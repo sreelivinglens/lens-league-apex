@@ -75,20 +75,20 @@ def draw_wrapped(draw, text, font, color, x, y, max_w, spacing=5):
 def build_card(photo_path, data, out_path):
 
     # ── Fonts — sized for 900px canvas, readable at screen size ───────────────
-    f_strip = fnt(F_BOLD, 15)
-    f_score    = fnt(F_BOLD,    52)   # big score — unchanged intention
-    f_tier = fnt(F_MONO, 13)
-    f_asset = fnt(F_BOLD, 19)   # title — unchanged intention
-    f_meta = fnt(F_REG, 13)
-    f_tag = fnt(F_MONO_R, 12)
-    f_mod_lbl = fnt(F_MONO_R, 12)
-    f_mod_val = fnt(F_BOLD, 24)
-    f_sec_hdr = fnt(F_MONO, 12)
-    f_sec_body = fnt(F_REG, 14)
-    f_byline_h = fnt(F_MONO, 12)
-    f_byline_b = fnt(F_REG, 14)
-    f_byline_i = fnt(F_BOLD, 14)
-    f_badge = fnt(F_MONO_R, 12)
+    f_strip = fnt(F_BOLD, 18)
+    f_score = fnt(F_BOLD, 52)   # big score — unchanged intention
+    f_tier = fnt(F_MONO, 16)
+    f_asset = fnt(F_BOLD, 22)   # title — unchanged intention
+    f_meta = fnt(F_REG, 16)
+    f_tag = fnt(F_MONO_R, 15)
+    f_mod_lbl = fnt(F_MONO_R, 15)
+    f_mod_val = fnt(F_BOLD, 28)
+    f_sec_hdr = fnt(F_MONO, 15)
+    f_sec_body = fnt(F_REG, 17)
+    f_byline_h = fnt(F_MONO, 15)
+    f_byline_b = fnt(F_REG, 17)
+    f_byline_i = fnt(F_BOLD, 17)
+    f_badge = fnt(F_MONO_R, 15)
 
     dummy = ImageDraw.Draw(Image.new("RGB", (CW, 10)))
 
