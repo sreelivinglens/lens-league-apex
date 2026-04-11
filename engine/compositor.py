@@ -1,7 +1,8 @@
 """
-Apex Audit Card — JPG Compositor v4
-All text scaled up for readability at display size.
-Module scores, section labels, body text all significantly larger.
+Apex Audit Card — v9
+Canvas: 1920px wide, HEIGHT DYNAMIC — grows to fit all content
+Photo: 300x200 top-left thumbnail
+White background, black text, gold accents
 """
 
 from PIL import Image, ImageDraw, ImageFont
@@ -9,12 +10,10 @@ import os
 
 L = "/usr/share/fonts/truetype/liberation/"
 D = "/usr/share/fonts/truetype/dejavu/"
-
 F_BOLD   = L + "LiberationSans-Bold.ttf"
 F_REG    = L + "LiberationSans-Regular.ttf"
 F_MONO   = D + "DejaVuSansMono-Bold.ttf"
 F_MONO_R = D + "DejaVuSansMono.ttf"
-
 if not os.path.exists(F_BOLD):  F_BOLD  = D + "DejaVuSans-Bold.ttf"
 if not os.path.exists(F_REG):   F_REG   = D + "DejaVuSans.ttf"
 
@@ -22,49 +21,53 @@ def fnt(path, size):
     try:    return ImageFont.truetype(path, size)
     except: return ImageFont.load_default()
 
-# ── Palette ───────────────────────────────────────────────────────────────────
-DARK     = (13,  13,  13)
-PANEL    = (22,  22,  22)
-PANEL2   = (16,  16,  16)
-BORDER   = (45,  45,  45)
-MUTED    = (90,  90,  90)
-GOLD     = (200, 168, 75)
-GOLD_L   = (226, 200, 122)
-TEXT     = (232, 226, 213)
-TEXT_DIM = (190, 183, 170)
-GREEN    = (76,  175, 80)
-RED      = (229, 57,  53)
-RED_L    = (229, 115, 115)
+BG       = (255, 255, 255)
+BLACK    = (20,  20,  20)
+GREY     = (100, 100, 100)
+LGREY    = (200, 200, 200)
+GOLD     = (180, 140, 40)
+GOLD_BG  = (255, 248, 225)
+GREEN    = (40,  140, 50)
+RED      = (200, 40,  40)
+STRIP_BG = (30,  30,  30)
 
-CARD_W   = 2000   # wider card = more pixel budget per element
+CW       = 1920
+TH_W, TH_H = 300, 200
+PAD      = 44
 
 
-def wrap_text(text, font, max_width, draw):
-    if not text: return ['']
-    words, lines, current = text.split(), [], []
-    for word in words:
-        test = ' '.join(current + [word])
-        if draw.textbbox((0, 0), test, font=font)[2] > max_width and current:
-            lines.append(' '.join(current))
-            current = [word]
-        else:
-            current.append(word)
-    if current: lines.append(' '.join(current))
-    return lines or ['']
-
-
-def lh(font):
+def fh(font):
     d = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-    return d.textbbox((0, 0), "Ag", font=font)[3] + 4
+    return d.textbbox((0, 0), 'Ag', font=font)[3] + 6
 
 
-def block_h(lines, font, spacing=10):
-    if not lines: return 0
-    return len(lines) * lh(font) + max(0, len(lines) - 1) * spacing
+def wrap(text, font, max_w, draw):
+    if not text or not text.strip():
+        return []
+    words, lines, cur = text.split(), [], []
+    for w in words:
+        test = ' '.join(cur + [w])
+        if draw.textbbox((0, 0), test, font=font)[2] > max_w and cur:
+            lines.append(' '.join(cur))
+            cur = [w]
+        else:
+            cur.append(w)
+    if cur:
+        lines.append(' '.join(cur))
+    return lines
 
 
-def draw_lines(draw, lines, x, y, font, color, spacing=10):
-    h = lh(font)
+def measure_wrapped_h(text, font, max_w, draw, spacing=8):
+    """Return pixel height of wrapped text block."""
+    lines = wrap(text, font, max_w, draw)
+    if not lines:
+        return 0
+    return len(lines) * fh(font) + max(0, len(lines) - 1) * spacing
+
+
+def draw_wrapped(draw, text, font, color, x, y, max_w, spacing=8):
+    lines = wrap(text, font, max_w, draw)
+    h = fh(font)
     for line in lines:
         draw.text((x, y), line, font=font, fill=color)
         y += h + spacing
@@ -72,246 +75,271 @@ def draw_lines(draw, lines, x, y, font, color, spacing=10):
 
 
 def build_card(photo_path, data, out_path):
-    PAD   = 64
-    COL   = CARD_W - PAD * 2
-    LBL_W = 240   # section label column width
-    SPAD  = 36    # section vertical padding
 
-    # ── Fonts — sized for CARD_W=2000 ────────────────────────────────────────
-    f_brand      = fnt(F_BOLD,    32)   # THE LENS LEAGUE
-    f_engine     = fnt(F_MONO_R,  22)   # APEX DDI ENGINE header right
-    f_tag        = fnt(F_MONO_R,  26)   # genre tag on photo
-    f_score_big  = fnt(F_BOLD,   100)   # score number on photo badge
-    f_score_lbl  = fnt(F_MONO_R,  24)   # MASTER / PRACTITIONER on badge
-    f_title      = fnt(F_BOLD,    70)   # asset name on photo
-    f_meta       = fnt(F_MONO_R,  26)   # meta line on photo
-    f_mod_lbl    = fnt(F_MONO_R,  26)   # DOD / DISRUPTION labels
-    f_mod_score  = fnt(F_BOLD,    88)   # module score numbers  ← KEY FIX
-    f_sec_lbl    = fnt(F_MONO,    27)   # TECHNICAL INTEGRITY etc.
-    f_sec_body   = fnt(F_REG,     36)   # section body text     ← KEY FIX
-    f_badge_t    = fnt(F_MONO_R,  24)   # STRENGTHS / GAPS
-    f_badge      = fnt(F_MONO_R,  23)   # badge text
-    f_bl_title   = fnt(F_MONO,    26)   # APEX BYLINE
-    f_bl_body    = fnt(F_REG,     34)   # byline body
-    f_bl_imp     = fnt(F_BOLD,    36)   # THE ONE IMPROVEMENT text
-    f_arch_lbl   = fnt(F_MONO_R,  22)   # AFFECTIVE STATE label
-    f_arch_val   = fnt(F_BOLD,    38)   # archetype value
-    f_credit     = fnt(F_REG,     30)   # photographer credit
-    f_bot        = fnt(F_MONO_R,  22)   # bottom strip
+    # ── Fonts ─────────────────────────────────────────────────────────────────
+    f_strip    = fnt(F_MONO_R, 34)
+    f_tag      = fnt(F_MONO_R, 30)
+    f_score    = fnt(F_BOLD,   64)   # unchanged
+    f_tier     = fnt(F_MONO,   32)
+    f_asset    = fnt(F_BOLD,   26)   # unchanged
+    f_meta     = fnt(F_REG,    30)
+    f_mod_lbl  = fnt(F_MONO_R, 28)
+    f_mod_val  = fnt(F_BOLD,   60)
+    f_sec_hdr  = fnt(F_MONO,   26)
+    f_sec_body = fnt(F_REG,    34)
+    f_byline_h = fnt(F_MONO,   26)
+    f_byline_b = fnt(F_REG,    34)
+    f_byline_i = fnt(F_BOLD,   34)
+    f_badge    = fnt(F_MONO_R, 26)
 
-    # ── Load & crop photo to fixed height ─────────────────────────────────────
-    photo  = Image.open(photo_path).convert("RGB")
-    PH     = 640   # photo strip height
-    pw, ph = photo.size
-    scale  = CARD_W / pw
-    new_h  = int(ph * scale)
-    photo  = photo.resize((CARD_W, new_h), Image.LANCZOS)
-    if new_h > PH:
-        top   = (new_h - PH) // 3
-        photo = photo.crop((0, top, CARD_W, top + PH))
-    else:
-        PH    = new_h
+    # ── Two-column layout constants ───────────────────────────────────────────
+    COL_GAP = 40
+    COL_W   = (CW - PAD * 2 - COL_GAP) // 2
+    LC_X    = PAD
+    RC_X    = PAD + COL_W + COL_GAP
 
-    # ── Measure heights ───────────────────────────────────────────────────────
-    dummy      = ImageDraw.Draw(Image.new("RGB", (CARD_W, 10)))
-    sec_heights = []
-    for _, body in data.get("rows", []):
-        bl = wrap_text(body, f_sec_body, COL - LBL_W - 40, dummy)
-        sec_heights.append(max(block_h(bl, f_sec_body, 10) + SPAD * 2, 100))
+    # ── Pre-measure ALL content to calculate canvas height ───────────────────
+    dummy = ImageDraw.Draw(Image.new("RGB", (CW, 10)))
 
-    b1l   = wrap_text(data.get("byline_1", ""),      f_bl_body, COL, dummy)
-    b2l   = wrap_text(data.get("byline_2_body", ""), f_bl_imp,  COL, dummy)
-    byl_h = block_h(b1l, f_bl_body, 10) + block_h(b2l, f_bl_imp, 10) + 120
+    STRIP_H = 60
+    TH_X    = PAD
+    TH_Y    = STRIP_H + PAD
 
-    HDR_H  = 72
-    MOD_H  = 200
-    BAD_H  = 150
-    FTR_H  = 100
-    BOT_H  = 68
+    # Photo + info block height
+    photo_block_h = TH_H + 24   # thumbnail + gap to divider
 
-    TOTAL_H = (HDR_H + PH + MOD_H +
-               sum(sec_heights) + 2 * len(sec_heights) +
-               byl_h + BAD_H + FTR_H + BOT_H + PAD)
+    # Module row height
+    MOD_H = fh(f_mod_lbl) + fh(f_mod_val) + 22 + 16   # label + score + bar + padding
 
-    canvas = Image.new("RGB", (CARD_W, TOTAL_H), DARK)
+    # Dividers
+    DIV_H = 1 + 18   # line + gap below
+
+    # Measure LEFT column (sections)
+    left_h = 0
+    for label, body in data.get("rows", []):
+        left_h += fh(f_sec_hdr) + 4
+        if body and body.strip():
+            left_h += measure_wrapped_h(body, f_sec_body, COL_W, dummy, 6)
+        left_h += 14   # gap between sections
+    left_h = max(left_h, 10)
+
+    # Measure RIGHT column (byline + badges)
+    right_h = 0
+    right_h += fh(f_byline_h) + 4   # APEX BYLINE header
+    b1 = data.get("byline_1", "").strip()
+    if b1:
+        right_h += measure_wrapped_h(b1, f_byline_b, COL_W, dummy, 6)
+    right_h += 16
+    right_h += fh(f_byline_h) + 4   # THE ONE IMPROVEMENT header
+    b2 = data.get("byline_2_body", "").strip()
+    if b2:
+        right_h += measure_wrapped_h(b2, f_byline_i, COL_W, dummy, 6)
+    right_h += 20
+
+    badges_g = [b for b in data.get("badges_g", []) if b.strip()]
+    badges_w = [b for b in data.get("badges_w", []) if b.strip()]
+
+    def badge_block_h(badges):
+        if not badges: return 0
+        h = fh(f_byline_h) + 6   # header
+        bx = 0
+        row_count = 1
+        for badge in badges:
+            bb = dummy.textbbox((0, 0), badge, font=f_badge)
+            bw = bb[2] - bb[0] + 22
+            if bx + bw > COL_W:
+                row_count += 1
+                bx = 0
+            bx += bw + 10
+        h += row_count * (fh(f_badge) + 12) + 6
+        return h
+
+    right_h += badge_block_h(badges_g)
+    right_h += badge_block_h(badges_w)
+    right_h = max(right_h, 10)
+
+    # Two-column height = max of left and right
+    two_col_h = max(left_h, right_h)
+
+    BOT_H = 50
+    CONTENT_PAD = 24   # padding below two-column block before footer
+
+    # Total canvas height
+    CH = (STRIP_H +
+          TH_Y - STRIP_H +   # = PAD
+          photo_block_h +
+          DIV_H +
+          MOD_H +
+          DIV_H +
+          two_col_h +
+          CONTENT_PAD +
+          BOT_H)
+
+    # ── Build canvas ──────────────────────────────────────────────────────────
+    canvas = Image.new("RGB", (CW, CH), BG)
     draw   = ImageDraw.Draw(canvas)
-    y      = 0
 
-    # ── Header strip ──────────────────────────────────────────────────────────
-    draw.rectangle([0, 0, CARD_W, HDR_H], fill=GOLD)
-    draw.text((PAD, 20), "THE LENS LEAGUE", font=f_brand, fill=DARK)
+    # ── Top strip ─────────────────────────────────────────────────────────────
+    draw.rectangle([0, 0, CW, STRIP_H], fill=STRIP_BG)
+    draw.text((PAD, 14), "THE LENS LEAGUE", font=f_strip, fill=(200, 168, 75))
     et  = "APEX DDI ENGINE  ·  FULL EVALUATION"
-    etb = draw.textbbox((0, 0), et, font=f_engine)
-    draw.text((CARD_W - PAD - (etb[2]-etb[0]), 24), et, font=f_engine, fill=(50, 40, 5))
-    y += HDR_H
+    etb = draw.textbbox((0, 0), et, font=f_strip)
+    draw.text((CW - PAD - (etb[2] - etb[0]), 14), et, font=f_strip, fill=(160, 130, 60))
 
-    # ── Photo ─────────────────────────────────────────────────────────────────
-    canvas.paste(photo, (0, y))
-    PT = y
+    # ── Thumbnail ─────────────────────────────────────────────────────────────
+    photo = Image.open(photo_path).convert("RGB")
+    pw, ph = photo.size
+    scale  = max(TH_W / pw, TH_H / ph)
+    nw, nh = int(pw * scale), int(ph * scale)
+    photo  = photo.resize((nw, nh), Image.LANCZOS)
+    cx, cy = (nw - TH_W) // 2, (nh - TH_H) // 2
+    photo  = photo.crop((cx, cy, cx + TH_W, cy + TH_H))
+    canvas.paste(photo, (TH_X, TH_Y))
+    draw.rectangle([TH_X - 1, TH_Y - 1, TH_X + TH_W, TH_Y + TH_H],
+                   outline=LGREY, width=1)
 
-    # Gradient
-    G_H  = 320
-    grad = Image.new("RGBA", (CARD_W, G_H))
-    for i in range(G_H):
-        a = int(255 * (i / G_H) ** 1.3)
-        grad.paste((13, 13, 13, a), (0, i, CARD_W, i + 1))
-    canvas.paste(grad, (0, PT + PH - G_H), grad)
-
-    # Genre tag
-    gt  = data.get("genre_tag", "WILDLIFE  ·  JPEG")
-    gtb = draw.textbbox((0, 0), gt, font=f_tag)
-    draw.rectangle([PAD-14, PT+30, PAD+(gtb[2]-gtb[0])+14, PT+30+(gtb[3]-gtb[1])+18],
-                   fill=(13,13,13), outline=GOLD, width=2)
-    draw.text((PAD, PT+37), gt, font=f_tag, fill=GOLD)
-
-    # Score badge
-    BSZ = 170
-    bx  = CARD_W - PAD - BSZ
-    by  = PT + 30
-    draw.rectangle([bx, by, bx+BSZ, by+BSZ], fill=(10,10,10), outline=GOLD, width=3)
+    # ── Score badge ───────────────────────────────────────────────────────────
+    BX, BY = TH_X + TH_W + 24, TH_Y
+    BW, BH = 160, TH_H
+    draw.rectangle([BX, BY, BX + BW, BY + BH], fill=GOLD_BG, outline=GOLD, width=2)
     sc  = str(data.get("score", "0.0"))
-    sb  = draw.textbbox((0, 0), sc, font=f_score_big)
-    draw.text((bx + (BSZ-(sb[2]-sb[0]))//2, by+8), sc, font=f_score_big, fill=GOLD)
-    tier_t = data.get("tier","").upper()
-    tierb  = draw.textbbox((0, 0), tier_t, font=f_score_lbl)
-    draw.text((bx+(BSZ-(tierb[2]-tierb[0]))//2, by+120), tier_t, font=f_score_lbl, fill=GOLD)
+    sb  = draw.textbbox((0, 0), sc, font=f_score)
+    draw.text((BX + (BW - (sb[2] - sb[0])) // 2, BY + 40), sc, font=f_score, fill=GOLD)
+    tier_t = data.get("tier", "").upper()
+    tierb  = draw.textbbox((0, 0), tier_t, font=f_tier)
+    draw.text((BX + (BW - (tierb[2] - tierb[0])) // 2, BY + 148),
+              tier_t, font=f_tier, fill=GOLD)
 
-    # Soul bonus / IUCN
-    tag_y = PT + PH - 88
+    # ── Info block ────────────────────────────────────────────────────────────
+    IX = BX + BW + 28
+    IY = TH_Y + 8
+    draw.text((IX, IY), data.get("asset", ""), font=f_asset, fill=BLACK)
+    IY += fh(f_asset) + 2
+    draw.text((IX, IY), data.get("meta", ""),  font=f_meta,  fill=GREY)
+    IY += fh(f_meta) + 2
+    draw.text((IX, IY), data.get("genre_tag", ""), font=f_tag, fill=GREY)
+    IY += fh(f_tag) + 6
+
     if data.get("soul_bonus"):
-        st  = "★  SOUL BONUS ACTIVE"
-        stb = draw.textbbox((0,0), st, font=f_tag)
-        sx  = CARD_W - PAD - (stb[2]-stb[0]) - 24
-        draw.rectangle([sx-16, tag_y-10, sx+(stb[2]-stb[0])+16, tag_y+(stb[3]-stb[1])+12],
-                       fill=(30,25,5), outline=GOLD, width=2)
-        draw.text((sx, tag_y), st, font=f_tag, fill=GOLD)
+        draw.text((IX, IY), "★  SOUL BONUS ACTIVE", font=f_tag, fill=GOLD)
+        IY += fh(f_tag) + 4
     if data.get("iucn_tag"):
-        it  = data["iucn_tag"]
-        itb = draw.textbbox((0,0), it, font=f_tag)
-        ix  = CARD_W - PAD - (itb[2]-itb[0]) - 24
-        draw.rectangle([ix-16, tag_y-10, ix+(itb[2]-itb[0])+16, tag_y+(itb[3]-itb[1])+12],
-                       fill=(40,10,10), outline=(180,50,50), width=2)
-        draw.text((ix, tag_y), it, font=f_tag, fill=RED_L)
+        draw.text((IX, IY), data["iucn_tag"], font=f_tag, fill=RED)
+        IY += fh(f_tag) + 4
 
-    # Title & meta
-    ty = PT + PH - 140
-    draw.text((PAD, ty),     data.get("asset",""), font=f_title, fill=TEXT)
-    draw.text((PAD, ty+80),  data.get("meta", ""), font=f_meta,  fill=GOLD_L)
-    y += PH
+    combined = (f"Affective State:  {data.get('dec', '')}"
+                f"     ·     Photographer:  {data.get('credit', '')}")
+    draw.text((IX, IY), combined, font=f_meta, fill=BLACK)
 
-    # ── Module row ────────────────────────────────────────────────────────────
-    draw.rectangle([0, y, CARD_W, y+MOD_H], fill=PANEL)
-    draw.rectangle([0, y, CARD_W, y+1], fill=BORDER)
+    # ── Divider 1 ─────────────────────────────────────────────────────────────
+    D1Y = TH_Y + TH_H + 24
+    draw.rectangle([PAD, D1Y, CW - PAD, D1Y + 1], fill=LGREY)
 
+    # ── Module scores ─────────────────────────────────────────────────────────
+    MY      = D1Y + 18
     modules = data.get("modules", [])
-    n       = len(modules) or 1
-    cell_w  = CARD_W // n
-    max_sc  = max((s for _,s in modules), default=0)
+    n       = max(len(modules), 1)
+    MOD_W_  = (CW - PAD * 2) // n
+    max_sc  = max((float(s) for _, s in modules), default=0)
 
     for i, (name, score) in enumerate(modules):
-        cx = i * cell_w
+        mx  = PAD + i * MOD_W_
+        col = GOLD if float(score) == max_sc else BLACK
+        draw.text((mx, MY), name.upper(), font=f_mod_lbl, fill=GREY)
+        draw.text((mx, MY + fh(f_mod_lbl) + 2), str(score), font=f_mod_val, fill=col)
+        bar_x = mx
+        bar_y = MY + fh(f_mod_lbl) + fh(f_mod_val) + 8
+        bar_w = MOD_W_ - 24
+        draw.rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + 5], fill=LGREY)
+        fw = int(bar_w * float(score) / 10)
+        draw.rectangle([bar_x, bar_y, bar_x + fw, bar_y + 5],
+                       fill=GOLD if float(score) == max_sc else (160, 130, 50))
         if i > 0:
-            draw.rectangle([cx, y+22, cx+1, y+MOD_H-22], fill=BORDER)
-        draw.text((cx+28, y+20), name.upper(), font=f_mod_lbl, fill=TEXT_DIM)
-        col = GOLD if score == max_sc else TEXT
-        draw.text((cx+28, y+46), str(score), font=f_mod_score, fill=col)
-        bx2 = cx+28
-        by2 = y+MOD_H-30
-        bw  = cell_w-56
-        draw.rectangle([bx2, by2, bx2+bw, by2+6], fill=MUTED)
-        fw  = int(bw * float(score)/10)
-        draw.rectangle([bx2, by2, bx2+fw, by2+6],
-                       fill=GOLD if score==max_sc else (160,130,60))
-    y += MOD_H
+            draw.rectangle([mx - 1, MY, mx, bar_y + 5], fill=LGREY)
 
-    # ── Section rows ──────────────────────────────────────────────────────────
-    for idx, (label, body) in enumerate(data.get("rows", [])):
-        bl    = wrap_text(body, f_sec_body, COL-LBL_W-40, draw)
-        row_h = sec_heights[idx]
-        bg    = PANEL2 if idx%2==0 else (19,19,19)
-        draw.rectangle([0, y, CARD_W, y+row_h], fill=bg)
-        draw.rectangle([0, y, CARD_W, y+1], fill=BORDER)
+    # ── Divider 2 ─────────────────────────────────────────────────────────────
+    D2Y = MY + fh(f_mod_lbl) + fh(f_mod_val) + 22
+    draw.rectangle([PAD, D2Y, CW - PAD, D2Y + 1], fill=LGREY)
 
-        # Label column
-        draw.rectangle([0, y, LBL_W, y+row_h], fill=(20,17,8))
-        parts  = label.replace("\\n","\n").split("\n")
-        lh_e   = lh(f_sec_lbl)
-        total  = len(parts)*lh_e + max(0,len(parts)-1)*6
-        ly     = y + (row_h-total)//2
-        for p in parts:
-            draw.text((18, ly), p.upper(), font=f_sec_lbl, fill=GOLD)
-            ly += lh_e + 6
+    # ── Two-column content ────────────────────────────────────────────────────
+    CY_L = D2Y + 18
+    CY_R = D2Y + 18
 
-        draw.rectangle([LBL_W, y+18, LBL_W+1, y+row_h-18], fill=BORDER)
-        draw_lines(draw, bl, LBL_W+30, y+SPAD, f_sec_body, TEXT_DIM, 10)
-        y += row_h
+    # LEFT — sections
+    for label, body in data.get("rows", []):
+        lbl = label.replace("\\n", " ").replace("\n", " ")
+        draw.text((LC_X, CY_L), lbl.upper(), font=f_sec_hdr, fill=GOLD)
+        CY_L += fh(f_sec_hdr) + 4
+        if body and body.strip():
+            CY_L = draw_wrapped(draw, body, f_sec_body, BLACK,
+                                LC_X, CY_L, COL_W, spacing=6)
+        CY_L += 14
 
-    # ── Badges ────────────────────────────────────────────────────────────────
-    draw.rectangle([0, y, CARD_W, y+BAD_H], fill=PANEL)
-    draw.rectangle([0, y, CARD_W, y+1], fill=BORDER)
-    draw.text((PAD, y+20), "STRENGTHS", font=f_badge_t, fill=TEXT_DIM)
-    bxp = PAD
-    for badge in data.get("badges_g", []):
-        if not badge.strip(): continue
-        bb = draw.textbbox((0,0), badge, font=f_badge)
-        bw = bb[2]-bb[0]+30
-        if bxp+bw > CARD_W//2-PAD: break
-        draw.rectangle([bxp, y+56, bxp+bw, y+104], fill=(10,24,10), outline=GREEN, width=2)
-        draw.text((bxp+15, y+65), badge, font=f_badge, fill=GREEN)
-        bxp += bw+12
+    # RIGHT — byline
+    draw.text((RC_X, CY_R), "APEX BYLINE", font=f_byline_h, fill=GOLD)
+    CY_R += fh(f_byline_h) + 4
+    if b1:
+        CY_R = draw_wrapped(draw, b1, f_byline_b, BLACK, RC_X, CY_R, COL_W, spacing=6)
+    CY_R += 16
 
-    half = CARD_W//2
-    draw.text((half+PAD, y+20), "GAPS", font=f_badge_t, fill=TEXT_DIM)
-    bxp = half+PAD
-    for badge in data.get("badges_w", []):
-        if not badge.strip(): continue
-        bb = draw.textbbox((0,0), badge, font=f_badge)
-        bw = bb[2]-bb[0]+30
-        if bxp+bw > CARD_W-PAD: break
-        draw.rectangle([bxp, y+56, bxp+bw, y+104], fill=(24,8,8), outline=RED, width=2)
-        draw.text((bxp+15, y+65), badge, font=f_badge, fill=RED)
-        bxp += bw+12
-    y += BAD_H
+    draw.text((RC_X, CY_R), "THE ONE IMPROVEMENT:", font=f_byline_h, fill=GOLD)
+    CY_R += fh(f_byline_h) + 4
+    if b2:
+        CY_R = draw_wrapped(draw, b2, f_byline_i, BLACK, RC_X, CY_R, COL_W, spacing=6)
+    CY_R += 20
 
-    # ── Apex Byline ───────────────────────────────────────────────────────────
-    draw.rectangle([0, y, CARD_W, y+1], fill=GOLD)
-    draw.rectangle([0, y+1, CARD_W, y+byl_h], fill=(16,14,6))
-    draw.rectangle([0, y+1, 7, y+byl_h], fill=GOLD)
-    draw.text((PAD, y+26), "APEX BYLINE", font=f_bl_title, fill=GOLD)
-    cy  = y+68
-    cy  = draw_lines(draw, b1l, PAD, cy, f_bl_body, TEXT_DIM, 10)
-    cy += 30
-    draw.text((PAD, cy), "THE ONE IMPROVEMENT:", font=f_bl_title, fill=GOLD)
-    cy += 42
-    draw_lines(draw, b2l, PAD, cy, f_bl_imp, TEXT, 10)
-    y += byl_h
+    # Strengths
+    if badges_g:
+        draw.text((RC_X, CY_R), "STRENGTHS", font=f_byline_h, fill=GREEN)
+        CY_R += fh(f_byline_h) + 6
+        bx_pos = RC_X
+        for badge in badges_g:
+            bb = draw.textbbox((0, 0), badge, font=f_badge)
+            bw = bb[2] - bb[0] + 22
+            if bx_pos + bw > RC_X + COL_W:
+                bx_pos = RC_X
+                CY_R  += fh(f_badge) + 12
+            draw.rectangle([bx_pos, CY_R - 2, bx_pos + bw, CY_R + fh(f_badge) + 4],
+                           fill=(240, 255, 240), outline=GREEN, width=1)
+            draw.text((bx_pos + 11, CY_R), badge, font=f_badge, fill=GREEN)
+            bx_pos += bw + 10
+        CY_R += fh(f_badge) + 18
 
-    # ── Footer ────────────────────────────────────────────────────────────────
-    draw.rectangle([0, y, CARD_W, y+FTR_H], fill=PANEL2)
-    draw.rectangle([0, y, CARD_W, y+1], fill=BORDER)
-    draw.text((PAD, y+16), "AFFECTIVE STATE", font=f_arch_lbl, fill=TEXT_DIM)
-    draw.text((PAD, y+44), data.get("dec",""), font=f_arch_val, fill=GOLD)
-    cred = data.get("credit","")
-    cb   = draw.textbbox((0,0), cred, font=f_credit)
-    draw.text((CARD_W-PAD-(cb[2]-cb[0]), y+34), cred, font=f_credit, fill=TEXT_DIM)
-    y += FTR_H
+    # Gaps
+    if badges_w:
+        draw.text((RC_X, CY_R), "GAPS", font=f_byline_h, fill=RED)
+        CY_R += fh(f_byline_h) + 6
+        bx_pos = RC_X
+        for badge in badges_w:
+            bb = draw.textbbox((0, 0), badge, font=f_badge)
+            bw = bb[2] - bb[0] + 22
+            if bx_pos + bw > RC_X + COL_W:
+                bx_pos = RC_X
+                CY_R  += fh(f_badge) + 12
+            draw.rectangle([bx_pos, CY_R - 2, bx_pos + bw, CY_R + fh(f_badge) + 4],
+                           fill=(255, 240, 240), outline=RED, width=1)
+            draw.text((bx_pos + 11, CY_R), badge, font=f_badge, fill=RED)
+            bx_pos += bw + 10
 
     # ── Bottom strip ──────────────────────────────────────────────────────────
-    draw.rectangle([0, y, CARD_W, y+BOT_H], fill=(8,8,8))
-    draw.rectangle([0, y, CARD_W, y+1], fill=BORDER)
-    draw.text((PAD, y+23), "APEX DDI ENGINE  ·  LENS LEAGUE", font=f_bot, fill=MUTED)
+    BOT_Y = CH - BOT_H
+    draw.rectangle([0, BOT_Y, CW, CH], fill=STRIP_BG)
 
     tier_map = {"APPRENTICE":1,"PRACTITIONER":2,"MASTER":3,"GRANDMASTER":4,"LEGEND":5}
-    active   = tier_map.get(data.get("tier","").upper(), 2)
-    px, py2  = CARD_W//2-80, y+24
+    active   = tier_map.get(data.get("tier", "").upper(), 2)
+    pip_x, pip_y = CW // 2 - 80, BOT_Y + 16
     for i in range(5):
-        col = GOLD if i<active else MUTED
-        draw.rectangle([px+i*34, py2, px+i*34+22, py2+22],
-                       fill=col if i<active else None, outline=col, width=2)
+        col = (200, 168, 75) if i < active else (70, 70, 70)
+        draw.rectangle([pip_x + i * 32, pip_y, pip_x + i * 32 + 22, pip_y + 18],
+                       fill=col if i < active else None, outline=col, width=1)
 
-    sc_txt = f"LL-SCORE  {data.get('score','')}  ·  {data.get('tier','').upper()}"
-    scb    = draw.textbbox((0,0), sc_txt, font=f_bot)
-    draw.text((CARD_W-PAD-(scb[2]-scb[0]), y+23), sc_txt, font=f_bot, fill=MUTED)
+    sc_txt = f"LL-SCORE  {data.get('score', '')}  ·  {data.get('tier', '').upper()}"
+    scb    = draw.textbbox((0, 0), sc_txt, font=f_strip)
+    draw.text((CW - PAD - (scb[2] - scb[0]), BOT_Y + 10),
+              sc_txt, font=f_strip, fill=(160, 130, 60))
+    draw.text((PAD, BOT_Y + 10),
+              "APEX DDI ENGINE  ·  LENS LEAGUE",
+              font=f_strip, fill=(100, 90, 70))
 
-    canvas.save(out_path, "JPEG", quality=93, optimize=True)
+    canvas.save(out_path, "JPEG", quality=95, optimize=True)
     return out_path
