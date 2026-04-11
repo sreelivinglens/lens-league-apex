@@ -213,6 +213,16 @@ def upload():
         if os.path.exists(raw_path):
             os.remove(raw_path)
 
+        # EXIF authenticity check
+        from engine.exif_check import extract_exif
+        exif_status, exif_data, exif_warning = extract_exif(thumb_path)
+        exif_settings = '  ·  '.join(filter(None, [
+            exif_data.get('focal_length',''),
+            exif_data.get('aperture',''),
+            exif_data.get('iso',''),
+            exif_data.get('shutter',''),
+        ]))
+
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
@@ -230,6 +240,12 @@ def upload():
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
             status            = 'pending',
+            legal_declaration = bool(request.form.get('legal_declaration')),
+            exif_status       = exif_status,
+            exif_camera       = exif_data.get('camera', ''),
+            exif_date_taken   = exif_data.get('date_taken', ''),
+            exif_settings     = exif_settings,
+            exif_warning      = exif_warning,
         )
         db.session.add(img)
         db.session.commit()
