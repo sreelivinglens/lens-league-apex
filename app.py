@@ -398,6 +398,33 @@ def serve_thumb(image_id):
 
 
 
+
+# ── Change password ───────────────────────────────────────────────────────────
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current  = request.form.get('current_password', '')
+        new_pw   = request.form.get('new_password', '')
+        confirm  = request.form.get('confirm_password', '')
+
+        if not check_password_hash(current_user.password_hash, current):
+            flash('Current password is incorrect.', 'error')
+            return redirect(url_for('change_password'))
+        if len(new_pw) < 8:
+            flash('New password must be at least 8 characters.', 'error')
+            return redirect(url_for('change_password'))
+        if new_pw != confirm:
+            flash('New passwords do not match.', 'error')
+            return redirect(url_for('change_password'))
+
+        current_user.password_hash = generate_password_hash(new_pw)
+        db.session.commit()
+        flash('Password updated successfully.', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('change_password.html')
+
 # ── Bulk upload route ─────────────────────────────────────────────────────────
 @app.route('/bulk-upload', methods=['GET', 'POST'])
 @login_required
