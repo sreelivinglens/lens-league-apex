@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ image.asset_name }} — Lens League Apex</title>
+
+<!-- Open Graph for WhatsApp / Facebook / Twitter previews -->
+<meta property="og:title"       content="{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}">
+<meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
+<meta property="og:image"       content="{{ request.host_url }}image/{{ image.id }}/thumb">
+<meta property="og:url"         content="{{ request.url }}">
+<meta property="og:type"        content="website">
+<meta name="twitter:card"       content="summary_large_image">
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#0D0D0D; color:#E8E2D5;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:32px 16px;
+  }
+
+  .top-bar {
+    width:100%; max-width:640px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:24px;
+  }
+  .brand {
+    font-family:'Courier New',monospace; font-size:13px;
+    letter-spacing:3px; color:#C8A84B; text-decoration:none;
+  }
+  .join-btn {
+    padding:7px 16px; border:1px solid #C8A84B;
+    color:#C8A84B; font-family:'Courier New',monospace;
+    font-size:11px; letter-spacing:2px; text-decoration:none;
+    transition:all .2s;
+  }
+  .join-btn:hover { background:#C8A84B; color:#0D0D0D; }
+
+  .card {
+    width:100%; max-width:640px;
+    background:#121212; border:1px solid #1E1E1E;
+    overflow:hidden;
+  }
+
+  /* Score header */
+  .score-header {
+    background:#C8A84B; padding:10px 24px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .score-header .ll { font-family:'Courier New',monospace; font-size:13px; color:#0D0D0D; font-weight:700; }
+  .score-header .engine { font-family:'Courier New',monospace; font-size:11px; color:rgba(0,0,0,0.5); }
+
+  /* Photo */
+  .photo-wrap { position:relative; }
+  .photo-wrap img { width:100%; display:block; max-height:400px; object-fit:cover; }
+
+  /* Score overlay on photo */
+  .score-overlay {
+    position:absolute; top:16px; right:16px;
+    background:rgba(13,13,13,0.92); border:2px solid #C8A84B;
+    padding:10px 16px; text-align:center; min-width:80px;
+  }
+  .score-num { font-size:36px; font-weight:700; color:#C8A84B; line-height:1; }
+  .score-tier { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-top:4px; }
+
+  /* Info section */
+  .info { padding:20px 24px; border-bottom:1px solid #1E1E1E; }
+  .asset-name { font-size:22px; font-weight:700; margin-bottom:6px; }
+  .meta { font-family:'Courier New',monospace; font-size:11px; color:#888; letter-spacing:1px; }
+
+  /* Module scores */
+  .modules {
+    display:grid; grid-template-columns:repeat(5,1fr);
+    border-bottom:1px solid #1E1E1E;
+  }
+  .mod-cell {
+    padding:14px 16px; text-align:left;
+    border-right:1px solid #1E1E1E;
+  }
+  .mod-cell:last-child { border-right:none; }
+  .mod-lbl { font-family:'Courier New',monospace; font-size:9px; letter-spacing:1px; color:#666; margin-bottom:4px; }
+  .mod-val { font-size:22px; font-weight:700; color:#E8E2D5; }
+  .mod-val.top { color:#C8A84B; }
+  .mod-bar { height:3px; background:#333; margin-top:6px; }
+  .mod-bar-fill { height:100%; background:#C8A84B; }
+
+  /* Sections */
+  .sections { padding:20px 24px; border-bottom:1px solid #1E1E1E; }
+  .sec-row { margin-bottom:14px; }
+  .sec-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:4px; }
+  .sec-body { font-size:13px; color:#999; line-height:1.6; }
+
+  /* Byline */
+  .byline {
+    padding:20px 24px; border-bottom:1px solid #1E1E1E;
+    border-left:3px solid #C8A84B; background:rgba(200,168,75,0.03);
+  }
+  .byline-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:8px; }
+  .byline-text { font-size:13px; color:#999; line-height:1.6; margin-bottom:12px; }
+  .improvement-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:6px; }
+  .improvement-text { font-size:13px; color:#E8E2D5; line-height:1.6; font-weight:500; }
+
+  /* Authenticity */
+  .auth-bar {
+    padding:12px 24px; border-bottom:1px solid #1E1E1E;
+    display:flex; align-items:center; gap:10px; font-size:12px;
+  }
+
+  /* Footer */
+  .card-footer {
+    padding:14px 24px; display:flex;
+    justify-content:space-between; align-items:center;
+    background:#080808;
+  }
+  .archetype { font-family:'Courier New',monospace; font-size:10px; color:#C8A84B; letter-spacing:1px; }
+  .photographer { font-size:12px; color:#666; }
+
+  /* Action buttons */
+  .actions {
+    width:100%; max-width:640px;
+    display:flex; gap:12px; margin-top:20px;
+  }
+  .action-btn {
+    flex:1; padding:14px; text-align:center;
+    font-family:'Courier New',monospace; font-size:11px;
+    letter-spacing:2px; cursor:pointer; border:none;
+    text-decoration:none; display:block; transition:all .2s;
+  }
+  .action-primary { background:#C8A84B; color:#0D0D0D; }
+  .action-primary:hover { background:#E2C87A; }
+  .action-secondary { border:1px solid #333; background:transparent; color:#888; }
+  .action-secondary:hover { border-color:#C8A84B; color:#C8A84B; }
+
+  .powered {
+    margin-top:24px; font-family:'Courier New',monospace;
+    font-size:10px; letter-spacing:2px; color:#333; text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="{{ url_for('index') }}" class="brand">LENS LEAGUE APEX</a>
+  <a href="{{ url_for('register') }}" class="join-btn">Get Your Images Rated</a>
+</div>
+
+<div class="card">
+
+  <!-- Score header strip -->
+  <div class="score-header">
+    <span class="ll">THE LENS LEAGUE</span>
+    <span class="engine">APEX DDI ENGINE · FULL EVALUATION</span>
+  </div>
+
+  <!-- Photo -->
+  <div class="photo-wrap">
+    <img src="{{ url_for('serve_thumb', image_id=image.id) }}"
+         alt="{{ image.asset_name }}">
+    <div class="score-overlay">
+      <div class="score-num">{{ image.score }}</div>
+      <div class="score-tier">{{ image.tier.upper() }}</div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="info">
+    <div class="asset-name">{{ image.asset_name }}</div>
+    <div class="meta">
+      {{ image.genre }}
+      {% if image.subject %} · {{ image.subject }}{% endif %}
+      {% if image.location %} · {{ image.location }}{% endif %}
+    </div>
+  </div>
+
+  <!-- Module scores -->
+  {% set mods = [
+    ('DoD',        image.dod_score),
+    ('Disruption', image.disruption_score),
+    ('DM',         image.dm_score),
+    ('Wonder',     image.wonder_score),
+    ('AQ',         image.aq_score),
+  ] %}
+  {% set max_mod = mods | map(attribute=1) | select | max %}
+  <div class="modules">
+    {% for name, val in mods %}
+    {% if val %}
+    <div class="mod-cell">
+      <div class="mod-lbl">{{ name }}</div>
+      <div class="mod-val {{ 'top' if val == max_mod }}">{{ val }}</div>
+      <div class="mod-bar">
+        <div class="mod-bar-fill" style="width:{{ (val/10*100)|int }}%"></div>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Sections -->
+  {% if audit %}
+  <div class="sections">
+    {% for label, body in audit.get('rows', []) %}
+    {% if body %}
+    <div class="sec-row">
+      <div class="sec-lbl">{{ label.replace('\\n',' ').replace('\n',' ') }}</div>
+      <div class="sec-body">{{ body }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Byline -->
+  {% if audit.get('byline_1') or audit.get('byline_2_body') %}
+  <div class="byline">
+    <div class="byline-lbl">Apex Byline</div>
+    {% if audit.get('byline_1') %}
+    <div class="byline-text">{{ audit.byline_1 }}</div>
+    {% endif %}
+    {% if audit.get('byline_2_body') %}
+    <div class="improvement-lbl">The One Improvement:</div>
+    <div class="improvement-text">{{ audit.byline_2_body }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Authenticity -->
+  <div class="auth-bar">
+    {% if image.exif_status == 'verified' %}
+      <span style="color:#4CAF50;">✅ Camera Verified</span>
+    {% elif image.exif_status == 'suspicious' %}
+      <span style="color:#E53935;">⚠️ Unverified Source</span>
+    {% else %}
+      <span style="color:#666;">❓ Unverified</span>
+    {% endif %}
+    {% if image.legal_declaration %}
+      <span style="color:#666; font-size:11px;">· Legally Declared by Photographer</span>
+    {% endif %}
+    {% if image.exif_camera %}
+      <span style="color:#666; font-size:11px;">· {{ image.exif_camera }}</span>
+    {% endif %}
+  </div>
+
+  <!-- Footer -->
+  <div class="card-footer">
+    <div>
+      <div class="archetype">{{ image.archetype }}</div>
+      <div class="photographer" style="margin-top:4px;">{{ image.photographer_name }}</div>
+    </div>
+    <div style="font-family:'Courier New',monospace; font-size:10px; color:#555; letter-spacing:1px;">
+      LL · {{ image.score }} · {{ image.tier.upper() }}
+    </div>
+  </div>
+
+</div>
+
+<!-- Action buttons -->
+<div class="actions">
+  {% if image.card_path %}
+  <a href="{{ url_for('download_card', image_id=image.id) }}"
+     class="action-btn action-primary">↓ Download Rating Card</a>
+  {% endif %}
+  <button onclick="shareThis()" class="action-btn action-secondary">Share</button>
+</div>
+
+<div class="powered">POWERED BY APEX DDI ENGINE · LENS LEAGUE</div>
+
+<script>
+function shareThis() {
+  const url   = window.location.href;
+  const title = "{{ image.asset_name }} — LL Score {{ image.score }} · {{ image.tier }}";
+  const text  = "Rated by the Apex DDI Engine on Lens League";
+
+  if (navigator.share) {
+    navigator.share({ title, text, url })
+      .catch(() => copyToClipboard(url));
+  } else {
+    copyToClipboard(url);
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Share link copied to clipboard!');
+  }).catch(() => {
+    prompt('Copy this link:', text);
+  });
+}
+</script>
+</body>
+</html>
