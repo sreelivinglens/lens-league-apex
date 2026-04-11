@@ -397,6 +397,111 @@ def serve_thumb(image_id):
     return send_file(img.thumb_path, mimetype='image/jpeg')
 
 
+
+# ── Bulk upload route ─────────────────────────────────────────────────────────
+@app.route('/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def bulk_upload():
+    results = []
+
+    if request.method == 'POST':
+        files        = request.files.getlist('images')
+        genre        = request.form.get('genre', 'Wildlife')
+        photographer = request.form.get('photographer_name',
+                                        current_user.full_name or current_user.username)
+
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+
+        for file in files:
+            if not file or not file.filename:
+                continue
+            if not allowed_file(file.filename):
+                results.append({'filename': file.filename, 'score': None,
+                                 'tier': None, 'status': 'skipped'})
+                continue
+
+            result_row = {'filename': file.filename, 'score': None,
+                          'tier': None, 'status': 'failed'}
+            try:
+                uid      = str(uuid.uuid4())
+                filename = secure_filename(file.filename)
+                raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw',
+                                        f"{uid}_{filename}")
+                file.save(raw_path)
+
+                thumb_path, w, h, fmt = ingest_image(raw_path,
+                                                     app.config['UPLOAD_FOLDER'])
+                if os.path.exists(raw_path):
+                    os.remove(raw_path)
+
+                img = Image(
+                    user_id           = current_user.id,
+                    original_filename = filename,
+                    stored_filename   = os.path.basename(thumb_path),
+                    thumb_path        = thumb_path,
+                    file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
+                    width             = w,
+                    height            = h,
+                    format            = fmt,
+                    asset_name        = os.path.splitext(filename)[0],
+                    genre             = genre,
+                    photographer_name = photographer,
+                    status            = 'pending',
+                )
+                db.session.add(img)
+                db.session.flush()   # get img.id without full commit
+
+                if api_key:
+                    from engine.auto_score import auto_score, build_audit_data
+                    from engine.compositor import build_card as _build_card
+
+                    scored = auto_score(
+                        image_path   = img.thumb_path,
+                        genre        = genre,
+                        title        = img.asset_name,
+                        photographer = photographer,
+                    )
+                    img.dod_score        = float(scored.get('dod', 0))
+                    img.disruption_score = float(scored.get('disruption', 0))
+                    img.dm_score         = float(scored.get('dm', 0))
+                    img.wonder_score     = float(scored.get('wonder', 0))
+                    img.aq_score         = float(scored.get('aq', 0))
+                    img.score            = float(scored.get('score', 0))
+                    img.tier             = scored.get('tier', 'Practitioner')
+                    img.archetype        = scored.get('archetype', '')
+                    img.soul_bonus       = scored.get('soul_bonus', False)
+                    img.status           = 'scored'
+                    img.scored_at        = datetime.utcnow()
+
+                    audit = build_audit_data(scored, img)
+                    img.set_audit(audit)
+
+                    card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                  f"{secure_filename(photographer.replace(' ',''))}_"
+                                  f"{genre}_{img.score}.jpg")
+                    card_path  = os.path.join(app.config['UPLOAD_FOLDER'],
+                                              'cards', card_fname)
+                    _build_card(img.thumb_path, audit, card_path)
+                    img.card_path = card_path
+
+                    result_row['score']  = img.score
+                    result_row['tier']   = img.tier
+                    result_row['status'] = 'scored'
+                else:
+                    img.status           = 'pending'
+                    result_row['status'] = 'uploaded'
+
+                db.session.commit()
+
+            except Exception as e:
+                db.session.rollback()
+                result_row['status'] = f'error: {str(e)[:60]}'
+
+            results.append(result_row)
+
+    genres = list(GENRE_WEIGHTS.keys())
+    return render_template('bulk_upload.html', genres=genres, results=results)
+
 # ── Admin routes ──────────────────────────────────────────────────────────────
 @app.route('/admin')
 @login_required
