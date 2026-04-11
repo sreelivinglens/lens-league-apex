@@ -1,8 +1,86 @@
 {% extends "base.html" %}
-{% block title %}Upload — Lens League Apex{% endblock %}
+{% block title %}Upload — Lens League Apex</div><!-- end uploadContent -->
+{% endblock %}
 {% block content %}
 
 <div style="max-width:680px; margin:0 auto;">
+
+<!-- ── Legal Declaration Modal ────────────────────────────────────────────── -->
+<div id="legalModal" style="
+  position:fixed; inset:0; z-index:999;
+  background:rgba(0,0,0,0.85);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;">
+  <div style="
+    background:var(--panel); border:1px solid var(--gold);
+    max-width:580px; width:100%; padding:40px;
+    position:relative;">
+
+    <!-- Header -->
+    <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px;
+                color:var(--gold); margin-bottom:20px;">
+      COPYRIGHT DECLARATION — REQUIRED
+    </div>
+
+    <h2 style="font-size:20px; font-weight:700; margin-bottom:20px; color:var(--text);">
+      Before You Upload
+    </h2>
+
+    <!-- Declaration text -->
+    <div style="background:#0A0A0A; border:1px solid var(--border);
+                padding:20px; margin-bottom:24px;
+                font-size:13px; line-height:1.8; color:var(--text-dim);">
+      <p style="margin-bottom:14px;">
+        By uploading images to Lens League, you <strong style="color:var(--text);">certify and declare</strong> that:
+      </p>
+      <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
+        <li>The image(s) you are about to upload were <strong style="color:var(--text);">photographed by you</strong>, or you hold written authorisation from the original creator to submit them for evaluation.</li>
+        <li>You are <strong style="color:var(--text);">solely responsible</strong> for any image submitted under your account. Lens League bears no liability for user-submitted content.</li>
+        <li>Submitting another photographer's work as your own constitutes <strong style="color:var(--text);">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international copyright law.</li>
+        <li>You acknowledge that Lens League may remove any image found to be in violation and <strong style="color:var(--text);">permanently suspend your account</strong> without notice.</li>
+        <li>You may be held <strong style="color:var(--text);">legally liable</strong> for damages, penalties, and legal costs arising from copyright infringement, including claims by the original rights holder.</li>
+      </ol>
+    </div>
+
+    <!-- Checkbox confirm -->
+    <label style="display:flex; align-items:flex-start; gap:12px;
+                  cursor:pointer; margin-bottom:24px;">
+      <input type="checkbox" id="modalCheckbox"
+             style="width:18px; height:18px; margin-top:2px;
+                    flex-shrink:0; accent-color:var(--gold);">
+      <span style="font-size:13px; color:var(--text); line-height:1.6; font-weight:500;">
+        I have read and understood the above declaration. I confirm these are my original
+        photographs. I accept full legal responsibility for any images I upload.
+      </span>
+    </label>
+
+    <!-- Buttons -->
+    <div style="display:flex; gap:12px;">
+      <button onclick="proceedToUpload()"
+              id="agreeBtn"
+              disabled
+              style="flex:1; padding:14px; background:var(--gold); color:var(--dark);
+                     border:none; font-family:'Courier New',monospace; font-size:12px;
+                     letter-spacing:2px; cursor:pointer; opacity:0.4; transition:opacity .2s;">
+        I AGREE — PROCEED TO UPLOAD
+      </button>
+      <a href="{{ url_for('dashboard') }}"
+         style="padding:14px 20px; border:1px solid var(--border);
+                color:var(--text-dim); font-family:'Courier New',monospace;
+                font-size:12px; letter-spacing:1px; text-decoration:none;
+                display:flex; align-items:center;">
+        Cancel
+      </a>
+    </div>
+
+    <p style="margin-top:16px; font-size:11px; color:var(--muted); text-align:center;">
+      This declaration is logged with your account, IP address, and timestamp.
+    </p>
+  </div>
+</div>
+
+<!-- ── Upload form (hidden until declaration accepted) ────────────────────── -->
+<div id="uploadContent" style="display:none;">
   <div class="page-header">
     <h1>Upload Image</h1>
     <p>Supported: JPG, PNG, CR2, CR3, NEF, ARW, DNG, RAF, RW2 &nbsp;·&nbsp; Max 50MB &nbsp;·&nbsp; RAW files are converted and not stored</p>
@@ -53,19 +131,7 @@
         </div>
       </div>
 
-      <!-- Legal declaration -->
-      <div style="background:#0A0A0A; border:1px solid var(--border); padding:16px 18px; margin-bottom:16px;">
-        <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
-          <input type="checkbox" name="legal_declaration" required
-                 style="width:16px; height:16px; margin-top:3px; flex-shrink:0; accent-color:var(--gold);">
-          <span style="font-size:12px; color:var(--text-dim); line-height:1.6;">
-            I certify that this image was created by me, or that I hold full rights to submit it
-            for evaluation on Lens League. I understand that submitting images I do not own
-            constitutes a breach of these terms and may result in account suspension.
-          </span>
-        </label>
-      </div>
-
+      <input type="hidden" name="legal_declaration" value="1">
       <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:12px; margin-top:8px;">
         Upload &amp; Process
       </button>
@@ -74,6 +140,25 @@
 </div>
 
 <script>
+  // ── Legal modal logic ──────────────────────────────────────────────────────
+  const modalCheckbox = document.getElementById('modalCheckbox');
+  const agreeBtn      = document.getElementById('agreeBtn');
+  const legalModal    = document.getElementById('legalModal');
+  const uploadContent = document.getElementById('uploadContent');
+
+  modalCheckbox.addEventListener('change', function() {
+    agreeBtn.disabled = !this.checked;
+    agreeBtn.style.opacity = this.checked ? '1' : '0.4';
+    agreeBtn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
+  });
+
+  function proceedToUpload() {
+    if (!modalCheckbox.checked) return;
+    legalModal.style.display    = 'none';
+    uploadContent.style.display = 'block';
+  }
+
+  // ── File input logic ───────────────────────────────────────────────────────
   const input    = document.getElementById('fileInput');
   const dropzone = document.getElementById('dropzone');
   const fnLabel  = document.getElementById('filename');
