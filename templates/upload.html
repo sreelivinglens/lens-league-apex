@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Upload — Lens League Apex{% endblock %}
+{% block content %}
+
+<div style="max-width:680px; margin:0 auto;">
+  <div class="page-header">
+    <h1>Upload Image</h1>
+    <p>Supported: JPG, PNG, CR2, CR3, NEF, ARW, DNG, RAF, RW2 &nbsp;·&nbsp; Max 50MB &nbsp;·&nbsp; RAW files are converted and not stored</p>
+  </div>
+
+  <div class="card">
+    <form method="POST" enctype="multipart/form-data">
+
+      <!-- Drop zone -->
+      <div id="dropzone" style="border:2px dashed var(--border); padding:48px; text-align:center; margin-bottom:28px; cursor:pointer; transition:border-color .2s;"
+           onclick="document.getElementById('fileInput').click()">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--text-dim); margin-bottom:12px;">DROP IMAGE HERE</div>
+        <div style="font-size:13px; color:var(--muted);">or click to browse</div>
+        <div id="filename" style="margin-top:14px; font-size:13px; color:var(--gold); display:none;"></div>
+      </div>
+      <input type="file" id="fileInput" name="image" accept=".jpg,.jpeg,.png,.cr2,.cr3,.nef,.arw,.dng,.raf,.rw2" style="display:none;" required>
+
+      <hr class="divider" style="margin:24px 0;">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Image Title</label>
+          <input type="text" name="asset_name" placeholder="e.g. The Sovereign Approach" required>
+        </div>
+        <div class="form-group">
+          <label>Genre</label>
+          <select name="genre" required>
+            {% for g in genres %}
+            <option value="{{ g }}">{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" name="subject" placeholder="e.g. African Bull Elephant">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" placeholder="e.g. Serengeti, Tanzania">
+        </div>
+        <div class="form-group">
+          <label>Conditions</label>
+          <input type="text" name="conditions" placeholder="e.g. Golden hour, open savannah">
+        </div>
+        <div class="form-group">
+          <label>Photographer Name</label>
+          <input type="text" name="photographer_name" value="{{ current_user.full_name or current_user.username }}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:12px; margin-top:8px;">
+        Upload &amp; Process
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const input    = document.getElementById('fileInput');
+  const dropzone = document.getElementById('dropzone');
+  const fnLabel  = document.getElementById('filename');
+
+  input.addEventListener('change', () => {
+    if (input.files.length) {
+      fnLabel.textContent = input.files[0].name;
+      fnLabel.style.display = 'block';
+      dropzone.style.borderColor = 'var(--gold)';
+    }
+  });
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor='var(--gold)'; });
+  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor='var(--border)'; });
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      input.files = files;
+      fnLabel.textContent = files[0].name;
+      fnLabel.style.display = 'block';
+      dropzone.style.borderColor = 'var(--gold)';
+    }
+  });
+</script>
+{% endblock %}

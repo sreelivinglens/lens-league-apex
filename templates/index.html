@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Lens League Apex — Photography Rating Engine{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<div style="text-align:center; padding:80px 0 60px;">
+  <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:20px;">APEX DDI ENGINE</div>
+  <h1 style="font-size:56px; font-weight:700; line-height:1.1; max-width:700px; margin:0 auto;">
+    Photography Rated<br><span style="color:var(--gold);">By Formula.</span>
+  </h1>
+  <p style="color:var(--text-dim); font-size:16px; max-width:520px; margin:24px auto; line-height:1.7; font-weight:300;">
+    Five modules. Genre-calibrated weights. Every score is produced by the Apex DDI formula — not opinion. Every Apex Byline gives one physically actionable improvement.
+  </p>
+  <div style="display:flex; gap:16px; justify-content:center; margin-top:36px;">
+    <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 36px; font-size:12px;">Join Free</a>
+    <a href="{{ url_for('login') }}" class="btn" style="padding:14px 36px; font-size:12px;">Login</a>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- STATS -->
+<div class="grid-3" style="margin-bottom:48px;">
+  <div class="stat-box" style="text-align:center;">
+    <div class="stat-val">{{ stats.total_images }}</div>
+    <div class="stat-lbl">Images Rated</div>
+  </div>
+  <div class="stat-box" style="text-align:center;">
+    <div class="stat-val">{{ stats.total_members }}</div>
+    <div class="stat-lbl">Photographers</div>
+  </div>
+  <div class="stat-box" style="text-align:center;">
+    <div class="stat-val">{{ "%.1f"|format(stats.avg_score) }}</div>
+    <div class="stat-lbl">Average LL-Score</div>
+  </div>
+</div>
+
+<!-- TOP IMAGES -->
+{% if top_images %}
+<div class="section-label">Top Rated Images</div>
+<div class="grid-3">
+  {% for img in top_images %}
+  <a href="{{ url_for('image_detail', image_id=img.id) }}" style="text-decoration:none; color:inherit;">
+    <div class="card-sm" style="padding:0; overflow:hidden;">
+      <div class="img-thumb">
+        <img src="{{ url_for('serve_thumb', image_id=img.id) }}" alt="{{ img.asset_name }}" loading="lazy">
+        <div class="score-overlay">{{ img.score }}</div>
+        <div class="status-badge scored">{{ img.tier }}</div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:4px;">{{ img.asset_name or 'Untitled' }}</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); letter-spacing:1px;">{{ img.genre }} &nbsp;·&nbsp; {{ img.archetype }}</div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<div class="section-label">The Five Modules</div>
+<div class="grid-3" style="gap:12px;">
+  {% set modules = [
+    ('DoD', 'Degree of Difficulty', 'Physical risk, mechanical precision, environmental hostility.'),
+    ('Disruption', 'Visual Disruption', 'Cross-referenced against Magnum, HIPA, NHM + Art-Historical Library.'),
+    ('DM', 'Decisive Moment', 'The exact millisecond of transition. Multiple variables at peak simultaneously.'),
+    ('Wonder', 'Wonder Factor', 'The Smithsonian standard: the Unseen Truth. Rare behaviour, natural secrets.'),
+    ('AQ', 'Affective Quotient', 'Tonal Archetype Mapping + Narrative Dissonance. The soul of the image.'),
+  ] %}
+  {% for code, name, desc in modules %}
+  <div class="card-sm">
+    <div style="font-family:'DM Mono',monospace; font-size:22px; color:var(--gold); font-weight:700; margin-bottom:8px;">{{ code }}</div>
+    <div style="font-weight:600; font-size:14px; margin-bottom:8px;">{{ name }}</div>
+    <div style="font-size:13px; color:var(--text-dim); line-height:1.6; font-weight:300;">{{ desc }}</div>
+  </div>
+  {% endfor %}
+  <div class="card-sm" style="border-color:var(--gold); background:rgba(200,168,75,.04);">
+    <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--gold); margin-bottom:12px;">FIVE TIERS</div>
+    {% for tier, range in [('Legend', '9.7–9.9'), ('Grandmaster','9.0–9.6'), ('Master','7.6–8.9'), ('Practitioner','5.1–7.5'), ('Apprentice','0.0–5.0')] %}
+    <div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px;">
+      <span style="font-weight:500;">{{ tier }}</span>
+      <span style="font-family:'DM Mono',monospace; color:var(--gold); font-size:11px;">{{ range }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

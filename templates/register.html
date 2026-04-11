@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Join — Lens League Apex{% endblock %}
+{% block content %}
+<div style="max-width:480px; margin:60px auto;">
+  <div class="page-header">
+    <h1>Join Lens League</h1>
+    <p>Create your photographer account</p>
+  </div>
+  <div class="card">
+    <form method="POST">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="full_name" required>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required minlength="8">
+      </div>
+      <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:12px; margin-top:8px;">Create Account</button>
+    </form>
+    <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--text-dim);">
+      Already a member? <a href="{{ url_for('login') }}" style="color:var(--gold);">Login</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

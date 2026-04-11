@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{{ image.asset_name or 'Image' }} — Lens League Apex{% endblock %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>{{ image.asset_name or image.original_filename }}</h1>
+    <p>{{ image.genre }} &nbsp;·&nbsp; {{ image.format }} &nbsp;·&nbsp; {{ image.photographer_name }}</p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
+    {% if image.card_path %}
+    <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2" style="gap:32px; align-items:start;">
+
+  <!-- LEFT: Image + score display -->
+  <div>
+    <img src="{{ url_for('serve_thumb', image_id=image.id) }}"
+         alt="{{ image.asset_name }}"
+         style="width:100%; border:1px solid var(--border);">
+
+    {% if image.status == 'scored' %}
+    <div style="margin-top:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); margin-bottom:4px;">LL-SCORE</div>
+          <div style="font-size:52px; font-weight:700; color:var(--gold); line-height:1;">{{ image.score }}</div>
+          <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); letter-spacing:2px;">{{ image.tier.upper() }}</div>
+        </div>
+        {% if image.soul_bonus %}
+        <div style="border:1px solid var(--gold); padding:8px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); background:rgba(200,168,75,.06);">
+          ★ SOUL BONUS
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Module bars -->
+      {% set mods = [('DoD', image.dod_score), ('Disruption', image.disruption_score), ('DM', image.dm_score), ('Wonder', image.wonder_score), ('AQ', image.aq_score)] %}
+      {% for name, score in mods %}
+      {% if score %}
+      <div style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--text-dim);">{{ name }}</span>
+          <span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--gold);">{{ score }}</span>
+        </div>
+        <div style="height:3px; background:var(--muted);">
+          <div style="height:100%; width:{{ (score/10*100)|int }}%; background:var(--gold);"></div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      {% if image.archetype %}
+      <div style="margin-top:16px; padding:12px 16px; border:1px solid var(--border); background:#0A0A0A;">
+        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); margin-bottom:4px;">AFFECTIVE STATE</div>
+        <div style="font-size:15px; font-weight:600; color:var(--gold);">{{ image.archetype }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div style="margin-top:16px; padding:16px; border:1px solid var(--muted); text-align:center;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--text-dim);">AWAITING SCORING</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: Scoring form -->
+  <div>
+    <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:20px;">
+      {% if image.status == 'scored' %}RESCORE IMAGE{% else %}SCORE THIS IMAGE{% endif %}
+    </div>
+
+    <form method="POST" action="{{ url_for('score_image', image_id=image.id) }}">
+      <div class="grid-2" style="gap:12px;">
+        {% for field, label, val in [
+            ('dod', 'DoD', image.dod_score),
+            ('disruption', 'Disruption', image.disruption_score),
+            ('dm', 'DM', image.dm_score),
+            ('wonder', 'Wonder', image.wonder_score),
+            ('aq', 'AQ', image.aq_score)] %}
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>{{ label }} (0–10)</label>
+          <input type="number" name="{{ field }}" step="0.1" min="0" max="10"
+                 value="{{ val or '' }}" required placeholder="0.0">
+        </div>
+        {% endfor %}
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Archetype</label>
+          <select name="archetype">
+            {% for a in archetypes %}
+            <option value="{{ a }}" {{ 'selected' if image.archetype == a }}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {% set audit = image.get_audit() %}
+
+      <div class="form-group"><label>Technical Integrity</label>
+        <textarea name="row_technical">{{ audit.get('rows', [[],[],[],[],[]])[0][1] if audit.get('rows') else '' }}</textarea></div>
+      <div class="form-group"><label>Geometric Harmony</label>
+        <textarea name="row_geometric">{{ audit.get('rows', [[],[],[],[],[]])[1][1] if audit.get('rows') else '' }}</textarea></div>
+      <div class="form-group"><label>Decisive Moment</label>
+        <textarea name="row_dm">{{ audit.get('rows', [[],[],[],[],[]])[2][1] if audit.get('rows') else '' }}</textarea></div>
+      <div class="form-group"><label>Wonder Factor</label>
+        <textarea name="row_wonder">{{ audit.get('rows', [[],[],[],[],[]])[3][1] if audit.get('rows') else '' }}</textarea></div>
+      <div class="form-group"><label>AQ — Soul</label>
+        <textarea name="row_aq">{{ audit.get('rows', [[],[],[],[],[]])[4][1] if audit.get('rows') else '' }}</textarea></div>
+
+      <div class="form-group"><label>Apex Byline — Gap Analysis</label>
+        <textarea name="byline_1" style="min-height:80px;">{{ audit.get('byline_1','') }}</textarea></div>
+      <div class="form-group"><label>The One Improvement</label>
+        <textarea name="byline_2" style="min-height:80px;">{{ audit.get('byline_2_body','') }}</textarea></div>
+
+      <div class="form-group"><label>Strength Badges (one per line)</label>
+        <textarea name="badges_g" style="min-height:60px;">{{ '\n'.join(audit.get('badges_g',[])) }}</textarea></div>
+      <div class="form-group"><label>Gap Badges (one per line)</label>
+        <textarea name="badges_w" style="min-height:60px;">{{ '\n'.join(audit.get('badges_w',[])) }}</textarea></div>
+
+      <div class="form-group"><label>IUCN Tag (optional)</label>
+        <input type="text" name="iucn_tag" value="{{ audit.get('iucn_tag','') }}" placeholder="e.g. ⚠ IUCN Vulnerable Species"></div>
+
+      <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:12px;">
+        Generate Score + Rating Card
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

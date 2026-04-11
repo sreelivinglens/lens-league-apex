@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Admin — Lens League Apex{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>Admin Dashboard</h1>
+  <p>Engine calibration &amp; platform overview</p>
+</div>
+
+<!-- STATS -->
+<div class="grid-4" style="margin-bottom:40px;">
+  <div class="stat-box"><div class="stat-val">{{ total_users }}</div><div class="stat-lbl">Members</div></div>
+  <div class="stat-box"><div class="stat-val">{{ total_images }}</div><div class="stat-lbl">Total Images</div></div>
+  <div class="stat-box"><div class="stat-val">{{ scored }}</div><div class="stat-lbl">Scored</div></div>
+  <div class="stat-box"><div class="stat-val">{{ pending }}</div><div class="stat-lbl">Pending</div></div>
+</div>
+
+<!-- CALIBRATION -->
+{% if cal_stats %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+  <div class="section-label" style="margin-bottom:0;">Calibration Data by Genre</div>
+  <form method="POST" action="{{ url_for('run_calibration') }}">
+    <button type="submit" class="btn btn-solid" style="font-size:11px; padding:8px 20px;">Run Calibration Log</button>
+  </form>
+</div>
+<div class="card" style="padding:0; overflow:hidden; margin-bottom:40px;">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr style="background:#0A0A0A;">
+        {% for col in ['Genre','Count','Avg Score','Avg DoD','Avg Dis','Avg DM','Avg Wonder','Avg AQ'] %}
+        <th style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for genre, s in cal_stats.items() %}
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:12px 16px; font-weight:600;">{{ genre }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.count }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--gold);">{{ s.avg_score }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.avg_dod }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.avg_dis }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.avg_dm }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.avg_wonder }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:12px; color:var(--text-dim);">{{ s.avg_aq }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- RECENT IMAGES -->
+<div class="section-label">Recent Submissions</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr style="background:#0A0A0A;">
+        {% for col in ['Image','Photographer','Genre','Score','Tier','Status','Date'] %}
+        <th style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for img in recent %}
+      <tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='#0A0A0A'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 16px;">
+          <a href="{{ url_for('image_detail', image_id=img.id) }}" style="color:var(--text); font-weight:500; text-decoration:none; font-size:13px;">
+            {{ img.asset_name or img.original_filename or 'Untitled' }}
+          </a>
+        </td>
+        <td style="padding:12px 16px; font-size:13px; color:var(--text-dim);">{{ img.photographer_name }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--text-dim);">{{ img.genre }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:13px; color:var(--gold); font-weight:700;">{{ img.score or '—' }}</td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--text-dim);">{{ img.tier or '—' }}</td>
+        <td style="padding:12px 16px;">
+          <span style="font-family:'DM Mono',monospace; font-size:10px; padding:3px 8px; border:1px solid {{ 'var(--green)' if img.status=='scored' else 'var(--muted)' }}; color:{{ 'var(--green)' if img.status=='scored' else 'var(--text-dim)' }};">
+            {{ img.status.upper() }}
+          </span>
+        </td>
+        <td style="padding:12px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">{{ img.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
