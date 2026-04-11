@@ -42,6 +42,25 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'cards'),  exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'raw'),    exist_ok=True)
 
+# ── Auto-initialise database on first run ─────────────────────────────────────
+with app.app_context():
+    try:
+        db.create_all()
+        if not User.query.filter_by(email='admin@lenslague.com').first():
+            admin = User(
+                email         = 'admin@lenslague.com',
+                username      = 'admin',
+                password_hash = generate_password_hash('changeme123'),
+                full_name     = 'Admin',
+                role          = 'admin',
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print('Admin account created.')
+        print('Database ready.')
+    except Exception as e:
+        print(f'DB init warning: {e}')
+
 # ── Auth helpers ──────────────────────────────────────────────────────────────
 @login_manager.user_loader
 def load_user(user_id):
@@ -58,16 +77,20 @@ def admin_required(f):
 # ── Public routes ─────────────────────────────────────────────────────────────
 @app.route('/')
 def index():
-    stats = {
-        'total_images': Image.query.filter_by(status='scored').count(),
-        'total_members': User.query.filter_by(role='member').count(),
-        'avg_score': db.session.query(db.func.avg(Image.score))
-                       .filter(Image.score != None).scalar() or 0,
-    }
-    top_images = (Image.query
-                  .filter(Image.status=='scored', Image.score != None)
-                  .order_by(Image.score.desc())
-                  .limit(6).all())
+    try:
+        stats = {
+            'total_images': Image.query.filter_by(status='scored').count(),
+            'total_members': User.query.filter_by(role='member').count(),
+            'avg_score': db.session.query(db.func.avg(Image.score))
+                           .filter(Image.score != None).scalar() or 0,
+        }
+        top_images = (Image.query
+                      .filter(Image.status=='scored', Image.score != None)
+                      .order_by(Image.score.desc())
+                      .limit(6).all())
+    except Exception:
+        stats = {'total_images': 0, 'total_members': 0, 'avg_score': 0}
+        top_images = []
     return render_template('index.html', stats=stats, top_images=top_images)
 
 
@@ -132,9 +155,8 @@ def dashboard():
     query = request.args.get('q', '').strip()
 
     images_q = Image.query.filter_by(user_id=current_user.id)
-
-    # Search (available once user has > 20 images)
     total_images = images_q.count()
+
     if query and total_images >= 20:
         images_q = images_q.filter(
             db.or_(
@@ -175,24 +197,22 @@ def upload():
             flash('File type not supported.', 'error')
             return redirect(request.url)
 
-        # Save raw file temporarily
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
         raw_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
         file.save(raw_path)
 
-        # Ingest — convert to compressed JPG
         try:
             thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
             flash(f'Image processing failed: {e}', 'error')
-            os.remove(raw_path)
+            if os.path.exists(raw_path):
+                os.remove(raw_path)
             return redirect(request.url)
 
-        # Remove RAW file — we don't keep heavy files
-        os.remove(raw_path)
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
 
-        # Create image record
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
@@ -214,7 +234,7 @@ def upload():
         db.session.add(img)
         db.session.commit()
 
-        flash('Image uploaded successfully! Scoring is in progress.', 'success')
+        flash('Image uploaded! Add scores below.', 'success')
         return redirect(url_for('image_detail', image_id=img.id))
 
     genres = list(GENRE_WEIGHTS.keys())
@@ -233,10 +253,6 @@ def image_detail(image_id):
 @app.route('/image/<int:image_id>/score', methods=['POST'])
 @login_required
 def score_image(image_id):
-    """
-    Accepts manual module scores + audit data,
-    runs the formula, saves to DB, generates card.
-    """
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
@@ -268,18 +284,17 @@ def score_image(image_id):
         img.status           = 'scored'
         img.scored_at        = datetime.utcnow()
 
-        # Build audit data for card
         audit = {
-            'asset':     img.asset_name,
-            'meta':      f"{img.genre}  ·  {img.format}  ·  {img.subject}  ·  {img.location}",
-            'score':     str(final_score),
-            'tier':      tier,
-            'dec':       archetype,
-            'credit':    img.photographer_name,
-            'genre_tag': f"{img.genre.upper()}  ·  {img.format}",
-            'soul_bonus': soul_bonus,
-            'iucn_tag':  iucn_tag or None,
-            'modules':   [
+            'asset':       img.asset_name,
+            'meta':        f"{img.genre}  ·  {img.format}  ·  {img.subject}  ·  {img.location}",
+            'score':       str(final_score),
+            'tier':        tier,
+            'dec':         archetype,
+            'credit':      img.photographer_name,
+            'genre_tag':   f"{img.genre.upper()}  ·  {img.format}",
+            'soul_bonus':  soul_bonus,
+            'iucn_tag':    iucn_tag or None,
+            'modules': [
                 ('DoD',        dod),
                 ('Disruption', disruption),
                 ('DM',         dm),
@@ -293,19 +308,19 @@ def score_image(image_id):
                 ('Wonder\nFactor',        request.form.get('row_wonder', '')),
                 ('AQ — Soul',             request.form.get('row_aq', '')),
             ],
-            'byline_1':    byline_1,
+            'byline_1':      byline_1,
             'byline_2_body': byline_2,
-            'badges_g':    request.form.getlist('badges_g'),
-            'badges_w':    request.form.getlist('badges_w'),
+            'badges_g':      request.form.get('badges_g', '').splitlines(),
+            'badges_w':      request.form.get('badges_w', '').splitlines(),
         }
         img.set_audit(audit)
 
         # Generate rating card JPG
         from engine.compositor import build_card
-        today_str   = date.today().strftime("%Y%m%d")
-        safe_name   = secure_filename(img.photographer_name.replace(' ',''))
-        card_fname  = f"LL_{today_str}_{safe_name}_{img.genre}_{final_score}.jpg"
-        card_path   = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+        today_str  = date.today().strftime("%Y%m%d")
+        safe_name  = secure_filename((img.photographer_name or 'unknown').replace(' ',''))
+        card_fname = f"LL_{today_str}_{safe_name}_{img.genre}_{final_score}.jpg"
+        card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
         build_card(img.thumb_path, audit, card_path)
         img.card_path = card_path
 
@@ -327,10 +342,7 @@ def download_card(image_id):
     if not img.card_path or not os.path.exists(img.card_path):
         flash('Rating card not yet generated.', 'error')
         return redirect(url_for('image_detail', image_id=image_id))
-
-    safe_name = secure_filename(
-        f"LL_{img.score}_{img.tier}_{img.asset_name or 'card'}.jpg"
-    )
+    safe_name = secure_filename(f"LL_{img.score}_{img.tier}_{img.asset_name or 'card'}.jpg")
     return send_file(img.card_path, as_attachment=True, download_name=safe_name)
 
 
@@ -343,6 +355,7 @@ def serve_thumb(image_id):
     if not img.thumb_path or not os.path.exists(img.thumb_path):
         abort(404)
     return send_file(img.thumb_path, mimetype='image/jpeg')
+
 
 # ── Admin routes ──────────────────────────────────────────────────────────────
 @app.route('/admin')
@@ -387,27 +400,11 @@ def run_calibration():
     return redirect(url_for('admin_dashboard'))
 
 
-# ── Init DB ───────────────────────────────────────────────────────────────────
-@app.cli.command('init-db')
-def init_db():
-    with app.app_context():
-        db.create_all()
-        # Create default admin if not exists
-        if not User.query.filter_by(email='admin@lenslague.com').first():
-            admin = User(
-                email         = 'admin@lenslague.com',
-                username      = 'admin',
-                password_hash = generate_password_hash('changeme123'),
-                full_name     = 'Admin',
-                role          = 'admin',
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print('Default admin created: admin@lenslague.com / changeme123')
-        print('Database initialised.')
+# ── Health check ──────────────────────────────────────────────────────────────
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
