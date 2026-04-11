@@ -234,7 +234,47 @@ def upload():
         db.session.add(img)
         db.session.commit()
 
-        flash('Image uploaded! Add scores below.', 'success')
+        # Auto-score via Claude Vision if API key is set
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if api_key:
+            try:
+                from engine.auto_score import auto_score, build_audit_data
+                from engine.compositor import build_card
+                result = auto_score(
+                    image_path   = img.thumb_path,
+                    genre        = img.genre,
+                    title        = img.asset_name,
+                    photographer = img.photographer_name,
+                    subject      = img.subject,
+                    location     = img.location,
+                )
+                img.dod_score        = float(result.get('dod', 0))
+                img.disruption_score = float(result.get('disruption', 0))
+                img.dm_score         = float(result.get('dm', 0))
+                img.wonder_score     = float(result.get('wonder', 0))
+                img.aq_score         = float(result.get('aq', 0))
+                img.score            = float(result.get('score', 0))
+                img.tier             = result.get('tier', 'Practitioner')
+                img.archetype        = result.get('archetype', '')
+                img.soul_bonus       = result.get('soul_bonus', False)
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                audit = build_audit_data(result, img)
+                img.set_audit(audit)
+                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                              f"{img.genre}_{img.score}.jpg")
+                card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                build_card(img.thumb_path, audit, card_path)
+                img.card_path = card_path
+                db.session.commit()
+                flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
+            except Exception as e:
+                db.session.commit()
+                flash(f'Uploaded. Auto-scoring failed: {e}. Score manually below.', 'warning')
+        else:
+            flash('Image uploaded! Add scores below.', 'success')
+
         return redirect(url_for('image_detail', image_id=img.id))
 
     genres = list(GENRE_WEIGHTS.keys())
