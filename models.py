@@ -37,6 +37,14 @@ class Image(db.Model):
     thumb_path        = db.Column(db.String(255))        # compressed JPG path
     card_path         = db.Column(db.String(255))        # rating card JPG path
     file_size_kb      = db.Column(db.Integer)
+
+    # Authenticity / EXIF
+    legal_declaration = db.Column(db.Boolean, default=False)
+    exif_status       = db.Column(db.String(20), default='unknown')  # verified|unverified|suspicious
+    exif_camera       = db.Column(db.String(255))
+    exif_date_taken   = db.Column(db.String(100))
+    exif_settings     = db.Column(db.String(255))  # focal/aperture/iso summary
+    exif_warning      = db.Column(db.Text)
     width             = db.Column(db.Integer)
     height            = db.Column(db.Integer)
     format            = db.Column(db.String(20))         # JPEG, RAW, PNG etc.
