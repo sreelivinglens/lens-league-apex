@@ -434,7 +434,8 @@ def bulk_upload():
                 if os.path.exists(raw_path):
                     os.remove(raw_path)
 
-                img = Image(
+                from models import Image as ImageModel
+                img = ImageModel(
                     user_id           = current_user.id,
                     original_filename = filename,
                     stored_filename   = os.path.basename(thumb_path),
