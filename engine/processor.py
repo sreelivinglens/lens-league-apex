@@ -2,21 +2,19 @@
 Image ingestion pipeline
 - Accepts RAW (CR2, CR3, NEF, ARW, DNG) and JPEG/PNG
 - Strips RAW to compressed JPG thumbnail
-- Builds rating card JPG via compositor
+- Rejects rating card images (tall portrait ratio ~1:2.5+)
 """
 
 import os
 import uuid
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from datetime import date
 
-# RAW extensions
 RAW_EXTENSIONS = {'.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.rw2'}
 IMG_EXTENSIONS  = {'.jpg', '.jpeg', '.png'}
 
-THUMB_W    = 1400   # target width for stored thumbnail
-CARD_W     = 1400
-JPEG_Q     = 88
+THUMB_W = 2000   # match CARD_W
+JPEG_Q  = 88
 
 
 def allowed_file(filename):
@@ -26,8 +24,9 @@ def allowed_file(filename):
 
 def ingest_image(file_path, upload_folder):
     """
-    Takes a raw file path, converts to compressed JPG thumbnail.
+    Takes a file path, converts to compressed JPG thumbnail.
     Returns (thumb_path, width, height, format_str)
+    Raises ValueError if the image looks like a rating card.
     """
     ext = os.path.splitext(file_path)[1].lower()
     uid = str(uuid.uuid4())
@@ -54,29 +53,37 @@ def ingest_image(file_path, upload_folder):
         img = Image.open(file_path).convert('RGB')
         fmt = img.format or 'JPEG'
 
-    # Resize to thumb width preserving aspect
+    # ── Guard: reject rating card images ─────────────────────────────────────
+    # Rating cards are tall portrait images with aspect ratio > 1.8 (h/w)
     w, h = img.size
+    aspect = h / w if w > 0 else 0
+    if aspect > 1.8:
+        raise ValueError(
+            "This looks like a rating card image, not a source photo. "
+            "Please upload your original photograph (landscape or square orientation)."
+        )
+
+    # Resize preserving aspect
     if w > THUMB_W:
-        ratio  = THUMB_W / w
-        new_h  = int(h * ratio)
-        img    = img.resize((THUMB_W, new_h), Image.LANCZOS)
-        w, h   = THUMB_W, new_h
+        ratio = THUMB_W / w
+        new_h = int(h * ratio)
+        img   = img.resize((THUMB_W, new_h), Image.LANCZOS)
+        w, h  = THUMB_W, new_h
 
     img.save(thumb_path, 'JPEG', quality=JPEG_Q, optimize=True)
-
     return thumb_path, w, h, fmt
 
 
 def build_rating_card(thumb_path, data, upload_folder):
     """
-    Composites the full rating card JPG from a thumbnail + scoring data.
+    Composites the full rating card JPG from thumbnail + scoring data.
     Returns path to the card JPG.
     """
     from engine.compositor import build_card
 
     uid       = str(uuid.uuid4())
-    today     = date.today().strftime("%Y%m%d")
-    card_name = f"{today}_{uid}_card.jpg"
+    today_str = date.today().strftime("%Y%m%d")
+    card_name = f"{today_str}_{uid}_card.jpg"
     card_path = os.path.join(upload_folder, 'cards', card_name)
     os.makedirs(os.path.dirname(card_path), exist_ok=True)
 
