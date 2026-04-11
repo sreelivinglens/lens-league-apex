@@ -546,6 +546,16 @@ def bulk_upload():
     genres = list(GENRE_WEIGHTS.keys())
     return render_template('bulk_upload.html', genres=genres, results=results)
 
+
+# ── Public share page — no login required ─────────────────────────────────────
+@app.route('/share/<int:image_id>')
+def share_image(image_id):
+    img = Image.query.get_or_404(image_id)
+    if img.status != 'scored':
+        abort(404)
+    audit = img.get_audit()
+    return render_template('share.html', image=img, audit=audit)
+
 # ── Admin routes ──────────────────────────────────────────────────────────────
 @app.route('/admin')
 @login_required
