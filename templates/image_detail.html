@@ -9,6 +9,12 @@
   </div>
   <div style="display:flex; gap:10px;">
     <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
+    {% if image.status == 'scored' %}
+    <a href="{{ url_for('share_image', image_id=image.id) }}"
+       class="btn" target="_blank" style="color:var(--gold); border-color:var(--gold);">
+       🔗 Share
+    </a>
+    {% endif %}
     {% if image.card_path %}
     <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
     {% endif %}
