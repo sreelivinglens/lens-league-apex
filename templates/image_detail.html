@@ -23,6 +23,49 @@
          alt="{{ image.asset_name }}"
          style="width:100%; border:1px solid var(--border);">
 
+    <!-- EXIF / Authenticity block -->
+    {% if image.exif_status %}
+    <div style="margin-top:16px; padding:14px 16px; border:1px solid
+      {% if image.exif_status == 'verified' %}var(--green)
+      {% elif image.exif_status == 'suspicious' %}var(--red)
+      {% else %}var(--muted){% endif %}; background:#0A0A0A;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="font-size:14px;">
+          {% if image.exif_status == 'verified' %}✅
+          {% elif image.exif_status == 'suspicious' %}⚠️
+          {% else %}❓{% endif %}
+        </span>
+        <span style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px;
+          color:{% if image.exif_status == 'verified' %}var(--green)
+          {% elif image.exif_status == 'suspicious' %}var(--red)
+          {% else %}var(--text-dim){% endif %};">
+          {{ image.exif_status.upper() }}
+          {% if image.legal_declaration %} · LEGALLY DECLARED{% endif %}
+        </span>
+      </div>
+      {% if image.exif_camera %}
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+        📷 {{ image.exif_camera }}
+      </div>
+      {% endif %}
+      {% if image.exif_settings %}
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+        ⚙️ {{ image.exif_settings }}
+      </div>
+      {% endif %}
+      {% if image.exif_date_taken %}
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+        📅 {{ image.exif_date_taken }}
+      </div>
+      {% endif %}
+      {% if image.exif_warning %}
+      <div style="font-size:11px; color:var(--red); margin-top:6px;">
+        {{ image.exif_warning }}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
     {% if image.status == 'scored' %}
     <div style="margin-top:20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">

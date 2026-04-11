@@ -69,6 +69,7 @@
           {{ img.genre }}
           {% if img.archetype %} &nbsp;·&nbsp; {{ img.archetype }}{% endif %}
         </div>
+        <div style="font-size:10px; margin-bottom:3px;">{% if img.exif_status == 'verified' %}<span style="color:var(--green);">✅ Verified</span>{% elif img.exif_status == 'suspicious' %}<span style="color:var(--red);">⚠️ Suspicious</span>{% else %}<span style="color:var(--muted);">❓ Unverified</span>{% endif %}{% if img.legal_declaration %} <span style="color:var(--text-dim);">· Declared</span>{% endif %}</div>
         <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:4px;">
           {{ img.created_at.strftime('%d %b %Y') }}
         </div>
