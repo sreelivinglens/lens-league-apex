@@ -76,7 +76,7 @@ def build_card(photo_path, data, out_path):
 
     # ── Fonts — sized for 900px canvas, readable at screen size ───────────────
     f_strip    = fnt(F_BOLD,    13)
-    f_score    = fnt(F_BOLD,    42)   # big score — unchanged intention
+    f_score    = fnt(F_BOLD,    52)   # big score — unchanged intention
     f_tier     = fnt(F_MONO,    11)
     f_asset    = fnt(F_BOLD,    17)   # title — unchanged intention
     f_meta     = fnt(F_REG,     11)
@@ -172,7 +172,7 @@ def build_card(photo_path, data, out_path):
     draw.rectangle([BX, BY, BX + BW, BY + BH], fill=GOLD_BG, outline=GOLD, width=2)
     sc  = str(data.get("score", "0.0"))
     sb  = draw.textbbox((0, 0), sc, font=f_score)
-    draw.text((BX + (BW - (sb[2] - sb[0])) // 2, BY + 28), sc, font=f_score, fill=GOLD)
+    draw.text((BX + (BW - (sb[2] - sb[0])) // 2, BY + 18), sc, font=f_score, fill=GOLD)
     tier_t = data.get("tier", "").upper()
     tierb  = draw.textbbox((0, 0), tier_t, font=f_tier)
     draw.text((BX + (BW - (tierb[2] - tierb[0])) // 2, BY + 96), tier_t, font=f_tier, fill=GOLD)
