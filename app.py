@@ -44,18 +44,32 @@ with app.app_context():
     try:
         db.create_all()
         with db.engine.connect() as conn:
-            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-            if 'postgresql' in db_url:
-                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)'))
-                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)'))
-                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP'))
-            else:
-                # SQLite fallback — add columns one at a time, ignore if already exist
-                for col, typ in [('security_question','VARCHAR(255)'),('security_answer','VARCHAR(255)'),('agreed_at','TIMESTAMP')]:
-                    try:
-                        conn.execute(db.text(f'ALTER TABLE users ADD COLUMN {col} {typ}'))
-                    except Exception:
-                        pass
+            _migrations = [
+                # users — all columns the model defines
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'member'",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP",
+                # images — extra columns
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_path VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_settings VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_warning TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS soul_bonus BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS audit_json TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS conditions VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
+            ]
+            for sql in _migrations:
+                try:
+                    conn.execute(db.text(sql))
+                except Exception as _e:
+                    print(f'[migration] {_e}')
             conn.commit()
         print('Columns migrated OK.')
     except Exception as e:
@@ -67,7 +81,8 @@ with app.app_context():
             if not exists:
                 new_hash = generate_password_hash('LensAdmin2026!')
                 conn.execute(db.text(
-                    "INSERT INTO users (email, username, password_hash, full_name, role, is_active, created_at) VALUES ('admin@lenslague.com','admin',:h,'Admin','admin',true,NOW())"
+                    "INSERT INTO users (email, username, password_hash, full_name, role, is_active, created_at) "
+                    "VALUES ('admin@lenslague.com','admin',:h,'Admin','admin',true,NOW())"
                 ), {'h': new_hash})
                 conn.commit()
                 print('Admin account created.')
@@ -188,14 +203,15 @@ def forgot_password():
             if not user.security_question:
                 flash('This account has no security question set. Please contact support.', 'error')
                 return render_template('forgot_password.html', step=1)
-            return render_template('forgot_password.html', step=2, email=email, question=user.security_question)
+            return render_template('forgot_password.html', step=2, email=email,
+                                   security_question=user.security_question)
         elif step == 2:
             user   = User.query.filter_by(email=email).first()
             answer = request.form.get('security_answer', '').strip().lower()
             if not user or user.security_answer != answer:
                 flash('Incorrect answer. Please try again.', 'error')
                 return render_template('forgot_password.html', step=2, email=email,
-                                       question=user.security_question if user else '')
+                                       security_question=user.security_question if user else '')
             return render_template('forgot_password.html', step=3, email=email)
         elif step == 3:
             new_pw  = request.form.get('new_password', '')
@@ -212,7 +228,6 @@ def forgot_password():
                 return render_template('forgot_password.html', step=3, email=email)
             user.password_hash = generate_password_hash(new_pw)
             db.session.commit()
-            db.session.refresh(user)
             flash('Password reset successfully. Please log in with your new password.', 'success')
             return redirect(url_for('login'))
     return render_template('forgot_password.html', step=1)
