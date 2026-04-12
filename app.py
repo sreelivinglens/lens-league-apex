@@ -436,6 +436,7 @@ def change_password():
 
         current_user.password_hash = generate_password_hash(new_pw)
         db.session.commit()
+      db.session.refresh(current_user)
         flash('Password updated successfully.', 'success')
         return redirect(url_for('dashboard'))
 
