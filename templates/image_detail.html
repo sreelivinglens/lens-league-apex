@@ -15,8 +15,8 @@
        🔗 Share
     </a>
     {% endif %}
-    {% if image.card_path %}
-    <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
+    {% if image.card_url or image.card_path %}
+    <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
     {% endif %}
   </div>
 </div>
@@ -25,7 +25,7 @@
 
   <!-- LEFT: Image + score display -->
   <div>
-    <img src="{{ url_for('serve_thumb', image_id=image.id) }}"
+    <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}"
          style="width:100%; border:1px solid var(--border);">
 
