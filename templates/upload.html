@@ -423,12 +423,14 @@
   });
   // Genre hint
   const genreHints = {
-    'Creative': '🎨 ICM · Panning · Zoom Burst · Star Trails · Astrophotography · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ are referred for judge review.',
-    'Wildlife': '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street': '🏙 Decisive moment and human narrative. Some motion blur on subjects is acceptable.',
+    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur · Mosaics. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ referred for judge review.',
+    'Drone':      '🚁 Aerial photography from drones. DoD covers wind, altitude, vibration control and regulatory complexity. Geometric patterns and impossible ground perspectives score highest.',
+    'Wildlife':   '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
+    'Street':     '🏙 Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
     'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water/clouds is rewarded.',
-    'Macro': '🔬 Extreme precision focus required. Sharpness is the primary DoD criterion.',
-    'Aerial': '✈️ Physical difficulty of airborne capture. Unique elevation perspectives score highest.',
+    'Macro':      '🔬 Extreme precision focus required. Sharpness is the primary DoD criterion.',
+    'Wedding':    '💍 Emotional authenticity and decisive moment. Genuine emotion scores highest.',
+    'People':     '👤 Emotional connection and authentic expression are paramount.',
   };
   document.getElementById('genre').addEventListener('change', function() {
     const hint = genreHints[this.value] || '';
