@@ -67,17 +67,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS genre VARCHAR(60)",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS image_count INTEGER",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_score FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dod FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dis FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dm FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_wonder FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_aq FLOAT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS note TEXT",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS logged_by INTEGER",
-                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS logged_at TIMESTAMP",
+
             ]
             for sql in _migrations:
                 try:
@@ -85,6 +75,40 @@ with app.app_context():
                 except Exception as _e:
                     print(f'[migration] {_e}')
             conn.commit()
+
+        # Fix calibration_logs table — recreate if missing genre column
+        try:
+            with db.engine.connect() as conn2:
+                conn2.execute(db.text("""
+                    DO $$
+                    BEGIN
+                      IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name='calibration_logs' AND column_name='genre'
+                      ) THEN
+                        DROP TABLE IF EXISTS calibration_logs;
+                        CREATE TABLE calibration_logs (
+                          id SERIAL PRIMARY KEY,
+                          genre VARCHAR(60) NOT NULL,
+                          image_count INTEGER,
+                          avg_score FLOAT,
+                          avg_dod FLOAT,
+                          avg_dis FLOAT,
+                          avg_dm FLOAT,
+                          avg_wonder FLOAT,
+                          avg_aq FLOAT,
+                          note TEXT,
+                          logged_by INTEGER,
+                          logged_at TIMESTAMP DEFAULT NOW()
+                        );
+                      END IF;
+                    END $$;
+                """))
+                conn2.commit()
+            print('calibration_logs schema OK.')
+        except Exception as ce:
+            print(f'calibration_logs migration warning: {ce}')
+
         print('Columns migrated OK.')
     except Exception as e:
         print(f'Migration warning: {e}')
