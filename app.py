@@ -149,7 +149,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        if not request.form.get('user_agreed'):
+        if not request.form.get('agreed') and not request.form.get('user_agreed'):
             flash('You must accept the Member Agreement to register.', 'error')
             return redirect(url_for('register'))
         email    = request.form.get('email', '').strip().lower()
@@ -559,6 +559,24 @@ def bulk_upload():
                 thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
                 if os.path.exists(raw_path): os.remove(raw_path)
 
+                # Duplicate check
+                from engine.processor import hash_similarity_pct
+                existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
+                duplicate_found = False
+                for ex in existing_imgs:
+                    sim = hash_similarity_pct(phash, ex.phash)
+                    if sim >= 90.0:
+                        if ex.user_id == current_user.id:
+                            result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
+                        else:
+                            result_row['status'] = 'rejected: image already submitted by another member'
+                        duplicate_found = True
+                        if os.path.exists(thumb_path): os.remove(thumb_path)
+                        break
+                if duplicate_found:
+                    results.append(result_row)
+                    continue
+
                 thumb_url = _r2_upload_thumb(thumb_path, uid)
 
                 from models import Image as ImageModel
@@ -680,6 +698,42 @@ def admin_cleanup():
     db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/bulk-delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_bulk_delete():
+    image_ids = request.form.getlist('image_ids')
+    if not image_ids:
+        flash('No images selected.', 'warning')
+        return redirect(url_for('admin_dashboard'))
+    deleted = 0
+    for image_id in image_ids:
+        try:
+            img = Image.query.get(int(image_id))
+            if not img:
+                continue
+            # Delete from R2
+            if img.thumb_url:
+                try:
+                    key = img.thumb_url.replace(r2.R2_PUBLIC_URL + '/', '')
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            if img.card_url:
+                try:
+                    key = img.card_url.replace(r2.R2_PUBLIC_URL + '/', '')
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            db.session.delete(img)
+            deleted += 1
+        except Exception as e:
+            print(f'[bulk delete] image {image_id}: {e}')
+    db.session.commit()
+    flash(f'Deleted {deleted} image(s).', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
