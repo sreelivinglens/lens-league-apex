@@ -46,6 +46,13 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'raw'),    exist_ok=True)
 with app.app_context():
     try:
         db.create_all()
+        # Auto-migrate new columns — safe to run on every startup
+        with db.engine.connect() as conn:
+            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)'))
+            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)'))
+            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP'))
+            conn.commit()
+            print('Columns migrated.')
         if not User.query.filter_by(email='admin@lenslague.com').first():
             admin = User(
                 email         = 'admin@lenslague.com',
