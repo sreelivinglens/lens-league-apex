@@ -11,6 +11,9 @@ GENRE_WEIGHTS = {
     'Wedding':    {'dod': 0.10, 'disruption': 0.15, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.40},
     'People':     {'dod': 0.10, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.40},
     'Macro':      {'dod': 0.35, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
+    'ICM':        {'dod': 0.20, 'disruption': 0.35, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
+    'Aerial':     {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
+    'Abstract':   {'dod': 0.10, 'disruption': 0.35, 'dm': 0.10, 'wonder': 0.25, 'aq': 0.20},
 }
 
 # ── Tier map ──────────────────────────────────────────────────────────────────
@@ -29,7 +32,6 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
     """
     weights   = GENRE_WEIGHTS.get(genre, GENRE_WEIGHTS['Wildlife'])
     checks    = {}
-    penalties = []
     notes     = []
 
     # Raw weighted total
@@ -41,14 +43,11 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
         aq         * weights['aq']
     )
 
-    # ── Apex layer checks ─────────────────────────────────────────────────────
-
     # Humanity check — AQ < 4.0
     if aq < 4.0:
         aq -= 1.5
         checks['humanity_check'] = True
         notes.append('Humanity Check triggered: AQ < 4.0, −1.5 applied to AQ')
-        # Recalculate with adjusted AQ
         raw = (
             dod        * weights['dod']        +
             disruption * weights['disruption'] +
@@ -57,7 +56,7 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
             aq         * weights['aq']
         )
 
-    # Soul Bonus — AQ >= 8.0 (removes technical penalties)
+    # Soul Bonus — AQ >= 8.0
     soul_bonus = aq >= 8.0
     checks['soul_bonus'] = soul_bonus
     if soul_bonus:
@@ -69,10 +68,7 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
         notes.append('Plateau Penalty: DoD ≥ 9.5 + Disruption < 5.0, score capped at 7.9')
         raw = min(raw, 7.9)
 
-    # Identity Cap — handled upstream; if similarity > 85%, cap at 6.0
-    # (similarity score passed in via audit_data, not recalculated here)
-
-    # 9.0 Iconic Wall — both Disruption AND AQ must exceed 8.5
+    # 9.0 Iconic Wall
     if raw >= 9.0:
         if disruption <= 8.5 or aq <= 8.5:
             checks['iconic_wall_blocked'] = True
@@ -110,10 +106,6 @@ ARCHETYPES = [
 
 # ── Calibration stats ─────────────────────────────────────────────────────────
 def compute_calibration_stats(images):
-    """
-    Given a list of Image model objects,
-    compute per-genre averages for the calibration log.
-    """
     from collections import defaultdict
     genre_buckets = defaultdict(list)
 
