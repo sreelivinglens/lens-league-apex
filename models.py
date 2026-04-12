@@ -45,7 +45,9 @@ class Image(db.Model):
     original_filename   = db.Column(db.String(260), nullable=True)
     stored_filename     = db.Column(db.String(260), nullable=True)
     thumb_path          = db.Column(db.String(512), nullable=True)
+    thumb_url           = db.Column(db.String(512), nullable=True)   # R2 public URL
     card_path           = db.Column(db.String(512), nullable=True)
+    card_url            = db.Column(db.String(512), nullable=True)    # R2 public URL
     file_size_kb        = db.Column(db.Integer,  nullable=True)
     width               = db.Column(db.Integer,  nullable=True)
     height              = db.Column(db.Integer,  nullable=True)

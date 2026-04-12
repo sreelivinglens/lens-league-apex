@@ -634,17 +634,14 @@ def health():
 
 @app.route('/debug/images')
 def debug_images():
-    imgs = Image.query.order_by(Image.id.desc()).limit(5).all()
-    out = []
-    for i in imgs:
-        out.append({
-            'id': i.id,
-            'asset_name': i.asset_name,
-            'thumb_url': i.thumb_url,
-            'thumb_path': i.thumb_path,
-            'status': i.status,
-        })
-    return jsonify(out)
+    try:
+        rows = db.session.execute(db.text(
+            "SELECT id, asset_name, thumb_url, thumb_path, status FROM images ORDER BY id DESC LIMIT 5"
+        )).fetchall()
+        out = [{'id': r[0], 'asset_name': r[1], 'thumb_url': r[2], 'thumb_path': r[3], 'status': r[4]} for r in rows]
+        return jsonify(out)
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 
 if __name__ == '__main__':
