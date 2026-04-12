@@ -67,6 +67,17 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS genre VARCHAR(60)",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS image_count INTEGER",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_score FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dod FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dis FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_dm FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_wonder FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS avg_aq FLOAT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS note TEXT",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS logged_by INTEGER",
+                "ALTER TABLE calibration_logs ADD COLUMN IF NOT EXISTS logged_at TIMESTAMP",
             ]
             for sql in _migrations:
                 try:
