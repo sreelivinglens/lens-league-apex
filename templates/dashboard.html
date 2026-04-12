@@ -34,14 +34,14 @@
 {% if search_enabled %}
 <form method="GET" style="display:flex; gap:12px; margin-bottom:28px;">
   <input type="text" name="q" value="{{ query }}" placeholder="Search images, genre, location…"
-         style="flex:1; background:#0A0A0A; border:1px solid var(--border); color:var(--text); padding:10px 16px; font-family:'Poppins',sans-serif; font-size:14px; outline:none;">
+         style="flex:1; background:#F5F5F5; border:1px solid var(--border); color:var(--text); padding:10px 16px; font-size:14px; outline:none;">
   <button type="submit" class="btn" style="padding:10px 24px;">Search</button>
   {% if query %}
   <a href="{{ url_for('dashboard') }}" class="btn" style="padding:10px 20px;">Clear</a>
   {% endif %}
 </form>
 {% else %}
-<div style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:28px;">
+<div style="font-family:'Courier New',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:28px;">
   SEARCH UNLOCKS AFTER 20 IMAGES &nbsp;·&nbsp; {{ stats.total }}/20
 </div>
 {% endif %}
@@ -62,15 +62,26 @@
         {% endif %}
       </div>
       <div style="padding:14px 16px;">
-        <div style="font-weight:600; font-size:14px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
           {{ img.asset_name or img.original_filename or 'Untitled' }}
         </div>
-        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); letter-spacing:1px;">
+        <div style="font-family:'Courier New',monospace; font-size:10px; color:var(--muted); letter-spacing:1px;">
           {{ img.genre }}
           {% if img.archetype %} &nbsp;·&nbsp; {{ img.archetype }}{% endif %}
         </div>
-        <div style="font-size:10px; margin-bottom:3px;">{% if img.exif_status == 'verified' %}<span style="color:var(--green);">✅ Verified</span>{% elif img.exif_status == 'suspicious' %}<span style="color:var(--red);">⚠️ Suspicious</span>{% else %}<span style="color:var(--muted);">❓ Unverified</span>{% endif %}{% if img.legal_declaration %} <span style="color:var(--text-dim);">· Declared</span>{% endif %}</div>
-        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:4px;">
+        <div style="font-size:10px; margin-bottom:3px;">
+          {% if img.exif_status == 'verified' %}
+            <span style="color:var(--green);">✅ Verified</span>
+          {% elif img.exif_status == 'suspicious' %}
+            <span style="color:var(--red);">⚠️ Suspicious</span>
+          {% else %}
+            <span style="color:var(--muted);">❓ Unverified</span>
+          {% endif %}
+          {% if img.legal_declaration %}
+            <span style="color:var(--muted);">· Declared</span>
+          {% endif %}
+        </div>
+        <div style="font-family:'Courier New',monospace; font-size:10px; color:var(--muted); margin-top:4px;">
           {{ img.created_at.strftime('%d %b %Y') }}
         </div>
       </div>
@@ -99,9 +110,9 @@
 {% endif %}
 
 {% else %}
-<div style="text-align:center; padding:80px 0; color:var(--text-dim);">
-  <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; margin-bottom:20px;">NO IMAGES YET</div>
-  <p style="font-size:14px; margin-bottom:24px;">Upload your first image to get an Apex DDI score.</p>
+<div style="text-align:center; padding:80px 0; color:var(--muted);">
+  <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; margin-bottom:20px;">NO IMAGES YET</div>
+  <p style="font-size:14px; margin-bottom:24px; color:var(--text);">Upload your first image to get an Apex DDI score.</p>
   <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Now</a>
 </div>
 {% endif %}
