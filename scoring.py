@@ -11,8 +11,8 @@ GENRE_WEIGHTS = {
     'Wedding':    {'dod': 0.10, 'disruption': 0.15, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.40},
     'People':     {'dod': 0.10, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.40},
     'Macro':      {'dod': 0.35, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
-    'Aerial':     {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
-    'Abstract':   {'dod': 0.10, 'disruption': 0.35, 'dm': 0.10, 'wonder': 0.25, 'aq': 0.20},
+    'Creative':   {'dod': 0.20, 'disruption': 0.30, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.15},
+    'Drone':      {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
 }
 
 # ── Tier map ──────────────────────────────────────────────────────────────────
@@ -25,15 +25,10 @@ def get_tier(score):
 
 # ── Core formula ──────────────────────────────────────────────────────────────
 def calculate_score(genre, dod, disruption, dm, wonder, aq):
-    """
-    Apply genre weights, run all Apex layer checks,
-    return final score, tier, and a dict of all checks fired.
-    """
     weights   = GENRE_WEIGHTS.get(genre, GENRE_WEIGHTS['Wildlife'])
     checks    = {}
     notes     = []
 
-    # Raw weighted total
     raw = (
         dod        * weights['dod']        +
         disruption * weights['disruption'] +
@@ -42,7 +37,6 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
         aq         * weights['aq']
     )
 
-    # Humanity check — AQ < 4.0
     if aq < 4.0:
         aq -= 1.5
         checks['humanity_check'] = True
@@ -55,34 +49,28 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
             aq         * weights['aq']
         )
 
-    # Soul Bonus — AQ >= 8.0
     soul_bonus = aq >= 8.0
     checks['soul_bonus'] = soul_bonus
     if soul_bonus:
-        notes.append('Soul Bonus active: AQ ≥ 8.0, technical penalties removed')
+        notes.append('Soul Bonus active: AQ >= 8.0, technical penalties removed')
 
-    # Plateau Penalty — DoD >= 9.5 + Disruption < 5.0
     if dod >= 9.5 and disruption < 5.0:
         checks['plateau_penalty'] = True
-        notes.append('Plateau Penalty: DoD ≥ 9.5 + Disruption < 5.0, score capped at 7.9')
+        notes.append('Plateau Penalty: DoD >= 9.5 + Disruption < 5.0, score capped at 7.9')
         raw = min(raw, 7.9)
 
-    # 9.0 Iconic Wall
     if raw >= 9.0:
         if disruption <= 8.5 or aq <= 8.5:
             checks['iconic_wall_blocked'] = True
             raw = min(raw, 8.99)
-            notes.append('Iconic Wall: score capped at 8.99 — Disruption or AQ below 8.5')
+            notes.append('Iconic Wall: score capped at 8.99')
         else:
             checks['iconic_wall_cleared'] = True
-            notes.append('Iconic Wall cleared: both Disruption and AQ exceed 8.5')
+            notes.append('Iconic Wall cleared')
 
-    # 10.0 never awarded
     raw = min(raw, 9.9)
-
     final_score = round(raw, 1)
     tier        = get_tier(final_score)
-
     checks['notes'] = notes
     return final_score, tier, soul_bonus, checks
 
