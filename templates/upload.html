@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Upload — Lens League Apex</div><!-- end uploadContent -->
-{% endblock %}
+{% block title %}Upload — Lens League Apex{% endblock %}
 {% block content %}
 
 <div style="max-width:680px; margin:0 auto;">
@@ -16,7 +15,6 @@
     max-width:580px; width:100%; padding:40px;
     position:relative;">
 
-    <!-- Header -->
     <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px;
                 color:var(--gold); margin-bottom:20px;">
       COPYRIGHT DECLARATION — REQUIRED
@@ -26,23 +24,21 @@
       Before You Upload
     </h2>
 
-    <!-- Declaration text -->
-    <div style="background:#0A0A0A; border:1px solid var(--border);
+    <div style="background:#2C2C2A; border:1px solid var(--border);
                 padding:20px; margin-bottom:24px;
-                font-size:13px; line-height:1.8; color:var(--text-dim);">
+                font-size:13px; line-height:1.8; color:#FFFFFF;">
       <p style="margin-bottom:14px;">
-        By uploading images to Lens League, you <strong style="color:var(--text);">certify and declare</strong> that:
+        By uploading images to Lens League, you <strong style="color:#FFFFFF;">certify and declare</strong> that:
       </p>
       <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
-        <li>The image(s) you are about to upload were <strong style="color:var(--text);">photographed by you</strong>, or you hold written authorisation from the original creator to submit them for evaluation.</li>
-        <li>You are <strong style="color:var(--text);">solely responsible</strong> for any image submitted under your account. Lens League bears no liability for user-submitted content.</li>
-        <li>Submitting another photographer's work as your own constitutes <strong style="color:var(--text);">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international copyright law.</li>
-        <li>You acknowledge that Lens League may remove any image found to be in violation and <strong style="color:var(--text);">permanently suspend your account</strong> without notice.</li>
-        <li>You may be held <strong style="color:var(--text);">legally liable</strong> for damages, penalties, and legal costs arising from copyright infringement, including claims by the original rights holder.</li>
+        <li>The image(s) you are about to upload were <strong style="color:#FFFFFF;">photographed by you</strong>, or you hold written authorisation from the original creator to submit them for evaluation.</li>
+        <li>You are <strong style="color:#FFFFFF;">solely responsible</strong> for any image submitted under your account. Lens League bears no liability for user-submitted content.</li>
+        <li>Submitting another photographer's work as your own constitutes <strong style="color:#FFFFFF;">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international copyright law.</li>
+        <li>You acknowledge that Lens League may remove any image found to be in violation and <strong style="color:#FFFFFF;">permanently suspend your account</strong> without notice.</li>
+        <li>You may be held <strong style="color:#FFFFFF;">legally liable</strong> for damages, penalties, and legal costs arising from copyright infringement, including claims by the original rights holder.</li>
       </ol>
     </div>
 
-    <!-- Checkbox confirm -->
     <label style="display:flex; align-items:flex-start; gap:12px;
                   cursor:pointer; margin-bottom:24px;">
       <input type="checkbox" id="modalCheckbox"
@@ -54,19 +50,18 @@
       </span>
     </label>
 
-    <!-- Buttons -->
     <div style="display:flex; gap:12px;">
       <button onclick="proceedToUpload()"
               id="agreeBtn"
               disabled
-              style="flex:1; padding:14px; background:var(--gold); color:var(--dark);
+              style="flex:1; padding:14px; background:var(--gold); color:#1A1A1A;
                      border:none; font-family:'Courier New',monospace; font-size:12px;
-                     letter-spacing:2px; cursor:pointer; opacity:0.4; transition:opacity .2s;">
+                     letter-spacing:2px; cursor:not-allowed; opacity:0.4; transition:opacity .2s;">
         I AGREE — PROCEED TO UPLOAD
       </button>
       <a href="{{ url_for('dashboard') }}"
          style="padding:14px 20px; border:1px solid var(--border);
-                color:var(--text-dim); font-family:'Courier New',monospace;
+                color:var(--text); font-family:'Courier New',monospace;
                 font-size:12px; letter-spacing:1px; text-decoration:none;
                 display:flex; align-items:center;">
         Cancel
@@ -89,10 +84,9 @@
   <div class="card">
     <form method="POST" enctype="multipart/form-data">
 
-      <!-- Drop zone -->
       <div id="dropzone" style="border:2px dashed var(--border); padding:48px; text-align:center; margin-bottom:28px; cursor:pointer; transition:border-color .2s;"
            onclick="document.getElementById('fileInput').click()">
-        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--text-dim); margin-bottom:12px;">DROP IMAGE HERE</div>
+        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:var(--text); margin-bottom:12px;">DROP IMAGE HERE</div>
         <div style="font-size:13px; color:var(--muted);">or click to browse</div>
         <div id="filename" style="margin-top:14px; font-size:13px; color:var(--gold); display:none;"></div>
       </div>
@@ -140,7 +134,6 @@
 </div>
 
 <script>
-  // ── Legal modal logic ──────────────────────────────────────────────────────
   const modalCheckbox = document.getElementById('modalCheckbox');
   const agreeBtn      = document.getElementById('agreeBtn');
   const legalModal    = document.getElementById('legalModal');
@@ -158,7 +151,6 @@
     uploadContent.style.display = 'block';
   }
 
-  // ── File input logic ───────────────────────────────────────────────────────
   const input    = document.getElementById('fileInput');
   const dropzone = document.getElementById('dropzone');
   const fnLabel  = document.getElementById('filename');
