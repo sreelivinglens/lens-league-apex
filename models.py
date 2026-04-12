@@ -1,30 +1,28 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
 from datetime import datetime
-import json
 
 db = SQLAlchemy()
 
-class User(UserMixin, db.Model):
+
+class User(db.Model):
     __tablename__ = 'users'
 
-    id            = db.Column(db.Integer, primary_key=True)
-    email         = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    username      = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    full_name     = db.Column(db.String(255))
-    role          = db.Column(db.String(20), default='member')
-    is_active     = db.Column(db.Boolean, default=True)
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login    = db.Column(db.DateTime)
-    agreed_at     = db.Column(db.DateTime)
+    id                = db.Column(db.Integer, primary_key=True)
+    username          = db.Column(db.String(80),  unique=True, nullable=False)
+    email             = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash     = db.Column(db.String(256), nullable=False)
 
-    # Security question for password reset (no email needed)
-    security_question = db.Column(db.String(255))
-    security_answer   = db.Column(db.String(255))   # stored as lowercase strip
+    # Security question for password recovery (3-step flow)
+    security_question = db.Column(db.String(255), nullable=True)
+    security_answer   = db.Column(db.String(255), nullable=True)   # stored lowercase-stripped
 
-    images = db.relationship('Image', backref='photographer', lazy='dynamic',
-                             cascade='all, delete-orphan')
+    # Member agreement acceptance timestamp
+    agreed_at         = db.Column(db.DateTime,    nullable=True)
+
+    is_admin          = db.Column(db.Boolean, default=False, nullable=False)
+    created_at        = db.Column(db.DateTime, default=datetime.utcnow)
+
+    images            = db.relationship('Image', backref='author', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -34,70 +32,75 @@ class Image(db.Model):
     __tablename__ = 'images'
 
     id              = db.Column(db.Integer, primary_key=True)
-    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    original_filename = db.Column(db.String(255))
-    stored_filename   = db.Column(db.String(255))
-    thumb_path        = db.Column(db.String(255))
-    card_path         = db.Column(db.String(255))
-    file_size_kb      = db.Column(db.Integer)
+    title           = db.Column(db.String(120), nullable=False)
+    category        = db.Column(db.String(60),  nullable=True)
+    caption         = db.Column(db.Text,         nullable=True)
 
-    legal_declaration = db.Column(db.Boolean, default=False)
-    exif_status       = db.Column(db.String(20), default='unknown')
-    exif_camera       = db.Column(db.String(255))
-    exif_date_taken   = db.Column(db.String(100))
-    exif_settings     = db.Column(db.String(255))
-    exif_warning      = db.Column(db.Text)
-    width             = db.Column(db.Integer)
-    height            = db.Column(db.Integer)
-    format            = db.Column(db.String(20))
+    filename        = db.Column(db.String(260), nullable=False)   # stored filename on disk/S3
+    original_name   = db.Column(db.String(260), nullable=True)    # original upload filename
 
-    asset_name        = db.Column(db.String(255))
-    genre             = db.Column(db.String(50))
-    subject           = db.Column(db.String(255))
-    location          = db.Column(db.String(255))
-    conditions        = db.Column(db.String(255))
-    photographer_name = db.Column(db.String(255))
+    # EXIF authenticity: 'verified' | 'unverified' | 'suspicious'
+    exif_status     = db.Column(db.String(20), default='unverified')
+    exif_data       = db.Column(db.JSON,        nullable=True)
 
-    score             = db.Column(db.Float)
-    tier              = db.Column(db.String(30))
-    dod_score         = db.Column(db.Float)
-    disruption_score  = db.Column(db.Float)
-    dm_score          = db.Column(db.Float)
-    wonder_score      = db.Column(db.Float)
-    aq_score          = db.Column(db.Float)
-    archetype         = db.Column(db.String(100))
-    soul_bonus        = db.Column(db.Boolean, default=False)
+    # Apex DDI Engine scoring
+    score           = db.Column(db.Float,   nullable=True)
+    score_breakdown = db.Column(db.JSON,    nullable=True)   # per-dimension scores
+    scored_at       = db.Column(db.DateTime, nullable=True)
 
-    audit_data        = db.Column(db.Text)
+    # Share page
+    share_id        = db.Column(db.String(32), unique=True, nullable=True)
 
-    status            = db.Column(db.String(20), default='pending')
-    scored_at         = db.Column(db.DateTime)
-    created_at        = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def get_audit(self):
-        if self.audit_data:
-            return json.loads(self.audit_data)
-        return {}
-
-    def set_audit(self, data):
-        self.audit_data = json.dumps(data)
+    uploaded_at     = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<Image {self.asset_name} score={self.score}>'
+        return f'<Image {self.id} – {self.title}>'
 
 
 class CalibrationLog(db.Model):
-    __tablename__ = 'calibration_log'
+    """Stores admin calibration data for score drift monitoring."""
+    __tablename__ = 'calibration_logs'
 
-    id              = db.Column(db.Integer, primary_key=True)
-    genre           = db.Column(db.String(50))
-    image_count     = db.Column(db.Integer)
-    avg_score       = db.Column(db.Float)
-    avg_dod         = db.Column(db.Float)
-    avg_disruption  = db.Column(db.Float)
-    avg_dm          = db.Column(db.Float)
-    avg_wonder      = db.Column(db.Float)
-    avg_aq          = db.Column(db.Float)
-    notes           = db.Column(db.Text)
-    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    id          = db.Column(db.Integer, primary_key=True)
+    category    = db.Column(db.String(60),  nullable=False)
+    note        = db.Column(db.Text,         nullable=True)
+    adjustment  = db.Column(db.Float,        nullable=True)   # positive = score increase
+    logged_by   = db.Column(db.Integer,  db.ForeignKey('users.id'), nullable=True)
+    logged_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<CalibrationLog {self.category} {self.adjustment:+.2f}>'
+
+
+# ---------------------------------------------------------------------------
+# Auto-migration helper
+# Called from app.py on every startup — safe, uses CREATE TABLE IF NOT EXISTS
+# ---------------------------------------------------------------------------
+
+def run_migrations(app):
+    """
+    Adds new columns to existing tables if they don't already exist.
+    Runs on every startup — safe for production (IF NOT EXISTS guard via
+    catching duplicate-column errors).
+    """
+    with app.app_context():
+        db.create_all()  # creates any brand-new tables
+
+        # Add new columns to 'users' if they don't exist yet
+        _add_column_if_missing(db, 'users', 'security_question', 'VARCHAR(255)')
+        _add_column_if_missing(db, 'users', 'security_answer',   'VARCHAR(255)')
+        _add_column_if_missing(db, 'users', 'agreed_at',         'TIMESTAMP')
+
+
+def _add_column_if_missing(db, table, column, col_type):
+    """Execute ALTER TABLE … ADD COLUMN IF NOT EXISTS (PostgreSQL 9.6+)."""
+    sql = f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type};"
+    try:
+        db.session.execute(db.text(sql))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        # Log but don't crash — column may already exist on older PG versions
+        print(f"[migration] {table}.{column}: {e}")
