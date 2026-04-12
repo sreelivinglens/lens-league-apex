@@ -68,73 +68,122 @@
   </div>
 </div>
 
-<div class="card" style="padding:0; overflow-x:auto;">
-  <table style="width:100%; border-collapse:collapse; min-width:900px;">
-    <thead>
-      <tr style="background:#2C2C2A;">
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Image</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Genre</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Score</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Tier</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Auth</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Status</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Date</th>
-        <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for img in recent %}
-      <tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='rgba(200,168,75,0.05)'" onmouseout="this.style.background='transparent'">
-        <td style="padding:10px 12px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            {% if img.thumb_url %}
-            <img src="{{ img.thumb_url }}" style="width:32px; height:32px; object-fit:cover; border:1px solid var(--border); flex-shrink:0;">
-            {% else %}
-            <div style="width:32px; height:32px; background:#1e1e1c; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">🖼️</div>
-            {% endif %}
-            <a href="{{ url_for('image_detail', image_id=img.id) }}" style="color:var(--text); font-weight:500; text-decoration:none; font-size:12px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">
-              {{ img.asset_name or img.original_filename or 'Untitled' }}
-            </a>
-          </div>
-        </td>
-        <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:11px; color:var(--text); white-space:nowrap;">{{ img.genre or '—' }}</td>
-        <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914; font-weight:700;">{{ img.score or '—' }}</td>
-        <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--text); white-space:nowrap;">{{ img.tier or '—' }}</td>
-        <td style="padding:10px 12px; font-size:11px; white-space:nowrap;">
-          {% if img.exif_status == 'verified' %}<span style="color:var(--green);">✅</span>
-          {% elif img.exif_status == 'suspicious' %}<span style="color:var(--red);">⚠️</span>
-          {% else %}<span style="color:var(--muted);">❓</span>{% endif %}
-        </td>
-        <td style="padding:10px 12px;">
-          <span style="font-family:'Courier New',monospace; font-size:10px; padding:2px 6px; border:1px solid {{ 'var(--green)' if img.status=='scored' else 'var(--border)' }}; color:{{ 'var(--green)' if img.status=='scored' else 'var(--text)' }}; white-space:nowrap;">
-            {{ img.status.upper() }}
-          </span>
-        </td>
-        <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--muted); white-space:nowrap;">{{ img.created_at.strftime('%d %b %Y') }}</td>
-        <td style="padding:10px 12px;">
-          <div style="display:flex; gap:6px; align-items:center;">
-            <form method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}">
-              <button type="submit" title="{{ 'Remove calibration example' if img.is_calibration_example else 'Set as calibration example' }}"
-                style="background:{{ 'rgba(200,168,75,0.2)' if img.is_calibration_example else 'none' }};
-                       border:1px solid {{ '#C8A84B' if img.is_calibration_example else '#555' }};
-                       color:{{ '#C8A84B' if img.is_calibration_example else '#888' }};
-                       padding:3px 8px; font-size:10px; cursor:pointer;
-                       font-family:'Courier New',monospace; white-space:nowrap;">
-                {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
-              </button>
-            </form>
-            <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
-                  onsubmit="return confirm('Delete this image? Cannot be undone.');">
-              <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:3px 10px; font-size:10px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; white-space:nowrap;">
-                🗑 DEL
-              </button>
-            </form>
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm"
+      onsubmit="return confirmBulk();">
+
+  <!-- Bulk action bar -->
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+    <label style="display:flex; align-items:center; gap:6px; font-family:'Courier New',monospace; font-size:11px; color:var(--muted); cursor:pointer;">
+      <input type="checkbox" id="selectAll" onchange="toggleAll(this)" style="accent-color:#8B6914; width:15px; height:15px;">
+      SELECT ALL
+    </label>
+    <span style="font-family:'Courier New',monospace; font-size:11px; color:var(--muted);" id="selectedCount">0 selected</span>
+    <button type="submit" id="bulkDeleteBtn" disabled
+      style="background:none; border:1px solid #7a2222; color:#f88; padding:5px 16px;
+             font-size:11px; cursor:pointer; font-family:'Courier New',monospace;
+             letter-spacing:1px; opacity:0.4;"
+      onmouseover="if(!this.disabled) this.style.background='rgba(122,34,34,0.2)'"
+      onmouseout="this.style.background='none'">
+      🗑 DELETE SELECTED
+    </button>
+  </div>
+
+  <div class="card" style="padding:0; overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:920px;">
+      <thead>
+        <tr style="background:#2C2C2A;">
+          <th style="padding:10px 12px; width:36px; border-bottom:1px solid var(--border);"></th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Image</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Genre</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Score</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Tier</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Auth</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Status</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Date</th>
+          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for img in recent %}
+        <tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='rgba(200,168,75,0.05)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:10px 12px; text-align:center;">
+            <input type="checkbox" name="image_ids" value="{{ img.id }}"
+                   class="row-check" onchange="updateCount()"
+                   style="accent-color:#8B6914; width:15px; height:15px;">
+          </td>
+          <td style="padding:10px 12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              {% if img.thumb_url %}
+              <img src="{{ img.thumb_url }}" style="width:32px; height:32px; object-fit:cover; border:1px solid var(--border); flex-shrink:0;">
+              {% else %}
+              <div style="width:32px; height:32px; background:#1e1e1c; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">🖼️</div>
+              {% endif %}
+              <a href="{{ url_for('image_detail', image_id=img.id) }}" style="color:var(--text); font-weight:500; text-decoration:none; font-size:12px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">
+                {{ img.asset_name or img.original_filename or 'Untitled' }}
+              </a>
+            </div>
+          </td>
+          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:11px; color:var(--text); white-space:nowrap;">{{ img.genre or '—' }}</td>
+          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914; font-weight:700;">{{ img.score or '—' }}</td>
+          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--text); white-space:nowrap;">{{ img.tier or '—' }}</td>
+          <td style="padding:10px 12px; font-size:11px; white-space:nowrap;">
+            {% if img.exif_status == 'verified' %}<span style="color:var(--green);">✅</span>
+            {% elif img.exif_status == 'suspicious' %}<span style="color:var(--red);">⚠️</span>
+            {% else %}<span style="color:var(--muted);">❓</span>{% endif %}
+          </td>
+          <td style="padding:10px 12px;">
+            <span style="font-family:'Courier New',monospace; font-size:10px; padding:2px 6px; border:1px solid {{ 'var(--green)' if img.status=='scored' else 'var(--border)' }}; color:{{ 'var(--green)' if img.status=='scored' else 'var(--text)' }}; white-space:nowrap;">
+              {{ img.status.upper() }}
+            </span>
+          </td>
+          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--muted); white-space:nowrap;">{{ img.created_at.strftime('%d %b %Y') }}</td>
+          <td style="padding:10px 12px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <form method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}">
+                <button type="submit" title="{{ 'Remove calibration example' if img.is_calibration_example else 'Set as calibration example' }}"
+                  style="background:{{ 'rgba(200,168,75,0.2)' if img.is_calibration_example else 'none' }};
+                         border:1px solid {{ '#C8A84B' if img.is_calibration_example else '#555' }};
+                         color:{{ '#C8A84B' if img.is_calibration_example else '#888' }};
+                         padding:3px 8px; font-size:10px; cursor:pointer;
+                         font-family:'Courier New',monospace; white-space:nowrap;">
+                  {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
+                    onsubmit="return confirm('Delete this image? Cannot be undone.');">
+                <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:3px 10px; font-size:10px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; white-space:nowrap;">
+                  🗑
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+
+<script>
+function toggleAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+  updateCount();
+}
+function updateCount() {
+  const checked = document.querySelectorAll('.row-check:checked').length;
+  document.getElementById('selectedCount').textContent = checked + ' selected';
+  const btn = document.getElementById('bulkDeleteBtn');
+  btn.disabled = checked === 0;
+  btn.style.opacity = checked === 0 ? '0.4' : '1';
+  // Uncheck selectAll if not all selected
+  const total = document.querySelectorAll('.row-check').length;
+  document.getElementById('selectAll').checked = checked === total && total > 0;
+}
+function confirmBulk() {
+  const count = document.querySelectorAll('.row-check:checked').length;
+  if (count === 0) return false;
+  return confirm('Delete ' + count + ' selected image(s)? This cannot be undone.');
+}
+</script>
 
 {% endblock %}
