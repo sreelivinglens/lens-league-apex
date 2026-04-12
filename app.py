@@ -16,6 +16,7 @@ from models import db, User, Image, CalibrationLog
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS,
                               ARCHETYPES, compute_calibration_stats)
 from engine.processor import ingest_image, allowed_file
+import storage as r2
 
 load_dotenv()
 
@@ -45,7 +46,6 @@ with app.app_context():
         db.create_all()
         with db.engine.connect() as conn:
             _migrations = [
-                # users — all columns the model defines
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'member'",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
@@ -53,8 +53,9 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP",
-                # images — extra columns
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_path VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_url VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
@@ -104,6 +105,24 @@ def admin_required(f):
     return decorated
 
 
+# ---------------------------------------------------------------------------
+# Helper — upload both thumb and card to R2, return public URLs
+# ---------------------------------------------------------------------------
+
+def _r2_upload_thumb(local_path: str, uid: str) -> str | None:
+    ext = os.path.splitext(local_path)[1].lower() or '.jpg'
+    key = f'thumbs/{uid}{ext}'
+    return r2.upload_file(local_path, key, content_type='image/jpeg')
+
+def _r2_upload_card(local_path: str, uid: str) -> str | None:
+    key = f'cards/{uid}.jpg'
+    return r2.upload_file(local_path, key, content_type='image/jpeg')
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
 @app.route('/')
 def index():
     try:
@@ -147,13 +166,10 @@ def register():
             flash('Username already taken.', 'error')
             return redirect(url_for('register'))
         user = User(
-            email             = email,
-            username          = username,
-            password_hash     = generate_password_hash(password),
-            full_name         = fullname,
-            security_question = sq,
-            security_answer   = sa,
-            agreed_at         = datetime.utcnow(),
+            email=email, username=username,
+            password_hash=generate_password_hash(password),
+            full_name=fullname, security_question=sq,
+            security_answer=sa, agreed_at=datetime.utcnow(),
         )
         db.session.add(user)
         db.session.commit()
@@ -189,9 +205,6 @@ def logout():
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    step     = 1
-    email    = None
-    question = None
     if request.method == 'POST':
         step  = int(request.form.get('step', 1))
         email = request.form.get('email', '').strip().lower()
@@ -274,30 +287,39 @@ def upload():
         if not allowed_file(file.filename):
             flash('File type not supported.', 'error')
             return redirect(request.url)
+
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
         raw_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
         file.save(raw_path)
+
         try:
             thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
             flash(f'Image processing failed: {e}', 'error')
-            if os.path.exists(raw_path):
-                os.remove(raw_path)
+            if os.path.exists(raw_path): os.remove(raw_path)
             return redirect(request.url)
-        if os.path.exists(raw_path):
-            os.remove(raw_path)
+        if os.path.exists(raw_path): os.remove(raw_path)
+
+        # Upload thumb to R2
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+        if not thumb_url:
+            flash('Storage upload failed. Please try again.', 'error')
+            return redirect(request.url)
+
         from engine.exif_check import extract_exif
         exif_status, exif_data, exif_warning = extract_exif(thumb_path)
         exif_settings = '  ·  '.join(filter(None, [
             exif_data.get('focal_length',''), exif_data.get('aperture',''),
             exif_data.get('iso',''), exif_data.get('shutter',''),
         ]))
+
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
             stored_filename   = os.path.basename(thumb_path),
-            thumb_path        = thumb_path,
+            thumb_path        = thumb_path,   # kept as temp local ref
+            thumb_url         = thumb_url,    # permanent R2 URL
             file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
             width=w, height=h, format=fmt,
             asset_name        = request.form.get('asset_name', filename),
@@ -315,6 +337,7 @@ def upload():
         )
         db.session.add(img)
         db.session.commit()
+
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
             try:
@@ -323,19 +346,32 @@ def upload():
                 result = auto_score(image_path=img.thumb_path, genre=img.genre,
                                     title=img.asset_name, photographer=img.photographer_name,
                                     subject=img.subject, location=img.location)
-                img.dod_score=float(result.get('dod',0)); img.disruption_score=float(result.get('disruption',0))
-                img.dm_score=float(result.get('dm',0)); img.wonder_score=float(result.get('wonder',0))
-                img.aq_score=float(result.get('aq',0)); img.score=float(result.get('score',0))
-                img.tier=result.get('tier','Practitioner'); img.archetype=result.get('archetype','')
-                img.soul_bonus=result.get('soul_bonus',False); img.status='scored'; img.scored_at=datetime.utcnow()
+                img.dod_score=float(result.get('dod',0))
+                img.disruption_score=float(result.get('disruption',0))
+                img.dm_score=float(result.get('dm',0))
+                img.wonder_score=float(result.get('wonder',0))
+                img.aq_score=float(result.get('aq',0))
+                img.score=float(result.get('score',0))
+                img.tier=result.get('tier','Practitioner')
+                img.archetype=result.get('archetype','')
+                img.soul_bonus=result.get('soul_bonus',False)
+                img.status='scored'
+                img.scored_at=datetime.utcnow()
                 audit = build_audit_data(result, img)
                 img.set_audit(audit)
+
                 card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                               f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
                               f"{img.genre}_{img.score}.jpg")
                 card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
                 build_card(img.thumb_path, audit, card_path)
                 img.card_path = card_path
+
+                # Upload card to R2
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+
                 db.session.commit()
                 flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
             except Exception as e:
@@ -343,7 +379,9 @@ def upload():
                 flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
         else:
             flash('Image uploaded! Add scores below.', 'success')
+
         return redirect(url_for('image_detail', image_id=img.id))
+
     genres = list(GENRE_WEIGHTS.keys())
     return render_template('upload.html', genres=genres)
 
@@ -364,11 +402,14 @@ def score_image(image_id):
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
     try:
-        dod=float(request.form.get('dod',0)); disruption=float(request.form.get('disruption',0))
-        dm=float(request.form.get('dm',0)); wonder=float(request.form.get('wonder',0))
+        dod=float(request.form.get('dod',0))
+        disruption=float(request.form.get('disruption',0))
+        dm=float(request.form.get('dm',0))
+        wonder=float(request.form.get('wonder',0))
         aq=float(request.form.get('aq',0))
         archetype=request.form.get('archetype','Sovereign Momentum')
-        byline_1=request.form.get('byline_1',''); byline_2=request.form.get('byline_2','')
+        byline_1=request.form.get('byline_1','')
+        byline_2=request.form.get('byline_2','')
         iucn_tag=request.form.get('iucn_tag','')
         final_score, tier, soul_bonus, checks = calculate_score(img.genre, dod, disruption, dm, wonder, aq)
         img.dod_score=dod; img.disruption_score=disruption; img.dm_score=dm
@@ -395,13 +436,21 @@ def score_image(image_id):
             'badges_w': request.form.get('badges_w','').splitlines(),
         }
         img.set_audit(audit)
+
         from engine.compositor import build_card
+        uid = str(uuid.uuid4())
         card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                       f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
                       f"{img.genre}_{final_score}.jpg")
         card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
         build_card(img.thumb_path, audit, card_path)
         img.card_path = card_path
+
+        # Upload card to R2
+        card_url = _r2_upload_card(card_path, uid + '_card')
+        if card_url:
+            img.card_url = card_url
+
         db.session.commit()
         flash(f'Scored! LL-Score: {final_score} — {tier}', 'success')
     except Exception as e:
@@ -415,22 +464,28 @@ def download_card(image_id):
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
-    if not img.card_path or not os.path.exists(img.card_path):
-        flash('Rating card not yet generated.', 'error')
-        return redirect(url_for('image_detail', image_id=image_id))
-    safe_name = secure_filename(f"LL_{img.score}_{img.tier}_{img.asset_name or 'card'}.jpg")
-    return send_file(img.card_path, as_attachment=True, download_name=safe_name)
+    # Prefer R2 URL redirect; fall back to local file
+    if img.card_url:
+        return redirect(img.card_url)
+    if img.card_path and os.path.exists(img.card_path):
+        safe_name = secure_filename(f"LL_{img.score}_{img.tier}_{img.asset_name or 'card'}.jpg")
+        return send_file(img.card_path, as_attachment=True, download_name=safe_name)
+    flash('Rating card not yet generated.', 'error')
+    return redirect(url_for('image_detail', image_id=image_id))
 
 
 @app.route('/image/<int:image_id>/thumb')
 @login_required
 def serve_thumb(image_id):
+    """Redirect to R2 URL if available, otherwise serve local file."""
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
-    if not img.thumb_path or not os.path.exists(img.thumb_path):
-        abort(404)
-    return send_file(img.thumb_path, mimetype='image/jpeg')
+    if img.thumb_url:
+        return redirect(img.thumb_url)
+    if img.thumb_path and os.path.exists(img.thumb_path):
+        return send_file(img.thumb_path, mimetype='image/jpeg')
+    abort(404)
 
 
 @app.route('/change-password', methods=['GET', 'POST'])
@@ -481,12 +536,15 @@ def bulk_upload():
                 raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
                 file.save(raw_path)
                 thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
-                if os.path.exists(raw_path):
-                    os.remove(raw_path)
+                if os.path.exists(raw_path): os.remove(raw_path)
+
+                thumb_url = _r2_upload_thumb(thumb_path, uid)
+
                 from models import Image as ImageModel
                 img = ImageModel(
                     user_id=current_user.id, original_filename=filename,
-                    stored_filename=os.path.basename(thumb_path), thumb_path=thumb_path,
+                    stored_filename=os.path.basename(thumb_path),
+                    thumb_path=thumb_path, thumb_url=thumb_url,
                     file_size_kb=int(os.path.getsize(thumb_path)/1024),
                     width=w, height=h, format=fmt,
                     asset_name=os.path.splitext(filename)[0],
@@ -499,11 +557,16 @@ def bulk_upload():
                     from engine.compositor import build_card as _build_card
                     scored = auto_score(image_path=img.thumb_path, genre=genre,
                                         title=img.asset_name, photographer=photographer)
-                    img.dod_score=float(scored.get('dod',0)); img.disruption_score=float(scored.get('disruption',0))
-                    img.dm_score=float(scored.get('dm',0)); img.wonder_score=float(scored.get('wonder',0))
-                    img.aq_score=float(scored.get('aq',0)); img.score=float(scored.get('score',0))
-                    img.tier=scored.get('tier','Practitioner'); img.archetype=scored.get('archetype','')
-                    img.soul_bonus=scored.get('soul_bonus',False); img.status='scored'; img.scored_at=datetime.utcnow()
+                    img.dod_score=float(scored.get('dod',0))
+                    img.disruption_score=float(scored.get('disruption',0))
+                    img.dm_score=float(scored.get('dm',0))
+                    img.wonder_score=float(scored.get('wonder',0))
+                    img.aq_score=float(scored.get('aq',0))
+                    img.score=float(scored.get('score',0))
+                    img.tier=scored.get('tier','Practitioner')
+                    img.archetype=scored.get('archetype','')
+                    img.soul_bonus=scored.get('soul_bonus',False)
+                    img.status='scored'; img.scored_at=datetime.utcnow()
                     audit = build_audit_data(scored, img)
                     img.set_audit(audit)
                     card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
@@ -511,6 +574,8 @@ def bulk_upload():
                     card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
                     _build_card(img.thumb_path, audit, card_path)
                     img.card_path = card_path
+                    card_url = _r2_upload_card(card_path, uid + '_card')
+                    if card_url: img.card_url = card_url
                     result_row['score']=img.score; result_row['tier']=img.tier; result_row['status']='scored'
                 else:
                     img.status='pending'; result_row['status']='uploaded'
@@ -565,6 +630,21 @@ def run_calibration():
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
+
+
+@app.route('/debug/images')
+def debug_images():
+    imgs = Image.query.order_by(Image.id.desc()).limit(5).all()
+    out = []
+    for i in imgs:
+        out.append({
+            'id': i.id,
+            'asset_name': i.asset_name,
+            'thumb_url': i.thumb_url,
+            'thumb_path': i.thumb_path,
+            'status': i.status,
+        })
+    return jsonify(out)
 
 
 if __name__ == '__main__':
