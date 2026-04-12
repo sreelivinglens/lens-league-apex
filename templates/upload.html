@@ -80,7 +80,7 @@
 <div id="uploadContent" style="display:none;">
   <div class="page-header">
     <h1>Upload Image</h1>
-    <p>Supported: JPG, PNG, CR2, CR3, NEF, ARW, DNG, RAF, RW2 &nbsp;·&nbsp; Max 50MB &nbsp;·&nbsp; RAW files are converted and not stored</p>
+    <p>Supported: JPG and PNG only &nbsp;·&nbsp; Maximum file size 5MB</p>
   </div>
 
   <div class="card">
@@ -92,7 +92,7 @@
         <div style="font-size:13px; color:var(--muted);">or click to browse</div>
         <div id="filename" style="margin-top:14px; font-size:13px; color:var(--gold); display:none;"></div>
       </div>
-      <input type="file" id="fileInput" name="image" accept=".jpg,.jpeg,.png,.cr2,.cr3,.nef,.arw,.dng,.raf,.rw2" style="display:none;" required>
+      <input type="file" id="fileInput" name="image" accept=".jpg,.jpeg,.png" style="display:none;" required>
 
       <hr class="divider" style="margin:24px 0;">
 
@@ -157,25 +157,105 @@
   const dropzone = document.getElementById('dropzone');
   const fnLabel  = document.getElementById('filename');
 
-  input.addEventListener('change', () => {
-    if (input.files.length) {
-      fnLabel.textContent = input.files[0].name;
-      fnLabel.style.display = 'block';
-      dropzone.style.borderColor = 'var(--gold)';
-    }
-  });
-
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor='var(--gold)'; });
   dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor='var(--border)'; });
   dropzone.addEventListener('drop', e => {
     e.preventDefault();
     const files = e.dataTransfer.files;
     if (files.length) {
+      if (!validateFile(files[0])) return;
       input.files = files;
       fnLabel.textContent = files[0].name;
       fnLabel.style.display = 'block';
       dropzone.style.borderColor = 'var(--gold)';
     }
+  });
+
+  function validateFile(file) {
+    const allowed = ['image/jpeg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      alert('Only JPG and PNG files are supported.');
+      return false;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB. Please choose a smaller image.');
+      return false;
+    }
+    return true;
+  }
+
+  input.addEventListener('change', () => {
+    if (input.files.length) {
+      if (!validateFile(input.files[0])) {
+        input.value = '';
+        fnLabel.style.display = 'none';
+        dropzone.style.borderColor = 'var(--border)';
+        return;
+      }
+      fnLabel.textContent = input.files[0].name + ' (' + (input.files[0].size / 1024).toFixed(0) + ' KB)';
+      fnLabel.style.display = 'block';
+      dropzone.style.borderColor = 'var(--gold)';
+    }
+  });
+
+  // Progress bar + elapsed timer on submit
+  const form = document.querySelector('form');
+  form.addEventListener('submit', function(e) {
+    if (!input.files.length) return;
+    if (!validateFile(input.files[0])) { e.preventDefault(); return; }
+
+    // Show progress UI
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Uploading…';
+
+    const progressHTML = `
+      <div id="progressWrap" style="margin-top:20px; padding:20px; background:#2C2C2A; border:1px solid var(--border);">
+        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:#FFFFFF; margin-bottom:12px;">
+          UPLOADING &amp; ANALYSING IMAGE
+        </div>
+        <div style="background:var(--border); height:6px; border-radius:3px; margin-bottom:12px; overflow:hidden;">
+          <div id="progressBar" style="height:100%; width:0%; background:var(--gold); border-radius:3px; transition:width 0.4s ease;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+          <span id="progressLabel" style="color:#FFFFFF; font-family:'Courier New',monospace;">Uploading...</span>
+          <span id="timerLabel" style="color:var(--gold); font-family:'Courier New',monospace;">0s elapsed</span>
+        </div>
+      </div>`;
+    submitBtn.insertAdjacentHTML('afterend', progressHTML);
+
+    const bar      = document.getElementById('progressBar');
+    const label    = document.getElementById('progressLabel');
+    const timer    = document.getElementById('timerLabel');
+    const stages   = [
+      { pct: 15, msg: 'Uploading image…' },
+      { pct: 35, msg: 'Reading EXIF data…' },
+      { pct: 55, msg: 'Sending to AI engine…' },
+      { pct: 70, msg: 'Analysing composition…' },
+      { pct: 82, msg: 'Scoring modules…' },
+      { pct: 92, msg: 'Generating rating card…' },
+      { pct: 98, msg: 'Almost done…' },
+    ];
+
+    let stageIndex = 0;
+    let elapsed    = 0;
+
+    // Elapsed timer — ticks every second
+    const timerInterval = setInterval(() => {
+      elapsed++;
+      timer.textContent = elapsed + 's elapsed';
+    }, 1000);
+
+    // Progress stages — advances every ~3 seconds
+    const stageInterval = setInterval(() => {
+      if (stageIndex < stages.length) {
+        bar.style.width   = stages[stageIndex].pct + '%';
+        label.textContent = stages[stageIndex].msg;
+        stageIndex++;
+      } else {
+        clearInterval(stageInterval);
+      }
+    }, 3000);
   });
 </script>
 {% endblock %}
