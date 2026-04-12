@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Bulk Upload — Lens League Apex</div><!-- end uploadContent -->
-{% endblock %}
+{% block title %}Bulk Upload — Lens League Apex{% endblock %}
 {% block content %}
 
 <div style="max-width:680px; margin:0 auto;">
@@ -24,18 +23,18 @@
       Before You Upload
     </h2>
 
-    <div style="background:#0A0A0A; border:1px solid var(--border);
+    <div style="background:#2C2C2A; border:1px solid var(--border);
                 padding:20px; margin-bottom:24px;
-                font-size:13px; line-height:1.8; color:var(--text-dim);">
+                font-size:13px; line-height:1.8; color:#FFFFFF;">
       <p style="margin-bottom:14px;">
-        By uploading images to Lens League, you <strong style="color:var(--text);">certify and declare</strong> that:
+        By uploading images to Lens League, you <strong style="color:#FFFFFF;">certify and declare</strong> that:
       </p>
       <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
-        <li>All images in this batch were <strong style="color:var(--text);">photographed by you</strong>, or you hold written authorisation from the original creator.</li>
-        <li>You are <strong style="color:var(--text);">solely responsible</strong> for every image submitted under your account.</li>
-        <li>Submitting another photographer's work constitutes <strong style="color:var(--text);">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international law.</li>
-        <li>Violations will result in <strong style="color:var(--text);">permanent account suspension</strong> and potential legal action.</li>
-        <li>You may be held <strong style="color:var(--text);">legally liable</strong> for damages and costs arising from infringement claims.</li>
+        <li>All images in this batch were <strong style="color:#FFFFFF;">photographed by you</strong>, or you hold written authorisation from the original creator.</li>
+        <li>You are <strong style="color:#FFFFFF;">solely responsible</strong> for every image submitted under your account.</li>
+        <li>Submitting another photographer's work constitutes <strong style="color:#FFFFFF;">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international law.</li>
+        <li>Violations will result in <strong style="color:#FFFFFF;">permanent account suspension</strong> and potential legal action.</li>
+        <li>You may be held <strong style="color:#FFFFFF;">legally liable</strong> for damages and costs arising from infringement claims.</li>
       </ol>
     </div>
 
@@ -52,14 +51,14 @@
 
     <div style="display:flex; gap:12px;">
       <button onclick="proceedToUpload()" id="agreeBtn" disabled
-              style="flex:1; padding:14px; background:var(--gold); color:var(--dark);
+              style="flex:1; padding:14px; background:var(--gold); color:#1A1A1A;
                      border:none; font-family:'Courier New',monospace; font-size:12px;
                      letter-spacing:2px; cursor:not-allowed; opacity:0.4; transition:opacity .2s;">
         I AGREE — PROCEED TO UPLOAD
       </button>
       <a href="{{ url_for('dashboard') }}"
          style="padding:14px 20px; border:1px solid var(--border);
-                color:var(--text-dim); font-family:'Courier New',monospace;
+                color:var(--text); font-family:'Courier New',monospace;
                 font-size:12px; text-decoration:none; display:flex; align-items:center;">
         Cancel
       </a>
@@ -82,7 +81,7 @@
       <!-- Drop zone -->
       <div id="dropzone" style="border:2px dashed var(--border); padding:48px; text-align:center; margin-bottom:24px; cursor:pointer; transition:border-color .2s;"
            onclick="document.getElementById('filesInput').click()">
-        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--text-dim); margin-bottom:12px;">DROP IMAGES HERE</div>
+        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:var(--text); margin-bottom:12px;">DROP IMAGES HERE</div>
         <div style="font-size:13px; color:var(--muted);">or click to select multiple files</div>
         <div id="filecount" style="margin-top:14px; font-size:13px; color:var(--gold); display:none;"></div>
       </div>
@@ -109,7 +108,7 @@
         </div>
       </div>
 
-      <div style="background:#0A0A0A; border:1px solid var(--border); padding:14px 18px; margin-bottom:20px; font-size:13px; color:var(--text-dim); line-height:1.6;">
+      <div style="background:#2C2C2A; border:1px solid var(--border); padding:14px 18px; margin-bottom:20px; font-size:13px; color:#FFFFFF; line-height:1.6;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
         Claude Vision analyses each image automatically — title, subject, location and all five
         module scores are generated by AI. No manual input needed per image.
@@ -118,11 +117,11 @@
 
       <!-- Progress area (shown after submit) -->
       <div id="progressArea" style="display:none; margin-bottom:20px;">
-        <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:10px;">PROCESSING</div>
-        <div style="background:#0A0A0A; border:1px solid var(--border); height:6px; margin-bottom:10px;">
+        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:var(--text); margin-bottom:10px;">PROCESSING</div>
+        <div style="background:#2C2C2A; border:1px solid var(--border); height:6px; margin-bottom:10px;">
           <div id="progressBar" style="height:100%; background:var(--gold); width:0%; transition:width .3s;"></div>
         </div>
-        <div id="progressText" style="font-size:12px; color:var(--text-dim);"></div>
+        <div id="progressText" style="font-size:12px; color:var(--text);"></div>
       </div>
 
       <button type="submit" id="submitBtn" class="btn btn-solid"
@@ -139,20 +138,20 @@
     <div style="background:var(--panel); border:1px solid var(--border);">
       <table style="width:100%; border-collapse:collapse;">
         <thead>
-          <tr style="background:#0A0A0A;">
+          <tr style="background:#2C2C2A;">
             {% for col in ['File', 'Score', 'Tier', 'Status'] %}
-            <th style="padding:10px 16px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
+            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
             {% endfor %}
           </tr>
         </thead>
         <tbody>
           {% for r in results %}
           <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:10px 16px; font-size:13px;">{{ r.filename }}</td>
-            <td style="padding:10px 16px; font-family:'DM Mono',monospace; font-size:13px; color:var(--gold);">{{ r.score or '—' }}</td>
-            <td style="padding:10px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--text-dim);">{{ r.tier or '—' }}</td>
+            <td style="padding:10px 16px; font-size:13px; color:var(--text);">{{ r.filename }}</td>
+            <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914;">{{ r.score or '—' }}</td>
+            <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:11px; color:var(--muted);">{{ r.tier or '—' }}</td>
             <td style="padding:10px 16px;">
-              <span style="font-family:'DM Mono',monospace; font-size:10px; padding:3px 8px; border:1px solid {{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }}; color:{{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }};">
+              <span style="font-family:'Courier New',monospace; font-size:10px; padding:3px 8px; border:1px solid {{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }}; color:{{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }};">
                 {{ r.status.upper() }}
               </span>
             </td>
@@ -220,12 +219,13 @@
     btn.textContent = 'Processing…';
     progArea.style.display = 'block';
     progText.textContent = `Uploading ${input.files.length} image(s)…`;
-    // Animate bar while waiting
     let pct = 5;
     const interval = setInterval(() => {
       pct = Math.min(pct + 2, 90);
       progBar.style.width = pct + '%';
-    }, 800);
+    }, 500);
   });
 </script>
+
+</div>
 {% endblock %}
