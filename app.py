@@ -632,30 +632,5 @@ def health():
     return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
 
 
-@app.route('/debug/images')
-def debug_images():
-    try:
-        rows = db.session.execute(db.text(
-            "SELECT id, asset_name, thumb_url, thumb_path, status FROM images ORDER BY id DESC LIMIT 5"
-        )).fetchall()
-        out = [{'id': r[0], 'asset_name': r[1], 'thumb_url': r[2], 'thumb_path': r[3], 'status': r[4]} for r in rows]
-        return jsonify(out)
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-
-@app.route('/debug/r2')
-def debug_r2():
-    import os
-    client = r2.get_client()
-    return jsonify({
-        'R2_ACCOUNT_ID': os.getenv('R2_ACCOUNT_ID', 'NOT SET'),
-        'R2_ACCESS_KEY_ID': (os.getenv('R2_ACCESS_KEY_ID', 'NOT SET')[:6] + '...') if os.getenv('R2_ACCESS_KEY_ID') else 'NOT SET',
-        'R2_BUCKET_NAME': os.getenv('R2_BUCKET_NAME', 'NOT SET'),
-        'R2_PUBLIC_URL': os.getenv('R2_PUBLIC_URL', 'NOT SET'),
-        'storage_client': 'OK' if client else 'FAILED - check credentials',
-    })
-
-
 if __name__ == '__main__':
     app.run(debug=True)
