@@ -99,11 +99,20 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     if request.method == 'POST':
+        if not request.form.get('user_agreed'):
+            flash('You must accept the Member Agreement to register.', 'error')
+            return redirect(url_for('register'))
+
         email    = request.form.get('email', '').strip().lower()
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         fullname = request.form.get('full_name', '').strip()
+        sq       = request.form.get('security_question', '').strip()
+        sa       = request.form.get('security_answer', '').strip().lower()
 
+        if not sq or not sa:
+            flash('Please select a security question and provide an answer.', 'error')
+            return redirect(url_for('register'))
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
             return redirect(url_for('register'))
@@ -112,9 +121,13 @@ def register():
             return redirect(url_for('register'))
 
         user = User(
-            email=email, username=username,
-            password_hash=generate_password_hash(password),
-            full_name=fullname
+            email             = email,
+            username          = username,
+            password_hash     = generate_password_hash(password),
+            full_name         = fullname,
+            security_question = sq,
+            security_answer   = sa,
+            agreed_at         = datetime.utcnow(),
         )
         db.session.add(user)
         db.session.commit()
@@ -147,6 +160,67 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
+# ── Forgot password (no email needed — security question flow) ────────────────
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    step     = 1
+    email    = None
+    question = None
+
+    if request.method == 'POST':
+        step  = int(request.form.get('step', 1))
+        email = request.form.get('email', '').strip().lower()
+
+        # STEP 1: look up email
+        if step == 1:
+            user = User.query.filter_by(email=email).first()
+            if not user:
+                flash('No account found with that email address.', 'error')
+                return render_template('forgot_password.html', step=1)
+            if not user.security_question:
+                flash('This account has no security question set. Please contact support.', 'error')
+                return render_template('forgot_password.html', step=1)
+            return render_template('forgot_password.html',
+                                   step=2,
+                                   email=email,
+                                   question=user.security_question)
+
+        # STEP 2: verify security answer
+        elif step == 2:
+            user   = User.query.filter_by(email=email).first()
+            answer = request.form.get('security_answer', '').strip().lower()
+            if not user or user.security_answer != answer:
+                flash('Incorrect answer. Please try again.', 'error')
+                return render_template('forgot_password.html',
+                                       step=2,
+                                       email=email,
+                                       question=user.security_question if user else '')
+            return render_template('forgot_password.html', step=3, email=email)
+
+        # STEP 3: set new password
+        elif step == 3:
+            new_pw  = request.form.get('new_password', '')
+            confirm = request.form.get('confirm_password', '')
+            user    = User.query.filter_by(email=email).first()
+            if not user:
+                flash('Session expired. Please start again.', 'error')
+                return redirect(url_for('forgot_password'))
+            if len(new_pw) < 8:
+                flash('Password must be at least 8 characters.', 'error')
+                return render_template('forgot_password.html', step=3, email=email)
+            if new_pw != confirm:
+                flash('Passwords do not match.', 'error')
+                return render_template('forgot_password.html', step=3, email=email)
+            user.password_hash = generate_password_hash(new_pw)
+            db.session.commit()
+            db.session.refresh(user)
+            flash('Password reset successfully. Please log in with your new password.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('forgot_password.html', step=1)
+
+
 # ── Member dashboard ──────────────────────────────────────────────────────────
 @app.route('/dashboard')
 @login_required
@@ -154,7 +228,7 @@ def dashboard():
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
 
-    images_q = Image.query.filter_by(user_id=current_user.id)
+    images_q     = Image.query.filter_by(user_id=current_user.id)
     total_images = images_q.count()
 
     if query and total_images >= 20:
@@ -213,7 +287,6 @@ def upload():
         if os.path.exists(raw_path):
             os.remove(raw_path)
 
-        # EXIF authenticity check
         from engine.exif_check import extract_exif
         exif_status, exif_data, exif_warning = extract_exif(thumb_path)
         exif_settings = '  ·  '.join(filter(None, [
@@ -250,7 +323,6 @@ def upload():
         db.session.add(img)
         db.session.commit()
 
-        # Auto-score via Claude Vision if API key is set
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
             try:
@@ -371,7 +443,6 @@ def score_image(image_id):
         }
         img.set_audit(audit)
 
-        # Generate rating card JPG
         from engine.compositor import build_card
         today_str  = date.today().strftime("%Y%m%d")
         safe_name  = secure_filename((img.photographer_name or 'unknown').replace(' ',''))
@@ -413,8 +484,6 @@ def serve_thumb(image_id):
     return send_file(img.thumb_path, mimetype='image/jpeg')
 
 
-
-
 # ── Change password ───────────────────────────────────────────────────────────
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required
@@ -436,13 +505,15 @@ def change_password():
 
         current_user.password_hash = generate_password_hash(new_pw)
         db.session.commit()
-      db.session.refresh(current_user)
-        flash('Password updated successfully.', 'success')
-        return redirect(url_for('dashboard'))
+        db.session.refresh(current_user)
+        flash('Password updated. Please log in again with your new password.', 'success')
+        logout_user()
+        return redirect(url_for('login'))
 
     return render_template('change_password.html')
 
-# ── Bulk upload route ─────────────────────────────────────────────────────────
+
+# ── Bulk upload ───────────────────────────────────────────────────────────────
 @app.route('/bulk-upload', methods=['GET', 'POST'])
 @login_required
 def bulk_upload():
@@ -453,7 +524,6 @@ def bulk_upload():
         genre        = request.form.get('genre', 'Wildlife')
         photographer = request.form.get('photographer_name',
                                         current_user.full_name or current_user.username)
-
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
 
         for file in files:
@@ -473,8 +543,7 @@ def bulk_upload():
                                         f"{uid}_{filename}")
                 file.save(raw_path)
 
-                thumb_path, w, h, fmt = ingest_image(raw_path,
-                                                     app.config['UPLOAD_FOLDER'])
+                thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
                 if os.path.exists(raw_path):
                     os.remove(raw_path)
 
@@ -494,7 +563,7 @@ def bulk_upload():
                     status            = 'pending',
                 )
                 db.session.add(img)
-                db.session.flush()   # get img.id without full commit
+                db.session.flush()
 
                 if api_key:
                     from engine.auto_score import auto_score, build_audit_data
@@ -548,7 +617,7 @@ def bulk_upload():
     return render_template('bulk_upload.html', genres=genres, results=results)
 
 
-# ── Public share page — no login required ─────────────────────────────────────
+# ── Public share page ─────────────────────────────────────────────────────────
 @app.route('/share/<int:image_id>')
 def share_image(image_id):
     img = Image.query.get_or_404(image_id)
@@ -556,6 +625,7 @@ def share_image(image_id):
         abort(404)
     audit = img.get_audit()
     return render_template('share.html', image=img, audit=audit)
+
 
 # ── Admin routes ──────────────────────────────────────────────────────────────
 @app.route('/admin')
