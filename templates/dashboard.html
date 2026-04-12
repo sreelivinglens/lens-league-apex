@@ -53,7 +53,7 @@
   <a href="{{ url_for('image_detail', image_id=img.id) }}" style="text-decoration:none; color:inherit;">
     <div class="card-sm" style="padding:0; overflow:hidden; transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
       <div class="img-thumb">
-        <img src="{{ url_for('serve_thumb', image_id=img.id) }}" alt="{{ img.asset_name }}" loading="lazy">
+        <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}" alt="{{ img.asset_name }}" loading="lazy">
         {% if img.score %}
           <div class="score-overlay">{{ img.score }}</div>
           <div class="status-badge scored">{{ img.tier }}</div>
