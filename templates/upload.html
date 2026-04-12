@@ -262,6 +262,8 @@
         <textarea id="subject" name="subject" placeholder="Share a brief story or context about this image…" maxlength="500"></textarea>
       </div>
 
+      <div id="genre-hint" style="margin-top:6px; font-size:0.78rem; color:#888; min-height:16px;"></div>
+
       <div class="exif-note">
         📋 <strong style="color:#C8A84B;">EXIF metadata</strong> is automatically extracted from your file to verify camera authenticity. For best results, upload the original JPEG straight from your camera without stripping metadata.
       </div>
@@ -418,6 +420,19 @@
 
     const formData = new FormData(form);
     xhr.send(formData);
+  });
+  // Genre hint
+  const genreHints = {
+    'Creative': '🎨 ICM · Panning · Zoom Burst · Star Trails · Astrophotography · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ are referred for judge review.',
+    'Wildlife': '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
+    'Street': '🏙 Decisive moment and human narrative. Some motion blur on subjects is acceptable.',
+    'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water/clouds is rewarded.',
+    'Macro': '🔬 Extreme precision focus required. Sharpness is the primary DoD criterion.',
+    'Aerial': '✈️ Physical difficulty of airborne capture. Unique elevation perspectives score highest.',
+  };
+  document.getElementById('genre').addEventListener('change', function() {
+    const hint = genreHints[this.value] || '';
+    document.getElementById('genre-hint').textContent = hint;
   });
 })();
 </script>

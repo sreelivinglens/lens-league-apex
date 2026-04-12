@@ -135,6 +135,11 @@
             <span style="font-family:'Courier New',monospace; font-size:10px; padding:2px 6px; border:1px solid {{ 'var(--green)' if img.status=='scored' else 'var(--border)' }}; color:{{ 'var(--green)' if img.status=='scored' else 'var(--text)' }}; white-space:nowrap;">
               {{ img.status.upper() }}
             </span>
+            {% if img.judge_referral %}
+            <span style="display:block; margin-top:4px; font-family:'Courier New',monospace; font-size:9px; padding:2px 6px; border:1px solid #C8A84B; color:#C8A84B; white-space:nowrap; background:rgba(200,168,75,0.1);">
+              ⚖️ JUDGE REVIEW
+            </span>
+            {% endif %}
           </td>
           <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--muted); white-space:nowrap;">{{ img.created_at.strftime('%d %b %Y') }}</td>
           <td style="padding:10px 12px;">
