@@ -112,12 +112,24 @@
         </td>
         <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--muted); white-space:nowrap;">{{ img.created_at.strftime('%d %b %Y') }}</td>
         <td style="padding:10px 12px;">
-          <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
-                onsubmit="return confirm('Delete this image? Cannot be undone.');">
-            <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:3px 10px; font-size:10px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; white-space:nowrap;">
-              🗑 DEL
-            </button>
-          </form>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <form method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}">
+              <button type="submit" title="{{ 'Remove calibration example' if img.is_calibration_example else 'Set as calibration example' }}"
+                style="background:{{ 'rgba(200,168,75,0.2)' if img.is_calibration_example else 'none' }};
+                       border:1px solid {{ '#C8A84B' if img.is_calibration_example else '#555' }};
+                       color:{{ '#C8A84B' if img.is_calibration_example else '#888' }};
+                       padding:3px 8px; font-size:10px; cursor:pointer;
+                       font-family:'Courier New',monospace; white-space:nowrap;">
+                {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
+                  onsubmit="return confirm('Delete this image? Cannot be undone.');">
+              <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:3px 10px; font-size:10px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; white-space:nowrap;">
+                🗑 DEL
+              </button>
+            </form>
+          </div>
         </td>
       </tr>
       {% endfor %}
