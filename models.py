@@ -83,6 +83,9 @@ class Image(db.Model):
     archetype           = db.Column(db.String(120), nullable=True)
     soul_bonus          = db.Column(db.Boolean, default=False)
 
+    # Calibration example flag
+    is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
+
     # Workflow status: 'pending' | 'scored'
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
@@ -157,6 +160,7 @@ def run_migrations(app):
         _col('images', 'conditions',       'VARCHAR(180)')
         _col('images', 'photographer_name','VARCHAR(120)')
         _col('images', 'phash',            'VARCHAR(64)')
+        _col('images', 'is_calibration_example', 'BOOLEAN DEFAULT FALSE')
 
 
 def _col(table, column, col_type):
