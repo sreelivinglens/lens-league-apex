@@ -66,6 +66,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS conditions VARCHAR(180)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
             ]
             for sql in _migrations:
                 try:
@@ -679,6 +680,18 @@ def admin_cleanup():
     db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/image/<int:image_id>/toggle-example', methods=['POST'])
+@login_required
+@admin_required
+def toggle_calibration_example(image_id):
+    img = Image.query.get_or_404(image_id)
+    img.is_calibration_example = not img.is_calibration_example
+    db.session.commit()
+    status = 'set as calibration example' if img.is_calibration_example else 'removed from calibration examples'
+    flash(f'"{img.asset_name}" {status}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
