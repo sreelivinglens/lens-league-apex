@@ -53,26 +53,20 @@ with app.app_context():
         print(f'Migration warning: {e}')
 
     try:
-        admin = User.query.filter_by(email='admin@lenslague.com').first()
-        if not admin:
+        if not User.query.filter_by(email='admin@lenslague.com').first():
             admin = User(
                 email         = 'admin@lenslague.com',
                 username      = 'admin',
-                password_hash = generate_password_hash('LensAdmin2026!'),
+                password_hash = generate_password_hash('changeme123'),
                 full_name     = 'Admin',
                 role          = 'admin',
             )
             db.session.add(admin)
             db.session.commit()
             print('Admin account created.')
-        else:
-            admin.password_hash = generate_password_hash('LensAdmin2026!')
-            admin.role = 'admin'
-            db.session.commit()
-            print('Admin password reset OK.')
         print('Database ready.')
     except Exception as e:
-        print(f'Admin reset warning: {e}')
+        print(f'Admin init warning: {e}')
 
 
 @login_manager.user_loader
