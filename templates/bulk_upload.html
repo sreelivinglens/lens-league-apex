@@ -271,31 +271,34 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
+  // Prevent default — show progress first, then submit after short delay
+  e.preventDefault();
+
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
   progArea.style.display = 'block';
+  progBar.style.width = '2%';
 
   const total    = files.length;
-  const perImage = 12; // estimated seconds per image
+  const perImage = 15; // estimated seconds per image
   const totalSec = total * perImage;
 
-  // Elapsed timer
+  // Start elapsed timer
   let secs = 0;
   const ticker = setInterval(() => {
     secs++;
     elapsed.textContent = secs + 's elapsed';
-    // Smooth progress based on time estimate
-    const pct = Math.min((secs / totalSec) * 90, 90);
+    const pct = Math.min((secs / totalSec) * 88, 88);
     progBar.style.width = pct + '%';
-    // Update status text based on estimated image being processed
     const imgNum = Math.min(Math.floor(secs / perImage) + 1, total);
-    progText.textContent = `Processing image ${imgNum} of ${total}…`;
+    progText.textContent = `Scoring image ${imgNum} of ${total} with Apex DDI Engine…`;
     progLabel.textContent = `PROCESSING ${imgNum}/${total}`;
   }, 1000);
 
-  // When form actually submits and page reloads, timer clears naturally
-  // Store ticker in window so it can be cleared if needed
   window.bulkTicker = ticker;
+
+  // Submit form after 200ms so browser renders the progress bar first
+  setTimeout(() => form.submit(), 200);
 });
 
 // Init on load
