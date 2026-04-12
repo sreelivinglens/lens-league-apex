@@ -26,51 +26,71 @@ Street:       DoD=15% Disruption=25% DM=25% Wonder=15% AQ=20%
 Wedding:      DoD=10% Disruption=15% DM=25% Wonder=10% AQ=40%
 People:       DoD=10% Disruption=20% DM=15% Wonder=15% AQ=40%
 Macro:        DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
-ICM:          DoD=20% Disruption=35% DM=15% Wonder=20% AQ=10%
 Aerial:       DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
 Abstract:     DoD=10% Disruption=35% DM=10% Wonder=25% AQ=20%
 
-CRITICAL — MODULE DEFINITIONS BY GENRE:
+STEP 1 — TECHNIQUE DETECTION (do this before scoring):
+Before applying any genre rules, examine the image for artistic technique:
 
-DoD (Difficulty of Delivery):
-  Wildlife/Aerial: Physical risk, access difficulty, environmental hostility,
-    mechanical precision (sharpness, exposure in challenging conditions).
-    Blur = technical failure UNLESS the subject is in flight/motion and blur
-    is consistent with intentional panning technique.
-  ICM / Abstract: DoD measures the SKILL and CONTROL required to execute
-    intentional camera movement or long-exposure artistry. Precise,
-    repeatable, controlled blur = HIGH DoD. Accidental muddy blur = low DoD.
-    Sharpness is IRRELEVANT and must NOT be penalised.
-  Street: DoD = speed of reaction, working in chaotic environments,
-    capturing fleeting moments in difficult light. Mild motion blur on
-    moving subjects is acceptable and often desirable.
-  Macro: Extreme DoD — precise focus at high magnification, depth of field
-    control, diffraction management. Sharpness IS the DoD criterion here.
-  Landscapes: Patience, location access, weather timing, long-exposure
-    technique. Intentional long-exposure blur on water/clouds = HIGH DoD.
+INTENTIONAL MOTION BLUR SIGNALS (any of these = treat as deliberate creative choice):
+  - Consistent, directional blur across the entire frame or primary subject
+  - Painterly, impressionistic, or watercolour-like rendering
+  - Motion streaks with clear directionality and control
+  - Long-exposure blur on water, clouds, or light trails
+  - Subject and background blurred in the same deliberate direction
+  - Dreamy, ethereal, or abstracted quality that transforms the subject
+  - Atmospheric mood created through controlled camera movement
+
+ACCIDENTAL / POOR TECHNIQUE SIGNALS (penalise these):
+  - Random, multidirectional blur with no consistent pattern
+  - Subject blurred but background sharp (missed focus, not artistic)
+  - Blur only on fast-moving elements with no creative intent evident
+  - Overall soft/hazy image from poor technique rather than artistic choice
+
+CRITICAL RULE: If intentional motion blur is detected, the genre label becomes
+SECONDARY. The image must be evaluated as a creative, technique-driven work
+REGARDLESS of what genre the photographer selected. A Wildlife image with
+intentional full-frame ICM blur is NOT a failed Wildlife shot — it is an
+artistic interpretation of nature, and must be scored accordingly.
+
+STEP 2 — DoD DEFINITION (technique-aware):
+  If INTENTIONAL BLUR detected:
+    DoD = skill and control of the movement technique. Consistent, precise,
+    repeatable blur = HIGH DoD (7-9). The difficulty is executing the
+    movement with artistic control, not achieving sharpness.
+    Sharpness MUST NOT be mentioned as a negative.
+
+  If NO intentional blur (standard capture):
+    Wildlife/Aerial: Sharpness, focus accuracy, physical access difficulty,
+      environmental hostility. Sharp subject = high DoD.
+    Street/People: Reaction speed, working in chaos, light management.
+      Some subject motion blur is acceptable and adds energy.
+    Macro: Extreme precision at high magnification. Sharpness IS DoD.
+    Landscapes: Patience, location, weather timing, long-exposure control.
 
 Disruption (Visual Originality):
-  Evaluate against global photographic database. ICM, multiple reflections,
-  layered transparencies, painterly rendering, unconventional framing = HIGH
-  Disruption. Disruption rewards the UNUSUAL and UNEXPECTED.
-  Multiple reflections in a single frame = significant Disruption bonus.
-  Intentional blur creating painterly or impressionistic effect = HIGH
-  Disruption — this is a deliberate creative choice, not a flaw.
+  Evaluate against global photographic database.
+  Intentional blur, painterly rendering, multiple reflections, layered
+  transparencies, unconventional framing = HIGH Disruption.
+  Disruption rewards the UNUSUAL — technique-driven images often score
+  highest here because they show the world in an unfamiliar way.
 
 DM (Decisive Moment):
-  Multiple variables at peak simultaneously. For ICM this means the
-  photographer chose EXACTLY the right duration, direction, and intensity
-  of movement. Selection ≠ Decision — reward active creative control.
+  For technique-driven images: DM = the photographer chose EXACTLY the
+  right duration, direction, and intensity of movement at the right moment.
+  The decision to execute the technique IS the decisive moment.
+  Selection ≠ Decision — reward active creative control.
 
 Wonder (Smithsonian Standard):
-  The Unseen Truth. Rare behaviour, scientific significance, or a view of
-  the world the audience has never seen. For ICM/Abstract, Wonder is the
-  ability to transform the mundane into the extraordinary — showing familiar
-  subjects in completely unfamiliar, revelatory ways.
+  The Unseen Truth. For technique-driven nature/wildlife images, Wonder is
+  the ability to show a familiar environment in a completely revelatory way —
+  transforming a known place into an emotional, almost spiritual experience.
+  This is valid Wonder, not a consolation prize.
 
 AQ (Affective Quotient):
   Emotional resonance and tonal archetype. Evaluate the FEELING the image
-  creates, not its technical attributes.
+  creates, not its technical attributes. A blurred, dreamy image with strong
+  emotional pull scores HIGH on AQ.
 
 APEX LAYER RULES:
 - Soul Bonus: AQ >= 8.0 removes ALL technical penalties
@@ -86,13 +106,12 @@ ARCHETYPES: Sadness/Forlorn, Hope/Joy, Tension/Dread, Wonder/Transcendence,
 Resilient Forlorn, Sovereign Momentum, Compressed Tension, Joyful Disruption,
 Forlorn Transcendence, Chromatic Transcendence, Tender Sovereignty, Primal Dread
 
-IMPORTANT CALIBRATION NOTES:
-- NEVER penalise intentional blur in ICM, Abstract, Street, or long-exposure Landscapes
-- Multiple reflections in one frame = compositional complexity = Disruption boost
-- Painterly, impressionistic, or ethereal rendering = artistic mastery = reward it
-- A technically "imperfect" image with high artistic intent scores HIGHER than a
-  technically perfect but creatively empty image
-- When in doubt about intent, read the genre — ICM = intentional, always
+CALIBRATION NOTES:
+- A technically "imperfect" image with high artistic intent and emotional
+  resonance scores HIGHER than a technically perfect but creatively empty one
+- Multiple reflections = compositional complexity = Disruption boost
+- Soul Bonus (AQ >= 8.0) actively removes technical penalties — use it
+- When genre and technique conflict, TECHNIQUE WINS for scoring purposes
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
 """
@@ -108,7 +127,11 @@ Location: {location}
 GENRE CONTEXT: {genre_context}
 {calibration_examples}
 
-Score all five modules using the genre-specific definitions above.
+IMPORTANT: First examine the image for intentional motion blur or creative technique
+(see STEP 1 in your instructions). If detected, evaluate DoD on technique skill,
+NOT sharpness. The genre label is secondary to what you actually see in the image.
+
+Score all five modules using technique-aware definitions.
 Use the calibration examples above as scoring anchors if provided.
 Apply all Apex layer rules. Calculate the final weighted score.
 
@@ -137,13 +160,6 @@ Return this exact JSON structure:
 
 # Genre-specific context injected into the prompt
 GENRE_CONTEXT = {
-    'ICM': (
-        "This is Intentional Camera Movement photography. Blur is the medium, not a flaw. "
-        "Evaluate DoD on the SKILL and CONTROL of the movement — precise, repeatable, "
-        "directional blur scores high. Evaluate Disruption on visual originality and "
-        "painterly quality. Do NOT mention sharpness as a negative. The photographer "
-        "deliberately moved the camera to create this effect."
-    ),
     'Abstract': (
         "This is Abstract photography. Conventional sharpness rules do not apply. "
         "Reward visual originality, colour relationships, compositional tension, "
