@@ -241,34 +241,25 @@
 
       <!-- Title -->
       <div class="form-group">
-        <label for="title">Image Title</label>
-        <input type="text" id="title" name="title" placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
+        <label for="asset_name">Image Title</label>
+        <input type="text" id="asset_name" name="asset_name" placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
       </div>
 
       <!-- Category -->
       <div class="form-group">
-        <label for="category">Category</label>
-        <select id="category" name="category" required>
-          <option value="" disabled selected>Select a category…</option>
-          <option value="Landscape">Landscape</option>
-          <option value="Portrait">Portrait</option>
-          <option value="Wildlife">Wildlife</option>
-          <option value="Street">Street</option>
-          <option value="Macro">Macro</option>
-          <option value="Aerial">Aerial</option>
-          <option value="Architecture">Architecture</option>
-          <option value="Astrophotography">Astrophotography</option>
-          <option value="ICM">ICM (Intentional Camera Movement)</option>
-          <option value="Abstract">Abstract</option>
-          <option value="Documentary">Documentary</option>
-          <option value="Other">Other</option>
+        <label for="genre">Genre</label>
+        <select id="genre" name="genre" required>
+          <option value="" disabled selected>Select a genre…</option>
+          {% for g in genres %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
         </select>
       </div>
 
       <!-- Caption -->
       <div class="form-group">
-        <label for="caption">Caption / Story <span style="color:#666;font-weight:400;text-transform:none;">(optional)</span></label>
-        <textarea id="caption" name="caption" placeholder="Share a brief story or context about this image…" maxlength="500"></textarea>
+        <label for="subject">Subject / Story <span style="color:#666;font-weight:400;text-transform:none;">(optional)</span></label>
+        <textarea id="subject" name="subject" placeholder="Share a brief story or context about this image…" maxlength="500"></textarea>
       </div>
 
       <div class="exif-note">
