@@ -682,6 +682,37 @@ def admin_cleanup():
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/admin/backfill-hashes', methods=['POST'])
+@login_required
+@admin_required
+def backfill_hashes():
+    from engine.processor import compute_phash
+    from PIL import Image as PILImage
+    import requests, io
+    updated = 0
+    failed  = 0
+    images  = Image.query.filter(Image.phash.is_(None)).all()
+    for img in images:
+        try:
+            if img.thumb_url:
+                # Fetch from R2
+                resp = requests.get(img.thumb_url, timeout=10)
+                pil  = PILImage.open(io.BytesIO(resp.content)).convert('RGB')
+            elif img.thumb_path and os.path.exists(img.thumb_path):
+                pil  = PILImage.open(img.thumb_path).convert('RGB')
+            else:
+                failed += 1
+                continue
+            img.phash = compute_phash(pil)
+            updated += 1
+        except Exception as e:
+            print(f'[backfill] image {img.id}: {e}')
+            failed += 1
+    db.session.commit()
+    flash(f'Backfilled {updated} image hashes. {failed} failed (no file).', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
