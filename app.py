@@ -644,5 +644,18 @@ def debug_images():
         return jsonify({'error': str(e)})
 
 
+@app.route('/debug/r2')
+def debug_r2():
+    import os
+    client = r2.get_client()
+    return jsonify({
+        'R2_ACCOUNT_ID': os.getenv('R2_ACCOUNT_ID', 'NOT SET'),
+        'R2_ACCESS_KEY_ID': (os.getenv('R2_ACCESS_KEY_ID', 'NOT SET')[:6] + '...') if os.getenv('R2_ACCESS_KEY_ID') else 'NOT SET',
+        'R2_BUCKET_NAME': os.getenv('R2_BUCKET_NAME', 'NOT SET'),
+        'R2_PUBLIC_URL': os.getenv('R2_PUBLIC_URL', 'NOT SET'),
+        'storage_client': 'OK' if client else 'FAILED - check credentials',
+    })
+
+
 if __name__ == '__main__':
     app.run(debug=True)
