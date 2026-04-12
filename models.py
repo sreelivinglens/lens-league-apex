@@ -17,11 +17,11 @@ class User(UserMixin, db.Model):
     is_active     = db.Column(db.Boolean, default=True)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     last_login    = db.Column(db.DateTime)
-    agreed_at     = db.Column(db.DateTime)
+    
 
     # Security question for password reset (no email needed)
-    security_question = db.Column(db.String(255))
-    security_answer   = db.Column(db.String(255))   # stored as lowercase strip
+    
+       # stored as lowercase strip
 
     images = db.relationship('Image', backref='photographer', lazy='dynamic',
                              cascade='all, delete-orphan')
