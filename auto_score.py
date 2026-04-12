@@ -29,44 +29,46 @@ Macro:        DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
 Aerial:       DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
 Abstract:     DoD=10% Disruption=35% DM=10% Wonder=25% AQ=20%
 
-STEP 1 — TECHNIQUE DETECTION (do this before scoring):
-Before applying any genre rules, examine the image for artistic technique:
+STEP 1 — TECHNIQUE DETECTION (do this FIRST, before any genre evaluation):
+Examine the image carefully for artistic technique signals:
 
-INTENTIONAL MOTION BLUR SIGNALS (any of these = treat as deliberate creative choice):
-  - Consistent, directional blur across the entire frame or primary subject
+INTENTIONAL MOTION BLUR / ICM SIGNALS:
+  - Consistent, directional blur across the entire frame
   - Painterly, impressionistic, or watercolour-like rendering
   - Motion streaks with clear directionality and control
   - Long-exposure blur on water, clouds, or light trails
-  - Subject and background blurred in the same deliberate direction
-  - Dreamy, ethereal, or abstracted quality that transforms the subject
+  - Dreamy, ethereal quality that transforms the subject
   - Atmospheric mood created through controlled camera movement
+  - The blur feels COMPOSED, not accidental
 
-ACCIDENTAL / POOR TECHNIQUE SIGNALS (penalise these):
-  - Random, multidirectional blur with no consistent pattern
-  - Subject blurred but background sharp (missed focus, not artistic)
-  - Blur only on fast-moving elements with no creative intent evident
-  - Overall soft/hazy image from poor technique rather than artistic choice
+ACCIDENTAL BLUR SIGNALS (penalise):
+  - Random multidirectional blur with no pattern
+  - Inconsistent blur — some areas sharp, some randomly blurred
+  - Overall muddy, hazy image from poor technique
 
-CRITICAL RULE: If intentional motion blur is detected, the genre label becomes
-SECONDARY. The image must be evaluated as a creative, technique-driven work
-REGARDLESS of what genre the photographer selected. A Wildlife image with
-intentional full-frame ICM blur is NOT a failed Wildlife shot — it is an
-artistic interpretation of nature, and must be scored accordingly.
+IF INTENTIONAL BLUR IS DETECTED — MANDATORY SCORING OVERRIDE:
+  ① The genre label is OVERRIDDEN for DoD evaluation purposes
+  ② "No wildlife subject" or "no sharp subject" are NOT valid penalties
+  ③ The absence of a sharp identifiable subject IS THE POINT
+  ④ DoD must be evaluated ENTIRELY on movement technique difficulty:
 
-STEP 2 — DoD DEFINITION (technique-aware):
-  If INTENTIONAL BLUR detected:
-    DoD = skill and control of the movement technique. Consistent, precise,
-    repeatable blur = HIGH DoD (7-9). The difficulty is executing the
-    movement with artistic control, not achieving sharpness.
-    Sharpness MUST NOT be mentioned as a negative.
+  ICM DoD SCORING GUIDE:
+  8-9: Controlled full-frame movement in challenging natural light
+       (dawn/dusk, low light, dynamic environments like wetlands/forests).
+       Precise shutter speed selection. Consistent blur direction.
+       Environmental difficulty — working outdoors in unpredictable conditions.
+       Multiple reflections, layered transparencies = additional DoD credit.
+  6-7: Good ICM technique in moderate conditions. Some control evident.
+  4-5: Partially controlled blur. Technique visible but inconsistent.
+  2-3: Mostly accidental blur. Little evidence of deliberate technique.
 
-  If NO intentional blur (standard capture):
-    Wildlife/Aerial: Sharpness, focus accuracy, physical access difficulty,
-      environmental hostility. Sharp subject = high DoD.
-    Street/People: Reaction speed, working in chaos, light management.
-      Some subject motion blur is acceptable and adds energy.
-    Macro: Extreme precision at high magnification. Sharpness IS DoD.
-    Landscapes: Patience, location, weather timing, long-exposure control.
+  ⑤ DO NOT write any analysis criticising the absence of a sharp subject
+  ⑥ DO NOT suggest the photographer should have used faster shutter speed
+  ⑦ DO NOT say the image "fails wildlife/street/portrait requirements"
+  ⑧ Instead, evaluate the technique on its own artistic merit
+
+STEP 2 — GENRE WEIGHTS still apply for the weighted score calculation.
+The genre label determines the formula weights, not the scoring criteria.
 
 Disruption (Visual Originality):
   Evaluate against global photographic database.
@@ -127,13 +129,17 @@ Location: {location}
 GENRE CONTEXT: {genre_context}
 {calibration_examples}
 
-IMPORTANT: First examine the image for intentional motion blur or creative technique
-(see STEP 1 in your instructions). If detected, evaluate DoD on technique skill,
-NOT sharpness. The genre label is secondary to what you actually see in the image.
+MANDATORY FIRST STEP: Examine this image for intentional motion blur or ICM technique
+BEFORE applying any genre rules. Look for consistent directional blur, painterly
+rendering, and controlled movement. If detected:
+  - Score DoD on movement difficulty and control (8+ for skilled outdoor ICM)
+  - Do NOT penalise absence of sharp subjects — that is the artistic intent
+  - Do NOT write any criticism about genre mismatch or missing wildlife/people
+  - The row_technical analysis must praise the technique, not criticise sharpness
 
-Score all five modules using technique-aware definitions.
-Use the calibration examples above as scoring anchors if provided.
-Apply all Apex layer rules. Calculate the final weighted score.
+Then score all five modules using technique-aware definitions.
+Use calibration examples as anchors if provided.
+Apply all Apex layer rules and calculate the final weighted score.
 
 Return this exact JSON structure:
 {{
