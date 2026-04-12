@@ -294,12 +294,36 @@ def upload():
         file.save(raw_path)
 
         try:
-            thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+            thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
             flash(f'Image processing failed: {e}', 'error')
             if os.path.exists(raw_path): os.remove(raw_path)
             return redirect(request.url)
         if os.path.exists(raw_path): os.remove(raw_path)
+
+        # Duplicate detection — check perceptual hash against all existing images
+        from engine.processor import hash_similarity_pct
+        existing = Image.query.filter(Image.phash.isnot(None)).all()
+        for ex in existing:
+            sim = hash_similarity_pct(phash, ex.phash)
+            if sim >= 90.0:
+                if ex.user_id == current_user.id:
+                    flash(
+                        f'⚠️ This image appears identical to one you already uploaded '
+                        f'("{ex.asset_name or ex.original_filename}"). '
+                        f'Please upload a different photograph.',
+                        'warning'
+                    )
+                else:
+                    flash(
+                        f'🚫 This image has already been submitted to Lens League by another member. '
+                        f'Submitting images that belong to or have been scored for another photographer '
+                        f'violates our Member Agreement and may have legal implications. '
+                        f'Only submit your own original photographs.',
+                        'error'
+                    )
+                if os.path.exists(thumb_path): os.remove(thumb_path)
+                return redirect(request.url)
 
         # Upload thumb to R2
         thumb_url = _r2_upload_thumb(thumb_path, uid)
@@ -329,6 +353,7 @@ def upload():
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
+            phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
             exif_status=exif_status, exif_camera=exif_data.get('camera', ''),
@@ -535,7 +560,7 @@ def bulk_upload():
                 filename = secure_filename(file.filename)
                 raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
                 file.save(raw_path)
-                thumb_path, w, h, fmt = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+                thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
                 if os.path.exists(raw_path): os.remove(raw_path)
 
                 thumb_url = _r2_upload_thumb(thumb_path, uid)
@@ -548,7 +573,7 @@ def bulk_upload():
                     file_size_kb=int(os.path.getsize(thumb_path)/1024),
                     width=w, height=h, format=fmt,
                     asset_name=os.path.splitext(filename)[0],
-                    genre=genre, photographer_name=photographer, status='pending',
+                    phash=phash, genre=genre, photographer_name=photographer, status='pending',
                 )
                 db.session.add(img)
                 db.session.flush()

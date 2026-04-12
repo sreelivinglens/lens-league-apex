@@ -44,6 +44,7 @@ class Image(db.Model):
     # File info
     original_filename   = db.Column(db.String(260), nullable=True)
     stored_filename     = db.Column(db.String(260), nullable=True)
+    phash               = db.Column(db.String(64),  nullable=True, index=True)  # perceptual hash
     thumb_path          = db.Column(db.String(512), nullable=True)
     thumb_url           = db.Column(db.String(512), nullable=True)   # R2 public URL
     card_path           = db.Column(db.String(512), nullable=True)
@@ -155,6 +156,7 @@ def run_migrations(app):
         _col('images', 'audit_json',       'TEXT')
         _col('images', 'conditions',       'VARCHAR(180)')
         _col('images', 'photographer_name','VARCHAR(120)')
+        _col('images', 'phash',            'VARCHAR(64)')
 
 
 def _col(table, column, col_type):
