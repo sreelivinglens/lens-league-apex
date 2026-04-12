@@ -2,76 +2,79 @@
 {% block title %}Bulk Upload — Lens League Apex{% endblock %}
 {% block content %}
 
-<div style="max-width:680px; margin:0 auto;">
+<style>
+  .modal-overlay {
+    position:fixed; inset:0; z-index:999;
+    background:rgba(0,0,0,0.85);
+    display:flex; align-items:center; justify-content:center;
+    padding:16px; overflow-y:auto;
+  }
+  .modal-box {
+    background:#2C2C2A; border:1px solid #8B6914;
+    max-width:580px; width:100%; border-radius:8px;
+    display:flex; flex-direction:column; max-height:90vh;
+  }
+  .modal-header {
+    padding:20px 24px 16px;
+    border-bottom:1px solid #3a3a38;
+  }
+  .modal-body {
+    padding:20px 24px; overflow-y:auto; flex:1;
+    font-size:13px; line-height:1.8; color:#FFFFFF;
+  }
+  .modal-footer {
+    padding:16px 24px; border-top:1px solid #3a3a38;
+    display:flex; gap:12px;
+  }
+</style>
 
-<!-- ── Legal Declaration Modal ────────────────────────────────────────────── -->
-<div id="legalModal" style="
-  position:fixed; inset:0; z-index:999;
-  background:rgba(0,0,0,0.85);
-  display:flex; align-items:flex-start; justify-content:center;
-  padding:16px;
-  overflow-y:auto;">
-  <div style="
-    background:var(--panel); border:1px solid var(--gold);
-    max-width:580px; width:100%; padding:28px;
-    margin:auto;">
-
-    <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px;
-                color:var(--gold); margin-bottom:20px;">
-      COPYRIGHT DECLARATION — REQUIRED
+<!-- Legal Declaration Modal — only shown if not yet agreed this session -->
+<div id="legalModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px; color:#C8A84B; margin-bottom:8px;">COPYRIGHT DECLARATION — REQUIRED</div>
+      <h2 style="font-size:18px; font-weight:700; color:#fff; margin:0;">Before You Upload</h2>
     </div>
-
-    <h2 style="font-size:20px; font-weight:700; margin-bottom:20px; color:var(--text);">
-      Before You Upload
-    </h2>
-
-    <div style="background:#2C2C2A; border:1px solid var(--border);
-                padding:20px; margin-bottom:24px;
-                font-size:13px; line-height:1.8; color:#FFFFFF;">
-      <p style="margin-bottom:14px;">
-        By uploading images to Lens League, you <strong style="color:#FFFFFF;">certify and declare</strong> that:
+    <div class="modal-body">
+      <div style="background:#1e1e1c; border:1px solid #3a3a38; padding:16px; margin-bottom:20px; border-radius:4px;">
+        <p style="margin-bottom:12px;">By uploading images to Lens League, you <strong>certify and declare</strong> that:</p>
+        <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
+          <li>All images were <strong>photographed by you</strong>, or you hold written authorisation from the original creator.</li>
+          <li>You are <strong>solely responsible</strong> for every image submitted under your account.</li>
+          <li>Submitting another photographer's work constitutes <strong>copyright infringement</strong> under the Copyright Act of India, 1957 and applicable international law.</li>
+          <li>Violations will result in <strong>permanent account suspension</strong> and potential legal action.</li>
+          <li>You may be held <strong>legally liable</strong> for damages and costs arising from infringement claims.</li>
+        </ol>
+      </div>
+      <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+        <input type="checkbox" id="modalCheckbox" style="width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:#8B6914;">
+        <span style="font-size:13px; color:#ccc; line-height:1.6;">
+          I have read and understood the above. I confirm all images are my original photographs.
+          I accept full legal responsibility.
+        </span>
+      </label>
+      <p style="margin-top:12px; font-size:11px; color:#666; text-align:center;">
+        This declaration is logged with your account, IP address, and timestamp.
       </p>
-      <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
-        <li>All images in this batch were <strong style="color:#FFFFFF;">photographed by you</strong>, or you hold written authorisation from the original creator.</li>
-        <li>You are <strong style="color:#FFFFFF;">solely responsible</strong> for every image submitted under your account.</li>
-        <li>Submitting another photographer's work constitutes <strong style="color:#FFFFFF;">copyright infringement</strong> under the <strong style="color:var(--gold);">Copyright Act of India, 1957</strong> and applicable international law.</li>
-        <li>Violations will result in <strong style="color:#FFFFFF;">permanent account suspension</strong> and potential legal action.</li>
-        <li>You may be held <strong style="color:#FFFFFF;">legally liable</strong> for damages and costs arising from infringement claims.</li>
-      </ol>
     </div>
-
-    <label style="display:flex; align-items:flex-start; gap:12px;
-                  cursor:pointer; margin-bottom:24px;">
-      <input type="checkbox" id="modalCheckbox"
-             style="width:18px; height:18px; margin-top:2px;
-                    flex-shrink:0; accent-color:var(--gold);">
-      <span style="font-size:13px; color:var(--text); line-height:1.6; font-weight:500;">
-        I have read and understood the above declaration. I confirm all images in this
-        batch are my original photographs. I accept full legal responsibility.
-      </span>
-    </label>
-
-    <div style="display:flex; gap:12px;">
+    <div class="modal-footer">
       <button onclick="proceedToUpload()" id="agreeBtn" disabled
-              style="flex:1; padding:14px; background:var(--gold); color:#1A1A1A;
-                     border:none; font-family:'Courier New',monospace; font-size:12px;
-                     letter-spacing:2px; cursor:not-allowed; opacity:0.4; transition:opacity .2s;">
+              style="flex:1; padding:13px; background:#8B6914; color:#fff; border:none;
+                     font-family:'Courier New',monospace; font-size:12px; letter-spacing:2px;
+                     cursor:not-allowed; opacity:0.4; transition:opacity .2s; border-radius:4px;">
         I AGREE — PROCEED TO UPLOAD
       </button>
       <a href="{{ url_for('dashboard') }}"
-         style="padding:14px 20px; border:1px solid var(--border);
-                color:var(--text); font-family:'Courier New',monospace;
-                font-size:12px; text-decoration:none; display:flex; align-items:center;">
+         style="padding:13px 20px; border:1px solid #3a3a38; color:#888;
+                font-family:'Courier New',monospace; font-size:12px;
+                text-decoration:none; display:flex; align-items:center; border-radius:4px;">
         Cancel
       </a>
     </div>
-    <p style="margin-top:16px; font-size:11px; color:var(--muted); text-align:center;">
-      This declaration is logged with your account, IP address, and timestamp.
-    </p>
   </div>
 </div>
 
-<div id="uploadContent" style="display:none;">
+<div id="uploadContent" style="display:none; max-width:680px; margin:0 auto;">
   <div class="page-header">
     <h1>Bulk Upload</h1>
     <p>Upload multiple images at once — AI scores each one automatically</p>
@@ -81,17 +84,22 @@
     <form method="POST" enctype="multipart/form-data" id="bulkForm">
 
       <!-- Drop zone -->
-      <div id="dropzone" style="border:2px dashed var(--border); padding:48px; text-align:center; margin-bottom:24px; cursor:pointer; transition:border-color .2s;"
-           onclick="document.getElementById('filesInput').click()">
-        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:var(--text); margin-bottom:12px;">DROP IMAGES HERE</div>
-        <div style="font-size:13px; color:var(--muted);">or click to select multiple files</div>
-        <div id="filecount" style="margin-top:14px; font-size:13px; color:var(--gold); display:none;"></div>
+      <div id="dropzone" style="border:2px dashed #3a3a38; padding:48px; text-align:center;
+           margin-bottom:24px; cursor:pointer; transition:border-color .2s; border-radius:6px;"
+           onclick="document.getElementById('filesInput').click()"
+           ondragover="event.preventDefault(); this.style.borderColor='#8B6914';"
+           ondragleave="this.style.borderColor='#3a3a38';"
+           ondrop="handleDrop(event)">
+        <div style="font-size:2rem; margin-bottom:10px;">📁</div>
+        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:var(--text); margin-bottom:8px;">DROP IMAGES HERE</div>
+        <div style="font-size:13px; color:var(--muted);">or click to select multiple files · JPG / PNG · max 5MB each</div>
+        <div id="filecount" style="margin-top:14px; font-size:13px; color:#C8A84B; display:none;"></div>
+        <div id="filelist" style="margin-top:10px; font-size:11px; color:#888; text-align:left; max-height:120px; overflow-y:auto; display:none;"></div>
       </div>
       <input type="file" id="filesInput" name="images" multiple
-             accept=".jpg,.jpeg,.png,.cr2,.cr3,.nef,.arw,.dng,.raf,.rw2"
-             style="display:none;" required>
+             accept=".jpg,.jpeg,.png" style="display:none;" required>
 
-      <hr class="divider" style="margin:20px 0;">
+      <hr style="border:none; border-top:1px solid #3a3a38; margin:20px 0;">
 
       <div class="grid-2">
         <div class="form-group">
@@ -103,27 +111,31 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Photographer Name (optional)</label>
+          <label>Photographer Name</label>
           <input type="text" name="photographer_name"
                  value="{{ current_user.full_name or current_user.username }}"
                  placeholder="Leave blank to use account name">
         </div>
       </div>
 
-      <div style="background:#2C2C2A; border:1px solid var(--border); padding:14px 18px; margin-bottom:20px; font-size:13px; color:#FFFFFF; line-height:1.6;">
-        <strong style="color:var(--gold);">How bulk upload works:</strong><br>
-        Claude Vision analyses each image automatically — title, subject, location and all five
-        module scores are generated by AI. No manual input needed per image.
-        Large batches are processed sequentially. Allow ~10 seconds per image.
+      <div style="background:#2C2C2A; border:1px solid #3a3a38; padding:14px 18px;
+                  margin-bottom:20px; font-size:13px; color:#FFFFFF; line-height:1.6; border-radius:4px;">
+        <strong style="color:#C8A84B;">How bulk upload works:</strong><br>
+        Claude Vision analyses each image automatically. Allow ~10–15 seconds per image.
+        Duplicates are detected and skipped automatically.
       </div>
 
-      <!-- Progress area (shown after submit) -->
-      <div id="progressArea" style="display:none; margin-bottom:20px;">
-        <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:var(--text); margin-bottom:10px;">PROCESSING</div>
-        <div style="background:#2C2C2A; border:1px solid var(--border); height:6px; margin-bottom:10px;">
-          <div id="progressBar" style="height:100%; background:var(--gold); width:0%; transition:width .3s;"></div>
+      <!-- Progress area -->
+      <div id="progressArea" style="display:none; margin-bottom:20px; background:#2C2C2A;
+           border:1px solid #3a3a38; padding:16px; border-radius:4px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:#C8A84B;" id="progressLabel">PROCESSING</span>
+          <span style="font-family:'Courier New',monospace; font-size:11px; color:#888;" id="elapsedDisplay">0s elapsed</span>
         </div>
-        <div id="progressText" style="font-size:12px; color:var(--text);"></div>
+        <div style="background:#1e1e1c; border-radius:99px; height:8px; overflow:hidden; margin-bottom:10px;">
+          <div id="progressBar" style="height:100%; background:linear-gradient(90deg,#8B6914,#C8A84B); width:0%; transition:width .4s ease; border-radius:99px;"></div>
+        </div>
+        <div id="progressText" style="font-size:12px; color:#ccc;"></div>
       </div>
 
       <button type="submit" id="submitBtn" class="btn btn-solid"
@@ -133,11 +145,10 @@
     </form>
   </div>
 
-  <!-- Results (shown after processing) -->
   {% if results %}
   <div style="margin-top:32px;">
     <div class="section-label">Results — {{ results|length }} images processed</div>
-    <div style="background:var(--panel); border:1px solid var(--border);">
+    <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; overflow:hidden;">
       <table style="width:100%; border-collapse:collapse;">
         <thead>
           <tr style="background:#2C2C2A;">
@@ -153,7 +164,10 @@
             <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914;">{{ r.score or '—' }}</td>
             <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:11px; color:var(--muted);">{{ r.tier or '—' }}</td>
             <td style="padding:10px 16px;">
-              <span style="font-family:'Courier New',monospace; font-size:10px; padding:3px 8px; border:1px solid {{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }}; color:{{ 'var(--green)' if r.status == 'scored' else 'var(--red)' }};">
+              {% set is_ok = r.status in ['scored', 'uploaded'] %}
+              <span style="font-family:'Courier New',monospace; font-size:10px; padding:3px 8px;
+                     border:1px solid {{ 'var(--green)' if is_ok else 'var(--red)' }};
+                     color:{{ 'var(--green)' if is_ok else 'var(--red)' }};">
                 {{ r.status.upper() }}
               </span>
             </td>
@@ -171,63 +185,124 @@
 </div>
 
 <script>
-  const modalCheckbox = document.getElementById('modalCheckbox');
-  const agreeBtn      = document.getElementById('agreeBtn');
-  const legalModal    = document.getElementById('legalModal');
-  const uploadContent = document.getElementById('uploadContent');
+// ── Session-based agreement memory ──────────────────────────────────────────
+// Use sessionStorage so modal only shows once per browser session
+const AGREED_KEY = 'bulk_upload_agreed';
 
-  modalCheckbox.addEventListener('change', function() {
-    agreeBtn.disabled = !this.checked;
-    agreeBtn.style.opacity = this.checked ? '1' : '0.4';
-    agreeBtn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
-  });
-
-  function proceedToUpload() {
-    if (!modalCheckbox.checked) return;
-    legalModal.style.display    = 'none';
-    uploadContent.style.display = 'block';
+function initPage() {
+  if (sessionStorage.getItem(AGREED_KEY) === '1') {
+    // Already agreed this session — skip modal
+    document.getElementById('legalModal').style.display = 'none';
+    document.getElementById('uploadContent').style.display = 'block';
+  } else {
+    document.getElementById('legalModal').style.display = 'flex';
+    document.getElementById('uploadContent').style.display = 'none';
   }
+  // If results exist, content should always be visible
+  {% if results %}
+  document.getElementById('legalModal').style.display = 'none';
+  document.getElementById('uploadContent').style.display = 'block';
+  {% endif %}
+}
 
-  const input    = document.getElementById('filesInput');
-  const dropzone = document.getElementById('dropzone');
-  const fcLabel  = document.getElementById('filecount');
-  const form     = document.getElementById('bulkForm');
-  const btn      = document.getElementById('submitBtn');
-  const progArea = document.getElementById('progressArea');
-  const progBar  = document.getElementById('progressBar');
-  const progText = document.getElementById('progressText');
+document.getElementById('modalCheckbox').addEventListener('change', function() {
+  const btn = document.getElementById('agreeBtn');
+  btn.disabled = !this.checked;
+  btn.style.opacity = this.checked ? '1' : '0.4';
+  btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
+});
 
-  function updateCount() {
-    if (input.files.length) {
-      fcLabel.textContent = `${input.files.length} file${input.files.length > 1 ? 's' : ''} selected`;
-      fcLabel.style.display = 'block';
-      dropzone.style.borderColor = 'var(--gold)';
-    }
+function proceedToUpload() {
+  if (!document.getElementById('modalCheckbox').checked) return;
+  sessionStorage.setItem(AGREED_KEY, '1');
+  document.getElementById('legalModal').style.display = 'none';
+  document.getElementById('uploadContent').style.display = 'block';
+}
+
+// ── File handling ────────────────────────────────────────────────────────────
+const input    = document.getElementById('filesInput');
+const dropzone = document.getElementById('dropzone');
+const fcLabel  = document.getElementById('filecount');
+const filelist = document.getElementById('filelist');
+
+function handleDrop(e) {
+  e.preventDefault();
+  dropzone.style.borderColor = '#3a3a38';
+  // DataTransfer files — set on input
+  try { input.files = e.dataTransfer.files; } catch(err) {}
+  showFiles(e.dataTransfer.files);
+}
+
+function showFiles(files) {
+  if (!files.length) return;
+  fcLabel.textContent = `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  fcLabel.style.display = 'block';
+  dropzone.style.borderColor = '#8B6914';
+  // List filenames
+  const names = Array.from(files).map(f =>
+    `<div style="padding:2px 0; border-bottom:1px solid #2a2a28;">
+       ${f.name} <span style="color:#666;">(${(f.size/1024/1024).toFixed(1)}MB)</span>
+     </div>`
+  ).join('');
+  filelist.innerHTML = names;
+  filelist.style.display = 'block';
+}
+
+input.addEventListener('change', () => showFiles(input.files));
+
+// ── Progress bar with real elapsed timer ────────────────────────────────────
+const form      = document.getElementById('bulkForm');
+const submitBtn = document.getElementById('submitBtn');
+const progArea  = document.getElementById('progressArea');
+const progBar   = document.getElementById('progressBar');
+const progText  = document.getElementById('progressText');
+const progLabel = document.getElementById('progressLabel');
+const elapsed   = document.getElementById('elapsedDisplay');
+
+form.addEventListener('submit', function(e) {
+  const files = input.files;
+  if (!files.length) return;
+
+  // Validate file sizes
+  let oversized = [];
+  for (let f of files) {
+    if (f.size > 5 * 1024 * 1024) oversized.push(f.name);
   }
-
-  input.addEventListener('change', updateCount);
-
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor='var(--gold)'; });
-  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor='var(--border)'; });
-  dropzone.addEventListener('drop', e => {
+  if (oversized.length) {
     e.preventDefault();
-    input.files = e.dataTransfer.files;
-    updateCount();
-  });
+    alert('These files exceed 5MB and will be rejected:\n' + oversized.join('\n'));
+    return;
+  }
 
-  form.addEventListener('submit', () => {
-    if (!input.files.length) return;
-    btn.disabled = true;
-    btn.textContent = 'Processing…';
-    progArea.style.display = 'block';
-    progText.textContent = `Uploading ${input.files.length} image(s)…`;
-    let pct = 5;
-    const interval = setInterval(() => {
-      pct = Math.min(pct + 2, 90);
-      progBar.style.width = pct + '%';
-    }, 500);
-  });
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Processing…';
+  progArea.style.display = 'block';
+
+  const total    = files.length;
+  const perImage = 12; // estimated seconds per image
+  const totalSec = total * perImage;
+
+  // Elapsed timer
+  let secs = 0;
+  const ticker = setInterval(() => {
+    secs++;
+    elapsed.textContent = secs + 's elapsed';
+    // Smooth progress based on time estimate
+    const pct = Math.min((secs / totalSec) * 90, 90);
+    progBar.style.width = pct + '%';
+    // Update status text based on estimated image being processed
+    const imgNum = Math.min(Math.floor(secs / perImage) + 1, total);
+    progText.textContent = `Processing image ${imgNum} of ${total}…`;
+    progLabel.textContent = `PROCESSING ${imgNum}/${total}`;
+  }, 1000);
+
+  // When form actually submits and page reloads, timer clears naturally
+  // Store ticker in window so it can be cleared if needed
+  window.bulkTicker = ticker;
+});
+
+// Init on load
+window.addEventListener('DOMContentLoaded', initPage);
 </script>
 
-</div>
 {% endblock %}
