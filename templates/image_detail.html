@@ -18,6 +18,14 @@
     {% if image.card_url or image.card_path %}
     <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
     {% endif %}
+    {% if current_user.role == 'admin' %}
+    <form method="POST" action="{{ url_for('admin_delete_image', image_id=image.id) }}"
+          onsubmit="return confirm('Delete this image permanently?');" style="display:inline;">
+      <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:8px 16px; font-size:11px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px;">
+        🗑 DELETE
+      </button>
+    </form>
+    {% endif %}
   </div>
 </div>
 
