@@ -755,15 +755,14 @@ def toggle_calibration_example(image_id):
 def backfill_hashes():
     from engine.processor import compute_phash
     from PIL import Image as PILImage
-    import requests, io
+    import httpx, io
     updated = 0
     failed  = 0
     images  = Image.query.filter(Image.phash.is_(None)).all()
     for img in images:
         try:
             if img.thumb_url:
-                # Fetch from R2
-                resp = requests.get(img.thumb_url, timeout=10)
+                resp = httpx.get(img.thumb_url, timeout=10, follow_redirects=True)
                 pil  = PILImage.open(io.BytesIO(resp.content)).convert('RGB')
             elif img.thumb_path and os.path.exists(img.thumb_path):
                 pil  = PILImage.open(img.thumb_path).convert('RGB')
