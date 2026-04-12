@@ -53,12 +53,19 @@
 <!-- RECENT IMAGES -->
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
   <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
-  <form method="POST" action="{{ url_for('admin_cleanup') }}"
-        onsubmit="return confirm('Delete all images with no thumbnail? This cannot be undone.');">
-    <button type="submit" class="btn" style="font-size:11px; padding:8px 20px; border-color:#7a2222; color:#f88;">
-      🗑 Delete Broken Images
-    </button>
-  </form>
+  <div style="display:flex; gap:10px;">
+    <form method="POST" action="{{ url_for('backfill_hashes') }}">
+      <button type="submit" class="btn" style="font-size:11px; padding:8px 20px; border-color:#8B6914; color:#C8A84B;">
+        🔍 Backfill Image Hashes
+      </button>
+    </form>
+    <form method="POST" action="{{ url_for('admin_cleanup') }}"
+          onsubmit="return confirm('Delete all images with no thumbnail? This cannot be undone.');">
+      <button type="submit" class="btn" style="font-size:11px; padding:8px 20px; border-color:#7a2222; color:#f88;">
+        🗑 Delete Broken Images
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="card" style="padding:0; overflow-x:auto;">
