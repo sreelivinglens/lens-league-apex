@@ -92,6 +92,7 @@ def run_migrations(app):
         _add_column_if_missing(db, 'users', 'security_question', 'VARCHAR(255)')
         _add_column_if_missing(db, 'users', 'security_answer',   'VARCHAR(255)')
         _add_column_if_missing(db, 'users', 'agreed_at',         'TIMESTAMP')
+        _add_column_if_missing(db, 'users', 'is_admin',          'BOOLEAN DEFAULT FALSE')
 
 
 def _add_column_if_missing(db, table, column, col_type):
