@@ -44,26 +44,37 @@ with app.app_context():
     try:
         db.create_all()
         with db.engine.connect() as conn:
-            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)'))
-            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)'))
-            conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP'))
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+            if 'postgresql' in db_url:
+                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)'))
+                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)'))
+                conn.execute(db.text('ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP'))
+            else:
+                # SQLite fallback — add columns one at a time, ignore if already exist
+                for col, typ in [('security_question','VARCHAR(255)'),('security_answer','VARCHAR(255)'),('agreed_at','TIMESTAMP')]:
+                    try:
+                        conn.execute(db.text(f'ALTER TABLE users ADD COLUMN {col} {typ}'))
+                    except Exception:
+                        pass
             conn.commit()
         print('Columns migrated OK.')
     except Exception as e:
         print(f'Migration warning: {e}')
 
     try:
-        if not User.query.filter_by(email='admin@lenslague.com').first():
-            admin = User(
-                email         = 'admin@lenslague.com',
-                username      = 'admin',
-                password_hash = generate_password_hash('changeme123'),
-                full_name     = 'Admin',
-                role          = 'admin',
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print('Admin account created.')
+        with db.engine.connect() as conn:
+            new_hash = generate_password_hash('LensAdmin2026!')
+            result = conn.execute(db.text(
+                "UPDATE users SET password_hash=:h, role='admin' WHERE email='admin@lenslague.com'"
+            ), {'h': new_hash})
+            if result.rowcount == 0:
+                conn.execute(db.text(
+                    "INSERT INTO users (email, username, password_hash, full_name, role, is_active, created_at) VALUES ('admin@lenslague.com','admin',:h,'Admin','admin',true,NOW())"
+                ), {'h': new_hash})
+                print('Admin account created.')
+            else:
+                print('Admin password reset OK.')
+            conn.commit()
         print('Database ready.')
     except Exception as e:
         print(f'Admin init warning: {e}')
