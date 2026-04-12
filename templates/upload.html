@@ -385,13 +385,25 @@
 
     xhr.addEventListener('load', function () {
       clearInterval(ticker);
-      if (xhr.status === 200 || xhr.status === 302) {
+      if (xhr.status === 200) {
         progressBar.style.width = '100%';
         progressPct.textContent = '100%';
         progressStatus.textContent = '✅ Done! Redirecting…';
-        // Follow redirect
         const redirectUrl = xhr.responseURL || '/dashboard';
         window.location.href = redirectUrl;
+      } else if (xhr.status === 409) {
+        // Duplicate image detected
+        progressWrap.style.display = 'none';
+        submitBtn.disabled = false;
+        try {
+          const resp = JSON.parse(xhr.responseText);
+          showError(resp.message || 'Duplicate image detected.');
+        } catch(e) {
+          showError('This image has already been submitted. Please upload a different photograph.');
+        }
+        // Reset file input
+        fileInput.value = '';
+        previewArea.style.display = 'none';
       } else {
         progressStatus.textContent = '❌ Upload failed. Please try again.';
         submitBtn.disabled = false;
