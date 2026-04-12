@@ -152,24 +152,21 @@
       <table style="width:100%; border-collapse:collapse;">
         <thead>
           <tr style="background:#2C2C2A;">
-            {% for col in ['File', 'Score', 'Tier', 'Status'] %}
-            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
-            {% endfor %}
+            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); width:35%;">File</th>
+            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); width:8%;">Score</th>
+            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); width:12%;">Tier</th>
+            <th style="padding:10px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); width:45%;">Status</th>
           </tr>
         </thead>
         <tbody>
           {% for r in results %}
+          {% set is_ok = r.status in ['scored', 'uploaded'] %}
           <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:10px 16px; font-size:13px; color:var(--text);">{{ r.filename }}</td>
+            <td style="padding:10px 16px; font-size:12px; color:var(--text); word-break:break-word;">{{ r.filename }}</td>
             <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914;">{{ r.score or '—' }}</td>
             <td style="padding:10px 16px; font-family:'Courier New',monospace; font-size:11px; color:var(--muted);">{{ r.tier or '—' }}</td>
-            <td style="padding:10px 16px;">
-              {% set is_ok = r.status in ['scored', 'uploaded'] %}
-              <span style="font-family:'Courier New',monospace; font-size:10px; padding:3px 8px;
-                     border:1px solid {{ 'var(--green)' if is_ok else 'var(--red)' }};
-                     color:{{ 'var(--green)' if is_ok else 'var(--red)' }};">
-                {{ r.status.upper() }}
-              </span>
+            <td style="padding:10px 16px; font-size:11px; color:{{ 'var(--green)' if is_ok else 'var(--red)' }}; word-break:break-word; line-height:1.5;">
+              {{ r.status }}
             </td>
           </tr>
           {% endfor %}
