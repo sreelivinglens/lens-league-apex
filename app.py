@@ -65,6 +65,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS audit_json TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS conditions VARCHAR(180)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
             ]
             for sql in _migrations:
                 try:
