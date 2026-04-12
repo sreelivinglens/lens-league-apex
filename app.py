@@ -67,6 +67,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
 
             ]
             for sql in _migrations:

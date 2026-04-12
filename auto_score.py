@@ -28,6 +28,18 @@ People:       DoD=10% Disruption=20% DM=15% Wonder=15% AQ=40%
 Macro:        DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
 Aerial:       DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
 Abstract:     DoD=10% Disruption=35% DM=10% Wonder=25% AQ=20%
+Creative:     DoD=20% Disruption=30% DM=15% Wonder=20% AQ=15%
+
+STEP 0 — CREATIVE GENRE OVERRIDE:
+If genre = 'Creative':
+  - Sharpness is NOT penalised when absent
+  - Sharpness IS rewarded when present (sharp subject + intentional blur = HIGHEST DoD 8.5-9.5)
+  - Pure technique/abstract work (full-frame blur, layered patterns, mosaics) scores on
+    Disruption and Wonder — can score equally high or HIGHER than sharp+blur work
+  - DoD = technique skill and difficulty. Use the DoD guide in Creative context.
+  - Never penalise absence of sharp subject. Never suggest faster shutter speed.
+  - Never mention genre mismatch.
+  - Set judge_referral=true if score >= 7.0 or technique is exceptionally complex.
 
 STEP 1 — TECHNIQUE DETECTION (do this FIRST, before any genre evaluation):
 Examine the image carefully for artistic technique signals:
@@ -161,7 +173,8 @@ Return this exact JSON structure:
   "byline_2": "<THE ONE IMPROVEMENT: specific, physical, actionable. No brand names.>",
   "badges_g": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "badges_w": ["<gap 1>", "<gap 2>", "<gap 3>"],
-  "iucn_tag": "<IUCN status if applicable, else null>"
+  "iucn_tag": "<IUCN status if applicable, else null>",
+  "judge_referral": <true if Creative genre AND score >= 7.0, OR technique complexity is exceptional, else false>
 }}"""
 
 # Genre-specific context injected into the prompt
@@ -199,6 +212,50 @@ GENRE_CONTEXT = {
         "This is Wildlife photography. Sharpness, focus accuracy, and exposure in "
         "challenging conditions are the primary DoD criteria. Reward rare behaviour, "
         "scientific significance, and peak-action capture."
+    ),
+    'Creative': (
+        "This is Creative photography — covering all technique-driven work: ICM, panning, zoom burst, "
+        "intentional blur, long exposure, star trails, astrophotography, light painting, multiple "
+        "exposure, layered blur patterns, atmospheric mosaics, and any image where artistic or "
+        "technical execution is the primary creative statement. "
+        ""
+        "DoD RULES FOR CREATIVE — READ CAREFULLY: "
+        "Sharpness is NEVER penalised when absent. Sharpness IS rewarded when present as it "
+        "demonstrates simultaneous technical and artistic control. "
+        ""
+        "HIGHEST DoD (8.5-9.5): Techniques requiring extreme precision AND creative execution together: "
+        "— Panning with razor-sharp frozen subject against motion-blurred background "
+        "— Star trails with sharp foreground elements (requires long exposure + focus precision) "
+        "— Astrophotography with sharp Milky Way/stars (requires tracking, dark skies, precise focus) "
+        "— Light painting with sharp subject (requires total darkness control + movement precision) "
+        "— ICM with selectively sharp focal point against controlled blur "
+        "— Zoom burst with sharp centre and controlled radial blur "
+        ""
+        "HIGH DoD (7-8.5): Skilled single-technique execution in challenging conditions: "
+        "— Full-frame controlled ICM in natural outdoor environments at dawn/dusk "
+        "— Long exposure water/cloud blur with precise timing "
+        "— Layered blur patterns creating atmospheric or mosaic effects "
+        "— Light trail photography with compositional control "
+        ""
+        "MODERATE DoD (5-7): Good technique in standard conditions. "
+        "LOWER DoD (3-5): Technique present but inconsistent or uncontrolled. "
+        ""
+        "Disruption: Reward images that look unlike anything in the global photographic database. "
+        "Layered blur mosaics, atmospheric abstractions, and painterly patterns that create a new "
+        "visual language score HIGHER on Disruption than technically perfect ICM with sharpness. "
+        "The more unfamiliar and original the visual result, the higher the Disruption. "
+        ""
+        "Wonder: The ability to reveal the invisible — star movement, light physics, time compression, "
+        "the hidden beauty in motion. Abstract layered patterns that evoke atmosphere or emotion "
+        "beyond what the eye can see = high Wonder. "
+        ""
+        "DM: The precise moment and decision to execute — right conditions, right timing, right technique. "
+        ""
+        "JUDGE REFERRAL: If this image scores 7.0+ overall, or shows exceptional technique complexity "
+        "that defies standard scoring, set 'judge_referral': true in your response. "
+        ""
+        "NEVER penalise absence of sharp subject. NEVER suggest faster shutter speed. "
+        "NEVER mention genre mismatch. Evaluate purely on artistic and technical mastery."
     ),
     'default': (
         "Evaluate using genre-appropriate criteria. Reward artistic intent, "
