@@ -34,7 +34,7 @@
     <div style="margin-top:16px; padding:14px 16px; border:1px solid
       {% if image.exif_status == 'verified' %}var(--green)
       {% elif image.exif_status == 'suspicious' %}var(--red)
-      {% else %}var(--muted){% endif %}; background:#0A0A0A;">
+      {% else %}var(--border){% endif %}; background:#2C2C2A;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
         <span style="font-size:14px;">
           {% if image.exif_status == 'verified' %}✅
@@ -44,23 +44,23 @@
         <span style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px;
           color:{% if image.exif_status == 'verified' %}var(--green)
           {% elif image.exif_status == 'suspicious' %}var(--red)
-          {% else %}var(--text-dim){% endif %};">
+          {% else %}#FFFFFF{% endif %};">
           {{ image.exif_status.upper() }}
           {% if image.legal_declaration %} · LEGALLY DECLARED{% endif %}
         </span>
       </div>
       {% if image.exif_camera %}
-      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
         📷 {{ image.exif_camera }}
       </div>
       {% endif %}
       {% if image.exif_settings %}
-      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
         ⚙️ {{ image.exif_settings }}
       </div>
       {% endif %}
       {% if image.exif_date_taken %}
-      <div style="font-size:12px; color:var(--text-dim); margin-bottom:3px;">
+      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
         📅 {{ image.exif_date_taken }}
       </div>
       {% endif %}
@@ -76,12 +76,12 @@
     <div style="margin-top:20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <div>
-          <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); margin-bottom:4px;">LL-SCORE</div>
-          <div style="font-size:52px; font-weight:700; color:var(--gold); line-height:1;">{{ image.score }}</div>
-          <div style="font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); letter-spacing:2px;">{{ image.tier.upper() }}</div>
+          <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:4px;">LL-SCORE</div>
+          <div style="font-size:52px; font-weight:700; color:#8B6914; line-height:1;">{{ image.score }}</div>
+          <div style="font-family:'Courier New',monospace; font-size:12px; color:#8B6914; letter-spacing:2px;">{{ image.tier.upper() }}</div>
         </div>
         {% if image.soul_bonus %}
-        <div style="border:1px solid var(--gold); padding:8px 16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); background:rgba(200,168,75,.06);">
+        <div style="border:1px solid var(--gold); padding:8px 16px; font-family:'Courier New',monospace; font-size:11px; color:#8B6914; background:rgba(200,168,75,.12);">
           ★ SOUL BONUS
         </div>
         {% endif %}
@@ -93,33 +93,33 @@
       {% if score %}
       <div style="margin-bottom:10px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; color:var(--text-dim);">{{ name }}</span>
-          <span style="font-family:'DM Mono',monospace; font-size:11px; color:var(--gold);">{{ score }}</span>
+          <span style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:1px; color:var(--text);">{{ name }}</span>
+          <span style="font-family:'Courier New',monospace; font-size:11px; color:#8B6914;">{{ score }}</span>
         </div>
-        <div style="height:3px; background:var(--muted);">
-          <div style="height:100%; width:{{ (score/10*100)|int }}%; background:var(--gold);"></div>
+        <div style="height:3px; background:var(--border);">
+          <div style="height:100%; width:{{ (score/10*100)|int }}%; background:#8B6914;"></div>
         </div>
       </div>
       {% endif %}
       {% endfor %}
 
       {% if image.archetype %}
-      <div style="margin-top:16px; padding:12px 16px; border:1px solid var(--border); background:#0A0A0A;">
-        <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--text-dim); margin-bottom:4px;">AFFECTIVE STATE</div>
+      <div style="margin-top:16px; padding:12px 16px; border:1px solid var(--border); background:#2C2C2A;">
+        <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; margin-bottom:4px;">AFFECTIVE STATE</div>
         <div style="font-size:15px; font-weight:600; color:var(--gold);">{{ image.archetype }}</div>
       </div>
       {% endif %}
     </div>
     {% else %}
-    <div style="margin-top:16px; padding:16px; border:1px solid var(--muted); text-align:center;">
-      <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--text-dim);">AWAITING SCORING</div>
+    <div style="margin-top:16px; padding:16px; border:1px solid var(--border); background:#2C2C2A; text-align:center;">
+      <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:#FFFFFF;">AWAITING SCORING</div>
     </div>
     {% endif %}
   </div>
 
   <!-- RIGHT: Scoring form -->
   <div>
-    <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:20px;">
+    <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:#8B6914; margin-bottom:20px;">
       {% if image.status == 'scored' %}RESCORE IMAGE{% else %}SCORE THIS IMAGE{% endif %}
     </div>
 
