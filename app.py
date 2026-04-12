@@ -307,23 +307,17 @@ def upload():
         for ex in existing:
             sim = hash_similarity_pct(phash, ex.phash)
             if sim >= 90.0:
-                if ex.user_id == current_user.id:
-                    flash(
-                        f'⚠️ This image appears identical to one you already uploaded '
-                        f'("{ex.asset_name or ex.original_filename}"). '
-                        f'Please upload a different photograph.',
-                        'warning'
-                    )
-                else:
-                    flash(
-                        f'🚫 This image has already been submitted to Lens League by another member. '
-                        f'Submitting images that belong to or have been scored for another photographer '
-                        f'violates our Member Agreement and may have legal implications. '
-                        f'Only submit your own original photographs.',
-                        'error'
-                    )
                 if os.path.exists(thumb_path): os.remove(thumb_path)
-                return redirect(request.url)
+                if ex.user_id == current_user.id:
+                    return jsonify({'error': True, 'message':
+                        f'⚠️ This image appears identical to one you already uploaded (\"{ ex.asset_name or ex.original_filename }\"). Please upload a different photograph.'
+                    }), 409
+                else:
+                    return jsonify({'error': True, 'message':
+                        '🚫 This image has already been submitted to Lens League by another member. ' +
+                        'Submitting images that belong to another photographer violates our Member Agreement ' +
+                        'and may have legal implications. Only submit your own original photographs.'
+                    }), 409
 
         # Upload thumb to R2
         thumb_url = _r2_upload_thumb(thumb_path, uid)
