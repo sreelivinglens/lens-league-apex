@@ -163,6 +163,38 @@ def _r2_upload_card(local_path: str, uid: str) -> str | None:
 # Routes
 # ---------------------------------------------------------------------------
 
+def auto_title(filename, genre=None, archetype=None, location=None, subject=None):
+    """Generate a meaningful title for bulk-uploaded images."""
+    import re
+    # Subject provided by user
+    if subject and subject.strip():
+        return subject.strip()[:60]
+    # Genre + first part of location
+    if genre and location:
+        city = location.split(',')[0].strip()
+        if city:
+            return f"{city} {genre}"[:60]
+    # Genre + archetype first word
+    if genre and archetype:
+        word = archetype.split()[0] if archetype.split() else ''
+        if word:
+            return f"{word} {genre}"[:60]
+    # Just genre
+    if genre:
+        return f"{genre} Photography"
+    # Clean the filename
+    name = os.path.splitext(filename)[0]
+    name = re.sub(r'(?i)screenshot[\s_]*[\d._atATPM-]+', '', name)
+    name = re.sub(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'(?i)IMG_\d+', 'Image', name)
+    name = re.sub(r'(?i)DSC_?\d+', 'Shot', name)
+    name = re.sub(r'[_\-]+', ' ', name).strip()
+    name = re.sub(r'\s+', ' ', name).strip()
+    if name and len(name) > 2:
+        return name.title()[:60]
+    return 'Untitled'
+
+
 @app.route('/')
 def index():
     try:
