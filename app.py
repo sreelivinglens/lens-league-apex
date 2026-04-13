@@ -1,7 +1,7 @@
 import os
 import uuid
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -10,6 +10,7 @@ from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
 from models import db, User, Image, CalibrationLog, CalibrationNote
@@ -68,7 +69,6 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
-
             ]
             for sql in _migrations:
                 try:
@@ -166,23 +166,18 @@ def _r2_upload_card(local_path: str, uid: str) -> str | None:
 def auto_title(filename, genre=None, archetype=None, location=None, subject=None):
     """Generate a meaningful title for bulk-uploaded images."""
     import re
-    # Subject provided by user
     if subject and subject.strip():
         return subject.strip()[:60]
-    # Genre + first part of location
     if genre and location:
         city = location.split(',')[0].strip()
         if city:
             return f"{city} {genre}"[:60]
-    # Genre + archetype first word
     if genre and archetype:
         word = archetype.split()[0] if archetype.split() else ''
         if word:
             return f"{word} {genre}"[:60]
-    # Just genre
     if genre:
         return f"{genre} Photography"
-    # Clean the filename
     name = os.path.splitext(filename)[0]
     name = re.sub(r'(?i)screenshot[\s_]*[\d._atATPM-]+', '', name)
     name = re.sub(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', '', name, flags=re.IGNORECASE)
@@ -323,7 +318,6 @@ def forgot_password():
 def dashboard():
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
-    # Admin sees all images; regular users see only their own
     if current_user.role == 'admin':
         images_q = Image.query
     else:
@@ -379,7 +373,6 @@ def upload():
             return redirect(request.url)
         if os.path.exists(raw_path): os.remove(raw_path)
 
-        # Duplicate detection — check perceptual hash against all existing images
         from engine.processor import hash_similarity_pct
         existing = Image.query.filter(Image.phash.isnot(None)).all()
         for ex in existing:
@@ -397,7 +390,6 @@ def upload():
                         'and may have legal implications. Only submit your own original photographs.'
                     }), 409
 
-        # Upload thumb to R2
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
             flash('Storage upload failed. Please try again.', 'error')
@@ -414,8 +406,8 @@ def upload():
             user_id           = current_user.id,
             original_filename = filename,
             stored_filename   = os.path.basename(thumb_path),
-            thumb_path        = thumb_path,   # kept as temp local ref
-            thumb_url         = thumb_url,    # permanent R2 URL
+            thumb_path        = thumb_path,
+            thumb_url         = thumb_url,
             file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
             width=w, height=h, format=fmt,
             asset_name        = (request.form.get('asset_name') or '').strip() or
@@ -465,7 +457,6 @@ def upload():
                 build_card1(img.thumb_path, audit, card_path)
                 img.card_path = card_path
 
-                # Upload card to R2
                 card_url = _r2_upload_card(card_path, uid + '_card')
                 if card_url:
                     img.card_url = card_url
@@ -550,7 +541,6 @@ def score_image(image_id):
         build_card1(img.thumb_path, audit, card_path)
         img.card_path = card_path
 
-        # Upload card to R2
         card_url = _r2_upload_card(card_path, uid + '_card')
         if card_url:
             img.card_url = card_url
@@ -574,7 +564,6 @@ def download_card(image_id):
 
     audit = img.get_audit() or {}
     app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())} rows_count={len(audit.get("rows",[]))} byline_1_len={len(audit.get("byline_1",""))} byline_2={len(audit.get("byline_2",""))} byline_2_body={len(audit.get("byline_2_body",""))}')
-    # Use scores from DB directly (most reliable)
     modules = [(n,v) for n,v in [
         ('DoD',        img.dod_score),
         ('Disruption', img.disruption_score),
@@ -600,7 +589,6 @@ def download_card(image_id):
         'badges_w':      audit.get('badges_w',[]),
     }
 
-    # Get photo
     photo_tmp  = None
     photo_path = img.thumb_path if (img.thumb_path and _os.path.exists(img.thumb_path)) else None
     if not photo_path and img.thumb_url:
@@ -621,7 +609,6 @@ def download_card(image_id):
         build_card1(photo_path, card_data, t1.name)
         build_card2(card_data, t2.name)
 
-        # Pack into ZIP
         import re as _re
         raw = img.asset_name or 'card'
         clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
@@ -698,12 +685,11 @@ def change_password():
 def bulk_upload():
     results = []
     if request.method == 'POST':
-        files        = request.files.getlist('images')
-        # Cap at 10 images per batch
+        files = request.files.getlist('images')
         if len(files) > 10:
             flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
             return redirect(url_for('bulk_upload'))
-        genre        = request.form.get('genre', '').strip()
+        genre = request.form.get('genre', '').strip()
         if not genre:
             flash('Please select a genre before uploading.', 'error')
             return redirect(url_for('bulk_upload'))
@@ -726,7 +712,6 @@ def bulk_upload():
                 thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
                 if os.path.exists(raw_path): os.remove(raw_path)
 
-                # Duplicate check
                 from engine.processor import hash_similarity_pct
                 existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
                 duplicate_found = False
@@ -787,7 +772,6 @@ def bulk_upload():
                     img.status='pending'; result_row['status']='uploaded'
                 db.session.commit()
             except Exception as e:
-                # Use subtransaction rollback to avoid losing other images
                 try:
                     db.session.rollback()
                 except:
@@ -797,7 +781,6 @@ def bulk_upload():
                 app.logger.error(f'Bulk upload error for {file.filename}: {err_detail}')
                 result_row['status'] = f'error: {str(e)[:120]}'
             results.append(result_row)
-    # Final safety commit — commit any pending images
     try:
         db.session.commit()
     except Exception as ce:
@@ -808,7 +791,6 @@ def bulk_upload():
             pass
 
     genres = list(GENRE_WEIGHTS.keys())
-    # If POST with results, redirect to dashboard with success flash
     if request.method == 'POST' and results:
         scored_count  = sum(1 for r in results if r['status'] == 'scored')
         saved_count   = sum(1 for r in results if 'saved' in r['status'] or r['status'] == 'uploaded')
@@ -831,6 +813,86 @@ def share_image(image_id):
     return render_template('share.html', image=img, audit=audit)
 
 
+# ---------------------------------------------------------------------------
+# Leaderboard
+# ---------------------------------------------------------------------------
+
+@app.route('/leaderboard')
+@login_required
+def leaderboard():
+    genre  = request.args.get('genre', 'all')
+    tier   = request.args.get('tier', 'all')
+    period = request.args.get('period', 'all')
+    tab    = request.args.get('tab', 'images')
+
+    # Date filter
+    now = datetime.utcnow()
+    if period == 'week':
+        since = now - timedelta(days=7)
+    elif period == 'month':
+        since = now - timedelta(days=30)
+    else:
+        since = None
+
+    # Base filter: scored images only
+    def apply_filters(q):
+        q = q.filter(
+            Image.score.isnot(None),
+            Image.score > 0,
+            Image.status == 'scored'
+        )
+        if since:
+            q = q.filter(Image.created_at >= since)
+        if genre != 'all':
+            q = q.filter(Image.genre == genre)
+        if tier != 'all':
+            q = q.filter(Image.tier == tier)
+        return q
+
+    # Top images tab
+    top_images = (apply_filters(Image.query)
+                  .order_by(desc(Image.score))
+                  .limit(50)
+                  .all())
+
+    # Top photographers tab — ranked by best single image score
+    pg_query = db.session.query(
+        Image.photographer_id,
+        Image.photographer_name,
+        func.max(Image.score).label('best_score'),
+        func.avg(Image.score).label('avg_score'),
+        func.count(Image.id).label('image_count')
+    )
+    pg_query = apply_filters(pg_query)
+    photographer_stats = (pg_query
+                          .group_by(Image.photographer_id, Image.photographer_name)
+                          .order_by(desc('best_score'))
+                          .limit(50)
+                          .all())
+
+    # Dropdown values
+    all_genres = sorted([
+        r[0] for r in
+        db.session.query(Image.genre).distinct().filter(Image.genre.isnot(None)).all()
+    ])
+    all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
+
+    return render_template('leaderboard.html',
+        top_images=top_images,
+        photographer_stats=photographer_stats,
+        all_genres=all_genres,
+        all_tiers=all_tiers,
+        genre=genre,
+        tier=tier,
+        period=period,
+        tab=tab,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Admin routes
+# ---------------------------------------------------------------------------
+
 @app.route('/admin')
 @login_required
 @admin_required
@@ -842,15 +904,11 @@ def admin_dashboard():
     recent       = Image.query.order_by(Image.created_at.desc()).limit(20).all()
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
 
-    # Get last two calibration log snapshots for trend comparison
     cal_trend = {}
     try:
-        from sqlalchemy import func
-        # Get the two most recent distinct log timestamps
         recent_logs = (CalibrationLog.query
                        .order_by(CalibrationLog.logged_at.desc())
                        .limit(40).all())
-        # Group by timestamp proximity — find two distinct batches
         batches = []
         current_batch = []
         last_time = None
@@ -867,7 +925,7 @@ def admin_dashboard():
             batches.append(current_batch)
 
         if len(batches) >= 2:
-            current_snap = {l.genre: l for l in batches[0]}
+            current_snap  = {l.genre: l for l in batches[0]}
             previous_snap = {l.genre: l for l in batches[1]}
             for genre in current_snap:
                 curr = current_snap[genre]
@@ -875,12 +933,12 @@ def admin_dashboard():
                 cal_trend[genre] = {
                     'current':  curr,
                     'previous': prev,
-                    'score_delta': round(curr.avg_score - prev.avg_score, 2) if prev else None,
-                    'dod_delta':   round(curr.avg_dod - prev.avg_dod, 2) if prev else None,
-                    'dis_delta':   round(curr.avg_dis - prev.avg_dis, 2) if prev else None,
-                    'dm_delta':    round(curr.avg_dm - prev.avg_dm, 2) if prev else None,
-                    'wonder_delta':round(curr.avg_wonder - prev.avg_wonder, 2) if prev else None,
-                    'aq_delta':    round(curr.avg_aq - prev.avg_aq, 2) if prev else None,
+                    'score_delta':  round(curr.avg_score  - prev.avg_score,  2) if prev else None,
+                    'dod_delta':    round(curr.avg_dod    - prev.avg_dod,    2) if prev else None,
+                    'dis_delta':    round(curr.avg_dis    - prev.avg_dis,    2) if prev else None,
+                    'dm_delta':     round(curr.avg_dm     - prev.avg_dm,     2) if prev else None,
+                    'wonder_delta': round(curr.avg_wonder - prev.avg_wonder, 2) if prev else None,
+                    'aq_delta':     round(curr.avg_aq     - prev.avg_aq,     2) if prev else None,
                 }
         elif len(batches) == 1:
             for log in batches[0]:
@@ -888,7 +946,6 @@ def admin_dashboard():
     except Exception as e:
         print(f'[cal trend] {e}')
 
-    # Drift alerts — flag genres with potential issues
     drift_alerts = []
     for genre, s in cal_stats.items():
         if s['avg_score'] < 5.0:
@@ -926,7 +983,6 @@ def run_calibration():
 @admin_required
 def admin_delete_image(image_id):
     img = Image.query.get_or_404(image_id)
-    # Delete from R2 if thumb exists
     if img.thumb_url:
         try:
             key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
@@ -970,7 +1026,6 @@ def admin_bulk_delete():
             img = Image.query.get(int(image_id))
             if not img:
                 continue
-            # Delete from R2
             if img.thumb_url:
                 try:
                     key = img.thumb_url.replace(r2.R2_PUBLIC_URL + '/', '')
@@ -1059,7 +1114,6 @@ def admin_feedback(image_id):
     )
     db.session.add(note)
 
-    # If corrected score provided, also update the image score and mark as REF
     if corr and module == 'overall':
         img.score = float(corr)
         img.status = 'scored'
@@ -1079,9 +1133,10 @@ def score_single_image():
     if 'image' not in request.files:
         return jsonify({'error': 'No file'}), 400
 
-    file       = request.files['image']
-    genre      = request.form.get('genre', 'Wildlife')
-    photographer = request.form.get('photographer_name', '').strip() or                    current_user.full_name or current_user.username
+    file         = request.files['image']
+    genre        = request.form.get('genre', 'Wildlife')
+    photographer = request.form.get('photographer_name', '').strip() or \
+                   current_user.full_name or current_user.username
 
     if not file or not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file'}), 400
@@ -1094,7 +1149,6 @@ def score_single_image():
         thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         if os.path.exists(raw_path): os.remove(raw_path)
 
-        # Duplicate check
         from engine.processor import hash_similarity_pct
         for ex in Image.query.filter(Image.phash.isnot(None)).all():
             if hash_similarity_pct(phash, ex.phash) >= 90.0:
@@ -1137,9 +1191,7 @@ def score_single_image():
                 img.soul_bonus       = scored.get('soul_bonus', False)
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
-                # Update title with archetype
-                img.asset_name = auto_title(filename, genre,
-                                            archetype=scored.get('archetype', ''))
+                img.asset_name = auto_title(filename, genre, archetype=scored.get('archetype', ''))
                 audit = build_audit_data(scored, img)
                 img.set_audit(audit)
                 db.session.commit()
@@ -1176,7 +1228,6 @@ def score_single_image():
 @login_required
 @admin_required
 def admin_health_check():
-    """Audit every scored image for missing/malformed audit data."""
     images = Image.query.filter_by(status='scored').all()
     issues = []
     healthy = 0
@@ -1185,7 +1236,6 @@ def admin_health_check():
         audit = img.get_audit() or {}
         img_issues = []
 
-        # Check audit keys
         if not audit:
             img_issues.append('no audit JSON')
         else:
@@ -1199,7 +1249,6 @@ def admin_health_check():
             if rows and len(rows) < 5:
                 img_issues.append(f'only {len(rows)}/5 analysis rows')
 
-        # Check scores
         if not img.score:
             img_issues.append('no score')
         if not img.tier:
@@ -1231,7 +1280,6 @@ def admin_health_check():
 @login_required
 @admin_required
 def admin_rescore_all():
-    """Rescore all images that have missing audit data. Runs synchronously."""
     images = Image.query.filter_by(status='scored').all()
     results = {'rescored': 0, 'skipped': 0, 'errors': []}
     api_key = os.getenv('ANTHROPIC_API_KEY', '')
@@ -1241,7 +1289,6 @@ def admin_rescore_all():
 
     for img in images:
         audit = img.get_audit() or {}
-        # Only rescore if byline_2_body is missing (old format)
         needs_rescore = (
             not audit.get('byline_2_body') and
             not audit.get('byline_2') and
@@ -1282,13 +1329,11 @@ def admin_rescore_all():
 @login_required
 @admin_required
 def admin_transfer_images():
-    """Transfer images from admin to a registered user by photographer name."""
     photographer = request.form.get('photographer_name', '').strip()
     if not photographer:
         flash('Please enter a photographer name.', 'error')
         return redirect(url_for('admin_dashboard'))
 
-    # Find matching user
     target_user = User.query.filter(
         db.or_(
             User.full_name.ilike(photographer),
@@ -1300,7 +1345,6 @@ def admin_transfer_images():
         flash(f'No registered user found matching "{photographer}". They need to register first.', 'warning')
         return redirect(url_for('admin_dashboard'))
 
-    # Transfer all images credited to this photographer that aren't already theirs
     images = Image.query.filter(
         Image.photographer_name.ilike(photographer),
         Image.user_id != target_user.id
@@ -1383,7 +1427,6 @@ def delete_calibration_note(note_id):
 @login_required
 @admin_required
 def debug_images():
-    """Show last 20 images in DB with full details for debugging."""
     images = Image.query.order_by(Image.created_at.desc()).limit(20).all()
     rows = []
     for img in images:
