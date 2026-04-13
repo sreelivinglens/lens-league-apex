@@ -520,102 +520,87 @@ def score_image(image_id):
 
 @app.route('/image/<int:image_id>/download')
 def download_card(image_id):
-    """Public route — no login required. Card contains Lens League branding throughout."""
+    """Public route. Regenerates card fresh every time using current compositor."""
     img = Image.query.get_or_404(image_id)
 
     if not img.score:
-        flash('This image has not been scored yet.', 'error')
-        return redirect(url_for('image_detail', image_id=image_id))
+        return "This image has not been scored yet.", 404
 
-    safe_name = secure_filename(
-        f"LL_{img.score}_{img.tier}_{(img.asset_name or 'card').replace(' ','_')}.jpg"
-    )
+    import io, tempfile, os as _os
+    from engine.compositor import build_card as _build_card
 
-    try:
-        # Always regenerate card fresh from stored audit data
-        # This ensures the latest compositor design is always used
-        import io, tempfile
-        from engine.compositor import build_card
+    # ── Assemble audit data ───────────────────────────────────────────────────
+    audit = img.get_audit() or {}
 
-        audit = img.get_audit() or {}
+    modules = [(n, v) for n, v in [
+        ('DoD',        img.dod_score),
+        ('Disruption', img.disruption_score),
+        ('DM',         img.dm_score),
+        ('Wonder',     img.wonder_score),
+        ('AQ',         img.aq_score),
+    ] if v is not None]
 
-        # Build the audit dict that build_card expects
-        modules = []
-        for name, val in [
-            ('DoD',        img.dod_score),
-            ('Disruption', img.disruption_score),
-            ('DM',         img.dm_score),
-            ('Wonder',     img.wonder_score),
-            ('AQ',         img.aq_score),
-        ]:
-            if val:
-                modules.append((name, val))
+    card_data = {
+        'score':         img.score,
+        'tier':          img.tier or '',
+        'asset':         img.asset_name or img.original_filename or 'Untitled',
+        'meta':          '  ·  '.join(filter(None, [img.genre, img.format, img.location])),
+        'genre_tag':     '  ·  '.join(filter(None, [img.genre, img.format])),
+        'dec':           img.archetype or '',
+        'credit':        img.photographer_name or '',
+        'soul_bonus':    bool(img.soul_bonus),
+        'iucn_tag':      audit.get('iucn_tag', ''),
+        'modules':       modules,
+        'rows':          audit.get('rows', []),
+        'byline_1':      audit.get('byline_1', ''),
+        'byline_2_body': audit.get('byline_2_body', ''),
+        'badges_g':      audit.get('badges_g', []),
+        'badges_w':      audit.get('badges_w', []),
+    }
 
-        card_data = {
-            'score':         img.score,
-            'tier':          img.tier or '',
-            'asset':         img.asset_name or img.original_filename or 'Untitled',
-            'meta':          f"{img.genre or ''} · {img.format or ''} · {img.location or ''}".strip(' ·'),
-            'genre_tag':     f"{img.genre or ''} · {img.format or ''}".strip(' ·'),
-            'dec':           img.archetype or '',
-            'credit':        img.photographer_name or '',
-            'soul_bonus':    img.soul_bonus or False,
-            'iucn_tag':      audit.get('iucn_tag', ''),
-            'modules':       modules,
-            'rows':          audit.get('rows', []),
-            'byline_1':      audit.get('byline_1', ''),
-            'byline_2_body': audit.get('byline_2_body', ''),
-            'badges_g':      audit.get('badges_g', []),
-            'badges_w':      audit.get('badges_w', []),
-        }
+    # ── Get photo path ────────────────────────────────────────────────────────
+    photo_tmp = None
+    photo_path = img.thumb_path if (img.thumb_path and _os.path.exists(img.thumb_path)) else None
 
-        # Use thumb_path if available, otherwise fetch from R2
-        photo_path = img.thumb_path
-        if not photo_path or not os.path.exists(photo_path):
-            # Download thumb from R2 to a temp file
-            if img.thumb_url:
-                from storage import get_client, BUCKET
-                s3  = get_client()
-                key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
-                tmp = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-                s3.download_fileobj(BUCKET, key, tmp)
-                tmp.close()
-                photo_path = tmp.name
-            else:
-                photo_path = None
-
-        # Generate card to temp file
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tf:
-            card_tmp = tf.name
-
-        build_card(photo_path, card_data, card_tmp)
-
-        # Stream to browser as download
-        with open(card_tmp, 'rb') as f:
-            card_bytes = f.read()
-
-        # Cleanup temp files
+    if not photo_path and img.thumb_url:
         try:
-            os.unlink(card_tmp)
-            if photo_path and photo_path.startswith(tempfile.gettempdir()):
-                os.unlink(photo_path)
-        except:
-            pass
+            from storage import get_client, BUCKET
+            s3  = get_client()
+            key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
+            tf  = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            s3.download_fileobj(BUCKET, key, tf)
+            tf.close()
+            photo_path = tf.name
+            photo_tmp  = tf.name
+        except Exception as e:
+            app.logger.warning(f'Thumb download failed: {e}')
 
-        from flask import Response
-        return Response(
-            card_bytes,
-            headers={
-                'Content-Type': 'image/jpeg',
-                'Content-Disposition': f'attachment; filename="{safe_name}"',
-                'Content-Length': len(card_bytes),
-            }
-        )
+    # ── Generate card ─────────────────────────────────────────────────────────
+    try:
+        card_tmp = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+        card_tmp.close()
+        _build_card(photo_path, card_data, card_tmp.name)
 
-    except Exception as e:
-        app.logger.error(f'Card generation error: {e}')
-        flash(f'Card generation failed: {e}', 'error')
-        return redirect(url_for('image_detail', image_id=image_id))
+        with open(card_tmp.name, 'rb') as f:
+            card_bytes = f.read()
+    finally:
+        for p in [card_tmp.name if card_tmp else None, photo_tmp]:
+            try:
+                if p: _os.unlink(p)
+            except: pass
+
+    safe_name = f"LensLeague_{img.score}_{img.tier}_{(img.asset_name or 'card').replace(' ','_')}.jpg"
+
+    from flask import Response
+    return Response(
+        card_bytes,
+        headers={
+            'Content-Type':        'image/jpeg',
+            'Content-Disposition': f'attachment; filename="{safe_name}"',
+            'Content-Length':      str(len(card_bytes)),
+            'Cache-Control':       'no-store',
+        }
+    )
 
 
 @app.route('/image/<int:image_id>/thumb')
