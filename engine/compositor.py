@@ -52,8 +52,8 @@ RED      = (224,  85,  85)  # --red
 AMBER    = (224, 153,  64)  # --amber
 
 # ── Canvas ────────────────────────────────────────────────────────────────────
-CW  = 900   # canvas width
-PAD = 44    # left/right padding
+CW  = 1400   # canvas width
+PAD = 64    # left/right padding
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def line_h(font):
@@ -133,20 +133,20 @@ def build_card(photo_path, data, out_path):
 
     # ── Define all fonts ──────────────────────────────────────────────────────
     F = {
-        'brand':    fnt(F_MONO,   15),
-        'engine':   fnt(F_MONO_R, 12),
-        'score':    fnt(F_BOLD,   88),   # dominant score number
-        'tier':     fnt(F_MONO,   20),
-        'title':    fnt(F_BOLD,   28),
-        'meta':     fnt(F_REG,    17),
-        'tag':      fnt(F_MONO_R, 14),
-        'mod_lbl':  fnt(F_MONO_R, 14),
-        'mod_val':  fnt(F_BOLD,   36),   # large module numbers
-        'sec_hdr':  fnt(F_MONO,   15),   # section label
-        'body':     fnt(F_REG,    19),   # ALL body text 19pt
-        'imp':      fnt(F_BOLD,   19),   # improvement text bold
-        'badge_h':  fnt(F_MONO,   15),
-        'footer':   fnt(F_MONO_R, 13),
+        'brand':    fnt(F_MONO,   22),
+        'engine':   fnt(F_MONO_R, 18),
+        'score':    fnt(F_BOLD,   132),   # dominant score number
+        'tier':     fnt(F_MONO,   30),
+        'title':    fnt(F_BOLD,   42),
+        'meta':     fnt(F_REG,    26),
+        'tag':      fnt(F_MONO_R, 21),
+        'mod_lbl':  fnt(F_MONO_R, 21),
+        'mod_val':  fnt(F_BOLD,   54),   # large module numbers
+        'sec_hdr':  fnt(F_MONO,   22),   # section label
+        'body':     fnt(F_REG,    28),   # ALL body text — 28pt
+        'imp':      fnt(F_BOLD,   28),   # improvement text bold
+        'badge_h':  fnt(F_MONO,   22),
+        'footer':   fnt(F_MONO_R, 20),
     }
 
     W = CW - PAD * 2  # inner content width
@@ -171,8 +171,8 @@ def build_card(photo_path, data, out_path):
 
     # ── Calculate heights of each section ─────────────────────────────────────
     HEADER_H = 56
-    PHOTO_H  = 520
-    SCORE_H  = 180
+    PHOTO_H  = 800
+    SCORE_H  = 260
 
     # Module row
     MOD_H = PAD + line_h(F['mod_lbl']) + 10 + line_h(F['mod_val']) + 14 + 6 + PAD
