@@ -683,8 +683,68 @@ def admin_dashboard():
     pending      = Image.query.filter_by(status='pending').count()
     recent       = Image.query.order_by(Image.created_at.desc()).limit(20).all()
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
+
+    # Get last two calibration log snapshots for trend comparison
+    cal_trend = {}
+    try:
+        from sqlalchemy import func
+        # Get the two most recent distinct log timestamps
+        recent_logs = (CalibrationLog.query
+                       .order_by(CalibrationLog.logged_at.desc())
+                       .limit(40).all())
+        # Group by timestamp proximity — find two distinct batches
+        batches = []
+        current_batch = []
+        last_time = None
+        for log in recent_logs:
+            if last_time is None or (last_time - log.logged_at).total_seconds() < 60:
+                current_batch.append(log)
+            else:
+                batches.append(current_batch)
+                current_batch = [log]
+                if len(batches) >= 2:
+                    break
+            last_time = log.logged_at
+        if current_batch:
+            batches.append(current_batch)
+
+        if len(batches) >= 2:
+            current_snap = {l.genre: l for l in batches[0]}
+            previous_snap = {l.genre: l for l in batches[1]}
+            for genre in current_snap:
+                curr = current_snap[genre]
+                prev = previous_snap.get(genre)
+                cal_trend[genre] = {
+                    'current':  curr,
+                    'previous': prev,
+                    'score_delta': round(curr.avg_score - prev.avg_score, 2) if prev else None,
+                    'dod_delta':   round(curr.avg_dod - prev.avg_dod, 2) if prev else None,
+                    'dis_delta':   round(curr.avg_dis - prev.avg_dis, 2) if prev else None,
+                    'dm_delta':    round(curr.avg_dm - prev.avg_dm, 2) if prev else None,
+                    'wonder_delta':round(curr.avg_wonder - prev.avg_wonder, 2) if prev else None,
+                    'aq_delta':    round(curr.avg_aq - prev.avg_aq, 2) if prev else None,
+                }
+        elif len(batches) == 1:
+            for log in batches[0]:
+                cal_trend[log.genre] = {'current': log, 'previous': None, 'score_delta': None}
+    except Exception as e:
+        print(f'[cal trend] {e}')
+
+    # Drift alerts — flag genres with potential issues
+    drift_alerts = []
+    for genre, s in cal_stats.items():
+        if s['avg_score'] < 5.0:
+            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg score {s["avg_score"]} — possible under-scoring'})
+        elif s['avg_score'] > 8.5:
+            drift_alerts.append({'genre': genre, 'type': 'high', 'msg': f'Avg score {s["avg_score"]} — possible over-scoring'})
+        if s['avg_dod'] < 3.0:
+            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]} — engine may be under-valuing difficulty'})
+        if s['avg_aq'] < 4.0:
+            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]} — low emotional resonance scores across genre'})
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
-                           scored=scored, pending=pending, recent=recent, cal_stats=cal_stats)
+                           scored=scored, pending=pending, recent=recent,
+                           cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts)
 
 
 @app.route('/admin/calibrate', methods=['POST'])
