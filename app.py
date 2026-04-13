@@ -552,89 +552,86 @@ def score_image(image_id):
 
 @app.route('/image/<int:image_id>/download')
 def download_card(image_id):
-    """Public route. Regenerates card fresh every time using current compositor."""
+    """Public. Generates two landscape cards and serves as ZIP."""
     img = Image.query.get_or_404(image_id)
-
     if not img.score:
         return "This image has not been scored yet.", 404
 
-    import io, tempfile, os as _os
-    from engine.compositor import build_card as _build_card
+    import io, tempfile, zipfile, os as _os
+    from engine.compositor import build_card1, build_card2
 
-    # ── Assemble audit data ───────────────────────────────────────────────────
     audit = img.get_audit() or {}
-
-    modules = [(n, v) for n, v in [
+    modules = [(n,v) for n,v in [
         ('DoD',        img.dod_score),
         ('Disruption', img.disruption_score),
         ('DM',         img.dm_score),
         ('Wonder',     img.wonder_score),
         ('AQ',         img.aq_score),
-    ] if v is not None and float(v) > 0]
+    ] if v and float(v) > 0]
 
     card_data = {
         'score':         img.score,
         'tier':          img.tier or '',
         'asset':         img.asset_name or img.original_filename or 'Untitled',
-        'meta':          '  ·  '.join(filter(None, [img.genre, img.format, img.location])),
-        'genre_tag':     '  ·  '.join(filter(None, [img.genre, img.format])),
+        'meta':          '  ·  '.join(filter(None,[img.genre,img.format,img.location])),
         'dec':           img.archetype or '',
         'credit':        img.photographer_name or '',
         'soul_bonus':    bool(img.soul_bonus),
-        'iucn_tag':      audit.get('iucn_tag', ''),
+        'iucn_tag':      audit.get('iucn_tag',''),
         'modules':       modules,
-        'rows':          audit.get('rows', []),
-        'byline_1':      audit.get('byline_1', ''),
-        'byline_2_body': audit.get('byline_2_body', ''),
-        'badges_g':      audit.get('badges_g', []),
-        'badges_w':      audit.get('badges_w', []),
+        'rows':          audit.get('rows',[]),
+        'byline_1':      audit.get('byline_1',''),
+        'byline_2_body': audit.get('byline_2_body',''),
+        'badges_g':      audit.get('badges_g',[]),
+        'badges_w':      audit.get('badges_w',[]),
     }
 
-    # ── Get photo path ────────────────────────────────────────────────────────
-    photo_tmp = None
+    # Get photo
+    photo_tmp  = None
     photo_path = img.thumb_path if (img.thumb_path and _os.path.exists(img.thumb_path)) else None
-
     if not photo_path and img.thumb_url:
         try:
             from storage import get_client, BUCKET
-            s3  = get_client()
-            key = 'thumbs/' + img.thumb_url.split('/thumbs/')[-1]
-            tf  = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-            s3.download_fileobj(BUCKET, key, tf)
+            tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            get_client().download_fileobj(BUCKET, 'thumbs/'+img.thumb_url.split('/thumbs/')[-1], tf)
             tf.close()
-            photo_path = tf.name
-            photo_tmp  = tf.name
+            photo_path = photo_tmp = tf.name
         except Exception as e:
-            app.logger.warning(f'Thumb download failed: {e}')
+            app.logger.warning(f'Thumb fetch failed: {e}')
 
-    # ── Generate card ─────────────────────────────────────────────────────────
     try:
-        card_tmp = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        card_tmp.close()
-        _build_card(photo_path, card_data, card_tmp.name)
+        t1 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+        t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+        t1.close(); t2.close()
 
-        with open(card_tmp.name, 'rb') as f:
-            card_bytes = f.read()
+        build_card1(photo_path, card_data, t1.name)
+        build_card2(card_data, t2.name)
+
+        # Pack into ZIP
+        import re as _re
+        raw = img.asset_name or 'card'
+        clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
+        clean = clean[:40].replace(' ','_')
+
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf,'w',zipfile.ZIP_DEFLATED) as zf:
+            zf.write(t1.name, f'LensLeague_{clean}_ScoreCard.jpg')
+            zf.write(t2.name, f'LensLeague_{clean}_Analysis.jpg')
+        zip_bytes = zip_buf.getvalue()
+
     finally:
-        for p in [card_tmp.name if card_tmp else None, photo_tmp]:
+        for p in [t1.name if t1 else None, t2.name if t2 else None, photo_tmp]:
             try:
                 if p: _os.unlink(p)
             except: pass
 
-    import re as _re
-    raw_name = img.asset_name or img.original_filename or 'card'
-    # Strip screenshot timestamp patterns like Screenshot_2026-04-11_at_10.01.22_PM
-    clean = _re.sub(r'screenshot[_\s]*\d{4}.\d{2}.\d{2}.*', '', raw_name, flags=_re.IGNORECASE).strip('_- ')
-    clean = clean or 'RatingCard'
-    safe_name = f"LensLeague_{img.score}_{img.tier}_{clean.replace(' ','_')[:40]}.jpg"
-
     from flask import Response
     return Response(
-        card_bytes,
+        zip_bytes,
         headers={
-            'Content-Type':        'image/jpeg',
-            'Content-Disposition': f'attachment; filename="{safe_name}"',
-            'Content-Length':      str(len(card_bytes)),
+            'Content-Type':        'application/zip',
+            'Content-Disposition': f'attachment; filename="LensLeague_{clean}_RatingCards.zip"',
+            'Content-Length':      str(len(zip_bytes)),
             'Cache-Control':       'no-store',
         }
     )
