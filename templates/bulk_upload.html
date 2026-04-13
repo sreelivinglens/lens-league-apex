@@ -198,6 +198,13 @@
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
         The Apex DDI Engine analyses each image automatically. Allow ~15–20 seconds per image.
         Duplicates are detected and skipped. Keep this tab open until complete.
+        <br><br>
+        <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong>
+        6:00 AM – 10:00 AM &nbsp;·&nbsp; 2:00 PM – 5:00 PM &nbsp;·&nbsp; After 11:00 PM<br>
+        <span style="color:var(--text-muted); font-size:13px;">
+        Peak hours (6 PM – 10 PM IST) may cause scoring delays due to high global API demand.
+        Images are always saved — scoring happens automatically when servers are available.
+        </span>
       </div>
 
       <!-- Progress -->
@@ -222,6 +229,45 @@
   <!-- Results — redesigned as card rows instead of table -->
   {% if results %}
   <div class="results-section">
+
+    {% set busy_count = results | selectattr('status', 'containing', 'API busy') | list | length %}
+    {% set error_count = results | selectattr('status', 'containing', 'error') | list | length %}
+    {% set scored_count = results | selectattr('status', 'equalto', 'scored') | list | length %}
+
+    {% if busy_count > 0 %}
+    <div style="background:var(--amber-dim); border:1px solid var(--amber);
+                border-radius:var(--radius-md); padding:20px 24px; margin-bottom:20px;">
+      <div style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+                  letter-spacing:2px; color:var(--amber); text-transform:uppercase; margin-bottom:10px;">
+        ⏳ AI Servers Currently Busy
+      </div>
+      <p style="font-size:15px; color:#F0C888; line-height:1.7; margin-bottom:12px;">
+        {{ busy_count }} image{{ 's' if busy_count != 1 }} were saved but could not be scored right now.
+        The Apex DDI Engine runs on Anthropic AI servers which experience high demand at certain times.
+        Your images are safe — you can score them from your dashboard when the servers are less busy.
+      </p>
+      <div style="background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); padding:14px 18px;
+                  font-size:14px; color:#F0C888; line-height:1.9;">
+        <strong style="color:var(--amber);">Generally busy periods (IST):</strong><br>
+        🔴 &nbsp;6:00 PM – 11:00 PM &nbsp;·&nbsp; Peak evening hours<br>
+        🟡 &nbsp;12:00 PM – 2:00 PM &nbsp;·&nbsp; Lunch hour load<br>
+        🟢 &nbsp;6:00 AM – 11:00 AM &nbsp;·&nbsp; Best time to upload<br>
+        🟢 &nbsp;11:00 PM – 5:00 AM &nbsp;·&nbsp; Off-peak, fastest scoring
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:12px; font-family:var(--font-mono);">
+        TIP: Go to Dashboard → click any pending image → click "Generate Score" to retry scoring individually.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if scored_count > 0 %}
+    <div style="background:var(--green-dim); border:1px solid var(--green);
+                border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px;
+                font-size:15px; color:var(--green);">
+      ✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully by the Apex DDI Engine.
+    </div>
+    {% endif %}
+
     <div class="results-count">
       <span>{{ results|length }}</span> image{{ 's' if results|length != 1 }} processed
     </div>
@@ -235,13 +281,28 @@
         <div style="min-width:120px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Status</div>
       </div>
 
+      {% set has_busy = results | selectattr('status', 'equalto', 'saved — scoring queued (API busy)') | list | length > 0 %}
+      {% if has_busy %}
+      <div style="padding:16px 20px; background:var(--amber-dim); border:1px solid var(--amber);
+                  border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+                  font-size:15px; color:#F0C888; line-height:1.7;">
+        ⏳ <strong>AI scoring servers are currently busy.</strong>
+        Your images have been saved safely and will appear in your dashboard.
+        You can rescore them manually from the image detail page, or try again during off-peak hours.<br>
+        <strong>Best times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM
+      </div>
+      {% endif %}
       {% for r in results %}
-      {% set is_ok = r.status in ['scored', 'uploaded'] %}
+      {% set is_ok = r.status in ['scored', 'uploaded', 'saved — scoring queued (API busy)'] %}
       <div class="result-row">
         <div class="result-filename" style="word-break:break-word; overflow-wrap:anywhere; font-size:13px; color:var(--text-muted);">{{ r.filename }}</div>
         <div class="result-score">{{ r.score or '—' }}</div>
         <div class="result-tier">{{ r.tier or '—' }}</div>
+        {% if 'busy' in r.status %}
+        <div class="result-status" style="color:var(--amber);">{{ r.status }}</div>
+        {% else %}
         <div class="result-status {{ 'ok' if is_ok else 'err' }}">{{ r.status }}</div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>

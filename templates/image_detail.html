@@ -280,7 +280,7 @@
           {% elif image.exif_status == 'suspicious' %}⚠️
           {% else %}❓{% endif %}
         </span>
-        <span class="exif-status-label"
+        <span class="exif-status-label" title="Camera Authentication" title="Camera Authentication Status"
               style="color:{% if image.exif_status == 'verified' %}var(--green){% elif image.exif_status == 'suspicious' %}var(--red){% else %}var(--text-secondary){% endif %};">
           {{ image.exif_status.upper() }}
           {% if image.legal_declaration %}&nbsp;·&nbsp;LEGALLY DECLARED{% endif %}
