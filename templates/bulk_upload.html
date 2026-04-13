@@ -386,7 +386,7 @@ form.addEventListener('submit', function(e) {
       sessionStorage.removeItem('bulk_processing');
       // Redirect to dashboard with success message instead of document.write
       sessionStorage.removeItem('bulk_processing');
-      window.location.href = '/bulk-upload?done=1';
+      window.location.href = '/dashboard';
     } else {
       progText.textContent = `❌ Error ${xhr.status} — please try again.`;
       submitBtn.disabled = false;

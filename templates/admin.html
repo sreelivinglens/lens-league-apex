@@ -367,6 +367,29 @@
 
 {% endif %}
 
+<!-- IMAGE TRANSFER PANEL -->
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
+    🔄 Transfer Images to Photographer
+  </div>
+  <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
+    Transfer all images credited to a photographer name to their registered account.
+    The photographer must be registered first. On registration, transfer happens automatically.
+  </p>
+  <form method="POST" action="{{ url_for('admin_transfer_images') }}"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <div style="flex:1; min-width:200px;">
+      <label style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">PHOTOGRAPHER NAME</label>
+      <input type="text" name="photographer_name"
+             placeholder="e.g. Ashok Kochhar"
+             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;">
+    </div>
+    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;">
+      Transfer Images →
+    </button>
+  </form>
+</div>
+
 <!-- RECENT SUBMISSIONS HEADER -->
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
   <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
