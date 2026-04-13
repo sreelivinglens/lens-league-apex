@@ -1,6 +1,6 @@
 """
 Apex DDI Auto-Scoring Engine
-Calls Claude Vision API to automatically score uploaded images
+Apex DDI Engine — AI scoring for uploaded images
 Returns structured JSON with all module scores, audit text, bylines, badges
 """
 
@@ -11,7 +11,7 @@ import re
 import httpx
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-MODEL             = "claude-sonnet-4-20250514"
+MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
 
 SYSTEM_BRIEF = """
 You are the Apex DDI Engine for The Lens League photography rating platform.
@@ -336,7 +336,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
 
     payload = {
         "model":      MODEL,
-        "max_tokens": 1200,
+        "max_tokens": 800,
         "temperature": 0.2,
         "system":     SYSTEM_BRIEF,
         "messages": [
@@ -357,16 +357,26 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
         ],
     }
 
-    response = httpx.post(
-        "https://api.anthropic.com/v1/messages",
-        headers={
-            "x-api-key":         ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type":      "application/json",
-        },
-        json=payload,
-        timeout=60,
-    )
+    # Retry up to 3 times on 529 overloaded errors
+    import time as _time
+    response = None
+    for _attempt in range(3):
+        response = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json=payload,
+            timeout=90,
+        )
+        if response.status_code == 529:
+            wait = (_attempt + 1) * 15  # 15s, 30s, 45s
+            print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {_attempt+1}/3)")
+            _time.sleep(wait)
+            continue
+        break
 
     if response.status_code != 200:
         raise ValueError(f"API error {response.status_code}: {response.text}")
