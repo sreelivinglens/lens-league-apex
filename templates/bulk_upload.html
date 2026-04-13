@@ -166,7 +166,7 @@
            ondrop="handleDrop(event)">
         <span class="dz-icon">📁</span>
         <div class="dz-label">Drop images here or <strong style="color:var(--gold);">click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB each</div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB each &nbsp;·&nbsp; <strong style="color:var(--amber);">Max 10 images per batch</strong></div>
         <div id="filecount" style="margin-top:14px; font-size:14px; font-weight:600; color:var(--gold); display:none;"></div>
         <div id="filelist" style="margin-top:10px; font-size:13px; color:var(--text-muted); text-align:left; max-height:120px; overflow-y:auto; display:none;"></div>
       </div>
@@ -196,7 +196,7 @@
                   border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px;
                   font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
-        The Apex DDI Engine analyses each image automatically. Allow ~15–20 seconds per image.
+        The Apex DDI Engine analyses each image automatically. Allow ~15–20 seconds per image. <strong style="color:var(--amber);">Maximum 10 images per batch.</strong>
         Duplicates are detected and skipped. Keep this tab open until complete.
         <br><br>
         <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong>
@@ -374,7 +374,11 @@ function showFiles(files) {
   if (!files.length) return;
   const fc = document.getElementById('filecount');
   const fl = document.getElementById('filelist');
-  fc.textContent = `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  const overLimit = files.length > 10;
+  fc.textContent = overLimit
+    ? `⚠️ ${files.length} files selected — maximum is 10. Please select fewer images.`
+    : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  fc.style.color = overLimit ? 'var(--red)' : 'var(--gold)';
   fc.style.display = 'block';
   dropzone.style.borderColor = 'var(--gold)';
   fl.innerHTML = Array.from(files).map(f =>
