@@ -1046,6 +1046,112 @@ def admin_feedback(image_id):
     return redirect(url_for('image_detail', image_id=image_id))
 
 
+@app.route('/admin/health-check')
+@login_required
+@admin_required
+def admin_health_check():
+    """Audit every scored image for missing/malformed audit data."""
+    images = Image.query.filter_by(status='scored').all()
+    issues = []
+    healthy = 0
+
+    for img in images:
+        audit = img.get_audit() or {}
+        img_issues = []
+
+        # Check audit keys
+        if not audit:
+            img_issues.append('no audit JSON')
+        else:
+            if not audit.get('rows'):
+                img_issues.append('missing rows')
+            if not audit.get('byline_1') and not audit.get('byline_2') and not audit.get('byline_2_body'):
+                img_issues.append('missing byline')
+            if not audit.get('byline_2') and not audit.get('byline_2_body'):
+                img_issues.append('missing improvement text')
+            rows = audit.get('rows', [])
+            if rows and len(rows) < 5:
+                img_issues.append(f'only {len(rows)}/5 analysis rows')
+
+        # Check scores
+        if not img.score:
+            img_issues.append('no score')
+        if not img.tier:
+            img_issues.append('no tier')
+        if not img.thumb_url:
+            img_issues.append('no thumb_url')
+
+        if img_issues:
+            issues.append({
+                'id': img.id,
+                'name': img.asset_name or img.original_filename,
+                'genre': img.genre,
+                'score': img.score,
+                'issues': img_issues,
+                'audit_keys': list(audit.keys()) if audit else []
+            })
+        else:
+            healthy += 1
+
+    return jsonify({
+        'total_scored': len(images),
+        'healthy': healthy,
+        'issues_count': len(issues),
+        'images_with_issues': issues
+    })
+
+
+@app.route('/admin/rescore-all', methods=['POST'])
+@login_required
+@admin_required
+def admin_rescore_all():
+    """Rescore all images that have missing audit data. Runs synchronously."""
+    images = Image.query.filter_by(status='scored').all()
+    results = {'rescored': 0, 'skipped': 0, 'errors': []}
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+
+    if not api_key:
+        return jsonify({'error': 'No API key configured'}), 500
+
+    for img in images:
+        audit = img.get_audit() or {}
+        # Only rescore if byline_2_body is missing (old format)
+        needs_rescore = (
+            not audit.get('byline_2_body') and
+            not audit.get('byline_2') and
+            img.thumb_path and os.path.exists(img.thumb_path)
+        )
+        if not needs_rescore:
+            results['skipped'] += 1
+            continue
+
+        try:
+            from engine.auto_score import auto_score, build_audit_data
+            scored = auto_score(
+                image_path=img.thumb_path,
+                genre=img.genre or 'Wildlife',
+                title=img.asset_name,
+                photographer=img.photographer_name
+            )
+            audit = build_audit_data(scored, img)
+            img.set_audit(audit)
+            img.dod_score        = float(scored.get('dod', img.dod_score or 0))
+            img.disruption_score = float(scored.get('disruption', img.disruption_score or 0))
+            img.dm_score         = float(scored.get('dm', img.dm_score or 0))
+            img.wonder_score     = float(scored.get('wonder', img.wonder_score or 0))
+            img.aq_score         = float(scored.get('aq', img.aq_score or 0))
+            img.score            = float(scored.get('score', img.score or 0))
+            img.tier             = scored.get('tier', img.tier)
+            img.archetype        = scored.get('archetype', img.archetype)
+            db.session.commit()
+            results['rescored'] += 1
+        except Exception as e:
+            db.session.rollback()
+            results['errors'].append({'id': img.id, 'error': str(e)[:100]})
+
+    return jsonify(results)
+
+
 @app.route('/admin/transfer-images', methods=['POST'])
 @login_required
 @admin_required
