@@ -1,6 +1,225 @@
 {% extends "base.html" %}
 {% block title %}Leaderboard — Lens League Apex{% endblock %}
 
+{% block extra_css %}
+<style>
+.lb-wrap { max-width: 1000px; }
+
+.lb-header {
+  margin-bottom: 1.5rem;
+  padding-left: 20px;
+  border-left: 3px solid var(--gold);
+}
+.lb-header h1 {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.lb-sub {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+}
+
+/* Filters */
+.lb-filters { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+.lb-filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+.lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
+.lb-filter-group label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Period pills */
+.lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
+.lb-pill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  text-decoration: none;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all .15s;
+  letter-spacing: .5px;
+}
+.lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+.lb-pill.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 700; }
+
+/* Selects */
+.lb-filter-group select {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  background: var(--surface-3);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color .2s;
+}
+.lb-filter-group select:focus { border-color: var(--gold); }
+.lb-filter-group select option { background: var(--surface-3); }
+
+/* Tabs */
+.lb-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.lb-tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  text-decoration: none;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .15s;
+  text-transform: uppercase;
+}
+.lb-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.lb-tab:hover:not(.active) { color: var(--text-secondary); }
+
+/* Table */
+.lb-table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); }
+.lb-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+.lb-table thead tr { background: var(--surface-3); }
+.lb-table thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.lb-table thead th.col-score,
+.lb-table thead th.col-count { text-align: right; }
+
+.lb-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background .1s;
+}
+.lb-table tbody tr:last-child { border-bottom: none; }
+.lb-table tbody tr:hover { background: rgba(200,168,75,0.04); }
+.lb-row--podium { background: rgba(200,168,75,0.06); }
+.lb-row--podium:hover { background: rgba(200,168,75,0.09); }
+
+.lb-table td { padding: 11px 14px; vertical-align: middle; color: var(--text-primary); }
+.col-rank  { width: 48px; text-align: center; }
+.col-thumb { width: 56px; }
+.col-score { text-align: right; width: 90px; }
+.col-count { text-align: right; width: 80px; }
+.col-genre, .col-tier { white-space: nowrap; }
+
+/* Medals */
+.medal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  font-size: 11px; font-weight: 700;
+}
+.medal.gold   { background: #C8A84B; color: #3a2a00; }
+.medal.silver { background: #8a8a8a; color: #1a1a1a; }
+.medal.bronze { background: #8B5E3C; color: #fff; }
+.rank-num { font-size: 13px; color: var(--text-disabled); font-family: var(--font-mono); }
+
+/* Thumbnail */
+.lb-thumb {
+  width: 44px; height: 44px;
+  object-fit: cover; border-radius: var(--radius-sm); display: block;
+  border: 1px solid var(--border);
+}
+.lb-thumb-placeholder {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+
+/* Title cell */
+.lb-title-link {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 14px;
+  display: block;
+}
+.lb-title-link:hover { color: var(--gold); }
+.lb-byline {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  display: block;
+}
+
+/* Badges */
+.lb-badge {
+  font-size: 11px;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  letter-spacing: .5px;
+}
+
+/* Tier pills */
+.lb-tier { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
+.tier-legend       { background: rgba(200,168,75,0.15); color: var(--gold-light); border: 1px solid var(--gold-dark); }
+.tier-grandmaster  { background: rgba(138,97,175,0.20); color: #c49eff; border: 1px solid #7a4aaa; }
+.tier-master       { background: rgba(59,130,200,0.20); color: #7abfff; border: 1px solid #2a5a99; }
+.tier-practitioner { background: rgba(76,175,115,0.20); color: #7adfa8; border: 1px solid #2a7a55; }
+.tier-apprentice   { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+
+/* Score */
+.lb-score {
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  font-family: var(--font-mono);
+}
+.lb-score-avg {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.lb-photographer-name { font-weight: 600; color: var(--text-primary); }
+.lb-count { color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; }
+
+/* Empty state */
+.lb-empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="lb-wrap">
 
@@ -63,16 +282,17 @@
         <tr>
           <th class="col-rank">#</th>
           <th class="col-thumb"></th>
-          <th class="col-title">Image</th>
+          <th>Image</th>
           <th class="col-genre">Genre</th>
           <th class="col-tier">Tier</th>
           <th class="col-score">Score</th>
-          <th class="col-photographer">Photographer</th>
+          <th>Photographer</th>
         </tr>
       </thead>
       <tbody>
         {% for image in top_images %}
         <tr class="lb-row {% if loop.index <= 3 %}lb-row--podium{% endif %}">
+
           <td class="col-rank">
             {% if loop.index == 1 %}<span class="medal gold">1</span>
             {% elif loop.index == 2 %}<span class="medal silver">2</span>
@@ -80,32 +300,42 @@
             {% else %}<span class="rank-num">{{ loop.index }}</span>
             {% endif %}
           </td>
+
           <td class="col-thumb">
             <a href="{{ url_for('image_detail', image_id=image.id) }}">
-              <img src="{{ url_for('serve_thumb', image_id=image.id) }}" alt="{{ image.asset_name }}" class="lb-thumb">
+              {% if image.thumb_url %}
+                <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="lb-thumb">
+              {% else %}
+                <div class="lb-thumb-placeholder"></div>
+              {% endif %}
             </a>
           </td>
-          <td class="col-title">
+
+          <td>
             <a href="{{ url_for('image_detail', image_id=image.id) }}" class="lb-title-link">
-              {{ image.asset_name or 'Untitled' }}
+              {{ image.asset_name or image.original_filename or 'Untitled' }}
             </a>
-            {% set audit = image.get_audit() %}
-            {% if audit and audit.get('byline_1') %}
-            <span class="lb-byline">{{ audit.byline_1 }}</span>
-            {% elif image.archetype %}
+            {% if image.archetype %}
             <span class="lb-byline">{{ image.archetype }}</span>
             {% endif %}
           </td>
-          <td class="col-genre"><span class="lb-badge">{{ image.genre or '—' }}</span></td>
+
+          <td class="col-genre">
+            <span class="lb-badge">{{ image.genre or '—' }}</span>
+          </td>
+
           <td class="col-tier">
             <span class="lb-tier tier-{{ (image.tier or 'apprentice') | lower | replace(' ', '-') }}">
               {{ image.tier or '—' }}
             </span>
           </td>
+
           <td class="col-score">
             <span class="lb-score">{{ "%.2f" | format(image.score) }}</span>
           </td>
-          <td class="col-photographer">{{ image.photographer_name or '—' }}</td>
+
+          <td>{{ image.photographer_name or '—' }}</td>
+
         </tr>
         {% endfor %}
       </tbody>
@@ -123,7 +353,7 @@
       <thead>
         <tr>
           <th class="col-rank">#</th>
-          <th class="col-title">Photographer</th>
+          <th>Photographer</th>
           <th class="col-score">Best Score</th>
           <th class="col-score">Avg Score</th>
           <th class="col-count">Images</th>
@@ -132,6 +362,7 @@
       <tbody>
         {% for p in photographer_stats %}
         <tr class="lb-row {% if loop.index <= 3 %}lb-row--podium{% endif %}">
+
           <td class="col-rank">
             {% if loop.index == 1 %}<span class="medal gold">1</span>
             {% elif loop.index == 2 %}<span class="medal silver">2</span>
@@ -139,14 +370,21 @@
             {% else %}<span class="rank-num">{{ loop.index }}</span>
             {% endif %}
           </td>
-          <td class="col-title">
-            <span class="lb-photographer-name">{{ p.photographer_name or 'Anonymous' }}</span>
-          </td>
+
+          <td><span class="lb-photographer-name">{{ p.photographer_name or 'Anonymous' }}</span></td>
+
           <td class="col-score">
             <span class="lb-score">{{ "%.2f" | format(p.best_score) }}</span>
           </td>
-          <td class="col-score secondary-score">{{ "%.2f" | format(p.avg_score) }}</td>
-          <td class="col-count">{{ p.image_count }}</td>
+
+          <td class="col-score">
+            <span class="lb-score-avg">{{ "%.2f" | format(p.avg_score) }}</span>
+          </td>
+
+          <td class="col-count">
+            <span class="lb-count">{{ p.image_count }}</span>
+          </td>
+
         </tr>
         {% endfor %}
       </tbody>
@@ -158,113 +396,6 @@
   {% endif %}
 
 </div>
-
-<style>
-.lb-wrap { max-width: 920px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-
-.lb-header { margin-bottom: 1.5rem; }
-.lb-header h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 .25rem; }
-.lb-sub { color: #888; font-size: .875rem; margin: 0; }
-
-.lb-filters { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
-.lb-filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
-.lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
-.lb-filter-group label {
-  font-size: .7rem; font-weight: 600; letter-spacing: .07em;
-  text-transform: uppercase; color: #999;
-}
-
-.lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
-.lb-pill {
-  padding: .3rem .8rem; border-radius: 999px;
-  border: 1px solid #ddd; font-size: .8rem;
-  text-decoration: none; color: #555; background: #fff;
-  transition: all .15s;
-}
-.lb-pill.active, .lb-pill:hover { background: #111; color: #fff; border-color: #111; }
-
-select {
-  padding: .35rem .7rem; border-radius: 6px;
-  border: 1px solid #ddd; font-size: .85rem;
-  background: #fff; color: #222; cursor: pointer;
-  height: 34px;
-}
-select:focus { outline: none; border-color: #999; }
-
-.lb-tabs {
-  display: flex; border-bottom: 1px solid #eee; margin-bottom: 1.5rem;
-}
-.lb-tab {
-  padding: .6rem 1.25rem; font-size: .875rem; font-weight: 500;
-  text-decoration: none; color: #888;
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
-  transition: all .15s;
-}
-.lb-tab.active { color: #111; border-bottom-color: #111; }
-.lb-tab:hover:not(.active) { color: #333; }
-
-.lb-table-wrap { overflow-x: auto; }
-.lb-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-.lb-table thead th {
-  text-align: left; font-size: .7rem; font-weight: 600;
-  letter-spacing: .06em; text-transform: uppercase; color: #999;
-  padding: .5rem .75rem; border-bottom: 1px solid #eee; white-space: nowrap;
-}
-.lb-table tbody tr { border-bottom: 1px solid #f3f3f3; transition: background .1s; }
-.lb-table tbody tr:hover { background: #fafafa; }
-.lb-row--podium { background: #fffdf5; }
-.lb-row--podium:hover { background: #fff9e8; }
-
-td { padding: .65rem .75rem; vertical-align: middle; }
-.col-rank  { width: 44px; text-align: center; }
-.col-thumb { width: 52px; }
-.col-score { text-align: right; width: 90px; }
-.col-count { text-align: right; width: 80px; color: #888; font-size: .85rem; }
-.col-genre, .col-tier { white-space: nowrap; }
-
-.medal {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; border-radius: 50%;
-  font-size: .7rem; font-weight: 700;
-}
-.medal.gold   { background: #FFD700; color: #6b4f00; }
-.medal.silver { background: #C0C0C0; color: #444; }
-.medal.bronze { background: #cd7f32; color: #fff; }
-.rank-num { font-size: .8rem; color: #ccc; }
-
-.lb-thumb {
-  width: 40px; height: 40px;
-  object-fit: cover; border-radius: 4px; display: block;
-}
-
-.lb-title-link { font-weight: 500; color: #111; text-decoration: none; }
-.lb-title-link:hover { text-decoration: underline; }
-.lb-byline {
-  display: block; font-size: .75rem; color: #aaa; margin-top: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;
-}
-
-.lb-badge {
-  font-size: .72rem; background: #f0f0f0; color: #555;
-  padding: .2rem .55rem; border-radius: 999px;
-}
-
-.lb-tier { font-size: .72rem; padding: .2rem .55rem; border-radius: 999px; font-weight: 600; }
-.tier-legend       { background: #fff3cd; color: #7a5500; }
-.tier-grandmaster  { background: #ede0ff; color: #4a1f8a; }
-.tier-master       { background: #daeeff; color: #0a4a7a; }
-.tier-practitioner { background: #d6f5e8; color: #0a5a35; }
-.tier-apprentice   { background: #f0f0f0; color: #666; }
-
-.lb-score {
-  font-weight: 700; font-size: .95rem;
-  font-variant-numeric: tabular-nums; color: #111;
-}
-.secondary-score { color: #999; font-size: .85rem; }
-.lb-photographer-name { font-weight: 500; }
-
-.lb-empty { padding: 3rem; text-align: center; color: #bbb; font-size: .9rem; }
-</style>
 
 <script>
 function applyFilter(key, value) {
