@@ -1,8 +1,7 @@
 """
-Apex Audit Card — v15
-Dark theme redesign matching Lens League Apex brand
-Canvas: 960px wide, dynamic height
-Palette: Deep black background, gold accents, high contrast text
+Apex Rating Card — v16
+Exactly mirrors the share page dark design.
+Canvas: 960px wide, dynamic height.
 """
 
 from PIL import Image, ImageDraw, ImageFont
@@ -15,323 +14,273 @@ F_MONO   = os.path.join(FONT_DIR, 'DejaVuSansMono-Bold.ttf')
 F_MONO_R = os.path.join(FONT_DIR, 'DejaVuSansMono.ttf')
 
 def fnt(path, size):
-    if os.path.exists(path):
-        try: return ImageFont.truetype(path, size)
-        except: pass
-    for fb in [
+    for p in [path,
         '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
         '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
     ]:
-        if os.path.exists(fb):
-            try: return ImageFont.truetype(fb, size)
+        if os.path.exists(p):
+            try: return ImageFont.truetype(p, size)
             except: pass
     return ImageFont.load_default()
 
-# ── Dark Theme Palette ────────────────────────────────────────────────────────
-BG          = (13,  13,  11)    # #0D0D0B — deep black
-SURFACE_1   = (20,  20,  18)    # #141412 — card surface
-SURFACE_2   = (28,  28,  26)    # #1C1C1A — raised elements
-SURFACE_3   = (36,  36,  34)    # #242422 — subtle panels
-BORDER      = (42,  42,  40)    # #2A2A28 — borders
-BORDER_MD   = (56,  56,  54)    # #383836 — stronger borders
-TEXT_1      = (240, 239, 232)   # #F0EFE8 — primary text
-TEXT_2      = (184, 182, 174)   # #B8B6AE — secondary text
-TEXT_3      = (122, 120, 112)   # #7A7870 — muted text
-GOLD        = (200, 168, 75)    # #C8A84B — gold accent
-GOLD_DARK   = (139, 105, 20)    # #8B6914 — dark gold
-GOLD_BG     = (28,  24,  12)    # dark gold background
-GREEN       = (76,  175, 115)   # #4CAF73
-RED         = (224, 85,  85)    # #E05555
-AMBER       = (224, 153, 64)    # #E09940
-WHITE       = (255, 255, 255)
+# ── Palette — matches share page exactly ─────────────────────────────────────
+BG        = (13,  13,  11)
+S1        = (20,  20,  18)
+S2        = (28,  28,  26)
+S3        = (36,  36,  34)
+BORDER    = (42,  42,  40)
+BORDER_MD = (56,  56,  54)
+T1        = (240, 239, 232)
+T2        = (184, 182, 174)
+T3        = (122, 120, 112)
+GOLD      = (200, 168, 75)
+GOLD_D    = (139, 105, 20)
+GOLD_BG   = (22,  19,  8)
+GREEN     = (76,  175, 115)
+RED       = (224, 85,  85)
+AMBER     = (224, 153, 64)
 
-CW          = 960
-PAD         = 32
-TH_W, TH_H  = 240, 160          # Larger thumbnail
+CW  = 960
+PAD = 32
 
 def fh(font):
-    d = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-    return d.textbbox((0, 0), 'Ag', font=font)[3] + 4
+    d = ImageDraw.Draw(Image.new('RGB', (1,1)))
+    return d.textbbox((0,0),'Ag',font=font)[3] + 4
 
 def wrap(text, font, max_w, draw):
-    if not text or not text.strip():
-        return []
+    if not text or not text.strip(): return []
     words, lines, cur = text.split(), [], []
     for w in words:
-        test = ' '.join(cur + [w])
-        if draw.textbbox((0, 0), test, font=font)[2] > max_w and cur:
-            lines.append(' '.join(cur))
-            cur = [w]
-        else:
-            cur.append(w)
-    if cur:
-        lines.append(' '.join(cur))
+        test = ' '.join(cur+[w])
+        if draw.textbbox((0,0),test,font=font)[2] > max_w and cur:
+            lines.append(' '.join(cur)); cur=[w]
+        else: cur.append(w)
+    if cur: lines.append(' '.join(cur))
     return lines
 
-def measure_h(text, font, max_w, draw, sp=5):
-    lines = wrap(text, font, max_w, draw)
-    return len(lines) * fh(font) + max(0, len(lines)-1) * sp if lines else 0
+def mh(text, font, max_w, draw, sp=5):
+    ls = wrap(text,font,max_w,draw)
+    return len(ls)*fh(font)+max(0,len(ls)-1)*sp if ls else 0
 
-def draw_wrapped(draw, text, font, color, x, y, max_w, sp=5):
-    for line in wrap(text, font, max_w, draw):
-        draw.text((x, y), line, font=font, fill=color)
-        y += fh(font) + sp
+def dw(draw, text, font, color, x, y, max_w, sp=5):
+    for line in wrap(text,font,max_w,draw):
+        draw.text((x,y),line,font=font,fill=color); y+=fh(font)+sp
     return y
-
-def draw_rect_outline(draw, x, y, w, h, color, width=1):
-    draw.rectangle([x, y, x+w, y+h], outline=color, width=width)
 
 def build_card(photo_path, data, out_path):
 
-    # ── Font sizes — bigger for legibility ───────────────────────────────────
-    f_brand    = fnt(F_MONO,   13)   # top strip brand
-    f_engine   = fnt(F_MONO_R, 11)   # engine tag
-    f_score    = fnt(F_BOLD,   52)   # big score number
-    f_tier     = fnt(F_MONO,   13)   # tier label
-    f_asset    = fnt(F_BOLD,   18)   # image title
-    f_meta     = fnt(F_REG,    13)   # meta line
-    f_tag      = fnt(F_MONO_R, 11)   # genre/soul tags
-    f_mod_lbl  = fnt(F_MONO_R, 11)   # module labels
-    f_mod_val  = fnt(F_BOLD,   22)   # module values
-    f_sec_hdr  = fnt(F_MONO,   10)   # section headers
-    f_sec_body = fnt(F_REG,    13)   # section body
-    f_byline_h = fnt(F_MONO,   11)   # byline headers
-    f_byline_b = fnt(F_REG,    13)   # byline body
-    f_byline_i = fnt(F_BOLD,   13)   # improvement text
-    f_str_hdr  = fnt(F_MONO,   10)   # badge headers
-    f_str_body = fnt(F_REG,    12)   # badge text
-    f_footer   = fnt(F_MONO,   11)   # footer
+    # Fonts — sized to match share page readability at 960px
+    fBrand   = fnt(F_MONO,   13)
+    fEngine  = fnt(F_MONO_R, 11)
+    fScore   = fnt(F_BOLD,   56)   # big score like share page
+    fTier    = fnt(F_MONO,   13)
+    fTitle   = fnt(F_BOLD,   20)
+    fMeta    = fnt(F_REG,    13)
+    fTag     = fnt(F_MONO_R, 11)
+    fModLbl  = fnt(F_MONO_R, 11)
+    fModVal  = fnt(F_BOLD,   24)
+    fSecHdr  = fnt(F_MONO,   11)
+    fSecBody = fnt(F_REG,    13)
+    fByHdr   = fnt(F_MONO,   11)
+    fByBody  = fnt(F_REG,    13)
+    fByImp   = fnt(F_BOLD,   13)
+    fBadge   = fnt(F_REG,    12)
+    fBadgeH  = fnt(F_MONO,   10)
+    fFooter  = fnt(F_MONO_R, 11)
 
-    dummy = ImageDraw.Draw(Image.new('RGB', (CW, 10)))
+    dummy = ImageDraw.Draw(Image.new('RGB',(CW,10)))
 
-    # Column layout
+    # ── Layout constants ──────────────────────────────────────────────────────
+    HEADER_H = 44
+    PHOTO_W  = 380   # wider photo
+    PHOTO_H  = 240
+    PHOTO_X  = PAD
+    PHOTO_Y  = HEADER_H + PAD
+
+    # Score panel right of photo
+    SP_X = PHOTO_X + PHOTO_W + 20
+    SP_W = 130
+    SP_H = PHOTO_H
+
+    # Info right of score panel
+    INFO_X = SP_X + SP_W + 20
+    INFO_W = CW - INFO_X - PAD
+
+    PHOTO_BLOCK_H = PHOTO_H + PAD*2
+
+    # Module row
+    MOD_H = PAD + fh(fModLbl) + 6 + fh(fModVal) + 10 + 5 + PAD
+
+    # Two columns
     COL_GAP = 28
     COL_W   = (CW - PAD*2 - COL_GAP) // 2
     LC_X    = PAD
     RC_X    = PAD + COL_W + COL_GAP
 
-    HEADER_H    = 44
-    PHOTO_PAD   = 20
-    MOD_PAD     = 16
+    b1 = data.get('byline_1','').strip()
+    b2 = data.get('byline_2_body','').strip()
+    bg = [b for b in data.get('badges_g',[]) if b.strip()]
+    bw = [b for b in data.get('badges_w',[]) if b.strip()]
 
-    # Measure two-column section height
-    left_h = 0
-    for _, body in data.get('rows', []):
-        left_h += fh(f_sec_hdr) + 4
-        left_h += measure_h(body, f_sec_body, COL_W, dummy, 5) if body.strip() else 0
-        left_h += 14
+    lh = sum(
+        fh(fSecHdr)+4 + (mh(body,fSecBody,COL_W,dummy,5) if body.strip() else 0) + 14
+        for _,body in data.get('rows',[])
+    )
+    rh  = fh(fByHdr)+4 + mh(b1,fByBody,COL_W,dummy,5) + 14
+    rh += fh(fByHdr)+4 + mh(b2,fByImp,COL_W,dummy,5) + 16
+    if bg: rh += fh(fBadgeH)+4 + mh(', '.join(bg),fBadge,COL_W,dummy,4) + 12
+    if bw: rh += fh(fBadgeH)+4 + mh(', '.join(bw),fBadge,COL_W,dummy,4) + 12
 
-    b1 = data.get('byline_1', '').strip()
-    b2 = data.get('byline_2_body', '').strip()
-    badges_g = [b for b in data.get('badges_g', []) if b.strip()]
-    badges_w = [b for b in data.get('badges_w', []) if b.strip()]
-
-    right_h  = fh(f_byline_h) + 4
-    right_h += measure_h(b1, f_byline_b, COL_W, dummy, 5)
-    right_h += 14
-    right_h += fh(f_byline_h) + 4
-    right_h += measure_h(b2, f_byline_i, COL_W, dummy, 5)
-    right_h += 16
-    if badges_g:
-        right_h += fh(f_str_hdr) + 4
-        right_h += measure_h(', '.join(badges_g), f_str_body, COL_W, dummy, 4)
-        right_h += 12
-    if badges_w:
-        right_h += fh(f_str_hdr) + 4
-        right_h += measure_h(', '.join(badges_w), f_str_body, COL_W, dummy, 4)
-        right_h += 12
-
-    two_col_h = max(left_h, right_h)
+    TWO_COL_H = max(lh, rh)
     FOOTER_H  = 40
 
-    # Total canvas height
-    photo_block_h = TH_H + PHOTO_PAD * 2
-    mod_block_h   = MOD_PAD + fh(f_mod_lbl) + 4 + fh(f_mod_val) + 8 + 4 + MOD_PAD
-    CH = (HEADER_H + photo_block_h + 1 + mod_block_h + 1 + PAD + two_col_h + PAD + FOOTER_H)
+    CH = HEADER_H + PHOTO_BLOCK_H + 1 + MOD_H + 1 + PAD + TWO_COL_H + PAD + FOOTER_H
 
-    canvas = Image.new('RGB', (CW, CH), BG)
+    canvas = Image.new('RGB',(CW,CH),BG)
     draw   = ImageDraw.Draw(canvas)
 
-    # ── HEADER STRIP ─────────────────────────────────────────────────────────
-    draw.rectangle([0, 0, CW, HEADER_H], fill=GOLD)
-    draw.text((PAD, 13), 'THE LENS LEAGUE', font=f_brand, fill=BG)
+    # ── GOLD HEADER STRIP ─────────────────────────────────────────────────────
+    draw.rectangle([0,0,CW,HEADER_H], fill=GOLD)
+    draw.text((PAD,13),'THE LENS LEAGUE', font=fBrand, fill=BG)
     et  = 'APEX DDI ENGINE  ·  FULL EVALUATION  ·  RATED BY SCIENCE'
-    etb = draw.textbbox((0, 0), et, font=f_engine)
-    draw.text((CW - PAD - (etb[2]-etb[0]), 16), et, font=f_engine, fill=(50, 40, 10))
+    etw = draw.textbbox((0,0),et,font=fEngine)[2]
+    draw.text((CW-PAD-etw, 16), et, font=fEngine, fill=(40,30,5))
 
-    # ── PHOTO + SCORE BLOCK ───────────────────────────────────────────────────
-    PB_Y = HEADER_H   # photo block starts here
-    draw.rectangle([0, PB_Y, CW, PB_Y + photo_block_h], fill=SURFACE_1)
+    # ── PHOTO BLOCK ───────────────────────────────────────────────────────────
+    draw.rectangle([0, HEADER_H, CW, HEADER_H+PHOTO_BLOCK_H], fill=S1)
 
-    # Thumbnail
-    TH_X = PAD
-    TH_Y = PB_Y + PHOTO_PAD
     try:
-        photo = Image.open(photo_path).convert('RGB')
-        pw, ph = photo.size
-        scale  = max(TH_W/pw, TH_H/ph)
-        nw, nh = int(pw*scale), int(ph*scale)
-        photo  = photo.resize((nw, nh), Image.LANCZOS)
-        cx, cy = (nw-TH_W)//2, (nh-TH_H)//2
-        photo  = photo.crop((cx, cy, cx+TH_W, cy+TH_H))
-        canvas.paste(photo, (TH_X, TH_Y))
-    except Exception:
-        draw.rectangle([TH_X, TH_Y, TH_X+TH_W, TH_Y+TH_H], fill=SURFACE_3)
+        ph = Image.open(photo_path).convert('RGB')
+        pw, phh = ph.size
+        scale = max(PHOTO_W/pw, PHOTO_H/phh)
+        nw, nh = int(pw*scale), int(phh*scale)
+        ph = ph.resize((nw,nh), Image.LANCZOS)
+        cx, cy = (nw-PHOTO_W)//2, (nh-PHOTO_H)//2
+        ph = ph.crop((cx,cy,cx+PHOTO_W,cy+PHOTO_H))
+        canvas.paste(ph, (PHOTO_X, PHOTO_Y))
+        draw.rectangle([PHOTO_X-1, PHOTO_Y-1, PHOTO_X+PHOTO_W, PHOTO_Y+PHOTO_H],
+                       outline=BORDER_MD, width=1)
+    except:
+        draw.rectangle([PHOTO_X, PHOTO_Y, PHOTO_X+PHOTO_W, PHOTO_Y+PHOTO_H], fill=S3)
 
-    # Score badge — right of thumbnail
-    SB_X = TH_X + TH_W + 20
-    SB_W = 110
-    SB_H = TH_H
-    draw.rectangle([SB_X, TH_Y, SB_X+SB_W, TH_Y+SB_H], fill=GOLD_BG, outline=GOLD_DARK, width=2)
+    # Score panel — mirrors share page score badge
+    draw.rectangle([SP_X, PHOTO_Y, SP_X+SP_W, PHOTO_Y+SP_H],
+                   fill=GOLD_BG, outline=GOLD_D, width=2)
 
-    # Score number
-    sc_txt = str(data.get('score', '0.0'))
-    sc_bb  = draw.textbbox((0, 0), sc_txt, font=f_score)
-    sc_w   = sc_bb[2] - sc_bb[0]
-    draw.text((SB_X + (SB_W - sc_w)//2, TH_Y + 20), sc_txt, font=f_score, fill=GOLD)
+    sc  = str(data.get('score','0.0'))
+    scw = draw.textbbox((0,0),sc,font=fScore)[2]
+    draw.text((SP_X+(SP_W-scw)//2, PHOTO_Y+18), sc, font=fScore, fill=GOLD)
 
-    # Tier
-    tier_txt = data.get('tier', '').upper()
-    tier_bb  = draw.textbbox((0, 0), tier_txt, font=f_tier)
-    tier_w   = tier_bb[2] - tier_bb[0]
-    draw.text((SB_X + (SB_W - tier_w)//2, TH_Y + SB_H - fh(f_tier) - 12), tier_txt, font=f_tier, fill=GOLD)
+    tier = data.get('tier','').upper()
+    tw   = draw.textbbox((0,0),tier,font=fTier)[2]
+    draw.text((SP_X+(SP_W-tw)//2, PHOTO_Y+SP_H-fh(fTier)-28), tier, font=fTier, fill=GOLD)
 
     # Tier pips
-    pip_y = TH_Y + SB_H - fh(f_tier) - 28
     tier_map = {'APPRENTICE':1,'PRACTITIONER':2,'MASTER':3,'GRANDMASTER':4,'LEGEND':5}
-    active   = tier_map.get(tier_txt, 1)
-    pip_total_w = 5 * 14 + 4 * 4
-    pip_x_start = SB_X + (SB_W - pip_total_w) // 2
+    active = tier_map.get(tier,1)
+    pip_w_total = 5*12 + 4*4
+    pip_x0 = SP_X + (SP_W - pip_w_total)//2
+    pip_y  = PHOTO_Y + SP_H - 14
     for i in range(5):
-        px = pip_x_start + i * 18
-        col = GOLD if i < active else BORDER_MD
-        draw.rectangle([px, pip_y, px+12, pip_y+6], fill=col)
+        px = pip_x0 + i*16
+        draw.rectangle([px, pip_y, px+10, pip_y+5], fill=GOLD if i<active else BORDER_MD)
 
-    # Image info — right of score badge
-    IX = SB_X + SB_W + 20
-    IY = TH_Y + 8
-    IW = CW - IX - PAD
-
-    asset_name = data.get('asset', 'Untitled')
-    draw.text((IX, IY), asset_name, font=f_asset, fill=TEXT_1)
-    IY += fh(f_asset) + 4
-
-    meta = data.get('meta', '')
-    draw.text((IX, IY), meta, font=f_meta, fill=TEXT_2)
-    IY += fh(f_meta) + 4
-
-    genre_tag = data.get('genre_tag', '')
-    draw.text((IX, IY), genre_tag, font=f_tag, fill=TEXT_3)
-    IY += fh(f_tag) + 6
-
+    # Image info
+    IY = PHOTO_Y + 10
+    draw.text((INFO_X, IY), data.get('asset','Untitled'), font=fTitle, fill=T1)
+    IY += fh(fTitle)+4
+    draw.text((INFO_X, IY), data.get('meta',''), font=fMeta, fill=T2)
+    IY += fh(fMeta)+4
+    draw.text((INFO_X, IY), data.get('genre_tag',''), font=fTag, fill=T3)
+    IY += fh(fTag)+6
     if data.get('soul_bonus'):
-        draw.text((IX, IY), '★  SOUL BONUS ACTIVE  —  AQ ≥ 8.0', font=f_tag, fill=GOLD)
-        IY += fh(f_tag) + 4
-
+        draw.text((INFO_X,IY), '★  SOUL BONUS  —  AQ ≥ 8.0', font=fTag, fill=GOLD)
+        IY += fh(fTag)+4
     if data.get('iucn_tag'):
-        draw.text((IX, IY), data['iucn_tag'], font=f_tag, fill=AMBER)
-        IY += fh(f_tag) + 4
-
+        draw.text((INFO_X,IY), data['iucn_tag'], font=fTag, fill=AMBER)
+        IY += fh(fTag)+4
     IY += 4
-    archetype_line = f"Affective State: {data.get('dec','')}  ·  Photographer: {data.get('credit','')}"
-    draw_wrapped(draw, archetype_line, f_meta, TEXT_3, IX, IY, IW, 3)
+    archline = f"Affective State: {data.get('dec','')}   ·   Photographer: {data.get('credit','')}"
+    dw(draw, archline, fMeta, T3, INFO_X, IY, INFO_W, 3)
 
     # ── DIVIDER ───────────────────────────────────────────────────────────────
-    DIV1_Y = PB_Y + photo_block_h
-    draw.rectangle([0, DIV1_Y, CW, DIV1_Y+1], fill=BORDER_MD)
+    D1 = HEADER_H + PHOTO_BLOCK_H
+    draw.rectangle([0,D1,CW,D1+1], fill=BORDER_MD)
 
-    # ── MODULE SCORES ─────────────────────────────────────────────────────────
-    MB_Y    = DIV1_Y + 1
-    MB_H    = mod_block_h
-    draw.rectangle([0, MB_Y, CW, MB_Y + MB_H], fill=SURFACE_2)
+    # ── MODULE SCORES — mirrors share page module row ─────────────────────────
+    draw.rectangle([0, D1+1, CW, D1+1+MOD_H], fill=S2)
+    modules = data.get('modules',[])
+    n  = max(len(modules),1)
+    MW = (CW - PAD*2) // n
+    max_sc = max((float(s) for _,s in modules if s), default=0)
+    MY = D1 + 1 + PAD
 
-    modules = data.get('modules', [])
-    n       = max(len(modules), 1)
-    MW      = (CW - PAD*2) // n
-    max_sc  = max((float(s) for _,s in modules if s), default=0)
-    MY      = MB_Y + MOD_PAD
-
-    for i, (name, score) in enumerate(modules):
-        mx  = PAD + i * MW
-        is_top = float(score) == max_sc
-        col = GOLD if is_top else TEXT_2
-
-        # Vertical separator
+    for i,(name,score) in enumerate(modules):
+        mx   = PAD + i*MW
+        top  = float(score) == max_sc
+        col  = GOLD if top else T2
         if i > 0:
-            draw.rectangle([mx - 1, MY - 4, mx, MY + fh(f_mod_lbl) + fh(f_mod_val) + 14], fill=BORDER)
-
-        draw.text((mx + 8, MY), name.upper(), font=f_mod_lbl, fill=TEXT_3)
-        draw.text((mx + 8, MY + fh(f_mod_lbl) + 4), str(score), font=f_mod_val, fill=col)
-
-        # Bar
-        bar_y = MY + fh(f_mod_lbl) + fh(f_mod_val) + 8
-        bar_w = MW - 20
-        draw.rectangle([mx + 8, bar_y, mx + 8 + bar_w, bar_y + 4], fill=SURFACE_3)
-        fill_w = int(bar_w * float(score) / 10)
-        bar_col = GOLD if is_top else GOLD_DARK
-        draw.rectangle([mx + 8, bar_y, mx + 8 + fill_w, bar_y + 4], fill=bar_col)
+            draw.rectangle([mx-1, MY-4, mx, MY+fh(fModLbl)+fh(fModVal)+14], fill=BORDER)
+        draw.text((mx+10, MY), name.upper(), font=fModLbl, fill=T3)
+        draw.text((mx+10, MY+fh(fModLbl)+6), str(score), font=fModVal, fill=col)
+        by = MY+fh(fModLbl)+6+fh(fModVal)+8
+        bw2 = MW-24
+        draw.rectangle([mx+10, by, mx+10+bw2, by+4], fill=S3)
+        fw = int(bw2*float(score)/10)
+        draw.rectangle([mx+10, by, mx+10+fw, by+4], fill=GOLD if top else GOLD_D)
 
     # ── DIVIDER 2 ─────────────────────────────────────────────────────────────
-    DIV2_Y = MB_Y + MB_H
-    draw.rectangle([0, DIV2_Y, CW, DIV2_Y+1], fill=BORDER_MD)
+    D2 = D1 + 1 + MOD_H
+    draw.rectangle([0,D2,CW,D2+1], fill=BORDER_MD)
 
-    # ── TWO COLUMN CONTENT ────────────────────────────────────────────────────
-    CY_L = DIV2_Y + 1 + PAD
-    CY_R = DIV2_Y + 1 + PAD
+    # Gold left accent bar (matches byline-section in share page)
+    draw.rectangle([0, D2+1, 4, CH-FOOTER_H], fill=GOLD_D)
 
-    # Gold left border accent
-    draw.rectangle([0, DIV2_Y + 1, 3, CH - FOOTER_H], fill=GOLD_DARK)
+    # ── TWO COLUMNS ───────────────────────────────────────────────────────────
+    CYL = D2+1+PAD
+    CYR = D2+1+PAD
 
-    # LEFT — five analysis sections
-    for label, body in data.get('rows', []):
-        lbl = label.replace('\\n', ' ').replace('\n', ' ').upper()
-        draw.text((LC_X, CY_L), lbl, font=f_sec_hdr, fill=GOLD)
-        CY_L += fh(f_sec_hdr) + 4
+    # LEFT — analysis rows
+    for label,body in data.get('rows',[]):
+        lbl = label.replace('\\n',' ').replace('\n',' ').upper()
+        draw.text((LC_X,CYL), lbl, font=fSecHdr, fill=GOLD)
+        CYL += fh(fSecHdr)+4
         if body and body.strip():
-            CY_L = draw_wrapped(draw, body, f_sec_body, TEXT_2, LC_X, CY_L, COL_W, 5)
-        CY_L += 14
+            CYL = dw(draw, body, fSecBody, T2, LC_X, CYL, COL_W, 5)
+        CYL += 14
 
-    # RIGHT — bylines and badges
-    # Apex Byline header
-    draw.text((RC_X, CY_R), 'APEX BYLINE', font=f_byline_h, fill=GOLD)
-    CY_R += fh(f_byline_h) + 4
-    if b1:
-        CY_R = draw_wrapped(draw, b1, f_byline_b, TEXT_2, RC_X, CY_R, COL_W, 5)
-    CY_R += 14
+    # RIGHT — byline
+    draw.text((RC_X,CYR), 'APEX BYLINE', font=fByHdr, fill=GOLD)
+    CYR += fh(fByHdr)+4
+    if b1: CYR = dw(draw,b1,fByBody,T2,RC_X,CYR,COL_W,5)
+    CYR += 14
 
-    draw.text((RC_X, CY_R), 'THE ONE IMPROVEMENT', font=f_byline_h, fill=GOLD)
-    CY_R += fh(f_byline_h) + 4
-    if b2:
-        CY_R = draw_wrapped(draw, b2, f_byline_i, TEXT_1, RC_X, CY_R, COL_W, 5)
-    CY_R += 16
+    draw.text((RC_X,CYR), 'THE ONE IMPROVEMENT', font=fByHdr, fill=GOLD)
+    CYR += fh(fByHdr)+4
+    if b2: CYR = dw(draw,b2,fByImp,T1,RC_X,CYR,COL_W,5)
+    CYR += 16
 
-    if badges_g:
-        draw.text((RC_X, CY_R), 'STRENGTHS', font=f_str_hdr, fill=GREEN)
-        CY_R += fh(f_str_hdr) + 4
-        CY_R = draw_wrapped(draw, ', '.join(badges_g), f_str_body, GREEN, RC_X, CY_R, COL_W, 4)
-        CY_R += 12
+    if bg:
+        draw.text((RC_X,CYR), 'STRENGTHS', font=fBadgeH, fill=GREEN)
+        CYR += fh(fBadgeH)+4
+        CYR = dw(draw,', '.join(bg),fBadge,GREEN,RC_X,CYR,COL_W,4)
+        CYR += 12
+    if bw:
+        draw.text((RC_X,CYR), 'AREAS TO DEVELOP', font=fBadgeH, fill=RED)
+        CYR += fh(fBadgeH)+4
+        CYR = dw(draw,', '.join(bw),fBadge,RED,RC_X,CYR,COL_W,4)
 
-    if badges_w:
-        draw.text((RC_X, CY_R), 'AREAS TO DEVELOP', font=f_str_hdr, fill=RED)
-        CY_R += fh(f_str_hdr) + 4
-        CY_R = draw_wrapped(draw, ', '.join(badges_w), f_str_body, RED, RC_X, CY_R, COL_W, 4)
-
-    # ── FOOTER STRIP ──────────────────────────────────────────────────────────
-    FT_Y = CH - FOOTER_H
-    draw.rectangle([0, FT_Y, CW, CH], fill=SURFACE_1)
-    draw.rectangle([0, FT_Y, CW, FT_Y+1], fill=BORDER_MD)
-
-    # Footer left — engine credit
-    draw.text((PAD, FT_Y + 13), 'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.', font=f_footer, fill=TEXT_3)
-
-    # Footer right — score stamp
+    # ── FOOTER ────────────────────────────────────────────────────────────────
+    FY = CH-FOOTER_H
+    draw.rectangle([0,FY,CW,CH], fill=S1)
+    draw.rectangle([0,FY,CW,FY+1], fill=BORDER_MD)
+    draw.text((PAD, FY+13), 'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE', font=fFooter, fill=T3)
     stamp = f"LL · {data.get('score','')} · {data.get('tier','').upper()}"
-    sb    = draw.textbbox((0,0), stamp, font=f_footer)
-    draw.text((CW - PAD - (sb[2]-sb[0]), FT_Y + 13), stamp, font=f_footer, fill=GOLD)
+    sw = draw.textbbox((0,0),stamp,font=fFooter)[2]
+    draw.text((CW-PAD-sw, FY+13), stamp, font=fFooter, fill=GOLD)
 
     canvas.save(out_path, 'JPEG', quality=96, optimize=True)
     return out_path
