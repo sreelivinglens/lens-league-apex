@@ -77,33 +77,35 @@ with app.app_context():
                     print(f'[migration] {_e}')
             conn.commit()
 
-        # Fix calibration_logs table — recreate if missing genre column
+        # Fix calibration_logs — force correct schema on every startup
         try:
             with db.engine.connect() as conn2:
                 conn2.execute(db.text("""
                     DO $$
                     BEGIN
-                      IF NOT EXISTS (
+                      IF EXISTS (
                         SELECT 1 FROM information_schema.columns
-                        WHERE table_name='calibration_logs' AND column_name='genre'
+                        WHERE table_name='calibration_logs' AND column_name='category'
                       ) THEN
-                        DROP TABLE IF EXISTS calibration_logs;
-                        CREATE TABLE calibration_logs (
-                          id SERIAL PRIMARY KEY,
-                          genre VARCHAR(60) NOT NULL,
-                          image_count INTEGER,
-                          avg_score FLOAT,
-                          avg_dod FLOAT,
-                          avg_dis FLOAT,
-                          avg_dm FLOAT,
-                          avg_wonder FLOAT,
-                          avg_aq FLOAT,
-                          note TEXT,
-                          logged_by INTEGER,
-                          logged_at TIMESTAMP DEFAULT NOW()
-                        );
+                        DROP TABLE IF EXISTS calibration_logs CASCADE;
                       END IF;
                     END $$;
+                """))
+                conn2.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS calibration_logs (
+                        id SERIAL PRIMARY KEY,
+                        genre VARCHAR(60) NOT NULL,
+                        image_count INTEGER,
+                        avg_score FLOAT,
+                        avg_dod FLOAT,
+                        avg_dis FLOAT,
+                        avg_dm FLOAT,
+                        avg_wonder FLOAT,
+                        avg_aq FLOAT,
+                        note TEXT,
+                        logged_by INTEGER,
+                        logged_at TIMESTAMP DEFAULT NOW()
+                    )
                 """))
                 conn2.commit()
             print('calibration_logs schema OK.')
