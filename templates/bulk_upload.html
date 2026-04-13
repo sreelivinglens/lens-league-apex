@@ -178,6 +178,7 @@
         <div class="form-group">
           <label>Genre <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(applies to all)</span></label>
           <select name="genre" required>
+            <option value="" disabled selected>Select a genre…</option>
             {% for g in genres %}
             <option value="{{ g }}">{{ g }}</option>
             {% endfor %}
@@ -195,7 +196,7 @@
                   border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px;
                   font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
-        Claude Vision analyses each image automatically. Allow ~15–20 seconds per image.
+        The Apex DDI Engine analyses each image automatically. Allow ~15–20 seconds per image.
         Duplicates are detected and skipped. Keep this tab open until complete.
       </div>
 
@@ -383,10 +384,9 @@ form.addEventListener('submit', function(e) {
       progLabel.textContent = 'COMPLETE';
       progText.textContent = '✅ All images processed — loading results…';
       sessionStorage.removeItem('bulk_processing');
-      // Parse response HTML and replace page content
-      document.open();
-      document.write(xhr.responseText);
-      document.close();
+      // Redirect to dashboard with success message instead of document.write
+      sessionStorage.removeItem('bulk_processing');
+      window.location.href = '/bulk_upload?done=1';
     } else {
       progText.textContent = `❌ Error ${xhr.status} — please try again.`;
       submitBtn.disabled = false;

@@ -410,7 +410,6 @@
           <th>Genre</th>
           <th>Score</th>
           <th>Tier</th>
-          <th>Auth</th>
           <th>Status</th>
           <th>Date</th>
           <th>Actions</th>
@@ -451,15 +450,7 @@
               {{ img.tier or '—' }}
             </span>
           </td>
-          <td style="font-size:18px; text-align:center;">
-            {% if img.exif_status == 'verified' %}
-              <span title="Verified" style="color:var(--green);">✅</span>
-            {% elif img.exif_status == 'suspicious' %}
-              <span title="Suspicious" style="color:var(--red);">⚠️</span>
-            {% else %}
-              <span title="Unverified" style="color:var(--text-muted);">❓</span>
-            {% endif %}
-          </td>
+
           <td>
             <span class="status-chip {{ img.status }}">{{ img.status.upper() }}</span>
             {% if img.judge_referral %}

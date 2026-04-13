@@ -256,15 +256,7 @@
       </div>
       <div class="img-card-footer">
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
-        <span class="img-card-auth">
-          {% if img.exif_status == 'verified' %}
-            <span style="color:var(--green);">✅</span>
-          {% elif img.exif_status == 'suspicious' %}
-            <span style="color:var(--red);">⚠️</span>
-          {% else %}
-            <span style="color:var(--text-muted);">❓</span>
-          {% endif %}
-        </span>
+
       </div>
     </div>
   </a>
