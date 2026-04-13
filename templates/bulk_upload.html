@@ -336,8 +336,9 @@ function initPage() {
   }
   {% endif %}
 
-  // Show processing notice if returning to tab mid-processing
-  if (sessionStorage.getItem('bulk_processing') === '1') {
+  // Only show processing notice if actively processing (not on fresh page load)
+  // bulk_processing is cleared on XHR complete, so this only shows on tab switch mid-upload
+  if (sessionStorage.getItem('bulk_processing') === '1' && sessionStorage.getItem('bulk_started') === '1') {
     document.getElementById('processingNotice').style.display = 'block';
     document.getElementById('uploadContent').style.display = 'block';
     document.getElementById('legalModal').classList.remove('open');
@@ -447,6 +448,7 @@ form.addEventListener('submit', function(e) {
       sessionStorage.removeItem('bulk_processing');
       // Redirect to dashboard with success message instead of document.write
       sessionStorage.removeItem('bulk_processing');
+      sessionStorage.removeItem('bulk_started');
       window.location.href = '/dashboard';
     } else {
       progText.textContent = `❌ Error ${xhr.status} — please try again.`;

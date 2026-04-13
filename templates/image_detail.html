@@ -250,7 +250,7 @@
        class="btn" target="_blank"
        style="border-color:var(--gold-dark); color:var(--gold);">🔗 Share</a>
     {% endif %}
-    {% if image.card_url or image.card_path %}
+    {% if image.status == 'scored' %}
     <a href="{{ url_for('download_card', image_id=image.id) }}"
        class="btn btn-solid"
        download="LensLeague_RatingCards.zip">↓ Save Rating Cards</a>
