@@ -773,8 +773,17 @@ def bulk_upload():
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                result_row['status'] = f'error: {str(e)[:60]}'
+                import traceback
+                err_detail = traceback.format_exc()
+                app.logger.error(f'Bulk upload error for {file.filename}: {err_detail}')
+                result_row['status'] = f'error: {str(e)[:120]}'
             results.append(result_row)
+    # Final safety commit
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+
     genres = list(GENRE_WEIGHTS.keys())
     return render_template('bulk_upload.html', genres=genres, results=results)
 
@@ -1128,6 +1137,28 @@ def delete_calibration_note(note_id):
     db.session.commit()
     flash('Calibration note deleted.', 'success')
     return redirect(url_for('admin_calibration_notes'))
+
+
+@app.route('/admin/debug-images')
+@login_required
+@admin_required
+def debug_images():
+    """Show last 20 images in DB with full details for debugging."""
+    images = Image.query.order_by(Image.created_at.desc()).limit(20).all()
+    rows = []
+    for img in images:
+        rows.append({
+            'id': img.id,
+            'asset_name': img.asset_name,
+            'genre': img.genre,
+            'status': img.status,
+            'user_id': img.user_id,
+            'photographer': img.photographer_name,
+            'created_at': str(img.created_at),
+            'score': img.score,
+            'thumb_url': img.thumb_url,
+        })
+    return jsonify({'count': len(rows), 'images': rows})
 
 
 @app.route('/terms')
