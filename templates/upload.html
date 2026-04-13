@@ -1,45 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Upload Image — Lens League Apex{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
   .upload-wrap {
     max-width: 680px;
-    margin: 48px auto;
-    padding: 0 16px;
+    margin: 0 auto;
   }
-  .upload-wrap h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #C8A84B;
-    margin-bottom: 6px;
-    letter-spacing: 0.02em;
-  }
-  .upload-wrap .subtitle {
-    color: #aaa;
-    font-size: 0.93rem;
-    margin-bottom: 32px;
-  }
-  .upload-card {
-    background: #2C2C2A;
-    border: 1px solid #3a3a38;
-    border-radius: 10px;
-    padding: 32px;
-    color: #fff;
-  }
+
+  /* Drop zone */
   .drop-zone {
-    border: 2px dashed #8B6914;
-    border-radius: 8px;
-    padding: 48px 24px;
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 52px 24px;
     text-align: center;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
-    background: #232321;
+    background: var(--surface-3);
     position: relative;
+    margin-bottom: 8px;
   }
   .drop-zone:hover, .drop-zone.dragover {
-    background: #2e2c28;
-    border-color: #C8A84B;
+    background: var(--surface-4);
+    border-color: var(--gold);
   }
   .drop-zone input[type="file"] {
     position: absolute;
@@ -49,187 +32,159 @@
     width: 100%;
     height: 100%;
   }
-  .drop-zone .dz-icon {
-    font-size: 2.8rem;
-    margin-bottom: 12px;
-    display: block;
-    color: #8B6914;
+  .dz-icon { font-size: 3rem; margin-bottom: 14px; display: block; }
+  .dz-label {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
   }
-  .drop-zone .dz-label {
-    font-size: 1rem;
-    color: #ccc;
-    margin-bottom: 4px;
+  .dz-label strong { color: var(--gold); }
+  .dz-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
   }
-  .drop-zone .dz-hint {
-    font-size: 0.82rem;
-    color: #777;
-  }
+
+  /* Preview */
   .preview-area {
     display: none;
-    margin-top: 20px;
-    text-align: center;
+    margin-top: 16px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
   .preview-area img {
-    max-width: 100%;
-    max-height: 320px;
-    border-radius: 6px;
-    border: 1px solid #444;
-    object-fit: contain;
-    background: #1a1a18;
-  }
-  .preview-area .file-info {
-    margin-top: 8px;
-    font-size: 0.85rem;
-    color: #aaa;
-  }
-  .form-group {
-    margin-top: 22px;
-  }
-  .form-group label {
-    display: block;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #C8A84B;
-    margin-bottom: 6px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .form-group input[type="text"],
-  .form-group select,
-  .form-group textarea {
     width: 100%;
-    background: #1e1e1c;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #fff;
-    padding: 10px 14px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
+    max-height: 340px;
+    object-fit: contain;
+    display: block;
+    background: var(--surface-3);
   }
-  .form-group input:focus,
-  .form-group select:focus,
-  .form-group textarea:focus {
-    border-color: #8B6914;
+  .file-info {
+    padding: 10px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
   }
-  .form-group select option {
-    background: #1e1e1c;
-  }
-  .form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  /* Progress */
-  .progress-wrap {
-    display: none;
-    margin-top: 24px;
-  }
-  .progress-bar-outer {
-    background: #1e1e1c;
-    border-radius: 99px;
-    height: 10px;
-    overflow: hidden;
-    border: 1px solid #3a3a38;
-  }
-  .progress-bar-inner {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #8B6914, #C8A84B);
-    border-radius: 99px;
-    transition: width 0.3s ease;
-  }
-  .progress-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 6px;
-    font-size: 0.8rem;
-    color: #888;
-  }
-  .progress-status {
-    margin-top: 10px;
-    font-size: 0.88rem;
-    color: #ccc;
-    text-align: center;
-    min-height: 20px;
-  }
-  /* Error */
+
+  /* File error */
   .file-error {
     display: none;
     margin-top: 10px;
-    padding: 10px 14px;
-    background: #2e1a1a;
-    border: 1px solid #7a2222;
-    border-radius: 6px;
-    color: #f88;
-    font-size: 0.88rem;
-  }
-  /* Submit */
-  .btn-submit {
-    margin-top: 28px;
-    width: 100%;
-    padding: 13px;
-    background: #8B6914;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-  }
-  .btn-submit:hover:not(:disabled) {
-    background: #a07c1a;
-  }
-  .btn-submit:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-  .flash-msg {
     padding: 12px 16px;
-    border-radius: 7px;
-    margin-bottom: 20px;
-    font-size: 0.92rem;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: var(--radius-sm);
+    color: #F0A0A0;
+    font-size: 14px;
   }
-  .flash-msg.error   { background: #2e1a1a; border: 1px solid #7a2222; color: #f88; }
-  .flash-msg.success { background: #1a2e1a; border: 1px solid #2a6a2a; color: #7f7; }
-  .flash-msg.warning { background: #2e2a1a; border: 1px solid #7a6a22; color: #fdc; }
+
+  /* Genre hint */
+  .genre-hint {
+    min-height: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 6px;
+    padding: 0 2px;
+    transition: opacity 0.2s;
+  }
+
+  /* EXIF note */
   .exif-note {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: #222220;
-    border-left: 3px solid #8B6914;
-    border-radius: 0 6px 6px 0;
-    font-size: 0.83rem;
-    color: #aaa;
-    line-height: 1.55;
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: var(--surface-3);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+  .exif-note strong { color: var(--gold); }
+
+  /* Progress */
+  .progress-wrap {
+    display: none;
+    margin-top: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .progress-elapsed {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .progress-track {
+    background: var(--surface-3);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
+  .progress-pct {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .progress-pct span {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .progress-status {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+    min-height: 22px;
   }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="upload-wrap">
-  <h1>📷 Upload Image</h1>
-  <p class="subtitle">Submit your photograph for AI scoring via the Apex DDI Engine.</p>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="flash-msg {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+  <div class="page-header">
+    <h1>Upload Image</h1>
+    <p>Submit your photograph for AI scoring via the Apex DDI Engine</p>
+  </div>
 
-  <div class="upload-card">
+  <div class="card">
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
       <!-- Drop Zone -->
       <div class="drop-zone" id="dropZone">
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
-        <div class="dz-label">Drop your image here or <strong style="color:#C8A84B;">click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG only &nbsp;·&nbsp; Max 5 MB</div>
+        <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB</div>
       </div>
 
       <div class="file-error" id="fileError"></div>
@@ -240,12 +195,14 @@
       </div>
 
       <!-- Title -->
-      <div class="form-group">
+      <div class="form-group" style="margin-top:24px;">
         <label for="asset_name">Image Title</label>
-        <input type="text" id="asset_name" name="asset_name" placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
+        <input type="text" id="asset_name" name="asset_name"
+               placeholder="e.g. Golden Hour at Hampi"
+               maxlength="120" required>
       </div>
 
-      <!-- Category -->
+      <!-- Genre -->
       <div class="form-group">
         <label for="genre">Genre</label>
         <select id="genre" name="genre" required>
@@ -254,94 +211,112 @@
           <option value="{{ g }}">{{ g }}</option>
           {% endfor %}
         </select>
+        <div class="genre-hint" id="genre-hint"></div>
       </div>
 
-      <!-- Caption -->
+      <!-- Location -->
       <div class="form-group">
-        <label for="subject">Subject / Story <span style="color:#666;font-weight:400;text-transform:none;">(optional)</span></label>
-        <textarea id="subject" name="subject" placeholder="Share a brief story or context about this image…" maxlength="500"></textarea>
+        <label for="location">Location <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
+        <input type="text" id="location" name="location"
+               placeholder="e.g. Keoladeo National Park, Rajasthan"
+               maxlength="180">
       </div>
 
-      <div id="genre-hint" style="margin-top:6px; font-size:0.78rem; color:#888; min-height:16px;"></div>
+      <!-- Subject -->
+      <div class="form-group">
+        <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
+        <textarea id="subject" name="subject"
+                  placeholder="Brief context about this image — subject, conditions, technique…"
+                  maxlength="500"></textarea>
+      </div>
 
       <div class="exif-note">
-        📋 <strong style="color:#C8A84B;">EXIF metadata</strong> is automatically extracted from your file to verify camera authenticity. For best results, upload the original JPEG straight from your camera without stripping metadata.
+        📋 <strong>EXIF metadata</strong> is automatically extracted to verify camera authenticity.
+        For best results, upload the original JPEG straight from your camera without stripping metadata.
       </div>
 
       <!-- Progress bar -->
       <div class="progress-wrap" id="progressWrap">
-        <div class="progress-bar-outer">
-          <div class="progress-bar-inner" id="progressBar"></div>
+        <div class="progress-header">
+          <span class="progress-label" id="progressLabel">Uploading</span>
+          <span class="progress-elapsed" id="elapsedTimer">0s elapsed</span>
         </div>
-        <div class="progress-meta">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-pct">
           <span id="progressPct">0%</span>
-          <span id="elapsedTimer">0s elapsed</span>
+          <span id="progressEst"></span>
         </div>
-        <div class="progress-status" id="progressStatus">Uploading…</div>
+        <div class="progress-status" id="progressStatus">Uploading image…</div>
       </div>
 
-      <button type="submit" class="btn-submit" id="submitBtn">⬆ Submit for Scoring</button>
+      <button type="submit" class="btn btn-solid" id="submitBtn"
+              style="width:100%; padding:15px; font-size:13px; letter-spacing:2px; margin-top:28px;">
+        ⬆ Submit for Scoring
+      </button>
     </form>
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 (function () {
-  const dropZone   = document.getElementById('dropZone');
-  const fileInput  = document.getElementById('imageInput');
-  const previewArea = document.getElementById('previewArea');
-  const previewImg  = document.getElementById('previewImg');
-  const fileInfo    = document.getElementById('fileInfo');
-  const fileError   = document.getElementById('fileError');
-  const form        = document.getElementById('uploadForm');
-  const submitBtn   = document.getElementById('submitBtn');
-  const progressWrap = document.getElementById('progressWrap');
-  const progressBar  = document.getElementById('progressBar');
-  const progressPct  = document.getElementById('progressPct');
-  const elapsedTimer = document.getElementById('elapsedTimer');
-  const progressStatus = document.getElementById('progressStatus');
+  const dropZone      = document.getElementById('dropZone');
+  const fileInput     = document.getElementById('imageInput');
+  const previewArea   = document.getElementById('previewArea');
+  const previewImg    = document.getElementById('previewImg');
+  const fileInfo      = document.getElementById('fileInfo');
+  const fileError     = document.getElementById('fileError');
+  const form          = document.getElementById('uploadForm');
+  const submitBtn     = document.getElementById('submitBtn');
+  const progressWrap  = document.getElementById('progressWrap');
+  const progressBar   = document.getElementById('progressBar');
+  const progressPct   = document.getElementById('progressPct');
+  const progressLabel = document.getElementById('progressLabel');
+  const progressEst   = document.getElementById('progressEst');
+  const elapsedTimer  = document.getElementById('elapsedTimer');
+  const progressStatus= document.getElementById('progressStatus');
+  const genreHintEl   = document.getElementById('genre-hint');
 
-  const MAX_MB   = 5;
-  const ALLOWED  = ['image/jpeg', 'image/png'];
+  const MAX_MB  = 5;
+  const ALLOWED = ['image/jpeg', 'image/png'];
 
-  // Drag & drop styling
-  ['dragenter','dragover'].forEach(evt => dropZone.addEventListener(evt, e => {
-    e.preventDefault(); dropZone.classList.add('dragover');
+  // Drag & drop
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.add('dragover');
   }));
-  ['dragleave','drop'].forEach(evt => dropZone.addEventListener(evt, e => {
-    e.preventDefault(); dropZone.classList.remove('dragover');
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.remove('dragover');
   }));
   dropZone.addEventListener('drop', e => {
     const file = e.dataTransfer.files[0];
     if (file) { fileInput.files = e.dataTransfer.files; handleFile(file); }
   });
-
   fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
   function handleFile(file) {
     fileError.style.display = 'none';
-    // Validate type
     if (!ALLOWED.includes(file.type)) {
       showError('Only JPG and PNG files are accepted.');
       previewArea.style.display = 'none';
       fileInput.value = '';
       return;
     }
-    // Validate size
     if (file.size > MAX_MB * 1024 * 1024) {
       showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`);
       previewArea.style.display = 'none';
       fileInput.value = '';
       return;
     }
-    // Preview
     const reader = new FileReader();
-    reader.onload = e => {
-      previewImg.src = e.target.result;
+    reader.onload = ev => {
+      previewImg.src = ev.target.result;
       previewArea.style.display = 'block';
-      fileInfo.textContent = `${file.name}  ·  ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      fileInfo.textContent = `${file.name}  ·  ${(file.size/1024/1024).toFixed(2)} MB`;
     };
     reader.readAsDataURL(file);
   }
@@ -351,23 +326,39 @@
     fileError.style.display = 'block';
   }
 
-  // Form submit with XHR for progress
+  // Genre hints
+  const genreHints = {
+    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ referred for judge review.',
+    'Drone':      '🚁 Aerial photography. DoD covers wind, altitude, vibration and regulatory complexity. Geometric patterns and impossible ground-level perspectives score highest.',
+    'Wildlife':   '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
+    'Street':     '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable and often enhances energy.',
+    'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water and clouds is rewarded.',
+    'Macro':      '🔬 Extreme precision focus required. Sharpness on the primary subject is the primary DoD criterion.',
+    'Wedding':    '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
+    'People':     '👤 Emotional connection and authentic expression are paramount. AQ is the dominant scoring signal.',
+  };
+  document.getElementById('genre').addEventListener('change', function () {
+    genreHintEl.textContent = genreHints[this.value] || '';
+  });
+
+  // XHR submit with progress
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-
-    // Re-validate before submit
     const file = fileInput.files[0];
-    if (!file) { showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
-    if (file.size > MAX_MB * 1024 * 1024) { showError(`File exceeds ${MAX_MB} MB.`); return; }
+    if (!file)                              { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type))       { showError('Only JPG and PNG files are accepted.'); return; }
+    if (file.size > MAX_MB * 1024 * 1024)  { showError(`File exceeds ${MAX_MB} MB.`); return; }
 
     submitBtn.disabled = true;
     progressWrap.style.display = 'block';
     progressStatus.textContent = 'Uploading image…';
+    progressLabel.textContent  = 'UPLOADING';
 
-    // Elapsed timer
     let seconds = 0;
-    const ticker = setInterval(() => { seconds++; elapsedTimer.textContent = `${seconds}s elapsed`; }, 1000);
+    const ticker = setInterval(() => {
+      seconds++;
+      elapsedTimer.textContent = `${seconds}s elapsed`;
+    }, 1000);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', form.action);
@@ -377,11 +368,10 @@
         const pct = Math.round((e.loaded / e.total) * 100);
         progressBar.style.width = pct + '%';
         progressPct.textContent = pct + '%';
-        if (pct < 100) {
-          progressStatus.textContent = 'Uploading image…';
-        } else {
-          progressStatus.textContent = 'Analysing with Apex DDI Engine…';
-        }
+        progressStatus.textContent = pct < 100
+          ? 'Uploading image…'
+          : 'Analysing with Apex DDI Engine…';
+        progressLabel.textContent = pct < 100 ? 'UPLOADING' : 'SCORING';
       }
     });
 
@@ -390,20 +380,18 @@
       if (xhr.status === 200) {
         progressBar.style.width = '100%';
         progressPct.textContent = '100%';
+        progressLabel.textContent = 'COMPLETE';
         progressStatus.textContent = '✅ Done! Redirecting…';
-        const redirectUrl = xhr.responseURL || '/dashboard';
-        window.location.href = redirectUrl;
+        window.location.href = xhr.responseURL || '/dashboard';
       } else if (xhr.status === 409) {
-        // Duplicate image detected
         progressWrap.style.display = 'none';
         submitBtn.disabled = false;
         try {
           const resp = JSON.parse(xhr.responseText);
           showError(resp.message || 'Duplicate image detected.');
-        } catch(e) {
+        } catch(err) {
           showError('This image has already been submitted. Please upload a different photograph.');
         }
-        // Reset file input
         fileInput.value = '';
         previewArea.style.display = 'none';
       } else {
@@ -418,23 +406,7 @@
       submitBtn.disabled = false;
     });
 
-    const formData = new FormData(form);
-    xhr.send(formData);
-  });
-  // Genre hint
-  const genreHints = {
-    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur · Mosaics. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ referred for judge review.',
-    'Drone':      '🚁 Aerial photography from drones. DoD covers wind, altitude, vibration control and regulatory complexity. Geometric patterns and impossible ground perspectives score highest.',
-    'Wildlife':   '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street':     '🏙 Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
-    'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water/clouds is rewarded.',
-    'Macro':      '🔬 Extreme precision focus required. Sharpness is the primary DoD criterion.',
-    'Wedding':    '💍 Emotional authenticity and decisive moment. Genuine emotion scores highest.',
-    'People':     '👤 Emotional connection and authentic expression are paramount.',
-  };
-  document.getElementById('genre').addEventListener('change', function() {
-    const hint = genreHints[this.value] || '';
-    document.getElementById('genre-hint').textContent = hint;
+    xhr.send(new FormData(form));
   });
 })();
 </script>
