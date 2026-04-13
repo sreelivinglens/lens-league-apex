@@ -699,7 +699,7 @@ def bulk_upload():
                     thumb_path=thumb_path, thumb_url=thumb_url,
                     file_size_kb=int(os.path.getsize(thumb_path)/1024),
                     width=w, height=h, format=fmt,
-                    asset_name=os.path.splitext(filename)[0].replace('_',' ').replace('-',' ').title(),
+                    asset_name=auto_title(filename, genre),
                     phash=phash, genre=genre, photographer_name=photographer, status='pending',
                 )
                 db.session.add(img)
