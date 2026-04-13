@@ -643,10 +643,13 @@ def download_card(image_id):
     return Response(
         zip_bytes,
         headers={
-            'Content-Type':        'application/zip',
-            'Content-Disposition': f'attachment; filename="LensLeague_{clean}_RatingCards.zip"',
-            'Content-Length':      str(len(zip_bytes)),
-            'Cache-Control':       'no-store',
+            'Content-Type':              'application/zip',
+            'Content-Disposition':       f'attachment; filename="LensLeague_{clean}_RatingCards.zip"',
+            'Content-Length':            str(len(zip_bytes)),
+            'Cache-Control':             'no-store, no-cache, must-revalidate',
+            'Pragma':                    'no-cache',
+            'X-Content-Type-Options':    'nosniff',
+            'Content-Transfer-Encoding': 'binary',
         }
     )
 
@@ -771,7 +774,7 @@ def bulk_upload():
                     card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                                   f"{secure_filename(photographer.replace(' ',''))}_{genre}_{img.score}.jpg")
                     card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                    _build_card1(img.thumb_path, audit, card_path)
+                    _build_card(img.thumb_path, audit, card_path)
                     img.card_path = card_path
                     card_url = _r2_upload_card(card_path, uid + '_card')
                     if card_url: img.card_url = card_url
