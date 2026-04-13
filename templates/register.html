@@ -2,266 +2,33 @@
 {% block title %}Create Account — Lens League Apex{% endblock %}
 
 {% block content %}
-<style>
-  .reg-wrap {
-    max-width: 560px;
-    margin: 48px auto;
-    padding: 0 16px;
-  }
-  .reg-wrap h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #C8A84B;
-    margin-bottom: 6px;
-    letter-spacing: 0.02em;
-  }
-  .reg-wrap .subtitle {
-    color: #aaa;
-    font-size: 0.93rem;
-    margin-bottom: 28px;
-  }
-  .reg-card {
-    background: #2C2C2A;
-    border: 1px solid #3a3a38;
-    border-radius: 10px;
-    padding: 32px;
-    color: #fff;
-  }
-  .form-group {
-    margin-bottom: 20px;
-  }
-  .form-group label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #C8A84B;
-    margin-bottom: 6px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    background: #1e1e1c;
-    border: 1px solid #444;
-    border-radius: 6px;
-    color: #fff;
-    padding: 10px 14px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-  }
-  .form-group input:focus,
-  .form-group select:focus {
-    border-color: #8B6914;
-  }
-  .form-group select option { background: #1e1e1c; }
-  .form-group .hint {
-    margin-top: 5px;
-    font-size: 0.78rem;
-    color: #666;
-  }
-  .section-divider {
-    border: none;
-    border-top: 1px solid #3a3a38;
-    margin: 24px 0;
-  }
-  .section-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #8B6914;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-  /* Agreement checkbox */
-  .agree-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 6px;
-    padding: 14px 16px;
-    background: #222220;
-    border: 1px solid #3a3a38;
-    border-radius: 7px;
-  }
-  .agree-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    margin-top: 2px;
-    accent-color: #8B6914;
-    cursor: pointer;
-  }
-  .agree-row label {
-    font-size: 0.88rem;
-    color: #ccc;
-    line-height: 1.55;
-    cursor: pointer;
-  }
-  .agree-row label a {
-    color: #C8A84B;
-    text-decoration: underline;
-  }
-  .btn-link {
-    background: none;
-    border: none;
-    color: #C8A84B;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: inherit;
-    padding: 0;
-  }
-  .btn-submit {
-    margin-top: 24px;
-    width: 100%;
-    padding: 13px;
-    background: #8B6914;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-  }
-  .btn-submit:hover:not(:disabled) { background: #a07c1a; }
-  .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-  .login-link {
-    text-align: center;
-    margin-top: 18px;
-    font-size: 0.88rem;
-    color: #888;
-  }
-  .login-link a { color: #C8A84B; text-decoration: none; }
-  .flash-msg {
-    padding: 12px 16px;
-    border-radius: 7px;
-    margin-bottom: 18px;
-    font-size: 0.92rem;
-  }
-  .flash-msg.error   { background: #2e1a1a; border: 1px solid #7a2222; color: #f88; }
-  .flash-msg.success { background: #1a2e1a; border: 1px solid #2a6a2a; color: #7f7; }
+<div style="max-width:580px; margin:48px auto;">
 
-  /* Agreement Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.82);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: #2C2C2A;
-    border: 1px solid #8B6914;
-    border-radius: 10px;
-    max-width: 580px;
-    width: 100%;
-    max-height: 82vh;
-    display: flex;
-    flex-direction: column;
-  }
-  .modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #3a3a38;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .modal-header h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #C8A84B;
-    margin: 0;
-  }
-  .modal-close {
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 1.4rem;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 4px;
-  }
-  .modal-close:hover { color: #fff; }
-  .modal-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    flex: 1;
-    font-size: 0.88rem;
-    color: #ccc;
-    line-height: 1.65;
-  }
-  .modal-body h3 {
-    font-size: 0.9rem;
-    color: #C8A84B;
-    margin: 18px 0 6px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .modal-body p { margin: 0 0 10px; }
-  .modal-body ul { padding-left: 20px; margin: 0 0 10px; }
-  .modal-body ul li { margin-bottom: 6px; }
-  .modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #3a3a38;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-  .btn-modal-close {
-    padding: 9px 22px;
-    background: #3a3a38;
-    color: #ccc;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-  .btn-modal-accept {
-    padding: 9px 22px;
-    background: #8B6914;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 700;
-  }
-  .btn-modal-accept:hover { background: #a07c1a; }
-</style>
+  <div style="text-align:center; margin-bottom:36px;">
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">JOIN THE LEAGUE</div>
+    <h1 style="font-size:clamp(24px,4vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">Create Your Account</h1>
+    <p style="font-size:15px; color:var(--text-secondary);">Start scoring your photography with the Apex DDI Engine.</p>
+  </div>
 
-<div class="reg-wrap">
-  <h1>🏆 Create Account</h1>
-  <p class="subtitle">Join Lens League Apex and start scoring your photography.</p>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="flash-msg {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <div class="reg-card">
+  <div class="card">
     <form method="POST" action="/register">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
       <!-- Account Details -->
-      <div class="section-label">Account Details</div>
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">Account Details</div>
 
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Your display name" maxlength="50"
-               value="{{ request.form.get('username', '') }}" required autocomplete="username">
-        <div class="hint">Visible on leaderboards and your public profile.</div>
+        <input type="text" id="username" name="username" placeholder="Your display name"
+               maxlength="50" value="{{ request.form.get('username', '') }}"
+               required autocomplete="username">
+        <div style="margin-top:5px; font-size:13px; color:var(--text-muted);">Visible on leaderboards and your public profile.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" placeholder="Your real name"
+               maxlength="120" value="{{ request.form.get('full_name', '') }}"
+               autocomplete="name">
       </div>
 
       <div class="form-group">
@@ -270,32 +37,35 @@
                value="{{ request.form.get('email', '') }}" required autocomplete="email">
       </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Minimum 8 characters"
-               minlength="8" required autocomplete="new-password">
+      <div class="grid-2" style="gap:16px;">
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password"
+                 placeholder="Minimum 8 characters"
+                 minlength="8" required autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label for="confirm_password">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password"
+                 placeholder="Repeat password"
+                 minlength="8" required autocomplete="new-password">
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password"
-               minlength="8" required autocomplete="new-password">
-      </div>
-
-      <hr class="section-divider">
+      <hr style="border:none; border-top:1px solid var(--border-subtle); margin:24px 0;">
 
       <!-- Security Question -->
-      <div class="section-label">🔐 Security Question</div>
-      <div style="font-size:0.82rem;color:#888;margin-bottom:14px;">Used to recover your account if you forget your password.</div>
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">🔐 Security Question</div>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">Used to recover your account if you forget your password.</p>
 
       <div class="form-group">
         <label for="security_question">Choose a Question</label>
         <select id="security_question" name="security_question" required>
           <option value="" disabled {% if not request.form.get('security_question') %}selected{% endif %}>Select a question…</option>
-          <option value="What was the name of your first pet?"      {% if request.form.get('security_question') == "What was the name of your first pet?" %}selected{% endif %}>What was the name of your first pet?</option>
-          <option value="What is your mother's maiden name?"        {% if request.form.get('security_question') == "What is your mother's maiden name?" %}selected{% endif %}>What is your mother's maiden name?</option>
-          <option value="What city were you born in?"               {% if request.form.get('security_question') == "What city were you born in?" %}selected{% endif %}>What city were you born in?</option>
-          <option value="What was the make of your first car?"      {% if request.form.get('security_question') == "What was the make of your first car?" %}selected{% endif %}>What was the make of your first car?</option>
+          <option value="What was the name of your first pet?" {% if request.form.get('security_question') == "What was the name of your first pet?" %}selected{% endif %}>What was the name of your first pet?</option>
+          <option value="What is your mother's maiden name?" {% if request.form.get('security_question') == "What is your mother's maiden name?" %}selected{% endif %}>What is your mother's maiden name?</option>
+          <option value="What city were you born in?" {% if request.form.get('security_question') == "What city were you born in?" %}selected{% endif %}>What city were you born in?</option>
+          <option value="What was the make of your first car?" {% if request.form.get('security_question') == "What was the make of your first car?" %}selected{% endif %}>What was the make of your first car?</option>
           <option value="What is the name of the street you grew up on?" {% if request.form.get('security_question') == "What is the name of the street you grew up on?" %}selected{% endif %}>What is the name of the street you grew up on?</option>
           <option value="What was the name of your primary school?" {% if request.form.get('security_question') == "What was the name of your primary school?" %}selected{% endif %}>What was the name of your primary school?</option>
           <option value="What is your oldest sibling's middle name?" {% if request.form.get('security_question') == "What is your oldest sibling's middle name?" %}selected{% endif %}>What is your oldest sibling's middle name?</option>
@@ -304,99 +74,103 @@
 
       <div class="form-group">
         <label for="security_answer">Your Answer</label>
-        <input type="text" id="security_answer" name="security_answer" placeholder="Answer (case-insensitive)"
+        <input type="text" id="security_answer" name="security_answer"
+               placeholder="Answer (case-insensitive)"
                maxlength="120" value="{{ request.form.get('security_answer', '') }}" required>
-        <div class="hint">Remember this answer — it will be required during password recovery.</div>
+        <div style="margin-top:5px; font-size:13px; color:var(--text-muted);">Remember this — required during password recovery.</div>
       </div>
 
-      <hr class="section-divider">
+      <hr style="border:none; border-top:1px solid var(--border-subtle); margin:24px 0;">
 
       <!-- Member Agreement -->
-      <div class="section-label">📋 Member Agreement</div>
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">📋 Member Agreement</div>
 
-      <div class="agree-row">
+      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
         <input type="checkbox" id="agreed" name="agreed" value="1"
-               {% if request.form.get('agreed') %}checked{% endif %} required>
-        <label for="agreed">
+               {% if request.form.get('agreed') %}checked{% endif %}
+               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); cursor:pointer; flex-shrink:0;">
+        <label for="agreed" style="font-size:14px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
           I have read and agree to the
-          <button type="button" class="btn-link" onclick="openAgreement()">Lens League Member Agreement</button>.
-          I understand that image scoring is AI-assisted, that competition results are final,
-          and that submitting AI-generated or plagiarised images may result in permanent disqualification.
+          <button type="button" onclick="openAgreement()"
+                  style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:14px; padding:0;">
+            Lens League Member Agreement
+          </button>.
+          I understand that image scoring is AI-assisted, competition results are final,
+          and submitting AI-generated or plagiarised images may result in permanent disqualification.
         </label>
       </div>
 
-      <button type="submit" class="btn-submit" id="submitBtn">Create My Account</button>
+      <button type="submit" class="btn btn-solid" id="submitBtn"
+              style="width:100%; padding:14px; font-size:13px; letter-spacing:2px; margin-top:24px;">
+        Create My Account
+      </button>
     </form>
-  </div>
 
-  <div class="login-link">Already have an account? <a href="/login">Sign in here</a></div>
+    <div style="border-top:1px solid var(--border-subtle); margin-top:24px; padding-top:20px; text-align:center;">
+      <p style="font-size:15px; color:var(--text-secondary);">
+        Already have an account?
+        <a href="{{ url_for('login') }}" style="color:var(--gold); font-weight:600; text-decoration:none; margin-left:4px;">Sign in →</a>
+      </p>
+    </div>
+  </div>
 </div>
 
 <!-- Member Agreement Modal -->
-<div class="modal-overlay" id="agreementModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>📋 Lens League Member Agreement</h2>
-      <button class="modal-close" onclick="closeAgreement()" title="Close">✕</button>
+<div id="agreementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); max-width:580px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+    <div style="padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="font-size:17px; font-weight:700; color:var(--gold); margin:0;">Lens League Member Agreement</h2>
+      <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer; line-height:1; padding:0 4px;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
     </div>
-    <div class="modal-body">
-      <p>Welcome to Lens League Apex. By registering, you agree to the following terms:</p>
+    <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:14px; color:var(--text-secondary); line-height:1.7;">
+      <p style="margin-bottom:16px;">Welcome to Lens League Apex. By registering, you agree to the following terms:</p>
 
-      <h3>1. Image Authenticity</h3>
-      <p>All images you submit must be your own original photographs. Submitting AI-generated images, heavily composited work presented as single captures, or images taken by another photographer is strictly prohibited and will result in immediate disqualification and account suspension.</p>
+      {% for title, body in [
+        ('1. Image Authenticity', 'All images you submit must be your own original photographs. Submitting AI-generated images, heavily composited work presented as single captures, or images taken by another photographer is strictly prohibited and will result in immediate disqualification and account suspension.'),
+        ('2. EXIF & Metadata', 'We use EXIF metadata to verify camera authenticity. Absence of EXIF does not automatically disqualify an image — but it will be flagged as Unverified. Suspicious metadata patterns may trigger manual review.'),
+        ('3. AI Scoring', 'Images are scored by the Apex DDI Engine, an AI-powered scoring system. Scores represent an objective assessment of photographic merit and are subject to calibration updates over time.'),
+        ('5. Copyright', 'You retain copyright of all images you upload. By uploading, you grant Lens League Apex a non-exclusive licence to display your images on the platform. You may request removal of your images at any time.'),
+        ('6. Community Standards', 'Images containing illegal content, nudity, hate speech, or graphic violence are strictly prohibited and will be removed immediately. Repeat violations will result in permanent bans.'),
+        ('7. Account Security', 'You are responsible for keeping your password secure. Password changes will log you out of all active sessions — this is by design for your security.'),
+        ('8. Force Majeure', 'Lens League Apex shall not be liable for delays or failures caused by circumstances beyond our reasonable control.'),
+      ] %}
+      <div style="margin-bottom:16px;">
+        <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">{{ title }}</div>
+        <p style="margin:0;">{{ body }}</p>
+      </div>
+      {% endfor %}
 
-      <h3>2. EXIF & Metadata</h3>
-      <p>We use EXIF metadata to verify camera authenticity. While submitting images with intact metadata is strongly encouraged, absence of EXIF does not automatically disqualify an image — but it will be flagged as <em>Unverified</em>. Suspicious metadata patterns may trigger manual review.</p>
-
-      <h3>3. AI Scoring</h3>
-      <p>Images are scored by the Apex DDI Engine, an AI-powered scoring system. Scores are indicative and represent an objective assessment of photographic merit. Scores are not infallible and are subject to calibration updates over time.</p>
-
-      <h3>4. Competitions & Prizes</h3>
-      <ul>
-        <li>Monthly and annual prizes are awarded based on cumulative scores.</li>
-        <li>Prize eligibility may be subject to tax regulations applicable in your country (India: TDS/GST; International: local tax laws).</li>
-        <li>Lens League Apex reserves the right to withhold prizes in cases of suspected fraud or policy violations.</li>
-      </ul>
-
-      <h3>5. Copyright</h3>
-      <p>You retain copyright of all images you upload. By uploading, you grant Lens League Apex a non-exclusive licence to display your images on the platform, including public share pages and leaderboards. You may request removal of your images at any time.</p>
-
-      <h3>6. Community Standards</h3>
-      <p>Images containing illegal content, nudity, hate speech, or graphic violence are strictly prohibited and will be removed immediately. Repeat violations will result in permanent bans.</p>
-
-      <h3>7. Account Security</h3>
-      <p>You are responsible for keeping your password secure. Password changes will log you out of all active sessions — this is by design for your security.</p>
-
-      <h3>8. Force Majeure</h3>
-      <p>Lens League Apex shall not be liable for delays or failures caused by circumstances beyond our reasonable control, including but not limited to server outages, internet disruptions, or natural disasters.</p>
-
-      <h3>9. Changes to Terms</h3>
-      <p>These terms may be updated from time to time. Continued use of the platform constitutes acceptance of any revised terms.</p>
+      <div style="margin-bottom:16px;">
+        <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">4. Competitions & Prizes</div>
+        <ul style="padding-left:20px; display:flex; flex-direction:column; gap:6px;">
+          <li>Monthly and annual prizes are awarded based on cumulative scores.</li>
+          <li>Prize eligibility is subject to tax regulations in your country (India: TDS/GST; International: local tax laws).</li>
+          <li>Lens League Apex reserves the right to withhold prizes in cases of suspected fraud or policy violations.</li>
+        </ul>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-modal-close" onclick="closeAgreement()">Close</button>
-      <button class="btn-modal-accept" onclick="acceptAgreement()">I Agree ✓</button>
+    <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+      <button onclick="closeAgreement()" class="btn" style="padding:10px 24px;">Close</button>
+      <button onclick="acceptAgreement()" class="btn btn-solid" style="padding:10px 24px;">I Agree ✓</button>
     </div>
   </div>
 </div>
 
 <script>
 function openAgreement() {
-  document.getElementById('agreementModal').classList.add('open');
+  const m = document.getElementById('agreementModal');
+  m.style.display = 'flex';
 }
 function closeAgreement() {
-  document.getElementById('agreementModal').classList.remove('open');
+  document.getElementById('agreementModal').style.display = 'none';
 }
 function acceptAgreement() {
   document.getElementById('agreed').checked = true;
   closeAgreement();
 }
-// Close on overlay click
 document.getElementById('agreementModal').addEventListener('click', function(e) {
   if (e.target === this) closeAgreement();
 });
-
-// Client-side password match check
 document.querySelector('form').addEventListener('submit', function(e) {
   const pw  = document.getElementById('password').value;
   const cpw = document.getElementById('confirm_password').value;
