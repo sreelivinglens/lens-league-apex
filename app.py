@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
-from models import db, User, Image, CalibrationLog
+from models import db, User, Image, CalibrationLog, CalibrationNote
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS,
                               ARCHETYPES, compute_calibration_stats)
 from engine.processor import ingest_image, allowed_file
@@ -814,6 +814,75 @@ def backfill_hashes():
     db.session.commit()
     flash(f'Backfilled {updated} image hashes. {failed} failed (no file).', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/image/<int:image_id>/feedback', methods=['POST'])
+@login_required
+@admin_required
+def admin_feedback(image_id):
+    img     = Image.query.get_or_404(image_id)
+    module  = request.form.get('module', 'overall').strip()
+    reason  = request.form.get('reason', '').strip()
+    orig    = request.form.get('original_score', '')
+    corr    = request.form.get('corrected_score', '')
+
+    if not reason:
+        flash('Please provide a reason for the correction.', 'error')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    note = CalibrationNote(
+        image_id        = image_id,
+        admin_id        = current_user.id,
+        genre           = img.genre or 'Wildlife',
+        module          = module,
+        original_score  = float(orig) if orig else None,
+        corrected_score = float(corr) if corr else None,
+        reason          = reason,
+    )
+    db.session.add(note)
+
+    # If corrected score provided, also update the image score and mark as REF
+    if corr and module == 'overall':
+        img.score = float(corr)
+        img.status = 'scored'
+        img.is_calibration_example = True
+        flash(f'Correction saved. Image score updated to {corr} and marked as REF example.', 'success')
+    else:
+        flash(f'Calibration correction saved for {module.upper()}. Will influence future {img.genre} scoring.', 'success')
+
+    db.session.commit()
+    return redirect(url_for('image_detail', image_id=image_id))
+
+
+@app.route('/admin/calibration-notes')
+@login_required
+@admin_required
+def admin_calibration_notes():
+    notes = CalibrationNote.query.order_by(CalibrationNote.created_at.desc()).all()
+    return render_template('calibration_notes.html', notes=notes)
+
+
+@app.route('/admin/calibration-notes/<int:note_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_calibration_note(note_id):
+    note = CalibrationNote.query.get_or_404(note_id)
+    note.is_active = not note.is_active
+    db.session.commit()
+    status = 'activated' if note.is_active else 'deactivated'
+    flash(f'Calibration note {status}.', 'success')
+    return redirect(url_for('admin_calibration_notes'))
+
+
+@app.route('/admin/calibration-notes/<int:note_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_calibration_note(note_id):
+    note = CalibrationNote.query.get_or_404(note_id)
+    db.session.delete(note)
+    db.session.commit()
+    flash('Calibration note deleted.', 'success')
+    return redirect(url_for('admin_calibration_notes'))
 
 
 @app.route('/terms')

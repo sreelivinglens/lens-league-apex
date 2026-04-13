@@ -236,6 +236,44 @@ def get_genre_context(genre):
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
+def get_calibration_notes(genre, limit=5):
+    """
+    Fetch admin correction notes for this genre.
+    These are injected as negative/positive examples to prevent recurring mistakes.
+    """
+    try:
+        from models import CalibrationNote
+        from flask import current_app
+        with current_app.app_context():
+            notes = (
+                CalibrationNote.query
+                .filter_by(genre=genre, is_active=True)
+                .order_by(CalibrationNote.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            if not notes:
+                return ''
+            lines = ['\nADMIN CALIBRATION CORRECTIONS FOR THIS GENRE:']
+            lines.append('These are corrections made by human judges. Learn from these mistakes.\n')
+            for n in notes:
+                score_info = ''
+                if n.original_score and n.corrected_score:
+                    score_info = f'(AI scored {n.original_score} → correct score is {n.corrected_score})'
+                elif n.corrected_score:
+                    score_info = f'(correct score should be {n.corrected_score})'
+                lines.append(
+                    f'Module: {n.module.upper()} {score_info}\n'
+                    f'Correction: {n.reason}\n'
+                    f'---'
+                )
+            return '\n'.join(lines)
+    except Exception as e:
+        print(f'[calibration notes] {e}')
+        return ''
+
+
+
 def get_calibration_examples(genre, limit=3):
     try:
         from models import Image as ImageModel
@@ -283,6 +321,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
     media_type = "image/jpeg" if ext in [".jpg", ".jpeg"] else "image/png"
 
     calibration_block = get_calibration_examples(genre)
+    correction_block  = get_calibration_notes(genre)
 
     prompt = SCORE_PROMPT.format(
         genre                = genre,
@@ -292,6 +331,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
         location             = location or "Not specified",
         genre_context        = get_genre_context(genre),
         calibration_examples = calibration_block,
+        calibration_notes    = correction_block,
     )
 
     payload = {

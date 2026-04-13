@@ -112,6 +112,37 @@ class Image(db.Model):
         return f'<Image {self.id} – {self.asset_name} ({self.score})>'
 
 
+class CalibrationNote(db.Model):
+    """Admin feedback on individual scored images — feeds back into engine prompt."""
+    __tablename__ = 'calibration_notes'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    admin_id        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    genre           = db.Column(db.String(60), nullable=False)
+
+    # Which module was wrong (or 'overall')
+    module          = db.Column(db.String(20), nullable=False)
+
+    # Original AI score vs admin corrected score
+    original_score  = db.Column(db.Float, nullable=True)
+    corrected_score = db.Column(db.Float, nullable=True)
+
+    # Why the engine was wrong
+    reason          = db.Column(db.Text, nullable=False)
+
+    # Was this used as a calibration injection?
+    is_active       = db.Column(db.Boolean, default=True)
+
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    image           = db.relationship('Image', backref='calibration_notes', lazy=True)
+    admin           = db.relationship('User', backref='calibration_notes', lazy=True)
+
+    def __repr__(self):
+        return f'<CalibrationNote image={self.image_id} module={self.module} {self.original_score}→{self.corrected_score}>'
+
+
 class CalibrationLog(db.Model):
     """Stores admin calibration snapshots for score drift monitoring."""
     __tablename__ = 'calibration_logs'
@@ -165,6 +196,23 @@ def run_migrations(app):
         _col('images', 'phash',            'VARCHAR(64)')
         _col('images', 'is_calibration_example', 'BOOLEAN DEFAULT FALSE')
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
+
+        # calibration_notes table
+        db.session.execute(db.text('''
+            CREATE TABLE IF NOT EXISTS calibration_notes (
+                id SERIAL PRIMARY KEY,
+                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                admin_id INTEGER REFERENCES users(id),
+                genre VARCHAR(60) NOT NULL,
+                module VARCHAR(20) NOT NULL,
+                original_score FLOAT,
+                corrected_score FLOAT,
+                reason TEXT NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        '''))
+        db.session.commit()
 
 
 def _col(table, column, col_type):
