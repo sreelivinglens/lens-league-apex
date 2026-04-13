@@ -52,8 +52,8 @@ RED      = (224,  85,  85)  # --red
 AMBER    = (224, 153,  64)  # --amber
 
 # ── Canvas ────────────────────────────────────────────────────────────────────
-CW  = 1400   # canvas width
-PAD = 64    # left/right padding
+CW  = 1600   # canvas width
+PAD = 72    # left/right padding
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def line_h(font):
@@ -133,20 +133,20 @@ def build_card(photo_path, data, out_path):
 
     # ── Define all fonts ──────────────────────────────────────────────────────
     F = {
-        'brand':    fnt(F_MONO,   22),
-        'engine':   fnt(F_MONO_R, 18),
-        'score':    fnt(F_BOLD,   132),   # dominant score number
-        'tier':     fnt(F_MONO,   30),
-        'title':    fnt(F_BOLD,   42),
-        'meta':     fnt(F_REG,    26),
-        'tag':      fnt(F_MONO_R, 21),
-        'mod_lbl':  fnt(F_MONO_R, 21),
-        'mod_val':  fnt(F_BOLD,   54),   # large module numbers
-        'sec_hdr':  fnt(F_MONO,   22),   # section label
-        'body':     fnt(F_REG,    28),   # ALL body text — 28pt
-        'imp':      fnt(F_BOLD,   28),   # improvement text bold
-        'badge_h':  fnt(F_MONO,   22),
-        'footer':   fnt(F_MONO_R, 20),
+        'brand':    fnt(F_MONO,   26),
+        'engine':   fnt(F_MONO_R, 22),
+        'score':    fnt(F_BOLD,   160),   # dominant score number
+        'tier':     fnt(F_MONO,   36),
+        'title':    fnt(F_BOLD,   52),
+        'meta':     fnt(F_REG,    32),
+        'tag':      fnt(F_MONO_R, 26),
+        'mod_lbl':  fnt(F_MONO_R, 26),
+        'mod_val':  fnt(F_BOLD,   64),   # large module numbers
+        'sec_hdr':  fnt(F_MONO,   26),   # section label
+        'body':     fnt(F_REG,    34),   # ALL body text — 28pt
+        'imp':      fnt(F_BOLD,   34),   # improvement text bold
+        'badge_h':  fnt(F_MONO,   26),
+        'footer':   fnt(F_MONO_R, 24),
     }
 
     W = CW - PAD * 2  # inner content width
@@ -162,7 +162,7 @@ def build_card(photo_path, data, out_path):
     credit  = data.get('credit', '')
     soul    = data.get('soul_bonus', False)
     iucn    = data.get('iucn_tag', '')
-    modules = data.get('modules', [])
+    modules = [(n, v) for n, v in data.get('modules', []) if v and float(v) > 0]
     rows    = data.get('rows', [])
     b1      = data.get('byline_1', '').strip()
     b2      = data.get('byline_2_body', '').strip()
@@ -171,8 +171,8 @@ def build_card(photo_path, data, out_path):
 
     # ── Calculate heights of each section ─────────────────────────────────────
     HEADER_H = 56
-    PHOTO_H  = 800
-    SCORE_H  = 260
+    PHOTO_H  = 1000
+    SCORE_H  = 320
 
     # Module row
     MOD_H = PAD + line_h(F['mod_lbl']) + 10 + line_h(F['mod_val']) + 14 + 6 + PAD
@@ -209,7 +209,7 @@ def build_card(photo_path, data, out_path):
 
     FOOTER_H = 56
 
-    CH = (HEADER_H + PHOTO_H + SCORE_H +
+    CH = (HEADER_H + PHOTO_H + SCORE_H + PAD * 2 +
           1 + MOD_H +
           1 + analysis_h +
           1 + byline_h +
