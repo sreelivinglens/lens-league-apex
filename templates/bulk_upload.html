@@ -237,7 +237,7 @@
       {% for r in results %}
       {% set is_ok = r.status in ['scored', 'uploaded'] %}
       <div class="result-row">
-        <div class="result-filename">{{ r.filename }}</div>
+        <div class="result-filename" style="word-break:break-word; overflow-wrap:anywhere; font-size:13px; color:var(--text-muted);">{{ r.filename }}</div>
         <div class="result-score">{{ r.score or '—' }}</div>
         <div class="result-tier">{{ r.tier or '—' }}</div>
         <div class="result-status {{ 'ok' if is_ok else 'err' }}">{{ r.status }}</div>
@@ -325,7 +325,7 @@ function showFiles(files) {
 
 input.addEventListener('change', () => showFiles(input.files));
 
-// Submit with progress
+// Submit with XHR so JS keeps running (elapsed timer works)
 const form      = document.getElementById('bulkForm');
 const submitBtn = document.getElementById('submitBtn');
 const progArea  = document.getElementById('progressArea');
@@ -335,28 +335,28 @@ const progLabel = document.getElementById('progressLabel');
 const elapsed   = document.getElementById('elapsedDisplay');
 
 form.addEventListener('submit', function(e) {
+  e.preventDefault();
+
   const files = input.files;
-  if (!files.length) return;
+  if (!files.length) { alert('Please select images first.'); return; }
 
   let oversized = [];
   for (let f of files) {
     if (f.size > 5 * 1024 * 1024) oversized.push(f.name);
   }
   if (oversized.length) {
-    e.preventDefault();
     alert('These files exceed 5MB:\n' + oversized.join('\n'));
     return;
   }
 
-  e.preventDefault();
+  // Lock UI
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
   progArea.style.display = 'block';
   progBar.style.width = '2%';
-
-  // Store processing state — survives tab switching
   sessionStorage.setItem('bulk_processing', '1');
 
+  // Start elapsed timer — keeps running because XHR is async
   const total    = files.length;
   const perImage = 20;
   const totalSec = total * perImage;
@@ -365,17 +365,50 @@ form.addEventListener('submit', function(e) {
   const ticker = setInterval(() => {
     secs++;
     elapsed.textContent = secs + 's elapsed';
-    const pct = Math.min((secs / totalSec) * 88, 88);
+    const pct = Math.min((secs / totalSec) * 92, 92);
     progBar.style.width = pct + '%';
-    const imgNum = Math.min(Math.floor(secs / perImage) + 1, total);
+    const imgNum = Math.min(Math.ceil(secs / perImage), total);
     progText.textContent = `Scoring image ${imgNum} of ${total} with Apex DDI Engine…`;
     progLabel.textContent = `PROCESSING ${imgNum}/${total}`;
   }, 1000);
 
-  window.bulkTicker = ticker;
-  setTimeout(() => {
-    form.submit();
-  }, 200);
+  // XHR submit
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', form.action || window.location.pathname);
+
+  xhr.onload = function() {
+    clearInterval(ticker);
+    if (xhr.status === 200) {
+      progBar.style.width = '100%';
+      progLabel.textContent = 'COMPLETE';
+      progText.textContent = '✅ All images processed — loading results…';
+      sessionStorage.removeItem('bulk_processing');
+      // Parse response HTML and replace page content
+      document.open();
+      document.write(xhr.responseText);
+      document.close();
+    } else {
+      progText.textContent = `❌ Error ${xhr.status} — please try again.`;
+      submitBtn.disabled = false;
+      submitBtn.textContent = '⬆ Upload & Auto-Score All';
+    }
+  };
+
+  xhr.onerror = function() {
+    clearInterval(ticker);
+    progText.textContent = '❌ Network error — please try again.';
+    submitBtn.disabled = false;
+    submitBtn.textContent = '⬆ Upload & Auto-Score All';
+  };
+
+  xhr.ontimeout = function() {
+    clearInterval(ticker);
+    progText.textContent = '⏱ Request timed out — images may still be processing. Refresh the page to check.';
+  };
+
+  xhr.timeout = 300000; // 5 minute timeout for large batches
+
+  xhr.send(new FormData(form));
 });
 
 // Clear processing state when results load
