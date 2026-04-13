@@ -440,7 +440,7 @@ def upload():
         if api_key:
             try:
                 from engine.auto_score import auto_score, build_audit_data
-                from engine.compositor import build_card
+                from engine.compositor import build_card1 as build_card
                 result = auto_score(image_path=img.thumb_path, genre=img.genre,
                                     title=img.asset_name, photographer=img.photographer_name,
                                     subject=img.subject, location=img.location)
@@ -462,7 +462,7 @@ def upload():
                               f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
                               f"{img.genre}_{img.score}.jpg")
                 card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                build_card(img.thumb_path, audit, card_path)
+                build_card1(img.thumb_path, audit, card_path)
                 img.card_path = card_path
 
                 # Upload card to R2
@@ -541,13 +541,13 @@ def score_image(image_id):
         }
         img.set_audit(audit)
 
-        from engine.compositor import build_card
+        from engine.compositor import build_card1 as build_card
         uid = str(uuid.uuid4())
         card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                       f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
                       f"{img.genre}_{final_score}.jpg")
         card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-        build_card(img.thumb_path, audit, card_path)
+        build_card1(img.thumb_path, audit, card_path)
         img.card_path = card_path
 
         # Upload card to R2
@@ -753,7 +753,7 @@ def bulk_upload():
                 db.session.flush()
                 if api_key:
                     from engine.auto_score import auto_score, build_audit_data
-                    from engine.compositor import build_card as _build_card
+                    from engine.compositor import build_card1 as _build_card
                     scored = auto_score(image_path=img.thumb_path, genre=genre,
                                         title=img.asset_name, photographer=photographer)
                     img.dod_score=float(scored.get('dod',0))
@@ -771,7 +771,7 @@ def bulk_upload():
                     card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                                   f"{secure_filename(photographer.replace(' ',''))}_{genre}_{img.score}.jpg")
                     card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                    _build_card(img.thumb_path, audit, card_path)
+                    _build_card1(img.thumb_path, audit, card_path)
                     img.card_path = card_path
                     card_url = _r2_upload_card(card_path, uid + '_card')
                     if card_url: img.card_url = card_url
