@@ -573,6 +573,8 @@ def download_card(image_id):
     from engine.compositor import build_card1, build_card2
 
     audit = img.get_audit() or {}
+    app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())} rows_count={len(audit.get("rows",[]))} byline_1_len={len(audit.get("byline_1",""))} byline_2={len(audit.get("byline_2",""))} byline_2_body={len(audit.get("byline_2_body",""))}')
+    # Use scores from DB directly (most reliable)
     modules = [(n,v) for n,v in [
         ('DoD',        img.dod_score),
         ('Disruption', img.disruption_score),
@@ -593,7 +595,7 @@ def download_card(image_id):
         'modules':       modules,
         'rows':          audit.get('rows',[]),
         'byline_1':      audit.get('byline_1',''),
-        'byline_2_body': audit.get('byline_2_body',''),
+        'byline_2_body': audit.get('byline_2_body','') or audit.get('byline_2',''),
         'badges_g':      audit.get('badges_g',[]),
         'badges_w':      audit.get('badges_w',[]),
     }
