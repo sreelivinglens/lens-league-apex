@@ -538,7 +538,7 @@ def download_card(image_id):
         ('DM',         img.dm_score),
         ('Wonder',     img.wonder_score),
         ('AQ',         img.aq_score),
-    ] if v is not None]
+    ] if v is not None and float(v) > 0]
 
     card_data = {
         'score':         img.score,
@@ -589,7 +589,12 @@ def download_card(image_id):
                 if p: _os.unlink(p)
             except: pass
 
-    safe_name = f"LensLeague_{img.score}_{img.tier}_{(img.asset_name or 'card').replace(' ','_')}.jpg"
+    import re as _re
+    raw_name = img.asset_name or img.original_filename or 'card'
+    # Strip screenshot timestamp patterns like Screenshot_2026-04-11_at_10.01.22_PM
+    clean = _re.sub(r'screenshot[_\s]*\d{4}.\d{2}.\d{2}.*', '', raw_name, flags=_re.IGNORECASE).strip('_- ')
+    clean = clean or 'RatingCard'
+    safe_name = f"LensLeague_{img.score}_{img.tier}_{clean.replace(' ','_')[:40]}.jpg"
 
     from flask import Response
     return Response(
