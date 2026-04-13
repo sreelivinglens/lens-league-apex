@@ -244,9 +244,17 @@
       Click <strong style="color:var(--gold);">Run Calibration Log</strong> to save a snapshot
     </div>
   </div>
-  <form method="POST" action="{{ url_for('run_calibration') }}">
-    <button type="submit" class="btn btn-solid" style="padding:10px 24px;">📸 Run Calibration Log</button>
-  </form>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <form method="POST" action="{{ url_for('run_calibration') }}">
+      <button type="submit" class="btn btn-solid" style="padding:10px 24px;">📸 Run Calibration Log</button>
+    </form>
+    <form method="POST" action="{{ url_for('fix_calibration_table') }}"
+          onsubmit="return confirm('Rebuild calibration_logs table? This clears all previous snapshots.');">
+      <button type="submit" class="btn" style="padding:10px 20px; border-color:#7a2222; color:#f88;">
+        🔧 Fix Table
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="table-wrap" style="margin-bottom:40px;">
