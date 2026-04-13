@@ -621,10 +621,8 @@
 
 <!-- Action buttons -->
 <div class="actions">
-  {% if image.card_url or image.card_path %}
-  <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}"
+  <a href="{{ url_for('download_card', image_id=image.id) }}"
      class="action-btn action-primary">↓ Download Rating Card</a>
-  {% endif %}
   <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
 </div>
 
