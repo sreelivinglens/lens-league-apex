@@ -323,7 +323,11 @@ def forgot_password():
 def dashboard():
     page  = request.args.get('page', 1, type=int)
     query = request.args.get('q', '').strip()
-    images_q     = Image.query.filter_by(user_id=current_user.id)
+    # Admin sees all images; regular users see only their own
+    if current_user.role == 'admin':
+        images_q = Image.query
+    else:
+        images_q = Image.query.filter_by(user_id=current_user.id)
     total_images = images_q.count()
     if query and total_images >= 20:
         images_q = images_q.filter(
@@ -332,13 +336,15 @@ def dashboard():
                 Image.genre.ilike(f'%{query}%'),
                 Image.subject.ilike(f'%{query}%'),
                 Image.location.ilike(f'%{query}%'),
+                Image.photographer_name.ilike(f'%{query}%'),
             )
         )
     images = (images_q.order_by(Image.created_at.desc())
               .paginate(page=page, per_page=12, error_out=False))
+    user_filter = {} if current_user.role == 'admin' else {'user_id': current_user.id}
     stats = {
         'total': total_images,
-        'scored': Image.query.filter_by(user_id=current_user.id, status='scored').count(),
+        'scored': Image.query.filter_by(status='scored', **user_filter).count(),
         'avg_score': db.session.query(db.func.avg(Image.score))
                        .filter(Image.user_id==current_user.id, Image.score!=None).scalar() or 0,
         'best_score': db.session.query(db.func.max(Image.score))
@@ -686,8 +692,9 @@ def bulk_upload():
         if not genre:
             flash('Please select a genre before uploading.', 'error')
             return redirect(url_for('bulk_upload'))
-        photographer = request.form.get('photographer_name',
-                                        current_user.full_name or current_user.username)
+        photographer = (request.form.get('photographer_name') or '').strip()
+        if not photographer:
+            photographer = current_user.full_name or current_user.username
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         for file in files:
             if not file or not file.filename:
@@ -1020,6 +1027,46 @@ def admin_feedback(image_id):
 
     db.session.commit()
     return redirect(url_for('image_detail', image_id=image_id))
+
+
+@app.route('/admin/transfer-images', methods=['POST'])
+@login_required
+@admin_required
+def admin_transfer_images():
+    """Transfer images from admin to a registered user by photographer name."""
+    photographer = request.form.get('photographer_name', '').strip()
+    if not photographer:
+        flash('Please enter a photographer name.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    # Find matching user
+    target_user = User.query.filter(
+        db.or_(
+            User.full_name.ilike(photographer),
+            User.username.ilike(photographer)
+        )
+    ).first()
+
+    if not target_user:
+        flash(f'No registered user found matching "{photographer}". They need to register first.', 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    # Transfer all images credited to this photographer that aren't already theirs
+    images = Image.query.filter(
+        Image.photographer_name.ilike(photographer),
+        Image.user_id != target_user.id
+    ).all()
+
+    if not images:
+        flash(f'No images to transfer — all images credited to "{photographer}" already belong to their account.', 'info')
+        return redirect(url_for('admin_dashboard'))
+
+    for img in images:
+        img.user_id = target_user.id
+    db.session.commit()
+
+    flash(f'✅ Transferred {len(images)} image{"s" if len(images)>1 else ""} to {target_user.full_name or target_user.username}.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 
 @app.route('/admin/fix-calibration-table', methods=['POST'])
