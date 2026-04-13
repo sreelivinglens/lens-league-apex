@@ -524,13 +524,40 @@ def download_card(image_id):
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
-    # Prefer R2 URL redirect; fall back to local file
+
+    safe_name = secure_filename(
+        f"LL_{img.score}_{img.tier}_{(img.asset_name or 'card').replace(' ','_')}.jpg"
+    )
+
+    # Fetch from R2 via boto3 (already authenticated — avoids network proxy issues)
     if img.card_url:
-        return redirect(img.card_url)
+        try:
+            from storage import get_client, BUCKET
+            import io
+            s3  = get_client()
+            # Extract the R2 key from the card_url
+            # card_url = https://pub-xxx.r2.dev/cards/filename.jpg
+            key = 'cards/' + img.card_url.split('/cards/')[-1]
+            buf = io.BytesIO()
+            s3.download_fileobj(BUCKET, key, buf)
+            buf.seek(0)
+            from flask import send_file as _sf
+            return _sf(
+                buf,
+                mimetype='image/jpeg',
+                as_attachment=True,
+                download_name=safe_name
+            )
+        except Exception as e:
+            app.logger.error(f'R2 download error: {e}')
+            # Fallback — redirect with Content-Disposition hint
+            from flask import Response, redirect
+            return redirect(img.card_url + '?download=1')
+
     if img.card_path and os.path.exists(img.card_path):
-        safe_name = secure_filename(f"LL_{img.score}_{img.tier}_{img.asset_name or 'card'}.jpg")
         return send_file(img.card_path, as_attachment=True, download_name=safe_name)
-    flash('Rating card not yet generated.', 'error')
+
+    flash('Rating card not yet generated. Please rescore this image.', 'error')
     return redirect(url_for('image_detail', image_id=image_id))
 
 
