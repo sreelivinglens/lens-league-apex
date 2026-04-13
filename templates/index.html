@@ -1,90 +1,294 @@
 {% extends "base.html" %}
 {% block title %}Lens League Apex — Photography Rating Engine{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: clamp(48px, 8vw, 96px) 0 clamp(40px, 6vw, 72px);
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 68px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    max-width: 760px;
+    margin: 0 auto 24px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.75;
+    font-weight: 400;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hero-actions .btn { padding: 14px 40px; font-size: 12px; }
+
+  /* Stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 56px;
+  }
+  .stats-strip .stat-box {
+    text-align: center;
+    padding: 28px 20px;
+  }
+  .stats-strip .stat-val { font-size: clamp(32px, 5vw, 48px); }
+
+  /* Top images */
+  .top-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 56px;
+  }
+  .top-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.2s;
+    display: block;
+  }
+  .top-card:hover {
+    border-color: var(--gold-dark);
+    transform: translateY(-2px);
+  }
+  .top-card-info {
+    padding: 16px;
+  }
+  .top-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .top-card-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* Modules */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .module-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .module-card:hover { border-color: var(--border-strong); }
+  .module-code {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .module-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .module-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Tiers */
+  .tiers-card {
+    background: var(--surface-2);
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));
+  }
+  .tier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 15px;
+  }
+  .tier-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .tier-name { font-weight: 600; color: var(--text-primary); }
+  .tier-range {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* CTA banner */
+  .cta-banner {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.06));
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-lg);
+    padding: clamp(32px, 5vw, 56px);
+    text-align: center;
+    margin-top: 56px;
+  }
+  .cta-banner h2 {
+    font-size: clamp(22px, 3.5vw, 36px);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .cta-banner p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 480px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 768px) {
+    .stats-strip { grid-template-columns: 1fr; gap: 12px; }
+    .top-grid { grid-template-columns: 1fr; gap: 16px; }
+    .modules-grid { grid-template-columns: 1fr; }
+    .hero-actions .btn { width: 100%; max-width: 280px; }
+  }
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .top-grid { grid-template-columns: repeat(2, 1fr); }
+    .modules-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-strip { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- HERO -->
-<div style="text-align:center; padding:80px 0 60px;">
-  <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:20px;">APEX DDI ENGINE</div>
-  <h1 style="font-size:56px; font-weight:700; line-height:1.1; max-width:700px; margin:0 auto;">
-    Photography Rated<br><span style="color:var(--gold);">By Formula.</span>
-  </h1>
-  <p style="color:var(--text-dim); font-size:16px; max-width:520px; margin:24px auto; line-height:1.7; font-weight:300;">
-    Five modules. Genre-calibrated weights. Every score is produced by the Apex DDI formula — not opinion. Every Apex Byline gives one physically actionable improvement.
+<div class="hero">
+  <div class="hero-eyebrow">Apex DDI Engine</div>
+  <h1>Photography Rated<br><span>By Formula.</span></h1>
+  <p class="hero-sub">
+    Five modules. Genre-calibrated weights. Every score is produced by the Apex DDI formula — not opinion.
+    Every Apex Byline gives one physically actionable improvement.
   </p>
-  <div style="display:flex; gap:16px; justify-content:center; margin-top:36px;">
-    <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 36px; font-size:12px;">Join Free</a>
-    <a href="{{ url_for('login') }}" class="btn" style="padding:14px 36px; font-size:12px;">Login</a>
+  <div class="hero-actions">
+    <a href="{{ url_for('register') }}" class="btn btn-solid">Join Free</a>
+    <a href="{{ url_for('login') }}" class="btn">Login</a>
   </div>
 </div>
 
 <hr class="divider">
 
 <!-- STATS -->
-<div class="grid-3" style="margin-bottom:48px;">
-  <div class="stat-box" style="text-align:center;">
+<div class="stats-strip">
+  <div class="stat-box">
     <div class="stat-val">{{ stats.total_images }}</div>
     <div class="stat-lbl">Images Rated</div>
   </div>
-  <div class="stat-box" style="text-align:center;">
+  <div class="stat-box">
     <div class="stat-val">{{ stats.total_members }}</div>
     <div class="stat-lbl">Photographers</div>
   </div>
-  <div class="stat-box" style="text-align:center;">
+  <div class="stat-box">
     <div class="stat-val">{{ "%.1f"|format(stats.avg_score) }}</div>
     <div class="stat-lbl">Average LL-Score</div>
   </div>
 </div>
 
-<!-- TOP IMAGES -->
+<!-- TOP RATED IMAGES -->
 {% if top_images %}
 <div class="section-label">Top Rated Images</div>
-<div class="grid-3">
+<div class="top-grid">
   {% for img in top_images %}
-  <a href="{{ url_for('image_detail', image_id=img.id) }}" style="text-decoration:none; color:inherit;">
-    <div class="card-sm" style="padding:0; overflow:hidden;">
-      <div class="img-thumb">
-        <img src="{{ url_for('serve_thumb', image_id=img.id) }}" alt="{{ img.asset_name }}" loading="lazy">
-        <div class="score-overlay">{{ img.score }}</div>
-        <div class="status-badge scored">{{ img.tier }}</div>
-      </div>
-      <div style="padding:14px 16px;">
-        <div style="font-weight:600; font-size:14px; margin-bottom:4px;">{{ img.asset_name or 'Untitled' }}</div>
-        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--text-dim); letter-spacing:1px;">{{ img.genre }} &nbsp;·&nbsp; {{ img.archetype }}</div>
-      </div>
+  <a href="{{ url_for('image_detail', image_id=img.id) }}" class="top-card">
+    <div class="img-thumb">
+      <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+           alt="{{ img.asset_name }}" loading="lazy">
+      <div class="score-overlay">{{ img.score }}</div>
+      <div class="status-badge scored">{{ img.tier }}</div>
+    </div>
+    <div class="top-card-info">
+      <div class="top-card-title">{{ img.asset_name or 'Untitled' }}</div>
+      <div class="top-card-meta">{{ img.genre }} &nbsp;·&nbsp; {{ img.archetype }}</div>
     </div>
   </a>
   {% endfor %}
 </div>
+<hr class="divider">
 {% endif %}
 
-<hr class="divider">
-
-<!-- HOW IT WORKS -->
+<!-- THE FIVE MODULES -->
 <div class="section-label">The Five Modules</div>
-<div class="grid-3" style="gap:12px;">
-  {% set modules = [
-    ('DoD', 'Degree of Difficulty', 'Physical risk, mechanical precision, environmental hostility.'),
-    ('Disruption', 'Visual Disruption', 'Cross-referenced against Magnum, HIPA, NHM + Art-Historical Library.'),
-    ('DM', 'Decisive Moment', 'The exact millisecond of transition. Multiple variables at peak simultaneously.'),
-    ('Wonder', 'Wonder Factor', 'The Smithsonian standard: the Unseen Truth. Rare behaviour, natural secrets.'),
-    ('AQ', 'Affective Quotient', 'Tonal Archetype Mapping + Narrative Dissonance. The soul of the image.'),
+<div class="modules-grid">
+  {% for code, name, desc in [
+    ('DoD',       'Degree of Difficulty', 'Physical risk, mechanical precision, environmental hostility. The harder the shot, the higher the score.'),
+    ('Disruption','Visual Disruption',    'Cross-referenced against Magnum, HIPA, NHM and Art-Historical Library. Originality at a global scale.'),
+    ('DM',        'Decisive Moment',      'The exact millisecond of transition. Multiple variables at peak simultaneously. Selection ≠ Decision.'),
+    ('Wonder',    'Wonder Factor',        'The Smithsonian standard — the Unseen Truth. Rare behaviour, natural secrets, the image the world has never seen.'),
+    ('AQ',        'Affective Quotient',   'Tonal Archetype Mapping and Narrative Dissonance. The soul of the image — what it makes you feel.'),
   ] %}
-  {% for code, name, desc in modules %}
-  <div class="card-sm">
-    <div style="font-family:'DM Mono',monospace; font-size:22px; color:var(--gold); font-weight:700; margin-bottom:8px;">{{ code }}</div>
-    <div style="font-weight:600; font-size:14px; margin-bottom:8px;">{{ name }}</div>
-    <div style="font-size:13px; color:var(--text-dim); line-height:1.6; font-weight:300;">{{ desc }}</div>
+  <div class="module-card">
+    <div class="module-code">{{ code }}</div>
+    <div class="module-name">{{ name }}</div>
+    <div class="module-desc">{{ desc }}</div>
   </div>
   {% endfor %}
-  <div class="card-sm" style="border-color:var(--gold); background:rgba(200,168,75,.04);">
-    <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--gold); margin-bottom:12px;">FIVE TIERS</div>
-    {% for tier, range in [('Legend', '9.7–9.9'), ('Grandmaster','9.0–9.6'), ('Master','7.6–8.9'), ('Practitioner','5.1–7.5'), ('Apprentice','0.0–5.0')] %}
-    <div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px;">
-      <span style="font-weight:500;">{{ tier }}</span>
-      <span style="font-family:'DM Mono',monospace; color:var(--gold); font-size:11px;">{{ range }}</span>
+
+  <div class="tiers-card">
+    <div class="section-label" style="margin-bottom:16px;">Five Tiers</div>
+    {% for tier, range in [
+      ('Legend',      '9.7 – 9.9'),
+      ('Grandmaster', '9.0 – 9.6'),
+      ('Master',      '7.6 – 8.9'),
+      ('Practitioner','5.1 – 7.5'),
+      ('Apprentice',  '0.0 – 5.0'),
+    ] %}
+    <div class="tier-row">
+      <span class="tier-name">{{ tier }}</span>
+      <span class="tier-range">{{ range }}</span>
     </div>
     {% endfor %}
   </div>
 </div>
+
+<!-- CTA BANNER -->
+{% if not current_user.is_authenticated %}
+<div class="cta-banner">
+  <h2>Get Your Photography Rated</h2>
+  <p>Upload your images and receive a detailed Apex DDI score with genre-calibrated analysis and one actionable improvement.</p>
+  <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:16px 48px; font-size:13px;">Join Free Today</a>
+</div>
+{% endif %}
 
 {% endblock %}
