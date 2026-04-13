@@ -1,17 +1,195 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 36px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dash-header .page-header { margin-bottom: 0; }
+
+  /* Search bar */
+  .search-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .search-form input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 11px 16px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-form input:focus { border-color: var(--gold); }
+  .search-form input::placeholder { color: var(--text-muted); }
+  .search-locked {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .search-locked-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+  }
+  .search-progress {
+    flex: 1;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+    max-width: 120px;
+  }
+  .search-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+  }
+
+  /* Image grid */
+  .img-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .img-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .img-card:hover {
+    border-color: var(--gold-dark);
+    transform: translateY(-2px);
+  }
+  .img-card-info {
+    padding: 14px 16px;
+  }
+  .img-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 5px;
+  }
+  .img-card-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .img-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .img-card-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .img-card-auth {
+    font-size: 12px;
+  }
+
+  /* Judge referral indicator */
+  .judge-indicator {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--gold);
+    border: 1px solid var(--gold-dark);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+  }
+  .empty-state-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .empty-state-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .img-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .dash-header { flex-direction: column; align-items: stretch; }
+    .dash-header .btn { text-align: center; }
+  }
+  @media (max-width: 480px) {
+    .img-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px;">
-  <div class="page-header" style="margin-bottom:0;">
+<!-- Header -->
+<div class="dash-header">
+  <div class="page-header">
     <h1>{{ current_user.full_name or current_user.username }}</h1>
-    <p>Your photography portfolio &amp; rankings</p>
+    <p>Your photography portfolio &amp; scores</p>
   </div>
-  <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload Image</a>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
 </div>
 
-<!-- STATS -->
-<div class="grid-4" style="margin-bottom:40px;">
+<!-- Stats -->
+<div class="grid-4" style="margin-bottom:36px;">
   <div class="stat-box">
     <div class="stat-val">{{ stats.total }}</div>
     <div class="stat-lbl">Images</div>
@@ -30,67 +208,70 @@
   </div>
 </div>
 
-<!-- SEARCH -->
+<!-- Search -->
 {% if search_enabled %}
-<form method="GET" style="display:flex; gap:12px; margin-bottom:28px;">
-  <input type="text" name="q" value="{{ query }}" placeholder="Search images, genre, location…"
-         style="flex:1; background:#F5F5F5; border:1px solid var(--border); color:var(--text); padding:10px 16px; font-size:14px; outline:none;">
-  <button type="submit" class="btn" style="padding:10px 24px;">Search</button>
+<form method="GET" class="search-form">
+  <input type="text" name="q" value="{{ query }}"
+         placeholder="Search by title, genre, location…">
+  <button type="submit" class="btn" style="padding:11px 24px;">Search</button>
   {% if query %}
-  <a href="{{ url_for('dashboard') }}" class="btn" style="padding:10px 20px;">Clear</a>
+  <a href="{{ url_for('dashboard') }}" class="btn" style="padding:11px 20px;">✕ Clear</a>
   {% endif %}
 </form>
 {% else %}
-<div style="font-family:'Courier New',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:28px;">
-  SEARCH UNLOCKS AFTER 20 IMAGES &nbsp;·&nbsp; {{ stats.total }}/20
+<div class="search-locked">
+  <span class="search-locked-text">SEARCH UNLOCKS AT 20 IMAGES</span>
+  <div class="search-progress">
+    <div class="search-progress-fill" style="width:{{ [stats.total / 20 * 100, 100]|min|int }}%"></div>
+  </div>
+  <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">{{ stats.total }}/20</span>
 </div>
 {% endif %}
 
-<!-- IMAGE GRID -->
+<!-- Image Grid -->
 {% if images.items %}
-<div class="grid-3">
+<div class="img-grid">
   {% for img in images.items %}
-  <a href="{{ url_for('image_detail', image_id=img.id) }}" style="text-decoration:none; color:inherit;">
-    <div class="card-sm" style="padding:0; overflow:hidden; transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div class="img-thumb">
-        <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}" alt="{{ img.asset_name }}" loading="lazy">
-        {% if img.score %}
-          <div class="score-overlay">{{ img.score }}</div>
-          <div class="status-badge scored">{{ img.tier }}</div>
-        {% else %}
-          <div class="status-badge pending">Pending</div>
+  <a href="{{ url_for('image_detail', image_id=img.id) }}" class="img-card">
+    <div class="img-thumb">
+      <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+           alt="{{ img.asset_name }}" loading="lazy">
+      {% if img.score %}
+        <div class="score-overlay">{{ img.score }}</div>
+        <div class="status-badge scored">{{ img.tier }}</div>
+      {% else %}
+        <div class="status-badge pending">Pending</div>
+      {% endif %}
+    </div>
+    <div class="img-card-info">
+      <div class="img-card-title">
+        {{ img.asset_name or img.original_filename or 'Untitled' }}
+        {% if img.judge_referral %}
+        <span class="judge-indicator">⚖️ REVIEW</span>
         {% endif %}
       </div>
-      <div style="padding:14px 16px;">
-        <div style="font-weight:600; font-size:14px; margin-bottom:4px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-          {{ img.asset_name or img.original_filename or 'Untitled' }}
-        </div>
-        <div style="font-family:'Courier New',monospace; font-size:10px; color:var(--muted); letter-spacing:1px;">
-          {{ img.genre }}
-          {% if img.archetype %} &nbsp;·&nbsp; {{ img.archetype }}{% endif %}
-        </div>
-        <div style="font-size:10px; margin-bottom:3px;">
+      <div class="img-card-meta">
+        {{ img.genre or '—' }}
+        {% if img.archetype %}&nbsp;·&nbsp;{{ img.archetype }}{% endif %}
+      </div>
+      <div class="img-card-footer">
+        <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
+        <span class="img-card-auth">
           {% if img.exif_status == 'verified' %}
-            <span style="color:var(--green);">✅ Verified</span>
+            <span style="color:var(--green);">✅</span>
           {% elif img.exif_status == 'suspicious' %}
-            <span style="color:var(--red);">⚠️ Suspicious</span>
+            <span style="color:var(--red);">⚠️</span>
           {% else %}
-            <span style="color:var(--muted);">❓ Unverified</span>
+            <span style="color:var(--text-muted);">❓</span>
           {% endif %}
-          {% if img.legal_declaration %}
-            <span style="color:var(--muted);">· Declared</span>
-          {% endif %}
-        </div>
-        <div style="font-family:'Courier New',monospace; font-size:10px; color:var(--muted); margin-top:4px;">
-          {{ img.created_at.strftime('%d %b %Y') }}
-        </div>
+        </span>
       </div>
     </div>
   </a>
   {% endfor %}
 </div>
 
-<!-- PAGINATION -->
+<!-- Pagination -->
 {% if images.pages > 1 %}
 <div class="pagination">
   {% if images.has_prev %}
@@ -98,9 +279,10 @@
   {% endif %}
   {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
     {% if p %}
-      <a href="{{ url_for('dashboard', page=p, q=query) }}" class="{{ 'active' if p == images.page }}">{{ p }}</a>
+      <a href="{{ url_for('dashboard', page=p, q=query) }}"
+         class="{{ 'active' if p == images.page }}">{{ p }}</a>
     {% else %}
-      <span>…</span>
+      <span style="padding:8px 4px; color:var(--text-muted);">…</span>
     {% endif %}
   {% endfor %}
   {% if images.has_next %}
@@ -110,10 +292,14 @@
 {% endif %}
 
 {% else %}
-<div style="text-align:center; padding:80px 0; color:var(--muted);">
-  <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; margin-bottom:20px;">NO IMAGES YET</div>
-  <p style="font-size:14px; margin-bottom:24px; color:var(--text);">Upload your first image to get an Apex DDI score.</p>
-  <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Now</a>
+<div class="empty-state">
+  <div class="empty-state-icon">📷</div>
+  <div class="empty-state-title">No Images Yet</div>
+  <p class="empty-state-text">Upload your first photograph to receive<br>an Apex DDI score and full analysis.</p>
+  <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Single Image</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
 </div>
 {% endif %}
 
