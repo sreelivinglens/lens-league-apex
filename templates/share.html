@@ -2,178 +2,516 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ image.asset_name }} — Lens League Apex</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}</title>
 
-<!-- Open Graph for WhatsApp / Facebook / Twitter previews -->
+<!-- Open Graph -->
 <meta property="og:title"       content="{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
-<meta property="og:image"       content="{{ request.host_url }}image/{{ image.id }}/thumb">
+<meta property="og:image"       content="{{ image.thumb_url or request.host_url ~ 'image/' ~ image.id ~ '/thumb' }}">
 <meta property="og:url"         content="{{ request.url }}">
 <meta property="og:type"        content="website">
 <meta name="twitter:card"       content="summary_large_image">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background:#0D0D0D; color:#E8E2D5;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
-    min-height:100vh; display:flex; flex-direction:column; align-items:center;
-    padding:32px 16px;
+  :root {
+    --black:      #0D0D0B;
+    --surface-1:  #141412;
+    --surface-2:  #1C1C1A;
+    --surface-3:  #242422;
+    --border:     #2A2A28;
+    --border-md:  #383836;
+    --text-1:     #F0EFE8;
+    --text-2:     #B8B6AE;
+    --text-3:     #7A7870;
+    --gold:       #C8A84B;
+    --gold-dark:  #8B6914;
+    --gold-subtle:rgba(200,168,75,0.10);
+    --green:      #4CAF73;
+    --red:        #E05555;
+    --font-body:  'Inter', -apple-system, sans-serif;
+    --font-mono:  'JetBrains Mono', 'Courier New', monospace;
   }
 
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    background: var(--black);
+    color: var(--text-1);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 16px 48px;
+  }
+
+  /* Top bar */
   .top-bar {
-    width:100%; max-width:640px;
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:24px;
+    max-width: 680px;
+    margin: 0 auto 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   .brand {
-    font-family:'Courier New',monospace; font-size:13px;
-    letter-spacing:3px; color:#C8A84B; text-decoration:none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-decoration: none;
   }
   .join-btn {
-    padding:7px 16px; border:1px solid #C8A84B;
-    color:#C8A84B; font-family:'Courier New',monospace;
-    font-size:11px; letter-spacing:2px; text-decoration:none;
-    transition:all .2s;
+    padding: 8px 18px;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s;
+    white-space: nowrap;
   }
-  .join-btn:hover { background:#C8A84B; color:#0D0D0D; }
+  .join-btn:hover { background: var(--gold); color: var(--black); }
 
+  /* Main card */
   .card {
-    width:100%; max-width:640px;
-    background:#121212; border:1px solid #1E1E1E;
-    overflow:hidden;
+    max-width: 680px;
+    margin: 0 auto;
+    background: var(--surface-1);
+    border: 1px solid var(--border-md);
+    border-radius: 12px;
+    overflow: hidden;
   }
 
-  /* Score header */
-  .score-header {
-    background:#C8A84B; padding:10px 24px;
-    display:flex; justify-content:space-between; align-items:center;
+  /* Gold header strip */
+  .card-header {
+    background: var(--gold);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .score-header .ll { font-family:'Courier New',monospace; font-size:13px; color:#0D0D0D; font-weight:700; }
-  .score-header .engine { font-family:'Courier New',monospace; font-size:11px; color:rgba(0,0,0,0.5); }
+  .card-header .brand-dark {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--black);
+    letter-spacing: 2px;
+  }
+  .card-header .engine-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(0,0,0,0.5);
+    letter-spacing: 1.5px;
+  }
 
   /* Photo */
-  .photo-wrap { position:relative; }
-  .photo-wrap img { width:100%; display:block; max-height:400px; object-fit:cover; }
-
-  /* Score overlay on photo */
-  .score-overlay {
-    position:absolute; top:16px; right:16px;
-    background:rgba(13,13,13,0.92); border:2px solid #C8A84B;
-    padding:10px 16px; text-align:center; min-width:80px;
+  .photo-wrap { position: relative; background: var(--surface-3); }
+  .photo-wrap img {
+    width: 100%;
+    display: block;
+    max-height: 480px;
+    object-fit: cover;
   }
-  .score-num { font-size:36px; font-weight:700; color:#C8A84B; line-height:1; }
-  .score-tier { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-top:4px; }
+  .score-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(13,13,11,0.92);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 80px;
+    backdrop-filter: blur(8px);
+  }
+  .score-num {
+    font-family: var(--font-mono);
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .score-tier {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-top: 5px;
+    text-transform: uppercase;
+  }
 
-  /* Info section */
-  .info { padding:20px 24px; border-bottom:1px solid #1E1E1E; }
-  .asset-name { font-size:22px; font-weight:700; margin-bottom:6px; }
-  .meta { font-family:'Courier New',monospace; font-size:11px; color:#888; letter-spacing:1px; }
+  /* Judge referral badge */
+  .judge-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(200,168,75,0.15);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Image info */
+  .img-info {
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .img-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+  .img-meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+  }
+
+  /* Soul bonus */
+  .soul-bonus {
+    margin: 0 28px 0;
+    padding: 10px 16px;
+    background: var(--gold-subtle);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-align: center;
+    margin-top: 16px;
+  }
 
   /* Module scores */
   .modules {
-    display:grid; grid-template-columns:repeat(5,1fr);
-    border-bottom:1px solid #1E1E1E;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 1px solid var(--border);
   }
   .mod-cell {
-    padding:14px 16px; text-align:left;
-    border-right:1px solid #1E1E1E;
+    padding: 16px 14px;
+    border-right: 1px solid var(--border);
   }
-  .mod-cell:last-child { border-right:none; }
-  .mod-lbl { font-family:'Courier New',monospace; font-size:9px; letter-spacing:1px; color:#666; margin-bottom:4px; }
-  .mod-val { font-size:22px; font-weight:700; color:#E8E2D5; }
-  .mod-val.top { color:#C8A84B; }
-  .mod-bar { height:3px; background:#333; margin-top:6px; }
-  .mod-bar-fill { height:100%; background:#C8A84B; }
-
-  /* Sections */
-  .sections { padding:20px 24px; border-bottom:1px solid #1E1E1E; }
-  .sec-row { margin-bottom:14px; }
-  .sec-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:4px; }
-  .sec-body { font-size:13px; color:#999; line-height:1.6; }
-
-  /* Byline */
-  .byline {
-    padding:20px 24px; border-bottom:1px solid #1E1E1E;
-    border-left:3px solid #C8A84B; background:rgba(200,168,75,0.03);
+  .mod-cell:last-child { border-right: none; }
+  .mod-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
   }
-  .byline-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:8px; }
-  .byline-text { font-size:13px; color:#999; line-height:1.6; margin-bottom:12px; }
-  .improvement-lbl { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#C8A84B; margin-bottom:6px; }
-  .improvement-text { font-size:13px; color:#E8E2D5; line-height:1.6; font-weight:500; }
+  .mod-value {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-1);
+    line-height: 1;
+  }
+  .mod-value.highest { color: var(--gold); }
+  .mod-bar {
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .mod-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+  }
 
-  /* Authenticity */
+  /* Analysis sections */
+  .analysis {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .analysis-row {}
+  .analysis-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .analysis-body {
+    font-size: 15px;
+    color: var(--text-2);
+    line-height: 1.75;
+  }
+
+  /* Apex Byline */
+  .byline-section {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    background: linear-gradient(90deg, rgba(200,168,75,0.04), transparent);
+  }
+  .byline-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .byline-text {
+    font-size: 15px;
+    color: var(--text-2);
+    line-height: 1.75;
+    margin-bottom: 16px;
+  }
+  .improvement-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .improvement-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-1);
+    line-height: 1.7;
+  }
+
+  /* Badges */
+  .badges-section {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .badge-group {}
+  .badge-group-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .badge-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge {
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-strength {
+    background: rgba(76,175,115,0.15);
+    border: 1px solid rgba(76,175,115,0.40);
+    color: var(--green);
+  }
+  .badge-gap {
+    background: rgba(224,85,85,0.12);
+    border: 1px solid rgba(224,85,85,0.35);
+    color: var(--red);
+  }
+
+  /* Authenticity bar */
   .auth-bar {
-    padding:12px 24px; border-bottom:1px solid #1E1E1E;
-    display:flex; align-items:center; gap:10px; font-size:12px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-3);
   }
 
-  /* Footer */
+  /* Card footer */
   .card-footer {
-    padding:14px 24px; display:flex;
-    justify-content:space-between; align-items:center;
-    background:#080808;
+    padding: 16px 28px;
+    background: var(--surface-1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  .archetype { font-family:'Courier New',monospace; font-size:10px; color:#C8A84B; letter-spacing:1px; }
-  .photographer { font-size:12px; color:#666; }
+  .archetype-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .photographer-label {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 3px;
+  }
+  .score-stamp {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+  }
 
   /* Action buttons */
   .actions {
-    width:100%; max-width:640px;
-    display:flex; gap:12px; margin-top:20px;
+    max-width: 680px;
+    margin: 20px auto 0;
+    display: flex;
+    gap: 12px;
   }
   .action-btn {
-    flex:1; padding:14px; text-align:center;
-    font-family:'Courier New',monospace; font-size:11px;
-    letter-spacing:2px; cursor:pointer; border:none;
-    text-decoration:none; display:block; transition:all .2s;
+    flex: 1;
+    padding: 15px 20px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+    border-radius: 6px;
   }
-  .action-primary { background:#C8A84B; color:#0D0D0D; }
-  .action-primary:hover { background:#E2C87A; }
-  .action-secondary { border:1px solid #333; background:transparent; color:#888; }
-  .action-secondary:hover { border-color:#C8A84B; color:#C8A84B; }
+  .action-primary {
+    background: var(--gold);
+    color: var(--black);
+  }
+  .action-primary:hover { background: #DFC070; }
+  .action-secondary {
+    border: 1px solid var(--border-md);
+    background: transparent;
+    color: var(--text-2);
+  }
+  .action-secondary:hover {
+    border-color: var(--gold-dark);
+    color: var(--gold);
+    background: var(--gold-subtle);
+  }
+
+  /* Copy feedback */
+  .copy-feedback {
+    display: none;
+    max-width: 680px;
+    margin: 12px auto 0;
+    padding: 12px 20px;
+    background: rgba(76,175,115,0.15);
+    border: 1px solid rgba(76,175,115,0.40);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--green);
+  }
 
   .powered {
-    margin-top:24px; font-family:'Courier New',monospace;
-    font-size:10px; letter-spacing:2px; color:#333; text-align:center;
+    max-width: 680px;
+    margin: 28px auto 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--surface-3);
+  }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    body { padding: 16px 12px 40px; }
+    .card-header { padding: 10px 16px; }
+    .card-header .engine-tag { display: none; }
+    .img-info { padding: 18px 18px; }
+    .img-title { font-size: 18px; }
+    .modules { grid-template-columns: repeat(5, 1fr); }
+    .mod-cell { padding: 12px 8px; }
+    .mod-value { font-size: 18px; }
+    .mod-label { font-size: 8px; }
+    .analysis { padding: 18px 18px; }
+    .analysis-body { font-size: 14px; }
+    .byline-section { padding: 18px 18px; }
+    .byline-text, .improvement-text { font-size: 14px; }
+    .badges-section { padding: 16px 18px; }
+    .auth-bar { padding: 12px 18px; }
+    .card-footer { padding: 14px 18px; }
+    .actions { flex-direction: column; }
+    .action-btn { padding: 14px; }
+    .score-num { font-size: 30px; }
   }
 </style>
 </head>
 <body>
 
+<!-- Top bar -->
 <div class="top-bar">
   <a href="{{ url_for('index') }}" class="brand">LENS LEAGUE APEX</a>
   <a href="{{ url_for('register') }}" class="join-btn">Get Your Images Rated</a>
 </div>
 
+<!-- Main card -->
 <div class="card">
 
-  <!-- Score header strip -->
-  <div class="score-header">
-    <span class="ll">THE LENS LEAGUE</span>
-    <span class="engine">APEX DDI ENGINE · FULL EVALUATION</span>
+  <!-- Header strip -->
+  <div class="card-header">
+    <span class="brand-dark">THE LENS LEAGUE</span>
+    <span class="engine-tag">APEX DDI ENGINE · FULL EVALUATION</span>
   </div>
 
   <!-- Photo -->
   <div class="photo-wrap">
-    <img src="{{ url_for('serve_thumb', image_id=image.id) }}"
+    <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <div class="score-overlay">
+    <div class="score-badge">
       <div class="score-num">{{ image.score }}</div>
-      <div class="score-tier">{{ image.tier.upper() }}</div>
+      <div class="score-tier">{{ image.tier }}</div>
+    </div>
+    {% if image.judge_referral %}
+    <div class="judge-badge">⚖️ JUDGE REVIEW</div>
+    {% endif %}
+  </div>
+
+  <!-- Image info -->
+  <div class="img-info">
+    <div class="img-title">{{ image.asset_name or 'Untitled' }}</div>
+    <div class="img-meta">
+      {{ image.genre }}
+      {% if image.subject %}&nbsp;·&nbsp;{{ image.subject }}{% endif %}
+      {% if image.location %}&nbsp;·&nbsp;{{ image.location }}{% endif %}
     </div>
   </div>
 
-  <!-- Info -->
-  <div class="info">
-    <div class="asset-name">{{ image.asset_name }}</div>
-    <div class="meta">
-      {{ image.genre }}
-      {% if image.subject %} · {{ image.subject }}{% endif %}
-      {% if image.location %} · {{ image.location }}{% endif %}
-    </div>
-  </div>
+  {% if image.soul_bonus %}
+  <div class="soul-bonus">★ SOUL BONUS ACTIVE — AQ ≥ 8.0</div>
+  {% endif %}
 
   <!-- Module scores -->
   {% set mods = [
@@ -183,13 +521,14 @@
     ('Wonder',     image.wonder_score),
     ('AQ',         image.aq_score),
   ] %}
-  {% set max_mod = mods | map(attribute=1) | select | max %}
+  {% set valid_scores = mods | selectattr('1') | list %}
+  {% set max_val = valid_scores | map(attribute=1) | max if valid_scores else 0 %}
   <div class="modules">
     {% for name, val in mods %}
     {% if val %}
     <div class="mod-cell">
-      <div class="mod-lbl">{{ name }}</div>
-      <div class="mod-val {{ 'top' if val == max_mod }}">{{ val }}</div>
+      <div class="mod-label">{{ name }}</div>
+      <div class="mod-value {{ 'highest' if val == max_val }}">{{ val }}</div>
       <div class="mod-bar">
         <div class="mod-bar-fill" style="width:{{ (val/10*100)|int }}%"></div>
       </div>
@@ -198,29 +537,55 @@
     {% endfor %}
   </div>
 
-  <!-- Sections -->
-  {% if audit %}
-  <div class="sections">
+  <!-- Analysis rows -->
+  {% if audit and audit.get('rows') %}
+  <div class="analysis">
     {% for label, body in audit.get('rows', []) %}
     {% if body %}
-    <div class="sec-row">
-      <div class="sec-lbl">{{ label.replace('\\n',' ').replace('\n',' ') }}</div>
-      <div class="sec-body">{{ body }}</div>
+    <div class="analysis-row">
+      <div class="analysis-label">{{ label.replace('\n', ' ') }}</div>
+      <div class="analysis-body">{{ body }}</div>
     </div>
     {% endif %}
     {% endfor %}
   </div>
+  {% endif %}
 
-  <!-- Byline -->
-  {% if audit.get('byline_1') or audit.get('byline_2_body') %}
-  <div class="byline">
-    <div class="byline-lbl">Apex Byline</div>
+  <!-- Apex Byline -->
+  {% if audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
+  <div class="byline-section">
+    <div class="byline-tag">Apex Byline</div>
     {% if audit.get('byline_1') %}
     <div class="byline-text">{{ audit.byline_1 }}</div>
     {% endif %}
     {% if audit.get('byline_2_body') %}
-    <div class="improvement-lbl">The One Improvement:</div>
+    <div class="improvement-tag">The One Improvement</div>
     <div class="improvement-text">{{ audit.byline_2_body }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Strength & Gap badges -->
+  {% if audit %}
+  {% set strengths = audit.get('badges_g', []) %}
+  {% set gaps      = audit.get('badges_w', []) %}
+  {% if strengths or gaps %}
+  <div class="badges-section">
+    {% if strengths %}
+    <div class="badge-group">
+      <div class="badge-group-label">Strengths</div>
+      <div class="badge-list">
+        {% for b in strengths %}<span class="badge badge-strength">{{ b }}</span>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if gaps %}
+    <div class="badge-group">
+      <div class="badge-group-label">Areas to Develop</div>
+      <div class="badge-list">
+        {% for b in gaps %}<span class="badge badge-gap">{{ b }}</span>{% endfor %}
+      </div>
+    </div>
     {% endif %}
   </div>
   {% endif %}
@@ -229,41 +594,41 @@
   <!-- Authenticity -->
   <div class="auth-bar">
     {% if image.exif_status == 'verified' %}
-      <span style="color:#4CAF50;">✅ Camera Verified</span>
+      <span style="color:var(--green);">✅ Camera Verified</span>
     {% elif image.exif_status == 'suspicious' %}
-      <span style="color:#E53935;">⚠️ Unverified Source</span>
+      <span style="color:var(--red);">⚠️ Suspicious Metadata</span>
     {% else %}
-      <span style="color:#666;">❓ Unverified</span>
+      <span>❓ Unverified</span>
     {% endif %}
     {% if image.legal_declaration %}
-      <span style="color:#666; font-size:11px;">· Legally Declared by Photographer</span>
+      <span>· Legally Declared</span>
     {% endif %}
     {% if image.exif_camera %}
-      <span style="color:#666; font-size:11px;">· {{ image.exif_camera }}</span>
+      <span>· {{ image.exif_camera }}</span>
     {% endif %}
   </div>
 
   <!-- Footer -->
   <div class="card-footer">
     <div>
-      <div class="archetype">{{ image.archetype }}</div>
-      <div class="photographer" style="margin-top:4px;">{{ image.photographer_name }}</div>
+      <div class="archetype-label">{{ image.archetype }}</div>
+      <div class="photographer-label">{{ image.photographer_name }}</div>
     </div>
-    <div style="font-family:'Courier New',monospace; font-size:10px; color:#555; letter-spacing:1px;">
-      LL · {{ image.score }} · {{ image.tier.upper() }}
-    </div>
+    <div class="score-stamp">LL · {{ image.score }} · {{ image.tier.upper() }}</div>
   </div>
 
 </div>
 
 <!-- Action buttons -->
 <div class="actions">
-  {% if image.card_path %}
-  <a href="{{ url_for('download_card', image_id=image.id) }}"
+  {% if image.card_url or image.card_path %}
+  <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}"
      class="action-btn action-primary">↓ Download Rating Card</a>
   {% endif %}
-  <button onclick="shareThis()" class="action-btn action-secondary">Share</button>
+  <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
 </div>
+
+<div class="copy-feedback" id="copyFeedback">✓ Share link copied to clipboard!</div>
 
 <div class="powered">POWERED BY APEX DDI ENGINE · LENS LEAGUE</div>
 
@@ -271,22 +636,33 @@
 function shareThis() {
   const url   = window.location.href;
   const title = "{{ image.asset_name }} — LL Score {{ image.score }} · {{ image.tier }}";
-  const text  = "Rated by the Apex DDI Engine on Lens League";
+  const text  = "Rated by the Apex DDI Engine on Lens League Apex";
 
   if (navigator.share) {
-    navigator.share({ title, text, url })
-      .catch(() => copyToClipboard(url));
+    navigator.share({ title, text, url }).catch(() => copyFallback(url));
   } else {
-    copyToClipboard(url);
+    copyFallback(url);
   }
 }
 
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    alert('Share link copied to clipboard!');
-  }).catch(() => {
-    prompt('Copy this link:', text);
-  });
+function copyFallback(url) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showFeedback());
+  } else {
+    const el = document.createElement('textarea');
+    el.value = url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showFeedback();
+  }
+}
+
+function showFeedback() {
+  const fb = document.getElementById('copyFeedback');
+  fb.style.display = 'block';
+  setTimeout(() => { fb.style.display = 'none'; }, 3000);
 }
 </script>
 </body>
