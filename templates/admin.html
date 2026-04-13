@@ -1,5 +1,197 @@
 {% extends "base.html" %}
 {% block title %}Admin — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Calibration table */
+  .cal-table th {
+    padding: 14px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface-3);
+    text-transform: uppercase;
+  }
+  .cal-table td {
+    padding: 14px 18px;
+    font-size: 15px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+  }
+  .cal-table td.mono {
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .cal-table td.gold {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .cal-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+
+  /* Submissions table */
+  .sub-table th {
+    padding: 13px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface-3);
+    text-transform: uppercase;
+  }
+  .sub-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+  }
+  .sub-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+
+  /* Thumbnail */
+  .thumb-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .thumb-img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+  .thumb-placeholder {
+    width: 56px;
+    height: 56px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .thumb-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    display: block;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .thumb-title:hover { color: var(--gold); }
+
+  /* Status badge */
+  .status-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .status-chip.scored  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
+  .status-chip.pending { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
+  .judge-chip {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: 1px solid var(--gold-dark);
+    background: var(--gold-subtle);
+    color: var(--gold);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Action buttons in table */
+  .action-btn-sm {
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1px solid;
+    background: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .ref-btn {
+    border-color: var(--border-strong);
+    color: var(--text-muted);
+  }
+  .ref-btn:hover { border-color: var(--gold-dark); color: var(--gold); }
+  .ref-btn.active {
+    border-color: var(--gold-dark);
+    background: var(--gold-subtle);
+    color: var(--gold);
+  }
+  .del-btn {
+    border-color: #5a1a1a;
+    color: var(--red);
+  }
+  .del-btn:hover { border-color: var(--red); background: var(--red-dim); }
+
+  /* Bulk bar */
+  .bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .bulk-bar label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .bulk-bar label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--gold);
+  }
+  .selected-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
@@ -17,32 +209,37 @@
 
 <!-- CALIBRATION -->
 {% if cal_stats %}
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
   <div class="section-label" style="margin-bottom:0;">Calibration Data by Genre</div>
   <form method="POST" action="{{ url_for('run_calibration') }}">
-    <button type="submit" class="btn btn-solid" style="font-size:11px; padding:8px 20px;">Run Calibration Log</button>
+    <button type="submit" class="btn btn-solid" style="padding:10px 24px;">Run Calibration Log</button>
   </form>
 </div>
-<div class="card" style="padding:0; overflow:hidden; margin-bottom:40px;">
-  <table style="width:100%; border-collapse:collapse;">
+<div class="table-wrap" style="margin-bottom:40px;">
+  <table class="cal-table" style="width:100%; border-collapse:collapse;">
     <thead>
-      <tr style="background:#2C2C2A;">
-        {% for col in ['Genre','Count','Avg Score','Avg DoD','Avg Dis','Avg DM','Avg Wonder','Avg AQ'] %}
-        <th style="padding:12px 16px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border);">{{ col }}</th>
-        {% endfor %}
+      <tr>
+        <th>Genre</th>
+        <th>Count</th>
+        <th>Avg Score</th>
+        <th>Avg DoD</th>
+        <th>Avg Dis</th>
+        <th>Avg DM</th>
+        <th>Avg Wonder</th>
+        <th>Avg AQ</th>
       </tr>
     </thead>
     <tbody>
       {% for genre, s in cal_stats.items() %}
-      <tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:12px 16px; font-weight:600; color:var(--text);">{{ genre }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.count }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:#8B6914;">{{ s.avg_score }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.avg_dod }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.avg_dis }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.avg_dm }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.avg_wonder }}</td>
-        <td style="padding:12px 16px; font-family:'Courier New',monospace; font-size:12px; color:var(--text);">{{ s.avg_aq }}</td>
+      <tr>
+        <td style="font-weight:600; font-size:15px;">{{ genre }}</td>
+        <td class="mono">{{ s.count }}</td>
+        <td class="gold">{{ s.avg_score }}</td>
+        <td class="mono">{{ s.avg_dod }}</td>
+        <td class="mono">{{ s.avg_dis }}</td>
+        <td class="mono">{{ s.avg_dm }}</td>
+        <td class="mono">{{ s.avg_wonder }}</td>
+        <td class="mono">{{ s.avg_aq }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -50,115 +247,122 @@
 </div>
 {% endif %}
 
-<!-- RECENT IMAGES -->
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+<!-- RECENT SUBMISSIONS HEADER -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
   <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
-  <div style="display:flex; gap:10px;">
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
     <form method="POST" action="{{ url_for('backfill_hashes') }}">
-      <button type="submit" class="btn" style="font-size:11px; padding:8px 20px; border-color:#8B6914; color:#C8A84B;">
-        🔍 Backfill Image Hashes
+      <button type="submit" class="btn" style="border-color:var(--gold-dark); color:var(--gold); padding:8px 18px;">
+        🔍 Backfill Hashes
       </button>
     </form>
     <form method="POST" action="{{ url_for('admin_cleanup') }}"
           onsubmit="return confirm('Delete all images with no thumbnail? This cannot be undone.');">
-      <button type="submit" class="btn" style="font-size:11px; padding:8px 20px; border-color:#7a2222; color:#f88;">
-        🗑 Delete Broken Images
+      <button type="submit" class="btn btn-danger" style="padding:8px 18px;">
+        🗑 Delete Broken
       </button>
     </form>
   </div>
 </div>
 
-<form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm"
-      onsubmit="return confirmBulk();">
+<!-- BULK FORM -->
+<form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
 
   <!-- Bulk action bar -->
-  <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-    <label style="display:flex; align-items:center; gap:6px; font-family:'Courier New',monospace; font-size:11px; color:var(--muted); cursor:pointer;">
-      <input type="checkbox" id="selectAll" onchange="toggleAll(this)" style="accent-color:#8B6914; width:15px; height:15px;">
-      SELECT ALL
+  <div class="bulk-bar">
+    <label>
+      <input type="checkbox" id="selectAll" onchange="toggleAll(this)">
+      Select All
     </label>
-    <span style="font-family:'Courier New',monospace; font-size:11px; color:var(--muted);" id="selectedCount">0 selected</span>
-    <button type="submit" id="bulkDeleteBtn" disabled
-      style="background:none; border:1px solid #7a2222; color:#f88; padding:5px 16px;
-             font-size:11px; cursor:pointer; font-family:'Courier New',monospace;
-             letter-spacing:1px; opacity:0.4;"
-      onmouseover="if(!this.disabled) this.style.background='rgba(122,34,34,0.2)'"
-      onmouseout="this.style.background='none'">
-      🗑 DELETE SELECTED
+    <span class="selected-count" id="selectedCount">0 selected</span>
+    <button type="submit" id="bulkDeleteBtn" disabled class="btn btn-danger"
+            style="padding:7px 18px; opacity:0.4;">
+      🗑 Delete Selected
     </button>
   </div>
 
-  <div class="card" style="padding:0; overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; min-width:920px;">
+  <div class="table-wrap">
+    <table class="sub-table" style="width:100%; border-collapse:collapse; min-width:800px;">
       <thead>
-        <tr style="background:#2C2C2A;">
-          <th style="padding:10px 12px; width:36px; border-bottom:1px solid var(--border);"></th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Image</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Genre</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Score</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Tier</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Auth</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Status</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Date</th>
-          <th style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap;">Actions</th>
+        <tr>
+          <th style="width:40px;"></th>
+          <th style="min-width:220px;">Image</th>
+          <th>Genre</th>
+          <th>Score</th>
+          <th>Tier</th>
+          <th>Auth</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for img in recent %}
-        <tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='rgba(200,168,75,0.05)'" onmouseout="this.style.background='transparent'">
-          <td style="padding:10px 12px; text-align:center;">
+        <tr>
+          <td style="text-align:center; padding:12px;">
             <input type="checkbox" name="image_ids" value="{{ img.id }}"
                    class="row-check" onchange="updateCount()"
-                   style="accent-color:#8B6914; width:15px; height:15px;">
+                   style="accent-color:var(--gold); width:16px; height:16px;">
           </td>
-          <td style="padding:10px 12px;">
-            <div style="display:flex; align-items:center; gap:8px;">
+          <td>
+            <div class="thumb-cell">
               {% if img.thumb_url %}
-              <img src="{{ img.thumb_url }}" style="width:32px; height:32px; object-fit:cover; border:1px solid var(--border); flex-shrink:0;">
+              <img src="{{ img.thumb_url }}" class="thumb-img" alt="{{ img.asset_name }}">
               {% else %}
-              <div style="width:32px; height:32px; background:#1e1e1c; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">🖼️</div>
+              <div class="thumb-placeholder">🖼️</div>
               {% endif %}
-              <a href="{{ url_for('image_detail', image_id=img.id) }}" style="color:var(--text); font-weight:500; text-decoration:none; font-size:12px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">
+              <a href="{{ url_for('image_detail', image_id=img.id) }}" class="thumb-title">
                 {{ img.asset_name or img.original_filename or 'Untitled' }}
               </a>
             </div>
           </td>
-          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:11px; color:var(--text); white-space:nowrap;">{{ img.genre or '—' }}</td>
-          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:13px; color:#8B6914; font-weight:700;">{{ img.score or '—' }}</td>
-          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--text); white-space:nowrap;">{{ img.tier or '—' }}</td>
-          <td style="padding:10px 12px; font-size:11px; white-space:nowrap;">
-            {% if img.exif_status == 'verified' %}<span style="color:var(--green);">✅</span>
-            {% elif img.exif_status == 'suspicious' %}<span style="color:var(--red);">⚠️</span>
-            {% else %}<span style="color:var(--muted);">❓</span>{% endif %}
+          <td>
+            <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);">
+              {{ img.genre or '—' }}
+            </span>
           </td>
-          <td style="padding:10px 12px;">
-            <span style="font-family:'Courier New',monospace; font-size:10px; padding:2px 6px; border:1px solid {{ 'var(--green)' if img.status=='scored' else 'var(--border)' }}; color:{{ 'var(--green)' if img.status=='scored' else 'var(--text)' }}; white-space:nowrap;">
-              {{ img.status.upper() }}
+          <td>
+            <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--gold);">
+              {{ img.score or '—' }}
             </span>
-            {% if img.judge_referral %}
-            <span style="display:block; margin-top:4px; font-family:'Courier New',monospace; font-size:9px; padding:2px 6px; border:1px solid #C8A84B; color:#C8A84B; white-space:nowrap; background:rgba(200,168,75,0.1);">
-              ⚖️ JUDGE REVIEW
+          </td>
+          <td>
+            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">
+              {{ img.tier or '—' }}
             </span>
+          </td>
+          <td style="font-size:18px; text-align:center;">
+            {% if img.exif_status == 'verified' %}
+              <span title="Verified" style="color:var(--green);">✅</span>
+            {% elif img.exif_status == 'suspicious' %}
+              <span title="Suspicious" style="color:var(--red);">⚠️</span>
+            {% else %}
+              <span title="Unverified" style="color:var(--text-muted);">❓</span>
             {% endif %}
           </td>
-          <td style="padding:10px 12px; font-family:'Courier New',monospace; font-size:10px; color:var(--muted); white-space:nowrap;">{{ img.created_at.strftime('%d %b %Y') }}</td>
-          <td style="padding:10px 12px;">
-            <div style="display:flex; gap:6px; align-items:center;">
+          <td>
+            <span class="status-chip {{ img.status }}">{{ img.status.upper() }}</span>
+            {% if img.judge_referral %}
+            <span class="judge-chip">⚖️ REVIEW</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">
+              {{ img.created_at.strftime('%d %b %Y') }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex; gap:8px; align-items:center;">
               <form method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}">
-                <button type="submit" title="{{ 'Remove calibration example' if img.is_calibration_example else 'Set as calibration example' }}"
-                  style="background:{{ 'rgba(200,168,75,0.2)' if img.is_calibration_example else 'none' }};
-                         border:1px solid {{ '#C8A84B' if img.is_calibration_example else '#555' }};
-                         color:{{ '#C8A84B' if img.is_calibration_example else '#888' }};
-                         padding:3px 8px; font-size:10px; cursor:pointer;
-                         font-family:'Courier New',monospace; white-space:nowrap;">
+                <button type="submit"
+                        class="action-btn-sm ref-btn {{ 'active' if img.is_calibration_example }}"
+                        title="{{ 'Remove reference example' if img.is_calibration_example else 'Set as reference example' }}">
                   {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
                 </button>
               </form>
               <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
                     onsubmit="return confirm('Delete this image? Cannot be undone.');">
-                <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:3px 10px; font-size:10px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; white-space:nowrap;">
-                  🗑
-                </button>
+                <button type="submit" class="action-btn-sm del-btn" title="Delete image">🗑</button>
               </form>
             </div>
           </td>
@@ -169,6 +373,9 @@
   </div>
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 function toggleAll(cb) {
   document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
@@ -180,7 +387,6 @@ function updateCount() {
   const btn = document.getElementById('bulkDeleteBtn');
   btn.disabled = checked === 0;
   btn.style.opacity = checked === 0 ? '0.4' : '1';
-  // Uncheck selectAll if not all selected
   const total = document.querySelectorAll('.row-check').length;
   document.getElementById('selectAll').checked = checked === total && total > 0;
 }
@@ -190,5 +396,4 @@ function confirmBulk() {
   return confirm('Delete ' + count + ' selected image(s)? This cannot be undone.');
 }
 </script>
-
 {% endblock %}
