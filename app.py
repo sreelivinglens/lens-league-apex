@@ -519,11 +519,9 @@ def score_image(image_id):
 
 
 @app.route('/image/<int:image_id>/download')
-@login_required
 def download_card(image_id):
+    """Public route — no login required. Card contains Lens League branding throughout."""
     img = Image.query.get_or_404(image_id)
-    if img.user_id != current_user.id and current_user.role != 'admin':
-        abort(403)
 
     if not img.score:
         flash('This image has not been scored yet.', 'error')
