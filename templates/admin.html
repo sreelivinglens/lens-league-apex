@@ -367,6 +367,29 @@
 
 {% endif %}
 
+<!-- HEALTH CHECK PANEL -->
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:24px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
+    🔍 Database Health Check
+  </div>
+  <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
+    Check all scored images for missing audit data, broken download cards, or formatting issues.
+    Use <strong style="color:var(--gold);">Rescore All</strong> to fix images with missing analysis data.
+  </p>
+  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_health_check') }}" target="_blank"
+       class="btn" style="padding:10px 24px; border-color:var(--gold-dark); color:var(--gold);">
+      🔍 Run Health Check
+    </a>
+    <form method="POST" action="{{ url_for('admin_rescore_all') }}"
+          onsubmit="return confirm('Rescore all images with missing data? This uses API credits and may take several minutes.');">
+      <button type="submit" class="btn" style="padding:10px 24px;">
+        🔄 Rescore Images with Missing Data
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- IMAGE TRANSFER PANEL -->
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
   <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
