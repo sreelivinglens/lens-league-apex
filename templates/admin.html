@@ -215,12 +215,40 @@
 
 <!-- CALIBRATION -->
 {% if cal_stats %}
+
+<!-- Drift Alerts -->
+{% if drift_alerts %}
+<div style="margin-bottom:24px;">
+  {% for alert in drift_alerts %}
+  <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px;
+              background:{{ 'var(--red-dim)' if alert.type == 'low' else 'var(--amber-dim)' }};
+              border:1px solid {{ 'var(--red)' if alert.type == 'low' else 'var(--amber)' }};
+              border-radius:var(--radius-sm); font-size:14px;
+              color:{{ '#F0A0A0' if alert.type == 'low' else '#F0C888' }};">
+    {{ '⚠️' if alert.type == 'low' else '📈' }}
+    <strong style="font-family:var(--font-mono);">{{ alert.genre }}</strong>
+    &nbsp;—&nbsp;{{ alert.msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-  <div class="section-label" style="margin-bottom:0;">Calibration Data by Genre</div>
+  <div>
+    <div class="section-label" style="margin-bottom:4px;">Calibration Data by Genre</div>
+    <div style="font-size:13px; color:var(--text-muted);">
+      Live averages &nbsp;·&nbsp;
+      {% if cal_trend %}
+        Trend vs previous snapshot shown &nbsp;·&nbsp;
+      {% endif %}
+      Click <strong style="color:var(--gold);">Run Calibration Log</strong> to save a snapshot
+    </div>
+  </div>
   <form method="POST" action="{{ url_for('run_calibration') }}">
-    <button type="submit" class="btn btn-solid" style="padding:10px 24px;">Run Calibration Log</button>
+    <button type="submit" class="btn btn-solid" style="padding:10px 24px;">📸 Run Calibration Log</button>
   </form>
 </div>
+
 <div class="table-wrap" style="margin-bottom:40px;">
   <table class="cal-table" style="width:100%; border-collapse:collapse;">
     <thead>
@@ -237,20 +265,98 @@
     </thead>
     <tbody>
       {% for genre, s in cal_stats.items() %}
+      {% set trend = cal_trend.get(genre, {}) %}
       <tr>
-        <td style="font-weight:600; font-size:15px;">{{ genre }}</td>
+        <td style="font-weight:600; font-size:15px;">
+          {{ genre }}
+          {% if s.avg_score < 5.0 %}
+            <span style="font-size:11px; color:var(--red); font-family:var(--font-mono); margin-left:6px;">⚠ LOW</span>
+          {% elif s.avg_score > 8.5 %}
+            <span style="font-size:11px; color:var(--amber); font-family:var(--font-mono); margin-left:6px;">📈 HIGH</span>
+          {% endif %}
+        </td>
         <td class="mono">{{ s.count }}</td>
-        <td class="gold">{{ s.avg_score }}</td>
-        <td class="mono">{{ s.avg_dod }}</td>
-        <td class="mono">{{ s.avg_dis }}</td>
-        <td class="mono">{{ s.avg_dm }}</td>
-        <td class="mono">{{ s.avg_wonder }}</td>
-        <td class="mono">{{ s.avg_aq }}</td>
+        <td>
+          <span class="gold" style="font-size:16px;">{{ s.avg_score }}</span>
+          {% if trend.get('score_delta') is not none %}
+            {% set d = trend.score_delta %}
+            <span style="font-family:var(--font-mono); font-size:11px; margin-left:6px;
+                         color:{{ 'var(--green)' if d > 0 else ('var(--red)' if d < 0 else 'var(--text-muted)') }};">
+              {{ '↑' if d > 0 else ('↓' if d < 0 else '→') }}{{ '%+.2f'|format(d) if d != 0 else '' }}
+            </span>
+          {% endif %}
+        </td>
+        <td class="mono">
+          {{ s.avg_dod }}
+          {% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}
+            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">
+              {{ '↑' if trend.dod_delta > 0 else '↓' }}
+            </span>
+          {% endif %}
+        </td>
+        <td class="mono">
+          {{ s.avg_dis }}
+          {% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}
+            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">
+              {{ '↑' if trend.dis_delta > 0 else '↓' }}
+            </span>
+          {% endif %}
+        </td>
+        <td class="mono">
+          {{ s.avg_dm }}
+          {% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}
+            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">
+              {{ '↑' if trend.dm_delta > 0 else '↓' }}
+            </span>
+          {% endif %}
+        </td>
+        <td class="mono">
+          {{ s.avg_wonder }}
+          {% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}
+            <span style="font-size:10px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">
+              {{ '↑' if trend.wonder_delta > 0 else '↓' }}
+            </span>
+          {% endif %}
+        </td>
+        <td class="mono">
+          {{ s.avg_aq }}
+          {% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}
+            <span style="font-size:10px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">
+              {{ '↑' if trend.aq_delta > 0 else '↓' }}
+            </span>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<!-- When to run calibration explanation -->
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+            padding:20px 24px; margin-bottom:40px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px;
+              color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+    When to Run Calibration Log
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px;">
+    {% for icon, title, desc in [
+      ('📸', 'Before scoring changes', 'Run before deploying new auto_score.py to capture the baseline'),
+      ('📅', 'Monthly snapshot', 'Track if average scores are drifting over time'),
+      ('📦', 'After bulk uploads', 'Check if new batches are skewing genre averages'),
+      ('🔧', 'After corrections', 'Verify calibration notes are improving scores'),
+    ] %}
+    <div style="display:flex; gap:10px; align-items:flex-start;">
+      <span style="font-size:20px; flex-shrink:0;">{{ icon }}</span>
+      <div>
+        <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">{{ title }}</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5;">{{ desc }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
 {% endif %}
 
 <!-- RECENT SUBMISSIONS HEADER -->
