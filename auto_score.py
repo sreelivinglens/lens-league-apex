@@ -296,7 +296,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
 
     payload = {
         "model":      MODEL,
-        "max_tokens": 2000,
+        "max_tokens": 1200,
         "temperature": 0.2,
         "system":     SYSTEM_BRIEF,
         "messages": [

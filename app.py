@@ -166,7 +166,7 @@ def index():
     try:
         stats = {
             'total_images': Image.query.filter_by(status='scored').count(),
-            'total_members': User.query.filter_by(role='member').count(),
+            'total_members': User.query.filter(User.role != 'admin').count(),
             'avg_score': db.session.query(db.func.avg(Image.score))
                            .filter(Image.score != None).scalar() or 0,
         }
@@ -378,7 +378,8 @@ def upload():
             thumb_url         = thumb_url,    # permanent R2 URL
             file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
             width=w, height=h, format=fmt,
-            asset_name        = request.form.get('asset_name', filename),
+            asset_name        = (request.form.get('asset_name') or '').strip() or
+                                  os.path.splitext(filename)[0].replace('_',' ').replace('-',' ').title(),
             genre             = request.form.get('genre', 'Wildlife'),
             subject           = request.form.get('subject', ''),
             location          = request.form.get('location', ''),
@@ -622,7 +623,7 @@ def bulk_upload():
                     thumb_path=thumb_path, thumb_url=thumb_url,
                     file_size_kb=int(os.path.getsize(thumb_path)/1024),
                     width=w, height=h, format=fmt,
-                    asset_name=os.path.splitext(filename)[0],
+                    asset_name=os.path.splitext(filename)[0].replace('_',' ').replace('-',' ').title(),
                     phash=phash, genre=genre, photographer_name=photographer, status='pending',
                 )
                 db.session.add(img)
@@ -813,6 +814,21 @@ def backfill_hashes():
     db.session.commit()
     flash(f'Backfilled {updated} image hashes. {failed} failed (no file).', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500
 
 
 @app.route('/health')
