@@ -147,13 +147,7 @@
     <p>Upload multiple images at once — AI scores each one automatically</p>
   </div>
 
-  <!-- Processing notice for Safari/background tabs -->
-  <div id="processingNotice" style="display:none; margin-bottom:20px; padding:16px 20px;
-       background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-sm);
-       font-size:15px; color:#F0C888; line-height:1.6;">
-    ⏳ <strong>Processing in progress</strong> — your images are being scored by the Apex DDI Engine.
-    This page will update automatically when complete. Please keep this tab open.
-  </div>
+
 
   <div class="card">
     <form method="POST" enctype="multipart/form-data" id="bulkForm">
@@ -322,8 +316,11 @@
 const AGREED_KEY = 'bulk_upload_agreed';
 
 function initPage() {
+  // Always clear processing flags on page load
+  sessionStorage.removeItem('bulk_processing');
+  sessionStorage.removeItem('bulk_started');
+
   {% if results %}
-  // Results present — always show content, hide modal
   document.getElementById('legalModal').classList.remove('open');
   document.getElementById('uploadContent').style.display = 'block';
   {% else %}
@@ -335,14 +332,6 @@ function initPage() {
     document.getElementById('uploadContent').style.display = 'none';
   }
   {% endif %}
-
-  // Only show processing notice if actively processing (not on fresh page load)
-  // bulk_processing is cleared on XHR complete, so this only shows on tab switch mid-upload
-  if (sessionStorage.getItem('bulk_processing') === '1' && sessionStorage.getItem('bulk_started') === '1') {
-    document.getElementById('processingNotice').style.display = 'block';
-    document.getElementById('uploadContent').style.display = 'block';
-    document.getElementById('legalModal').classList.remove('open');
-  }
 }
 
 document.getElementById('modalCheckbox').addEventListener('change', function() {
