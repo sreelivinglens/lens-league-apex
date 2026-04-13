@@ -1,156 +1,391 @@
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or 'Image' }} — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .detail-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+
+  /* Left column */
+  .detail-image {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: block;
+  }
+
+  /* EXIF block */
+  .exif-block {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .exif-block.verified  { border-color: var(--green); }
+  .exif-block.suspicious { border-color: var(--red); }
+  .exif-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .exif-status-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .exif-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Score panel */
+  .score-panel {
+    margin-top: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .score-main {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .score-number {
+    font-family: var(--font-mono);
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .score-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .score-tier {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .score-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .soul-badge {
+    padding: 6px 14px;
+    border: 1px solid var(--gold-dark);
+    background: var(--gold-subtle);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .judge-badge {
+    padding: 6px 14px;
+    border: 1px solid var(--gold-dark);
+    background: rgba(200,168,75,0.06);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  /* Module bars */
+  .modules-panel {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .module-row {
+    margin-bottom: 14px;
+  }
+  .module-row:last-child { margin-bottom: 0; }
+  .module-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .module-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .module-score {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .module-bar {
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .module-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+
+  /* Archetype */
+  .archetype-panel {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .archetype-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .archetype-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  /* Pending state */
+  .pending-panel {
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  .pending-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* Right column — scoring form */
+  .form-section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    .detail-header { flex-direction: column; }
+    .detail-actions { width: 100%; }
+    .detail-actions .btn { flex: 1; text-align: center; }
+    .score-number { font-size: 44px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px;">
-  <div class="page-header" style="margin-bottom:0;">
+<!-- Header -->
+<div class="detail-header">
+  <div class="page-header">
     <h1>{{ image.asset_name or image.original_filename }}</h1>
-    <p>{{ image.genre }} &nbsp;·&nbsp; {{ image.format }} &nbsp;·&nbsp; {{ image.photographer_name }}</p>
+    <p>{{ image.genre }}&nbsp;·&nbsp;{{ image.format }}&nbsp;·&nbsp;{{ image.photographer_name }}</p>
   </div>
-  <div style="display:flex; gap:10px;">
+  <div class="detail-actions">
     <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
     {% if image.status == 'scored' %}
     <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="btn" target="_blank" style="color:var(--gold); border-color:var(--gold);">
-       🔗 Share
-    </a>
+       class="btn" target="_blank"
+       style="border-color:var(--gold-dark); color:var(--gold);">🔗 Share</a>
     {% endif %}
     {% if image.card_url or image.card_path %}
-    <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}" class="btn btn-solid">↓ Download Rating Card</a>
+    <a href="{{ image.card_url or url_for('download_card', image_id=image.id) }}"
+       class="btn btn-solid">↓ Download Card</a>
     {% endif %}
     {% if current_user.role == 'admin' %}
     <form method="POST" action="{{ url_for('admin_delete_image', image_id=image.id) }}"
-          onsubmit="return confirm('Delete this image permanently?');" style="display:inline;">
-      <button type="submit" style="background:none; border:1px solid #7a2222; color:#f88; padding:8px 16px; font-size:11px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px;">
-        🗑 DELETE
-      </button>
+          onsubmit="return confirm('Delete this image permanently?');"
+          style="display:inline;">
+      <button type="submit" class="btn btn-danger">🗑 Delete</button>
     </form>
     {% endif %}
   </div>
 </div>
 
-<div class="grid-2" style="gap:32px; align-items:start;">
+<div class="grid-2" style="gap:36px; align-items:start;">
 
-  <!-- LEFT: Image + score display -->
+  <!-- ── LEFT COLUMN ── -->
   <div>
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
-         alt="{{ image.asset_name }}"
-         style="width:100%; border:1px solid var(--border);">
+         alt="{{ image.asset_name }}" class="detail-image">
 
-    <!-- EXIF / Authenticity block -->
+    <!-- EXIF Block -->
     {% if image.exif_status %}
-    <div style="margin-top:16px; padding:14px 16px; border:1px solid
-      {% if image.exif_status == 'verified' %}var(--green)
-      {% elif image.exif_status == 'suspicious' %}var(--red)
-      {% else %}var(--border){% endif %}; background:#2C2C2A;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <span style="font-size:14px;">
+    <div class="exif-block {{ image.exif_status }}">
+      <div class="exif-status-row">
+        <span style="font-size:16px;">
           {% if image.exif_status == 'verified' %}✅
           {% elif image.exif_status == 'suspicious' %}⚠️
           {% else %}❓{% endif %}
         </span>
-        <span style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px;
-          color:{% if image.exif_status == 'verified' %}var(--green)
-          {% elif image.exif_status == 'suspicious' %}var(--red)
-          {% else %}#FFFFFF{% endif %};">
+        <span class="exif-status-label"
+              style="color:{% if image.exif_status == 'verified' %}var(--green){% elif image.exif_status == 'suspicious' %}var(--red){% else %}var(--text-secondary){% endif %};">
           {{ image.exif_status.upper() }}
-          {% if image.legal_declaration %} · LEGALLY DECLARED{% endif %}
+          {% if image.legal_declaration %}&nbsp;·&nbsp;LEGALLY DECLARED{% endif %}
         </span>
       </div>
       {% if image.exif_camera %}
-      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
-        📷 {{ image.exif_camera }}
-      </div>
+      <div class="exif-detail">📷 <span>{{ image.exif_camera }}</span></div>
       {% endif %}
       {% if image.exif_settings %}
-      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
-        ⚙️ {{ image.exif_settings }}
-      </div>
+      <div class="exif-detail">⚙️ <span>{{ image.exif_settings }}</span></div>
       {% endif %}
       {% if image.exif_date_taken %}
-      <div style="font-size:12px; color:#FFFFFF; margin-bottom:3px;">
-        📅 {{ image.exif_date_taken }}
-      </div>
+      <div class="exif-detail">📅 <span>{{ image.exif_date_taken }}</span></div>
       {% endif %}
       {% if image.exif_warning %}
-      <div style="font-size:11px; color:var(--red); margin-top:6px;">
-        {{ image.exif_warning }}
-      </div>
+      <div style="font-size:13px; color:var(--red); margin-top:8px;">{{ image.exif_warning }}</div>
       {% endif %}
     </div>
     {% endif %}
 
+    <!-- Score Panel -->
     {% if image.status == 'scored' %}
-    <div style="margin-top:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="score-panel">
+      <div class="score-main">
         <div>
-          <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:4px;">LL-SCORE</div>
-          <div style="font-size:52px; font-weight:700; color:#8B6914; line-height:1;">{{ image.score }}</div>
-          <div style="font-family:'Courier New',monospace; font-size:12px; color:#8B6914; letter-spacing:2px;">{{ image.tier.upper() }}</div>
+          <div class="score-label">LL-Score</div>
+          <div class="score-number">{{ image.score }}</div>
+          <div class="score-tier">{{ image.tier }}</div>
         </div>
-        {% if image.soul_bonus %}
-        <div style="border:1px solid var(--gold); padding:8px 16px; font-family:'Courier New',monospace; font-size:11px; color:#8B6914; background:rgba(200,168,75,.12);">
-          ★ SOUL BONUS
+        <div class="score-badges">
+          {% if image.soul_bonus %}
+          <div class="soul-badge">★ Soul Bonus</div>
+          {% endif %}
+          {% if image.judge_referral %}
+          <div class="judge-badge">⚖️ Judge Review</div>
+          {% endif %}
         </div>
-        {% endif %}
-        {% if image.judge_referral %}
-        <div style="border:1px solid #C8A84B; padding:8px 16px; font-family:'Courier New',monospace; font-size:11px; color:#C8A84B; background:rgba(200,168,75,.08); margin-top:8px;">
-          ⚖️ REFERRED FOR JUDGE REVIEW
-        </div>
-        {% endif %}
       </div>
 
       <!-- Module bars -->
-      {% set mods = [('DoD', image.dod_score), ('Disruption', image.disruption_score), ('DM', image.dm_score), ('Wonder', image.wonder_score), ('AQ', image.aq_score)] %}
-      {% for name, score in mods %}
-      {% if score %}
-      <div style="margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:1px; color:var(--text);">{{ name }}</span>
-          <span style="font-family:'Courier New',monospace; font-size:11px; color:#8B6914;">{{ score }}</span>
+      <div class="modules-panel">
+        {% set mods = [
+          ('DoD', image.dod_score),
+          ('Disruption', image.disruption_score),
+          ('DM', image.dm_score),
+          ('Wonder', image.wonder_score),
+          ('AQ', image.aq_score)
+        ] %}
+        {% for name, score in mods %}
+        {% if score %}
+        <div class="module-row">
+          <div class="module-row-header">
+            <span class="module-name">{{ name }}</span>
+            <span class="module-score">{{ score }}</span>
+          </div>
+          <div class="module-bar">
+            <div class="module-bar-fill" style="width:{{ (score/10*100)|int }}%"></div>
+          </div>
         </div>
-        <div style="height:3px; background:var(--border);">
-          <div style="height:100%; width:{{ (score/10*100)|int }}%; background:#8B6914;"></div>
-        </div>
+        {% endif %}
+        {% endfor %}
       </div>
-      {% endif %}
-      {% endfor %}
 
       {% if image.archetype %}
-      <div style="margin-top:16px; padding:12px 16px; border:1px solid var(--border); background:#2C2C2A;">
-        <div style="font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; color:#FFFFFF; margin-bottom:4px;">AFFECTIVE STATE</div>
-        <div style="font-size:15px; font-weight:600; color:var(--gold);">{{ image.archetype }}</div>
+      <div class="archetype-panel">
+        <div>
+          <div class="archetype-label">Affective State</div>
+          <div class="archetype-value">{{ image.archetype }}</div>
+        </div>
       </div>
       {% endif %}
     </div>
     {% else %}
-    <div style="margin-top:16px; padding:16px; border:1px solid var(--border); background:#2C2C2A; text-align:center;">
-      <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px; color:#FFFFFF;">AWAITING SCORING</div>
+    <div class="pending-panel">
+      <div class="pending-label">⏳ Awaiting Scoring</div>
+      <p style="font-size:14px; color:var(--text-secondary); margin-top:8px;">
+        Fill in the scoring form and click Generate to score this image.
+      </p>
     </div>
     {% endif %}
   </div>
 
-  <!-- RIGHT: Scoring form -->
+  <!-- ── RIGHT COLUMN — Scoring form ── -->
   <div>
-    <div style="font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px; color:#8B6914; margin-bottom:20px;">
-      {% if image.status == 'scored' %}RESCORE IMAGE{% else %}SCORE THIS IMAGE{% endif %}
+    <div class="form-section-label">
+      {% if image.status == 'scored' %}Rescore Image{% else %}Score This Image{% endif %}
     </div>
 
     <form method="POST" action="{{ url_for('score_image', image_id=image.id) }}">
+
       <div class="grid-2" style="gap:12px;">
         {% for field, label, val in [
-            ('dod', 'DoD', image.dod_score),
-            ('disruption', 'Disruption', image.disruption_score),
-            ('dm', 'DM', image.dm_score),
-            ('wonder', 'Wonder', image.wonder_score),
-            ('aq', 'AQ', image.aq_score)] %}
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>{{ label }} (0–10)</label>
+          ('dod',        'DoD',        image.dod_score),
+          ('disruption', 'Disruption', image.disruption_score),
+          ('dm',         'DM',         image.dm_score),
+          ('wonder',     'Wonder',     image.wonder_score),
+          ('aq',         'AQ',         image.aq_score),
+        ] %}
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>{{ label }} <span style="font-weight:400; color:var(--text-muted);">(0–10)</span></label>
           <input type="number" name="{{ field }}" step="0.1" min="0" max="10"
                  value="{{ val or '' }}" required placeholder="0.0">
         </div>
         {% endfor %}
-        <div class="form-group" style="margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:14px;">
           <label>Archetype</label>
           <select name="archetype">
             {% for a in archetypes %}
@@ -162,31 +397,49 @@
 
       {% set audit = image.get_audit() %}
 
-      <div class="form-group"><label>Technical Integrity</label>
-        <textarea name="row_technical">{{ audit.get('rows', [[],[],[],[],[]])[0][1] if audit.get('rows') else '' }}</textarea></div>
-      <div class="form-group"><label>Geometric Harmony</label>
-        <textarea name="row_geometric">{{ audit.get('rows', [[],[],[],[],[]])[1][1] if audit.get('rows') else '' }}</textarea></div>
-      <div class="form-group"><label>Decisive Moment</label>
-        <textarea name="row_dm">{{ audit.get('rows', [[],[],[],[],[]])[2][1] if audit.get('rows') else '' }}</textarea></div>
-      <div class="form-group"><label>Wonder Factor</label>
-        <textarea name="row_wonder">{{ audit.get('rows', [[],[],[],[],[]])[3][1] if audit.get('rows') else '' }}</textarea></div>
-      <div class="form-group"><label>AQ — Soul</label>
-        <textarea name="row_aq">{{ audit.get('rows', [[],[],[],[],[]])[4][1] if audit.get('rows') else '' }}</textarea></div>
+      {% for field_name, label, rows_idx in [
+        ('row_technical', 'Technical Integrity',  0),
+        ('row_geometric', 'Geometric Harmony',    1),
+        ('row_dm',        'Decisive Moment',       2),
+        ('row_wonder',    'Wonder Factor',         3),
+        ('row_aq',        'AQ — Soul',             4),
+      ] %}
+      <div class="form-group">
+        <label>{{ label }}</label>
+        <textarea name="{{ field_name }}">{{ audit.get('rows', [[],[],[],[],[]])[rows_idx][1] if audit.get('rows') else '' }}</textarea>
+      </div>
+      {% endfor %}
 
-      <div class="form-group"><label>Apex Byline — Gap Analysis</label>
-        <textarea name="byline_1" style="min-height:80px;">{{ audit.get('byline_1','') }}</textarea></div>
-      <div class="form-group"><label>The One Improvement</label>
-        <textarea name="byline_2" style="min-height:80px;">{{ audit.get('byline_2_body','') }}</textarea></div>
+      <div class="form-group">
+        <label>Apex Byline — Gap Analysis</label>
+        <textarea name="byline_1" style="min-height:90px;">{{ audit.get('byline_1','') }}</textarea>
+      </div>
 
-      <div class="form-group"><label>Strength Badges (one per line)</label>
-        <textarea name="badges_g" style="min-height:60px;">{{ '\n'.join(audit.get('badges_g',[])) }}</textarea></div>
-      <div class="form-group"><label>Gap Badges (one per line)</label>
-        <textarea name="badges_w" style="min-height:60px;">{{ '\n'.join(audit.get('badges_w',[])) }}</textarea></div>
+      <div class="form-group">
+        <label>The One Improvement</label>
+        <textarea name="byline_2" style="min-height:90px;">{{ audit.get('byline_2_body','') }}</textarea>
+      </div>
 
-      <div class="form-group"><label>IUCN Tag (optional)</label>
-        <input type="text" name="iucn_tag" value="{{ audit.get('iucn_tag','') }}" placeholder="e.g. ⚠ IUCN Vulnerable Species"></div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="form-group">
+          <label>Strength Badges <span style="font-weight:400; color:var(--text-muted);">(one per line)</span></label>
+          <textarea name="badges_g" style="min-height:70px;">{{ '\n'.join(audit.get('badges_g',[])) }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Gap Badges <span style="font-weight:400; color:var(--text-muted);">(one per line)</span></label>
+          <textarea name="badges_w" style="min-height:70px;">{{ '\n'.join(audit.get('badges_w',[])) }}</textarea>
+        </div>
+      </div>
 
-      <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:12px;">
+      <div class="form-group">
+        <label>IUCN Tag <span style="font-weight:400; color:var(--text-muted);">(optional)</span></label>
+        <input type="text" name="iucn_tag"
+               value="{{ audit.get('iucn_tag','') }}"
+               placeholder="e.g. ⚠ IUCN Vulnerable Species">
+      </div>
+
+      <button type="submit" class="btn btn-solid"
+              style="width:100%; padding:15px; font-size:13px; letter-spacing:2px; margin-top:8px;">
         Generate Score + Rating Card
       </button>
     </form>
