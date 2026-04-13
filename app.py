@@ -834,7 +834,7 @@ def leaderboard():
     else:
         since = None
 
-    # Base filter: scored images only
+    # Shared filter function — applies to both queries
     def apply_filters(q):
         q = q.filter(
             Image.score.isnot(None),
@@ -855,9 +855,8 @@ def leaderboard():
                   .limit(50)
                   .all())
 
-    # Top photographers tab — ranked by best single image score
+    # Top photographers tab — grouped by photographer_name only (no photographer_id column)
     pg_query = db.session.query(
-        Image.photographer_id,
         Image.photographer_name,
         func.max(Image.score).label('best_score'),
         func.avg(Image.score).label('avg_score'),
@@ -865,7 +864,7 @@ def leaderboard():
     )
     pg_query = apply_filters(pg_query)
     photographer_stats = (pg_query
-                          .group_by(Image.photographer_id, Image.photographer_name)
+                          .group_by(Image.photographer_name)
                           .order_by(desc('best_score'))
                           .limit(50)
                           .all())
@@ -927,10 +926,10 @@ def admin_dashboard():
         if len(batches) >= 2:
             current_snap  = {l.genre: l for l in batches[0]}
             previous_snap = {l.genre: l for l in batches[1]}
-            for genre in current_snap:
-                curr = current_snap[genre]
-                prev = previous_snap.get(genre)
-                cal_trend[genre] = {
+            for genre_key in current_snap:
+                curr = current_snap[genre_key]
+                prev = previous_snap.get(genre_key)
+                cal_trend[genre_key] = {
                     'current':  curr,
                     'previous': prev,
                     'score_delta':  round(curr.avg_score  - prev.avg_score,  2) if prev else None,
@@ -947,15 +946,15 @@ def admin_dashboard():
         print(f'[cal trend] {e}')
 
     drift_alerts = []
-    for genre, s in cal_stats.items():
+    for genre_key, s in cal_stats.items():
         if s['avg_score'] < 5.0:
-            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg score {s["avg_score"]} — possible under-scoring'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg score {s["avg_score"]} — possible under-scoring'})
         elif s['avg_score'] > 8.5:
-            drift_alerts.append({'genre': genre, 'type': 'high', 'msg': f'Avg score {s["avg_score"]} — possible over-scoring'})
+            drift_alerts.append({'genre': genre_key, 'type': 'high', 'msg': f'Avg score {s["avg_score"]} — possible over-scoring'})
         if s['avg_dod'] < 3.0:
-            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]} — engine may be under-valuing difficulty'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]} — engine may be under-valuing difficulty'})
         if s['avg_aq'] < 4.0:
-            drift_alerts.append({'genre': genre, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]} — low emotional resonance scores across genre'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]} — low emotional resonance scores across genre'})
 
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
@@ -968,8 +967,8 @@ def admin_dashboard():
 def run_calibration():
     images = Image.query.filter_by(status='scored').all()
     stats  = compute_calibration_stats(images)
-    for genre, s in stats.items():
-        log = CalibrationLog(genre=genre, image_count=s['count'], avg_score=s['avg_score'],
+    for genre_key, s in stats.items():
+        log = CalibrationLog(genre=genre_key, image_count=s['count'], avg_score=s['avg_score'],
                              avg_dod=s['avg_dod'], avg_dis=s['avg_dis'], avg_dm=s['avg_dm'],
                              avg_wonder=s['avg_wonder'], avg_aq=s['avg_aq'])
         db.session.add(log)
