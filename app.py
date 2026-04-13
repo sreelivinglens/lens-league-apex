@@ -699,6 +699,10 @@ def bulk_upload():
     results = []
     if request.method == 'POST':
         files        = request.files.getlist('images')
+        # Cap at 10 images per batch
+        if len(files) > 10:
+            flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
+            return redirect(url_for('bulk_upload'))
         genre        = request.form.get('genre', '').strip()
         if not genre:
             flash('Please select a genre before uploading.', 'error')
@@ -783,19 +787,38 @@ def bulk_upload():
                     img.status='pending'; result_row['status']='uploaded'
                 db.session.commit()
             except Exception as e:
-                db.session.rollback()
+                # Use subtransaction rollback to avoid losing other images
+                try:
+                    db.session.rollback()
+                except:
+                    pass
                 import traceback
                 err_detail = traceback.format_exc()
                 app.logger.error(f'Bulk upload error for {file.filename}: {err_detail}')
                 result_row['status'] = f'error: {str(e)[:120]}'
             results.append(result_row)
-    # Final safety commit
+    # Final safety commit — commit any pending images
     try:
         db.session.commit()
-    except:
-        db.session.rollback()
+    except Exception as ce:
+        app.logger.error(f'Final bulk commit error: {ce}')
+        try:
+            db.session.rollback()
+        except:
+            pass
 
     genres = list(GENRE_WEIGHTS.keys())
+    # If POST with results, redirect to dashboard with success flash
+    if request.method == 'POST' and results:
+        scored_count  = sum(1 for r in results if r['status'] == 'scored')
+        saved_count   = sum(1 for r in results if 'saved' in r['status'] or r['status'] == 'uploaded')
+        error_count   = sum(1 for r in results if 'error' in r['status'])
+        msg_parts = []
+        if scored_count:  msg_parts.append(f'{scored_count} scored')
+        if saved_count:   msg_parts.append(f'{saved_count} saved (pending)')
+        if error_count:   msg_parts.append(f'{error_count} failed')
+        flash(f"Bulk upload complete: {', '.join(msg_parts)}.", 'success')
+        return redirect(url_for('dashboard'))
     return render_template('bulk_upload.html', genres=genres, results=results)
 
 
@@ -1047,6 +1070,106 @@ def admin_feedback(image_id):
 
     db.session.commit()
     return redirect(url_for('image_detail', image_id=image_id))
+
+
+@app.route('/image/score-single', methods=['POST'])
+@login_required
+def score_single_image():
+    """Score one image at a time — used by progressive bulk upload."""
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file'}), 400
+
+    file       = request.files['image']
+    genre      = request.form.get('genre', 'Wildlife')
+    photographer = request.form.get('photographer_name', '').strip() or                    current_user.full_name or current_user.username
+
+    if not file or not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file'}), 400
+
+    try:
+        uid       = str(uuid.uuid4())
+        filename  = secure_filename(file.filename)
+        raw_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_{filename}')
+        file.save(raw_path)
+        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        if os.path.exists(raw_path): os.remove(raw_path)
+
+        # Duplicate check
+        from engine.processor import hash_similarity_pct
+        for ex in Image.query.filter(Image.phash.isnot(None)).all():
+            if hash_similarity_pct(phash, ex.phash) >= 90.0:
+                return jsonify({
+                    'status': 'duplicate',
+                    'message': f'Already uploaded as "{ex.asset_name or ex.original_filename}"'
+                })
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+        img = Image(
+            user_id=current_user.id,
+            original_filename=filename,
+            stored_filename=os.path.basename(thumb_path),
+            thumb_path=thumb_path, thumb_url=thumb_url,
+            file_size_kb=int(os.path.getsize(thumb_path)/1024),
+            width=w, height=h, format=fmt,
+            asset_name=auto_title(filename, genre),
+            phash=phash, genre=genre,
+            photographer_name=photographer,
+            status='pending',
+        )
+        db.session.add(img)
+        db.session.flush()
+
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if api_key:
+            try:
+                from engine.auto_score import auto_score, build_audit_data
+                scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                    title=img.asset_name, photographer=photographer)
+                img.dod_score        = float(scored.get('dod', 0))
+                img.disruption_score = float(scored.get('disruption', 0))
+                img.dm_score         = float(scored.get('dm', 0))
+                img.wonder_score     = float(scored.get('wonder', 0))
+                img.aq_score         = float(scored.get('aq', 0))
+                img.score            = float(scored.get('score', 0))
+                img.tier             = scored.get('tier', 'Practitioner')
+                img.archetype        = scored.get('archetype', '')
+                img.soul_bonus       = scored.get('soul_bonus', False)
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                # Update title with archetype
+                img.asset_name = auto_title(filename, genre,
+                                            archetype=scored.get('archetype', ''))
+                audit = build_audit_data(scored, img)
+                img.set_audit(audit)
+                db.session.commit()
+                return jsonify({
+                    'status': 'scored',
+                    'filename': filename,
+                    'score': img.score,
+                    'tier': img.tier,
+                    'image_id': img.id,
+                    'asset_name': img.asset_name,
+                })
+            except ValueError as api_err:
+                if '529' in str(api_err) or 'overloaded' in str(api_err).lower():
+                    img.status = 'pending'
+                    db.session.commit()
+                    return jsonify({
+                        'status': 'saved',
+                        'filename': filename,
+                        'message': 'API busy — saved for later scoring'
+                    })
+                raise
+        else:
+            img.status = 'pending'
+            db.session.commit()
+            return jsonify({'status': 'saved', 'filename': filename})
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'score_single_image error: {e}')
+        return jsonify({'error': str(e)[:100]}), 500
 
 
 @app.route('/admin/health-check')
