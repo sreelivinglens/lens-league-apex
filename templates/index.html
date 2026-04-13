@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Lens League Apex — Rated by Science. Not Opinion.{% endblock %}
+{% block title %}Lens League Apex — The World's First Forensically-Verified Photography Platform{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -18,7 +18,7 @@
     content: ''; flex: 1; max-width: 56px; height: 1px; background: var(--gold-dark);
   }
   .hero h1 {
-    font-size: clamp(36px, 7vw, 78px); font-weight: 700; line-height: 1.08;
+    font-size: clamp(32px, 6vw, 68px); font-weight: 700; line-height: 1.08;
     color: var(--text-primary); max-width: 860px; margin: 0 auto 8px;
     letter-spacing: -0.03em;
   }
@@ -30,11 +30,12 @@
   }
   .hero-usp {
     font-size: clamp(16px, 2.2vw, 21px); font-weight: 600;
-    color: var(--text-secondary); margin: 0 auto 14px; max-width: 620px; line-height: 1.4;
+    color: var(--text-secondary); margin: 0 auto 14px; max-width: 640px; line-height: 1.5;
   }
+  .hero-usp em { font-style: normal; color: var(--text-primary); }
   .hero-sub {
     font-size: clamp(14px, 1.8vw, 17px); color: var(--text-muted);
-    max-width: 580px; margin: 0 auto 40px; line-height: 1.85;
+    max-width: 560px; margin: 0 auto 40px; line-height: 1.85;
   }
   .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
   .hero-actions .btn { padding: 15px 44px; font-size: 13px; }
@@ -274,15 +275,19 @@
 <div class="hero">
   <div class="hero-eyebrow">Lens League Apex</div>
   <h1>
-    Your Photography<br>
-    <em>Deserves More Than Likes.</em>
+    The World's First<br>
+    <em>Forensically-Verified Photography Platform.</em>
   </h1>
   <div class="hero-tagline-big">Rated by Science. Not Opinion.</div>
-  <p class="hero-usp">The world's first AI-powered scientific photography rating engine.</p>
+  <p class="hero-usp">
+    Upload your image. Get an unbiased DDI score.<br>
+    See exactly where you stand —
+    <em>not in likes, but in truth.</em>
+  </p>
   <p class="hero-sub">
     Five academically-grounded modules. Proprietary AI. Genre-calibrated weights.
-    One honest score — and one actionable improvement — for every image you shoot.
-    Camera or Mobile. No bias. No politics. No friends voting for you.
+    One honest score and one actionable improvement for every image you shoot.
+    Camera or Mobile. No bias. No politics.
   </p>
   <div class="hero-actions">
     <a href="{{ url_for('register') }}" class="btn btn-solid">Start Free — 3 Images</a>
@@ -341,7 +346,6 @@
       </p>
     </div>
 
-    <!-- AI Credibility block -->
     <div class="ai-credibility">
       <div class="ai-credibility-icon">🤖</div>
       <div class="ai-credibility-text">
@@ -357,7 +361,6 @@
       </div>
     </div>
 
-    <!-- Five modules -->
     <div class="modules-grid">
       {% for code, name, source, desc in [
         ('DoD',       'Degree of Difficulty',  'Physics & Environmental Science',
@@ -379,7 +382,6 @@
       </div>
       {% endfor %}
 
-      <!-- Tiers card -->
       <div class="tiers-card">
         <div class="section-label" style="margin-bottom:16px;">Five Tiers</div>
         {% for tier, range in [
@@ -397,10 +399,9 @@
       </div>
     </div>
 
-    <!-- Trust bar -->
     <div class="trust-bar">
       {% for icon, label in [
-        ('🔬', 'Science-Based Scoring'),
+        ('🔬', 'Forensically Verified'),
         ('🤖', 'Proprietary AI Engine'),
         ('⚡', 'Instant Results'),
         ('📋', 'Actionable Feedback'),
@@ -428,7 +429,6 @@
     </div>
 
     <div class="tracks-grid">
-      <!-- Camera Track -->
       <div class="track-card camera">
         <span class="track-icon">📷</span>
         <div class="track-title">Camera Photographers</div>
@@ -451,7 +451,6 @@
         </div>
       </div>
 
-      <!-- Mobile Track -->
       <div class="track-card mobile">
         <span class="track-icon">📱</span>
         <div class="track-title">Mobile Photographers</div>
