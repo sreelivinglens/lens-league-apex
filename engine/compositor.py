@@ -191,65 +191,111 @@ def build_card1(photo_path, data, out_path):
 
 
 def build_card2(data, out_path):
-    """Card 2 — Full Analysis, 2 columns (landscape)"""
-    canvas = PilImage.new('RGB',(CW,CH),BLACK)
-    draw   = ImageDraw.Draw(canvas)
+    """Card 2 — Full Analysis, 2 columns, DYNAMIC height based on content."""
 
-    INNER_Y = HEADER_H + PAD
     COL_GAP = 80
     COL_W   = (CW - PAD*2 - COL_GAP)//2
     LX      = PAD
     RX      = PAD + COL_W + COL_GAP
 
-    def section(x, y, label, body, w):
+    rows = data.get('rows',[])
+    b1   = data.get('byline_1','').strip()
+    b2   = data.get('byline_2_body','').strip()
+    bg   = [b for b in data.get('badges_g',[]) if b.strip()]
+    bw   = [b for b in data.get('badges_w',[]) if b.strip()]
+
+    # ── Measure content height with a dummy canvas ────────────────────────────
+    def measure_section(dummy_draw, body, w):
+        """Height of one section label + body + gap."""
+        h  = lh(fnt(38,bold=True,mono=True)) + 20   # label + spacing
+        h += sum(lh(fnt(44))+12 for _ in wrap_lines(dummy_draw,body,fnt(44),w))
+        h += 28 + 1  # gap + rule
+        return h
+
+    dummy = ImageDraw.Draw(PilImage.new('RGB',(CW,100),BLACK))
+
+    left_h = sum(measure_section(dummy,body,COL_W) for _,body in rows[:3])
+    left_h += 10
+    if bg:
+        left_h += lh(fnt(38,bold=True,mono=True))+20
+        left_h += sum(lh(fnt(44))+10 for _ in wrap_lines(dummy,', '.join(bg),fnt(44),COL_W))
+        left_h += 24
+    if bw:
+        left_h += lh(fnt(38,bold=True,mono=True))+20
+        left_h += sum(lh(fnt(44))+10 for _ in wrap_lines(dummy,', '.join(bw),fnt(44),COL_W))
+
+    right_h = sum(measure_section(dummy,body,COL_W) for _,body in rows[3:])
+    right_h += lh(fnt(38,bold=True,mono=True))+20   # APEX BYLINE label
+    right_h += sum(lh(fnt(44))+12 for _ in wrap_lines(dummy,b1,fnt(44),COL_W))
+    right_h += 28
+    right_h += lh(fnt(38,bold=True,mono=True))+20   # THE ONE IMPROVEMENT label
+    right_h += sum(lh(fnt(44,bold=True))+12 for _ in wrap_lines(dummy,b2,fnt(44,bold=True),COL_W))
+
+    content_h = max(left_h, right_h)
+
+    # Dynamic canvas height — content + header + footer + generous buffer
+    DYN_H = HEADER_H + PAD + content_h + PAD*4 + FOOTER_H
+
+    # ── Build canvas at dynamic height ───────────────────────────────────────
+    canvas = PilImage.new('RGB',(CW, DYN_H), BLACK)
+    draw   = ImageDraw.Draw(canvas)
+
+    INNER_Y = HEADER_H + PAD
+    LY = INNER_Y
+    RY = INNER_Y
+
+    def section(x, y, label, body, w, body_color=T2):
         draw.text((x,y), label.upper(), font=fnt(38,bold=True,mono=True), fill=GOLD)
-        y += lh(fnt(38,bold=True,mono=True)) + 10
-        y = draw_text(draw, body, fnt(44), T2, x, y, w, 12)
+        y += lh(fnt(38,bold=True,mono=True)) + 20
+        y = draw_text(draw, body, fnt(44), body_color, x, y, w, 12)
         y += 28
-        draw.rectangle([x,y-14,x+w,y-13], fill=(42,42,40))
+        draw.rectangle([x, y-14, x+w, y-13], fill=(42,42,40))
         return y
 
-    rows  = data.get('rows',[])
-    LY    = INNER_Y
-    RY    = INNER_Y
-
-    # Left col: rows 0,1,2 + strengths/gaps
+    # Left col: rows 0,1,2
     for label,body in rows[:3]:
         LY = section(LX, LY, label, body, COL_W)
 
-    bg = [b for b in data.get('badges_g',[]) if b.strip()]
-    bw = [b for b in data.get('badges_w',[]) if b.strip()]
+    # Strengths + Gaps in left col
     LY += 10
     if bg:
-        draw.text((LX,LY),'STRENGTHS',font=fnt(38,bold=True,mono=True),fill=GREEN)
-        LY += lh(fnt(38,bold=True,mono=True))+10
-        LY = draw_text(draw,', '.join(bg),fnt(44),GREEN,LX,LY,COL_W,10)
+        draw.text((LX,LY), 'STRENGTHS', font=fnt(38,bold=True,mono=True), fill=GREEN)
+        LY += lh(fnt(38,bold=True,mono=True)) + 20
+        LY = draw_text(draw, ', '.join(bg), fnt(44), GREEN, LX, LY, COL_W, 10)
         LY += 24
     if bw:
-        draw.text((LX,LY),'AREAS TO DEVELOP',font=fnt(38,bold=True,mono=True),fill=RED)
-        LY += lh(fnt(38,bold=True,mono=True))+10
-        draw_text(draw,', '.join(bw),fnt(44),RED,LX,LY,COL_W,10)
+        draw.text((LX,LY), 'AREAS TO DEVELOP', font=fnt(38,bold=True,mono=True), fill=RED)
+        LY += lh(fnt(38,bold=True,mono=True)) + 20
+        LY = draw_text(draw, ', '.join(bw), fnt(44), RED, LX, LY, COL_W, 10)
 
-    # Right col: rows 3,4 + byline
+    # Right col: rows 3,4
     for label,body in rows[3:]:
         RY = section(RX, RY, label, body, COL_W)
 
-    # Byline — right col with gold left accent
-    b1 = data.get('byline_1','').strip()
-    b2 = data.get('byline_2_body','').strip()
-    draw.rectangle([RX-24,RY,RX-16,CH-FOOTER_H-PAD],fill=GOLD_D)
-    draw.text((RX,RY),'APEX BYLINE',font=fnt(38,bold=True,mono=True),fill=GOLD)
-    RY += lh(fnt(38,bold=True,mono=True))+10
-    RY = draw_text(draw,b1,fnt(44),T2,RX,RY,COL_W,12)
+    # Apex Byline in right col
+    byline_top = RY
+    draw.text((RX,RY), 'APEX BYLINE', font=fnt(38,bold=True,mono=True), fill=GOLD)
+    RY += lh(fnt(38,bold=True,mono=True)) + 20
+    RY = draw_text(draw, b1, fnt(44), T2, RX, RY, COL_W, 12)
     RY += 28
-    draw.text((RX,RY),'THE ONE IMPROVEMENT',font=fnt(38,bold=True,mono=True),fill=GOLD)
-    RY += lh(fnt(38,bold=True,mono=True))+10
-    draw_text(draw,b2,fnt(44,bold=True),T1,RX,RY,COL_W,12)
+    draw.text((RX,RY), 'THE ONE IMPROVEMENT', font=fnt(38,bold=True,mono=True), fill=GOLD)
+    RY += lh(fnt(38,bold=True,mono=True)) + 20
+    RY = draw_text(draw, b2, fnt(44,bold=True), T1, RX, RY, COL_W, 12)
 
+    # Gold left accent bar for byline section
+    draw.rectangle([RX-24, byline_top, RX-16, RY+20], fill=GOLD_D)
+
+    # Redraw footer at actual canvas bottom
+    actual_h = DYN_H
+    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h],fill=S1)
+    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1],fill=BORDER)
+    draw.text((PAD,actual_h-FOOTER_H+24),'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX',font=fnt(28,mono=True),fill=T3)
+    stamp = f"LL · {data.get('score','')} · {data.get('tier','').upper()}"
+    sw = tw(draw,stamp,fnt(28,bold=True,mono=True))
+    draw.text((CW-PAD-sw,actual_h-FOOTER_H+24),stamp,font=fnt(28,bold=True,mono=True),fill=GOLD)
     draw_header(canvas, draw,
                 f"FULL EVALUATION  ·  {data.get('asset','')}",
                 'APEX DDI ENGINE  ·  RATED BY SCIENCE')
-    draw_footer(canvas, draw, f"LL · {data.get('score','')} · {data.get('tier','').upper()}")
     canvas.save(out_path,'JPEG',quality=96)
     return out_path
 
