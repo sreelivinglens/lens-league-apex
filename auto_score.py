@@ -360,7 +360,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
     # Retry up to 3 times on 529 overloaded errors
     import time as _time
     response = None
-    for _attempt in range(3):
+    for _attempt in range(5):
         response = httpx.post(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -372,7 +372,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
             timeout=90,
         )
         if response.status_code == 529:
-            wait = (_attempt + 1) * 15  # 15s, 30s, 45s
+            wait = (_attempt + 1) * 20  # 20s, 40s, 60s, 80s, 100s
             print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {_attempt+1}/3)")
             _time.sleep(wait)
             continue

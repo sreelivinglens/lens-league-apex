@@ -474,7 +474,13 @@ def upload():
                 flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
             except Exception as e:
                 db.session.commit()
-                flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
+                err_str = str(e)
+                if '529' in err_str or 'overloaded' in err_str.lower():
+                    flash('Image uploaded ✅ — AI servers are currently busy (peak hours). '
+                          'Your image has been saved. Please score it from the dashboard '
+                          'during off-peak hours: 6am–11am IST or 11pm–5am IST.', 'warning')
+                else:
+                    flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
