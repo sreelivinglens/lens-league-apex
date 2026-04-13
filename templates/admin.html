@@ -194,9 +194,15 @@
 
 {% block content %}
 
-<div class="page-header">
-  <h1>Admin Dashboard</h1>
-  <p>Engine calibration &amp; platform overview</p>
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Admin Dashboard</h1>
+    <p>Engine calibration &amp; platform overview</p>
+  </div>
+  <a href="{{ url_for('admin_calibration_notes') }}" class="btn"
+     style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
+    🔧 Calibration Notes
+  </a>
 </div>
 
 <!-- STATS -->

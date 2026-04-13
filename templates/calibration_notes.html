@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Calibration Notes — Lens League Apex{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Calibration Notes</h1>
+    <p>Admin corrections that feed back into the Apex DDI Engine</p>
+  </div>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn">← Admin</a>
+</div>
+
+<div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
+            border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px;
+            font-size:15px; color:var(--text-secondary); line-height:1.65; margin-bottom:32px;">
+  <strong style="color:var(--gold);">How this works:</strong>
+  Active notes are injected into the scoring prompt every time a new image of that genre is scored.
+  The engine reads these as "mistakes to avoid" and adjusts its evaluation accordingly.
+  Deactivate notes that are no longer relevant without deleting them.
+</div>
+
+{% if notes %}
+
+<!-- Group by genre -->
+{% set genres_seen = [] %}
+{% for note in notes %}
+{% if note.genre not in genres_seen %}
+{% set _ = genres_seen.append(note.genre) %}
+
+<div style="margin-bottom:36px;">
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+    <div class="section-label" style="margin-bottom:0;">{{ note.genre }}</div>
+    <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      {{ notes | selectattr('genre', 'equalto', note.genre) | list | length }} note{{ 's' if (notes | selectattr('genre', 'equalto', note.genre) | list | length) != 1 }}
+    </span>
+  </div>
+
+  {% for n in notes if n.genre == note.genre %}
+  <div style="background:var(--surface-2); border:1px solid {{ 'var(--border)' if n.is_active else 'var(--border-subtle)' }};
+              border-radius:var(--radius-md); padding:20px; margin-bottom:12px;
+              {{ 'opacity:0.55;' if not n.is_active }}">
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <!-- Module badge -->
+        <span style="font-family:var(--font-mono); font-size:12px; font-weight:700;
+                     padding:4px 12px; border-radius:99px;
+                     background:var(--gold-subtle); border:1px solid var(--gold-dark); color:var(--gold);">
+          {{ n.module.upper() }}
+        </span>
+        <!-- Score correction -->
+        {% if n.original_score and n.corrected_score %}
+        <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);">
+          <span style="color:var(--red);">{{ n.original_score }}</span>
+          &nbsp;→&nbsp;
+          <span style="color:var(--green);">{{ n.corrected_score }}</span>
+        </span>
+        {% elif n.corrected_score %}
+        <span style="font-family:var(--font-mono); font-size:13px; color:var(--green);">→ {{ n.corrected_score }}</span>
+        {% endif %}
+        <!-- Active status -->
+        <span style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:1px;
+                     padding:3px 8px; border-radius:3px;
+                     {{ 'background:rgba(76,175,115,0.15); border:1px solid var(--green); color:var(--green);' if n.is_active else 'background:var(--surface-3); border:1px solid var(--border); color:var(--text-muted);' }}">
+          {{ 'ACTIVE' if n.is_active else 'INACTIVE' }}
+        </span>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+        <!-- Image link -->
+        <a href="{{ url_for('image_detail', image_id=n.image_id) }}"
+           style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-decoration:none; padding:5px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); transition:all 0.2s;"
+           onmouseover="this.style.borderColor='var(--gold)'; this.style.color='var(--gold)'"
+           onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-muted)'">
+          View Image →
+        </a>
+        <!-- Toggle -->
+        <form method="POST" action="{{ url_for('toggle_calibration_note', note_id=n.id) }}" style="display:inline;">
+          <button type="submit" class="btn" style="padding:5px 14px; font-size:11px;
+                  {{ 'border-color:var(--amber); color:var(--amber);' if n.is_active else 'border-color:var(--green); color:var(--green);' }}">
+            {{ 'Deactivate' if n.is_active else 'Activate' }}
+          </button>
+        </form>
+        <!-- Delete -->
+        <form method="POST" action="{{ url_for('delete_calibration_note', note_id=n.id) }}"
+              onsubmit="return confirm('Delete this calibration note permanently?');" style="display:inline;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 12px; font-size:11px;">🗑</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <div style="font-size:15px; color:var(--text-secondary); line-height:1.7; margin-bottom:10px;">
+      {{ n.reason }}
+    </div>
+
+    <!-- Meta -->
+    <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      Submitted {{ n.created_at.strftime('%d %b %Y') }}
+      &nbsp;·&nbsp; Image #{{ n.image_id }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endfor %}
+
+{% else %}
+<div style="text-align:center; padding:80px 20px; color:var(--text-muted);">
+  <div style="font-size:48px; margin-bottom:20px; opacity:0.3;">🔧</div>
+  <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:3px; text-transform:uppercase; margin-bottom:16px;">No Calibration Notes Yet</div>
+  <p style="font-size:15px; color:var(--text-secondary); max-width:480px; margin:0 auto 24px; line-height:1.7;">
+    When you submit corrections from the image detail page, they'll appear here and be automatically injected into future scoring prompts.
+  </p>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-solid">← Go to Admin</a>
+</div>
+{% endif %}
+
+{% endblock %}

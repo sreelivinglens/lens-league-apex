@@ -443,6 +443,97 @@
         Generate Score + Rating Card
       </button>
     </form>
+
+    <!-- Admin Calibration Feedback -->
+    {% if current_user.role == 'admin' and image.status == 'scored' %}
+    <div style="margin-top:32px; border-top:1px solid var(--border); padding-top:24px;">
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px;
+                  color:var(--gold); text-transform:uppercase; margin-bottom:16px;">
+        🔧 Engine Calibration Feedback
+      </div>
+      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
+                  border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 16px;
+                  font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+        Corrections submitted here are injected into future scoring prompts for
+        <strong style="color:var(--gold);">{{ image.genre }}</strong> images.
+        The engine will learn from your feedback automatically.
+      </div>
+
+      <form method="POST" action="{{ url_for('admin_feedback', image_id=image.id) }}">
+
+        <div class="grid-2" style="gap:12px;">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Module to Correct</label>
+            <select name="module">
+              <option value="overall">Overall Score</option>
+              <option value="dod">DoD — Difficulty</option>
+              <option value="disruption">Disruption — Originality</option>
+              <option value="dm">DM — Decisive Moment</option>
+              <option value="wonder">Wonder — Factor</option>
+              <option value="aq">AQ — Soul</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>AI Score <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(auto-filled)</span></label>
+            <input type="number" name="original_score" step="0.1" min="0" max="10"
+                   value="{{ image.score or '' }}" placeholder="Original AI score">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Corrected Score <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional — for overall override)</span></label>
+          <input type="number" name="corrected_score" step="0.1" min="0" max="10"
+                 placeholder="What should the score be?">
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Reason <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(required — explain what the engine missed)</span></label>
+          <textarea name="reason" style="min-height:100px;"
+                    placeholder="e.g. Engine penalised blur as technical failure but this is controlled ICM technique executed in low light at dawn. DoD should be 8+ for this level of movement control in challenging conditions."></textarea>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; padding:13px; font-size:12px;
+                border-color:var(--gold-dark); color:var(--gold);">
+          Submit Calibration Correction →
+        </button>
+      </form>
+
+      <!-- Existing notes for this image -->
+      {% if image.calibration_notes %}
+      <div style="margin-top:20px;">
+        <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px;
+                    color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
+          Previous Corrections ({{ image.calibration_notes|length }})
+        </div>
+        {% for note in image.calibration_notes %}
+        <div style="padding:12px 16px; background:var(--surface-2); border:1px solid var(--border);
+                    border-radius:var(--radius-sm); margin-bottom:8px;
+                    {{ 'opacity:0.5;' if not note.is_active }}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="font-family:var(--font-mono); font-size:11px; font-weight:600;
+                           color:var(--gold); letter-spacing:1px;">{{ note.module.upper() }}</span>
+              {% if note.original_score and note.corrected_score %}
+              <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+                {{ note.original_score }} → {{ note.corrected_score }}
+              </span>
+              {% endif %}
+              {% if not note.is_active %}
+              <span style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">INACTIVE</span>
+              {% endif %}
+            </div>
+            <span style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">
+              {{ note.created_at.strftime('%d %b %Y') }}
+            </span>
+          </div>
+          <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">{{ note.reason }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
   </div>
 </div>
 
