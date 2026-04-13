@@ -914,6 +914,36 @@ def admin_feedback(image_id):
     return redirect(url_for('image_detail', image_id=image_id))
 
 
+@app.route('/admin/fix-calibration-table', methods=['POST'])
+@login_required
+@admin_required
+def fix_calibration_table():
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text('DROP TABLE IF EXISTS calibration_logs CASCADE'))
+            conn.execute(db.text('''
+                CREATE TABLE calibration_logs (
+                    id SERIAL PRIMARY KEY,
+                    genre VARCHAR(60) NOT NULL,
+                    image_count INTEGER,
+                    avg_score FLOAT,
+                    avg_dod FLOAT,
+                    avg_dis FLOAT,
+                    avg_dm FLOAT,
+                    avg_wonder FLOAT,
+                    avg_aq FLOAT,
+                    note TEXT,
+                    logged_by INTEGER,
+                    logged_at TIMESTAMP DEFAULT NOW()
+                )
+            '''))
+            conn.commit()
+        flash('calibration_logs table rebuilt successfully. You can now Run Calibration Log.', 'success')
+    except Exception as e:
+        flash(f'Fix failed: {e}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/admin/calibration-notes')
 @login_required
 @admin_required
