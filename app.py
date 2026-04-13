@@ -685,7 +685,10 @@ def bulk_upload():
     results = []
     if request.method == 'POST':
         files        = request.files.getlist('images')
-        genre        = request.form.get('genre', 'Wildlife')
+        genre        = request.form.get('genre', '').strip()
+        if not genre:
+            flash('Please select a genre before uploading.', 'error')
+            return redirect(url_for('bulk_upload'))
         photographer = request.form.get('photographer_name',
                                         current_user.full_name or current_user.username)
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
