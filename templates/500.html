@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Server Error — Lens League Apex{% endblock %}
+{% block content %}
+<div style="min-height:65vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 20px;">
+  <div style="max-width:480px;">
+    <div style="font-family:var(--font-mono); font-size:80px; font-weight:700; color:var(--surface-4); line-height:1; margin-bottom:24px;">500</div>
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--red); text-transform:uppercase; margin-bottom:16px;">Server Error</div>
+    <h1 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:var(--text-primary); margin-bottom:16px; line-height:1.3;">
+      Something went wrong
+    </h1>
+    <p style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:36px;">
+      The Apex DDI Engine encountered an unexpected error.
+      Our team has been notified. Please try again in a few moments.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('index') }}" class="btn btn-solid" style="padding:13px 32px;">← Go Home</a>
+      <a href="javascript:location.reload()" class="btn" style="padding:13px 32px;">Try Again</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

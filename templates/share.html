@@ -8,7 +8,7 @@
 <!-- Open Graph -->
 <meta property="og:title"       content="{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
-<meta property="og:image"       content="{{ image.thumb_url or request.host_url ~ 'image/' ~ image.id ~ '/thumb' }}">
+<meta property="og:image"       content="{{ image.thumb_url or (request.host_url ~ 'image/' ~ image.id ~ '/thumb') }}">
 <meta property="og:url"         content="{{ request.url }}">
 <meta property="og:type"        content="website">
 <meta name="twitter:card"       content="summary_large_image">

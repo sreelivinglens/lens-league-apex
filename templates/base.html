@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>{% block title %}Lens League Apex{% endblock %}</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230D0D0B'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' font-weight='700' fill='%23C8A84B' text-anchor='middle'%3ELL%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -559,7 +560,14 @@ footer {
   {% block content %}{% endblock %}
 </main>
 
-<footer>APEX DDI ENGINE &nbsp;·&nbsp; LENS LEAGUE &nbsp;·&nbsp; 2026</footer>
+<footer>
+  APEX DDI ENGINE &nbsp;·&nbsp; LENS LEAGUE &nbsp;·&nbsp; 2026
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="/terms" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
+     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
+    Terms &amp; Conditions
+  </a>
+</footer>
 
 <script>
 function toggleNav() {
