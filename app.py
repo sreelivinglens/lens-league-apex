@@ -1174,7 +1174,7 @@ def admin_toggle_subscription(user_id):
     db.session.commit()
     status = 'activated' if user.is_subscribed else 'deactivated'
     flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
-    return redirect(url_for('admin_dashboard') + '#users')
+    return redirect(url_for('admin_users'))
 
 
 @app.route('/admin/backfill-hashes', methods=['POST'])
