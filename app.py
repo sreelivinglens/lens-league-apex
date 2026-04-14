@@ -1029,9 +1029,12 @@ def admin_dashboard():
         if s['avg_aq'] < 4.0:
             drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]} — low emotional resonance scores across genre'})
 
+    all_users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts)
+                           cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
+                           all_users=all_users)
 
 
 @app.route('/admin/calibrate', methods=['POST'])
@@ -1129,6 +1132,33 @@ def toggle_calibration_example(image_id):
     status = 'set as calibration example' if img.is_calibration_example else 'removed from calibration examples'
     flash(f'"{img.asset_name}" {status}.', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/users')
+@login_required
+@admin_required
+def admin_users():
+    users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
+    return render_template('admin_users.html', users=users)
+
+
+@app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
+@login_required
+@admin_required
+def admin_toggle_subscription(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_subscribed = not getattr(user, 'is_subscribed', False)
+    if user.is_subscribed:
+        user.subscription_track = request.form.get('track', 'camera')
+        user.subscription_plan  = 'beta'
+        user.subscribed_at      = datetime.utcnow()
+    else:
+        user.subscription_track = None
+        user.subscription_plan  = None
+    db.session.commit()
+    status = 'activated' if user.is_subscribed else 'deactivated'
+    flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
+    return redirect(url_for('admin_dashboard') + '#users')
 
 
 @app.route('/admin/backfill-hashes', methods=['POST'])
