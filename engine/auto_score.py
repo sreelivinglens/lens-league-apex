@@ -5,14 +5,19 @@ Returns structured JSON with all module scores, audit text, bylines, badges
 """
 
 import base64
+import io
 import json
 import os
 import re
 import time as _time
 import httpx
+from PIL import Image as PILImage
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
+
+# Maximum dimension sent to the API — keeps payload small and response fast
+API_MAX_PX = 800
 
 SYSTEM_BRIEF = """
 You are the Apex DDI Engine for The Lens League photography rating platform.
@@ -166,7 +171,7 @@ Return this exact JSON structure:
   "archetype": "<archetype name>",
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
-  "row_technical": "<2-3 sentence technical analysis — for Creative/technique images praise the technique>",
+  "row_technical": "<2-3 sentence technical analysis>",
   "row_geometric": "<2-3 sentence geometric harmony analysis>",
   "row_dm": "<2-3 sentence decisive moment analysis>",
   "row_wonder": "<2-3 sentence wonder factor analysis>",
@@ -239,10 +244,6 @@ def get_genre_context(genre):
 
 
 def get_calibration_notes(genre, limit=5):
-    """
-    Fetch admin correction notes for this genre.
-    These are injected as negative/positive examples to prevent recurring mistakes.
-    """
     try:
         from models import CalibrationNote
         from flask import current_app
@@ -308,18 +309,35 @@ def get_calibration_examples(genre, limit=3):
         return ''
 
 
-def encode_image(image_path):
-    with open(image_path, "rb") as f:
-        return base64.standard_b64encode(f.read()).decode("utf-8")
+def encode_image(image_path: str):
+    """
+    Load image, resize to API_MAX_PX on longest side, encode as base64.
+    Returns (base64_string, media_type).
+    Resizing reduces payload size and API latency significantly.
+    """
+    img = PILImage.open(image_path).convert('RGB')
+    w, h = img.size
+    if max(w, h) > API_MAX_PX:
+        if w >= h:
+            new_w = API_MAX_PX
+            new_h = int(h * API_MAX_PX / w)
+        else:
+            new_h = API_MAX_PX
+            new_w = int(w * API_MAX_PX / h)
+        img = img.resize((new_w, new_h), PILImage.LANCZOS)
+
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=85, optimize=True)
+    buf.seek(0)
+    encoded = base64.standard_b64encode(buf.read()).decode('utf-8')
+    return encoded, 'image/jpeg'
 
 
 def auto_score(image_path, genre, title, photographer, subject="", location=""):
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
 
-    img_data   = encode_image(image_path)
-    ext        = os.path.splitext(image_path)[1].lower()
-    media_type = "image/jpeg" if ext in [".jpg", ".jpeg"] else "image/png"
+    img_data, media_type = encode_image(image_path)
 
     calibration_block = get_calibration_examples(genre)
     correction_block  = get_calibration_notes(genre)
@@ -336,10 +354,10 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
     )
 
     payload = {
-        "model":      MODEL,
-        "max_tokens": 1500,
+        "model":       MODEL,
+        "max_tokens":  1500,
         "temperature": 0.2,
-        "system":     SYSTEM_BRIEF,
+        "system":      SYSTEM_BRIEF,
         "messages": [
             {
                 "role": "user",
@@ -358,8 +376,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
         ],
     }
 
-    # Retry up to 5 times on 529 overloaded errors
-    response = None
+    response  = None
     last_error = None
     for attempt in range(5):
         try:
@@ -378,7 +395,6 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
                 print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
                 _time.sleep(wait)
                 continue
-            # Any other status — break and handle below
             break
         except httpx.TimeoutException as e:
             last_error = e
