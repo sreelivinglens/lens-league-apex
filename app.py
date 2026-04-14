@@ -443,7 +443,7 @@ def upload():
                 img.wonder_score=float(result.get('wonder',0))
                 img.aq_score=float(result.get('aq',0))
                 img.score=float(result.get('score',0))
-                img.tier=result.get('tier','Practitioner')
+                img.tier=get_tier(float(result.get('score',0)))
                 img.archetype=result.get('archetype','')
                 img.soul_bonus=result.get('soul_bonus',False)
                 img.status='scored'
@@ -763,7 +763,7 @@ def bulk_upload():
                     img.wonder_score=float(scored.get('wonder',0))
                     img.aq_score=float(scored.get('aq',0))
                     img.score=float(scored.get('score',0))
-                    img.tier=scored.get('tier','Practitioner')
+                    img.tier=get_tier(float(scored.get('score',0)))
                     img.archetype=scored.get('archetype','')
                     img.soul_bonus=scored.get('soul_bonus',False)
                     img.status='scored'; img.scored_at=datetime.utcnow()
@@ -821,6 +821,39 @@ def share_image(image_id):
     audit = img.get_audit()
     return render_template('share.html', image=img, audit=audit)
 
+
+
+
+@app.route('/admin/fix-tiers', methods=['POST'])
+@login_required
+@admin_required
+def fix_tiers():
+    images = Image.query.filter(Image.score.isnot(None), Image.score > 0).all()
+    fixed = 0
+    for img in images:
+        correct_tier = get_tier(float(img.score))
+        if img.tier != correct_tier:
+            img.tier = correct_tier
+            fixed += 1
+    db.session.commit()
+    flash(f'Fixed {fixed} image(s) with incorrect tier assignments.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/fix-photographer-names', methods=['POST'])
+@login_required
+@admin_required
+def fix_photographer_names():
+    old_name = request.form.get('old_name', '').strip()
+    new_name = request.form.get('new_name', '').strip()
+    if not old_name or not new_name:
+        flash('Both old and new name required.', 'error')
+        return redirect(url_for('admin_dashboard'))
+    updated = Image.query.filter(Image.photographer_name == old_name).all()
+    for img in updated:
+        img.photographer_name = new_name
+    db.session.commit()
+    flash(f'Updated {len(updated)} image(s) from "{old_name}" to "{new_name}".', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 # ---------------------------------------------------------------------------
 # Leaderboard
@@ -1194,7 +1227,7 @@ def score_single_image():
                 img.wonder_score     = float(scored.get('wonder', 0))
                 img.aq_score         = float(scored.get('aq', 0))
                 img.score            = float(scored.get('score', 0))
-                img.tier             = scored.get('tier', 'Practitioner')
+                img.tier             = get_tier(float(scored.get('score', 0)))
                 img.archetype        = scored.get('archetype', '')
                 img.soul_bonus       = scored.get('soul_bonus', False)
                 img.status           = 'scored'
@@ -1322,7 +1355,7 @@ def admin_rescore_all():
             img.wonder_score     = float(scored.get('wonder', img.wonder_score or 0))
             img.aq_score         = float(scored.get('aq', img.aq_score or 0))
             img.score            = float(scored.get('score', img.score or 0))
-            img.tier             = scored.get('tier', img.tier)
+            img.tier             = get_tier(float(scored.get('score', img.score or 0)))
             img.archetype        = scored.get('archetype', img.archetype)
             db.session.commit()
             results['rescored'] += 1
