@@ -118,7 +118,7 @@
             <span class="badge badge-free">Free</span>
           {% endif %}
         </td>
-        <td>
+        <td colspan="2">
           <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=user.id) }}"
                 style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <input type="hidden" name="plan" value="uat">
@@ -126,8 +126,6 @@
               <option value="camera" {% if user.subscription_track == 'camera' %}selected{% endif %}>Camera</option>
               <option value="mobile" {% if user.subscription_track == 'mobile' %}selected{% endif %}>Mobile</option>
             </select>
-        </td>
-        <td>
             <button type="submit"
                     class="btn-action {% if user.is_subscribed %}revoke{% else %}activate{% endif %}">
               {% if user.is_subscribed %}Revoke{% else %}Activate UAT{% endif %}
