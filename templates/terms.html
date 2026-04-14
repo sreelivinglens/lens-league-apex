@@ -6,17 +6,18 @@
   .terms-wrap { max-width: 760px; margin: 0 auto; }
   .terms-section { margin-bottom: 40px; }
   .terms-section h2 {
-    font-size: 18px; font-weight: 700;
-    color: var(--text-primary); margin-bottom: 14px;
-    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
   }
   .terms-section h2 span {
     font-family: var(--font-mono); font-size: 12px;
     color: var(--gold); margin-right: 10px; font-weight: 600;
   }
+  .terms-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
+  }
   .terms-section p {
-    font-size: 15px; color: var(--text-secondary);
-    line-height: 1.8; margin-bottom: 12px;
+    font-size: 15px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px;
   }
   .terms-section ul, .terms-section ol {
     padding-left: 22px; margin-bottom: 12px;
@@ -32,6 +33,7 @@
     font-size: 14px; color: var(--text-secondary); line-height: 1.7;
   }
   .terms-highlight strong { color: var(--gold); }
+  .terms-highlight.ip { border-left-color: var(--gold); background: rgba(200,168,75,0.05); }
   .toc {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 24px; margin-bottom: 40px;
@@ -58,16 +60,18 @@
   <div class="terms-highlight">
     <strong>Please read these terms carefully.</strong> By registering for or using Lens League Apex,
     you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the platform.
+    Competition entry is additionally governed by the separate
+    <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Contest Rules &amp; Legal Framework</a>.
   </div>
 
-  <!-- Table of Contents -->
   <div class="toc">
     <div class="toc-title">Contents</div>
     <ol>
-      <li><a href="#scoring">Scoring Methodology</a></li>
+      <li><a href="#scoring">Scoring Methodology &amp; Proprietary Technology</a></li>
       <li><a href="#ai">AI Limitations Disclaimer</a></li>
-      <li><a href="#judging">Peer, Jury &amp; Judge Evaluation</a></li>
-      <li><a href="#competitions">Competitions &amp; Prizes</a></li>
+      <li><a href="#judging">Three-Tier Judging Framework</a></li>
+      <li><a href="#competitions">Competitions, POTY, Body of Work &amp; Prizes</a></li>
+      <li><a href="#peerrating">Peer Rating System &amp; Anti-Gaming Policy</a></li>
       <li><a href="#taxes">Taxes &amp; Financial Obligations</a></li>
       <li><a href="#copyright">Copyright &amp; Image Ownership</a></li>
       <li><a href="#authenticity">Image Authenticity &amp; AI-Generated Content</a></li>
@@ -81,164 +85,157 @@
     </ol>
   </div>
 
-  <!-- 1. Scoring -->
   <div class="terms-section" id="scoring">
-    <h2><span>01</span> Scoring Methodology</h2>
-    <p>Lens League Apex uses the <strong>Apex DDI Engine</strong>, a proprietary AI-powered scoring system that evaluates photographs across five modules: Degree of Difficulty (DoD), Visual Disruption, Decisive Moment (DM), Wonder Factor, and Affective Quotient (AQ).</p>
-    <p>Each module is weighted according to the genre submitted by the photographer. Final scores are calculated by a weighted formula and subject to Apex Layer rules including Soul Bonus, Humanity Check, Iconic Wall, and Plateau Penalty adjustments.</p>
-    <p>Scores are indicative, objective assessments of photographic merit based on the submitted genre and image content. The specific formula weights and scoring parameters are proprietary and not disclosed in full to protect intellectual property.</p>
+    <h2><span>01</span> Scoring Methodology &amp; Proprietary Technology</h2>
+    <p>Lens League Apex uses the <strong>Apex DDI Engine</strong>, a proprietary AI-powered scoring system evaluating photographs across five modules: Degree of Difficulty (DoD), Visual Disruption, Decisive Moment (DM), Wonder Factor, and Affective Quotient (AQ).</p>
+    <p>Each module is weighted according to the genre submitted. Final scores are calculated by a weighted formula subject to Apex Layer rules including Soul Bonus, Humanity Check, Iconic Wall, and Plateau Penalty adjustments. Specific formula weights are proprietary and not disclosed in full.</p>
     <div class="terms-highlight">
-      <strong>Important:</strong> Scores reflect the engine's assessment at the time of submission.
-      Calibration updates may affect how future images are scored but will not retroactively change existing scores.
+      <strong>Important:</strong> Scores reflect the engine's assessment at the time of submission. Calibration updates may affect future images but will not retroactively alter existing scores.
+    </div>
+    <div class="terms-highlight ip">
+      <strong>Proprietary Technology Notice:</strong> The Apex DDI Engine — including its module structure (DoD, Disruption, DM, Wonder, AQ), genre-calibrated weight tables, tier boundaries, archetype taxonomy, Soul Bonus criteria, Apex Byline framework, calibration logs, REF example library, and all associated scoring logic and prompts — constitutes original proprietary intellectual property exclusively owned by Lens League Apex. Reverse engineering, imitation, reproduction, or use of any element of this methodology as the basis of a competing scoring or evaluation system is strictly prohibited and may constitute a criminal offence under applicable IP law. Score outputs, module breakdowns, and calibration benchmarks may not be used to train, develop, or calibrate any competing photography rating product, commercial or otherwise. Lens League Apex reserves the right to pursue civil and criminal remedies against any violating party.
     </div>
   </div>
 
-  <!-- 2. AI Limitations -->
   <div class="terms-section" id="ai">
     <h2><span>02</span> AI Limitations Disclaimer</h2>
-    <p>The Apex DDI Engine is an AI-powered system and is subject to the inherent limitations of artificial intelligence, including but not limited to:</p>
-    <ul>
-      <li>Occasional misidentification of subject matter, genre, or technique</li>
-      <li>Scoring variations between identical or near-identical submissions due to model non-determinism</li>
-      <li>Potential bias in favour of or against certain photographic styles not well-represented in training data</li>
-      <li>Inability to account for contextual information not visible in the image itself</li>
-    </ul>
-    <p>Lens League Apex makes no warranty that AI scores are infallible, complete, or free from error. Scores should be treated as one data point in a photographer's development, not as a definitive or final judgment of artistic merit.</p>
+    <p>The Apex DDI Engine is subject to the inherent limitations of artificial intelligence, including occasional misidentification of subject matter or technique, scoring variations due to model non-determinism, potential bias against styles underrepresented in training data, and inability to account for contextual information not visible in the image. Scores should be treated as one data point in a photographer's development, not a definitive judgment of artistic merit.</p>
   </div>
 
-  <!-- 3. Judging -->
   <div class="terms-section" id="judging">
-    <h2><span>03</span> Peer, Jury &amp; Judge Evaluation</h2>
-    <p>Certain images — particularly those in the Creative genre scoring 7.0 or above, or those flagged by the engine for exceptional technical complexity — are automatically referred for <strong>human judge review</strong>.</p>
-    <p>Judge-referred images will be evaluated by qualified photography judges appointed by Lens League Apex. Judge decisions are final and binding on competition results. Human judge scores may override AI scores for competition ranking purposes.</p>
-    <p>Peer rating and jury evaluation features may be introduced in future platform updates. The introduction of peer or jury rating will be communicated to members in advance and governed by updated terms.</p>
-  </div>
-
-  <!-- 4. Competitions -->
-  <div class="terms-section" id="competitions">
-    <h2><span>04</span> Competitions &amp; Prizes</h2>
-    <p>Lens League Apex runs monthly and annual competitions across genres. Competition structure, entry criteria, and prize amounts are published on the platform and subject to change with reasonable notice.</p>
-    <ul>
-      <li><strong>Monthly competitions</strong> are determined by the highest LL-Score within each genre for that calendar month.</li>
-      <li><strong>Annual Photographer of the Year</strong> is determined by cumulative performance across monthly competitions within the calendar year.</li>
-      <li>Separate competition tracks exist for <strong>Camera users</strong> and <strong>Mobile photographers</strong>.</li>
-      <li>Prize eligibility requires a verified account in good standing with no active policy violations.</li>
-      <li>Lens League Apex reserves the right to disqualify entries, withhold prizes, or void competition results in cases of suspected fraud, duplicate submissions, policy violations, or AI-generated content.</li>
-      <li>Prize decisions made by Lens League Apex are final.</li>
-    </ul>
-  </div>
-
-  <!-- 5. Taxes -->
-  <div class="terms-section" id="taxes">
-    <h2><span>05</span> Taxes &amp; Financial Obligations</h2>
-    <p><strong>India:</strong> Prize winnings may be subject to Tax Deducted at Source (TDS) under Section 194B of the Income Tax Act, 1961, and Goods and Services Tax (GST) where applicable. Lens League Apex will deduct applicable TDS before disbursing prizes to Indian residents. Winners are responsible for declaring prize income in their personal tax returns.</p>
-    <p><strong>International:</strong> Winners outside India are solely responsible for complying with their local tax laws regarding prize income. Lens League Apex will not withhold taxes for international winners but may be required to report prize disbursements to relevant authorities.</p>
-    <p>By accepting a prize, you acknowledge full responsibility for any tax obligations arising from the prize in your jurisdiction.</p>
-  </div>
-
-  <!-- 6. Copyright -->
-  <div class="terms-section" id="copyright">
-    <h2><span>06</span> Copyright &amp; Image Ownership</h2>
-    <p>You retain full copyright ownership of all images you upload to Lens League Apex. By uploading an image, you grant Lens League Apex a <strong>non-exclusive, royalty-free, worldwide licence</strong> to:</p>
-    <ul>
-      <li>Display your images on the platform, including public share pages, leaderboards, and promotional materials</li>
-      <li>Generate and display AI scoring analysis, rating cards, and evaluations of your images</li>
-      <li>Use anonymised scoring data for platform calibration and improvement</li>
-    </ul>
-    <p>This licence does not transfer ownership and does not permit Lens League Apex to sell or sublicence your images to third parties without your explicit consent.</p>
-    <p>You may request removal of your images at any time by contacting support. Removal requests will be processed within 30 days.</p>
-    <p>Rating cards generated by the Apex DDI Engine may be freely shared on social media, provided the Lens League Apex branding remains intact and unaltered.</p>
-    <p>Images uploaded by platform administrators for calibration and seeding purposes are credited to their original photographers by name and will be automatically transferred to the photographer's account upon registration on the platform. Photographers may request removal of seeded images at any time by contacting <strong>admin@lenslague.com</strong>.</p>
+    <h2><span>03</span> Three-Tier Judging Framework</h2>
+    <p>All competitions operate under a three-tier judging framework combining AI objectivity, human perception, and legal defensibility.</p>
+    <h3>Tier 1 — Apex DDI Engine</h3>
+    <p>Every submitted image is automatically evaluated. This produces an objective DDI score and tier classification, establishing initial leaderboard position instantly on submission.</p>
+    <h3>Tier 2 — Blind Peer-to-Peer Rating</h3>
+    <p>Applicable to Monthly Contests and POTY only. Subscribers rate each other's images under fully blind conditions — rater identity, photographer identity, and DDI scores are all concealed. Each image receives a minimum of five independent peer ratings per monthly cycle. Participation is mandatory for competition progression beyond Tier 1. Subscribers have a monthly rating obligation of 20 images, fulfilled through the Rating Credits system. Tier 2 does not apply to Body of Work.</p>
+    <h3>Tier 3 — Jury</h3>
+    <p>For Monthly Contests and POTY: triggered automatically when a peer rating diverges from the DDI score by more than 1.5 points, or when a formal dispute is raised. For Body of Work: mandatory for all qualifying submissions, conducted by Jury Legends exclusively. Jury composition rotates each cycle and is never disclosed. Jury decisions at Tier 3 are final and binding. A photographer may not dispute a Tier 3 decision. Raising a dispute costs one Rating Credit; the same image may not be disputed twice.</p>
     <div class="terms-highlight">
-      <strong>Copyright infringement:</strong> Uploading images that belong to another photographer constitutes copyright infringement under the Copyright Act of India, 1957, and applicable international law. Violations will result in immediate account suspension and may result in legal action.
+      <strong>Score Visibility Policy:</strong> Numerical DDI scores are visible only to the individual photographer on their personal dashboard. All public-facing pages display tier classification only (Apprentice, Practitioner, Master, Grandmaster, Legend). This protects photographer privacy and the integrity of the scoring system.
     </div>
   </div>
 
-  <!-- 7. AI-Generated Content -->
+  <div class="terms-section" id="competitions">
+    <h2><span>04</span> Competitions, POTY, Body of Work &amp; Prizes</h2>
+
+    <h3>Monthly Competitions</h3>
+    <ul>
+      <li>Determined by DDI (Tier 1) → Blind Peer Rating (Tier 2) → Jury override (Tier 3, where triggered).</li>
+      <li>Separate Camera and Mobile tracks. Genre-based within each track.</li>
+      <li>All scored images uploaded within the calendar month are automatically entered — no separate entry required.</li>
+      <li>Leaderboards display tier classification only. Monthly reset on the first of each calendar month.</li>
+    </ul>
+
+    <h3>Photographer of the Year (POTY)</h3>
+    <ul>
+      <li>Annual, per genre, across Camera and Mobile tracks independently.</li>
+      <li>Eligibility: minimum <strong>24 qualifying images</strong> in that genre during the subscription year (6 months × 4 images).</li>
+      <li>POTY score: <strong>average of the photographer's top 6 DDI scores</strong> in that genre across all qualifying images for the year.</li>
+      <li>A dynamic percentile cutoff is recalculated monthly as images accumulate, until the 12th month submission deadline closes.</li>
+      <li>Subscribers from Month 1 may have up to 48 images evaluated; Month 4, up to 32; Month 7, up to 24 (minimum). This proportional difference is a legitimate function of tenure, balanced by the top-6 methodology rewarding quality over volume.</li>
+      <li>Additional purchased images are included in POTY evaluation on equal terms.</li>
+      <li>Judged: DDI → Blind Peer Rating → Jury (triggered).</li>
+    </ul>
+
+    <h3>Body of Work (BOW)</h3>
+    <ul>
+      <li>Annual, cross-genre. Open to all active subscribers regardless of tenure.</li>
+      <li>Submission: <strong>6 to 12 images</strong> curated by the photographer as a unified thematic series. One BOW submission per photographer per year.</li>
+      <li>Submissions close at end of the 11th month. May be submitted at any point before this deadline.</li>
+      <li>Judged: DDI Engine (individual image scores) + mandatory Jury Legends evaluation of the series as a whole. Peer-to-peer rating does not apply to BOW.</li>
+      <li>Jury Legends assess thematic coherence, narrative arc, creative vision, and technical consistency. Individual DDI scores inform but do not determine the BOW result.</li>
+      <li>Jury Legends are: (a) platform members who have achieved Legend tier and received Lens League Apex approval, and/or (b) externally appointed judges. External judges hold casting vote in the event of disagreement or dispute.</li>
+    </ul>
+
+    <h3>General</h3>
+    <ul>
+      <li>Prize eligibility requires a verified account in good standing with no active policy violations.</li>
+      <li>Lens League Apex reserves the right to disqualify entries, withhold prizes, or void results in cases of fraud, duplicates, policy violations, or AI-generated content.</li>
+      <li>All prize decisions are final. Full rules, prize structures, and legal immunity clauses are in the separate <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Contest Rules &amp; Legal Framework</a>.</li>
+    </ul>
+  </div>
+
+  <div class="terms-section" id="peerrating">
+    <h2><span>05</span> Peer Rating System &amp; Anti-Gaming Policy</h2>
+    <p>Lens League Apex operates a zero-tolerance policy against manipulation of the peer rating system. The following constitute violations subject to immediate account suspension:</p>
+    <h3>Prohibited Conduct</h3>
+    <ul>
+      <li><strong>Coordinated voting rings:</strong> Organising with other subscribers to exchange favourable ratings. The system tracks rating correlations and flags statistically improbable relationships for audit. Correlated raters are never assigned the same image pool.</li>
+      <li><strong>Targeted sabotage:</strong> Systematically rating a specific photographer's work below norms. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger audit.</li>
+      <li><strong>Low-effort rating:</strong> Submitting ratings in under 15 seconds per image. A minimum time-on-image threshold is enforced; sub-threshold ratings are invalid.</li>
+      <li><strong>Multiple accounts:</strong> Creating secondary accounts to inflate ratings. New accounts are ineligible for peer rating for the first 30 days and until at least 3 scored images have been submitted.</li>
+      <li><strong>Score inference:</strong> Systematically correlating ratings with competition outcomes to reverse-engineer DDI parameters. API rate limiting and score obfuscation are in place to detect and prevent this.</li>
+      <li><strong>Jury gaming:</strong> Filing repeated disputes to force jury review. Each dispute costs one Rating Credit; the same image may not be disputed twice.</li>
+    </ul>
+    <h3>Rating Credits &amp; Trusted Rater Status</h3>
+    <p>Every image rated earns one Rating Credit, required to unlock peer evaluation of your own submissions. Subscribers who do not meet their monthly obligation of 20 ratings will have their images held in the peer queue until the obligation is met.</p>
+    <p>Subscribers whose ratings demonstrate consistent alignment with peer consensus over time earn <strong>Trusted Rater</strong> status, visible on their profile. Trusted Raters with Legend tier are eligible to apply for Jury Legend status for BOW evaluation, subject to Lens League Apex approval.</p>
+  </div>
+
+  <div class="terms-section" id="taxes">
+    <h2><span>06</span> Taxes &amp; Financial Obligations</h2>
+    <p><strong>India:</strong> Prize winnings may be subject to TDS under Section 194B of the Income Tax Act, 1961, and GST where applicable. Lens League Apex will deduct applicable TDS before disbursing prizes to Indian residents. Winners are responsible for declaring prize income in personal tax returns.</p>
+    <p><strong>International:</strong> Winners outside India are solely responsible for complying with local tax laws. Lens League Apex will not withhold taxes for international winners but may be required to report disbursements to relevant authorities. By accepting a prize, you acknowledge full responsibility for any tax obligations in your jurisdiction.</p>
+  </div>
+
+  <div class="terms-section" id="copyright">
+    <h2><span>07</span> Copyright &amp; Image Ownership</h2>
+    <p>You retain full copyright ownership of all images you upload. By uploading, you grant Lens League Apex a non-exclusive, royalty-free, worldwide licence to display your images on the platform including public share pages, leaderboards, and promotional materials; generate and display AI scoring analysis and rating cards; and use anonymised scoring data for platform calibration. This licence does not transfer ownership or permit sale to third parties without your explicit consent.</p>
+    <p>You may request image removal at any time. Removal requests are processed within 30 days. Rating cards may be freely shared on social media provided Lens League Apex branding remains intact.</p>
+    <div class="terms-highlight">
+      <strong>Copyright infringement:</strong> Uploading images belonging to another photographer constitutes infringement under the Copyright Act of India, 1957, and applicable international law. Violations result in immediate account suspension and may result in legal action.
+    </div>
+  </div>
+
   <div class="terms-section" id="authenticity">
-    <h2><span>07</span> Image Authenticity &amp; AI-Generated Content</h2>
-    <p>Lens League Apex is a platform for <strong>genuine photography</strong> — images captured by a camera or mobile device by the submitting photographer. The following are strictly prohibited:</p>
-    <ul>
-      <li>AI-generated images (Midjourney, DALL-E, Stable Diffusion, or any AI image generator)</li>
-      <li>Images primarily created through generative AI compositing</li>
-      <li>Heavily manipulated images presented as unmanipulated photographs</li>
-      <li>Images taken by another photographer submitted under your account</li>
-    </ul>
-    <p>The engine employs perceptual hash duplicate detection and EXIF metadata analysis to identify suspicious submissions. Images flagged as AI-generated or duplicate may be removed and the account suspended without notice.</p>
-    <p>Genuine photographic manipulation including exposure adjustment, colour grading, cropping, focus stacking, and HDR merging of frames taken by the submitting photographer is permitted.</p>
+    <h2><span>08</span> Image Authenticity &amp; AI-Generated Content</h2>
+    <p>Lens League Apex is a platform for genuine photography — images captured by a camera or mobile device by the submitting photographer. Strictly prohibited: AI-generated images (Midjourney, DALL-E, Stable Diffusion, or any generator), images primarily created through generative AI compositing, heavily manipulated images presented as unmanipulated, and images taken by another photographer. Perceptual hash detection and EXIF analysis are used to identify violations. Genuine manipulation — exposure, colour grading, cropping, focus stacking, HDR merging of your own frames — is permitted.</p>
   </div>
 
-  <!-- 8. EXIF -->
   <div class="terms-section" id="exif">
-    <h2><span>08</span> EXIF Metadata &amp; Camera Verification</h2>
-    <p>Lens League Apex extracts and analyses EXIF metadata from uploaded images to verify camera authenticity. Images with intact EXIF data from a recognised camera manufacturer are marked as <strong>Verified</strong>.</p>
-    <p>Absence of EXIF metadata does not automatically disqualify an image but will result in an <strong>Unverified</strong> status. Suspicious or inconsistent metadata patterns may trigger manual review.</p>
-    <p>For best results and highest scores, upload original JPEG files directly from your camera without stripping metadata. Camera brand and model do not influence scoring — all manufacturers are treated equally.</p>
+    <h2><span>09</span> EXIF Metadata &amp; Camera Verification</h2>
+    <p>EXIF metadata is extracted and analysed to verify camera authenticity. Images with intact EXIF from a recognised manufacturer are marked <strong>Verified</strong>. Absence of EXIF results in <strong>Unverified</strong> status. Suspicious metadata patterns may trigger manual review. Camera brand does not influence scoring — all manufacturers are treated equally.</p>
   </div>
 
-  <!-- 9. Conduct -->
   <div class="terms-section" id="conduct">
-    <h2><span>09</span> Community Standards &amp; Conduct</h2>
-    <p>Images or content containing the following are strictly prohibited and will be removed immediately:</p>
-    <ul>
-      <li>Nudity, sexually explicit content, or content sexualising minors</li>
-      <li>Graphic violence, gore, or content glorifying harm</li>
-      <li>Hate speech, discrimination, or content targeting individuals or groups</li>
-      <li>Illegal content of any kind</li>
-    </ul>
-    <p>Repeat violations will result in permanent account bans. Serious violations may be reported to relevant authorities.</p>
+    <h2><span>10</span> Community Standards &amp; Conduct</h2>
+    <p>Strictly prohibited and immediately removed: nudity or sexually explicit content, content sexualising minors, graphic violence or gore, hate speech or discriminatory content, and illegal content of any kind. Repeat violations result in permanent bans. Serious violations may be reported to relevant authorities.</p>
   </div>
 
-  <!-- 10. Account Security -->
   <div class="terms-section" id="account">
-    <h2><span>10</span> Account Security &amp; Responsibility</h2>
-    <p>You are solely responsible for maintaining the security of your account credentials. Password changes will log you out of all active sessions — this is by design for your security.</p>
-    <p>You are responsible for all activity conducted under your account. If you suspect unauthorised access, change your password immediately and contact support.</p>
+    <h2><span>11</span> Account Security &amp; Responsibility</h2>
+    <p>You are solely responsible for maintaining the security of your account credentials. Password changes log you out of all active sessions by design. You are responsible for all activity conducted under your account. If you suspect unauthorised access, change your password immediately and contact support.</p>
   </div>
 
-  <!-- 11. Force Majeure -->
   <div class="terms-section" id="forcemajeure">
-    <h2><span>11</span> Force Majeure</h2>
-    <p>Lens League Apex shall not be liable for any delay, disruption, or failure in platform services caused by circumstances beyond our reasonable control, including but not limited to:</p>
-    <ul>
-      <li>Server outages, internet infrastructure failures, or cloud provider disruptions</li>
-      <li>Natural disasters, pandemics, or acts of God</li>
-      <li>Government actions, regulations, or legal orders</li>
-      <li>Cyberattacks, hacking, or denial-of-service events</li>
-      <li>Competition disruptions caused by platform unavailability during force majeure events</li>
-    </ul>
-    <p>In such events, Lens League Apex will make reasonable efforts to resume services and communicate updates to members as soon as practicable.</p>
+    <h2><span>12</span> Force Majeure</h2>
+    <p>Lens League Apex shall not be liable for delays or failures caused by circumstances beyond our reasonable control, including server outages, cloud provider disruptions, natural disasters, pandemics, government actions, or cyberattacks. We will make reasonable efforts to resume services and communicate updates as soon as practicable.</p>
   </div>
 
-  <!-- 12. Complaints -->
   <div class="terms-section" id="complaints">
-    <h2><span>12</span> Legal Counsel &amp; Complaints</h2>
-    <p>For complaints regarding scoring, competition results, copyright claims, or account actions, please contact us at <strong>admin@lenslague.com</strong>.</p>
-    <p>We will acknowledge complaints within 5 business days and aim to resolve them within 30 days. For unresolved disputes, parties may seek independent mediation or legal remedy in accordance with the laws of India.</p>
-    <p>These Terms and Conditions are governed by and construed in accordance with the laws of India. Any disputes arising under these terms shall be subject to the exclusive jurisdiction of the courts of India.</p>
+    <h2><span>13</span> Legal Counsel &amp; Complaints</h2>
+    <p>For complaints regarding scoring, competition results, copyright claims, or account actions, contact <strong>admin@lenslague.com</strong>. We acknowledge complaints within 5 business days and aim to resolve within 30 days. These Terms are governed by the laws of India. Disputes are subject to the exclusive jurisdiction of the courts of India.</p>
   </div>
 
-  <!-- 13. Advice Disclaimer -->
   <div class="terms-section" id="advice">
-    <h2><span>13</span> Advice Disclaimer</h2>
-    <p>Apex DDI scores, Apex Bylines, and improvement recommendations are provided for educational and developmental purposes only. They do not constitute professional photography advice, artistic direction, or any form of warranty regarding the commercial value or artistic significance of your work.</p>
-    <p>Scores and recommendations reflect the AI engine's assessment at the time of submission and should not be treated as definitive judgments of photographic merit. Photography is inherently subjective and the engine's evaluation is one perspective among many.</p>
-    <p>Lens League Apex is not responsible for decisions made based on platform scores or recommendations.</p>
+    <h2><span>14</span> Advice Disclaimer</h2>
+    <p>DDI scores, Apex Bylines, and improvement recommendations are for educational purposes only. They do not constitute professional photography advice or warranty of commercial value. Lens League Apex is not responsible for decisions made based on platform scores.</p>
   </div>
 
-  <!-- 14. Changes -->
   <div class="terms-section" id="changes">
-    <h2><span>14</span> Changes to Terms</h2>
-    <p>Lens League Apex reserves the right to update these Terms and Conditions at any time. Significant changes will be communicated to registered members via the platform. Continued use of the platform following notification of changes constitutes acceptance of the revised terms.</p>
-    <p>We encourage you to review these terms periodically to stay informed of your rights and obligations.</p>
+    <h2><span>15</span> Changes to Terms</h2>
+    <p>Lens League Apex reserves the right to update these Terms at any time. Significant changes will be communicated via the platform. Continued use following notification constitutes acceptance of the revised terms.</p>
   </div>
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
     <p style="font-size:15px; color:var(--text-secondary); margin-bottom:16px;">
-      Questions about these terms? Contact us at
-      <a href="mailto:admin@lenslague.com" style="color:var(--gold); text-decoration:none;">admin@lenslague.com</a>
+      Questions? Contact <a href="mailto:admin@lenslague.com" style="color:var(--gold); text-decoration:none;">admin@lenslague.com</a>
     </p>
-    <a href="{{ url_for('index') }}" class="btn btn-solid" style="padding:12px 32px;">← Back to Home</a>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('contest_rules') }}" class="btn btn-solid">Contest Rules &amp; Legal Framework →</a>
+      <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+    </div>
   </div>
 
 </div>

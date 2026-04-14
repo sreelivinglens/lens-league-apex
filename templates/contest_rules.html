@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% block title %}Contest Rules & Legal Framework — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rules-wrap { max-width: 760px; margin: 0 auto; }
+  .rules-section { margin-bottom: 44px; }
+  .rules-section h2 {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .rules-section h2 span {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--gold); margin-right: 10px; font-weight: 600;
+  }
+  .rules-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
+  }
+  .rules-section p {
+    font-size: 15px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px;
+  }
+  .rules-section ul, .rules-section ol {
+    padding-left: 22px; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .rules-section li { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+  .rules-section strong { color: var(--text-primary); }
+  .rules-highlight {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 16px 20px; margin: 16px 0;
+    font-size: 14px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .rules-highlight strong { color: var(--gold); }
+  .rules-highlight.legal { border-left-color: var(--red); background: rgba(224,85,85,0.05); }
+  .rules-highlight.final { border-left-color: var(--gold); background: rgba(200,168,75,0.05); }
+  .toc {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 24px; margin-bottom: 40px;
+  }
+  .toc-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;
+  }
+  .toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .toc li { font-size: 14px; }
+  .toc a { color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+  .toc a:hover { color: var(--gold); }
+  .comp-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .comp-table th {
+    background: var(--surface-3); padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase;
+    text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .comp-table td {
+    padding: 10px 14px; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle); vertical-align: top;
+  }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table td:first-child { color: var(--gold); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+  .doc-meta {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 32px;
+    display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .doc-meta-item { font-family: var(--font-mono); font-size: 11px; }
+  .doc-meta-label { color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .doc-meta-value { color: var(--text-primary); font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rules-wrap">
+
+  <div class="page-header">
+    <h1>Contest Rules &amp; Legal Framework</h1>
+    <p>Governing document for all competitions on Lens League Apex</p>
+  </div>
+
+  <div class="doc-meta">
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Version</div>
+      <div class="doc-meta-value">1.0 — April 2026</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Jurisdiction</div>
+      <div class="doc-meta-value">Republic of India</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Operator</div>
+      <div class="doc-meta-value">Lens League Apex</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Contact</div>
+      <div class="doc-meta-value">admin@lenslague.com</div>
+    </div>
+  </div>
+
+  <div class="rules-highlight legal">
+    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by Lens League Apex. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), and Body of Work (BOW) — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#overview">Competition Overview</a></li>
+      <li><a href="#eligibility">Eligibility &amp; Entry</a></li>
+      <li><a href="#judging">Judging Process &amp; Finality</a></li>
+      <li><a href="#monthly">Monthly Contest Rules</a></li>
+      <li><a href="#poty">POTY Rules</a></li>
+      <li><a href="#bow">Body of Work Rules</a></li>
+      <li><a href="#prizes">Prize Structure &amp; Disbursement</a></li>
+      <li><a href="#disqualification">Disqualification &amp; Integrity</a></li>
+      <li><a href="#immunity">Legal Immunity &amp; Liability</a></li>
+      <li><a href="#disputes">Disputes &amp; Appeals</a></li>
+      <li><a href="#ip">Intellectual Property</a></li>
+      <li><a href="#jurisdiction">Governing Law &amp; Jurisdiction</a></li>
+      <li><a href="#amendments">Amendments</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Overview -->
+  <div class="rules-section" id="overview">
+    <h2><span>01</span> Competition Overview</h2>
+    <p>Lens League Apex operates three distinct competition formats:</p>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Competition</th>
+          <th>Frequency</th>
+          <th>Scope</th>
+          <th>Judging</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monthly Contest</td>
+          <td>Every calendar month</td>
+          <td>Per genre, Camera &amp; Mobile separate</td>
+          <td>DDI → Peer → Jury (triggered)</td>
+        </tr>
+        <tr>
+          <td>POTY</td>
+          <td>Annual</td>
+          <td>Per genre, Camera &amp; Mobile separate</td>
+          <td>DDI → Peer → Jury (triggered)</td>
+        </tr>
+        <tr>
+          <td>Body of Work</td>
+          <td>Annual</td>
+          <td>Cross-genre, single category</td>
+          <td>DDI + Jury Legends (mandatory)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>All competitions are operated on the principle of objective, bias-free evaluation. The Apex DDI Engine provides the first layer of scoring. Human evaluation layers are structured to prevent bias, maintain independence, and ensure legal defensibility of all prize decisions.</p>
+  </div>
+
+  <!-- 2. Eligibility -->
+  <div class="rules-section" id="eligibility">
+    <h2><span>02</span> Eligibility &amp; Entry</h2>
+    <h3>General Eligibility</h3>
+    <ul>
+      <li>Entry is open to all registered Lens League Apex subscribers in good standing.</li>
+      <li>Accounts with active policy violations, pending fraud investigations, or suspended status are ineligible.</li>
+      <li>Employees, directors, and immediate family members of Lens League Apex are ineligible for prize awards, though they may use the platform.</li>
+      <li>Participants must be aged 18 or over, or have verifiable parental/guardian consent where applicable under local law.</li>
+    </ul>
+    <h3>Automatic Entry</h3>
+    <p>For Monthly Contests: every image scored by the Apex DDI Engine within the calendar month is automatically entered into the contest for its declared genre and track. No separate entry action is required.</p>
+    <p>For POTY: all images meeting the minimum qualification threshold (24 images in the genre during the subscription year) are automatically considered. No separate entry action is required.</p>
+    <p>For Body of Work: entry requires deliberate submission of a curated series of 6–12 images by the photographer. BOW entry is not automatic.</p>
+    <h3>Track Declaration</h3>
+    <p>Photographers must declare their track (Camera or Mobile) at subscription. Track determines which competition pool images enter. Images submitted under the incorrect track are ineligible for competition in that cycle. Track changes take effect from the following subscription month.</p>
+  </div>
+
+  <!-- 3. Judging -->
+  <div class="rules-section" id="judging">
+    <h2><span>03</span> Judging Process &amp; Finality</h2>
+    <h3>Three-Tier Structure</h3>
+    <p>All judging proceeds through up to three tiers. No tier may be bypassed except as specified for BOW (Tier 2 does not apply). A higher tier result supersedes lower tier results for competition ranking purposes.</p>
+    <h3>Tier 1 — Apex DDI Engine</h3>
+    <p>Automated, objective, runs on every image at submission. Produces a numerical DDI score and tier classification. Tier 1 results are used for initial leaderboard ranking and POTY qualification calculations.</p>
+    <h3>Tier 2 — Blind Peer Rating (Monthly &amp; POTY only)</h3>
+    <p>Each image is assigned to a minimum of five independent peer raters. Assignment is random within stratified tier bands. Raters do not know the photographer's identity, the DDI score, or the identity of other raters for the same image. A minimum of 15 seconds per image is required for a rating to be valid. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger an automatic audit. Peer ratings produce a consensus score used to validate or adjust the Tier 1 ranking.</p>
+    <h3>Tier 3 — Jury</h3>
+    <p>For Monthly and POTY: jury review is triggered when (a) peer rating diverges from DDI score by more than 1.5 points, or (b) a valid formal dispute is raised by the photographer. Jury members are selected from the approved Jury pool, rotated each cycle. Jury composition is never disclosed to photographers or other participants.</p>
+    <p>For Body of Work: jury review is mandatory. All qualifying BOW submissions are evaluated by a panel of Jury Legends — comprising approved platform Legend-tier members and externally appointed judges. External judges hold casting vote. Jury Legends evaluate the submission as a whole series, assessing thematic coherence, narrative arc, sustained creative vision, and technical consistency across images.</p>
+    <div class="rules-highlight final">
+      <strong>Finality of Decisions:</strong> Tier 3 jury decisions are final, conclusive, and binding on all parties. No further internal appeal is available following a Tier 3 decision. Lens League Apex's determination of all competition matters — including eligibility, scoring, disqualification, and prize awards — is final. Participants who have exhausted the dispute process (see Section 10) and remain dissatisfied may seek independent legal remedy only as provided under Section 12.
+    </div>
+    <h3>Jury Legend Qualification</h3>
+    <p>Jury Legends must satisfy one or both of the following criteria: (a) be a platform member who has achieved and maintained Legend tier (DDI score 9.7 or above) for a minimum of 6 consecutive months and has received written approval from Lens League Apex; or (b) be an externally appointed judge selected and contracted directly by Lens League Apex. Jury Legend status may be withdrawn at any time at the discretion of Lens League Apex.</p>
+  </div>
+
+  <!-- 4. Monthly -->
+  <div class="rules-section" id="monthly">
+    <h2><span>04</span> Monthly Contest Rules</h2>
+    <ul>
+      <li>Contest period: the full calendar month from 00:00 on the 1st to 23:59 on the last day (IST).</li>
+      <li>Results are finalised within 10 business days of month close, following completion of Tier 2 peer rating.</li>
+      <li>Winner is the photographer with the highest validated score (post Tier 2, or post Tier 3 where triggered) in each genre and track.</li>
+      <li>In the event of a tied score, the image submitted earlier in the month takes precedence.</li>
+      <li>A photographer may win multiple genre categories in the same month.</li>
+      <li>Leaderboards display tier classification only throughout the contest month. Final results announce winner by username and tier.</li>
+      <li>Prizes, where applicable, are disbursed within 30 days of results finalisation, subject to winner verification and tax compliance.</li>
+    </ul>
+  </div>
+
+  <!-- 5. POTY -->
+  <div class="rules-section" id="poty">
+    <h2><span>05</span> Photographer of the Year (POTY) Rules</h2>
+    <ul>
+      <li>POTY operates per genre and per track (Camera and Mobile independently) over the platform subscription year.</li>
+      <li>Minimum eligibility: 24 qualifying images evaluated in the specific genre during the subscription year.</li>
+      <li>POTY score: arithmetic mean of the photographer's highest 6 DDI scores in that genre across all qualifying images for the year.</li>
+      <li>A photographer subscribing from Month 1 may contribute up to 48 images; Month 4, up to 32; Month 7, up to 24. The top-6 methodology ensures quality determines outcome, not volume alone.</li>
+      <li>A dynamic percentile threshold is calculated monthly and updated as new qualifying images are submitted. The threshold determines which images enter the active POTY pool. The threshold is recalculated until the final submission deadline of the 12th month.</li>
+      <li>Additional images purchased beyond the monthly subscription allowance are included in POTY evaluation on equal terms at the rates published on the pricing page.</li>
+      <li>Final POTY results are announced within 30 days of the 12th month submission deadline.</li>
+      <li>In the event of a tied POTY score, the photographer with the higher individual peak score (best single image) in that genre wins. If still tied, the photographer with the longer subscription tenure wins.</li>
+    </ul>
+  </div>
+
+  <!-- 6. BOW -->
+  <div class="rules-section" id="bow">
+    <h2><span>06</span> Body of Work (BOW) Rules</h2>
+    <ul>
+      <li>BOW is a single annual competition. One entry per photographer per year.</li>
+      <li>Open to all active subscribers regardless of tenure or tier. No minimum subscription period applies.</li>
+      <li>A BOW submission consists of 6 to 12 images submitted as a unified thematic series. Submissions outside this range are ineligible.</li>
+      <li>Images in a BOW submission must have been previously scored by the Apex DDI Engine on the platform under the submitting photographer's account.</li>
+      <li>BOW is cross-genre. Images from different genres may be combined within a single submission if they form a coherent thematic series.</li>
+      <li>BOW submissions close at 23:59 IST on the last day of the 11th month of the platform year. Early submission is permitted and encouraged. Submissions may not be modified after the deadline.</li>
+      <li>BOW judging is conducted exclusively by Jury Legends. Each submission is evaluated by a minimum panel of three Jury Legends. The panel includes at least one externally appointed judge.</li>
+      <li>Evaluation criteria: thematic coherence, narrative arc, visual language consistency, sustained creative vision, individual image quality (informed by DDI scores), and overall impact of the series as a unified work.</li>
+      <li>Individual DDI scores are provided to Jury Legends as reference data. They inform but do not determine the BOW result.</li>
+      <li>BOW results are announced within 45 days of the submission deadline.</li>
+      <li>A photographer may enter both BOW and POTY in the same year. These are independent competitions.</li>
+    </ul>
+  </div>
+
+  <!-- 7. Prizes -->
+  <div class="rules-section" id="prizes">
+    <h2><span>07</span> Prize Structure &amp; Disbursement</h2>
+    <p>Prize amounts for each competition category are published on the platform and may be updated with reasonable notice. The following conditions apply to all prize disbursements:</p>
+    <ul>
+      <li>Winners must complete identity verification before prizes are disbursed. Failure to complete verification within 30 days of notification results in forfeiture of the prize.</li>
+      <li>Prizes are disbursed in Indian Rupees (INR) to Indian residents. International winners receive disbursement in the currency and method determined by Lens League Apex.</li>
+      <li>Applicable TDS under Section 194B of the Income Tax Act, 1961, will be deducted prior to disbursement for Indian residents. A TDS certificate will be provided.</li>
+      <li>Winners are solely responsible for all tax obligations arising from prize income in their jurisdiction.</li>
+      <li>Prizes are non-transferable and may not be exchanged for cash equivalents unless stated otherwise.</li>
+      <li>Lens League Apex reserves the right to substitute a prize of equivalent or greater value if the specified prize becomes unavailable.</li>
+      <li>A photographer who wins a prize and is subsequently found to have violated these rules or the Terms &amp; Conditions must return the prize or its cash equivalent. Lens League Apex reserves the right to pursue legal recovery.</li>
+    </ul>
+  </div>
+
+  <!-- 8. Disqualification -->
+  <div class="rules-section" id="disqualification">
+    <h2><span>08</span> Disqualification &amp; Integrity</h2>
+    <p>Lens League Apex reserves the right to disqualify any entry, void any result, and withhold or recover any prize in the following circumstances:</p>
+    <ul>
+      <li>Submission of AI-generated images or images primarily created through generative AI tools</li>
+      <li>Submission of images belonging to another photographer</li>
+      <li>Duplicate submission of the same or substantially similar image across multiple entries or months</li>
+      <li>Manipulation of the peer rating system including coordinated voting rings, targeted sabotage, or low-effort rating</li>
+      <li>Multiple account creation for competition advantage</li>
+      <li>Tampering with EXIF metadata or other authenticity markers</li>
+      <li>Any conduct that undermines the integrity of the competition or the platform</li>
+      <li>Violation of these rules or the Terms &amp; Conditions at any point, including after a prize has been awarded</li>
+    </ul>
+    <p>Disqualification decisions are made at the sole discretion of Lens League Apex and are not subject to internal appeal beyond the process described in Section 10.</p>
+  </div>
+
+  <!-- 9. Legal Immunity -->
+  <div class="rules-section" id="immunity">
+    <h2><span>09</span> Legal Immunity &amp; Liability</h2>
+    <div class="rules-highlight legal">
+      <strong>Important — Please Read Carefully.</strong> By entering any competition on Lens League Apex, participants agree to the following liability provisions in full.
+    </div>
+    <h3>Limitation of Liability</h3>
+    <p>Lens League Apex, its directors, employees, agents, and appointed judges shall not be liable for any loss, damage, or claim arising from or in connection with: competition results or prize decisions; the accuracy, completeness, or fairness of any DDI score, peer rating, or jury evaluation; technical failures, delays, or interruptions to the platform or competition processes; the conduct of peer raters or jury members acting in good faith; or any indirect, consequential, or punitive loss of any kind.</p>
+    <h3>Indemnity</h3>
+    <p>Participants indemnify and hold harmless Lens League Apex, its directors, employees, agents, and judges against any claim, liability, cost, or expense (including legal fees) arising from the participant's entry, conduct on the platform, violation of these rules, or infringement of any third party's rights.</p>
+    <h3>Judging Immunity</h3>
+    <p>Jury members — whether platform Jury Legends or externally appointed judges — acting in good faith in the exercise of their judging duties shall not be personally liable to any participant for any judging decision. All judging is conducted in good faith on the basis of the materials provided and the evaluation criteria published in these rules.</p>
+    <h3>Prize Liability</h3>
+    <p>Lens League Apex's liability in respect of any prize is limited to the face value of the prize as published. Lens League Apex is not liable for any tax, duty, or other financial obligation arising from receipt of a prize, which remains the sole responsibility of the winner.</p>
+    <h3>Publicity</h3>
+    <p>Winners consent to the use of their username, winning image(s), tier, and score (if applicable) in promotional materials published by Lens League Apex, including but not limited to the platform, social media, and press releases. No further compensation is payable for this use. Winners may request limited anonymisation at Lens League Apex's discretion.</p>
+  </div>
+
+  <!-- 10. Disputes -->
+  <div class="rules-section" id="disputes">
+    <h2><span>10</span> Disputes &amp; Appeals</h2>
+    <h3>Raising a Dispute</h3>
+    <p>A participant who believes their image has been incorrectly scored or that a competition result is in error may raise a formal dispute through their dashboard. Each dispute costs one Rating Credit. The same image may not be disputed more than once.</p>
+    <h3>Dispute Process</h3>
+    <ul>
+      <li><strong>Stage 1:</strong> Automated review. The system checks for processing errors, metadata anomalies, or rating outliers. Resolved within 5 business days. If an error is confirmed, it is corrected and the Rating Credit refunded.</li>
+      <li><strong>Stage 2:</strong> If Stage 1 finds no error, the dispute is escalated to Tier 3 jury review. The image is evaluated by an independent jury panel whose composition is not disclosed. Jury decision is communicated within 15 business days. The jury decision is final.</li>
+    </ul>
+    <h3>No Further Internal Appeal</h3>
+    <p>Following a Stage 2 jury decision, no further internal appeal is available. Participants who remain dissatisfied may seek independent legal remedy as provided under Section 12, subject to the limitation of liability provisions in Section 9.</p>
+    <h3>Dispute Abuse</h3>
+    <p>Filing disputes without reasonable grounds, or filing multiple disputes as a tactic to delay competition results, constitutes a violation of these rules and may result in suspension of dispute privileges or account suspension.</p>
+  </div>
+
+  <!-- 11. IP -->
+  <div class="rules-section" id="ip">
+    <h2><span>11</span> Intellectual Property</h2>
+    <h3>Participant Images</h3>
+    <p>Participants retain full copyright in all images submitted. By entering a competition, participants grant Lens League Apex a non-exclusive, royalty-free, worldwide licence to use winning and shortlisted images for promotional purposes, including display on the platform, social media, and press materials, with attribution. This licence does not permit commercial exploitation or sublicensing without explicit consent.</p>
+    <h3>Platform IP</h3>
+    <p>The Apex DDI Engine, all scoring methodology, competition structures, and platform software remain the exclusive intellectual property of Lens League Apex. No competition entry or prize award transfers any rights in platform IP to participants. See Section 01 of the Terms &amp; Conditions for the full proprietary technology notice.</p>
+    <h3>Rating Cards</h3>
+    <p>Rating cards generated by the Apex DDI Engine for participant images may be freely shared by the participant on social media and other personal channels, provided the Lens League Apex branding remains intact and unaltered. Commercial use of rating cards requires written consent from Lens League Apex.</p>
+  </div>
+
+  <!-- 12. Jurisdiction -->
+  <div class="rules-section" id="jurisdiction">
+    <h2><span>12</span> Governing Law &amp; Jurisdiction</h2>
+    <p>These Contest Rules are governed by and construed in accordance with the laws of the Republic of India. Any dispute arising out of or in connection with these rules — including disputes concerning the existence, validity, or termination of these rules — that is not resolved through the internal dispute process in Section 10 shall be subject to the exclusive jurisdiction of the courts of India.</p>
+    <p>Participants who are resident outside India submit to the personal jurisdiction of the Indian courts for the purpose of any such proceedings and waive any objection to the exercise of such jurisdiction.</p>
+    <p>Nothing in these rules limits the right of Lens League Apex to seek injunctive or other equitable relief in any court of competent jurisdiction for matters relating to intellectual property infringement, fraud, or breach of confidentiality.</p>
+  </div>
+
+  <!-- 13. Amendments -->
+  <div class="rules-section" id="amendments">
+    <h2><span>13</span> Amendments</h2>
+    <p>Lens League Apex reserves the right to amend these Contest Rules at any time. Amendments affecting ongoing competitions will be communicated to all active participants via the platform with a minimum of 14 days notice before taking effect, except where immediate amendment is required to protect the integrity of the competition or comply with applicable law.</p>
+    <p>Continued participation in any competition following notification of an amendment constitutes acceptance of the amended rules.</p>
+    <p>In the event of any conflict between these Contest Rules and the Terms &amp; Conditions, these Contest Rules shall prevail in respect of competition matters.</p>
+  </div>
+
+  <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
+    <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
+      This document was last updated April 2026 and supersedes all previous contest rules.<br>
+      Questions: <a href="mailto:admin@lenslague.com" style="color:var(--gold); text-decoration:none;">admin@lenslague.com</a>
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('terms') }}" class="btn btn-solid">Terms &amp; Conditions →</a>
+      <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
