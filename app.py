@@ -162,11 +162,19 @@ def admin_required(f):
 def is_open_contest_active() -> bool:
     """
     Returns True if the Open Competition is currently accepting entries.
-    Logic: env var OPEN_CONTEST_ACTIVE='1' overrides; otherwise False until
-    the Razorpay / contest management system sets it.
-    Replace this with a DB flag or date-range check when the contest system is built.
+    Set OPEN_CONTEST_ACTIVE=1 in Railway env vars to enable.
     """
     return os.getenv('OPEN_CONTEST_ACTIVE', '0') == '1'
+
+
+def is_bow_active() -> bool:
+    """
+    Returns True if Body of Work submissions are currently open.
+    BOW accepts submissions from Month 1 through end of Month 11 of the platform year.
+    Env var BOW_ACTIVE='1' enables; defaults to '0' (closed) until contest system is built.
+    Replace with a date-range check tied to the platform year when subscription system is built.
+    """
+    return os.getenv('BOW_ACTIVE', '0') == '1'
 
 
 # ---------------------------------------------------------------------------
@@ -1559,6 +1567,11 @@ def debug_images():
 # Static pages
 # ---------------------------------------------------------------------------
 
+@app.route('/science')
+def science():
+    return render_template('science.html')
+
+
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
@@ -1606,7 +1619,41 @@ def contests():
         month_name         = now.strftime('%B %Y'),
         genres             = GENRE_IDS,
         open_contest_active= is_open_contest_active(),
+        bow_active         = is_bow_active(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Body of Work submission
+# ---------------------------------------------------------------------------
+
+@app.route('/bow/submit', methods=['GET', 'POST'])
+@login_required
+def bow_submit():
+    """
+    Body of Work submission entry point.
+    Stub — full implementation in roadmap (contest system).
+    When live: BOW_ACTIVE env var must be '1'.
+    Requirements: active subscriber, 6–12 images scored on this account,
+    cross-genre allowed, no track split, one submission per photographer per year,
+    closes end of Month 11.
+    """
+    if not is_bow_active():
+        flash('Body of Work submissions are not currently open. Check back from Month 1 of the platform year.', 'info')
+        return redirect(url_for('contests'))
+
+    if not getattr(current_user, 'is_subscribed', False):
+        flash('An active Camera or Mobile subscription is required to submit a Body of Work.', 'error')
+        return redirect(url_for('pricing'))
+
+    # TODO: Implement full BOW submission flow:
+    #   - Photographer selects 6–12 scored images from their account
+    #   - Series title and thematic statement (required)
+    #   - Confirm submission (cannot be modified after deadline)
+    #   - Store in BodyOfWork model (to be created)
+    #   - Assign to Jury Legends pool for evaluation
+    flash('Body of Work submission is coming soon. Your scored images will be available to select when submissions open.', 'info')
+    return redirect(url_for('contests'))
 
 
 # ---------------------------------------------------------------------------
@@ -1639,6 +1686,8 @@ def open_contest_enter():
     #   - Store entry in OpenContestEntry model (to be created)
     flash('Open Competition entry is coming soon. You will be notified when entries open.', 'info')
     return redirect(url_for('contests'))
+
+
 
 
 # ---------------------------------------------------------------------------
