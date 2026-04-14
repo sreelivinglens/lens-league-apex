@@ -44,11 +44,38 @@
   .extra-name { font-size:15px; font-weight:600; color:var(--text-primary); }
   .extra-desc { font-size:13px; color:var(--text-muted); margin-top:2px; }
   .extra-price { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
+
+  /* Open Competition entry section */
+  .open-section { max-width:720px; margin:0 auto 64px; }
+  .open-card {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+    border:1px solid var(--gold-dark); border-radius:var(--radius-lg); padding:36px 32px;
+  }
+  .open-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:24px; }
+  .open-card-title { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .open-card-sub { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
+  .open-card-desc { font-size:14px; color:var(--text-secondary); line-height:1.8; max-width:480px; }
+  .open-price-box { text-align:center; flex-shrink:0; }
+  .open-price-amount { font-size:42px; font-weight:700; color:var(--gold); line-height:1; }
+  .open-price-per { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
+  .open-prizes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px; }
+  .open-prize-item { background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; text-align:center; }
+  .open-prize-label { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
+  .open-prize-amount { font-size:18px; font-weight:700; color:var(--gold); line-height:1; }
+  .open-prize-sub { font-size:11px; color:var(--text-muted); margin-top:3px; }
+  .open-rules { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+  .open-rule-pill { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:1px; color:var(--text-muted); background:var(--surface-3); border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
+
   .faq-section { max-width:720px; margin:0 auto 64px; }
   .faq-item { border-bottom:1px solid var(--border); padding:20px 0; }
   .faq-q { font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
   .faq-a { font-size:14px; color:var(--text-secondary); line-height:1.8; }
-  @media(max-width:768px) { .plans-grid { grid-template-columns:1fr; } .extras-grid { grid-template-columns:1fr; } }
+  @media(max-width:768px) {
+    .plans-grid { grid-template-columns:1fr; }
+    .extras-grid { grid-template-columns:1fr; }
+    .open-card-header { flex-direction:column; }
+    .open-prizes { grid-template-columns:1fr; }
+  }
 </style>
 {% endblock %}
 
@@ -58,7 +85,7 @@
   <div class="pricing-hero">
     <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Simple, Honest Pricing</div>
     <h1>Two Tracks.<br><em>One Scientific Standard.</em></h1>
-    <p>Get 10 free scored images. No credit card. When you're ready to compete, pick your track.</p>
+    <p>Get 3 free scored images. No credit card. When you're ready to compete, pick your track.</p>
 
     <div class="pricing-toggle">
       <span class="toggle-label active" id="lbl-monthly">Monthly</span>
@@ -82,7 +109,7 @@
         <span class="plan-period">forever</span>
       </div>
       <ul class="plan-features">
-        <li><span class="check">✓</span> 10 lifetime scored images</li>
+        <li><span class="check">✓</span> 3 lifetime scored images</li>
         <li><span class="check">✓</span> Full Apex DDI analysis</li>
         <li><span class="check">✓</span> Apex Byline improvement tip</li>
         <li><span class="check">✓</span> Shareable rating card</li>
@@ -118,7 +145,8 @@
         <li><span class="check">✓</span> Full Apex DDI analysis</li>
         <li><span class="check">✓</span> Monthly genre contests</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
-        <li><span class="check">✓</span> Annual Grand Prix — POTY</li>
+        <li><span class="check">✓</span> Annual Grand Prix — POTY ₹50L</li>
+        <li><span class="check">✓</span> Open Competition eligible</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> Leaderboard ranking</li>
       </ul>
@@ -146,7 +174,8 @@
         <li><span class="check">✓</span> Full Apex DDI analysis</li>
         <li><span class="check">✓</span> Monthly mobile contests</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
-        <li><span class="check">✓</span> Annual Mobile POTY</li>
+        <li><span class="check">✓</span> Annual Mobile POTY ₹12L pool</li>
+        <li><span class="check">✓</span> Open Competition eligible</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> Leaderboard ranking</li>
       </ul>
@@ -176,6 +205,60 @@
     </div>
   </div>
 
+  <!-- Open Competition entry pricing -->
+  <div class="open-section" id="open">
+    <div class="extras-title">Open Competition</div>
+    <div class="open-card">
+      <div class="open-card-header">
+        <div>
+          <div class="open-card-sub">Annual · No Track Split</div>
+          <div class="open-card-title">Enter the Open</div>
+          <div class="open-card-desc">Camera and Mobile compete together. One winner per genre, one Grand Open Winner selected by jury from the 8 category winners. Opens 3 months before Grand Prix.</div>
+        </div>
+        <div class="open-price-box">
+          <div class="open-price-amount">₹50</div>
+          <div class="open-price-per">per image entry</div>
+        </div>
+      </div>
+
+      <div class="open-prizes">
+        <div class="open-prize-item">
+          <div class="open-prize-label">Category Winner</div>
+          <div class="open-prize-amount">₹75,000</div>
+          <div class="open-prize-sub">× 8 genres</div>
+        </div>
+        <div class="open-prize-item" style="border-color:var(--gold-dark);">
+          <div class="open-prize-label">Grand Open Winner</div>
+          <div class="open-prize-amount">₹2,00,000</div>
+          <div class="open-prize-sub">Jury · from 8 finalists</div>
+        </div>
+        <div class="open-prize-item">
+          <div class="open-prize-label">Total Pool</div>
+          <div class="open-prize-amount">₹8,00,000</div>
+          <div class="open-prize-sub">Annual</div>
+        </div>
+      </div>
+
+      <div class="open-rules">
+        <span class="open-rule-pill">🎯 No track split</span>
+        <span class="open-rule-pill">🏅 One winner per genre</span>
+        <span class="open-rule-pill">👑 Grand Open — jury selected</span>
+        <span class="open-rule-pill">📅 Opens 3 months before Grand Prix</span>
+        <span class="open-rule-pill">🌍 8 genres</span>
+      </div>
+
+      {% if open_contest_active %}
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('open_contest_enter') }}" class="plan-cta primary">Enter Open Competition &rarr;</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="plan-cta primary">Join &amp; Enter &rarr;</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('contest_rules') }}#open" class="plan-cta secondary">View Open Rules &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- FAQ -->
   <div class="faq-section">
     <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
@@ -194,6 +277,14 @@
     <div class="faq-item">
       <div class="faq-q">Is there a refund policy?</div>
       <div class="faq-a">We offer a full refund within 7 days of subscription if you have not used any scored images in that billing period.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I enter the Open Competition on a free plan?</div>
+      <div class="faq-a">No — Open Competition entry requires an active Camera or Mobile subscription. The image you enter must have been previously scored on your account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Does the Open Competition have a track split?</div>
+      <div class="faq-a">No — Camera and Mobile photographers compete in the same pool for each genre. One winner per genre regardless of device.</div>
     </div>
   </div>
 
