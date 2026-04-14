@@ -12,6 +12,7 @@
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
+  --bg:          #0D0D0B;  /* alias for --black, used across templates */
   --black:       #0D0D0B;
   --surface-1:   #141412;
   --surface-2:   #1C1C1A;
@@ -39,6 +40,7 @@
   --red-dim:     rgba(224, 85, 85, 0.15);
   --amber:       #E09940;
   --amber-dim:   rgba(224, 153, 64, 0.15);
+  --dim:         #7A7870;
 
   --font-body:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:  'JetBrains Mono', 'Courier New', monospace;
@@ -180,16 +182,17 @@ nav {
   color: var(--gold);
   background: var(--gold-subtle);
 }
+/* GOLD BUTTON — always dark text so it is readable on gold background */
 .btn-solid {
   background: var(--gold);
   border-color: var(--gold);
-  color: var(--black);
+  color: #0D0D0B !important;
   font-weight: 700;
 }
 .btn-solid:hover {
   background: var(--gold-light);
   border-color: var(--gold-light);
-  color: var(--black);
+  color: #0D0D0B !important;
 }
 .btn-danger {
   border-color: #7a2222;
@@ -525,6 +528,7 @@ footer {
     {% if current_user.is_authenticated %}
       <a href="{{ url_for('dashboard') }}">Dashboard</a>
       <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
       <a href="{{ url_for('upload') }}">Upload</a>
       <a href="{{ url_for('bulk_upload') }}">Bulk Upload</a>
       {% if current_user.role == 'admin' %}
@@ -534,6 +538,7 @@ footer {
       <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
     {% else %}
       <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('pricing') }}">Pricing</a>
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Join Free</a>
     {% endif %}
   </div>
@@ -549,6 +554,7 @@ footer {
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
     <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
+    <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
     <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
     <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
     {% if current_user.role == 'admin' %}
@@ -558,6 +564,7 @@ footer {
     <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
   {% else %}
     <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
+    <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
     <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
   {% endif %}
 </div>
