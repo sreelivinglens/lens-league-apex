@@ -1,5 +1,5 @@
 """
-Apex Rating Cards — v21
+Apex Rating Cards — v22
 Two landscape cards at A4 300dpi (2480x1754px).
 Card 1: Photo + Score + Modules  
 Card 2: Full Analysis (2 columns)
@@ -58,6 +58,8 @@ PAD      = 80
 HEADER_H = 100
 FOOTER_H = 80
 
+SITE_URL = 'lenslague.com'
+
 def lh(font):
     d = ImageDraw.Draw(PilImage.new('RGB',(1,1)))
     bb = d.textbbox((0,0),'Ag',font=font)
@@ -90,13 +92,14 @@ def draw_header(canvas, draw, left, right):
     draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
 
 def draw_footer(canvas, draw, stamp):
+    """Footer with branding and URL for social sharing attribution."""
     draw.rectangle([0,CH-FOOTER_H,CW,CH], fill=S1)
     draw.rectangle([0,CH-FOOTER_H,CW,CH-FOOTER_H+1], fill=BORDER)
-    draw.text((PAD,CH-FOOTER_H+24),
-              'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX',
+    draw.text((PAD, CH-FOOTER_H+24),
+              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX  ·  {SITE_URL}',
               font=fnt(28,mono=True), fill=T3)
-    sw = tw(draw,stamp,fnt(28,bold=True,mono=True))
-    draw.text((CW-PAD-sw,CH-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
+    sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
+    draw.text((CW-PAD-sw, CH-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 
 
 def build_card1(photo_path, data, out_path):
@@ -204,12 +207,10 @@ def build_card2(data, out_path):
     bg   = [b for b in data.get('badges_g',[]) if b.strip()]
     bw   = [b for b in data.get('badges_w',[]) if b.strip()]
 
-    # ── Measure content height with a dummy canvas ────────────────────────────
     def measure_section(dummy_draw, body, w):
-        """Height of one section label + body + gap."""
-        h  = lh(fnt(38,bold=True,mono=True)) + 20   # label + spacing
+        h  = lh(fnt(38,bold=True,mono=True)) + 20
         h += sum(lh(fnt(44))+12 for _ in wrap_lines(dummy_draw,body,fnt(44),w))
-        h += 28 + 1  # gap + rule
+        h += 28 + 1
         return h
 
     dummy = ImageDraw.Draw(PilImage.new('RGB',(CW,100),BLACK))
@@ -225,18 +226,15 @@ def build_card2(data, out_path):
         left_h += sum(lh(fnt(44))+10 for _ in wrap_lines(dummy,', '.join(bw),fnt(44),COL_W))
 
     right_h = sum(measure_section(dummy,body,COL_W) for _,body in rows[3:])
-    right_h += lh(fnt(38,bold=True,mono=True))+20   # APEX BYLINE label
+    right_h += lh(fnt(38,bold=True,mono=True))+20
     right_h += sum(lh(fnt(44))+12 for _ in wrap_lines(dummy,b1,fnt(44),COL_W))
     right_h += 28
-    right_h += lh(fnt(38,bold=True,mono=True))+20   # THE ONE IMPROVEMENT label
+    right_h += lh(fnt(38,bold=True,mono=True))+20
     right_h += sum(lh(fnt(44,bold=True))+12 for _ in wrap_lines(dummy,b2,fnt(44,bold=True),COL_W))
 
     content_h = max(left_h, right_h)
-
-    # Dynamic canvas height — content + header + footer + generous buffer
     DYN_H = HEADER_H + PAD + content_h + PAD*4 + FOOTER_H
 
-    # ── Build canvas at dynamic height ───────────────────────────────────────
     canvas = PilImage.new('RGB',(CW, DYN_H), BLACK)
     draw   = ImageDraw.Draw(canvas)
 
@@ -252,11 +250,9 @@ def build_card2(data, out_path):
         draw.rectangle([x, y-14, x+w, y-13], fill=(42,42,40))
         return y
 
-    # Left col: rows 0,1,2
     for label,body in rows[:3]:
         LY = section(LX, LY, label, body, COL_W)
 
-    # Strengths + Gaps in left col
     LY += 10
     if bg:
         draw.text((LX,LY), 'STRENGTHS', font=fnt(38,bold=True,mono=True), fill=GREEN)
@@ -268,11 +264,9 @@ def build_card2(data, out_path):
         LY += lh(fnt(38,bold=True,mono=True)) + 20
         LY = draw_text(draw, ', '.join(bw), fnt(44), RED, LX, LY, COL_W, 10)
 
-    # Right col: rows 3,4
     for label,body in rows[3:]:
         RY = section(RX, RY, label, body, COL_W)
 
-    # Apex Byline in right col
     byline_top = RY
     draw.text((RX,RY), 'APEX BYLINE', font=fnt(38,bold=True,mono=True), fill=GOLD)
     RY += lh(fnt(38,bold=True,mono=True)) + 20
@@ -282,17 +276,19 @@ def build_card2(data, out_path):
     RY += lh(fnt(38,bold=True,mono=True)) + 20
     RY = draw_text(draw, b2, fnt(44,bold=True), T1, RX, RY, COL_W, 12)
 
-    # Gold left accent bar for byline section
     draw.rectangle([RX-24, byline_top, RX-16, RY+20], fill=GOLD_D)
 
-    # Redraw footer at actual canvas bottom
+    # Footer with URL — redrawn at actual dynamic canvas bottom
     actual_h = DYN_H
-    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h],fill=S1)
-    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1],fill=BORDER)
-    draw.text((PAD,actual_h-FOOTER_H+24),'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX',font=fnt(28,mono=True),fill=T3)
+    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h], fill=S1)
+    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1], fill=BORDER)
+    draw.text((PAD, actual_h-FOOTER_H+24),
+              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX  ·  {SITE_URL}',
+              font=fnt(28,mono=True), fill=T3)
     stamp = f"LL · {data.get('score','')} · {data.get('tier','').upper()}"
-    sw = tw(draw,stamp,fnt(28,bold=True,mono=True))
-    draw.text((CW-PAD-sw,actual_h-FOOTER_H+24),stamp,font=fnt(28,bold=True,mono=True),fill=GOLD)
+    sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
+    draw.text((CW-PAD-sw, actual_h-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
+
     draw_header(canvas, draw,
                 f"FULL EVALUATION  ·  {data.get('asset','')}",
                 'APEX DDI ENGINE  ·  RATED BY SCIENCE')
