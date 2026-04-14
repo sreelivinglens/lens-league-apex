@@ -8,6 +8,7 @@ import base64
 import json
 import os
 import re
+import time as _time
 import httpx
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -142,6 +143,7 @@ Location: {location}
 
 GENRE CONTEXT: {genre_context}
 {calibration_examples}
+{calibration_notes}
 
 MANDATORY: If genre is 'Creative' — apply STEP 0 override immediately.
 Sharpness is never penalised. Score DoD on technique difficulty.
@@ -273,7 +275,6 @@ def get_calibration_notes(genre, limit=5):
         return ''
 
 
-
 def get_calibration_examples(genre, limit=3):
     try:
         from models import Image as ImageModel
@@ -357,26 +358,41 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
         ],
     }
 
-    # Retry up to 3 times on 529 overloaded errors
-    import time as _time
+    # Retry up to 5 times on 529 overloaded errors
     response = None
-    for _attempt in range(5):
-        response = httpx.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key":         ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type":      "application/json",
-            },
-            json=payload,
-            timeout=90,
-        )
-        if response.status_code == 529:
-            wait = (_attempt + 1) * 20  # 20s, 40s, 60s, 80s, 100s
-            print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {_attempt+1}/3)")
+    last_error = None
+    for attempt in range(5):
+        try:
+            response = httpx.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key":         ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type":      "application/json",
+                },
+                json=payload,
+                timeout=90,
+            )
+            if response.status_code == 529:
+                wait = (attempt + 1) * 20
+                print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
+                _time.sleep(wait)
+                continue
+            # Any other status — break and handle below
+            break
+        except httpx.TimeoutException as e:
+            last_error = e
+            wait = (attempt + 1) * 15
+            print(f"[auto_score] Timeout on attempt {attempt+1}/5, retrying in {wait}s...")
             _time.sleep(wait)
             continue
-        break
+        except Exception as e:
+            last_error = e
+            print(f"[auto_score] Request error on attempt {attempt+1}/5: {e}")
+            break
+
+    if response is None:
+        raise ValueError(f"All retry attempts failed. Last error: {last_error}")
 
     if response.status_code != 200:
         raise ValueError(f"API error {response.status_code}: {response.text}")
@@ -425,7 +441,7 @@ def build_audit_data(result, image_obj):
             ("Geometric Harmony",   result.get("row_geometric", "")),
             ("Decisive Moment",     result.get("row_dm", "")),
             ("Wonder Factor",       result.get("row_wonder", "")),
-            ("AQ — Soul",            result.get("row_aq", "")),
+            ("AQ — Soul",           result.get("row_aq", "")),
         ],
         "byline_1":      result.get("byline_1", ""),
         "byline_2_body": result.get("byline_2", ""),
