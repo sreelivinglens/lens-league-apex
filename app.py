@@ -14,14 +14,15 @@ from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
 from models import db, User, Image, CalibrationLog, CalibrationNote
-from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS,
-                              ARCHETYPES, compute_calibration_stats)
+from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
+                              normalise_genre, ARCHETYPES, compute_calibration_stats,
+                              OPEN_PRIZES)
 from engine.processor import ingest_image, allowed_file
 import storage as r2
 
 load_dotenv()
 
-FREE_IMAGE_LIMIT = 10  # Lifetime free images for non-subscribed users
+FREE_IMAGE_LIMIT = 3  # Lifetime free images for non-subscribed users
 
 app = Flask(__name__)
 app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-me')
@@ -152,6 +153,20 @@ def admin_required(f):
             abort(403)
         return f(*args, **kwargs)
     return decorated
+
+
+# ---------------------------------------------------------------------------
+# Helper — open contest active flag
+# ---------------------------------------------------------------------------
+
+def is_open_contest_active() -> bool:
+    """
+    Returns True if the Open Competition is currently accepting entries.
+    Logic: env var OPEN_CONTEST_ACTIVE='1' overrides; otherwise False until
+    the Razorpay / contest management system sets it.
+    Replace this with a DB flag or date-range check when the contest system is built.
+    """
+    return os.getenv('OPEN_CONTEST_ACTIVE', '0') == '1'
 
 
 # ---------------------------------------------------------------------------
@@ -422,6 +437,10 @@ def upload():
             exif_data.get('iso',''), exif_data.get('shutter',''),
         ]))
 
+        # Normalise genre from form input
+        raw_genre = request.form.get('genre', 'Wildlife')
+        genre     = normalise_genre(raw_genre)
+
         img = Image(
             user_id           = current_user.id,
             original_filename = filename,
@@ -432,7 +451,7 @@ def upload():
             width=w, height=h, format=fmt,
             asset_name        = (request.form.get('asset_name') or '').strip() or
                                   os.path.splitext(filename)[0].replace('_',' ').replace('-',' ').title(),
-            genre             = request.form.get('genre', 'Wildlife'),
+            genre             = genre,
             subject           = request.form.get('subject', ''),
             location          = request.form.get('location', ''),
             conditions        = request.form.get('conditions', ''),
@@ -506,8 +525,7 @@ def upload():
 
         return redirect(url_for('image_detail', image_id=img.id))
 
-    genres = list(GENRE_WEIGHTS.keys())
-    return render_template('upload.html', genres=genres)
+    return render_template('upload.html', genres=GENRE_IDS)
 
 
 @app.route('/image/<int:image_id>')
@@ -567,7 +585,7 @@ def score_image(image_id):
                       f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
                       f"{img.genre}_{final_score}.jpg")
         card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-        build_card1(img.thumb_path, audit, card_path)
+        build_card(img.thumb_path, audit, card_path)
         img.card_path = card_path
 
         card_url = _r2_upload_card(card_path, uid + '_card')
@@ -718,10 +736,11 @@ def bulk_upload():
         if len(files) > 10:
             flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
             return redirect(url_for('bulk_upload'))
-        genre = request.form.get('genre', '').strip()
-        if not genre:
+        raw_genre = request.form.get('genre', '').strip()
+        if not raw_genre:
             flash('Please select a genre before uploading.', 'error')
             return redirect(url_for('bulk_upload'))
+        genre = normalise_genre(raw_genre)
 
         # ── Free quota check ──────────────────────────────────────────────
         if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
@@ -830,7 +849,6 @@ def bulk_upload():
         except:
             pass
 
-    genres = list(GENRE_WEIGHTS.keys())
     if request.method == 'POST' and results:
         scored_count  = sum(1 for r in results if r['status'] == 'scored')
         saved_count   = sum(1 for r in results if 'saved' in r['status'] or r['status'] == 'uploaded')
@@ -841,7 +859,7 @@ def bulk_upload():
         if error_count:   msg_parts.append(f'{error_count} failed')
         flash(f"Bulk upload complete: {', '.join(msg_parts)}.", 'success')
         return redirect(url_for('dashboard'))
-    return render_template('bulk_upload.html', genres=genres, results=results)
+    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
 
 
 @app.route('/share/<int:image_id>')
@@ -851,8 +869,6 @@ def share_image(image_id):
         abort(404)
     audit = img.get_audit()
     return render_template('share.html', image=img, audit=audit)
-
-
 
 
 @app.route('/admin/fix-tiers', methods=['POST'])
@@ -886,6 +902,7 @@ def fix_photographer_names():
     flash(f'Updated {len(updated)} image(s) from "{old_name}" to "{new_name}".', 'success')
     return redirect(url_for('admin_dashboard'))
 
+
 # ---------------------------------------------------------------------------
 # Leaderboard
 # ---------------------------------------------------------------------------
@@ -898,7 +915,6 @@ def leaderboard():
     period = request.args.get('period', 'all')
     tab    = request.args.get('tab', 'images')
 
-    # Date filter
     now = datetime.utcnow()
     if period == 'week':
         since = now - timedelta(days=7)
@@ -907,7 +923,6 @@ def leaderboard():
     else:
         since = None
 
-    # Shared filter function — applies to both queries
     def apply_filters(q):
         q = q.filter(
             Image.score.isnot(None),
@@ -922,13 +937,11 @@ def leaderboard():
             q = q.filter(Image.tier == tier)
         return q
 
-    # Top images tab
     top_images = (apply_filters(Image.query)
                   .order_by(desc(Image.score))
                   .limit(50)
                   .all())
 
-    # Top photographers tab — grouped by photographer_name only (no photographer_id column)
     pg_query = db.session.query(
         Image.photographer_name,
         func.max(Image.score).label('best_score'),
@@ -942,17 +955,12 @@ def leaderboard():
                           .limit(50)
                           .all())
 
-    # Dropdown values
-    all_genres = sorted([
-        r[0] for r in
-        db.session.query(Image.genre).distinct().filter(Image.genre.isnot(None)).all()
-    ])
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
 
     return render_template('leaderboard.html',
         top_images=top_images,
         photographer_stats=photographer_stats,
-        all_genres=all_genres,
+        all_genres=GENRE_IDS,
         all_tiers=all_tiers,
         genre=genre,
         tier=tier,
@@ -1236,7 +1244,8 @@ def score_single_image():
         return jsonify({'error': 'No file'}), 400
 
     file         = request.files['image']
-    genre        = request.form.get('genre', 'Wildlife')
+    raw_genre    = request.form.get('genre', 'Wildlife')
+    genre        = normalise_genre(raw_genre)
     photographer = request.form.get('photographer_name', '').strip() or \
                    current_user.full_name or current_user.username
 
@@ -1488,7 +1497,7 @@ def fix_calibration_table():
                 )
             '''))
             conn.commit()
-        flash('calibration_logs table rebuilt successfully. You can now Run Calibration Log.', 'success')
+        flash('calibration_logs table rebuilt successfully.', 'success')
     except Exception as e:
         flash(f'Fix failed: {e}', 'error')
     return redirect(url_for('admin_dashboard'))
@@ -1546,6 +1555,10 @@ def debug_images():
     return jsonify({'count': len(rows), 'images': rows})
 
 
+# ---------------------------------------------------------------------------
+# Static pages
+# ---------------------------------------------------------------------------
+
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
@@ -1556,13 +1569,9 @@ def contest_rules():
     return render_template('contest_rules.html')
 
 
-# ---------------------------------------------------------------------------
-# Pricing page
-# ---------------------------------------------------------------------------
-
 @app.route('/pricing')
 def pricing():
-    return render_template('pricing.html')
+    return render_template('pricing.html', open_contest_active=is_open_contest_active())
 
 
 # ---------------------------------------------------------------------------
@@ -1571,34 +1580,65 @@ def pricing():
 
 @app.route('/contests')
 def contests():
-    from datetime import date
-    now = datetime.utcnow()
+    now         = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
-    days_left = (next_month - now).days
+    next_month  = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    days_left   = (next_month - now).days
 
-    # Top images this month per genre
+    # Top 3 images this month per genre (uses canonical GENRE_IDS)
     monthly_top = {}
-    genres = list(GENRE_WEIGHTS.keys())
-    for genre in genres:
+    for genre in GENRE_IDS:
         top = (Image.query
                .filter(
                    Image.status == 'scored',
                    Image.score != None,
-                   Image.created_at >= month_start
+                   Image.created_at >= month_start,
+                   Image.genre == genre,
                )
-               .filter(Image.genre == genre)
                .order_by(Image.score.desc())
                .limit(3).all())
         if top:
             monthly_top[genre] = top
 
     return render_template('contests.html',
-        monthly_top=monthly_top,
-        days_left=days_left,
-        month_name=now.strftime('%B %Y'),
-        genres=genres,
+        monthly_top        = monthly_top,
+        days_left          = days_left,
+        month_name         = now.strftime('%B %Y'),
+        genres             = GENRE_IDS,
+        open_contest_active= is_open_contest_active(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Open Competition entry
+# ---------------------------------------------------------------------------
+
+@app.route('/open-contest/enter', methods=['GET', 'POST'])
+@login_required
+def open_contest_enter():
+    """
+    Open Competition entry point.
+    Stub — full implementation in roadmap item #8 (contest system).
+    When live: OPEN_CONTEST_ACTIVE env var must be '1'.
+    Entry fee: ₹50/image (OPEN_PRIZES['Entry_Fee']).
+    No track split — Camera and Mobile compete together.
+    """
+    if not is_open_contest_active():
+        flash('The Open Competition is not currently accepting entries. Check back closer to Grand Prix.', 'info')
+        return redirect(url_for('contests'))
+
+    if not getattr(current_user, 'is_subscribed', False):
+        flash('An active Camera or Mobile subscription is required to enter the Open Competition.', 'error')
+        return redirect(url_for('pricing'))
+
+    # TODO: Implement full Open Competition entry flow:
+    #   - Genre selection (from GENRE_IDS)
+    #   - Image selection (must be previously scored on this account)
+    #   - Razorpay payment: OPEN_PRIZES['Entry_Fee'] (₹50) per entry
+    #   - One entry per genre per photographer
+    #   - Store entry in OpenContestEntry model (to be created)
+    flash('Open Competition entry is coming soon. You will be notified when entries open.', 'info')
+    return redirect(url_for('contests'))
 
 
 # ---------------------------------------------------------------------------
@@ -1616,7 +1656,7 @@ def subscribe(track):
         'camera': {'monthly': 20000, 'annual': 200000},  # paise
         'mobile': {'monthly': 10000, 'annual': 100000},
     }
-    plan = request.args.get('plan', 'monthly')
+    plan   = request.args.get('plan', 'monthly')
     amount = prices[track][plan]
 
     if request.method == 'POST':
@@ -1636,7 +1676,6 @@ def subscribe(track):
                       'razorpay_signature': signature}
             client.utility.verify_payment_signature(params)
 
-            # Mark user as subscribed
             current_user.subscription_track = track
             current_user.subscription_plan  = plan
             current_user.subscribed_at       = datetime.utcnow()
@@ -1649,7 +1688,6 @@ def subscribe(track):
             flash(f'Payment verification failed: {e}', 'error')
             return redirect(url_for('subscribe', track=track, plan=plan))
 
-    # GET — create Razorpay order
     order = None
     if razorpay_key:
         try:
