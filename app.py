@@ -431,8 +431,9 @@ def upload():
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
             try:
+                import traceback
                 from engine.auto_score import auto_score, build_audit_data
-                from engine.compositor import build_card1 as build_card
+                from engine.compositor import build_card1
                 result = auto_score(image_path=img.thumb_path, genre=img.genre,
                                     title=img.asset_name, photographer=img.photographer_name,
                                     subject=img.subject, location=img.location)
@@ -450,20 +451,28 @@ def upload():
                 audit = build_audit_data(result, img)
                 img.set_audit(audit)
 
-                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                              f"{img.genre}_{img.score}.jpg")
-                card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                build_card1(img.thumb_path, audit, card_path)
-                img.card_path = card_path
-
-                card_url = _r2_upload_card(card_path, uid + '_card')
-                if card_url:
-                    img.card_url = card_url
-
+                # Commit scores immediately — card building is non-critical
                 db.session.commit()
+
+                # Build and upload card — wrapped separately so a card failure
+                # never rolls back the score that was already saved
+                try:
+                    card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                  f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                                  f"{img.genre}_{img.score}.jpg")
+                    card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                    build_card1(img.thumb_path, audit, card_path)
+                    img.card_path = card_path
+                    card_url = _r2_upload_card(card_path, uid + '_card')
+                    if card_url:
+                        img.card_url = card_url
+                    db.session.commit()
+                except Exception as card_err:
+                    app.logger.error(f'[upload card build error] {traceback.format_exc()}')
+
                 flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
             except Exception as e:
+                app.logger.error(f'[upload scoring error] {traceback.format_exc()}')
                 db.session.commit()
                 err_str = str(e)
                 if '529' in err_str or 'overloaded' in err_str.lower():
