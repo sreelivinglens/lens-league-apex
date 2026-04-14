@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% block title %}The Science of Imaging — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ──────────────────────────────────────────────────────── */
+  .sci-hero { text-align:center; padding:clamp(48px,8vw,80px) 0 56px; max-width:680px; margin:0 auto; }
+  .sci-hero h1 { font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
+  .sci-hero h1 em { font-style:normal; color:var(--gold); display:block; }
+  .sci-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-secondary); line-height:1.8; margin-bottom:0; }
+
+  /* ── SECTION WRAPPER ───────────────────────────────────────────── */
+  .sci-wrap { max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad); }
+  .sci-section { margin-bottom:72px; }
+  .sci-section-label {
+    font-family:var(--font-mono); font-size:11px; font-weight:600;
+    letter-spacing:4px; color:var(--gold); text-transform:uppercase;
+    margin-bottom:14px; display:block;
+  }
+  .sci-section h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:var(--text-primary); margin-bottom:16px; line-height:1.2; }
+  .sci-section h2 em { font-style:normal; color:var(--gold); }
+  .sci-section p { font-size:16px; color:var(--text-secondary); line-height:1.85; margin-bottom:14px; max-width:760px; }
+  .sci-section p:last-child { margin-bottom:0; }
+
+  /* ── HIGHLIGHT BOX ─────────────────────────────────────────────── */
+  .sci-callout {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-left:3px solid var(--gold-dark);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    padding:20px 24px; margin:24px 0;
+    font-size:15px; color:var(--text-secondary); line-height:1.8;
+  }
+  .sci-callout strong { color:var(--gold); }
+
+  /* ── DIVIDER ───────────────────────────────────────────────────── */
+  .sci-divider { height:1px; background:var(--border); margin:0 0 72px; }
+
+  /* ── 5 MODULE CARDS ────────────────────────────────────────────── */
+  .modules-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:40px; }
+  .module-card {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:24px 18px;
+    transition:border-color .2s;
+  }
+  .module-card:hover { border-color:var(--gold-dark); }
+  .module-num {
+    font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .module-abbr {
+    font-family:var(--font-mono); font-size:22px; font-weight:700;
+    color:var(--gold); line-height:1; margin-bottom:8px;
+  }
+  .module-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
+  .module-desc { font-size:13px; color:var(--text-secondary); line-height:1.7; }
+
+  /* ── TIER TABLE ────────────────────────────────────────────────── */
+  .tier-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:32px; }
+  .tier-item {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-md); padding:16px 14px; text-align:center;
+  }
+  .tier-item.legend { border-color:var(--gold); }
+  .tier-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .tier-range { font-family:var(--font-mono); font-size:11px; color:var(--gold); letter-spacing:1px; }
+  .tier-desc { font-size:12px; color:var(--text-muted); margin-top:6px; line-height:1.5; }
+
+  /* ── THREE PILLAR CARDS ────────────────────────────────────────── */
+  .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:32px; }
+  .pillar-card {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:28px 24px;
+  }
+  .pillar-icon { font-size:28px; margin-bottom:14px; display:block; }
+  .pillar-title { font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
+  .pillar-body { font-size:14px; color:var(--text-secondary); line-height:1.75; }
+
+  /* ── SAFEGUARDS ────────────────────────────────────────────────── */
+  .safeguards-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:32px; }
+  .safeguard-item {
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-md); padding:20px 22px;
+    display:flex; gap:16px; align-items:flex-start;
+  }
+  .safeguard-label {
+    font-family:var(--font-mono); font-size:11px; font-weight:700;
+    letter-spacing:1.5px; color:var(--gold); text-transform:uppercase;
+    margin-bottom:6px; white-space:nowrap;
+  }
+  .safeguard-desc { font-size:13px; color:var(--text-secondary); line-height:1.7; }
+  .safeguard-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--gold-dark); flex-shrink:0; margin-top:5px;
+  }
+
+  /* ── IP NOTICE ─────────────────────────────────────────────────── */
+  .ip-notice {
+    background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+    border:1px solid var(--gold-dark); border-radius:var(--radius-lg);
+    padding:32px 36px; margin-top:32px;
+  }
+  .ip-notice h3 { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
+  .ip-notice p { font-size:14px; color:var(--text-secondary); line-height:1.8; margin-bottom:0; }
+
+  /* ── BOTTOM CTA ────────────────────────────────────────────────── */
+  .sci-cta {
+    text-align:center; padding:clamp(40px,6vw,64px);
+    background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06));
+    border:1px solid var(--gold-dark); border-radius:var(--radius-lg);
+    margin-bottom:64px;
+  }
+  .sci-cta h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+  .sci-cta p { font-size:16px; color:var(--text-secondary); max-width:480px; margin:0 auto 28px; line-height:1.8; }
+
+  /* ── RESPONSIVE ────────────────────────────────────────────────── */
+  @media(max-width:1024px) {
+    .modules-grid { grid-template-columns:repeat(3,1fr); }
+    .tier-strip { grid-template-columns:repeat(3,1fr); }
+  }
+  @media(max-width:768px) {
+    .modules-grid { grid-template-columns:1fr 1fr; }
+    .pillars-grid { grid-template-columns:1fr; }
+    .safeguards-grid { grid-template-columns:1fr; }
+    .tier-strip { grid-template-columns:1fr 1fr; }
+  }
+  @media(max-width:480px) {
+    .modules-grid { grid-template-columns:1fr; }
+    .tier-strip { grid-template-columns:1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sci-wrap">
+
+  <!-- ── HERO ──────────────────────────────────────────────────────── -->
+  <div class="sci-hero">
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Apex DDI Engine</div>
+    <h1>The Science<em>of Imaging.</em></h1>
+    <p>Photography has always been judged — but never measured. The Apex DDI Engine changes that. This is the framework that makes it possible: objective, repeatable, and genre-aware.</p>
+  </div>
+
+  <!-- ── WHY MEASUREMENT MATTERS ───────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">The Problem</span>
+    <h2>Opinion is not a standard.</h2>
+    <p>For as long as photography has been practised, its evaluation has depended entirely on who is in the room. Contest juries change year to year. Social media rewards familiarity, not craft. Workshop feedback reflects the teacher's aesthetic preferences, not the image's objective properties.</p>
+    <p>This creates a system where the same photograph can be celebrated by one judge and ignored by another — not because the image changed, but because the evaluator did. Talented photographers plateau not because their work stopped improving, but because the feedback stopped being useful.</p>
+    <div class="sci-callout">
+      <strong>The DDI Engine was built to answer one question:</strong> what does this photograph actually do, independent of who is looking at it?
+    </div>
+    <p>The answer required building a scoring framework grounded in perceptual science, visual psychology, and the documented principles of photographic craft — then calibrating it per genre, so a Wildlife image and a Street image are each measured against the standards that apply to them, not a single homogenised rubric.</p>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── THE 5 MODULES ─────────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">The Framework</span>
+    <h2>Five dimensions.<br><em>One score.</em></h2>
+    <p>Every image submitted to Lens League Apex is evaluated across five independently-weighted modules. Each module addresses a distinct dimension of photographic achievement. Together they form the DDI — the Dimensional Diagnostic Index.</p>
+    <p>The five modules are not arbitrary categories. Each is rooted in documented principles of visual perception, compositional theory, and the established criteria of photographic excellence as practised across genres and traditions.</p>
+
+    <div class="modules-grid">
+
+      <div class="module-card">
+        <div class="module-num">Module 01</div>
+        <div class="module-abbr">DoD</div>
+        <div class="module-name">Depth of Difficulty</div>
+        <div class="module-desc">Measures the inherent technical and situational difficulty of capturing the image. Considers subject accessibility, environmental constraints, timing precision, and the complexity of the photographic challenge posed.</div>
+      </div>
+
+      <div class="module-card">
+        <div class="module-num">Module 02</div>
+        <div class="module-abbr">DIS</div>
+        <div class="module-name">Visual Disruption</div>
+        <div class="module-desc">Evaluates how strongly the image breaks from visual convention. Disruption is not chaos — it is intentional deviation from the expected that creates a more powerful or unexpected visual statement.</div>
+      </div>
+
+      <div class="module-card">
+        <div class="module-num">Module 03</div>
+        <div class="module-abbr">DM</div>
+        <div class="module-name">Decisive Moment</div>
+        <div class="module-desc">Assesses the timing, irreversibility, and completeness of the captured moment. Rooted in Cartier-Bresson's principle: whether the shutter was released at the precise instant where all elements align.</div>
+      </div>
+
+      <div class="module-card">
+        <div class="module-num">Module 04</div>
+        <div class="module-abbr">WON</div>
+        <div class="module-name">Wonder Factor</div>
+        <div class="module-desc">Measures the image's capacity to arrest attention, provoke curiosity, and sustain engagement. Draws on research in aesthetic response and the documented psychology of visual awe.</div>
+      </div>
+
+      <div class="module-card">
+        <div class="module-num">Module 05</div>
+        <div class="module-abbr">AQ</div>
+        <div class="module-name">Affective Quotient</div>
+        <div class="module-desc">Evaluates the emotional truth and human resonance of the image — its capacity to communicate a felt experience rather than merely a recorded one. AQ is the soul of the score.</div>
+      </div>
+
+    </div>
+
+    <div class="sci-callout" style="margin-top:32px;">
+      <strong>Genre calibration:</strong> The relative weight of each module is calibrated per genre. A Wildlife image demands different priorities than a Wedding portrait or a Macro study. The engine adjusts its expectations accordingly — scoring each image against the standards that apply to its discipline, not a single universal rubric.
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── THREE PILLARS ─────────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Design Principles</span>
+    <h2>Built on three pillars.</h2>
+    <p>The engine was designed around three non-negotiable principles that define how it evaluates images and how its results should be interpreted.</p>
+
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <span class="pillar-icon">⚖️</span>
+        <div class="pillar-title">Objectivity</div>
+        <div class="pillar-body">The same image, submitted twice, should produce the same result. The engine has no preferences, no aesthetic agenda, and no awareness of who took the photograph. It responds to what is in the frame — nothing else.</div>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-icon">🎯</span>
+        <div class="pillar-title">Repeatability</div>
+        <div class="pillar-body">Scores are not impressionistic. They are the product of a structured, documented framework applied consistently. A photographer can submit work over years and trust that their scores reflect genuine progress, not shifting standards.</div>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-icon">🔬</span>
+        <div class="pillar-title">Genre awareness</div>
+        <div class="pillar-body">Excellence in Landscape photography is not excellence in Street photography. The engine does not force them onto the same scale. Each genre carries its own calibrated weight profile, built from the documented standards of that discipline.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── TIER SYSTEM ────────────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Tier Classification</span>
+    <h2>Five tiers.<br><em>One honest position.</em></h2>
+    <p>Every DDI score maps to a tier classification. Tiers represent qualitative bands of photographic achievement — each one meaningful, each one earned. They are the language the platform uses to communicate where a photographer stands without reducing their work to a single decimal.</p>
+    <p>Tier boundaries are fixed. They do not drift with the platform population or adjust for the volume of submissions. An Apprentice-tier image today means the same thing it will mean in five years.</p>
+
+    <div class="tier-strip">
+      <div class="tier-item">
+        <div class="tier-name">Apprentice</div>
+        <div class="tier-range">0 — 5.0</div>
+        <div class="tier-desc">Learning the fundamentals. Every expert begins here.</div>
+      </div>
+      <div class="tier-item">
+        <div class="tier-name">Practitioner</div>
+        <div class="tier-range">5.1 — 7.5</div>
+        <div class="tier-desc">Consistent craft. Genre awareness is developing.</div>
+      </div>
+      <div class="tier-item">
+        <div class="tier-name">Master</div>
+        <div class="tier-range">7.6 — 8.9</div>
+        <div class="tier-desc">Intentional vision. Technical and expressive command.</div>
+      </div>
+      <div class="tier-item">
+        <div class="tier-name">Grandmaster</div>
+        <div class="tier-range">9.0 — 9.6</div>
+        <div class="tier-desc">Rare. Sustained excellence at the frontier of the discipline.</div>
+      </div>
+      <div class="tier-item legend">
+        <div class="tier-name" style="color:var(--gold);">Legend</div>
+        <div class="tier-range">9.7 — 9.9</div>
+        <div class="tier-desc">Exceptional. Images that redefine what the genre can be.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── SCORING SAFEGUARDS ─────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Scoring Integrity</span>
+    <h2>Safeguards against<br><em>gaming and distortion.</em></h2>
+    <p>A scoring engine is only as trustworthy as the integrity mechanisms that prevent it from being exploited or producing misleading results. The DDI Engine contains several built-in safeguards — each designed to catch a specific class of distortion and correct for it automatically.</p>
+    <p>These mechanisms are named, documented, and disclosed — because photographers deserve to understand the principles that govern their scores, even if the precise implementation remains proprietary.</p>
+
+    <div class="safeguards-grid">
+
+      <div class="safeguard-item">
+        <div class="safeguard-dot"></div>
+        <div>
+          <div class="safeguard-label">Soul Bonus</div>
+          <div class="safeguard-desc">Images with exceptional emotional resonance — where the Affective Quotient signals genuine human truth — are protected from technical deductions. Craft matters, but soul matters more. A technically imperfect image that moves people should not be penalised out of recognition.</div>
+        </div>
+      </div>
+
+      <div class="safeguard-item">
+        <div class="safeguard-dot"></div>
+        <div>
+          <div class="safeguard-label">Humanity Check</div>
+          <div class="safeguard-desc">Scores with very low emotional resonance trigger an additional correction. An image that reads as technically competent but emotionally hollow is not a high-scoring photograph. The Humanity Check ensures the AQ dimension carries real consequence.</div>
+        </div>
+      </div>
+
+      <div class="safeguard-item">
+        <div class="safeguard-dot"></div>
+        <div>
+          <div class="safeguard-label">Plateau Penalty</div>
+          <div class="safeguard-desc">Technical perfection without creative ambition is not mastery — it is stasis. Images that score very high on technical difficulty but demonstrate no visual disruption or compositional risk are capped. The engine rewards growth, not the repetition of competence.</div>
+        </div>
+      </div>
+
+      <div class="safeguard-item">
+        <div class="safeguard-dot"></div>
+        <div>
+          <div class="safeguard-label">Iconic Wall</div>
+          <div class="safeguard-desc">The highest score tier is protected by a gate. To reach it, an image must demonstrate not just technical excellence but genuine creative disruption and emotional authenticity together. It cannot be reached by optimising one dimension alone. This preserves the meaning of the highest tier.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── THREE-TIER JUDGING ─────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Verification Layer</span>
+    <h2>The engine is the start,<br><em>not the end.</em></h2>
+    <p>The DDI Engine provides the first and most consistent layer of evaluation. But for competition purposes, it is validated — and where necessary, corrected — by two further layers of human judgment.</p>
+    <p>This three-tier structure is not a concession to the limitations of AI. It is a deliberate architecture that combines the objectivity of the machine with the perceptual authority of trained human evaluators.</p>
+
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <span class="pillar-icon">🤖</span>
+        <div class="pillar-title">Tier 1 — DDI Engine</div>
+        <div class="pillar-body">Instant, automatic, consistent. Every image scored the same way, every time. Establishes the initial position and provides the five-module breakdown visible to the photographer.</div>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-icon">👁️</span>
+        <div class="pillar-title">Tier 2 — Blind peer rating</div>
+        <div class="pillar-body">Five independent peer raters per image, fully blind — no names, no scores visible. Rater identity is concealed. Outlier ratings are excluded automatically. Human perception validates the machine's assessment.</div>
+      </div>
+      <div class="pillar-card">
+        <span class="pillar-icon">⚖️</span>
+        <div class="pillar-title">Tier 3 — Jury</div>
+        <div class="pillar-body">Triggered when peer rating and DDI score diverge significantly, or when a photographer raises a formal dispute. Conducted by appointed Jury Legends. Decisions are final. Required for all Open Competition Grand Winner selections.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── ARCHETYPE SYSTEM ───────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Emotional Classification</span>
+    <h2>Every image has<br><em>a felt dimension.</em></h2>
+    <p>Alongside its numerical score, every image is assigned an Archetype — a classification of its primary emotional and psychological register. Archetypes are derived from the combination of module scores, particularly Wonder and AQ, and reflect the dominant emotional experience the image communicates.</p>
+    <p>The Archetype system draws on documented frameworks in affective psychology and the study of aesthetic emotion. It is not a label assigned by the photographer — it is a recognition of what the image itself communicates.</p>
+    <div class="sci-callout">
+      <strong>Examples include:</strong> Wonder / Transcendence, Sovereign Momentum, Compressed Tension, Forlorn Transcendence, Joyful Disruption, Primal Dread — and nine others. The Archetype appears on your rating card and in your image detail, providing a qualitative lens on what your score means emotionally.
+    </div>
+  </div>
+
+  <div class="sci-divider"></div>
+
+  <!-- ── PROPRIETARY NOTICE ─────────────────────────────────────────── -->
+  <div class="sci-section">
+    <span class="sci-section-label">Intellectual Property</span>
+    <h2>What is disclosed.<br><em>What is protected.</em></h2>
+    <p>Lens League Apex believes photographers deserve to understand the framework that evaluates their work. The five modules, the tier structure, the safeguard names and their intent, and the three-tier judging architecture are all disclosed here and in the platform's legal documentation.</p>
+    <p>What is not disclosed — and what is protected as proprietary intellectual property — is the implementation: the specific weight values assigned to each module per genre, the precise threshold parameters of the scoring safeguards, the calibration data derived from the REF example library, and the prompt architecture that drives the AI engine.</p>
+
+    <div class="ip-notice">
+      <h3>Proprietary Technology Notice</h3>
+      <p>The Apex DDI Engine — including its genre-calibrated weight tables, tier boundary parameters, safeguard trigger logic, archetype taxonomy, calibration benchmarks, and all associated AI prompt architecture — constitutes original intellectual property exclusively owned by Lens League Apex. Reverse engineering, reproduction, or use of any element of this methodology as the basis of a competing scoring system is strictly prohibited. Score outputs and module breakdowns may not be used to train or calibrate any competing photography rating product. Full legal terms in the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.</p>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM CTA ─────────────────────────────────────────────────── -->
+  <div class="sci-cta">
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">See it applied to your work</div>
+    <h2>Your image. Measured honestly.</h2>
+    <p>3 free scored images. Full five-module DDI breakdown. No credit card. No human bias. Just the truth about your photography.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
+        <a href="{{ url_for('dashboard') }}" class="btn">My Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Score &rarr;</a>
+        <a href="{{ url_for('pricing') }}" class="btn">View Pricing</a>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
