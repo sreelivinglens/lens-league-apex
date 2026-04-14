@@ -1,33 +1,147 @@
-{% extends "base.html" %} {% block title %}User Management â€” Admin{% endblock %} {% block extra_css %} {% endblock %} {% block content %}
-User Management
-Manage subscriptions and UAT access for all members
-â† Back to Admin
-{{ USERS|LENGTH }}
-TOTAL MEMBERS
-{{ USERS|SELECTATTR('IS_SUBSCRIBED')|LIST|LENGTH }}
-SUBSCRIBED
-{{ USERS|SELECTATTR('SUBSCRIPTION_PLAN', 'EQUALTO', 'BETA')|LIST|LENGTH }}
-BETA / UAT
-{{ USERS|REJECTATTR('IS_SUBSCRIBED')|LIST|LENGTH }}
-FREE TIER
-{% for user in users %} {% else %} {% endfor %}
-Member
-Email
-Joined
-Images
-Status
-Track
-Action
-{{ user.full_name or user.username }}
-@{{ user.username }}
-{{ user.email }}
-{{ user.created_at.strftime('%d %b %Y') if user.created_at else 'â€”' }}
-{{ user.images|length if user.images else 0 }}
-{% if user.is_subscribed %} {% if user.subscription_plan == 'beta' %} BETA {% else %} {{ USER.SUBSCRIPTION_TRACK OR 'SUBSCRIBED' }} {% endif %} {% else %} FREE {% endif %}
-                Camera
-                Mobile
-              
-{% if user.is_subscribed %}Revoke{% else %}Activate{% endif %}
-No members registered yet.
-UAT Instructions: Ask testers to register at the live URL, then use this page to activate their subscription. Set track to Camera or Mobile depending on what they're testing. Beta accounts have no image limit and full contest access. To revoke after UAT, click Revoke â€” they revert to the free tier (10 image limit).
+{% extends "base.html" %}
+{% block title %}User Management — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .users-wrap { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--page-pad); }
+  .page-header { padding: clamp(32px,5vw,56px) 0 32px; }
+  .page-header h1 { font-size: clamp(22px,4vw,36px); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .page-header p { font-size: 15px; color: var(--text-secondary); }
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; }
+  .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .stat-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .users-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .users-table th { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .users-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); }
+  .users-table tr:last-child td { border-bottom: none; }
+  .users-table tr:hover td { background: var(--surface-2); }
+  .user-name { font-weight: 600; color: var(--text-primary); }
+  .user-handle { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .badge { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+  .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
+  .badge-sub  { background: var(--surface-3); color: var(--text-secondary); border: 1px solid var(--border); }
+  .badge-free { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+  .track-select { font-family: var(--font-mono); font-size: 11px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; color: var(--text-secondary); }
+  .btn-action { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
+  .btn-action.activate { background: var(--gold); color: #0D0D0B; }
+  .btn-action.revoke   { background: var(--surface-3); color: var(--text-secondary); border: 1px solid var(--border); }
+  .uat-explainer {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+    padding: 28px 32px; margin-bottom: 32px;
+  }
+  .uat-explainer h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+  .uat-explainer ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .uat-explainer li { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+  .uat-explainer li strong { color: var(--text-primary); }
+  .empty-state { text-align: center; padding: 48px; color: var(--text-muted); font-size: 14px; }
+  @media(max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .users-table { font-size: 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="users-wrap">
+
+  <div class="page-header">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn" style="margin-bottom:16px; display:inline-block;">&larr; Back to Admin</a>
+    <h1>User Management</h1>
+    <p>Activate UAT access for testers — full platform access, 10 images, no subscription required.</p>
+  </div>
+
+  <!-- UAT flow explainer -->
+  <div class="uat-explainer">
+    <h3>UAT Access Flow</h3>
+    <ol>
+      <li>Ask testers to <strong>register normally</strong> at the live URL — they go through the standard sign-up flow.</li>
+      <li>Find them in the table below. Select their track (Camera or Mobile — whichever they're testing).</li>
+      <li>Click <strong>Activate UAT</strong> — they instantly get 10 scored images + full contest access.</li>
+      <li>They test the full photographer journey: upload → score → rating cards → leaderboard → contest entry.</li>
+      <li>When UAT is complete, click <strong>Revoke</strong> — they revert to the standard free tier (3 lifetime images, no contest access).</li>
+    </ol>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val">{{ users|length }}</div>
+      <div class="stat-lbl">Total Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ users|selectattr('subscription_plan', 'equalto', 'uat')|list|length }}</div>
+      <div class="stat-lbl">Active UAT</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ users|selectattr('is_subscribed')|rejectattr('subscription_plan', 'equalto', 'uat')|list|length }}</div>
+      <div class="stat-lbl">Paid Subscribers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ users|rejectattr('is_subscribed')|list|length }}</div>
+      <div class="stat-lbl">Free Tier</div>
+    </div>
+  </div>
+
+  <!-- Users table -->
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>Member</th>
+        <th>Email</th>
+        <th>Joined</th>
+        <th>Images</th>
+        <th>Status</th>
+        <th>Track</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>
+          <div class="user-name">{{ user.full_name or user.username }}</div>
+          <div class="user-handle">@{{ user.username }}</div>
+        </td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</td>
+        <td>{{ user.images|length if user.images else 0 }}</td>
+        <td>
+          {% if user.is_subscribed %}
+            {% if user.subscription_plan in ('uat', 'beta') %}
+              <span class="badge badge-uat">UAT</span>
+            {% else %}
+              <span class="badge badge-sub">{{ user.subscription_track or 'Subscribed' }}</span>
+            {% endif %}
+          {% else %}
+            <span class="badge badge-free">Free</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=user.id) }}"
+                style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="hidden" name="plan" value="uat">
+            <select name="track" class="track-select">
+              <option value="camera" {% if user.subscription_track == 'camera' %}selected{% endif %}>Camera</option>
+              <option value="mobile" {% if user.subscription_track == 'mobile' %}selected{% endif %}>Mobile</option>
+            </select>
+        </td>
+        <td>
+            <button type="submit"
+                    class="btn-action {% if user.is_subscribed %}revoke{% else %}activate{% endif %}">
+              {% if user.is_subscribed %}Revoke{% else %}Activate UAT{% endif %}
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
 {% endblock %}
