@@ -60,6 +60,20 @@
   }
   .comp-table tr:last-child td { border-bottom: none; }
   .comp-table td:first-child { color: var(--gold); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+  .prize-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .prize-table th {
+    background: var(--surface-3); padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase;
+    text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .prize-table td { padding: 10px 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+  .prize-table tr:last-child td { border-bottom: none; }
+  .prize-table .award { color: var(--gold); font-family: var(--font-mono); font-weight: 600; }
+  .prize-table .amount { color: var(--text-primary); font-weight: 700; font-family: var(--font-mono); }
+  .prize-table tr.section-head td { background: var(--surface-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 8px 14px; }
+  .prize-total td { background: rgba(200,168,75,0.06); border-top: 1px solid var(--gold-dark) !important; }
+  .prize-total .amount { color: var(--gold); font-size: 16px; }
   .doc-meta {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 32px;
@@ -82,7 +96,7 @@
   <div class="doc-meta">
     <div class="doc-meta-item">
       <div class="doc-meta-label">Version</div>
-      <div class="doc-meta-value">1.0 — April 2026</div>
+      <div class="doc-meta-value">2.0 — April 2026</div>
     </div>
     <div class="doc-meta-item">
       <div class="doc-meta-label">Jurisdiction</div>
@@ -99,7 +113,7 @@
   </div>
 
   <div class="rules-highlight legal">
-    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by Lens League Apex. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), and Body of Work (BOW) — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by Lens League Apex. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), and the Open Competition — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
   </div>
 
   <div class="toc">
@@ -110,7 +124,7 @@
       <li><a href="#judging">Judging Process &amp; Finality</a></li>
       <li><a href="#monthly">Monthly Contest Rules</a></li>
       <li><a href="#poty">POTY Rules</a></li>
-      <li><a href="#bow">Body of Work Rules</a></li>
+      <li><a href="#open">Open Competition Rules</a></li>
       <li><a href="#prizes">Prize Structure &amp; Disbursement</a></li>
       <li><a href="#disqualification">Disqualification &amp; Integrity</a></li>
       <li><a href="#immunity">Legal Immunity &amp; Liability</a></li>
@@ -124,7 +138,7 @@
   <!-- 1. Overview -->
   <div class="rules-section" id="overview">
     <h2><span>01</span> Competition Overview</h2>
-    <p>Lens League Apex operates three distinct competition formats:</p>
+    <p>Lens League Apex operates three distinct competition formats across 8 genres (Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative) and two tracks (Camera and Mobile):</p>
     <table class="comp-table">
       <thead>
         <tr>
@@ -138,20 +152,20 @@
         <tr>
           <td>Monthly Contest</td>
           <td>Every calendar month</td>
-          <td>Per genre, Camera &amp; Mobile separate</td>
+          <td>Per genre · Camera &amp; Mobile separate</td>
           <td>DDI → Peer → Jury (triggered)</td>
         </tr>
         <tr>
           <td>POTY</td>
-          <td>Annual</td>
-          <td>Per genre, Camera &amp; Mobile separate</td>
+          <td>Annual · ₹50L pool</td>
+          <td>Per genre · Camera &amp; Mobile separate</td>
           <td>DDI → Peer → Jury (triggered)</td>
         </tr>
         <tr>
-          <td>Body of Work</td>
-          <td>Annual</td>
-          <td>Cross-genre, single category</td>
-          <td>DDI + Jury Legends (mandatory)</td>
+          <td>Open Competition</td>
+          <td>Annual · ₹8L pool</td>
+          <td>All 8 genres · No track split · ₹50/entry</td>
+          <td>DDI → Jury (mandatory for Grand Open)</td>
         </tr>
       </tbody>
     </table>
@@ -168,28 +182,29 @@
       <li>Employees, directors, and immediate family members of Lens League Apex are ineligible for prize awards, though they may use the platform.</li>
       <li>Participants must be aged 18 or over, or have verifiable parental/guardian consent where applicable under local law.</li>
     </ul>
-    <h3>Automatic Entry</h3>
+    <h3>Monthly Contest &amp; POTY — Automatic Entry</h3>
     <p>For Monthly Contests: every image scored by the Apex DDI Engine within the calendar month is automatically entered into the contest for its declared genre and track. No separate entry action is required.</p>
     <p>For POTY: all images meeting the minimum qualification threshold (24 images in the genre during the subscription year) are automatically considered. No separate entry action is required.</p>
-    <p>For Body of Work: entry requires deliberate submission of a curated series of 6–12 images by the photographer. BOW entry is not automatic.</p>
-    <h3>Track Declaration</h3>
-    <p>Photographers must declare their track (Camera or Mobile) at subscription. Track determines which competition pool images enter. Images submitted under the incorrect track are ineligible for competition in that cycle. Track changes take effect from the following subscription month.</p>
+    <h3>Open Competition — Paid Entry</h3>
+    <p>The Open Competition requires deliberate, paid entry. Each entry costs <strong>₹50 per image</strong>. There is no track split — Camera and Mobile photographers compete in the same pool per genre. A photographer may submit multiple entries across different genres. Entry is available to all active subscribers for the duration the Open Competition is live (opens 3 months before Grand Prix; see Section 6 for full timeline).</p>
+    <h3>Track Declaration (POTY only)</h3>
+    <p>Photographers must declare their track (Camera or Mobile) at subscription. Track determines which POTY competition pool images enter. Images submitted under the incorrect track are ineligible for POTY in that cycle. Track changes take effect from the following subscription month. Track declaration does not apply to the Open Competition, which has no track split.</p>
   </div>
 
   <!-- 3. Judging -->
   <div class="rules-section" id="judging">
     <h2><span>03</span> Judging Process &amp; Finality</h2>
     <h3>Three-Tier Structure</h3>
-    <p>All judging proceeds through up to three tiers. No tier may be bypassed except as specified for BOW (Tier 2 does not apply). A higher tier result supersedes lower tier results for competition ranking purposes.</p>
+    <p>All judging proceeds through up to three tiers. For Monthly Contests and POTY, no tier may be bypassed. For the Open Competition, Tier 2 peer rating applies to category-level ranking; Tier 3 jury is mandatory for Grand Open Winner selection.</p>
     <h3>Tier 1 — Apex DDI Engine</h3>
     <p>Automated, objective, runs on every image at submission. Produces a numerical DDI score and tier classification. Tier 1 results are used for initial leaderboard ranking and POTY qualification calculations.</p>
-    <h3>Tier 2 — Blind Peer Rating (Monthly &amp; POTY only)</h3>
-    <p>Each image is assigned to a minimum of five independent peer raters. Assignment is random within stratified tier bands. Raters do not know the photographer's identity, the DDI score, or the identity of other raters for the same image. A minimum of 15 seconds per image is required for a rating to be valid. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger an automatic audit. Peer ratings produce a consensus score used to validate or adjust the Tier 1 ranking.</p>
+    <h3>Tier 2 — Blind Peer Rating (Monthly, POTY, and Open category ranking)</h3>
+    <p>Each image is assigned to a minimum of five independent peer raters. Assignment is random within stratified tier bands. Raters do not know the photographer's identity, the DDI score, or the identity of other raters for the same image. A minimum of 15 seconds per image is required for a rating to be valid. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger an automatic audit.</p>
     <h3>Tier 3 — Jury</h3>
-    <p>For Monthly and POTY: jury review is triggered when (a) peer rating diverges from DDI score by more than 1.5 points, or (b) a valid formal dispute is raised by the photographer. Jury members are selected from the approved Jury pool, rotated each cycle. Jury composition is never disclosed to photographers or other participants.</p>
-    <p>For Body of Work: jury review is mandatory. All qualifying BOW submissions are evaluated by a panel of Jury Legends — comprising approved platform Legend-tier members and externally appointed judges. External judges hold casting vote. Jury Legends evaluate the submission as a whole series, assessing thematic coherence, narrative arc, sustained creative vision, and technical consistency across images.</p>
+    <p>For Monthly and POTY: jury review is triggered when (a) peer rating diverges from DDI score by more than 1.5 points, or (b) a valid formal dispute is raised by the photographer.</p>
+    <p>For Open Competition: jury review is mandatory for the Grand Open Winner selection. The jury evaluates all 8 category winners as a shortlist and selects the single Grand Open Winner. Jury composition is never disclosed to photographers or other participants.</p>
     <div class="rules-highlight final">
-      <strong>Finality of Decisions:</strong> Tier 3 jury decisions are final, conclusive, and binding on all parties. No further internal appeal is available following a Tier 3 decision. Lens League Apex's determination of all competition matters — including eligibility, scoring, disqualification, and prize awards — is final. Participants who have exhausted the dispute process (see Section 10) and remain dissatisfied may seek independent legal remedy only as provided under Section 12.
+      <strong>Finality of Decisions:</strong> Tier 3 jury decisions are final, conclusive, and binding on all parties. No further internal appeal is available following a Tier 3 decision. Lens League Apex's determination of all competition matters — including eligibility, scoring, disqualification, and prize awards — is final.
     </div>
     <h3>Jury Legend Qualification</h3>
     <p>Jury Legends must satisfy one or both of the following criteria: (a) be a platform member who has achieved and maintained Legend tier (DDI score 9.7 or above) for a minimum of 6 consecutive months and has received written approval from Lens League Apex; or (b) be an externally appointed judge selected and contracted directly by Lens League Apex. Jury Legend status may be withdrawn at any time at the discretion of Lens League Apex.</p>
@@ -213,39 +228,140 @@
   <div class="rules-section" id="poty">
     <h2><span>05</span> Photographer of the Year (POTY) Rules</h2>
     <ul>
-      <li>POTY operates per genre and per track (Camera and Mobile independently) over the platform subscription year.</li>
+      <li>POTY operates per genre and per track (Camera and Mobile independently) over the platform subscription year. 16 competitions total: 8 genres × 2 tracks.</li>
       <li>Minimum eligibility: 24 qualifying images evaluated in the specific genre during the subscription year.</li>
       <li>POTY score: arithmetic mean of the photographer's highest 6 DDI scores in that genre across all qualifying images for the year.</li>
       <li>A photographer subscribing from Month 1 may contribute up to 48 images; Month 4, up to 32; Month 7, up to 24. The top-6 methodology ensures quality determines outcome, not volume alone.</li>
       <li>A dynamic percentile threshold is calculated monthly and updated as new qualifying images are submitted. The threshold determines which images enter the active POTY pool. The threshold is recalculated until the final submission deadline of the 12th month.</li>
       <li>Additional images purchased beyond the monthly subscription allowance are included in POTY evaluation on equal terms at the rates published on the pricing page.</li>
       <li>Final POTY results are announced within 30 days of the 12th month submission deadline.</li>
+      <li>Grand POTY Camera and Grand POTY Mobile are awarded separately. The Grand POTY winner in each track is selected by jury from the 8 Camera Gold (or 8 Mobile Gold) category winners respectively.</li>
       <li>In the event of a tied POTY score, the photographer with the higher individual peak score (best single image) in that genre wins. If still tied, the photographer with the longer subscription tenure wins.</li>
     </ul>
   </div>
 
-  <!-- 6. BOW -->
-  <div class="rules-section" id="bow">
-    <h2><span>06</span> Body of Work (BOW) Rules</h2>
+  <!-- 6. Open Competition -->
+  <div class="rules-section" id="open">
+    <h2><span>06</span> Open Competition Rules</h2>
+    <p>The Open Competition is an annual single-entry competition open to all active subscribers. It is entirely separate from POTY and Monthly Contests. A photographer may enter both POTY and the Open Competition in the same year.</p>
+    <h3>Entry</h3>
     <ul>
-      <li>BOW is a single annual competition. One entry per photographer per year.</li>
-      <li>Open to all active subscribers regardless of tenure or tier. No minimum subscription period applies.</li>
-      <li>A BOW submission consists of 6 to 12 images submitted as a unified thematic series. Submissions outside this range are ineligible.</li>
-      <li>Images in a BOW submission must have been previously scored by the Apex DDI Engine on the platform under the submitting photographer's account.</li>
-      <li>BOW is cross-genre. Images from different genres may be combined within a single submission if they form a coherent thematic series.</li>
-      <li>BOW submissions close at 23:59 IST on the last day of the 11th month of the platform year. Early submission is permitted and encouraged. Submissions may not be modified after the deadline.</li>
-      <li>BOW judging is conducted exclusively by Jury Legends. Each submission is evaluated by a minimum panel of three Jury Legends. The panel includes at least one externally appointed judge.</li>
-      <li>Evaluation criteria: thematic coherence, narrative arc, visual language consistency, sustained creative vision, individual image quality (informed by DDI scores), and overall impact of the series as a unified work.</li>
-      <li>Individual DDI scores are provided to Jury Legends as reference data. They inform but do not determine the BOW result.</li>
-      <li>BOW results are announced within 45 days of the submission deadline.</li>
-      <li>A photographer may enter both BOW and POTY in the same year. These are independent competitions.</li>
+      <li>Entry fee: <strong>₹50 per image</strong>. Each entry is for one image in one genre category.</li>
+      <li>A photographer may submit multiple entries across different genres but may submit only one entry per genre.</li>
+      <li>There is no track split. Camera and Mobile photographers compete in the same pool for each genre.</li>
+      <li>Images must have been previously scored by the Apex DDI Engine on the platform under the submitting photographer's account.</li>
+      <li>Entry opens 3 months before the Grand Prix date and closes at 23:59 IST on the date published on the platform. Entries may not be modified after submission.</li>
     </ul>
+    <h3>Categories &amp; Judging</h3>
+    <ul>
+      <li>Entries are evaluated per genre. The 8 genres are: Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative.</li>
+      <li>Category winner selection: DDI score provides initial ranking. Peer rating (Tier 2) validates ranking within each genre. The highest-ranked entry per genre is the category winner.</li>
+      <li>There is one winner per genre. No Silver or Bronze — one winner only.</li>
+      <li>In the event of a tied score, the image with the higher DDI score (pre-peer adjustment) takes precedence. If still tied, the earlier submission wins.</li>
+    </ul>
+    <h3>Grand Open Winner</h3>
+    <ul>
+      <li>The Grand Open Winner is selected by jury from the 8 category winners only. No other entry is eligible for the Grand Open prize.</li>
+      <li>The jury evaluates the 8 shortlisted images as individual works and selects the single best image across all genres.</li>
+      <li>Jury composition is not disclosed. The jury decision is final and binding.</li>
+      <li>The Grand Open Winner receives ₹2,00,000 in addition to their category prize of ₹75,000. Total prize for the Grand Open Winner: ₹2,75,000.</li>
+    </ul>
+    <h3>Results</h3>
+    <p>Open Competition results are announced within 30 days of the entry deadline. Prize disbursement follows the conditions in Section 7.</p>
   </div>
 
   <!-- 7. Prizes -->
   <div class="rules-section" id="prizes">
     <h2><span>07</span> Prize Structure &amp; Disbursement</h2>
-    <p>Prize amounts for each competition category are published on the platform and may be updated with reasonable notice. The following conditions apply to all prize disbursements:</p>
+
+    <h3>POTY Prize Structure — ₹50,00,000 Total</h3>
+    <table class="prize-table">
+      <thead>
+        <tr>
+          <th>Award</th>
+          <th>Camera Track</th>
+          <th>Mobile Track</th>
+          <th>× Genres</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="award">Gold</td>
+          <td class="amount">₹1,50,000</td>
+          <td class="amount">₹75,000</td>
+          <td>× 8</td>
+          <td>₹17,60,000</td>
+        </tr>
+        <tr>
+          <td class="award">Silver</td>
+          <td class="amount">₹75,000</td>
+          <td class="amount">₹50,000</td>
+          <td>× 8</td>
+          <td>₹10,00,000</td>
+        </tr>
+        <tr>
+          <td class="award">Bronze</td>
+          <td class="amount">₹50,000</td>
+          <td class="amount">₹25,000</td>
+          <td>× 8</td>
+          <td>₹6,00,000</td>
+        </tr>
+        <tr class="section-head">
+          <td colspan="4">16 category competitions (8 genres × 2 tracks)</td>
+          <td>₹33,60,000</td>
+        </tr>
+        <tr>
+          <td class="award">Grand POTY Camera</td>
+          <td colspan="3" style="font-size:13px; color:var(--text-muted);">Jury selects from 8 Camera Gold winners</td>
+          <td class="amount">₹10,00,000</td>
+        </tr>
+        <tr>
+          <td class="award">Grand POTY Mobile</td>
+          <td colspan="3" style="font-size:13px; color:var(--text-muted);">Jury selects from 8 Mobile Gold winners</td>
+          <td class="amount">₹6,00,000</td>
+        </tr>
+        <tr class="prize-total">
+          <td colspan="4"><strong>POTY Total</strong></td>
+          <td class="amount">₹50,00,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Open Competition Prize Structure — ₹8,00,000 Total</h3>
+    <table class="prize-table">
+      <thead>
+        <tr>
+          <th>Award</th>
+          <th>Prize</th>
+          <th>Count</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="award">Category Winner</td>
+          <td class="amount">₹75,000</td>
+          <td>× 8 genres</td>
+          <td>₹6,00,000</td>
+        </tr>
+        <tr>
+          <td class="award">Grand Open Winner</td>
+          <td class="amount">₹2,00,000</td>
+          <td>Jury from 8 category winners</td>
+          <td>₹2,00,000</td>
+        </tr>
+        <tr class="prize-total">
+          <td colspan="3"><strong>Open Total</strong></td>
+          <td class="amount">₹8,00,000</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rules-highlight">
+      <strong>Note on Grand Open Winner:</strong> The Grand Open Winner receives the category prize (₹75,000) and the Grand Open prize (₹2,00,000) — a combined total of ₹2,75,000. No track split applies. Camera and Mobile photographers compete equally.
+    </div>
+
+    <h3>Disbursement Conditions</h3>
     <ul>
       <li>Winners must complete identity verification before prizes are disbursed. Failure to complete verification within 30 days of notification results in forfeiture of the prize.</li>
       <li>Prizes are disbursed in Indian Rupees (INR) to Indian residents. International winners receive disbursement in the currency and method determined by Lens League Apex.</li>
@@ -337,12 +453,13 @@
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
     <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-      This document was last updated April 2026 and supersedes all previous contest rules.<br>
+      Version 2.0 — April 2026. This document supersedes all previous contest rules.<br>
       Questions: <a href="mailto:admin@lenslague.com" style="color:var(--gold); text-decoration:none;">admin@lenslague.com</a>
     </p>
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a href="{{ url_for('terms') }}" class="btn btn-solid">Terms &amp; Conditions →</a>
-      <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+      <a href="{{ url_for('terms') }}" class="btn btn-solid">Terms &amp; Conditions &rarr;</a>
+      <a href="{{ url_for('contests') }}" class="btn">View Contests</a>
+      <a href="{{ url_for('index') }}" class="btn">&larr; Back to Home</a>
     </div>
   </div>
 
