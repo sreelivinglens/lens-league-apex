@@ -115,10 +115,15 @@
     <h1>Admin Dashboard</h1>
     <p>Engine calibration &amp; platform overview</p>
   </div>
-  <a href="{{ url_for('admin_calibration_notes') }}" class="btn"
-     style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
-    🔧 Calibration Notes
-  </a>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_users') }}" class="btn btn-solid" style="padding:10px 20px;">
+      👥 User Management
+    </a>
+    <a href="{{ url_for('admin_calibration_notes') }}" class="btn"
+       style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
+      🔧 Calibration Notes
+    </a>
+  </div>
 </div>
 
 <!-- STATS -->
@@ -324,13 +329,11 @@
   </div>
 </div>
 
-<!-- Hidden forms for REF and DELETE — outside the bulk form to avoid nesting -->
 {% for img in recent %}
 <form id="ref-form-{{ img.id }}" method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}" style="display:none;"></form>
 <form id="del-form-{{ img.id }}" method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}" style="display:none;"></form>
 {% endfor %}
 
-<!-- BULK FORM -->
 <form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
   <div class="bulk-bar">
     <label>
