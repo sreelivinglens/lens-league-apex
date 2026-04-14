@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Subscribe — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .subscribe-wrap { max-width:560px; margin:60px auto; padding:0 var(--page-pad); }
+  .subscribe-card { background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-lg); padding:40px; }
+  .sub-title { font-size:26px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .sub-track { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:28px; }
+  .sub-summary { display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:28px; }
+  .sub-plan-name { font-size:16px; font-weight:600; color:var(--text-primary); }
+  .sub-plan-desc { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .sub-amount { font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--gold); }
+  .sub-period { font-size:13px; color:var(--text-muted); }
+  .sub-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:10px; }
+  .sub-features li { font-size:14px; color:var(--text-secondary); display:flex; align-items:center; gap:10px; }
+  .sub-features .check { color:var(--gold); font-weight:700; }
+  .pay-btn { display:block; width:100%; padding:16px; background:var(--gold); color:var(--bg); font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; border:none; border-radius:var(--radius-md); cursor:pointer; text-align:center; transition:.2s; }
+  .pay-btn:hover { opacity:.85; }
+  .no-razorpay { background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; text-align:center; }
+  .no-razorpay p { font-size:14px; color:var(--text-muted); line-height:1.7; }
+  .secure-note { margin-top:16px; text-align:center; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscribe-wrap">
+  <div class="subscribe-card">
+    <div class="sub-title">{{ track|title }} Track</div>
+    <div class="sub-track">{{ plan|title }} Subscription</div>
+
+    <div class="sub-summary">
+      <div>
+        <div class="sub-plan-name">
+          {% if track == 'camera' %}📷 Camera Track{% else %}📱 Mobile Track{% endif %}
+          — {{ plan|title }}
+        </div>
+        <div class="sub-plan-desc">
+          {% if plan == 'monthly' %}4 images/month · renews monthly
+          {% else %}4 images/month · billed annually{% endif %}
+        </div>
+      </div>
+      <div>
+        <div class="sub-amount">
+          ₹{% if track == 'camera' %}{% if plan == 'monthly' %}200{% else %}2,000{% endif %}
+          {% else %}{% if plan == 'monthly' %}100{% else %}1,000{% endif %}{% endif %}
+        </div>
+        <div class="sub-period">{% if plan == 'monthly' %}/month{% else %}/year{% endif %}</div>
+      </div>
+    </div>
+
+    <ul class="sub-features">
+      <li><span class="check">✓</span> 4 scored images per month</li>
+      <li><span class="check">✓</span> Full Apex DDI analysis every image</li>
+      <li><span class="check">✓</span> Apex Byline improvement tip</li>
+      <li><span class="check">✓</span> Monthly genre contests</li>
+      <li><span class="check">✓</span> Leaderboard ranking</li>
+      <li><span class="check">✓</span> Shareable rating card</li>
+    </ul>
+
+    {% if razorpay_key and order %}
+      <button class="pay-btn" id="pay-btn">Pay Securely with Razorpay →</button>
+      <div class="secure-note">🔒 Secured by Razorpay · 256-bit SSL</div>
+
+      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+      <script>
+        document.getElementById('pay-btn').addEventListener('click', function() {
+          var options = {
+            key: '{{ razorpay_key }}',
+            amount: {{ amount }},
+            currency: 'INR',
+            name: 'Lens League Apex',
+            description: '{{ track|title }} Track — {{ plan|title }}',
+            order_id: '{{ order.id }}',
+            handler: function(response) {
+              var form = document.createElement('form');
+              form.method = 'POST';
+              form.action = '';
+              ['razorpay_payment_id','razorpay_order_id','razorpay_signature'].forEach(function(k) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden'; inp.name = k; inp.value = response[k];
+                form.appendChild(inp);
+              });
+              document.body.appendChild(form);
+              form.submit();
+            },
+            prefill: { email: '{{ current_user.email }}', name: '{{ current_user.full_name or current_user.username }}' },
+            theme: { color: '#C8A84B' }
+          };
+          var rzp = new Razorpay(options);
+          rzp.open();
+        });
+      </script>
+    {% else %}
+      <div class="no-razorpay">
+        <p>Payment processing is being set up. To subscribe, contact us at <strong>support@lenslague.com</strong> and we'll activate your account manually.</p>
+      </div>
+    {% endif %}
+
+    <div style="margin-top:20px; text-align:center;">
+      <a href="{{ url_for('pricing') }}" style="font-size:13px; color:var(--text-muted); text-decoration:none;">← Back to Pricing</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Monthly Contests — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .contests-hero { text-align:center; padding:clamp(48px,8vw,80px) 0 40px; }
+  .contests-hero h1 { font-size:clamp(28px,5vw,48px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
+  .contests-hero h1 em { font-style:normal; color:var(--gold); }
+  .countdown-strip { display:flex; align-items:center; justify-content:center; gap:24px; background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 32px; max-width:600px; margin:0 auto 48px; }
+  .countdown-item { text-align:center; }
+  .countdown-num { font-family:var(--font-mono); font-size:36px; font-weight:700; color:var(--gold); line-height:1; }
+  .countdown-lbl { font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; font-family:var(--font-mono); margin-top:4px; }
+  .countdown-sep { font-size:28px; color:var(--gold-dark); font-weight:300; margin-bottom:16px; }
+  .rules-strip { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-bottom:48px; }
+  .rule-pill { display:flex; align-items:center; gap:8px; padding:8px 16px; background:var(--surface-2); border:1px solid var(--border); border-radius:99px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; }
+  .genre-section { margin-bottom:48px; }
+  .genre-header { display:flex; align-items:baseline; gap:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .genre-title { font-size:20px; font-weight:700; color:var(--text-primary); }
+  .genre-count { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); letter-spacing:1px; }
+  .podium-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .podium-card { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; position:relative; transition:border-color .2s; text-decoration:none; color:inherit; display:block; }
+  .podium-card:hover { border-color:var(--gold-dark); }
+  .podium-card.rank-1 { border-color:var(--gold); }
+  .rank-badge { position:absolute; top:10px; left:10px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:13px; font-weight:700; z-index:2; }
+  .rank-1 .rank-badge { background:var(--gold); color:var(--bg); }
+  .rank-2 .rank-badge { background:var(--surface-3); color:var(--text-secondary); border:1px solid var(--border); }
+  .rank-3 .rank-badge { background:var(--surface-3); color:var(--text-secondary); border:1px solid var(--border); }
+  .podium-info { padding:12px 14px; }
+  .podium-title { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podium-meta { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); }
+  .podium-score { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); float:right; line-height:1; }
+  .empty-state { background:var(--surface-2); border:1px dashed var(--border); border-radius:var(--radius-md); padding:32px; text-align:center; }
+  .empty-state p { font-size:14px; color:var(--text-muted); margin-bottom:16px; }
+  .enter-cta { text-align:center; margin-top:48px; padding:40px; background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06)); border:1px solid var(--gold-dark); border-radius:var(--radius-lg); }
+  .enter-cta h2 { font-size:clamp(20px,3vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+  .enter-cta p { font-size:15px; color:var(--text-secondary); max-width:500px; margin:0 auto 24px; line-height:1.8; }
+  @media(max-width:768px) { .podium-grid { grid-template-columns:1fr; } .countdown-strip { flex-wrap:wrap; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad);">
+
+  <div class="contests-hero">
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">{{ month_name }}</div>
+    <h1>Monthly Contests.<br><em>Zero Politics.</em></h1>
+    <p>Every genre. Every tier. Peer-rated blind. Science-verified. Reset every 30 days.</p>
+  </div>
+
+  <!-- Countdown -->
+  <div class="countdown-strip">
+    <div class="countdown-item">
+      <div class="countdown-num" id="days">{{ days_left }}</div>
+      <div class="countdown-lbl">Days Left</div>
+    </div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-item">
+      <div class="countdown-num" id="hours">--</div>
+      <div class="countdown-lbl">Hours</div>
+    </div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-item">
+      <div class="countdown-num" id="minutes">--</div>
+      <div class="countdown-lbl">Minutes</div>
+    </div>
+  </div>
+
+  <!-- Rules -->
+  <div class="rules-strip">
+    <div class="rule-pill">🎯 Peer-rated blind</div>
+    <div class="rule-pill">🔬 DDI verified</div>
+    <div class="rule-pill">📅 Monthly reset</div>
+    <div class="rule-pill">🏆 Tier-based ranking</div>
+    <div class="rule-pill">📷 Camera & Mobile separate</div>
+  </div>
+
+  <!-- Genre leaderboards -->
+  {% if monthly_top %}
+    {% for genre, images in monthly_top.items() %}
+    <div class="genre-section">
+      <div class="genre-header">
+        <span class="genre-title">{{ genre }}</span>
+        <span class="genre-count">{{ images|length }} entries this month</span>
+      </div>
+      <div class="podium-grid">
+        {% for img in images %}
+        <a href="{{ url_for('share_image', image_id=img.id) }}" class="podium-card rank-{{ loop.index }}" target="_blank">
+          <div class="rank-badge">{{ loop.index }}</div>
+          <div class="img-thumb" style="height:160px;">
+            <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+                 alt="{{ img.asset_name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div class="podium-info">
+            <div class="podium-score">{{ img.score }}</div>
+            <div class="podium-title">{{ img.asset_name or 'Untitled' }}</div>
+            <div class="podium-meta">{{ img.tier }} · {{ img.photographer_name or 'Anonymous' }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <p>No scored images this month yet. Be the first to enter.</p>
+      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload & Score Now</a>
+    </div>
+  {% endif %}
+
+  <!-- Enter CTA -->
+  <div class="enter-cta">
+    <h2>Your Shot at the Top.<br>This Month.</h2>
+    <p>Upload your best image, get your DDI score, and you're automatically in the contest for your genre and tier. No separate entry needed.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your Entry →</a>
+      <a href="{{ url_for('leaderboard') }}" class="btn">View Full Leaderboard</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Live countdown to end of month
+function updateCountdown() {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const diff = end - now;
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  document.getElementById('hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('minutes').textContent = String(m).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 60000);
+</script>
+{% endblock %}
