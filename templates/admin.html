@@ -247,6 +247,12 @@
        class="btn" style="padding:10px 24px; border-color:var(--gold-dark); color:var(--gold);">
       🔍 Run Health Check
     </a>
+    <form method="POST" action="{{ url_for('fix_tiers') }}"
+          onsubmit="return confirm('Recalculate all tier assignments from scores? This fixes any model-assigned tiers.')">
+      <button type="submit" class="btn" style="padding:10px 24px; border-color:var(--gold-dark); color:var(--gold);">
+        🏆 Fix All Tiers
+      </button>
+    </form>
     <form method="POST" action="{{ url_for('admin_rescore_all') }}"
           onsubmit="return confirm('Rescore all images with missing data? This uses API credits and may take several minutes.');">
       <button type="submit" class="btn" style="padding:10px 24px;">
@@ -254,6 +260,33 @@
       </button>
     </form>
   </div>
+</div>
+
+<!-- FIX PHOTOGRAPHER NAMES -->
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
+    ✏️ Fix Photographer Names
+  </div>
+  <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
+    Bulk rename all images credited to a specific photographer name.
+  </p>
+  <form method="POST" action="{{ url_for('fix_photographer_names') }}"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <div style="flex:1; min-width:150px;">
+      <label style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">CURRENT NAME</label>
+      <input type="text" name="old_name" placeholder="e.g. Admin" value="Admin"
+             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;">
+    </div>
+    <div style="flex:1; min-width:150px;">
+      <label style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">REPLACE WITH</label>
+      <input type="text" name="new_name" placeholder="e.g. Sree"
+             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;">
+    </div>
+    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;"
+            onclick="return confirm('Rename all images? Cannot be undone.')">
+      Rename All →
+    </button>
+  </form>
 </div>
 
 <!-- IMAGE TRANSFER -->
