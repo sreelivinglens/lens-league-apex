@@ -3,12 +3,8 @@
 
 {% block extra_css %}
 <style>
-  .upload-wrap {
-    max-width: 680px;
-    margin: 0 auto;
-  }
+  .upload-wrap { max-width: 680px; margin: 0 auto; }
 
-  /* Drop zone */
   .drop-zone {
     border: 2px dashed var(--border-strong);
     border-radius: var(--radius-md);
@@ -20,151 +16,59 @@
     position: relative;
     margin-bottom: 8px;
   }
-  .drop-zone:hover, .drop-zone.dragover {
-    background: var(--surface-4);
-    border-color: var(--gold);
-  }
+  .drop-zone:hover, .drop-zone.dragover { background: var(--surface-4); border-color: var(--gold); }
   .drop-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
   }
   .dz-icon { font-size: 3rem; margin-bottom: 14px; display: block; }
-  .dz-label {
-    font-size: 16px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-weight: 500;
-  }
+  .dz-label { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
   .dz-label strong { color: var(--gold); }
-  .dz-hint {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    letter-spacing: 1px;
-  }
+  .dz-hint { font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 1px; }
 
-  /* Preview */
   .preview-area {
-    display: none;
-    margin-top: 16px;
-    background: var(--surface-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
+    display: none; margin-top: 16px; background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
   }
   .preview-area img {
-    width: 100%;
-    max-height: 340px;
-    object-fit: contain;
-    display: block;
-    background: var(--surface-3);
+    width: 100%; max-height: 340px; object-fit: contain; display: block; background: var(--surface-3);
   }
   .file-info {
-    padding: 10px 16px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
+    padding: 10px 16px; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-muted); border-top: 1px solid var(--border);
   }
-
-  /* File error */
   .file-error {
-    display: none;
-    margin-top: 10px;
-    padding: 12px 16px;
-    background: var(--red-dim);
-    border: 1px solid var(--red);
-    border-radius: var(--radius-sm);
-    color: #F0A0A0;
-    font-size: 14px;
+    display: none; margin-top: 10px; padding: 12px 16px;
+    background: var(--red-dim); border: 1px solid var(--red);
+    border-radius: var(--radius-sm); color: #F0A0A0; font-size: 14px;
   }
-
-  /* Genre hint */
   .genre-hint {
-    min-height: 20px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin-top: 6px;
-    padding: 0 2px;
-    transition: opacity 0.2s;
+    min-height: 20px; font-size: 13px; color: var(--text-muted);
+    line-height: 1.6; margin-top: 6px; padding: 0 2px; transition: opacity 0.2s;
   }
-
-  /* EXIF note */
   .exif-note {
-    margin-top: 20px;
-    padding: 14px 18px;
-    background: var(--surface-3);
+    margin-top: 20px; padding: 14px 18px; background: var(--surface-3);
     border-left: 3px solid var(--gold-dark);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.65;
+    font-size: 14px; color: var(--text-secondary); line-height: 1.65;
   }
   .exif-note strong { color: var(--gold); }
 
-  /* Progress */
   .progress-wrap {
-    display: none;
-    margin-top: 20px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 20px;
+    display: none; margin-top: 20px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px;
   }
-  .progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .progress-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: var(--gold);
-    text-transform: uppercase;
-  }
-  .progress-elapsed {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .progress-track {
-    background: var(--surface-3);
-    border-radius: 99px;
-    height: 8px;
-    overflow: hidden;
-  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
+  .progress-elapsed { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .progress-track { background: var(--surface-3); border-radius: 99px; height: 8px; overflow: hidden; }
   .progress-fill {
-    height: 100%;
-    width: 0%;
+    height: 100%; width: 0%;
     background: linear-gradient(90deg, var(--gold-dark), var(--gold));
-    border-radius: 99px;
-    transition: width 0.3s ease;
+    border-radius: 99px; transition: width 0.3s ease;
   }
-  .progress-pct {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-  }
-  .progress-pct span {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .progress-status {
-    margin-top: 12px;
-    font-size: 14px;
-    color: var(--text-secondary);
-    text-align: center;
-    min-height: 22px;
-  }
+  .progress-pct { display: flex; justify-content: space-between; margin-top: 8px; }
+  .progress-pct span { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .progress-status { margin-top: 12px; font-size: 14px; color: var(--text-secondary); text-align: center; min-height: 22px; }
 </style>
 {% endblock %}
 
@@ -200,6 +104,15 @@
         <input type="text" id="asset_name" name="asset_name"
                placeholder="e.g. Golden Hour at Hampi"
                maxlength="120" required>
+      </div>
+
+      <!-- Photographer Name -->
+      <div class="form-group">
+        <label for="photographer_name">Photographer Name</label>
+        <input type="text" id="photographer_name" name="photographer_name"
+               placeholder="e.g. Sreeekumar Krishnan"
+               maxlength="120"
+               value="{{ current_user.full_name or current_user.username }}">
       </div>
 
       <!-- Genre -->
@@ -258,6 +171,7 @@
         6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM<br>
         <span style="color:var(--text-muted);">High global demand during 6–10 PM IST may slow scoring.</span>
       </div>
+
       <button type="submit" class="btn btn-solid" id="submitBtn"
               style="width:100%; padding:15px; font-size:13px; letter-spacing:2px; margin-top:4px;">
         ⬆ Submit for Scoring
@@ -290,7 +204,6 @@
   const MAX_MB  = 5;
   const ALLOWED = ['image/jpeg', 'image/png'];
 
-  // Drag & drop
   ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
     ev.preventDefault(); dropZone.classList.add('dragover');
   }));
@@ -309,15 +222,11 @@
     fileError.style.display = 'none';
     if (!ALLOWED.includes(file.type)) {
       showError('Only JPG and PNG files are accepted.');
-      previewArea.style.display = 'none';
-      fileInput.value = '';
-      return;
+      previewArea.style.display = 'none'; fileInput.value = ''; return;
     }
     if (file.size > MAX_MB * 1024 * 1024) {
       showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`);
-      previewArea.style.display = 'none';
-      fileInput.value = '';
-      return;
+      previewArea.style.display = 'none'; fileInput.value = ''; return;
     }
     const reader = new FileReader();
     reader.onload = ev => {
@@ -329,11 +238,9 @@
   }
 
   function showError(msg) {
-    fileError.textContent = msg;
-    fileError.style.display = 'block';
+    fileError.textContent = msg; fileError.style.display = 'block';
   }
 
-  // Genre hints
   const genreHints = {
     'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ referred for judge review.',
     'Drone':      '🚁 Aerial photography. DoD covers wind, altitude, vibration and regulatory complexity. Geometric patterns and impossible ground-level perspectives score highest.',
@@ -348,7 +255,6 @@
     genreHintEl.textContent = genreHints[this.value] || '';
   });
 
-  // XHR submit with progress
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     const file = fileInput.files[0];
