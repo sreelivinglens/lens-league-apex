@@ -6,6 +6,20 @@
   .contests-hero { text-align:center; padding:clamp(48px,8vw,80px) 0 40px; }
   .contests-hero h1 { font-size:clamp(28px,5vw,48px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
   .contests-hero h1 em { font-style:normal; color:var(--gold); }
+  .contests-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-secondary); max-width:580px; margin:0 auto 32px; line-height:1.8; }
+
+  /* Participate banner for non-logged-in */
+  .participate-banner {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.08));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+    padding: 32px; text-align: center; margin-bottom: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .participate-banner-text h3 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .participate-banner-text p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin: 0; max-width: 480px; }
+  .participate-actions { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+
   .countdown-strip { display:flex; align-items:center; justify-content:center; gap:24px; background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 32px; max-width:600px; margin:0 auto 48px; }
   .countdown-item { text-align:center; }
   .countdown-num { font-family:var(--font-mono); font-size:36px; font-weight:700; color:var(--gold); line-height:1; }
@@ -28,13 +42,22 @@
   .podium-info { padding:12px 14px; }
   .podium-title { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .podium-meta { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); }
-  .podium-score { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); float:right; line-height:1; }
+  .podium-tier { font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--gold); float:right; line-height:1; }
   .empty-state { background:var(--surface-2); border:1px dashed var(--border); border-radius:var(--radius-md); padding:32px; text-align:center; }
   .empty-state p { font-size:14px; color:var(--text-muted); margin-bottom:16px; }
-  .enter-cta { text-align:center; margin-top:48px; padding:40px; background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06)); border:1px solid var(--gold-dark); border-radius:var(--radius-lg); }
+
+  /* Bottom CTA — adapts based on auth state */
+  .enter-cta { text-align:center; margin-top:48px; padding:48px 40px; background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06)); border:1px solid var(--gold-dark); border-radius:var(--radius-lg); }
   .enter-cta h2 { font-size:clamp(20px,3vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:12px; }
-  .enter-cta p { font-size:15px; color:var(--text-secondary); max-width:500px; margin:0 auto 24px; line-height:1.8; }
-  @media(max-width:768px) { .podium-grid { grid-template-columns:1fr; } .countdown-strip { flex-wrap:wrap; } }
+  .enter-cta p { font-size:15px; color:var(--text-secondary); max-width:500px; margin:0 auto 28px; line-height:1.8; }
+  .enter-cta .cta-note { margin-top:14px; font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; }
+
+  @media(max-width:768px) {
+    .podium-grid { grid-template-columns:1fr; }
+    .countdown-strip { flex-wrap:wrap; }
+    .participate-banner { flex-direction:column; text-align:center; }
+    .participate-banner-text p { max-width:100%; }
+  }
 </style>
 {% endblock %}
 
@@ -46,6 +69,20 @@
     <h1>Monthly Contests.<br><em>Zero Politics.</em></h1>
     <p>Every genre. Every tier. Peer-rated blind. Science-verified. Reset every 30 days.</p>
   </div>
+
+  <!-- Participate Now banner — shown to non-logged-in visitors -->
+  {% if not current_user.is_authenticated %}
+  <div class="participate-banner">
+    <div class="participate-banner-text">
+      <h3>🏆 This Month's Contest is Open</h3>
+      <p>Upload your image, get your DDI score, and you're automatically entered into your genre contest. No separate entry needed. Camera and Mobile tracks judged separately.</p>
+    </div>
+    <div class="participate-actions">
+      <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Participate Now &rarr;</a>
+      <a href="{{ url_for('login') }}" class="btn">I Have an Account</a>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Countdown -->
   <div class="countdown-strip">
@@ -65,13 +102,14 @@
     </div>
   </div>
 
-  <!-- Rules -->
+  <!-- Rules pills -->
   <div class="rules-strip">
     <div class="rule-pill">🎯 Peer-rated blind</div>
     <div class="rule-pill">🔬 DDI verified</div>
     <div class="rule-pill">📅 Monthly reset</div>
     <div class="rule-pill">🏆 Tier-based ranking</div>
-    <div class="rule-pill">📷 Camera & Mobile separate</div>
+    <div class="rule-pill">📷 Camera &amp; Mobile separate</div>
+    <div class="rule-pill">🌟 Annual POTY &amp; BOW</div>
   </div>
 
   <!-- Genre leaderboards -->
@@ -80,7 +118,7 @@
     <div class="genre-section">
       <div class="genre-header">
         <span class="genre-title">{{ genre }}</span>
-        <span class="genre-count">{{ images|length }} entries this month</span>
+        <span class="genre-count">{{ images|length }} entr{{ 'y' if images|length == 1 else 'ies' }} this month</span>
       </div>
       <div class="podium-grid">
         {% for img in images %}
@@ -91,9 +129,9 @@
                  alt="{{ img.asset_name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
           </div>
           <div class="podium-info">
-            <div class="podium-score">{{ img.score }}</div>
+            <div class="podium-tier">{{ img.tier }}</div>
             <div class="podium-title">{{ img.asset_name or 'Untitled' }}</div>
-            <div class="podium-meta">{{ img.tier }} · {{ img.photographer_name or 'Anonymous' }}</div>
+            <div class="podium-meta">{{ genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
           </div>
         </a>
         {% endfor %}
@@ -102,25 +140,38 @@
     {% endfor %}
   {% else %}
     <div class="empty-state">
-      <p>No scored images this month yet. Be the first to enter.</p>
-      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload & Score Now</a>
+      <p>No entries this month yet in any genre. Be the first.</p>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload &amp; Enter Now</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Participate Now &rarr;</a>
+      {% endif %}
     </div>
   {% endif %}
 
-  <!-- Enter CTA -->
+  <!-- Bottom CTA -->
   <div class="enter-cta">
-    <h2>Your Shot at the Top.<br>This Month.</h2>
-    <p>Upload your best image, get your DDI score, and you're automatically in the contest for your genre and tier. No separate entry needed.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your Entry →</a>
-      <a href="{{ url_for('leaderboard') }}" class="btn">View Full Leaderboard</a>
-    </div>
+    {% if current_user.is_authenticated %}
+      <h2>Your Shot at the Top.<br>This Month.</h2>
+      <p>Upload your best image, get your DDI score, and you're automatically in the contest for your genre and tier.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your Entry &rarr;</a>
+        <a href="{{ url_for('leaderboard') }}" class="btn">View Full Leaderboard</a>
+      </div>
+    {% else %}
+      <h2>Ready to Compete?</h2>
+      <p>Join free, upload your image, and enter this month's contest automatically. 10 free scored images to start — no credit card required.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:15px 40px;">Participate Now &rarr;</a>
+        <a href="{{ url_for('contest_rules') }}" class="btn">Read Contest Rules</a>
+      </div>
+      <div class="cta-note">Free to Join &nbsp;·&nbsp; No Credit Card &nbsp;·&nbsp; Instant Score</div>
+    {% endif %}
   </div>
 
 </div>
 
 <script>
-// Live countdown to end of month
 function updateCountdown() {
   const now = new Date();
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
