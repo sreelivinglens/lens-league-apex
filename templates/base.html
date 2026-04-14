@@ -214,11 +214,33 @@ nav {
   border-radius: var(--radius-sm);
   margin: 8px 0;
   border-left: 3px solid;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  animation: flashIn .3s ease;
+  transition: opacity .3s ease, transform .3s ease;
+}
+@keyframes flashIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .flash.success { background: var(--green-dim);  border-color: var(--green); color: #A8DFB8; }
 .flash.error   { background: var(--red-dim);    border-color: var(--red);   color: #F0A0A0; }
 .flash.warning { background: var(--amber-dim);  border-color: var(--amber); color: #F0C888; }
 .flash.info    { background: var(--gold-subtle);border-color: var(--gold);  color: var(--gold-light); }
+.flash-msg     { flex: 1; line-height: 1.5; }
+.flash-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 0 2px;
+  opacity: .4; transition: opacity .2s; flex-shrink: 0;
+}
+.flash-close:hover { opacity: 1; }
+.flash.success .flash-close { color: #A8DFB8; }
+.flash.error   .flash-close { color: #F0A0A0; }
+.flash.warning .flash-close { color: #F0C888; }
+.flash.info    .flash-close { color: var(--gold-light); }
+.flash.hiding  { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 
 /* ── Main Layout ─────────────────────────────────────────────────────────── */
 main {
@@ -543,9 +565,12 @@ footer {
 <!-- Flash messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-  <div class="flash-container" style="max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);">
+  <div class="flash-container" id="flashContainer" style="max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);">
     {% for category, message in messages %}
-      <div class="flash {{ category }}">{{ message }}</div>
+      <div class="flash {{ category }}" role="alert">
+        <span class="flash-msg">{{ message }}</span>
+        <button class="flash-close" onclick="dismissFlash(this)" aria-label="Dismiss">&times;</button>
+      </div>
     {% endfor %}
   </div>
   {% endif %}
@@ -574,6 +599,22 @@ document.addEventListener('click', function(e) {
   if (nav.classList.contains('open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
     nav.classList.remove('open');
   }
+});
+
+function dismissFlash(btn) {
+  const flash = btn.closest('.flash');
+  flash.classList.add('hiding');
+  setTimeout(() => flash.remove(), 300);
+}
+
+// Auto-hide success messages after 6s, keep errors/warnings until dismissed
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.flash.success').forEach(function(el) {
+    setTimeout(function() {
+      el.classList.add('hiding');
+      setTimeout(() => el.remove(), 300);
+    }, 6000);
+  });
 });
 </script>
 
