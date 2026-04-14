@@ -21,6 +21,8 @@ import storage as r2
 
 load_dotenv()
 
+FREE_IMAGE_LIMIT = 10  # Lifetime free images for non-subscribed users
+
 app = Flask(__name__)
 app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lensleague.db')
@@ -69,6 +71,13 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS camera_track VARCHAR(20) DEFAULT 'camera'",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_track VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
             ]
             for sql in _migrations:
                 try:
@@ -359,6 +368,17 @@ def upload():
         if not allowed_file(file.filename):
             flash('File type not supported.', 'error')
             return redirect(request.url)
+
+        # ── Free quota check ──────────────────────────────────────────────
+        if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+            user_total = Image.query.filter_by(user_id=current_user.id).count()
+            if user_total >= FREE_IMAGE_LIMIT:
+                flash(
+                    f'You have used all {FREE_IMAGE_LIMIT} free images. '
+                    'Upgrade to Camera or Mobile track to continue uploading.',
+                    'error'
+                )
+                return redirect(url_for('pricing'))
 
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
@@ -702,6 +722,17 @@ def bulk_upload():
         if not genre:
             flash('Please select a genre before uploading.', 'error')
             return redirect(url_for('bulk_upload'))
+
+        # ── Free quota check ──────────────────────────────────────────────
+        if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+            user_total = Image.query.filter_by(user_id=current_user.id).count()
+            if user_total >= FREE_IMAGE_LIMIT:
+                flash(
+                    f'You have used all {FREE_IMAGE_LIMIT} free images. '
+                    'Upgrade to Camera or Mobile track to continue uploading.',
+                    'error'
+                )
+                return redirect(url_for('pricing'))
         photographer = (request.form.get('photographer_name') or '').strip()
         if not photographer:
             photographer = current_user.full_name or current_user.username
@@ -1488,6 +1519,131 @@ def debug_images():
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
+
+
+# ---------------------------------------------------------------------------
+# Pricing page
+# ---------------------------------------------------------------------------
+
+@app.route('/pricing')
+def pricing():
+    return render_template('pricing.html')
+
+
+# ---------------------------------------------------------------------------
+# Contests
+# ---------------------------------------------------------------------------
+
+@app.route('/contests')
+@login_required
+def contests():
+    from datetime import date
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    days_left = (next_month - now).days
+
+    # Top images this month per genre
+    monthly_top = {}
+    genres = list(GENRE_WEIGHTS.keys())
+    for genre in genres:
+        top = (Image.query
+               .filter(
+                   Image.status == 'scored',
+                   Image.score != None,
+                   Image.created_at >= month_start
+               )
+               .filter(Image.genre == genre)
+               .order_by(Image.score.desc())
+               .limit(3).all())
+        if top:
+            monthly_top[genre] = top
+
+    return render_template('contests.html',
+        monthly_top=monthly_top,
+        days_left=days_left,
+        month_name=now.strftime('%B %Y'),
+        genres=genres,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Razorpay subscription
+# ---------------------------------------------------------------------------
+
+@app.route('/subscribe/<track>', methods=['GET', 'POST'])
+@login_required
+def subscribe(track):
+    if track not in ('camera', 'mobile'):
+        return redirect(url_for('pricing'))
+
+    razorpay_key = os.getenv('RAZORPAY_KEY_ID', '')
+    prices = {
+        'camera': {'monthly': 20000, 'annual': 200000},  # paise
+        'mobile': {'monthly': 10000, 'annual': 100000},
+    }
+    plan = request.args.get('plan', 'monthly')
+    amount = prices[track][plan]
+
+    if request.method == 'POST':
+        payment_id = request.form.get('razorpay_payment_id', '')
+        order_id   = request.form.get('razorpay_order_id', '')
+        signature  = request.form.get('razorpay_signature', '')
+
+        if not razorpay_key:
+            flash('Payment system not configured. Contact support.', 'error')
+            return redirect(url_for('pricing'))
+
+        try:
+            import razorpay, hmac, hashlib
+            client = razorpay.Client(auth=(razorpay_key, os.getenv('RAZORPAY_KEY_SECRET', '')))
+            params = {'razorpay_order_id': order_id,
+                      'razorpay_payment_id': payment_id,
+                      'razorpay_signature': signature}
+            client.utility.verify_payment_signature(params)
+
+            # Mark user as subscribed
+            current_user.subscription_track = track
+            current_user.subscription_plan  = plan
+            current_user.subscribed_at       = datetime.utcnow()
+            current_user.is_subscribed       = True
+            db.session.commit()
+
+            flash(f'🎉 Welcome to the {track.title()} Track! Your subscription is active.', 'success')
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            flash(f'Payment verification failed: {e}', 'error')
+            return redirect(url_for('subscribe', track=track, plan=plan))
+
+    # GET — create Razorpay order
+    order = None
+    if razorpay_key:
+        try:
+            import razorpay
+            client = razorpay.Client(auth=(razorpay_key, os.getenv('RAZORPAY_KEY_SECRET', '')))
+            order = client.order.create({
+                'amount': amount,
+                'currency': 'INR',
+                'payment_capture': 1,
+            })
+        except Exception as e:
+            flash(f'Could not create payment order: {e}', 'error')
+
+    return render_template('subscribe.html',
+        track=track, plan=plan, amount=amount,
+        order=order, razorpay_key=razorpay_key,
+    )
+
+
+@app.route('/subscription/cancel', methods=['POST'])
+@login_required
+def cancel_subscription():
+    current_user.is_subscribed       = False
+    current_user.subscription_track  = None
+    current_user.subscription_plan   = None
+    db.session.commit()
+    flash('Your subscription has been cancelled. You can continue on the free plan.', 'info')
+    return redirect(url_for('dashboard'))
 
 
 @app.errorhandler(404)
