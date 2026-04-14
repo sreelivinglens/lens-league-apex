@@ -127,6 +127,28 @@
     display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
   }
   .contest-rule-dot { color: var(--gold-dark); flex-shrink: 0; margin-top: 2px; }
+
+  /* Prize pool callout strip */
+  .prize-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0; border: 1px solid var(--gold-dark); border-radius: var(--radius-md);
+    overflow: hidden; margin-bottom: 40px;
+  }
+  .prize-strip-item {
+    text-align: center; padding: 20px 16px;
+    border-right: 1px solid var(--gold-dark);
+  }
+  .prize-strip-item:last-child { border-right: none; }
+  .prize-strip-label {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .prize-strip-val {
+    font-family: var(--font-mono); font-size: clamp(20px,3vw,28px);
+    font-weight: 700; color: var(--gold); line-height: 1;
+  }
+  .prize-strip-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
   .contests-cta { text-align: center; }
   .countdown-badge {
     display: inline-flex; align-items: center; gap: 8px;
@@ -138,9 +160,7 @@
   .countdown-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
 
   /* ── JUDGING TIERS ────────────────────────────────────────────── */
-  .tiers-strip {
-    max-width: var(--max-width); margin: 0 auto 64px; padding: 0 var(--page-pad);
-  }
+  .tiers-strip { max-width: var(--max-width); margin: 0 auto 64px; padding: 0 var(--page-pad); }
   .tiers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .tier-card {
     background: var(--surface-2); border: 1px solid var(--border);
@@ -148,8 +168,7 @@
   }
   .tier-num {
     font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
-    margin-bottom: 10px;
+    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;
   }
   .tier-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .tier-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
@@ -199,6 +218,7 @@
     .hero-right { aspect-ratio: 16/9; }
     .cards-grid, .contests-grid, .tiers-grid { grid-template-columns: 1fr 1fr; }
     .top-grid { grid-template-columns: 1fr 1fr; }
+    .prize-strip { grid-template-columns: 1fr 1fr 1fr; }
   }
   @media(max-width:640px) {
     .cards-grid, .contests-grid, .tiers-grid, .top-grid { grid-template-columns: 1fr; }
@@ -207,6 +227,9 @@
     .stat-box:last-child { border-bottom: none; }
     .hero-actions { flex-direction: column; }
     .hero-trust { display: none; }
+    .prize-strip { grid-template-columns: 1fr; }
+    .prize-strip-item { border-right: none; border-bottom: 1px solid var(--gold-dark); }
+    .prize-strip-item:last-child { border-bottom: none; }
   }
 </style>
 {% endblock %}
@@ -271,7 +294,7 @@
     <a href="{{ url_for('pricing') }}" class="info-card">
       <span class="info-card-icon">💰</span>
       <div class="info-card-title">Pricing</div>
-      <div class="info-card-desc">10 free scored images to start. Camera from ₹200/month, Mobile from ₹100/month. No hidden fees.</div>
+      <div class="info-card-desc">3 free scored images to start. Camera from ₹200/month, Mobile from ₹100/month. No hidden fees.</div>
       <div class="info-card-link">View Pricing &rarr;</div>
     </a>
   </div>
@@ -283,8 +306,27 @@
 
     <div class="contests-header">
       <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Compete. Win. Repeat.</div>
-      <h2>Monthly Contests.<br><em>Annual Glory.</em></h2>
-      <p>Every genre. Every month. Peer-rated blind. Science-verified. Zero politics. The reason photographers stay for 12 months — and come back every year.</p>
+      <h2>Monthly Contests.<br><em>Annual Glory. ₹58L in Prizes.</em></h2>
+      <p>Every genre. Every month. Peer-rated blind. Science-verified. Zero politics. Monthly POTY contests, annual Grand Prix, and the Open Competition — 8 genres, two tracks, ₹58 lakhs total prize money.</p>
+    </div>
+
+    <!-- Prize pool strip -->
+    <div class="prize-strip">
+      <div class="prize-strip-item">
+        <div class="prize-strip-label">POTY Prize Pool</div>
+        <div class="prize-strip-val">₹50L</div>
+        <div class="prize-strip-sub">16 competitions · Camera &amp; Mobile</div>
+      </div>
+      <div class="prize-strip-item" style="background:rgba(200,168,75,.04);">
+        <div class="prize-strip-label">Open Competition</div>
+        <div class="prize-strip-val">₹8L</div>
+        <div class="prize-strip-sub">8 genres · No track split · ₹50/entry</div>
+      </div>
+      <div class="prize-strip-item">
+        <div class="prize-strip-label">Total Prize Money</div>
+        <div class="prize-strip-val">₹58L</div>
+        <div class="prize-strip-sub">Annual · Grand Prix</div>
+      </div>
     </div>
 
     <div class="contests-grid">
@@ -305,8 +347,8 @@
       <div class="contest-card featured">
         <span class="contest-card-icon">🌟</span>
         <div class="contest-card-title">Photographer of the Year</div>
-        <div class="contest-card-sub">Annual · Per Genre · POTY</div>
-        <div class="contest-card-desc">Your top 6 images in each genre across the year decide your POTY score. Minimum 24 qualifying images needed. Quality beats volume — one brilliant image can change everything.</div>
+        <div class="contest-card-sub">Annual · Per Genre · ₹50L</div>
+        <div class="contest-card-desc">Your top 6 images in each genre across the year. Camera Gold ₹1,50,000. Mobile Gold ₹75,000. Grand POTY Camera ₹10L. Grand POTY Mobile ₹6L. 8 genres, 2 tracks.</div>
         <div class="contest-card-rules">
           <div class="contest-rule"><span class="contest-rule-dot">›</span> Scored on average of your top 6 DDI scores per genre</div>
           <div class="contest-rule"><span class="contest-rule-dot">›</span> Min. 24 images in genre to qualify (6 months)</div>
@@ -316,15 +358,15 @@
       </div>
 
       <div class="contest-card">
-        <span class="contest-card-icon">🎨</span>
-        <div class="contest-card-title">Body of Work</div>
-        <div class="contest-card-sub">Annual · Cross-Genre · BOW</div>
-        <div class="contest-card-desc">Submit 6–12 images as a unified thematic series. Cross-genre. Open to all subscribers regardless of tenure. Judged by Jury Legends on coherence, narrative, and sustained vision.</div>
+        <span class="contest-card-icon">🎯</span>
+        <div class="contest-card-title">Open Competition</div>
+        <div class="contest-card-sub">Annual · No Track Split · ₹8L</div>
+        <div class="contest-card-desc">One shot. No track split — Camera and Mobile compete together. One winner per genre (₹75,000). Grand Open Winner selected by jury from the 8 category winners (₹2,00,000).</div>
         <div class="contest-card-rules">
-          <div class="contest-rule"><span class="contest-rule-dot">›</span> 6–12 images curated by you as a series</div>
-          <div class="contest-rule"><span class="contest-rule-dot">›</span> Cross-genre — your theme, your story</div>
-          <div class="contest-rule"><span class="contest-rule-dot">›</span> Judged by Jury Legends — no peer rating</div>
-          <div class="contest-rule"><span class="contest-rule-dot">›</span> Submissions close end of Month 11</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> ₹50 per entry — any subscriber can enter</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> 8 genre winners × ₹75,000 = ₹6L</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> Grand Open Winner — jury from 8 finalists = ₹2L</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> Opens 3 months before Grand Prix</div>
         </div>
       </div>
 
@@ -369,7 +411,7 @@
       <span class="tier-icon">⚖️</span>
       <div class="tier-num">Tier 3</div>
       <div class="tier-title">Jury</div>
-      <div class="tier-desc">Triggered when peer and AI diverge significantly. Mandatory for Body of Work, conducted by Jury Legends. Final and binding.</div>
+      <div class="tier-desc">Triggered when peer and AI diverge significantly. Mandatory for Open Competition Grand Winner. Conducted by Jury Legends. Final and binding.</div>
     </div>
   </div>
 </div>
@@ -424,12 +466,12 @@
   <div class="cta-card">
     <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Start Today. It's Free.</div>
     <h2>Find Out What Your Photography<br>Is Really Worth.</h2>
-    <p>10 free scored images. No credit card. No commitment. The most honest feedback your photography has ever received.</p>
+    <p>3 free scored images. No credit card. No commitment. The most honest feedback your photography has ever received.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Score &rarr;</a>
       <a href="{{ url_for('login') }}" class="btn">I Already Have an Account</a>
     </div>
-    <div class="cta-note">10 Free Images &nbsp;·&nbsp; No Credit Card &nbsp;·&nbsp; Instant Results</div>
+    <div class="cta-note">3 Free Images &nbsp;·&nbsp; No Credit Card &nbsp;·&nbsp; Instant Results</div>
   </div>
 </div>
 {% endif %}
