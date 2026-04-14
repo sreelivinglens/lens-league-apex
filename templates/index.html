@@ -279,7 +279,7 @@
 <!-- ── THREE INFO CARDS ───────────────────────────────────────────── -->
 <div class="cards-section">
   <div class="cards-grid">
-    <a href="{{ url_for('pricing') }}" class="info-card">
+    <a href="{{ url_for('science') }}" class="info-card">
       <span class="info-card-icon">🔬</span>
       <div class="info-card-title">The Science</div>
       <div class="info-card-desc">Five academically-grounded modules. Genre-calibrated weights. One repeatable, unbiased score per image.</div>
@@ -306,16 +306,21 @@
 
     <div class="contests-header">
       <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Compete. Win. Repeat.</div>
-      <h2>Monthly Contests.<br><em>Annual Glory. ₹58L in Prizes.</em></h2>
-      <p>Every genre. Every month. Peer-rated blind. Science-verified. Zero politics. Monthly POTY contests, annual Grand Prix, and the Open Competition — 8 genres, two tracks, ₹58 lakhs total prize money.</p>
+      <h2>Four Competitions.<br><em>Annual Glory. ₹63.25L in Prizes.</em></h2>
+      <p>Every genre. Every month. Peer-rated blind. Science-verified. Zero politics. Monthly contests, annual POTY, Body of Work judged by Jury Legends, and the Open Competition — 8 genres, two tracks, ₹63.25 lakhs total prize money.</p>
     </div>
 
     <!-- Prize pool strip -->
-    <div class="prize-strip">
+    <div class="prize-strip" style="grid-template-columns:repeat(4,1fr);">
       <div class="prize-strip-item">
         <div class="prize-strip-label">POTY Prize Pool</div>
         <div class="prize-strip-val">₹50L</div>
         <div class="prize-strip-sub">16 competitions · Camera &amp; Mobile</div>
+      </div>
+      <div class="prize-strip-item">
+        <div class="prize-strip-label">Body of Work</div>
+        <div class="prize-strip-val">₹5.25L</div>
+        <div class="prize-strip-sub">Cross-genre · Jury Legends only</div>
       </div>
       <div class="prize-strip-item" style="background:rgba(200,168,75,.04);">
         <div class="prize-strip-label">Open Competition</div>
@@ -324,12 +329,12 @@
       </div>
       <div class="prize-strip-item">
         <div class="prize-strip-label">Total Prize Money</div>
-        <div class="prize-strip-val">₹58L</div>
+        <div class="prize-strip-val">₹63.25L</div>
         <div class="prize-strip-sub">Annual · Grand Prix</div>
       </div>
     </div>
 
-    <div class="contests-grid">
+    <div class="contests-grid" style="grid-template-columns:repeat(2,1fr);">
 
       <div class="contest-card">
         <span class="contest-card-icon">🏆</span>
@@ -354,6 +359,19 @@
           <div class="contest-rule"><span class="contest-rule-dot">›</span> Min. 24 images in genre to qualify (6 months)</div>
           <div class="contest-rule"><span class="contest-rule-dot">›</span> Dynamic cutoff recalculated monthly</div>
           <div class="contest-rule"><span class="contest-rule-dot">›</span> Camera and Mobile POTY awarded separately</div>
+        </div>
+      </div>
+
+      <div class="contest-card featured">
+        <span class="contest-card-icon">🎨</span>
+        <div class="contest-card-title">Body of Work</div>
+        <div class="contest-card-sub">Annual · Cross-Genre · ₹5.25L</div>
+        <div class="contest-card-desc">Submit 6–12 images as a unified thematic series. Cross-genre. Judged exclusively by Jury Legends — no peer rating. Gold ₹3L / Silver ₹1.5L / Bronze ₹75K. Open to all subscribers.</div>
+        <div class="contest-card-rules">
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> 6–12 curated images as a unified series</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> No peer rating — Jury Legends only</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> Cross-genre · no track split · no tenure minimum</div>
+          <div class="contest-rule"><span class="contest-rule-dot">›</span> Submissions close end of Month 11</div>
         </div>
       </div>
 

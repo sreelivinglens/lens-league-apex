@@ -113,7 +113,7 @@
   </div>
 
   <div class="rules-highlight legal">
-    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by Lens League Apex. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), and the Open Competition — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by Lens League Apex. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), Body of Work (BOW), and the Open Competition — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
   </div>
 
   <div class="toc">
@@ -124,6 +124,7 @@
       <li><a href="#judging">Judging Process &amp; Finality</a></li>
       <li><a href="#monthly">Monthly Contest Rules</a></li>
       <li><a href="#poty">POTY Rules</a></li>
+      <li><a href="#bow">Body of Work Rules</a></li>
       <li><a href="#open">Open Competition Rules</a></li>
       <li><a href="#prizes">Prize Structure &amp; Disbursement</a></li>
       <li><a href="#disqualification">Disqualification &amp; Integrity</a></li>
@@ -138,7 +139,7 @@
   <!-- 1. Overview -->
   <div class="rules-section" id="overview">
     <h2><span>01</span> Competition Overview</h2>
-    <p>Lens League Apex operates three distinct competition formats across 8 genres (Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative) and two tracks (Camera and Mobile):</p>
+    <p>Lens League Apex operates four distinct competition formats across 8 genres (Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative) and two tracks (Camera and Mobile):</p>
     <table class="comp-table">
       <thead>
         <tr>
@@ -162,10 +163,16 @@
           <td>DDI → Peer → Jury (triggered)</td>
         </tr>
         <tr>
+          <td>Body of Work</td>
+          <td>Annual · ₹5.25L pool</td>
+          <td>Cross-genre · No track split · Curated series</td>
+          <td>DDI → Jury Legends (mandatory)</td>
+        </tr>
+        <tr>
           <td>Open Competition</td>
           <td>Annual · ₹8L pool</td>
           <td>All 8 genres · No track split · ₹50/entry</td>
-          <td>DDI → Jury (mandatory for Grand Open)</td>
+          <td>DDI → Peer → Jury (mandatory for Grand Open)</td>
         </tr>
       </tbody>
     </table>
@@ -185,23 +192,35 @@
     <h3>Monthly Contest &amp; POTY — Automatic Entry</h3>
     <p>For Monthly Contests: every image scored by the Apex DDI Engine within the calendar month is automatically entered into the contest for its declared genre and track. No separate entry action is required.</p>
     <p>For POTY: all images meeting the minimum qualification threshold (24 images in the genre during the subscription year) are automatically considered. No separate entry action is required.</p>
+    <h3>Body of Work — Curated Submission</h3>
+    <p>BOW entry requires deliberate submission of a curated series of 6–12 images assembled by the photographer. Entry is not automatic. There is no minimum subscription period — BOW is open to all active subscribers regardless of tenure. All images in the submission must have been previously scored by the Apex DDI Engine on the platform under the submitting photographer's account. BOW is cross-genre. Submissions close at 23:59 IST on the last day of the 11th month of the platform year. One BOW submission per photographer per year.</p>
     <h3>Open Competition — Paid Entry</h3>
-    <p>The Open Competition requires deliberate, paid entry. Each entry costs <strong>₹50 per image</strong>. There is no track split — Camera and Mobile photographers compete in the same pool per genre. A photographer may submit multiple entries across different genres. Entry is available to all active subscribers for the duration the Open Competition is live (opens 3 months before Grand Prix; see Section 6 for full timeline).</p>
+    <p>The Open Competition requires deliberate, paid entry. Each entry costs <strong>₹50 per image</strong>. There is no track split — Camera and Mobile photographers compete in the same pool per genre. A photographer may submit multiple entries across different genres. Entry is available to all active subscribers for the duration the Open Competition is live (opens 3 months before Grand Prix; see Section 7 for full timeline).</p>
     <h3>Track Declaration (POTY only)</h3>
-    <p>Photographers must declare their track (Camera or Mobile) at subscription. Track determines which POTY competition pool images enter. Images submitted under the incorrect track are ineligible for POTY in that cycle. Track changes take effect from the following subscription month. Track declaration does not apply to the Open Competition, which has no track split.</p>
+    <p>Photographers must declare their track (Camera or Mobile) at subscription. Track determines which POTY competition pool images enter. Images submitted under the incorrect track are ineligible for POTY in that cycle. Track changes take effect from the following subscription month. Track declaration does not apply to BOW or the Open Competition, neither of which has a track split.</p>
   </div>
 
   <!-- 3. Judging -->
   <div class="rules-section" id="judging">
     <h2><span>03</span> Judging Process &amp; Finality</h2>
-    <h3>Three-Tier Structure</h3>
-    <p>All judging proceeds through up to three tiers. For Monthly Contests and POTY, no tier may be bypassed. For the Open Competition, Tier 2 peer rating applies to category-level ranking; Tier 3 jury is mandatory for Grand Open Winner selection.</p>
+    <h3>Judging by Competition</h3>
+    <p>Each competition uses a defined judging path. No tier may be skipped within its defined path.</p>
+    <table class="comp-table" style="margin-bottom:16px;">
+      <thead><tr><th>Competition</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead>
+      <tbody>
+        <tr><td>Monthly Contest</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (triggered)</td></tr>
+        <tr><td>POTY</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (triggered)</td></tr>
+        <tr><td>Body of Work</td><td>DDI Engine</td><td>— (not applicable)</td><td>Jury Legends (mandatory)</td></tr>
+        <tr><td>Open Competition</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (mandatory for Grand Open)</td></tr>
+      </tbody>
+    </table>
     <h3>Tier 1 — Apex DDI Engine</h3>
-    <p>Automated, objective, runs on every image at submission. Produces a numerical DDI score and tier classification. Tier 1 results are used for initial leaderboard ranking and POTY qualification calculations.</p>
-    <h3>Tier 2 — Blind Peer Rating (Monthly, POTY, and Open category ranking)</h3>
-    <p>Each image is assigned to a minimum of five independent peer raters. Assignment is random within stratified tier bands. Raters do not know the photographer's identity, the DDI score, or the identity of other raters for the same image. A minimum of 15 seconds per image is required for a rating to be valid. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger an automatic audit.</p>
+    <p>Automated, objective, runs on every image at submission. Produces a numerical DDI score and tier classification. Tier 1 results are used for initial leaderboard ranking and POTY qualification calculations. For BOW, Tier 1 scores individual images in the series and are provided as reference data to the Jury Legends.</p>
+    <h3>Tier 2 — Blind Peer Rating (Monthly, POTY, and Open only)</h3>
+    <p>Applies to Monthly Contests, POTY, and Open Competition category ranking. Does <strong>not</strong> apply to Body of Work. Each image is assigned to a minimum of five independent peer raters. Assignment is random within stratified tier bands. Raters do not know the photographer's identity, the DDI score, or the identity of other raters for the same image. A minimum of 15 seconds per image is required for a rating to be valid. Outlier ratings deviating more than two standard deviations from peer consensus are excluded and trigger an automatic audit.</p>
     <h3>Tier 3 — Jury</h3>
     <p>For Monthly and POTY: jury review is triggered when (a) peer rating diverges from DDI score by more than 1.5 points, or (b) a valid formal dispute is raised by the photographer.</p>
+    <p>For Body of Work: jury review by Jury Legends is mandatory for all qualifying submissions. There is no peer rating layer. The Jury Legends evaluate each submission as a unified series — not as individual images. Individual DDI scores inform but do not determine the BOW result. Jury composition is never disclosed.</p>
     <p>For Open Competition: jury review is mandatory for the Grand Open Winner selection. The jury evaluates all 8 category winners as a shortlist and selects the single Grand Open Winner. Jury composition is never disclosed to photographers or other participants.</p>
     <div class="rules-highlight final">
       <strong>Finality of Decisions:</strong> Tier 3 jury decisions are final, conclusive, and binding on all parties. No further internal appeal is available following a Tier 3 decision. Lens League Apex's determination of all competition matters — including eligibility, scoring, disqualification, and prize awards — is final.
@@ -240,9 +259,36 @@
     </ul>
   </div>
 
-  <!-- 6. Open Competition -->
+  <!-- 6. BOW -->
+  <div class="rules-section" id="bow">
+    <h2><span>06</span> Body of Work (BOW) Rules</h2>
+    <p>The Body of Work is an annual competition judged as a unified creative series, not as a collection of individual images. It is the platform's most prestigious competitive category, evaluated exclusively by Jury Legends with no peer rating layer.</p>
+    <h3>Entry</h3>
+    <ul>
+      <li>One BOW submission per photographer per year.</li>
+      <li>Open to all active subscribers regardless of tenure or tier. No minimum subscription period applies.</li>
+      <li>A BOW submission consists of <strong>6 to 12 images</strong> curated and submitted by the photographer as a unified thematic series. Submissions outside this range are ineligible.</li>
+      <li>All images in the submission must have been previously scored by the Apex DDI Engine on the platform under the submitting photographer's account.</li>
+      <li>BOW is cross-genre. Images from different genres may be combined within a single submission if they form a coherent thematic series.</li>
+      <li>There is no track split. Camera and Mobile photographers compete in the same pool.</li>
+      <li>Submissions close at 23:59 IST on the last day of the 11th month of the platform year. Early submission is permitted and encouraged. Submissions may not be modified after the deadline.</li>
+    </ul>
+    <h3>Judging</h3>
+    <ul>
+      <li>BOW judging is two-tier only: Tier 1 (DDI Engine scores individual images) and Tier 3 (Jury Legends evaluate the series as a whole). Tier 2 peer rating does not apply to BOW.</li>
+      <li>Each submission is evaluated by a minimum panel of three Jury Legends. The panel includes at least one externally appointed judge.</li>
+      <li>Jury Legends assess: thematic coherence, narrative arc, visual language consistency, sustained creative vision, individual image quality (informed by DDI scores), and overall impact of the series as a unified work.</li>
+      <li>Individual DDI scores are provided to Jury Legends as reference data. They inform but do not determine the BOW result.</li>
+      <li>Jury composition is never disclosed to photographers or other participants. Jury decisions are final and binding.</li>
+    </ul>
+    <h3>Results</h3>
+    <p>BOW results are announced within 45 days of the submission deadline. Gold, Silver, and Bronze are awarded. Prize disbursement follows the conditions in Section 8.</p>
+    <p>A photographer may enter both BOW and POTY in the same year. These are independent competitions and may be entered simultaneously.</p>
+  </div>
+
+  <!-- 7. Open Competition -->
   <div class="rules-section" id="open">
-    <h2><span>06</span> Open Competition Rules</h2>
+    <h2><span>07</span> Open Competition Rules</h2>
     <p>The Open Competition is an annual single-entry competition open to all active subscribers. It is entirely separate from POTY and Monthly Contests. A photographer may enter both POTY and the Open Competition in the same year.</p>
     <h3>Entry</h3>
     <ul>
@@ -270,9 +316,9 @@
     <p>Open Competition results are announced within 30 days of the entry deadline. Prize disbursement follows the conditions in Section 7.</p>
   </div>
 
-  <!-- 7. Prizes -->
+  <!-- 8. Prizes -->
   <div class="rules-section" id="prizes">
-    <h2><span>07</span> Prize Structure &amp; Disbursement</h2>
+    <h2><span>08</span> Prize Structure &amp; Disbursement</h2>
 
     <h3>POTY Prize Structure — ₹50,00,000 Total</h3>
     <table class="prize-table">
@@ -361,6 +407,45 @@
       <strong>Note on Grand Open Winner:</strong> The Grand Open Winner receives the category prize (₹75,000) and the Grand Open prize (₹2,00,000) — a combined total of ₹2,75,000. No track split applies. Camera and Mobile photographers compete equally.
     </div>
 
+    <h3>Body of Work Prize Structure — ₹5,25,000 Total</h3>
+    <table class="prize-table">
+      <thead>
+        <tr>
+          <th>Award</th>
+          <th>Prize</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="award">Gold</td>
+          <td class="amount">₹3,00,000</td>
+          <td>Jury Legends · single winner</td>
+        </tr>
+        <tr>
+          <td class="award">Silver</td>
+          <td class="amount">₹1,50,000</td>
+          <td>Jury Legends · single winner</td>
+        </tr>
+        <tr>
+          <td class="award">Bronze</td>
+          <td class="amount">₹75,000</td>
+          <td>Jury Legends · single winner</td>
+        </tr>
+        <tr class="prize-total">
+          <td colspan="2"><strong>BOW Total</strong></td>
+          <td class="amount">₹5,25,000</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rules-highlight">
+      <strong>BOW judging note:</strong> BOW prizes are awarded by Jury Legends only. No peer rating applies. Cross-genre, no track split. A photographer may win both a POTY prize and a BOW prize in the same year.
+    </div>
+
+    <div class="rules-highlight final">
+      <strong>Total annual prize pool across all competitions: ₹63,25,000</strong> — POTY ₹50L + Open ₹8L + BOW ₹5.25L.
+    </div>
+
     <h3>Disbursement Conditions</h3>
     <ul>
       <li>Winners must complete identity verification before prizes are disbursed. Failure to complete verification within 30 days of notification results in forfeiture of the prize.</li>
@@ -373,9 +458,9 @@
     </ul>
   </div>
 
-  <!-- 8. Disqualification -->
+  <!-- 9. Disqualification -->
   <div class="rules-section" id="disqualification">
-    <h2><span>08</span> Disqualification &amp; Integrity</h2>
+    <h2><span>09</span> Disqualification &amp; Integrity</h2>
     <p>Lens League Apex reserves the right to disqualify any entry, void any result, and withhold or recover any prize in the following circumstances:</p>
     <ul>
       <li>Submission of AI-generated images or images primarily created through generative AI tools</li>
@@ -390,9 +475,9 @@
     <p>Disqualification decisions are made at the sole discretion of Lens League Apex and are not subject to internal appeal beyond the process described in Section 10.</p>
   </div>
 
-  <!-- 9. Legal Immunity -->
+  <!-- 10. Legal Immunity -->
   <div class="rules-section" id="immunity">
-    <h2><span>09</span> Legal Immunity &amp; Liability</h2>
+    <h2><span>10</span> Legal Immunity &amp; Liability</h2>
     <div class="rules-highlight legal">
       <strong>Important — Please Read Carefully.</strong> By entering any competition on Lens League Apex, participants agree to the following liability provisions in full.
     </div>
@@ -408,9 +493,9 @@
     <p>Winners consent to the use of their username, winning image(s), tier, and score (if applicable) in promotional materials published by Lens League Apex, including but not limited to the platform, social media, and press releases. No further compensation is payable for this use. Winners may request limited anonymisation at Lens League Apex's discretion.</p>
   </div>
 
-  <!-- 10. Disputes -->
+  <!-- 11. Disputes -->
   <div class="rules-section" id="disputes">
-    <h2><span>10</span> Disputes &amp; Appeals</h2>
+    <h2><span>11</span> Disputes &amp; Appeals</h2>
     <h3>Raising a Dispute</h3>
     <p>A participant who believes their image has been incorrectly scored or that a competition result is in error may raise a formal dispute through their dashboard. Each dispute costs one Rating Credit. The same image may not be disputed more than once.</p>
     <h3>Dispute Process</h3>
@@ -419,14 +504,14 @@
       <li><strong>Stage 2:</strong> If Stage 1 finds no error, the dispute is escalated to Tier 3 jury review. The image is evaluated by an independent jury panel whose composition is not disclosed. Jury decision is communicated within 15 business days. The jury decision is final.</li>
     </ul>
     <h3>No Further Internal Appeal</h3>
-    <p>Following a Stage 2 jury decision, no further internal appeal is available. Participants who remain dissatisfied may seek independent legal remedy as provided under Section 12, subject to the limitation of liability provisions in Section 9.</p>
+    <p>Following a Stage 2 jury decision, no further internal appeal is available. Participants who remain dissatisfied may seek independent legal remedy as provided under Section 13, subject to the limitation of liability provisions in Section 10.</p>
     <h3>Dispute Abuse</h3>
     <p>Filing disputes without reasonable grounds, or filing multiple disputes as a tactic to delay competition results, constitutes a violation of these rules and may result in suspension of dispute privileges or account suspension.</p>
   </div>
 
-  <!-- 11. IP -->
+  <!-- 12. IP -->
   <div class="rules-section" id="ip">
-    <h2><span>11</span> Intellectual Property</h2>
+    <h2><span>12</span> Intellectual Property</h2>
     <h3>Participant Images</h3>
     <p>Participants retain full copyright in all images submitted. By entering a competition, participants grant Lens League Apex a non-exclusive, royalty-free, worldwide licence to use winning and shortlisted images for promotional purposes, including display on the platform, social media, and press materials, with attribution. This licence does not permit commercial exploitation or sublicensing without explicit consent.</p>
     <h3>Platform IP</h3>
@@ -435,17 +520,17 @@
     <p>Rating cards generated by the Apex DDI Engine for participant images may be freely shared by the participant on social media and other personal channels, provided the Lens League Apex branding remains intact and unaltered. Commercial use of rating cards requires written consent from Lens League Apex.</p>
   </div>
 
-  <!-- 12. Jurisdiction -->
+  <!-- 13. Jurisdiction -->
   <div class="rules-section" id="jurisdiction">
-    <h2><span>12</span> Governing Law &amp; Jurisdiction</h2>
+    <h2><span>13</span> Governing Law &amp; Jurisdiction</h2>
     <p>These Contest Rules are governed by and construed in accordance with the laws of the Republic of India. Any dispute arising out of or in connection with these rules — including disputes concerning the existence, validity, or termination of these rules — that is not resolved through the internal dispute process in Section 10 shall be subject to the exclusive jurisdiction of the courts of India.</p>
     <p>Participants who are resident outside India submit to the personal jurisdiction of the Indian courts for the purpose of any such proceedings and waive any objection to the exercise of such jurisdiction.</p>
     <p>Nothing in these rules limits the right of Lens League Apex to seek injunctive or other equitable relief in any court of competent jurisdiction for matters relating to intellectual property infringement, fraud, or breach of confidentiality.</p>
   </div>
 
-  <!-- 13. Amendments -->
+  <!-- 14. Amendments -->
   <div class="rules-section" id="amendments">
-    <h2><span>13</span> Amendments</h2>
+    <h2><span>14</span> Amendments</h2>
     <p>Lens League Apex reserves the right to amend these Contest Rules at any time. Amendments affecting ongoing competitions will be communicated to all active participants via the platform with a minimum of 14 days notice before taking effect, except where immediate amendment is required to protect the integrity of the competition or comply with applicable law.</p>
     <p>Continued participation in any competition following notification of an amendment constitutes acceptance of the amended rules.</p>
     <p>In the event of any conflict between these Contest Rules and the Terms &amp; Conditions, these Contest Rules shall prevail in respect of competition matters.</p>
@@ -453,7 +538,7 @@
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
     <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">
-      Version 2.0 — April 2026. This document supersedes all previous contest rules.<br>
+      Version 3.0 — April 2026. This document supersedes all previous contest rules.<br>
       Questions: <a href="mailto:admin@lenslague.com" style="color:var(--gold); text-decoration:none;">admin@lenslague.com</a>
     </p>
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
