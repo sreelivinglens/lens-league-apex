@@ -17,10 +17,10 @@ GENRE_WEIGHTS = {
 
 # ── Tier map ──────────────────────────────────────────────────────────────────
 def get_tier(score):
-    if score <= 5.0:  return 'Apprentice'
-    if score <= 7.5:  return 'Practitioner'
-    if score <= 8.9:  return 'Master'
-    if score <= 9.6:  return 'Grandmaster'
+    if score <= 5.0:   return 'Apprentice'
+    if score < 7.6:    return 'Practitioner'
+    if score < 9.0:    return 'Master'
+    if score <= 9.6:   return 'Grandmaster'
     return 'Legend'
 
 # ── Core formula ──────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
     if aq < 4.0:
         aq -= 1.5
         checks['humanity_check'] = True
-        notes.append('Humanity Check triggered: AQ < 4.0, −1.5 applied to AQ')
+        notes.append('Humanity Check triggered: AQ < 4.0, -1.5 applied to AQ')
         raw = (
             dod        * weights['dod']        +
             disruption * weights['disruption'] +
@@ -69,7 +69,8 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
             notes.append('Iconic Wall cleared')
 
     raw = min(raw, 9.9)
-    final_score = round(raw, 1)
+    # Use 2 decimal places to avoid rounding artefacts pushing scores across tier boundaries
+    final_score = round(raw, 2)
     tier        = get_tier(final_score)
     checks['notes'] = notes
     return final_score, tier, soul_bonus, checks
