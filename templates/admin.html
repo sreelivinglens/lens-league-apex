@@ -3,7 +3,6 @@
 
 {% block extra_css %}
 <style>
-  /* Calibration table */
   .cal-table th {
     padding: 14px 18px;
     font-family: var(--font-mono);
@@ -24,19 +23,10 @@
     border-bottom: 1px solid var(--border-subtle);
     white-space: nowrap;
   }
-  .cal-table td.mono {
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
-  .cal-table td.gold {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--gold);
-  }
+  .cal-table td.mono { font-family: var(--font-mono); font-size: 14px; }
+  .cal-table td.gold { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gold); }
   .cal-table tbody tr:hover { background: rgba(200,168,75,0.03); }
 
-  /* Submissions table */
   .sub-table th {
     padding: 13px 16px;
     font-family: var(--font-mono);
@@ -59,136 +49,62 @@
   }
   .sub-table tbody tr:hover { background: rgba(200,168,75,0.03); }
 
-  /* Thumbnail */
-  .thumb-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .thumb-cell { display: flex; align-items: center; gap: 12px; }
   .thumb-img {
-    width: 56px;
-    height: 56px;
-    object-fit: cover;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    flex-shrink: 0;
+    width: 56px; height: 56px; object-fit: cover;
+    border: 1px solid var(--border); border-radius: var(--radius-sm); flex-shrink: 0;
   }
   .thumb-placeholder {
-    width: 56px;
-    height: 56px;
-    background: var(--surface-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
+    width: 56px; height: 56px; background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
   }
   .thumb-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    text-decoration: none;
-    display: block;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    text-decoration: none; display: block; max-width: 160px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     transition: color 0.2s;
   }
   .thumb-title:hover { color: var(--gold); }
 
-  /* Status badge */
   .status-chip {
-    display: inline-block;
-    padding: 4px 10px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
+    display: inline-block; padding: 4px 10px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; border-radius: var(--radius-sm); white-space: nowrap;
   }
   .status-chip.scored  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
   .status-chip.pending { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
   .judge-chip {
-    display: inline-block;
-    margin-top: 5px;
-    padding: 3px 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    border: 1px solid var(--gold-dark);
-    background: var(--gold-subtle);
-    color: var(--gold);
-    border-radius: var(--radius-sm);
+    display: inline-block; margin-top: 5px; padding: 3px 8px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; border: 1px solid var(--gold-dark);
+    background: var(--gold-subtle); color: var(--gold); border-radius: var(--radius-sm);
   }
 
-  /* Action buttons in table */
   .action-btn-sm {
-    padding: 5px 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    border: 1px solid;
-    background: none;
-    white-space: nowrap;
-    transition: all 0.2s;
+    padding: 5px 12px; font-family: var(--font-mono); font-size: 11px;
+    font-weight: 600; border-radius: var(--radius-sm); cursor: pointer;
+    border: 1px solid; background: none; white-space: nowrap; transition: all 0.2s;
   }
-  .ref-btn {
-    border-color: var(--border-strong);
-    color: var(--text-muted);
-  }
+  .ref-btn { border-color: var(--border-strong); color: var(--text-muted); }
   .ref-btn:hover { border-color: var(--gold-dark); color: var(--gold); }
-  .ref-btn.active {
-    border-color: var(--gold-dark);
-    background: var(--gold-subtle);
-    color: var(--gold);
-  }
-  .del-btn {
-    border-color: #5a1a1a;
-    color: var(--red);
-  }
+  .ref-btn.active { border-color: var(--gold-dark); background: var(--gold-subtle); color: var(--gold); }
+  .del-btn { border-color: #5a1a1a; color: var(--red); }
   .del-btn:hover { border-color: var(--red); background: var(--red-dim); }
 
-  /* Bulk bar */
   .bulk-bar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 12px; flex-wrap: wrap;
   }
   .bulk-bar label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-secondary); cursor: pointer; text-transform: uppercase;
   }
-  .bulk-bar label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--gold);
-  }
-  .selected-count {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .bulk-bar label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--gold); }
+  .selected-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
 </style>
 {% endblock %}
 
@@ -213,10 +129,7 @@
   <div class="stat-box"><div class="stat-val">{{ pending }}</div><div class="stat-lbl">Pending</div></div>
 </div>
 
-<!-- CALIBRATION -->
 {% if cal_stats %}
-
-<!-- Drift Alerts -->
 {% if drift_alerts %}
 <div style="margin-bottom:24px;">
   {% for alert in drift_alerts %}
@@ -238,9 +151,7 @@
     <div class="section-label" style="margin-bottom:4px;">Calibration Data by Genre</div>
     <div style="font-size:13px; color:var(--text-muted);">
       Live averages &nbsp;·&nbsp;
-      {% if cal_trend %}
-        Trend vs previous snapshot shown &nbsp;·&nbsp;
-      {% endif %}
+      {% if cal_trend %}Trend vs previous snapshot shown &nbsp;·&nbsp;{% endif %}
       Click <strong style="color:var(--gold);">Run Calibration Log</strong> to save a snapshot
     </div>
   </div>
@@ -261,14 +172,8 @@
   <table class="cal-table" style="width:100%; border-collapse:collapse;">
     <thead>
       <tr>
-        <th>Genre</th>
-        <th>Count</th>
-        <th>Avg Score</th>
-        <th>Avg DoD</th>
-        <th>Avg Dis</th>
-        <th>Avg DM</th>
-        <th>Avg Wonder</th>
-        <th>Avg AQ</th>
+        <th>Genre</th><th>Count</th><th>Avg Score</th><th>Avg DoD</th>
+        <th>Avg Dis</th><th>Avg DM</th><th>Avg Wonder</th><th>Avg AQ</th>
       </tr>
     </thead>
     <tbody>
@@ -294,59 +199,21 @@
             </span>
           {% endif %}
         </td>
-        <td class="mono">
-          {{ s.avg_dod }}
-          {% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}
-            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">
-              {{ '↑' if trend.dod_delta > 0 else '↓' }}
-            </span>
-          {% endif %}
-        </td>
-        <td class="mono">
-          {{ s.avg_dis }}
-          {% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}
-            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">
-              {{ '↑' if trend.dis_delta > 0 else '↓' }}
-            </span>
-          {% endif %}
-        </td>
-        <td class="mono">
-          {{ s.avg_dm }}
-          {% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}
-            <span style="font-size:10px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">
-              {{ '↑' if trend.dm_delta > 0 else '↓' }}
-            </span>
-          {% endif %}
-        </td>
-        <td class="mono">
-          {{ s.avg_wonder }}
-          {% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}
-            <span style="font-size:10px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">
-              {{ '↑' if trend.wonder_delta > 0 else '↓' }}
-            </span>
-          {% endif %}
-        </td>
-        <td class="mono">
-          {{ s.avg_aq }}
-          {% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}
-            <span style="font-size:10px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">
-              {{ '↑' if trend.aq_delta > 0 else '↓' }}
-            </span>
-          {% endif %}
-        </td>
+        <td class="mono">{{ s.avg_dod }}{% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}<span style="font-size:10px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dod_delta > 0 else '↓' }}</span>{% endif %}</td>
+        <td class="mono">{{ s.avg_dis }}{% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}<span style="font-size:10px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dis_delta > 0 else '↓' }}</span>{% endif %}</td>
+        <td class="mono">{{ s.avg_dm }}{% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}<span style="font-size:10px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dm_delta > 0 else '↓' }}</span>{% endif %}</td>
+        <td class="mono">{{ s.avg_wonder }}{% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}<span style="font-size:10px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.wonder_delta > 0 else '↓' }}</span>{% endif %}</td>
+        <td class="mono">{{ s.avg_aq }}{% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}<span style="font-size:10px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.aq_delta > 0 else '↓' }}</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-<!-- When to run calibration explanation -->
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
             padding:20px 24px; margin-bottom:40px;">
   <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px;
-              color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
-    When to Run Calibration Log
-  </div>
+              color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">When to Run Calibration Log</div>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px;">
     {% for icon, title, desc in [
       ('📸', 'Before scoring changes', 'Run before deploying new auto_score.py to capture the baseline'),
@@ -364,10 +231,9 @@
     {% endfor %}
   </div>
 </div>
-
 {% endif %}
 
-<!-- HEALTH CHECK PANEL -->
+<!-- HEALTH CHECK -->
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:24px;">
   <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
     🔍 Database Health Check
@@ -390,30 +256,26 @@
   </div>
 </div>
 
-<!-- IMAGE TRANSFER PANEL -->
+<!-- IMAGE TRANSFER -->
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
   <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
     🔄 Transfer Images to Photographer
   </div>
   <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
     Transfer all images credited to a photographer name to their registered account.
-    The photographer must be registered first. On registration, transfer happens automatically.
   </p>
   <form method="POST" action="{{ url_for('admin_transfer_images') }}"
         style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
     <div style="flex:1; min-width:200px;">
       <label style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">PHOTOGRAPHER NAME</label>
-      <input type="text" name="photographer_name"
-             placeholder="e.g. Ashok Kochhar"
+      <input type="text" name="photographer_name" placeholder="e.g. Ashok Kochhar"
              style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;">
     </div>
-    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;">
-      Transfer Images →
-    </button>
+    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;">Transfer Images →</button>
   </form>
 </div>
 
-<!-- RECENT SUBMISSIONS HEADER -->
+<!-- RECENT SUBMISSIONS -->
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
   <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -424,25 +286,26 @@
     </form>
     <form method="POST" action="{{ url_for('admin_cleanup') }}"
           onsubmit="return confirm('Delete all images with no thumbnail? This cannot be undone.');">
-      <button type="submit" class="btn btn-danger" style="padding:8px 18px;">
-        🗑 Delete Broken
-      </button>
+      <button type="submit" class="btn btn-danger" style="padding:8px 18px;">🗑 Delete Broken</button>
     </form>
   </div>
 </div>
 
+<!-- Hidden forms for REF and DELETE — outside the bulk form to avoid nesting -->
+{% for img in recent %}
+<form id="ref-form-{{ img.id }}" method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}" style="display:none;"></form>
+<form id="del-form-{{ img.id }}" method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}" style="display:none;"></form>
+{% endfor %}
+
 <!-- BULK FORM -->
 <form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
-
-  <!-- Bulk action bar -->
   <div class="bulk-bar">
     <label>
       <input type="checkbox" id="selectAll" onchange="toggleAll(this)">
       Select All
     </label>
     <span class="selected-count" id="selectedCount">0 selected</span>
-    <button type="submit" id="bulkDeleteBtn" disabled class="btn btn-danger"
-            style="padding:7px 18px; opacity:0.4;">
+    <button type="submit" id="bulkDeleteBtn" disabled class="btn btn-danger" style="padding:7px 18px; opacity:0.4;">
       🗑 Delete Selected
     </button>
   </div>
@@ -481,46 +344,27 @@
               </a>
             </div>
           </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);">
-              {{ img.genre or '—' }}
-            </span>
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--gold);">
-              {{ img.score or '—' }}
-            </span>
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">
-              {{ img.tier or '—' }}
-            </span>
-          </td>
-
+          <td><span style="font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);">{{ img.genre or '—' }}</span></td>
+          <td><span style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--gold);">{{ img.score or '—' }}</span></td>
+          <td><span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">{{ img.tier or '—' }}</span></td>
           <td>
             <span class="status-chip {{ img.status }}">{{ img.status.upper() }}</span>
-            {% if img.judge_referral %}
-            <span class="judge-chip">⚖️ REVIEW</span>
-            {% endif %}
+            {% if img.judge_referral %}<span class="judge-chip">⚖️ REVIEW</span>{% endif %}
           </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">
-              {{ img.created_at.strftime('%d %b %Y') }}
-            </span>
-          </td>
+          <td><span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">{{ img.created_at.strftime('%d %b %Y') }}</span></td>
           <td>
             <div style="display:flex; gap:8px; align-items:center;">
-              <form method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}">
-                <button type="submit"
-                        class="action-btn-sm ref-btn {{ 'active' if img.is_calibration_example }}"
-                        title="{{ 'Remove reference example' if img.is_calibration_example else 'Set as reference example' }}">
-                  {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
-                </button>
-              </form>
-              <form method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}"
-                    onsubmit="return confirm('Delete this image? Cannot be undone.');">
-                <button type="submit" class="action-btn-sm del-btn" title="Delete image">🗑</button>
-              </form>
+              <button type="submit"
+                      form="ref-form-{{ img.id }}"
+                      class="action-btn-sm ref-btn {{ 'active' if img.is_calibration_example }}"
+                      title="{{ 'Remove REF' if img.is_calibration_example else 'Set as REF' }}">
+                {{ '★ REF' if img.is_calibration_example else '☆ REF' }}
+              </button>
+              <button type="submit"
+                      form="del-form-{{ img.id }}"
+                      class="action-btn-sm del-btn"
+                      title="Delete image"
+                      onclick="return confirm('Delete this image? Cannot be undone.');">🗑</button>
             </div>
           </td>
         </tr>
