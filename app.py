@@ -215,7 +215,7 @@ def index():
     except Exception:
         stats = {'total_images': 0, 'total_members': 0, 'avg_score': 0}
         top_images = []
-    return render_template('index.html', stats=stats, top_images=top_images)
+    return render_template('index.html', stats=stats, top_images=top_images, now=datetime.utcnow())
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -1519,6 +1519,11 @@ def debug_images():
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
+
+
+@app.route('/contest-rules')
+def contest_rules():
+    return render_template('contest_rules.html')
 
 
 # ---------------------------------------------------------------------------
