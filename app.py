@@ -1570,7 +1570,6 @@ def pricing():
 # ---------------------------------------------------------------------------
 
 @app.route('/contests')
-@login_required
 def contests():
     from datetime import date
     now = datetime.utcnow()
