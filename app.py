@@ -564,6 +564,7 @@ def upload():
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
+            is_public         = (request.form.get('is_public', '1') == '1'),
             exif_status=exif_status, exif_camera=exif_data.get('camera', ''),
             exif_date_taken=exif_data.get('date_taken', ''),
             exif_settings=exif_settings, exif_warning=exif_warning,
@@ -927,7 +928,8 @@ def leaderboard():
         q = q.filter(
             Image.score.isnot(None),
             Image.score > 0,
-            Image.status == 'scored'
+            Image.status == 'scored',
+            Image.is_public == True
         )
         if since:
             q = q.filter(Image.created_at >= since)
@@ -2103,6 +2105,7 @@ def bulk_upload():
                     phash=phash, genre=genre, photographer_name=photographer,
                     camera_track=getattr(current_user, 'subscription_track', None),
                     status='pending',
+                    is_public=(request.form.get('is_public', '1') == '1'),
                 )
                 db.session.add(img)
                 db.session.flush()
