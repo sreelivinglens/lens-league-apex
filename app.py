@@ -465,7 +465,7 @@ def upload():
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
-            camera_track      = getattr(current_user, 'subscription_track', None),
+            camera_track      = request.form.get('camera_track') or getattr(current_user, 'subscription_track', None),
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
