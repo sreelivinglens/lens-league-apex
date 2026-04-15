@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Enter Open Competition — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .oc-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .oc-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+
+  .oc-heading { font-family: var(--font-display); font-size: clamp(28px,5vw,42px);
+    font-weight: 700; color: var(--text-primary); line-height: 1.15; margin-bottom: 8px; }
+
+  .oc-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 40px; }
+
+  /* Step indicators */
+  .oc-steps { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
+  .oc-step { display: flex; align-items: center; gap: 10px; }
+  .oc-step-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    border: 2px solid var(--border); color: var(--text-muted); background: var(--surface-2); flex-shrink: 0; }
+  .oc-step.active .oc-step-num { border-color: var(--gold); color: var(--gold); background: rgba(200,168,75,.1); }
+  .oc-step.done .oc-step-num { border-color: var(--gold); background: var(--gold); color: #000; }
+  .oc-step-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+  .oc-step.active .oc-step-label { color: var(--text-primary); }
+  .oc-step-line { flex: 1; height: 1px; background: var(--border); min-width: 24px; margin: 0 8px; }
+
+  /* Form card */
+  .oc-card { background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; }
+
+  .oc-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; display: block; }
+
+  /* Genre grid */
+  .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 32px; }
+  .genre-tile { position: relative; cursor: pointer; }
+  .genre-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .genre-tile-inner { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1px;
+    color: var(--text-muted); text-transform: uppercase; text-align: center;
+    transition: all .15s ease; background: var(--surface-1); }
+  .genre-tile input:checked + .genre-tile-inner { border-color: var(--gold); color: var(--gold);
+    background: rgba(200,168,75,.08); }
+  .genre-tile-inner:hover { border-color: var(--gold-dark); color: var(--text-primary); }
+  .genre-tile.entered .genre-tile-inner { opacity: .4; cursor: not-allowed; }
+  .genre-tile.entered .genre-tile-inner::after { content: ' ✓'; color: var(--gold); }
+
+  /* Image selector */
+  .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 32px; }
+  .img-tile { position: relative; cursor: pointer; }
+  .img-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .img-tile-inner { border: 2px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
+    transition: all .15s ease; background: var(--surface-1); }
+  .img-tile input:checked + .img-tile-inner { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(200,168,75,.3); }
+  .img-tile-inner img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .img-tile-meta { padding: 8px 10px; }
+  .img-tile-name { font-size: 11px; color: var(--text-primary); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .img-tile-score { font-family: var(--font-mono); font-size: 11px; color: var(--gold); margin-top: 2px; }
+  .img-tile-genre { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: .5px; }
+
+  /* Summary card */
+  .summary-card { background: var(--surface-2); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
+  .summary-img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+  .summary-body { padding: 28px 32px; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted); }
+  .summary-val { font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: right; }
+  .summary-fee { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--gold); }
+
+  /* Payment stub */
+  .payment-stub { background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.04));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-md); padding: 20px 24px;
+    margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+  .payment-stub-icon { font-size: 28px; flex-shrink: 0; }
+  .payment-stub-text { flex: 1; }
+  .payment-stub-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .payment-stub-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .5px; }
+
+  /* Buttons */
+  .oc-btn-primary { display: inline-block; padding: 14px 32px; background: var(--gold);
+    color: #000; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; border: none; border-radius: var(--radius-md);
+    cursor: pointer; text-decoration: none; transition: opacity .15s; }
+  .oc-btn-primary:hover { opacity: .85; }
+  .oc-btn-secondary { display: inline-block; padding: 14px 32px; background: transparent;
+    color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; border: 1px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer; text-decoration: none; transition: all .15s; }
+  .oc-btn-secondary:hover { border-color: var(--gold-dark); color: var(--text-primary); }
+  .oc-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty-state a { color: var(--gold); text-decoration: none; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="oc-wrap">
+
+  <div class="oc-eyebrow">Open Competition {{ platform_year }}</div>
+  <h1 class="oc-heading">Enter the Open.</h1>
+  <p class="oc-sub">No track split. Camera and Mobile compete together. One winner per genre. ₹50 per entry.</p>
+
+  <!-- Step indicators -->
+  <div class="oc-steps">
+    <div class="oc-step {% if step >= 1 %}{% if step > 1 %}done{% else %}active{% endif %}{% endif %}">
+      <div class="oc-step-num">{% if step > 1 %}✓{% else %}1{% endif %}</div>
+      <div class="oc-step-label">Select</div>
+    </div>
+    <div class="oc-step-line"></div>
+    <div class="oc-step {% if step >= 2 %}{% if step > 2 %}done{% else %}active{% endif %}{% endif %}">
+      <div class="oc-step-num">{% if step > 2 %}✓{% else %}2{% endif %}</div>
+      <div class="oc-step-label">Review</div>
+    </div>
+    <div class="oc-step-line"></div>
+    <div class="oc-step {% if step >= 3 %}active{% endif %}">
+      <div class="oc-step-num">3</div>
+      <div class="oc-step-label">Confirm</div>
+    </div>
+  </div>
+
+  {# ── STEP 1 — Genre + Image selector ── #}
+  {% if step == 1 %}
+
+  {% if not user_images %}
+  <div class="empty-state">
+    <div style="font-size:40px;margin-bottom:16px;">📷</div>
+    <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No scored images yet</div>
+    <p>Upload and score at least one image before entering the Open Competition.</p>
+    <a href="{{ url_for('upload') }}" class="oc-btn-primary" style="margin-top:20px;display:inline-block;">Upload an Image →</a>
+  </div>
+
+  {% else %}
+
+  <form method="POST" action="{{ url_for('open_contest_enter') }}">
+    <input type="hidden" name="confirm" value="0">
+
+    <div class="oc-card">
+      <span class="oc-label">1 — Choose a Genre</span>
+      <div class="genre-grid">
+        {% for gid in genres %}
+        <label class="genre-tile {% if gid in entered_genres %}entered{% endif %}">
+          <input type="radio" name="genre" value="{{ gid }}"
+            {% if gid in entered_genres %}disabled{% endif %}
+            required>
+          <div class="genre-tile-inner">{{ genre_labels.get(gid, gid) }}</div>
+        </label>
+        {% endfor %}
+      </div>
+
+      <span class="oc-label">2 — Choose Your Image</span>
+      {% if entered_genres %}
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;letter-spacing:.5px;">
+        ✓ marked genres already have an entry this year.
+      </p>
+      {% endif %}
+      <div class="image-grid">
+        {% for img in user_images %}
+        <label class="img-tile">
+          <input type="radio" name="image_id" value="{{ img.id }}" required>
+          <div class="img-tile-inner">
+            <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+                 alt="{{ img.asset_name or 'Untitled' }}">
+            <div class="img-tile-meta">
+              <div class="img-tile-name">{{ img.asset_name or 'Untitled' }}</div>
+              <div class="img-tile-score">{{ img.score }} · {{ img.tier }}</div>
+              <div class="img-tile-genre">{{ img.genre }}</div>
+            </div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="oc-actions">
+      <button type="submit" class="oc-btn-primary">Review Entry →</button>
+      <a href="{{ url_for('contests') }}" class="oc-btn-secondary">Cancel</a>
+    </div>
+  </form>
+  {% endif %}
+
+  {# ── STEP 2 — Summary + dummy payment confirmation ── #}
+  {% elif step == 2 %}
+
+  <div class="summary-card">
+    <img src="{{ selected_image.thumb_url or url_for('serve_thumb', image_id=selected_image.id) }}"
+         alt="{{ selected_image.asset_name }}" class="summary-img">
+    <div class="summary-body">
+      <div class="summary-row">
+        <span class="summary-key">Image</span>
+        <span class="summary-val">{{ selected_image.asset_name or 'Untitled' }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">DDI Score</span>
+        <span class="summary-val">{{ selected_image.score }} · {{ selected_image.tier }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Genre</span>
+        <span class="summary-val">{{ genre_labels.get(selected_genre, selected_genre) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Competition</span>
+        <span class="summary-val">Open Competition {{ platform_year }} · No Track Split</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">Entry Fee</span>
+        <span class="summary-val summary-fee">₹50</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="payment-stub">
+    <div class="payment-stub-icon">💳</div>
+    <div class="payment-stub-text">
+      <div class="payment-stub-title">Payment Gateway</div>
+      <div class="payment-stub-note">Razorpay integration coming soon — entry confirmed at no charge during beta.</div>
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('open_contest_enter') }}">
+    <input type="hidden" name="confirm" value="1">
+    <input type="hidden" name="genre" value="{{ selected_genre }}">
+    <input type="hidden" name="image_id" value="{{ selected_image.id }}">
+    <div class="oc-actions">
+      <button type="submit" class="oc-btn-primary">🎯 Confirm Entry</button>
+      <a href="{{ url_for('open_contest_enter') }}" class="oc-btn-secondary">← Change Selection</a>
+    </div>
+  </form>
+
+  {% endif %}
+
+</div>
+{% endblock %}
