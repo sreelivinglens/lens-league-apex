@@ -1829,8 +1829,6 @@ def my_contest_entries():
 
 @app.route('/open-contest/enter', methods=['GET', 'POST'])
 @login_required
-@app.route('/open-contest/enter', methods=['GET', 'POST'])
-@login_required
 def open_contest_enter():
     if not is_open_contest_active():
         flash('The Open Competition is not currently accepting entries. Check back closer to Grand Prix.', 'info')
