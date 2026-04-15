@@ -1061,6 +1061,46 @@
         </div>
       </div>
 
+      {% if example_image %}
+      {% set ex_audit = example_image.get_audit() or {} %}
+      <div class="live-score-card reveal reveal-delay-2">
+        <div class="lsc-image-area">
+          <img src="{{ example_image.thumb_url or url_for('serve_thumb', image_id=example_image.id) }}"
+               alt="{{ example_image.asset_name or 'Example' }}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:8px 8px 0 0;">
+          <div class="lsc-image-label">{{ example_image.asset_name or 'Untitled' }} · {{ example_image.genre }} · {{ 'Camera Track' if example_image.camera_track == 'camera' else 'Mobile Track' }}</div>
+          <div class="lsc-tier-badge">⭐ {{ example_image.tier }}</div>
+        </div>
+        <div class="lsc-body">
+          <div class="lsc-top">
+            <div>
+              <div class="lsc-title">Photographer Archetype</div>
+              <div class="lsc-archetype">{{ example_image.archetype or '—' }}</div>
+            </div>
+            <div class="lsc-score-main">
+              <div class="lsc-score-num">{{ example_image.score }}</div>
+              <div class="lsc-score-label">DDI Score</div>
+            </div>
+          </div>
+          <div class="lsc-modules">
+            {% set mods = [('DoD', example_image.dod_score), ('Disruption', example_image.disruption_score), ('DM', example_image.dm_score), ('Wonder', example_image.wonder_score), ('AQ', example_image.aq_score)] %}
+            {% for name, val in mods %}{% if val %}
+            <div class="lsc-module-row">
+              <div class="lsc-module-name">{{ name }}</div>
+              <div class="lsc-bar-track"><div class="lsc-bar-fill" style="width:{{ (val/10*100)|int }}%"></div></div>
+              <div class="lsc-module-val">{{ val }}</div>
+            </div>
+            {% endif %}{% endfor %}
+          </div>
+          {% set tip = ex_audit.get('byline_2_body') or ex_audit.get('byline_2') %}
+          {% if tip %}
+          <div class="lsc-tip">
+            <strong>To improve:</strong> {{ tip }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
       <div class="live-score-card reveal reveal-delay-2">
         <div class="lsc-image-area">
           <div class="photo-sim"></div>
@@ -1111,6 +1151,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
     </div>
   </div>
