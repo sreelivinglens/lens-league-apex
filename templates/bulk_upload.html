@@ -493,7 +493,7 @@ form.addEventListener('submit', function(e) {
   const overlayStatus= document.getElementById('overlayStatus');
   const overlaySub   = document.getElementById('overlaySubstatus');
 
-  const PER_IMAGE    = 20;
+  const PER_IMAGE    = 35;
   const totalSecs    = total * PER_IMAGE;
   const CIRCUMFERENCE= 534;
 
@@ -517,15 +517,15 @@ form.addEventListener('submit', function(e) {
     clockRing.style.stroke = imgRemain <= 3 ? '#fff' : 'var(--gold)';
 
     // Phase copy
-    if (imgSecs < 5) {
+    if (imgSecs < 4) {
       overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
       overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;
       overlaySub.textContent    = 'Transferring to server.';
-    } else if (imgSecs < 12) {
+    } else if (imgSecs < 10) {
       overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
       overlayStatus.textContent = `Apex DDI Engine is scoring image ${imgNum}…`;
       overlaySub.textContent    = 'DoD \u00b7 Disruption \u00b7 DM \u00b7 Wonder \u00b7 AQ';
-    } else if (imgSecs < 18) {
+    } else if (imgSecs < 28) {
       overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
       overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;
       overlaySub.textContent    = 'Applying genre weights and safeguards.';

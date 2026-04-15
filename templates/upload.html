@@ -536,15 +536,15 @@
     const overlayStatus= document.getElementById('overlayStatus');
     const overlaySub   = document.getElementById('overlaySubstatus');
 
-    const TOTAL_SECS   = 45;
+    const TOTAL_SECS   = 35;
     const CIRCUMFERENCE= 534; // 2π × 85
 
     const phases = [
-      { from: 0,  to: 5,  phase: 'UPLOADING',  status: 'Transferring your image…',          sub: 'Your image is being sent to the server securely.' },
-      { from: 5,  to: 12, phase: 'PROCESSING',  status: 'Preparing for analysis…',           sub: 'Extracting metadata, verifying file integrity.' },
-      { from: 12, to: 28, phase: 'ANALYSING',   status: 'Apex DDI Engine is evaluating…',   sub: 'Scoring across 5 modules: DoD · Disruption · DM · Wonder · AQ' },
-      { from: 28, to: 38, phase: 'SCORING',     status: 'Calculating your DDI score…',       sub: 'Applying genre weights and safeguards.' },
-      { from: 38, to: 45, phase: 'FINALISING',  status: 'Generating your score card…',       sub: 'Almost there — building your archetype and improvement tip.' },
+      { from: 0,  to: 4,  phase: 'UPLOADING',  status: 'Transferring your image…',          sub: 'Your image is being sent to the server securely.' },
+      { from: 4,  to: 10, phase: 'PROCESSING',  status: 'Preparing for analysis…',           sub: 'Extracting metadata, verifying file integrity.' },
+      { from: 10, to: 24, phase: 'ANALYSING',   status: 'Apex DDI Engine is evaluating…',   sub: 'Scoring across 5 modules: DoD · Disruption · DM · Wonder · AQ' },
+      { from: 24, to: 31, phase: 'SCORING',     status: 'Calculating your DDI score…',       sub: 'Applying genre weights and safeguards.' },
+      { from: 31, to: 35, phase: 'FINALISING',  status: 'Generating your score card…',       sub: 'Almost there — building your archetype and improvement tip.' },
     ];
 
     overlay.classList.add('active');
@@ -566,7 +566,7 @@
       overlaySub.textContent    = phase.sub;
 
       // Ring colour shift on final phase
-      if (elapsed >= 38) clockRing.style.stroke = '#fff';
+      if (elapsed >= 31) clockRing.style.stroke = '#fff';
     }, 1000);
 
     const xhr = new XMLHttpRequest();
