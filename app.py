@@ -1703,7 +1703,7 @@ def contests():
     days_left   = (next_month - now).days
 
     # Top 3 images this month per genre per track
-    # monthly_top = { genre: { 'camera': [...], 'mobile': [...] } }
+    # NULL camera_track (free users / pre-track images) included in Camera bucket
     monthly_top = {}
     for genre in GENRE_IDS:
         camera_top = (Image.query
@@ -1712,7 +1712,10 @@ def contests():
                           Image.score != None,
                           Image.created_at >= month_start,
                           Image.genre == genre,
-                          Image.camera_track == 'camera',
+                          db.or_(
+                              Image.camera_track == 'camera',
+                              Image.camera_track == None,
+                          ),
                       )
                       .order_by(Image.score.desc())
                       .limit(3).all())
