@@ -465,6 +465,7 @@ def upload():
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
+            camera_track      = getattr(current_user, 'subscription_track', None),
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
@@ -534,6 +535,106 @@ def upload():
         return redirect(url_for('image_detail', image_id=img.id))
 
     return render_template('upload.html', genres=GENRE_IDS)
+
+
+@app.route('/image/<int:image_id>/retry-score', methods=['POST'])
+@login_required
+def retry_score(image_id):
+    """User-facing retry for pending images where auto-scoring failed at upload time."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+    if img.status == 'scored':
+        flash('This image has already been scored.', 'info')
+        return redirect(url_for('image_detail', image_id=image_id))
+    if not img.thumb_path or not os.path.exists(img.thumb_path):
+        # thumb_path not on disk — try fetching from R2
+        if not img.thumb_url:
+            flash('Image file not found. Please contact support.', 'error')
+            return redirect(url_for('image_detail', image_id=image_id))
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        flash('Scoring service not available. Please try again later.', 'error')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    try:
+        import traceback, tempfile
+        from engine.auto_score import auto_score, build_audit_data
+        from engine.compositor import build_card1
+
+        # If thumb not on disk, download from R2 to a temp file
+        thumb_path = img.thumb_path
+        temp_file  = None
+        if not thumb_path or not os.path.exists(thumb_path):
+            try:
+                from storage import get_client, BUCKET
+                tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(
+                    BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+                )
+                tf.close()
+                thumb_path = temp_file = tf.name
+            except Exception as e:
+                flash(f'Could not retrieve image for scoring: {e}', 'error')
+                return redirect(url_for('image_detail', image_id=image_id))
+
+        result = auto_score(
+            image_path   = thumb_path,
+            genre        = img.genre,
+            title        = img.asset_name,
+            photographer = img.photographer_name,
+            subject      = img.subject,
+            location     = img.location,
+        )
+
+        img.dod_score        = float(result.get('dod', 0))
+        img.disruption_score = float(result.get('disruption', 0))
+        img.dm_score         = float(result.get('dm', 0))
+        img.wonder_score     = float(result.get('wonder', 0))
+        img.aq_score         = float(result.get('aq', 0))
+        img.score            = float(result.get('score', 0))
+        img.tier             = get_tier(float(result.get('score', 0)))
+        img.archetype        = result.get('archetype', '')
+        img.soul_bonus       = result.get('soul_bonus', False)
+        img.status           = 'scored'
+        img.scored_at        = datetime.utcnow()
+        audit = build_audit_data(result, img)
+        img.set_audit(audit)
+        db.session.commit()
+
+        # Build and upload card — non-critical, don't block on failure
+        try:
+            uid       = str(uuid.uuid4())
+            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                          f"{img.genre}_{img.score}.jpg")
+            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+            build_card1(thumb_path, audit, card_path)
+            img.card_path = card_path
+            card_url = _r2_upload_card(card_path, uid + '_card')
+            if card_url:
+                img.card_url = card_url
+            db.session.commit()
+        except Exception:
+            app.logger.error(f'[retry_score card error] {traceback.format_exc()}')
+
+        if temp_file:
+            try: os.unlink(temp_file)
+            except: pass
+
+        flash(f'Scored! LL-Score: {img.score} — {img.tier}', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[retry_score] {traceback.format_exc()}')
+        err = str(e)
+        if '529' in err or 'overloaded' in err.lower():
+            flash('AI engine is busy right now. Try again during off-peak hours: 6am–11am IST or 11pm–5am IST.', 'warning')
+        else:
+            flash(f'Scoring failed: {err[:120]}', 'error')
+
+    return redirect(url_for('image_detail', image_id=image_id))
 
 
 @app.route('/image/<int:image_id>')
@@ -806,7 +907,9 @@ def bulk_upload():
                     file_size_kb=int(os.path.getsize(thumb_path)/1024),
                     width=w, height=h, format=fmt,
                     asset_name=auto_title(filename, genre),
-                    phash=phash, genre=genre, photographer_name=photographer, status='pending',
+                    phash=phash, genre=genre, photographer_name=photographer,
+                    camera_track=getattr(current_user, 'subscription_track', None),
+                    status='pending',
                 )
                 db.session.add(img)
                 db.session.flush()
@@ -1288,6 +1391,7 @@ def score_single_image():
             asset_name=auto_title(filename, genre),
             phash=phash, genre=genre,
             photographer_name=photographer,
+            camera_track=getattr(current_user, 'subscription_track', None),
             status='pending',
         )
         db.session.add(img)
@@ -1598,20 +1702,35 @@ def contests():
     next_month  = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     days_left   = (next_month - now).days
 
-    # Top 3 images this month per genre (uses canonical GENRE_IDS)
+    # Top 3 images this month per genre per track
+    # monthly_top = { genre: { 'camera': [...], 'mobile': [...] } }
     monthly_top = {}
     for genre in GENRE_IDS:
-        top = (Image.query
-               .filter(
-                   Image.status == 'scored',
-                   Image.score != None,
-                   Image.created_at >= month_start,
-                   Image.genre == genre,
-               )
-               .order_by(Image.score.desc())
-               .limit(3).all())
-        if top:
-            monthly_top[genre] = top
+        camera_top = (Image.query
+                      .filter(
+                          Image.status == 'scored',
+                          Image.score != None,
+                          Image.created_at >= month_start,
+                          Image.genre == genre,
+                          Image.camera_track == 'camera',
+                      )
+                      .order_by(Image.score.desc())
+                      .limit(3).all())
+        mobile_top = (Image.query
+                      .filter(
+                          Image.status == 'scored',
+                          Image.score != None,
+                          Image.created_at >= month_start,
+                          Image.genre == genre,
+                          Image.camera_track == 'mobile',
+                      )
+                      .order_by(Image.score.desc())
+                      .limit(3).all())
+        if camera_top or mobile_top:
+            monthly_top[genre] = {
+                'camera': camera_top,
+                'mobile': mobile_top,
+            }
 
     return render_template('contests.html',
         monthly_top        = monthly_top,
