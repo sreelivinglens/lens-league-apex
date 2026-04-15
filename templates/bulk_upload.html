@@ -498,22 +498,25 @@ form.addEventListener('submit', function(e) {
   const CIRCUMFERENCE= 534;
 
   overlay.classList.add('active');
-  clockSecs.textContent = totalSecs;
+  clockSecs.textContent = PER_IMAGE;
 
   let secs = 0;
   const ticker = setInterval(() => {
     secs++;
-    const remaining = Math.max(totalSecs - secs, 0);
-    clockSecs.textContent = remaining;
 
-    // Ring fill
-    const pct = Math.min(secs / totalSecs, 1);
-    clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+    // Per-image position
+    const imgNum    = Math.min(Math.ceil(secs / PER_IMAGE), total);
+    const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;  // 1..PER_IMAGE within current image
+    const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
 
-    // Per-image phase tracking
-    const imgNum  = Math.min(Math.ceil(secs / PER_IMAGE), total);
-    const imgSecs = ((secs - 1) % PER_IMAGE) + 1;
+    // Clock resets each image
+    clockSecs.textContent = imgRemain;
+    clockUnit.textContent = imgRemain === 1 ? 'second' : 'seconds';
+    const imgPct = imgSecs / PER_IMAGE;
+    clockRing.style.strokeDashoffset = CIRCUMFERENCE - (imgPct * CIRCUMFERENCE);
+    clockRing.style.stroke = imgRemain <= 3 ? '#fff' : 'var(--gold)';
 
+    // Phase copy
     if (imgSecs < 5) {
       overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
       overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;
@@ -521,7 +524,7 @@ form.addEventListener('submit', function(e) {
     } else if (imgSecs < 12) {
       overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
       overlayStatus.textContent = `Apex DDI Engine is scoring image ${imgNum}…`;
-      overlaySub.textContent    = 'DoD · Disruption · DM · Wonder · AQ';
+      overlaySub.textContent    = 'DoD \u00b7 Disruption \u00b7 DM \u00b7 Wonder \u00b7 AQ';
     } else if (imgSecs < 18) {
       overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
       overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;
@@ -531,8 +534,6 @@ form.addEventListener('submit', function(e) {
       overlayStatus.textContent = `Generating score card for image ${imgNum}…`;
       overlaySub.textContent    = 'Building archetype and improvement tip.';
     }
-
-    if (remaining <= 5) clockRing.style.stroke = '#fff';
   }, 1000);
 
   // XHR submit
