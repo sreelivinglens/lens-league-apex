@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
-from models import db, User, Image, CalibrationLog, CalibrationNote
+from models import db, User, Image, CalibrationLog
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES)
@@ -1322,6 +1322,7 @@ def backfill_hashes():
 @login_required
 @admin_required
 def admin_feedback(image_id):
+    from models import CalibrationNote
     img     = Image.query.get_or_404(image_id)
     module  = request.form.get('module', 'overall').strip()
     reason  = request.form.get('reason', '').strip()
@@ -1627,6 +1628,7 @@ def fix_calibration_table():
 @login_required
 @admin_required
 def admin_calibration_notes():
+    from models import CalibrationNote
     notes = CalibrationNote.query.order_by(CalibrationNote.created_at.desc()).all()
     return render_template('calibration_notes.html', notes=notes)
 
@@ -1635,6 +1637,7 @@ def admin_calibration_notes():
 @login_required
 @admin_required
 def toggle_calibration_note(note_id):
+    from models import CalibrationNote
     note = CalibrationNote.query.get_or_404(note_id)
     note.is_active = not note.is_active
     db.session.commit()
@@ -1647,6 +1650,7 @@ def toggle_calibration_note(note_id):
 @login_required
 @admin_required
 def delete_calibration_note(note_id):
+    from models import CalibrationNote
     note = CalibrationNote.query.get_or_404(note_id)
     db.session.delete(note)
     db.session.commit()
