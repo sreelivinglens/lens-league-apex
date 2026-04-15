@@ -153,7 +153,7 @@ class BowSubmission(db.Model):
         return f'<BowSubmission {self.id} user={self.user_id} images={self.image_count} year={self.platform_year}>'
 
 
-
+class CalibrationNote(db.Model):
     """Admin feedback on individual scored images — feeds back into engine prompt."""
     __tablename__ = 'calibration_notes'
 
