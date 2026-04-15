@@ -94,6 +94,43 @@
   .result-status.ok { color: var(--green); }
   .result-status.err { color: var(--red); }
   .result-border { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+
+  /* ── Scoring Overlay ── */
+  #scoringOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,10,8,.96);
+    backdrop-filter: blur(8px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  #scoringOverlay.active { display: flex; }
+  .overlay-engine-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 40px; opacity: .7;
+  }
+  .clock-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 36px; flex-shrink: 0; }
+  .clock-svg { transform: rotate(-90deg); }
+  .clock-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 6; }
+  .clock-ring-fill {
+    fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 534; stroke-dashoffset: 534;
+    transition: stroke-dashoffset .9s linear;
+  }
+  .clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .clock-secs { font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #fff; line-height: 1; }
+  .clock-unit { font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .overlay-phase { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 14px; }
+  .overlay-status { font-size: 20px; font-weight: 600; color: #fff; text-align: center; max-width: 460px; line-height: 1.4; margin-bottom: 12px; min-height: 56px; }
+  .overlay-substatus { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: center; max-width: 400px; line-height: 1.6; letter-spacing: .5px; }
+  .dot-pulse { display: inline-flex; gap: 6px; margin-top: 28px; }
+  .dot-pulse span { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 1.4s ease-in-out infinite; opacity: .3; }
+  .dot-pulse span:nth-child(2) { animation-delay: .2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { 0%,80%,100% { opacity:.3; transform:scale(.8); } 40% { opacity:1; transform:scale(1.1); } }
 </style>
 {% endblock %}
 
@@ -326,6 +363,25 @@
   {% endif %}
 
 </div>
+
+<!-- Scoring Overlay -->
+<div id="scoringOverlay">
+  <div class="overlay-engine-tag">Apex DDI Engine · Bulk Scoring</div>
+  <div class="clock-wrap">
+    <svg class="clock-svg" width="200" height="200" viewBox="0 0 200 200">
+      <circle class="clock-ring-bg" cx="100" cy="100" r="85"/>
+      <circle class="clock-ring-fill" id="clockRing" cx="100" cy="100" r="85"/>
+    </svg>
+    <div class="clock-center">
+      <div class="clock-secs" id="clockSecs">—</div>
+      <div class="clock-unit" id="clockUnit">seconds</div>
+    </div>
+  </div>
+  <div class="overlay-phase" id="overlayPhase">Uploading</div>
+  <div class="overlay-status" id="overlayStatus">Sending your images…</div>
+  <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open while scoring is in progress.</div>
+  <div class="dot-pulse"><span></span><span></span><span></span></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -425,24 +481,58 @@ form.addEventListener('submit', function(e) {
   // Lock UI
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
-  progArea.style.display = 'block';
-  progBar.style.width = '2%';
   sessionStorage.setItem('bulk_processing', '1');
 
-  // Start elapsed timer — keeps running because XHR is async
-  const total    = files.length;
-  const perImage = 20;
-  const totalSec = total * perImage;
-  let secs = 0;
+  // ── Scoring Overlay ──────────────────────────────────────────────
+  const total        = files.length;
+  const overlay      = document.getElementById('scoringOverlay');
+  const clockRing    = document.getElementById('clockRing');
+  const clockSecs    = document.getElementById('clockSecs');
+  const clockUnit    = document.getElementById('clockUnit');
+  const overlayPhase = document.getElementById('overlayPhase');
+  const overlayStatus= document.getElementById('overlayStatus');
+  const overlaySub   = document.getElementById('overlaySubstatus');
 
+  const PER_IMAGE    = 20;
+  const totalSecs    = total * PER_IMAGE;
+  const CIRCUMFERENCE= 534;
+
+  overlay.classList.add('active');
+  clockSecs.textContent = totalSecs;
+
+  let secs = 0;
   const ticker = setInterval(() => {
     secs++;
-    elapsed.textContent = secs + 's elapsed';
-    const pct = Math.min((secs / totalSec) * 92, 92);
-    progBar.style.width = pct + '%';
-    const imgNum = Math.min(Math.ceil(secs / perImage), total);
-    progText.textContent = `Scoring image ${imgNum} of ${total} with Apex DDI Engine…`;
-    progLabel.textContent = `PROCESSING ${imgNum}/${total}`;
+    const remaining = Math.max(totalSecs - secs, 0);
+    clockSecs.textContent = remaining;
+
+    // Ring fill
+    const pct = Math.min(secs / totalSecs, 1);
+    clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+
+    // Per-image phase tracking
+    const imgNum  = Math.min(Math.ceil(secs / PER_IMAGE), total);
+    const imgSecs = ((secs - 1) % PER_IMAGE) + 1;
+
+    if (imgSecs < 5) {
+      overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
+      overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;
+      overlaySub.textContent    = 'Transferring to server.';
+    } else if (imgSecs < 12) {
+      overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
+      overlayStatus.textContent = `Apex DDI Engine is scoring image ${imgNum}…`;
+      overlaySub.textContent    = 'DoD · Disruption · DM · Wonder · AQ';
+    } else if (imgSecs < 18) {
+      overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
+      overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;
+      overlaySub.textContent    = 'Applying genre weights and safeguards.';
+    } else {
+      overlayPhase.textContent  = `FINALISING ${imgNum}/${total}`;
+      overlayStatus.textContent = `Generating score card for image ${imgNum}…`;
+      overlaySub.textContent    = 'Building archetype and improvement tip.';
+    }
+
+    if (remaining <= 5) clockRing.style.stroke = '#fff';
   }, 1000);
 
   // XHR submit
@@ -452,15 +542,18 @@ form.addEventListener('submit', function(e) {
   xhr.onload = function() {
     clearInterval(ticker);
     if (xhr.status === 200) {
-      progBar.style.width = '100%';
-      progLabel.textContent = 'COMPLETE';
-      progText.textContent = '✅ All images processed — loading results…';
-      sessionStorage.removeItem('bulk_processing');
-      // Redirect to dashboard with success message instead of document.write
+      clockSecs.textContent = '✓';
+      clockUnit.textContent = 'done';
+      clockRing.style.strokeDashoffset = '0';
+      clockRing.style.stroke = 'var(--gold)';
+      overlayPhase.textContent  = 'COMPLETE';
+      overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} scored!`;
+      overlaySub.textContent    = 'Redirecting to your dashboard…';
       sessionStorage.removeItem('bulk_processing');
       sessionStorage.removeItem('bulk_started');
-      window.location.href = '/dashboard';
+      setTimeout(() => { window.location.href = '/dashboard'; }, 800);
     } else {
+      overlay.classList.remove('active');
       progText.textContent = `❌ Error ${xhr.status} — please try again.`;
       submitBtn.disabled = false;
       submitBtn.textContent = '⬆ Upload & Auto-Score All';
@@ -469,6 +562,7 @@ form.addEventListener('submit', function(e) {
 
   xhr.onerror = function() {
     clearInterval(ticker);
+    overlay.classList.remove('active');
     progText.textContent = '❌ Network error — please try again.';
     submitBtn.disabled = false;
     submitBtn.textContent = '⬆ Upload & Auto-Score All';

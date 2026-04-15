@@ -174,6 +174,79 @@
   .progress-pct { display: flex; justify-content: space-between; margin-top: 8px; }
   .progress-pct span { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
   .progress-status { margin-top: 12px; font-size: 14px; color: var(--text-secondary); text-align: center; min-height: 22px; }
+  /* ── Scoring Overlay ── */
+  #scoringOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,10,8,.96);
+    backdrop-filter: blur(8px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  #scoringOverlay.active { display: flex; }
+
+  .overlay-engine-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 40px; opacity: .7;
+  }
+
+  /* Clock ring */
+  .clock-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 36px; flex-shrink: 0; }
+  .clock-svg { transform: rotate(-90deg); }
+  .clock-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 6; }
+  .clock-ring-fill {
+    fill: none; stroke: var(--gold); stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 534; /* 2π × 85 */
+    stroke-dashoffset: 534;
+    transition: stroke-dashoffset .9s linear;
+  }
+  .clock-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .clock-secs {
+    font-family: var(--font-display); font-size: 52px; font-weight: 700;
+    color: #fff; line-height: 1;
+  }
+  .clock-unit {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px;
+    color: var(--text-muted); text-transform: uppercase; margin-top: 4px;
+  }
+
+  .overlay-phase {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .overlay-status {
+    font-size: 20px; font-weight: 600; color: #fff;
+    text-align: center; max-width: 460px; line-height: 1.4;
+    margin-bottom: 12px; min-height: 56px;
+  }
+  .overlay-substatus {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    text-align: center; max-width: 400px; line-height: 1.6;
+    letter-spacing: .5px;
+  }
+
+  /* Dot pulse */
+  .dot-pulse { display: inline-flex; gap: 6px; margin-top: 28px; }
+  .dot-pulse span {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+    animation: pulse 1.4s ease-in-out infinite;
+    opacity: .3;
+  }
+  .dot-pulse span:nth-child(2) { animation-delay: .2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: .3; transform: scale(.8); }
+    40% { opacity: 1; transform: scale(1.1); }
+  }
 </style>
 {% endblock %}
 
@@ -314,22 +387,6 @@
         </label>
       </div>
 
-      <!-- Progress bar -->
-      <div class="progress-wrap" id="progressWrap">
-        <div class="progress-header">
-          <span class="progress-label" id="progressLabel">Uploading</span>
-          <span class="progress-elapsed" id="elapsedTimer">0s elapsed</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-pct">
-          <span id="progressPct">0%</span>
-          <span id="progressEst"></span>
-        </div>
-        <div class="progress-status" id="progressStatus">Uploading image…</div>
-      </div>
-
       <div style="padding:12px 16px; background:var(--surface-3); border:1px solid var(--border);
                   border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
                   font-size:13px; color:var(--text-secondary); line-height:1.6; margin-top:20px; margin-bottom:16px;">
@@ -345,6 +402,25 @@
     </form>
   </div>
 </div>
+
+<!-- Scoring Overlay -->
+<div id="scoringOverlay">
+  <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
+  <div class="clock-wrap">
+    <svg class="clock-svg" width="200" height="200" viewBox="0 0 200 200">
+      <circle class="clock-ring-bg" cx="100" cy="100" r="85"/>
+      <circle class="clock-ring-fill" id="clockRing" cx="100" cy="100" r="85"/>
+    </svg>
+    <div class="clock-center">
+      <div class="clock-secs" id="clockSecs">45</div>
+      <div class="clock-unit">seconds</div>
+    </div>
+  </div>
+  <div class="overlay-phase" id="overlayPhase">Uploading</div>
+  <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
+  <div class="overlay-substatus" id="overlaySubstatus">Your image is being sent to the server securely.</div>
+  <div class="dot-pulse"><span></span><span></span><span></span></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -358,13 +434,7 @@
   const fileError     = document.getElementById('fileError');
   const form          = document.getElementById('uploadForm');
   const submitBtn     = document.getElementById('submitBtn');
-  const progressWrap  = document.getElementById('progressWrap');
-  const progressBar   = document.getElementById('progressBar');
-  const progressPct   = document.getElementById('progressPct');
-  const progressLabel = document.getElementById('progressLabel');
-  const progressEst   = document.getElementById('progressEst');
-  const elapsedTimer  = document.getElementById('elapsedTimer');
-  const progressStatus= document.getElementById('progressStatus');
+  const progressWrap  = null; // replaced by overlay
   const genreHintEl   = document.getElementById('genre-hint');
   const legalBox      = document.getElementById('legalBox');
   const legalCheck    = document.getElementById('legal_declaration');
@@ -457,41 +527,63 @@
     }
 
     submitBtn.disabled = true;
-    progressWrap.style.display = 'block';
-    progressStatus.textContent = 'Uploading image…';
-    progressLabel.textContent  = 'UPLOADING';
 
-    let seconds = 0;
+    // ── Scoring Overlay ──────────────────────────────────────────────
+    const overlay      = document.getElementById('scoringOverlay');
+    const clockRing    = document.getElementById('clockRing');
+    const clockSecs    = document.getElementById('clockSecs');
+    const overlayPhase = document.getElementById('overlayPhase');
+    const overlayStatus= document.getElementById('overlayStatus');
+    const overlaySub   = document.getElementById('overlaySubstatus');
+
+    const TOTAL_SECS   = 45;
+    const CIRCUMFERENCE= 534; // 2π × 85
+
+    const phases = [
+      { from: 0,  to: 5,  phase: 'UPLOADING',  status: 'Transferring your image…',          sub: 'Your image is being sent to the server securely.' },
+      { from: 5,  to: 12, phase: 'PROCESSING',  status: 'Preparing for analysis…',           sub: 'Extracting metadata, verifying file integrity.' },
+      { from: 12, to: 28, phase: 'ANALYSING',   status: 'Apex DDI Engine is evaluating…',   sub: 'Scoring across 5 modules: DoD · Disruption · DM · Wonder · AQ' },
+      { from: 28, to: 38, phase: 'SCORING',     status: 'Calculating your DDI score…',       sub: 'Applying genre weights and safeguards.' },
+      { from: 38, to: 45, phase: 'FINALISING',  status: 'Generating your score card…',       sub: 'Almost there — building your archetype and improvement tip.' },
+    ];
+
+    overlay.classList.add('active');
+    let elapsed = 0;
+
     const ticker = setInterval(() => {
-      seconds++;
-      elapsedTimer.textContent = `${seconds}s elapsed`;
+      elapsed++;
+      const remaining = Math.max(TOTAL_SECS - elapsed, 0);
+      clockSecs.textContent = remaining;
+
+      // Ring fill — progress from 0 to full
+      const pct = Math.min(elapsed / TOTAL_SECS, 1);
+      clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+
+      // Phase copy
+      const phase = phases.find(p => elapsed >= p.from && elapsed < p.to) || phases[phases.length - 1];
+      overlayPhase.textContent  = phase.phase;
+      overlayStatus.textContent = phase.status;
+      overlaySub.textContent    = phase.sub;
+
+      // Ring colour shift on final phase
+      if (elapsed >= 38) clockRing.style.stroke = '#fff';
     }, 1000);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', form.action);
 
-    xhr.upload.addEventListener('progress', function (e) {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        progressBar.style.width = pct + '%';
-        progressPct.textContent = pct + '%';
-        progressStatus.textContent = pct < 100
-          ? 'Uploading image…'
-          : 'Analysing with Apex DDI Engine…';
-        progressLabel.textContent = pct < 100 ? 'UPLOADING' : 'SCORING';
-      }
-    });
-
     xhr.addEventListener('load', function () {
       clearInterval(ticker);
       if (xhr.status === 200) {
-        progressBar.style.width = '100%';
-        progressPct.textContent = '100%';
-        progressLabel.textContent = 'COMPLETE';
-        progressStatus.textContent = '✅ Done! Redirecting…';
-        window.location.href = xhr.responseURL || '/dashboard';
+        clockSecs.textContent = '✓';
+        clockRing.style.strokeDashoffset = '0';
+        clockRing.style.stroke = 'var(--gold)';
+        overlayPhase.textContent  = 'COMPLETE';
+        overlayStatus.textContent = 'Your score is ready!';
+        overlaySub.textContent    = 'Redirecting to your score card…';
+        setTimeout(() => { window.location.href = xhr.responseURL || '/dashboard'; }, 600);
       } else if (xhr.status === 409) {
-        progressWrap.style.display = 'none';
+        overlay.classList.remove('active');
         submitBtn.disabled = false;
         try {
           const resp = JSON.parse(xhr.responseText);
@@ -502,15 +594,17 @@
         fileInput.value = '';
         previewArea.style.display = 'none';
       } else {
-        progressStatus.textContent = '❌ Upload failed. Please try again.';
+        overlay.classList.remove('active');
         submitBtn.disabled = false;
+        showError('Upload failed. Please try again.');
       }
     });
 
     xhr.addEventListener('error', function () {
       clearInterval(ticker);
-      progressStatus.textContent = '❌ Network error. Please try again.';
+      overlay.classList.remove('active');
       submitBtn.disabled = false;
+      showError('Network error. Please try again.');
     });
 
     xhr.send(new FormData(form));
