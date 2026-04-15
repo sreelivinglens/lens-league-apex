@@ -323,9 +323,7 @@
     50%      { transform: translateY(5px); }
   }
 
-  /* ─── TRACK SELECTOR ────────────────────────────────────────── */
-  .tracks-section { background: var(--deep); }
-
+  /* ─── HOW IT WORKS ──────────────────────────────────────────── */
   .section-label {
     font-size: 0.72rem;
     font-weight: 600;
@@ -343,7 +341,6 @@
     height: 1px;
     background: linear-gradient(to right, var(--gold-dim), transparent);
   }
-
   .section-heading {
     font-family: 'Playfair Display', serif;
     font-size: clamp(1.75rem, 4vw, 2.75rem);
@@ -351,7 +348,6 @@
     line-height: 1.2;
     margin-bottom: 0.75rem;
   }
-
   .section-subheading {
     font-size: 1rem;
     color: var(--muted);
@@ -360,117 +356,6 @@
     margin-bottom: 3rem;
     line-height: 1.65;
   }
-
-  .tracks-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-
-  .track-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    transition: border-color 0.3s, transform 0.25s, box-shadow 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-  .track-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at top left, rgba(201,168,76,0.04), transparent 60%);
-    pointer-events: none;
-  }
-  .track-card:hover {
-    border-color: rgba(201,168,76,0.35);
-    transform: translateY(-4px);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-  }
-
-  .track-icon {
-    font-size: 2.5rem;
-    line-height: 1;
-  }
-  .track-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-  .track-desc {
-    font-size: 0.9rem;
-    color: var(--muted);
-    line-height: 1.6;
-    flex: 1;
-  }
-  .track-devices {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.25rem;
-  }
-  .tag {
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.05);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  .track-price {
-    font-size: 0.85rem;
-    color: var(--muted);
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-  }
-  .track-price strong { color: var(--gold); font-size: 1rem; }
-
-  .btn-track {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    background: transparent;
-    border: 1px solid var(--gold-dim);
-    color: var(--gold);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    letter-spacing: 0.02em;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-    margin-top: 0.5rem;
-  }
-  .btn-track:hover {
-    background: var(--gold);
-    color: var(--black);
-    border-color: var(--gold);
-  }
-
-  .track-same-science {
-    grid-column: 1 / -1;
-    text-align: center;
-    font-size: 0.82rem;
-    color: var(--muted);
-    padding-top: 0.5rem;
-  }
-  .track-same-science span { color: var(--gold); font-weight: 600; }
-
-  @media (max-width: 640px) {
-    .tracks-grid { grid-template-columns: 1fr; }
-  }
-
-  /* ─── HOW IT WORKS ──────────────────────────────────────────── */
   .how-section { background: var(--black); }
 
   .steps-row {
@@ -919,7 +804,6 @@
   }
 
   .lb-body { padding: 0.85rem 1rem; }
-  .lb-score { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); }
   .lb-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
 
   .proof-cta {
@@ -1102,56 +986,6 @@
   </div>
 </section>
 
-
-<!-- ═══════════════════ TRACK SELECTOR ════════════════════ -->
-<section class="section tracks-section" id="tracks">
-  <div class="section-inner">
-    <div class="section-label reveal">Two Tracks. Same Standard.</div>
-    <h2 class="section-heading reveal reveal-delay-1">Which photographer are you?</h2>
-    <p class="section-subheading reveal reveal-delay-2">Same science. Same rigour. Separate competitions so every photographer competes fairly.</p>
-
-    <div class="tracks-grid">
-      <div class="track-card reveal reveal-delay-2">
-        <div class="track-icon">📷</div>
-        <div>
-          <div class="track-title">Camera Photographer</div>
-          <div class="track-desc">For photographers shooting with dedicated camera gear. DSLR, mirrorless, or film — if you choose your own glass, this is your track.</div>
-          <div class="track-devices">
-            <span class="tag">DSLR</span>
-            <span class="tag">Mirrorless</span>
-            <span class="tag">Film</span>
-            <span class="tag">Medium Format</span>
-          </div>
-        </div>
-        <div class="track-price">
-          <strong>₹200/month</strong> or ₹2,000/year &nbsp;·&nbsp; 4 scored images/month
-        </div>
-        <a href="/upload?track=camera" class="btn-track">Score a Camera Shot →</a>
-      </div>
-
-      <div class="track-card reveal reveal-delay-3">
-        <div class="track-icon">📱</div>
-        <div>
-          <div class="track-title">Mobile Photographer</div>
-          <div class="track-desc">For photographers who shoot with a smartphone. iPhone, Android, or any mobile device — computational photography is a craft too.</div>
-          <div class="track-devices">
-            <span class="tag">iPhone</span>
-            <span class="tag">Android</span>
-            <span class="tag">Any Smartphone</span>
-          </div>
-        </div>
-        <div class="track-price">
-          <strong>₹100/month</strong> or ₹1,000/year &nbsp;·&nbsp; 4 scored images/month
-        </div>
-        <a href="/upload?track=mobile" class="btn-track">Score a Mobile Shot →</a>
-      </div>
-
-      <p class="track-same-science reveal reveal-delay-4">
-        Not sure yet? <a href="/upload" style="color: var(--gold); text-decoration:none;">Upload free</a> and choose your track during scoring &nbsp;·&nbsp; <span>First 3 scores are free for everyone</span>
-      </p>
-    </div>
-  </div>
-</section>
 
 
 <!-- ═════════════════════ HOW IT WORKS ════════════════════ -->
@@ -1339,7 +1173,6 @@
             <div class="lb-rank">#{{ loop.index }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-score">{{ "%.2f"|format(img.score) if img.score else "—" }}</div>
             <div class="lb-meta">{{ img.genre | default('—') }} · {{ img.camera_track | default('Camera') | title }}</div>
           </div>
         </div>
@@ -1351,7 +1184,6 @@
             <div class="lb-rank">#{{ i }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-score">—</div>
             <div class="lb-meta">Be the first to top the board</div>
           </div>
         </div>
