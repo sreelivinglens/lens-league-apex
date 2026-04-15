@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}URL Image Upload — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .url-wrap { max-width: 860px; margin: 0 auto; padding: 0 var(--page-pad) 80px; }
+  .page-header { padding: clamp(32px,5vw,56px) 0 32px; }
+  .page-header h1 { font-size: clamp(22px,4vw,32px); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .page-header p  { font-size: 14px; color: var(--text-secondary); }
+
+  .form-card { background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 32px; margin-bottom: 32px; }
+
+  .field-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
+    display: block; margin-bottom: 8px; }
+
+  .field-group { margin-bottom: 22px; }
+
+  textarea.url-input { width: 100%; min-height: 160px; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-primary);
+    resize: vertical; line-height: 1.7; }
+  textarea.url-input:focus { outline: none; border-color: var(--gold-dark); }
+  textarea.url-input::placeholder { color: var(--text-muted); }
+
+  input[type="text"], select { width: 100%; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 10px 14px; font-size: 14px; color: var(--text-primary); }
+  input[type="text"]:focus, select:focus { outline: none; border-color: var(--gold-dark); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* Visibility toggle */
+  .vis-toggle { display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 18px; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius-md); flex-wrap: wrap; }
+  .vis-toggle-text .title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .vis-toggle-text .note  { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .toggle-pill { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle-pill input { opacity: 0; position: absolute; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; border-radius: 99px; background: var(--border); transition: background .2s; }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; transition: left .2s; }
+
+  .warning-box { background: rgba(200,168,75,.06); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
+    font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .warning-box strong { color: var(--gold); }
+
+  /* Submit */
+  .btn-submit { display: inline-block; padding: 14px 36px; background: var(--gold); color: #000;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; border: none; border-radius: var(--radius-md); cursor: pointer; }
+  .btn-submit:hover { opacity: .85; }
+
+  /* Results table */
+  .results-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 24px; }
+  .results-table th { font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase;
+    text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .results-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary); vertical-align: middle; word-break: break-all; }
+  .results-table tr:last-child td { border-bottom: none; }
+  .status-ok   { color: var(--gold); font-weight: 600; }
+  .status-err  { color: var(--red, #e05); }
+  .status-warn { color: var(--amber); }
+
+  @media(max-width:640px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="url-wrap">
+
+  <div class="page-header">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn" style="margin-bottom:16px; display:inline-block;">&larr; Back to Admin</a>
+    <h1>URL Image Upload</h1>
+    <p>Fetch images by URL for engine calibration. Scored privately — hidden from leaderboard by default.</p>
+  </div>
+
+  <div class="warning-box">
+    <strong>⚖️ Rights &amp; Usage Reminder</strong><br>
+    Only upload images you have rights to use, or CC-licensed images from Flickr and similar sources.
+    Award-winning images from Magnum, NHM, Sony World Photo Awards etc. are copyrighted — use only with
+    permission or from official CC sources. These images are marked as calibration examples and
+    <strong>never shown publicly</strong> unless you explicitly set them to Public.
+  </div>
+
+  <div class="form-card">
+    <form method="POST" action="{{ url_for('admin_url_upload') }}">
+
+      <div class="field-group">
+        <label class="field-label">Image URLs — one per line (max 20)</label>
+        <textarea name="image_urls" class="url-input"
+          placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg&#10;..."></textarea>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:6px;letter-spacing:.5px;">
+          Supports direct .jpg / .png / .webp links. Must be publicly accessible.
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Genre</label>
+          <select name="genre" required>
+            {% if genre_choices %}
+              {% for gid, glabel in genre_choices %}
+                <option value="{{ gid }}">{{ glabel }}</option>
+              {% endfor %}
+            {% else %}
+              {% for g in genres %}
+                <option value="{{ g }}">{{ g }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Photographer Name</label>
+          <input type="text" name="photographer_name" placeholder="e.g. Steve McCurry">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Source Credit <span style="font-weight:400;color:var(--text-muted);">(optional — appended to image title)</span></label>
+        <input type="text" name="source_credit" placeholder="e.g. Magnum Photos, NHM Wildlife Photographer of the Year 2024">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Leaderboard Visibility</label>
+        <div class="vis-toggle">
+          <div class="vis-toggle-text">
+            <div class="title">Show on Public Leaderboard</div>
+            <div class="note">Default is Hidden — calibration images stay private.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <div class="toggle-pill">
+                <input type="checkbox" name="is_public" value="1" id="urlIsPublic">
+                <div class="toggle-track" id="urlToggleTrack"></div>
+                <div class="toggle-thumb" id="urlToggleThumb"></div>
+              </div>
+              <span id="urlToggleLabel" style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;">Hidden</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">⬇ Fetch &amp; Score All</button>
+    </form>
+  </div>
+
+  {% if results %}
+  <div class="form-card">
+    <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px;">
+      Results — {{ results|length }} URL{{ 's' if results|length != 1 }} processed
+    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Title</th>
+          <th>Score</th>
+          <th>Tier</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td style="max-width:220px;font-size:11px;">{{ r.url }}</td>
+          <td>{{ r.asset_name or '—' }}</td>
+          <td>{{ r.score or '—' }}</td>
+          <td>{{ r.tier or '—' }}</td>
+          <td class="{% if r.status == 'scored' %}status-ok{% elif 'error' in r.status or 'HTTP' in r.status or 'failed' in r.status %}status-err{% else %}status-warn{% endif %}">
+            {{ r.status }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+(function() {
+  const cb    = document.getElementById('urlIsPublic');
+  const track = document.getElementById('urlToggleTrack');
+  const thumb = document.getElementById('urlToggleThumb');
+  const label = document.getElementById('urlToggleLabel');
+  if (!cb) return;
+  cb.addEventListener('change', function() {
+    if (this.checked) {
+      track.style.background = 'var(--gold)';
+      thumb.style.left = '23px';
+      label.style.color = 'var(--gold)';
+      label.textContent = 'Public';
+    } else {
+      track.style.background = 'var(--border)';
+      thumb.style.left = '3px';
+      label.style.color = 'var(--text-muted)';
+      label.textContent = 'Hidden';
+    }
+  });
+})();
+</script>
+{% endblock %}
