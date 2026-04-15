@@ -270,7 +270,7 @@
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
 
-    {% if current_user.is_authenticated %}
+    {% if show_score %}
       <div class="score-badge">
         <div class="score-num">{{ image.score }}</div>
         <div class="score-tier-line">{{ image.tier }}</div>
@@ -311,8 +311,8 @@
   {% set valid_scores = mods | selectattr('1') | list %}
   {% set max_val = valid_scores | map(attribute=1) | max if valid_scores else 0 %}
 
-  {% if current_user.is_authenticated %}
-  <!-- Logged in: full numbers + bars -->
+  {% if show_score %}
+  <!-- Owner: full numbers + bars -->
   <div class="modules">
     {% for name, val in mods %}{% if val %}
     <div class="mod-cell">
@@ -324,7 +324,7 @@
   </div>
 
   {% else %}
-  <!-- Logged out: bars visible, numbers hidden -->
+  <!-- Everyone else (including logged-in non-owners): bars visible, numbers hidden -->
   <div class="modules-bars-only">
     {% for name, val in mods %}{% if val %}
     <div class="mod-bar-cell">
@@ -428,7 +428,7 @@
       <div class="photographer-label">{{ image.photographer_name }}</div>
     </div>
     <div class="score-stamp">
-      {% if current_user.is_authenticated %}LL · {{ image.score }} · {{ image.tier.upper() if image.tier else '' }}
+      {% if show_score %}LL · {{ image.score }} · {{ image.tier.upper() if image.tier else '' }}
       {% else %}{{ image.tier.upper() if image.tier else '' }}{% endif %}
     </div>
   </div>
