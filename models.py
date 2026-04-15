@@ -138,7 +138,7 @@ class BowSubmission(db.Model):
     submitted_at      = db.Column(db.DateTime, default=datetime.utcnow)
     notes             = db.Column(db.Text, nullable=True)              # admin/jury notes
 
-    user              = db.relationship('User', backref='bow_submissions', lazy=True)
+    user              = db.relationship('User', foreign_keys=[user_id], backref='bow_submissions', lazy=True)
 
     def get_image_ids(self):
         try:
@@ -168,8 +168,8 @@ class BowSubmission(db.Model):
     is_active       = db.Column(db.Boolean, default=True)
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
-    image           = db.relationship('Image', backref='calibration_notes', lazy=True)
-    admin           = db.relationship('User', backref='calibration_notes', lazy=True)
+    image           = db.relationship('Image', foreign_keys=[image_id], backref='calibration_notes', lazy=True)
+    admin           = db.relationship('User', foreign_keys=[admin_id], backref='calibration_notes', lazy=True)
 
     def __repr__(self):
         return f'<CalibrationNote image={self.image_id} module={self.module} {self.original_score}→{self.corrected_score}>'
