@@ -12,7 +12,7 @@
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
-  --bg:          #0D0D0B;  /* alias for --black, used across templates */
+  --bg:          #0D0D0B;
   --black:       #0D0D0B;
   --surface-1:   #141412;
   --surface-2:   #1C1C1A;
@@ -182,7 +182,6 @@ nav {
   color: var(--gold);
   background: var(--gold-subtle);
 }
-/* GOLD BUTTON — always dark text so it is readable on gold background */
 .btn-solid {
   background: var(--gold);
   border-color: var(--gold);
@@ -526,19 +525,21 @@ footer {
   <!-- Desktop nav -->
   <div class="nav-links">
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
       <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
       <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
-      <a href="{{ url_for('upload') }}">Upload</a>
-      <a href="{{ url_for('bulk_upload') }}">Bulk Upload</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+      <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
+      <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
       {% if current_user.role == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="nav-admin">Admin</a>
       {% endif %}
-      <a href="{{ url_for('change_password') }}">Password</a>
       <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
     {% else %}
+      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+      <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
       <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('pricing') }}">Pricing</a>
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Join Free</a>
     {% endif %}
   </div>
@@ -555,6 +556,7 @@ footer {
     <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
     <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
     <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
     <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
     {% if current_user.role == 'admin' %}
@@ -563,8 +565,10 @@ footer {
     <a href="{{ url_for('change_password') }}" onclick="toggleNav()">Change Password</a>
     <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
   {% else %}
-    <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
     <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
   {% endif %}
 </div>
@@ -621,7 +625,6 @@ function dismissFlash(btn) {
   setTimeout(() => flash.remove(), 300);
 }
 
-// Auto-hide success messages after 6s, keep errors/warnings until dismissed
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.flash.success').forEach(function(el) {
     setTimeout(function() {
