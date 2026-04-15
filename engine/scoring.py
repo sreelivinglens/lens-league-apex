@@ -30,7 +30,7 @@ GENRE_WEIGHTS = {
 GENRE_LIST = [
     {
         'id':          'Wildlife',
-        'label':       'Wildlife',
+        'label':       'Wildlife (Flora & Fauna)',
         'description': 'Wildlife, Flora & Fauna — animals, birds, insects, plants, marine life, ecosystems',
         'aliases':     ['wildlife', 'flora', 'fauna', 'nature', 'animals', 'birds', 'marine', 'underwater'],
     },
@@ -80,6 +80,12 @@ GENRE_LIST = [
 
 # Flat list of genre ids — use for form <select> options and DB validation.
 GENRE_IDS = [g['id'] for g in GENRE_LIST]
+
+# Display labels keyed by id — use in templates: {{ genre_labels[img.genre] }}
+GENRE_LABELS = {g['id']: g['label'] for g in GENRE_LIST}
+
+# List of (id, label) tuples — use for <select> dropdowns that need both
+GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
 
 
 def normalise_genre(raw: str) -> str:
