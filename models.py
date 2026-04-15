@@ -86,7 +86,6 @@ class Image(db.Model):
 
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
-    is_public              = db.Column(db.Boolean, default=True,  nullable=False)  # False = hidden from leaderboard
 
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
@@ -247,6 +246,12 @@ class CalibrationLog(db.Model):
 
 def run_migrations(app):
     with app.app_context():
+        # Clear any pre-existing broken transaction before we start
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
         db.create_all()
 
         _col('users', 'full_name',            'VARCHAR(120)')
@@ -281,69 +286,84 @@ def run_migrations(app):
         _col('images', 'camera_track',            'VARCHAR(20)')
         _col('images', 'is_public',               'BOOLEAN DEFAULT TRUE')
 
-        db.session.execute(db.text('''
-            CREATE TABLE IF NOT EXISTS bow_submissions (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                series_title VARCHAR(180) NOT NULL,
-                thematic_statement TEXT NOT NULL,
-                image_ids_json TEXT NOT NULL,
-                image_count INTEGER NOT NULL,
-                status VARCHAR(20) DEFAULT 'submitted',
-                platform_year INTEGER NOT NULL,
-                submitted_at TIMESTAMP DEFAULT NOW(),
-                notes TEXT
-            )
-        '''))
-        db.session.commit()
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS bow_submissions (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    series_title VARCHAR(180) NOT NULL,
+                    thematic_statement TEXT NOT NULL,
+                    image_ids_json TEXT NOT NULL,
+                    image_count INTEGER NOT NULL,
+                    status VARCHAR(20) DEFAULT 'submitted',
+                    platform_year INTEGER NOT NULL,
+                    submitted_at TIMESTAMP DEFAULT NOW(),
+                    notes TEXT
+                )
+            """))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'[migration] bow_submissions: {e}')
 
-        db.session.execute(db.text('''
-            CREATE TABLE IF NOT EXISTS calibration_notes (
-                id SERIAL PRIMARY KEY,
-                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                admin_id INTEGER REFERENCES users(id),
-                genre VARCHAR(60) NOT NULL,
-                module VARCHAR(20) NOT NULL,
-                original_score FLOAT,
-                corrected_score FLOAT,
-                reason TEXT NOT NULL,
-                is_active BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT NOW()
-            )
-        '''))
-        db.session.commit()
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS calibration_notes (
+                    id SERIAL PRIMARY KEY,
+                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                    admin_id INTEGER REFERENCES users(id),
+                    genre VARCHAR(60) NOT NULL,
+                    module VARCHAR(20) NOT NULL,
+                    original_score FLOAT,
+                    corrected_score FLOAT,
+                    reason TEXT NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'[migration] calibration_notes: {e}')
 
-        db.session.execute(db.text('''
-            CREATE TABLE IF NOT EXISTS contest_entries (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                genre VARCHAR(60) NOT NULL,
-                track VARCHAR(20) NOT NULL,
-                contest_month VARCHAR(7) NOT NULL,
-                contest_type VARCHAR(20) DEFAULT 'monthly',
-                entered_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, genre, track, contest_month, contest_type)
-            )
-        '''))
-        db.session.commit()
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS contest_entries (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                    genre VARCHAR(60) NOT NULL,
+                    track VARCHAR(20) NOT NULL,
+                    contest_month VARCHAR(7) NOT NULL,
+                    contest_type VARCHAR(20) DEFAULT 'monthly',
+                    entered_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(user_id, genre, track, contest_month, contest_type)
+                )
+            """))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'[migration] contest_entries: {e}')
 
-
-        db.session.execute(db.text('''
-            CREATE TABLE IF NOT EXISTS open_contest_entries (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                genre VARCHAR(60) NOT NULL,
-                platform_year INTEGER NOT NULL,
-                amount_paise INTEGER DEFAULT 5000,
-                payment_ref VARCHAR(120),
-                status VARCHAR(20) DEFAULT 'confirmed',
-                entered_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, genre, platform_year)
-            )
-        '''))
-        db.session.commit()
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS open_contest_entries (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                    genre VARCHAR(60) NOT NULL,
+                    platform_year INTEGER NOT NULL,
+                    amount_paise INTEGER DEFAULT 5000,
+                    payment_ref VARCHAR(120),
+                    status VARCHAR(20) DEFAULT 'confirmed',
+                    entered_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(user_id, genre, platform_year)
+                )
+            """))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'[migration] open_contest_entries: {e}')
 
 
 def _col(table, column, col_type):
