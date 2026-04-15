@@ -225,9 +225,15 @@
         <label for="genre">Genre</label>
         <select id="genre" name="genre" required>
           <option value="" disabled selected>Select a genre…</option>
-          {% for g in genres %}
-          <option value="{{ g }}">{{ g }}</option>
-          {% endfor %}
+          {% if genre_choices %}
+            {% for gid, glabel in genre_choices %}
+            <option value="{{ gid }}">{{ glabel }}</option>
+            {% endfor %}
+          {% else %}
+            {% for g in genres %}
+            <option value="{{ g }}">{{ g }}</option>
+            {% endfor %}
+          {% endif %}
         </select>
         <div class="genre-hint" id="genre-hint"></div>
       </div>

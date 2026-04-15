@@ -136,7 +136,7 @@
   <div class="participate-banner">
     <div class="participate-banner-text">
       <h3>🏆 This Month's Contest is Open</h3>
-      <p>Upload your image, get your DDI score, and you're automatically entered into your genre contest. No separate entry needed. Camera and Mobile tracks judged separately.</p>
+      <p>Upload your images, get your DDI scores, then choose your best shot to enter each genre contest. Camera and Mobile tracks judged separately.</p>
     </div>
     <div class="participate-actions">
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Participate Now &rarr;</a>
@@ -171,6 +171,7 @@
     <div class="rule-pill">🏆 Tier-based ranking</div>
     <div class="rule-pill">📷 Camera &amp; Mobile separate</div>
     <div class="rule-pill">🌟 8 genres</div>
+    <div class="rule-pill">🎨 You choose your entry per genre</div>
     <div class="rule-pill">👑 POTY ₹50L · BOW ₹5.25L · Open ₹8L</div>
   </div>
 
@@ -179,10 +180,16 @@
     {% for genre, tracks in monthly_top.items() %}
     <div class="genre-section">
       <div class="genre-header">
-        <span class="genre-title">{{ genre }}</span>
+        <span class="genre-title">{{ genre_labels[genre] if genre_labels and genre in genre_labels else genre }}</span>
         <span class="genre-count">
           {{ tracks.camera|length + tracks.mobile|length }} entr{{ 'y' if (tracks.camera|length + tracks.mobile|length) == 1 else 'ies' }} this month
         </span>
+        {% if current_user.is_authenticated and current_user.is_subscribed %}
+          <a href="{{ url_for('contest_enter_monthly', genre=genre) }}"
+             class="btn btn-solid" style="margin-left:auto; padding:6px 16px; font-size:11px; letter-spacing:1px;">
+            + Enter {{ genre_labels[genre] if genre_labels and genre in genre_labels else genre }}
+          </a>
+        {% endif %}
       </div>
 
       <!-- Camera Track -->
@@ -202,7 +209,7 @@
           <div class="podium-info">
             <div class="podium-tier">{{ img.tier }}</div>
             <div class="podium-title">{{ img.asset_name or 'Untitled' }}</div>
-            <div class="podium-meta">{{ genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
+            <div class="podium-meta">{{ genre_labels[genre] if genre_labels and genre in genre_labels else genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
           </div>
         </a>
         {% endfor %}
@@ -226,7 +233,7 @@
           <div class="podium-info">
             <div class="podium-tier">{{ img.tier }}</div>
             <div class="podium-title">{{ img.asset_name or 'Untitled' }}</div>
-            <div class="podium-meta">{{ genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
+            <div class="podium-meta">{{ genre_labels[genre] if genre_labels and genre in genre_labels else genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
           </div>
         </a>
         {% endfor %}
@@ -235,7 +242,7 @@
 
       {% if not tracks.camera and not tracks.mobile %}
       <div class="empty-state" style="padding:20px;">
-        <p style="font-size:13px; color:var(--text-muted); margin:0;">No entries this month in {{ genre }}.</p>
+        <p style="font-size:13px; color:var(--text-muted); margin:0;">No entries this month in {{ genre_labels[genre] if genre_labels and genre in genre_labels else genre }}.</p>
       </div>
       {% endif %}
 
@@ -394,9 +401,9 @@
   <div class="enter-cta">
     {% if current_user.is_authenticated %}
       <h2>Your Shot at the Top.<br>This Month.</h2>
-      <p>Upload your best image, get your DDI score, and you're automatically in the monthly contest. Enter the Open for ₹2,00,000. Submit a Body of Work for ₹3,00,000 Gold.</p>
+      <p>Upload your best images, get your DDI scores, then choose which image to enter per genre. Monthly, POTY ₹50L, BOW ₹5.25L, Open ₹8L.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your Entry &rarr;</a>
+        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
         <a href="{{ url_for('leaderboard') }}" class="btn">View Full Leaderboard</a>
       </div>
     {% else %}

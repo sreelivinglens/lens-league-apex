@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}My Contest Entries — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .entries-wrap { max-width: 900px; margin: 0 auto; }
+
+  .month-group { margin-bottom: 40px; }
+  .month-heading {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .month-heading .current-badge {
+    background: var(--gold-subtle);
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 1.5px;
+  }
+
+  .entry-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .entry-row:hover { border-color: var(--gold-dark); }
+
+  .entry-thumb {
+    width: 64px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface-3);
+  }
+  .entry-info { flex: 1; min-width: 0; }
+  .entry-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .entry-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .entry-score {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+    text-align: right;
+    min-width: 48px;
+  }
+  .entry-score small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .entry-actions { flex-shrink: 0; }
+
+  .empty-entries {
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 56px 32px;
+    text-align: center;
+  }
+  .empty-entries p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.7; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="entries-wrap">
+
+  <div class="page-header">
+    <h1>My Contest Entries</h1>
+    <p>Your chosen images for each genre contest, by month</p>
+  </div>
+
+  <div style="display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap;">
+    <a href="{{ url_for('contests') }}" class="btn btn-solid">Enter a Contest &rarr;</a>
+    <a href="{{ url_for('upload') }}" class="btn">Upload New Image</a>
+  </div>
+
+  {% if entries %}
+    {% set ns = namespace(current_month_shown=false) %}
+    {% set months_seen = [] %}
+
+    {# Group by month #}
+    {% for entry in entries %}
+      {% if entry.contest_month not in months_seen %}
+        {% if months_seen %}
+        </div><!-- close month-group -->
+        {% endif %}
+        {% set _ = months_seen.append(entry.contest_month) %}
+        <div class="month-group">
+          <div class="month-heading">
+            {{ entry.contest_month }}
+            {% if entry.contest_month == current_month %}
+              <span class="current-badge">THIS MONTH</span>
+            {% endif %}
+          </div>
+      {% endif %}
+
+      <div class="entry-row">
+        {% if entry.image and entry.image.thumb_url %}
+        <img src="{{ entry.image.thumb_url }}" alt="{{ entry.image.asset_name }}" class="entry-thumb">
+        {% else %}
+        <div class="entry-thumb"></div>
+        {% endif %}
+
+        <div class="entry-info">
+          <div class="entry-title">{{ entry.image.asset_name if entry.image else 'Untitled' }}</div>
+          <div class="entry-meta">
+            <span>{{ genre_labels[entry.genre] if genre_labels and entry.genre in genre_labels else entry.genre }}</span>
+            <span>{{ entry.track | title }} Track</span>
+            <span>Entered {{ entry.entered_at.strftime('%d %b %Y') }}</span>
+          </div>
+        </div>
+
+        <div class="entry-score">
+          {{ "%.2f"|format(entry.image.score) if entry.image and entry.image.score else '—' }}
+          <small>{{ entry.image.tier if entry.image else '' }}</small>
+        </div>
+
+        {% if entry.contest_month == current_month %}
+        <div class="entry-actions">
+          <a href="{{ url_for('contest_enter_monthly', genre=entry.genre) }}"
+             class="btn" style="font-size:11px; padding:6px 14px;">Change</a>
+        </div>
+        {% endif %}
+      </div>
+
+    {% endfor %}
+    </div><!-- close last month-group -->
+
+  {% else %}
+  <div class="empty-entries">
+    <p>You haven't entered any contests yet.<br>
+    Upload your images, get them scored, then choose your entry for each genre.</p>
+    <a href="{{ url_for('contests') }}" class="btn btn-solid">Go to Contests &rarr;</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

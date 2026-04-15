@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Enter {{ genre_label }} Contest — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .enter-wrap { max-width: 860px; margin: 0 auto; }
+
+  .contest-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .contest-meta-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .contest-meta-pill.gold {
+    border-color: var(--gold-dark);
+    color: var(--gold);
+    background: var(--gold-subtle);
+  }
+
+  /* Already entered banner */
+  .current-entry-banner {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06));
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .current-entry-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--gold-dark);
+  }
+  .current-entry-info { flex: 1; min-width: 0; }
+  .current-entry-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .current-entry-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .current-entry-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Image grid */
+  .image-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .image-select-card {
+    position: relative;
+    cursor: pointer;
+  }
+  .image-select-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .image-select-label {
+    display: block;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .image-select-card input[type="radio"]:checked + .image-select-label {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold-dark);
+  }
+  .image-select-label:hover {
+    border-color: var(--border-strong);
+  }
+  .image-select-thumb {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+  }
+  .image-select-body {
+    padding: 10px 12px;
+  }
+  .image-select-score {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    float: right;
+  }
+  .image-select-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .image-select-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .selected-tick {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--bg);
+    font-weight: 700;
+    z-index: 2;
+  }
+  .image-select-card input[type="radio"]:checked ~ .selected-tick {
+    display: flex;
+  }
+
+  .empty-eligible {
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 48px 32px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .empty-eligible p { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+
+  .submit-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface-1);
+    border-top: 1px solid var(--border);
+    padding: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .submit-bar-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .submit-bar-note strong { color: var(--text-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="enter-wrap">
+
+  <div class="page-header">
+    <h1>Enter {{ genre_label }}</h1>
+    <p>Choose one image to represent you in the {{ genre_label }} contest · {{ month_name }}</p>
+  </div>
+
+  <!-- Contest meta pills -->
+  <div class="contest-meta">
+    <span class="contest-meta-pill gold">{{ month_name }}</span>
+    <span class="contest-meta-pill">{{ track | title }} Track</span>
+    <span class="contest-meta-pill">{{ genre_label }}</span>
+    <span class="contest-meta-pill">One entry per genre</span>
+    <span class="contest-meta-pill">Peer-rated blind</span>
+  </div>
+
+  {% if existing %}
+  <!-- Show current entry -->
+  <div class="current-entry-banner">
+    {% if existing.image.thumb_url %}
+    <img src="{{ existing.image.thumb_url }}" alt="{{ existing.image.asset_name }}" class="current-entry-thumb">
+    {% endif %}
+    <div class="current-entry-info">
+      <div class="current-entry-label">✅ Current Entry</div>
+      <div class="current-entry-name">{{ existing.image.asset_name or 'Untitled' }}</div>
+      <div class="current-entry-meta">
+        Score {{ "%.2f"|format(existing.image.score) }} · {{ existing.image.tier }}
+        · Entered {{ existing.entered_at.strftime('%d %b %Y') }}
+      </div>
+    </div>
+    <div style="font-size:13px; color:var(--text-muted);">Select a different image below to change your entry.</div>
+  </div>
+  {% endif %}
+
+  <form method="POST" id="entryForm">
+    {% if eligible %}
+    <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px;">
+      Select your best image for this genre. Only your scored {{ track | title }} images are shown.
+      <strong style="color:var(--text-primary);">{{ eligible|length }} image{{ 's' if eligible|length != 1 else '' }} eligible.</strong>
+    </p>
+
+    <div class="image-select-grid">
+      {% for img in eligible %}
+      <div class="image-select-card">
+        <input type="radio" name="image_id" id="img_{{ img.id }}" value="{{ img.id }}"
+               {% if existing and existing.image_id == img.id %}checked{% endif %} required>
+        <label class="image-select-label" for="img_{{ img.id }}">
+          <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+               alt="{{ img.asset_name }}" class="image-select-thumb" loading="lazy">
+          <div class="image-select-body">
+            <span class="image-select-score">{{ "%.2f"|format(img.score) }}</span>
+            <div class="image-select-title">{{ img.asset_name or 'Untitled' }}</div>
+            <div class="image-select-meta">{{ img.tier }} · {{ img.scored_at.strftime('%d %b') if img.scored_at else '—' }}</div>
+          </div>
+        </label>
+        <div class="selected-tick">✓</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Sticky submit bar -->
+    <div class="submit-bar">
+      <div class="submit-bar-note">
+        <strong>One entry per genre per month.</strong><br>
+        You can change your entry any time before the month closes.
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="{{ url_for('contests') }}" class="btn">Cancel</a>
+        <button type="submit" class="btn btn-solid" id="submitBtn"
+                style="padding:12px 28px; font-size:12px; letter-spacing:1.5px;">
+          {% if existing %}Update Entry &rarr;{% else %}Confirm Entry &rarr;{% endif %}
+        </button>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="empty-eligible">
+      <p>You have no scored {{ track | title }} images in <strong>{{ genre_label }}</strong> yet.</p>
+      <p style="margin-bottom:24px;">Upload and score an image in this genre first, then come back to enter.</p>
+      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
+    </div>
+    <a href="{{ url_for('contests') }}" class="btn">Back to Contests</a>
+    {% endif %}
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Require selection before submit
+document.getElementById('entryForm').addEventListener('submit', function(e) {
+  const selected = document.querySelector('input[name="image_id"]:checked');
+  if (!selected) {
+    e.preventDefault();
+    alert('Please select an image to enter.');
+  }
+});
+</script>
+{% endblock %}
