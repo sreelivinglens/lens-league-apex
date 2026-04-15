@@ -123,7 +123,37 @@ class Image(db.Model):
         return f'<Image {self.id} – {self.asset_name} ({self.score})>'
 
 
-class CalibrationNote(db.Model):
+class BowSubmission(db.Model):
+    """Body of Work annual submission — 6 to 12 curated images as a unified series."""
+    __tablename__ = 'bow_submissions'
+
+    id                = db.Column(db.Integer, primary_key=True)
+    user_id           = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    series_title      = db.Column(db.String(180), nullable=False)
+    thematic_statement= db.Column(db.Text, nullable=False)
+    image_ids_json    = db.Column(db.Text, nullable=False)   # JSON list of image IDs
+    image_count       = db.Column(db.Integer, nullable=False)
+    status            = db.Column(db.String(20), default='submitted')  # submitted | under_review | awarded
+    platform_year     = db.Column(db.Integer, nullable=False)          # e.g. 2026
+    submitted_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    notes             = db.Column(db.Text, nullable=True)              # admin/jury notes
+
+    user              = db.relationship('User', backref='bow_submissions', lazy=True)
+
+    def get_image_ids(self):
+        try:
+            return json.loads(self.image_ids_json)
+        except Exception:
+            return []
+
+    def set_image_ids(self, ids: list):
+        self.image_ids_json = json.dumps(ids)
+
+    def __repr__(self):
+        return f'<BowSubmission {self.id} user={self.user_id} images={self.image_count} year={self.platform_year}>'
+
+
+
     """Admin feedback on individual scored images — feeds back into engine prompt."""
     __tablename__ = 'calibration_notes'
 
@@ -207,7 +237,22 @@ def run_migrations(app):
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
         _col('images', 'camera_track',            'VARCHAR(20)')  # 'camera' | 'mobile' | NULL
 
-        # calibration_notes table
+        # bow_submissions table
+        db.session.execute(db.text('''
+            CREATE TABLE IF NOT EXISTS bow_submissions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                series_title VARCHAR(180) NOT NULL,
+                thematic_statement TEXT NOT NULL,
+                image_ids_json TEXT NOT NULL,
+                image_count INTEGER NOT NULL,
+                status VARCHAR(20) DEFAULT 'submitted',
+                platform_year INTEGER NOT NULL,
+                submitted_at TIMESTAMP DEFAULT NOW(),
+                notes TEXT
+            )
+        '''))
+        db.session.commit()
         db.session.execute(db.text('''
             CREATE TABLE IF NOT EXISTS calibration_notes (
                 id SERIAL PRIMARY KEY,

@@ -1754,30 +1754,88 @@ def contests():
 @app.route('/bow/submit', methods=['GET', 'POST'])
 @login_required
 def bow_submit():
-    """
-    Body of Work submission entry point.
-    Stub — full implementation in roadmap (contest system).
-    When live: BOW_ACTIVE env var must be '1'.
-    Requirements: active subscriber, 6–12 images scored on this account,
-    cross-genre allowed, no track split, one submission per photographer per year,
-    closes end of Month 11.
-    """
-    if not is_bow_active():
-        flash('Body of Work submissions are not currently open. Check back from Month 1 of the platform year.', 'info')
-        return redirect(url_for('contests'))
+    """Body of Work submission — 6 to 12 scored images as a unified thematic series."""
+    from models import BowSubmission
 
     if not getattr(current_user, 'is_subscribed', False):
         flash('An active Camera or Mobile subscription is required to submit a Body of Work.', 'error')
         return redirect(url_for('pricing'))
 
-    # TODO: Implement full BOW submission flow:
-    #   - Photographer selects 6–12 scored images from their account
-    #   - Series title and thematic statement (required)
-    #   - Confirm submission (cannot be modified after deadline)
-    #   - Store in BodyOfWork model (to be created)
-    #   - Assign to Jury Legends pool for evaluation
-    flash('Body of Work submission is coming soon. Your scored images will be available to select when submissions open.', 'info')
-    return redirect(url_for('contests'))
+    # Check if already submitted this platform year
+    current_year = datetime.utcnow().year
+    existing = BowSubmission.query.filter_by(
+        user_id=current_user.id,
+        platform_year=current_year
+    ).first()
+
+    # All scored images for this user — available to select
+    scored_images = (Image.query
+                     .filter_by(user_id=current_user.id, status='scored')
+                     .filter(Image.score != None)
+                     .order_by(Image.score.desc())
+                     .all())
+
+    if request.method == 'POST':
+        series_title       = request.form.get('series_title', '').strip()
+        thematic_statement = request.form.get('thematic_statement', '').strip()
+        selected_ids       = request.form.getlist('image_ids')
+
+        # Validation
+        errors = []
+        if not series_title:
+            errors.append('Series title is required.')
+        if not thematic_statement or len(thematic_statement) < 50:
+            errors.append('Thematic statement must be at least 50 characters.')
+        if len(selected_ids) < 6:
+            errors.append(f'Select at least 6 images. You selected {len(selected_ids)}.')
+        if len(selected_ids) > 12:
+            errors.append(f'Maximum 12 images allowed. You selected {len(selected_ids)}.')
+        if existing:
+            errors.append('You have already submitted a Body of Work for this platform year.')
+
+        # Verify all selected images belong to this user and are scored
+        valid_ids = {str(img.id) for img in scored_images}
+        invalid = [i for i in selected_ids if i not in valid_ids]
+        if invalid:
+            errors.append('Some selected images are invalid or not scored.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('bow_submit.html',
+                scored_images=scored_images,
+                existing=existing,
+                selected_ids=selected_ids,
+                series_title=series_title,
+                thematic_statement=thematic_statement,
+                min_images=6, max_images=12,
+            )
+
+        # Save submission
+        sub = BowSubmission(
+            user_id            = current_user.id,
+            series_title       = series_title,
+            thematic_statement = thematic_statement,
+            image_count        = len(selected_ids),
+            platform_year      = current_year,
+            status             = 'submitted',
+        )
+        sub.set_image_ids([int(i) for i in selected_ids])
+        db.session.add(sub)
+        db.session.commit()
+
+        flash(f'✅ Your Body of Work "{series_title}" has been submitted successfully — {len(selected_ids)} images. Jury evaluation will begin after Month 11 submissions close.', 'success')
+        return redirect(url_for('bow_submit'))
+
+    return render_template('bow_submit.html',
+        scored_images      = scored_images,
+        existing           = existing,
+        selected_ids       = [],
+        series_title       = '',
+        thematic_statement = '',
+        min_images         = 6,
+        max_images         = 12,
+    )
 
 
 # ---------------------------------------------------------------------------
