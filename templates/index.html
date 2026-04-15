@@ -1324,8 +1324,11 @@
             <div class="lb-rank">#{{ loop.index }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-score">{{ "%.2f"|format(img.overall_score) }}</div>
-            <div class="lb-meta">{{ img.genre }} · {{ img.track | default('Camera') | title }}</div>
+            <div class="lb-score">
+              {%- set s = img.ddi_score if img.ddi_score is defined else (img.score if img.score is defined else none) -%}
+              {{ "%.2f"|format(s) if s is not none else "—" }}
+            </div>
+            <div class="lb-meta">{{ img.genre | default('—') }} · {{ img.track | default('Camera') | title }}</div>
           </div>
         </div>
         {% endfor %}
