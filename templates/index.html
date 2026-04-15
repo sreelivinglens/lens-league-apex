@@ -164,7 +164,6 @@
     overflow: hidden;
   }
 
-  /* Grain overlay */
   .hero::before {
     content: '';
     position: absolute;
@@ -175,7 +174,6 @@
     z-index: 1;
   }
 
-  /* Radial glow */
   .hero::after {
     content: '';
     position: absolute;
@@ -299,7 +297,6 @@
   }
   .hero-note strong { color: var(--green); }
 
-  /* scroll indicator */
   .scroll-hint {
     position: absolute;
     bottom: 2rem;
@@ -459,7 +456,6 @@
   }
   .score-bullet p strong { color: var(--white); }
 
-  /* The card itself */
   .live-score-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -480,7 +476,6 @@
     justify-content: center;
   }
 
-  /* Simulated long-exposure cityscape with CSS */
   .lsc-image-area .photo-sim {
     position: absolute;
     inset: 0;
@@ -527,9 +522,7 @@
     color: var(--gold);
   }
 
-  .lsc-body {
-    padding: 1.5rem;
-  }
+  .lsc-body { padding: 1.5rem; }
 
   .lsc-top {
     display: flex;
@@ -545,9 +538,7 @@
     font-weight: 600;
   }
 
-  .lsc-score-main {
-    text-align: right;
-  }
+  .lsc-score-main { text-align: right; }
   .lsc-score-num {
     font-family: 'Playfair Display', serif;
     font-size: 2.75rem;
@@ -685,7 +676,6 @@
   }
   .compete-feature::before { content: '✓'; font-weight: 700; }
 
-  /* Open teaser — muted */
   .open-teaser {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -775,7 +765,6 @@
     overflow: hidden;
   }
 
-  /* Simulated photo thumbnails with CSS gradients */
   .lb-image.photo-1 {
     background: linear-gradient(160deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
   }
@@ -804,7 +793,36 @@
   }
 
   .lb-body { padding: 0.85rem 1rem; }
-  .lb-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+  .lb-photographer {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #F5F4F0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 5px;
+  }
+  .lb-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .lb-meta { font-size: 0.72rem; color: var(--muted); }
+  .lb-tier-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .lb-tier-legend      { background: rgba(201,168,76,0.15); border: 1px solid #8A6E2F; color: #C9A84C; }
+  .lb-tier-grandmaster { background: rgba(138,97,175,0.15); border: 1px solid #7a4aaa; color: #c49eff; }
+  .lb-tier-master      { background: rgba(59,130,200,0.15); border: 1px solid #2a5a99; color: #7abfff; }
+  .lb-tier-practitioner{ background: rgba(76,175,115,0.15); border: 1px solid #2a7a55; color: #7adfa8; }
+  .lb-tier-apprentice  { background: #242422; border: 1px solid #383836; color: #7A7A8A; }
 
   .proof-cta {
     text-align: center;
@@ -950,7 +968,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Full-bleed escape from base <main> max-width/padding -->
 <div class="homepage-root">
 
 <!-- ═══════════════════════ HERO ══════════════════════════ -->
@@ -985,7 +1002,6 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
 </section>
-
 
 
 <!-- ═════════════════════ HOW IT WORKS ════════════════════ -->
@@ -1125,7 +1141,6 @@
       </div>
     </div>
 
-    <!-- Open teaser — quiet, as specified -->
     <div class="open-teaser reveal reveal-delay-3">
       <div class="open-teaser-left">
         <strong>Open Competition</strong> &nbsp;·&nbsp; Opens 3 months before year-end &nbsp;·&nbsp; ₹50 per entry &nbsp;·&nbsp; No track split
@@ -1152,7 +1167,7 @@
       </div>
       <div class="stat-cell">
         <div class="stat-num" id="stat-users">
-          {{ stats.total_users if stats and stats.total_users else '—' }}
+          {{ stats.total_members if stats and stats.total_members else '—' }}
         </div>
         <div class="stat-label">Photographers</div>
       </div>
@@ -1164,7 +1179,7 @@
       </div>
     </div>
 
-    <!-- Top 3 leaderboard preview -->
+    <!-- Top 3 leaderboard preview — shows photographer name + tier, no scores -->
     <div class="leaderboard-preview">
       {% if top_images %}
         {% for img in top_images[:3] %}
@@ -1173,7 +1188,13 @@
             <div class="lb-rank">#{{ loop.index }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-meta">{{ img.genre | default('—') }} · {{ img.camera_track | default('Camera') | title }}</div>
+            <div class="lb-photographer">{{ img.photographer_name or 'Anonymous' }}</div>
+            <div class="lb-bottom-row">
+              <span class="lb-meta">{{ img.genre | default('—') }}</span>
+              {% if img.tier %}
+              <span class="lb-tier-pill lb-tier-{{ img.tier | lower | replace(' ', '-') }}">{{ img.tier }}</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -1184,7 +1205,10 @@
             <div class="lb-rank">#{{ i }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-meta">Be the first to top the board</div>
+            <div class="lb-photographer">Be the first to top the board</div>
+            <div class="lb-bottom-row">
+              <span class="lb-meta">Upload &amp; score to enter</span>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -1283,7 +1307,6 @@
     requestAnimationFrame(update);
   }
 
-  // Trigger counters when stats row is visible
   const statsRow = document.querySelector('.stats-row');
   if (statsRow) {
     const statsObserver = new IntersectionObserver(entries => {
