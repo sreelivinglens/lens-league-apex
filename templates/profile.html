@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}My Profile — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-wrap { max-width: 560px; margin: 0 auto; }
+
+  .profile-section {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+  .profile-section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: block;
+  }
+  .subscription-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; background: var(--gold-subtle); border: 1px solid var(--gold-dark);
+    border-radius: 99px; font-family: var(--font-mono); font-size: 11px;
+    font-weight: 600; letter-spacing: 1.5px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .free-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; background: var(--surface-3); border: 1px solid var(--border);
+    border-radius: 99px; font-family: var(--font-mono); font-size: 11px;
+    font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .pw-strength-track { height: 5px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+  .pw-strength-fill  { height: 100%; width: 0%; border-radius: 99px; transition: width 0.3s, background 0.3s; }
+  .pw-strength-label { font-size: 13px; margin-top: 5px; color: var(--text-muted); font-family: var(--font-mono); }
+  .danger-zone { background: var(--surface-2); border: 1px solid #5a1a1a; border-radius: var(--radius-lg); padding: 24px 32px; }
+  .danger-zone-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; display: block; }
+  .danger-zone p { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+
+  <div class="page-header">
+    <h1>My Profile</h1>
+    <p>Manage your account details and password</p>
+  </div>
+
+  <!-- ── ACCOUNT INFO ──────────────────────────────────────────── -->
+  <div class="profile-section">
+    <span class="profile-section-label">Account Details</span>
+
+    {% if current_user.is_subscribed and current_user.subscription_track %}
+    <div class="subscription-badge">
+      {{ '📷' if current_user.subscription_track == 'camera' else '📱' }}
+      {{ current_user.subscription_track | title }} Track
+      {% if current_user.subscription_plan %}&nbsp;·&nbsp;{{ current_user.subscription_plan | title }}{% endif %}
+    </div>
+    {% else %}
+    <div class="free-badge">🎯 Free Plan &nbsp;·&nbsp; {{ images_used }}/3 images used</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('profile') }}">
+      <input type="hidden" name="action" value="update_profile">
+
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name"
+               value="{{ current_user.full_name or '' }}"
+               placeholder="Your full name" maxlength="120">
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username
+          <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(visible on leaderboard)</span>
+        </label>
+        <input type="text" id="username" name="username"
+               value="{{ current_user.username }}"
+               placeholder="Your username" maxlength="80" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Email Address</label>
+        <input type="email" value="{{ current_user.email }}" disabled
+               style="opacity:0.5; cursor:not-allowed;">
+        <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">
+          Email cannot be changed. Contact support if needed.
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-solid"
+              style="width:100%; padding:14px; margin-top:24px; font-size:12px; letter-spacing:2px;">
+        Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- ── CHANGE PASSWORD ───────────────────────────────────────── -->
+  <div class="profile-section">
+    <span class="profile-section-label">Change Password</span>
+
+    <form method="POST" action="{{ url_for('profile') }}" onsubmit="return validatePasswords()">
+      <input type="hidden" name="action" value="change_password">
+
+      <div class="form-group">
+        <label for="current_password">Current Password</label>
+        <input type="password" id="current_password" name="current_password"
+               placeholder="Your current password" required autocomplete="current-password">
+      </div>
+
+      <div class="form-group">
+        <label for="new_password">New Password</label>
+        <input type="password" id="new_password" name="new_password"
+               placeholder="Minimum 8 characters" minlength="8" required
+               autocomplete="new-password" oninput="checkStrength(this.value)">
+        <div class="pw-strength-track">
+          <div class="pw-strength-fill" id="pwBar"></div>
+        </div>
+        <div class="pw-strength-label" id="pwLabel">Enter a password</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label for="confirm_password">Confirm New Password</label>
+        <input type="password" id="confirm_password" name="confirm_password"
+               placeholder="Repeat new password" minlength="8" required
+               autocomplete="new-password">
+      </div>
+
+      <div style="background:var(--surface-3); border:1px solid var(--border);
+                  border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+                  padding:12px 16px; font-size:13px; color:var(--text-secondary);
+                  margin-top:20px; line-height:1.6;">
+        ⚠️ You will be <strong style="color:var(--text-primary);">logged out</strong> after changing your password.
+      </div>
+
+      <button type="submit" class="btn"
+              style="width:100%; padding:14px; margin-top:20px; font-size:12px; letter-spacing:2px;
+                     border-color:var(--gold-dark); color:var(--gold);">
+        Update Password
+      </button>
+    </form>
+  </div>
+
+  <!-- ── UPGRADE / CANCEL ──────────────────────────────────────── -->
+  {% if not current_user.is_subscribed %}
+  <div class="profile-section" style="border-color:var(--gold-dark);
+       background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));">
+    <span class="profile-section-label">Upgrade Your Plan</span>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
+      You have used <strong style="color:var(--text-primary);">{{ images_used }}/3</strong> free images.
+      Upgrade to get 4 images per month, monthly contests, and POTY ₹50L eligibility.
+    </p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="padding:12px 24px;">
+        📷 Camera — ₹200/mth
+      </a>
+      <a href="{{ url_for('subscribe', track='mobile') }}" class="btn"
+         style="padding:12px 24px; border-color:var(--gold-dark); color:var(--gold);">
+        📱 Mobile — ₹100/mth
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="danger-zone">
+    <span class="danger-zone-label">Cancel Subscription</span>
+    <p>Cancelling will revert your account to the free plan. Your scored images and history are kept.</p>
+    <form method="POST" action="{{ url_for('cancel_subscription') }}"
+          onsubmit="return confirm('Cancel your subscription? You will revert to the free plan.');">
+      <button type="submit" class="btn btn-danger" style="padding:10px 24px;">
+        Cancel Subscription
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkStrength(pw) {
+  const bar = document.getElementById('pwBar'), label = document.getElementById('pwLabel');
+  if (!bar) return;
+  let score = 0;
+  if (pw.length >= 8)           score++;
+  if (pw.length >= 12)          score++;
+  if (/[A-Z]/.test(pw))         score++;
+  if (/[0-9]/.test(pw))         score++;
+  if (/[^A-Za-z0-9]/.test(pw))  score++;
+  const levels = [
+    { pct: '15%',  color: '#E05555', text: 'Very weak' },
+    { pct: '32%',  color: '#E09940', text: 'Weak' },
+    { pct: '55%',  color: '#C8A84B', text: 'Fair' },
+    { pct: '78%',  color: '#4CAF73', text: 'Strong' },
+    { pct: '100%', color: '#2E7D52', text: 'Very strong' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width = pw.length ? lvl.pct : '0%';
+  bar.style.background = pw.length ? lvl.color : '';
+  label.textContent = pw.length ? lvl.text : 'Enter a password';
+  label.style.color = pw.length ? lvl.color : 'var(--text-muted)';
+}
+function validatePasswords() {
+  const pw = document.getElementById('new_password').value;
+  const cpw = document.getElementById('confirm_password').value;
+  if (pw !== cpw) {
+    alert('Passwords do not match. Please try again.');
+    document.getElementById('confirm_password').focus();
+    return false;
+  }
+  return true;
+}
+</script>
+{% endblock %}
