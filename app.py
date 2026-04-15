@@ -541,6 +541,7 @@ def upload():
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
+            is_public         = (request.form.get('is_public', '1') == '1'),
             exif_status=exif_status, exif_camera=exif_data.get('camera', ''),
             exif_date_taken=exif_data.get('date_taken', ''),
             exif_settings=exif_settings, exif_warning=exif_warning,
@@ -904,7 +905,8 @@ def leaderboard():
         q = q.filter(
             Image.score.isnot(None),
             Image.score > 0,
-            Image.status == 'scored'
+            Image.status == 'scored',
+            Image.is_public == True
         )
         if since:
             q = q.filter(Image.created_at >= since)
@@ -1578,6 +1580,164 @@ def debug_images():
 
 
 # ---------------------------------------------------------------------------
+# Admin — URL-based image fetch (calibration uploads from award sites)
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/url-upload', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_url_upload():
+    results = []
+    if request.method == 'POST':
+        import requests as http_requests
+        from engine.processor import hash_similarity_pct
+
+        urls_raw      = request.form.get('image_urls', '')
+        genre         = normalise_genre(request.form.get('genre', 'Wildlife'))
+        photographer  = (request.form.get('photographer_name') or '').strip() or 'Calibration'
+        source_credit = (request.form.get('source_credit') or '').strip()
+        is_public     = (request.form.get('is_public', '0') == '1')  # default hidden
+        api_key       = os.getenv('ANTHROPIC_API_KEY', '')
+
+        urls = [u.strip() for u in urls_raw.splitlines() if u.strip()]
+        if not urls:
+            flash('Please enter at least one image URL.', 'error')
+            return redirect(request.url)
+        if len(urls) > 20:
+            flash('Maximum 20 URLs per batch.', 'error')
+            return redirect(request.url)
+
+        for url in urls:
+            result_row = {'url': url, 'score': None, 'tier': None, 'status': 'failed', 'asset_name': ''}
+            try:
+                # Fetch image from URL
+                resp = http_requests.get(url, timeout=15, headers={
+                    'User-Agent': 'Mozilla/5.0 (compatible; LensLeagueApex/1.0)'
+                })
+                if resp.status_code != 200:
+                    result_row['status'] = f'HTTP {resp.status_code}'
+                    results.append(result_row)
+                    continue
+
+                content_type = resp.headers.get('Content-Type', '')
+                if 'jpeg' in content_type or 'jpg' in content_type:
+                    ext = 'jpg'
+                elif 'png' in content_type:
+                    ext = 'png'
+                elif 'webp' in content_type:
+                    ext = 'jpg'  # convert via PIL
+                else:
+                    # Try to infer from URL
+                    url_lower = url.lower()
+                    if url_lower.endswith('.png'):
+                        ext = 'png'
+                    else:
+                        ext = 'jpg'
+
+                uid      = str(uuid.uuid4())
+                raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_url_fetch.{ext}')
+                with open(raw_path, 'wb') as f:
+                    f.write(resp.content)
+
+                try:
+                    thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+                except Exception as e:
+                    result_row['status'] = f'ingest error: {str(e)[:80]}'
+                    if os.path.exists(raw_path): os.remove(raw_path)
+                    results.append(result_row)
+                    continue
+                if os.path.exists(raw_path): os.remove(raw_path)
+
+                # Duplicate check
+                existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
+                duplicate = False
+                for ex in existing_imgs:
+                    if hash_similarity_pct(phash, ex.phash) >= 90.0:
+                        result_row['status'] = f'duplicate: already exists as "{ex.asset_name}"'
+                        duplicate = True
+                        if os.path.exists(thumb_path): os.remove(thumb_path)
+                        break
+                if duplicate:
+                    results.append(result_row)
+                    continue
+
+                thumb_url = _r2_upload_thumb(thumb_path, uid)
+                if not thumb_url:
+                    result_row['status'] = 'R2 upload failed'
+                    results.append(result_row)
+                    continue
+
+                # Derive a title from URL filename
+                url_filename = url.split('/')[-1].split('?')[0]
+                asset_name   = os.path.splitext(url_filename)[0].replace('_', ' ').replace('-', ' ').title() or 'Calibration Image'
+                if source_credit:
+                    asset_name = f'{asset_name} [{source_credit}]'
+
+                img = Image(
+                    user_id               = current_user.id,
+                    original_filename     = url_filename,
+                    stored_filename       = os.path.basename(thumb_path),
+                    thumb_path            = thumb_path,
+                    thumb_url             = thumb_url,
+                    file_size_kb          = int(os.path.getsize(thumb_path) / 1024),
+                    width=w, height=h, format=fmt,
+                    asset_name            = asset_name,
+                    genre                 = genre,
+                    photographer_name     = photographer,
+                    phash                 = phash,
+                    status                = 'pending',
+                    is_calibration_example= True,
+                    is_public             = is_public,
+                    legal_declaration     = True,
+                    camera_track          = None,
+                )
+                db.session.add(img)
+                db.session.flush()
+
+                if api_key:
+                    from engine.auto_score import auto_score, build_audit_data
+                    from engine.compositor import build_card1 as _build_card
+                    scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                        title=img.asset_name, photographer=photographer)
+                    img.dod_score        = float(scored.get('dod', 0))
+                    img.disruption_score = float(scored.get('disruption', 0))
+                    img.dm_score         = float(scored.get('dm', 0))
+                    img.wonder_score     = float(scored.get('wonder', 0))
+                    img.aq_score         = float(scored.get('aq', 0))
+                    img.score            = float(scored.get('score', 0))
+                    img.tier             = get_tier(float(scored.get('score', 0)))
+                    img.archetype        = scored.get('archetype', '')
+                    img.soul_bonus       = scored.get('soul_bonus', False)
+                    img.status           = 'scored'
+                    img.scored_at        = datetime.utcnow()
+                    audit = build_audit_data(scored, img)
+                    img.set_audit(audit)
+                    result_row['score']      = img.score
+                    result_row['tier']       = img.tier
+                    result_row['status']     = 'scored'
+                    result_row['asset_name'] = img.asset_name
+                else:
+                    img.status           = 'pending'
+                    result_row['status'] = 'saved — score pending'
+                    result_row['asset_name'] = img.asset_name
+
+                db.session.commit()
+
+            except Exception as e:
+                try: db.session.rollback()
+                except: pass
+                import traceback
+                app.logger.error(f'[admin_url_upload] {url}: {traceback.format_exc()}')
+                result_row['status'] = f'error: {str(e)[:120]}'
+            results.append(result_row)
+
+    return render_template('admin_url_upload.html',
+                           results=results,
+                           genres=GENRE_IDS,
+                           genre_choices=GENRE_CHOICES)
+
+
+# ---------------------------------------------------------------------------
 # Static pages
 # ---------------------------------------------------------------------------
 
@@ -2080,6 +2240,7 @@ def bulk_upload():
                     phash=phash, genre=genre, photographer_name=photographer,
                     camera_track=getattr(current_user, 'subscription_track', None),
                     status='pending',
+                    is_public=(request.form.get('is_public', '1') == '1'),
                 )
                 db.session.add(img)
                 db.session.flush()

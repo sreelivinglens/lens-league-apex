@@ -86,6 +86,7 @@ class Image(db.Model):
 
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
+    is_public              = db.Column(db.Boolean, default=True,  nullable=False)  # False = hidden from leaderboard
 
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
@@ -278,6 +279,7 @@ def run_migrations(app):
         _col('images', 'is_calibration_example', 'BOOLEAN DEFAULT FALSE')
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
         _col('images', 'camera_track',            'VARCHAR(20)')
+        _col('images', 'is_public',               'BOOLEAN DEFAULT TRUE')
 
         db.session.execute(db.text('''
             CREATE TABLE IF NOT EXISTS bow_submissions (
