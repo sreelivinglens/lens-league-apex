@@ -2055,7 +2055,8 @@ def share_image(image_id):
     if img.status != 'scored':
         abort(404)
     audit = img.get_audit()
-    return render_template('share.html', image=img, audit=audit)
+    show_score = current_user.is_authenticated and current_user.id == img.user_id
+    return render_template('share.html', image=img, audit=audit, show_score=show_score)
 
 
 @app.errorhandler(404)
