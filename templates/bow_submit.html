@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% block title %}Body of Work Submission — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .bow-wrap { max-width: 900px; margin: 0 auto; }
+
+  /* Already submitted state */
+  .bow-submitted {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+    padding: 40px 36px; text-align: center; margin-bottom: 32px;
+  }
+  .bow-submitted h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+  .bow-submitted p { font-size: 15px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 6px; }
+  .bow-submitted .series-name { font-size: 18px; font-weight: 700; color: var(--gold); margin: 12px 0 4px; }
+  .bow-submitted .meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+
+  /* Info strip */
+  .bow-info-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px;
+  }
+  .bow-info-item {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 16px 14px; text-align: center;
+  }
+  .bow-info-val { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+  .bow-info-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+
+  /* Selection counter */
+  .selection-bar {
+    position: sticky; top: 68px; z-index: 100;
+    background: var(--surface-1); border-bottom: 1px solid var(--border);
+    padding: 12px 0; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .selection-count {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text-primary);
+  }
+  .selection-count span { color: var(--gold); font-size: 20px; }
+  .selection-hint { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .count-ok  { color: var(--green) !important; }
+  .count-bad { color: var(--red) !important; }
+
+  /* Image selection grid */
+  .image-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;
+  }
+  .image-select-card {
+    position: relative; border: 2px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
+    cursor: pointer; transition: border-color .2s, transform .15s;
+    background: var(--surface-2);
+  }
+  .image-select-card:hover { border-color: var(--gold-dark); transform: translateY(-2px); }
+  .image-select-card.selected { border-color: var(--gold); }
+  .image-select-card.selected .select-overlay { opacity: 1; }
+  .image-select-card input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+
+  .select-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(200,168,75,0.15); opacity: 0;
+    transition: opacity .2s; pointer-events: none;
+  }
+  .select-check {
+    position: absolute; top: 8px; right: 8px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--surface-2); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: transparent;
+    transition: all .2s; z-index: 2;
+  }
+  .image-select-card.selected .select-check {
+    background: var(--gold); border-color: var(--gold); color: var(--black);
+  }
+  .select-num {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(13,13,11,.85); border: 1px solid var(--gold);
+    border-radius: var(--radius-sm); padding: 2px 7px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--gold);
+    display: none; z-index: 2;
+  }
+  .image-select-card.selected .select-num { display: block; }
+
+  .card-thumb { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .card-info { padding: 10px 12px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta  { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .card-score { font-family: var(--font-mono); font-size: 12px; color: var(--gold); font-weight: 700; float: right; }
+
+  /* No images state */
+  .no-images {
+    text-align: center; padding: 48px 24px;
+    background: var(--surface-2); border: 1px dashed var(--border);
+    border-radius: var(--radius-md); margin-bottom: 32px;
+  }
+  .no-images p { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
+
+  /* Form sections */
+  .bow-form-section {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px 24px; margin-bottom: 24px;
+  }
+  .bow-form-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 3px; color: var(--gold-dark); text-transform: uppercase;
+    margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    display: block;
+  }
+  .char-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); float: right; margin-top: 6px; }
+
+  /* Rules callout */
+  .bow-rules {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 16px 20px; margin-bottom: 28px;
+    font-size: 14px; color: var(--text-secondary); line-height: 1.8;
+  }
+  .bow-rules strong { color: var(--gold); }
+
+  @media(max-width: 768px) {
+    .image-grid { grid-template-columns: repeat(2, 1fr); }
+    .bow-info-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media(max-width: 480px) {
+    .image-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bow-wrap">
+
+  <div class="page-header">
+    <h1>Body of Work</h1>
+    <p>Submit your best 6–12 images as a unified thematic series for Jury Legend evaluation</p>
+  </div>
+
+  <!-- Info strip -->
+  <div class="bow-info-strip">
+    <div class="bow-info-item">
+      <div class="bow-info-val">6–12</div>
+      <div class="bow-info-lbl">Images required</div>
+    </div>
+    <div class="bow-info-item">
+      <div class="bow-info-val">₹3L</div>
+      <div class="bow-info-lbl">Gold prize</div>
+    </div>
+    <div class="bow-info-item">
+      <div class="bow-info-val">Cross-genre</div>
+      <div class="bow-info-lbl">Any combination</div>
+    </div>
+    <div class="bow-info-item">
+      <div class="bow-info-val">Jury only</div>
+      <div class="bow-info-lbl">No peer rating</div>
+    </div>
+  </div>
+
+  <!-- Rules -->
+  <div class="bow-rules">
+    <strong>Before you submit:</strong> Your Body of Work is judged as a unified series — thematic coherence, narrative arc, and sustained creative vision matter as much as individual image quality. Images must be previously scored on your account. Cross-genre series are welcome. You may submit only once per platform year. Submissions cannot be modified after submission.
+    <br><br>
+    <strong>Prize pool: ₹5,25,000</strong> — Gold ₹3,00,000 · Silver ₹1,50,000 · Bronze ₹75,000. Results within 45 days of Month 11 close. Judged exclusively by Jury Legends.
+  </div>
+
+  {% if existing %}
+  <!-- Already submitted -->
+  <div class="bow-submitted">
+    <div style="font-size:48px; margin-bottom:16px;">✅</div>
+    <h2>Your Body of Work is Submitted</h2>
+    <div class="series-name">"{{ existing.series_title }}"</div>
+    <p class="meta">{{ existing.image_count }} images · Submitted {{ existing.submitted_at.strftime('%d %b %Y') }} · {{ existing.platform_year }} platform year</p>
+    <p style="margin-top:16px;">Your series is in the jury queue. Results are announced within 45 days of the Month 11 submission deadline. You will be notified when evaluation begins.</p>
+    <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('contests') }}" class="btn btn-solid">View Contests →</a>
+      <a href="{{ url_for('dashboard') }}" class="btn">My Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Show submitted images -->
+  {% set submitted_ids = existing.get_image_ids() %}
+  {% set submitted_images = scored_images | selectattr('id', 'in', submitted_ids) | list %}
+  {% if submitted_images %}
+  <div style="margin-bottom:16px; font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">
+    Submitted Series — {{ submitted_images|length }} Images
+  </div>
+  <div class="image-grid">
+    {% for img in submitted_images %}
+    <div class="image-select-card selected" style="cursor:default;">
+      <div class="select-overlay"></div>
+      <div class="select-num">{{ loop.index }}</div>
+      <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+           alt="{{ img.asset_name }}" class="card-thumb">
+      <div class="card-info">
+        <div class="card-title">
+          <span class="card-score">{{ img.score }}</span>
+          {{ img.asset_name or 'Untitled' }}
+        </div>
+        <div class="card-meta">{{ img.genre }} · {{ img.tier }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Submission form -->
+  <form method="POST" id="bowForm">
+
+    <!-- Selection counter (sticky) -->
+    <div class="selection-bar">
+      <div>
+        <div class="selection-count">
+          <span id="countNum">{{ selected_ids|length }}</span> images selected
+        </div>
+        <div class="selection-hint" id="countHint">Select between 6 and 12 images</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn" onclick="clearAll()">Clear all</button>
+        <button type="submit" class="btn btn-solid" id="submitBtn" disabled>
+          Submit Body of Work →
+        </button>
+      </div>
+    </div>
+
+    {% if scored_images %}
+    <!-- Image selection grid -->
+    <div class="image-grid" id="imageGrid">
+      {% for img in scored_images %}
+      <div class="image-select-card {% if img.id|string in selected_ids %}selected{% endif %}"
+           data-id="{{ img.id }}" onclick="toggleImage(this)">
+        <input type="checkbox" name="image_ids" value="{{ img.id }}"
+               {% if img.id|string in selected_ids %}checked{% endif %}>
+        <div class="select-overlay"></div>
+        <div class="select-num" id="num-{{ img.id }}"></div>
+        <div class="select-check">✓</div>
+        <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+             alt="{{ img.asset_name }}" class="card-thumb" loading="lazy">
+        <div class="card-info">
+          <div class="card-title">
+            <span class="card-score">{{ img.score }}</span>
+            {{ img.asset_name or 'Untitled' }}
+          </div>
+          <div class="card-meta">{{ img.genre }} · {{ img.tier }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="no-images">
+      <p>You don't have any scored images yet. Upload and score at least 6 images before submitting a Body of Work.</p>
+      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Images →</a>
+    </div>
+    {% endif %}
+
+    <!-- Series details -->
+    <div class="bow-form-section">
+      <span class="bow-form-label">Series Details</span>
+
+      <div class="form-group">
+        <label for="series_title">Series Title</label>
+        <input type="text" id="series_title" name="series_title"
+               value="{{ series_title }}"
+               placeholder="e.g. Monsoon Migrations · The Last Light · Mumbai at 3am"
+               maxlength="120" required>
+      </div>
+
+      <div class="form-group">
+        <label for="thematic_statement">
+          Thematic Statement
+          <span style="font-weight:400; color:var(--text-muted); text-transform:none; letter-spacing:0;">(min 50 characters)</span>
+        </label>
+        <textarea id="thematic_statement" name="thematic_statement"
+                  placeholder="Describe the theme, narrative arc, and creative vision that unifies this series. What were you trying to say? What connects these images beyond their subject matter?"
+                  maxlength="1000" rows="6" required
+                  oninput="updateCharCount(this, 'stmtCount', 1000)">{{ thematic_statement }}</textarea>
+        <span class="char-count" id="stmtCount">{{ thematic_statement|length }}/1000</span>
+      </div>
+    </div>
+
+    <!-- Final submit -->
+    <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
+                border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; margin-bottom:20px;
+                font-size:13px; color:var(--text-secondary); line-height:1.7;">
+      ⚠️ <strong style="color:var(--gold);">Submissions are final.</strong>
+      Once submitted, your Body of Work cannot be modified or withdrawn.
+      Make sure your series, title, and statement accurately represent your creative vision.
+    </div>
+
+    <button type="submit" class="btn btn-solid" id="submitBtnBottom"
+            style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;"
+            disabled>
+      Submit Body of Work →
+    </button>
+
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const MIN = {{ min_images }};
+  const MAX = {{ max_images }};
+  let selected = new Map(); // id → order
+
+  // Restore pre-selected from server (validation errors)
+  {% if selected_ids %}
+  {% for sid in selected_ids %}
+  selected.set('{{ sid }}', selected.size + 1);
+  {% endfor %}
+  refreshNumbers();
+  {% endif %}
+
+  function toggleImage(card) {
+    const id = card.dataset.id;
+    const cb = card.querySelector('input[type="checkbox"]');
+    if (selected.has(id)) {
+      selected.delete(id);
+      card.classList.remove('selected');
+      cb.checked = false;
+      // Re-number remaining
+      let n = 1;
+      selected.forEach((v, k) => { selected.set(k, n++); });
+      refreshNumbers();
+    } else {
+      if (selected.size >= MAX) {
+        alert(`Maximum ${MAX} images allowed. Remove one before adding another.`);
+        return;
+      }
+      selected.set(id, selected.size + 1);
+      card.classList.add('selected');
+      cb.checked = true;
+      document.getElementById('num-' + id).textContent = selected.get(id);
+    }
+    updateCounter();
+  }
+  window.toggleImage = toggleImage;
+
+  function refreshNumbers() {
+    selected.forEach((num, id) => {
+      const el = document.getElementById('num-' + id);
+      if (el) el.textContent = num;
+    });
+    // Clear numbers for deselected
+    document.querySelectorAll('.select-num').forEach(el => {
+      const cardId = el.id.replace('num-', '');
+      if (!selected.has(cardId)) el.textContent = '';
+    });
+  }
+
+  function updateCounter() {
+    const n = selected.size;
+    const countEl = document.getElementById('countNum');
+    const hintEl  = document.getElementById('countHint');
+    const btnTop  = document.getElementById('submitBtn');
+    const btnBot  = document.getElementById('submitBtnBottom');
+    if (countEl) countEl.textContent = n;
+
+    const ok = n >= MIN && n <= MAX;
+    if (countEl) countEl.className = n === 0 ? '' : (ok ? 'count-ok' : 'count-bad');
+
+    if (n < MIN) {
+      hintEl.textContent = `Select ${MIN - n} more image${MIN - n === 1 ? '' : 's'} (minimum ${MIN})`;
+    } else if (n > MAX) {
+      hintEl.textContent = `Remove ${n - MAX} image${n - MAX === 1 ? '' : 's'} (maximum ${MAX})`;
+    } else {
+      hintEl.textContent = `✓ ${n} images selected — good to go`;
+    }
+
+    if (btnTop)  btnTop.disabled  = !ok;
+    if (btnBot) btnBot.disabled  = !ok;
+  }
+
+  function clearAll() {
+    selected.clear();
+    document.querySelectorAll('.image-select-card').forEach(card => {
+      card.classList.remove('selected');
+      card.querySelector('input[type="checkbox"]').checked = false;
+    });
+    document.querySelectorAll('.select-num').forEach(el => el.textContent = '');
+    updateCounter();
+  }
+  window.clearAll = clearAll;
+
+  updateCounter();
+
+  // Char counter
+  window.updateCharCount = function(el, countId, max) {
+    document.getElementById(countId).textContent = el.value.length + '/' + max;
+  };
+
+  // Form validation before submit
+  document.getElementById('bowForm') && document.getElementById('bowForm').addEventListener('submit', function(e) {
+    if (selected.size < MIN || selected.size > MAX) {
+      e.preventDefault();
+      alert(`Please select between ${MIN} and ${MAX} images.`);
+    }
+  });
+})();
+</script>
+{% endblock %}

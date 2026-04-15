@@ -302,21 +302,21 @@
         <h3>🟢 Body of Work Submissions Open</h3>
         <p>Curate your best 6–12 images as a unified series and submit. Cross-genre. Judged by Jury Legends on thematic coherence, narrative arc, and sustained creative vision.</p>
       {% else %}
-        <h3>⏳ Body of Work — Submissions Open Year-Round</h3>
-        <p>Assemble your strongest 6–12 images as a thematic series. Submissions accepted any time during the year, closing at end of Month 11. No minimum subscription period required.</p>
+        <h3>📋 Body of Work — Submit Your Series</h3>
+        <p>Assemble your strongest 6–12 images as a thematic series. Cross-genre. Judged exclusively by Jury Legends — no peer rating. Submissions close end of Month 11. No entry fee.</p>
       {% endif %}
     </div>
     <div class="open-entry-box-actions">
-      {% if bow_active %}
-        {% if current_user.is_authenticated %}
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_subscribed %}
           <a href="{{ url_for('bow_submit') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Submit BOW &rarr;</a>
         {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Join &amp; Submit &rarr;</a>
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Subscribe to Enter &rarr;</a>
         {% endif %}
       {% else %}
-        <a href="{{ url_for('contest_rules') }}#bow" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">BOW Rules &rarr;</a>
+        <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:14px 32px; font-size:12px;">Join &amp; Submit &rarr;</a>
       {% endif %}
-      <a href="{{ url_for('contest_rules') }}" class="btn">Full Rules</a>
+      <a href="{{ url_for('contest_rules') }}#bow" class="btn">BOW Rules</a>
     </div>
   </div>
 
