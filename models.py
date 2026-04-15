@@ -86,6 +86,7 @@ class Image(db.Model):
 
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
+    is_public              = db.Column(db.Boolean, default=True,  nullable=False)
 
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
