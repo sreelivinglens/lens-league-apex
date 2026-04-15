@@ -1297,19 +1297,19 @@
     <div class="stats-row reveal reveal-delay-2">
       <div class="stat-cell">
         <div class="stat-num" id="stat-images">
-          {% if stats %}{{ stats.total_images | default('—') }}{% else %}—{% endif %}
+          {{ stats.total_images if stats and stats.total_images else '—' }}
         </div>
         <div class="stat-label">Images Rated</div>
       </div>
       <div class="stat-cell">
         <div class="stat-num" id="stat-users">
-          {% if stats %}{{ stats.total_users | default('—') }}{% else %}—{% endif %}
+          {{ stats.total_users if stats and stats.total_users else '—' }}
         </div>
         <div class="stat-label">Photographers</div>
       </div>
       <div class="stat-cell">
         <div class="stat-num" id="stat-avg">
-          {% if stats %}{{ stats.avg_score | default('—') }}{% else %}—{% endif %}
+          {{ "%.2f"|format(stats.avg_score) if stats and stats.avg_score else '—' }}
         </div>
         <div class="stat-label">Average Score</div>
       </div>
@@ -1320,15 +1320,12 @@
       {% if top_images %}
         {% for img in top_images[:3] %}
         <div class="lb-card reveal reveal-delay-{{ loop.index }}">
-          <div class="lb-image photo-{{ loop.index }}" style="{% if img.r2_url %}background-image: url('{{ img.r2_url }}'); background-size: cover; background-position: center;{% endif %}">
+          <div class="lb-image photo-{{ loop.index }}" style="{% if img.thumb_url %}background-image: url('{{ img.thumb_url }}'); background-size: cover; background-position: center;{% endif %}">
             <div class="lb-rank">#{{ loop.index }}</div>
           </div>
           <div class="lb-body">
-            <div class="lb-score">
-              {%- set s = img.ddi_score if img.ddi_score is defined else (img.score if img.score is defined else none) -%}
-              {{ "%.2f"|format(s) if s is not none else "—" }}
-            </div>
-            <div class="lb-meta">{{ img.genre | default('—') }} · {{ img.track | default('Camera') | title }}</div>
+            <div class="lb-score">{{ "%.2f"|format(img.score) if img.score else "—" }}</div>
+            <div class="lb-meta">{{ img.genre | default('—') }} · {{ img.camera_track | default('Camera') | title }}</div>
           </div>
         </div>
         {% endfor %}
