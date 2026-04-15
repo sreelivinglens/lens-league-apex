@@ -169,7 +169,7 @@ class BowSubmission(db.Model):
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
     image           = db.relationship('Image', foreign_keys=[image_id], backref='calibration_notes', lazy=True)
-    admin           = db.relationship('User', foreign_keys=[admin_id], backref='calibration_notes', lazy=True)
+    admin           = db.relationship('User', foreign_keys=[admin_id], backref='admin_calibration_notes', lazy=True)
 
     def __repr__(self):
         return f'<CalibrationNote image={self.image_id} module={self.module} {self.original_score}→{self.corrected_score}>'
