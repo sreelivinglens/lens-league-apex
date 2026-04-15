@@ -29,6 +29,14 @@ class User(db.Model, UserMixin):
     # Member agreement acceptance timestamp
     agreed_at         = db.Column(db.DateTime, nullable=True)
 
+    # Subscription
+    is_subscribed       = db.Column(db.Boolean, default=False)
+    subscription_track  = db.Column(db.String(20), nullable=True)   # 'camera' | 'mobile'
+    subscription_plan   = db.Column(db.String(20), nullable=True)   # 'monthly' | 'annual' | 'beta'
+    subscribed_at       = db.Column(db.DateTime, nullable=True)
+    monthly_uploads_used = db.Column(db.Integer, default=0)
+    monthly_reset_date  = db.Column(db.Date, nullable=True)
+
     images            = db.relationship('Image', backref='author', lazy=True)
 
     def __repr__(self):
@@ -44,11 +52,11 @@ class Image(db.Model):
     # File info
     original_filename   = db.Column(db.String(260), nullable=True)
     stored_filename     = db.Column(db.String(260), nullable=True)
-    phash               = db.Column(db.String(64),  nullable=True, index=True)  # perceptual hash
+    phash               = db.Column(db.String(64),  nullable=True, index=True)
     thumb_path          = db.Column(db.String(512), nullable=True)
-    thumb_url           = db.Column(db.String(512), nullable=True)   # R2 public URL
+    thumb_url           = db.Column(db.String(512), nullable=True)
     card_path           = db.Column(db.String(512), nullable=True)
-    card_url            = db.Column(db.String(512), nullable=True)    # R2 public URL
+    card_url            = db.Column(db.String(512), nullable=True)
     file_size_kb        = db.Column(db.Integer,  nullable=True)
     width               = db.Column(db.Integer,  nullable=True)
     height              = db.Column(db.Integer,  nullable=True)
@@ -61,6 +69,9 @@ class Image(db.Model):
     location            = db.Column(db.String(180), nullable=True)
     conditions          = db.Column(db.String(180), nullable=True)
     photographer_name   = db.Column(db.String(120), nullable=True)
+
+    # Competition track: 'camera' | 'mobile' | None (free users)
+    camera_track        = db.Column(db.String(20), nullable=True)
 
     # Legal
     legal_declaration   = db.Column(db.Boolean, default=False)
@@ -86,7 +97,7 @@ class Image(db.Model):
     # Calibration example flag
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
 
-    # Judge referral flag — set by engine for exceptional Creative images
+    # Judge referral flag
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
 
     # Workflow status: 'pending' | 'scored'
@@ -120,20 +131,11 @@ class CalibrationNote(db.Model):
     image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
     admin_id        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     genre           = db.Column(db.String(60), nullable=False)
-
-    # Which module was wrong (or 'overall')
     module          = db.Column(db.String(20), nullable=False)
-
-    # Original AI score vs admin corrected score
     original_score  = db.Column(db.Float, nullable=True)
     corrected_score = db.Column(db.Float, nullable=True)
-
-    # Why the engine was wrong
     reason          = db.Column(db.Text, nullable=False)
-
-    # Was this used as a calibration injection?
     is_active       = db.Column(db.Boolean, default=True)
-
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
     image           = db.relationship('Image', backref='calibration_notes', lazy=True)
@@ -166,36 +168,44 @@ class CalibrationLog(db.Model):
 
 # ---------------------------------------------------------------------------
 # Auto-migration — runs on every startup, safe for production
-# Adds any missing columns using PostgreSQL's ADD COLUMN IF NOT EXISTS
 # ---------------------------------------------------------------------------
 
 def run_migrations(app):
     with app.app_context():
-        db.create_all()  # creates brand-new tables if they don't exist
+        db.create_all()
 
         # users table
-        _col('users', 'full_name',         'VARCHAR(120)')
-        _col('users', 'role',              "VARCHAR(20) DEFAULT 'member'")
-        _col('users', 'is_active',         'BOOLEAN DEFAULT TRUE')
-        _col('users', 'last_login',        'TIMESTAMP')
-        _col('users', 'security_question', 'VARCHAR(255)')
-        _col('users', 'security_answer',   'VARCHAR(255)')
-        _col('users', 'agreed_at',         'TIMESTAMP')
+        _col('users', 'full_name',            'VARCHAR(120)')
+        _col('users', 'role',                 "VARCHAR(20) DEFAULT 'member'")
+        _col('users', 'is_active',            'BOOLEAN DEFAULT TRUE')
+        _col('users', 'last_login',           'TIMESTAMP')
+        _col('users', 'security_question',    'VARCHAR(255)')
+        _col('users', 'security_answer',      'VARCHAR(255)')
+        _col('users', 'agreed_at',            'TIMESTAMP')
+        _col('users', 'is_subscribed',        'BOOLEAN DEFAULT FALSE')
+        _col('users', 'subscription_track',   'VARCHAR(20)')
+        _col('users', 'subscription_plan',    'VARCHAR(20)')
+        _col('users', 'subscribed_at',        'TIMESTAMP')
+        _col('users', 'monthly_uploads_used', 'INTEGER DEFAULT 0')
+        _col('users', 'monthly_reset_date',   'DATE')
 
         # images table
-        _col('images', 'card_path',        'VARCHAR(512)')
-        _col('images', 'legal_declaration','BOOLEAN DEFAULT FALSE')
-        _col('images', 'exif_camera',      'VARCHAR(120)')
-        _col('images', 'exif_date_taken',  'VARCHAR(60)')
-        _col('images', 'exif_settings',    'VARCHAR(180)')
-        _col('images', 'exif_warning',     'TEXT')
-        _col('images', 'soul_bonus',       'BOOLEAN DEFAULT FALSE')
-        _col('images', 'audit_json',       'TEXT')
-        _col('images', 'conditions',       'VARCHAR(180)')
-        _col('images', 'photographer_name','VARCHAR(120)')
-        _col('images', 'phash',            'VARCHAR(64)')
+        _col('images', 'card_path',               'VARCHAR(512)')
+        _col('images', 'card_url',                'VARCHAR(512)')
+        _col('images', 'thumb_url',               'VARCHAR(512)')
+        _col('images', 'legal_declaration',       'BOOLEAN DEFAULT FALSE')
+        _col('images', 'exif_camera',             'VARCHAR(120)')
+        _col('images', 'exif_date_taken',         'VARCHAR(60)')
+        _col('images', 'exif_settings',           'VARCHAR(180)')
+        _col('images', 'exif_warning',            'TEXT')
+        _col('images', 'soul_bonus',              'BOOLEAN DEFAULT FALSE')
+        _col('images', 'audit_json',              'TEXT')
+        _col('images', 'conditions',              'VARCHAR(180)')
+        _col('images', 'photographer_name',       'VARCHAR(120)')
+        _col('images', 'phash',                   'VARCHAR(64)')
         _col('images', 'is_calibration_example', 'BOOLEAN DEFAULT FALSE')
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
+        _col('images', 'camera_track',            'VARCHAR(20)')  # 'camera' | 'mobile' | NULL
 
         # calibration_notes table
         db.session.execute(db.text('''

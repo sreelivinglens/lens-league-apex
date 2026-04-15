@@ -1702,31 +1702,25 @@ def contests():
     next_month  = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     days_left   = (next_month - now).days
 
-    # Top 3 images this month per genre per track
-    # NULL camera_track (free users / pre-track images) included in Camera bucket
+    # Top 3 images this month per genre per track (raw SQL for camera_track compatibility)
     monthly_top = {}
     for genre in GENRE_IDS:
-        camera_top = (Image.query
-                      .filter(
-                          Image.status == 'scored',
-                          Image.score != None,
-                          Image.created_at >= month_start,
-                          Image.genre == genre,
-                          db.or_(
-                              Image.camera_track == 'camera',
-                              Image.camera_track == None,
-                          ),
-                      )
+        base = (Image.query
+                .filter(
+                    Image.status == 'scored',
+                    Image.score != None,
+                    Image.created_at >= month_start,
+                    Image.genre == genre,
+                ))
+        camera_top = (base
+                      .filter(db.or_(
+                          db.text("camera_track = 'camera'"),
+                          db.text("camera_track IS NULL"),
+                      ))
                       .order_by(Image.score.desc())
                       .limit(3).all())
-        mobile_top = (Image.query
-                      .filter(
-                          Image.status == 'scored',
-                          Image.score != None,
-                          Image.created_at >= month_start,
-                          Image.genre == genre,
-                          Image.camera_track == 'mobile',
-                      )
+        mobile_top = (base
+                      .filter(db.text("camera_track = 'mobile'"))
                       .order_by(Image.score.desc())
                       .limit(3).all())
         if camera_top or mobile_top:
