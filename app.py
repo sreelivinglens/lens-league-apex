@@ -1019,11 +1019,11 @@ def fix_photographer_names():
 # ---------------------------------------------------------------------------
 
 @app.route('/leaderboard')
-@login_required
 def leaderboard():
     genre  = request.args.get('genre', 'all')
     tier   = request.args.get('tier', 'all')
     period = request.args.get('period', 'all')
+    track  = request.args.get('track', 'all')
     tab    = request.args.get('tab', 'images')
 
     now = datetime.utcnow()
@@ -1046,11 +1046,18 @@ def leaderboard():
             q = q.filter(Image.genre == genre)
         if tier != 'all':
             q = q.filter(Image.tier == tier)
+        if track == 'camera':
+            q = q.filter(db.or_(
+                db.text("camera_track = 'camera'"),
+                db.text("camera_track IS NULL"),
+            ))
+        elif track == 'mobile':
+            q = q.filter(db.text("camera_track = 'mobile'"))
         return q
 
     top_images = (apply_filters(Image.query)
                   .order_by(desc(Image.score))
-                  .limit(50)
+                  .limit(20)
                   .all())
 
     pg_query = db.session.query(
@@ -1063,7 +1070,7 @@ def leaderboard():
     photographer_stats = (pg_query
                           .group_by(Image.photographer_name)
                           .order_by(desc('best_score'))
-                          .limit(50)
+                          .limit(10)
                           .all())
 
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
@@ -1076,6 +1083,7 @@ def leaderboard():
         genre=genre,
         tier=tier,
         period=period,
+        track=track,
         tab=tab,
     )
 
