@@ -167,6 +167,36 @@ class BowSubmission(db.Model):
         return f'<BowSubmission {self.id} user={self.user_id} images={self.image_count} year={self.platform_year}>'
 
 
+class OpenContestEntry(db.Model):
+    """
+    A paid entry into the annual Open Competition.
+    One entry per user per genre. ₹50 per entry (dummy payment gate until #7).
+    No track split — Camera and Mobile compete together.
+    """
+    __tablename__ = 'open_contest_entries'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    user_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id     = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    genre        = db.Column(db.String(60), nullable=False)
+    platform_year= db.Column(db.Integer,   nullable=False)
+    amount_paise = db.Column(db.Integer,   default=5000)   # ₹50 = 5000 paise
+    payment_ref  = db.Column(db.String(120), nullable=True) # Razorpay order id when live
+    status       = db.Column(db.String(20), default='confirmed')  # confirmed | pending
+    entered_at   = db.Column(db.DateTime,  default=datetime.utcnow)
+
+    user  = db.relationship('User',  foreign_keys=[user_id],  backref='open_contest_entries', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='open_contest_entries', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'genre', 'platform_year',
+                            name='uq_open_contest_entry'),
+    )
+
+    def __repr__(self):
+        return f'<OpenContestEntry user={self.user_id} genre={self.genre} year={self.platform_year}>'
+
+
 class CalibrationNote(db.Model):
     """Admin feedback on individual scored images — feeds back into engine prompt."""
     __tablename__ = 'calibration_notes'
@@ -292,6 +322,23 @@ def run_migrations(app):
                 contest_type VARCHAR(20) DEFAULT 'monthly',
                 entered_at TIMESTAMP DEFAULT NOW(),
                 UNIQUE(user_id, genre, track, contest_month, contest_type)
+            )
+        '''))
+        db.session.commit()
+
+
+        db.session.execute(db.text('''
+            CREATE TABLE IF NOT EXISTS open_contest_entries (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                genre VARCHAR(60) NOT NULL,
+                platform_year INTEGER NOT NULL,
+                amount_paise INTEGER DEFAULT 5000,
+                payment_ref VARCHAR(120),
+                status VARCHAR(20) DEFAULT 'confirmed',
+                entered_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, genre, platform_year)
             )
         '''))
         db.session.commit()

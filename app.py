@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
-from models import db, User, Image, CalibrationLog, ContestEntry
+from models import db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
@@ -1829,6 +1829,8 @@ def my_contest_entries():
 
 @app.route('/open-contest/enter', methods=['GET', 'POST'])
 @login_required
+@app.route('/open-contest/enter', methods=['GET', 'POST'])
+@login_required
 def open_contest_enter():
     if not is_open_contest_active():
         flash('The Open Competition is not currently accepting entries. Check back closer to Grand Prix.', 'info')
@@ -1838,8 +1840,96 @@ def open_contest_enter():
         flash('An active Camera or Mobile subscription is required to enter the Open Competition.', 'error')
         return redirect(url_for('pricing'))
 
-    flash('Open Competition entry is coming soon. You will be notified when entries open.', 'info')
-    return redirect(url_for('contests'))
+    platform_year = datetime.utcnow().year
+
+    # Step 1 — GET: show genre + image selector
+    # Step 2 — POST confirm=0: show summary (genre + image + ₹50)
+    # Step 3 — POST confirm=1: write to DB (dummy payment gate)
+
+    # Fetch user's scored images for the selector
+    user_images = (Image.query
+                   .filter_by(user_id=current_user.id, status='scored')
+                   .order_by(Image.score.desc())
+                   .all())
+
+    # Genres the user has already entered this year
+    existing_entries = OpenContestEntry.query.filter_by(
+        user_id=current_user.id, platform_year=platform_year
+    ).all()
+    entered_genres = {e.genre for e in existing_entries}
+
+    if request.method == 'POST':
+        genre    = request.form.get('genre', '').strip()
+        image_id = request.form.get('image_id', '').strip()
+        confirm  = request.form.get('confirm', '0')
+
+        # Validate genre
+        if genre not in GENRE_IDS:
+            flash('Please select a valid genre.', 'error')
+            return render_template('open_contest_enter.html',
+                user_images=user_images, genres=GENRE_IDS,
+                genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+                step=1, platform_year=platform_year)
+
+        # Validate image
+        try:
+            image_id = int(image_id)
+        except (ValueError, TypeError):
+            flash('Please select an image.', 'error')
+            return render_template('open_contest_enter.html',
+                user_images=user_images, genres=GENRE_IDS,
+                genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+                step=1, platform_year=platform_year)
+
+        img = Image.query.filter_by(id=image_id, user_id=current_user.id, status='scored').first()
+        if not img:
+            flash('Invalid image selection.', 'error')
+            return render_template('open_contest_enter.html',
+                user_images=user_images, genres=GENRE_IDS,
+                genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+                step=1, platform_year=platform_year)
+
+        # Already entered this genre?
+        if genre in entered_genres:
+            flash(f'You have already entered the {GENRE_LABELS.get(genre, genre)} category this year.', 'error')
+            return render_template('open_contest_enter.html',
+                user_images=user_images, genres=GENRE_IDS,
+                genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+                step=1, platform_year=platform_year)
+
+        if confirm == '1':
+            # Step 3 — write to DB (dummy payment confirmed)
+            try:
+                entry = OpenContestEntry(
+                    user_id=current_user.id,
+                    image_id=img.id,
+                    genre=genre,
+                    platform_year=platform_year,
+                    amount_paise=5000,
+                    payment_ref='DUMMY-' + str(int(datetime.utcnow().timestamp())),
+                    status='confirmed'
+                )
+                db.session.add(entry)
+                db.session.commit()
+                flash(f'🎯 Entry confirmed! "{img.asset_name}" is entered in {GENRE_LABELS.get(genre, genre)} — Open Competition {platform_year}.', 'success')
+                return redirect(url_for('contests'))
+            except Exception:
+                db.session.rollback()
+                flash('Entry already exists for this genre, or a database error occurred.', 'error')
+                return redirect(url_for('contests'))
+        else:
+            # Step 2 — show summary for confirmation
+            return render_template('open_contest_enter.html',
+                user_images=user_images, genres=GENRE_IDS,
+                genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+                step=2, selected_genre=genre, selected_image=img,
+                platform_year=platform_year)
+
+    # GET — Step 1
+    return render_template('open_contest_enter.html',
+        user_images=user_images, genres=GENRE_IDS,
+        genre_labels=GENRE_LABELS, entered_genres=entered_genres,
+        step=1, platform_year=platform_year)
 
 
 # ---------------------------------------------------------------------------
