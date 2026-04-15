@@ -246,10 +246,15 @@ def index():
                       .filter(Image.status=='scored', Image.score != None)
                       .order_by(Image.score.desc())
                       .limit(6).all())
+        example_image = (Image.query
+                         .filter(Image.status=='scored', Image.score != None)
+                         .order_by(db.func.random())
+                         .first())
     except Exception:
         stats = {'total_images': 0, 'total_members': 0, 'avg_score': 0}
         top_images = []
-    return render_template('index.html', stats=stats, top_images=top_images, now=datetime.utcnow())
+        example_image = None
+    return render_template('index.html', stats=stats, top_images=top_images, example_image=example_image, now=datetime.utcnow())
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -2055,8 +2060,7 @@ def share_image(image_id):
     if img.status != 'scored':
         abort(404)
     audit = img.get_audit()
-    show_score = current_user.is_authenticated and current_user.id == img.user_id
-    return render_template('share.html', image=img, audit=audit, show_score=show_score)
+    return render_template('share.html', image=img, audit=audit)
 
 
 @app.errorhandler(404)
