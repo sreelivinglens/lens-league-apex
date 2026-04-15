@@ -34,7 +34,7 @@
 .lb-table td { padding: 11px 14px; vertical-align: middle; color: var(--text-primary); }
 .col-rank { width: 48px; text-align: center; }
 .col-thumb { width: 56px; }
-.col-genre, .col-tier { white-space: nowrap; }
+.col-genre, .col-tier, .col-track { white-space: nowrap; }
 .medal { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; font-weight: 700; }
 .medal.gold   { background: #C8A84B; color: #3a2a00; }
 .medal.silver { background: #8a8a8a; color: #1a1a1a; }
@@ -52,11 +52,11 @@
 .tier-master       { background: rgba(59,130,200,0.20); color: #7abfff; border: 1px solid #2a5a99; }
 .tier-practitioner { background: rgba(76,175,115,0.20); color: #7adfa8; border: 1px solid #2a7a55; }
 .tier-apprentice   { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+.lb-track-pill { font-size: 10px; font-family: var(--font-mono); letter-spacing: .5px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
+.lb-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
 .lb-photographer-name { font-weight: 600; color: var(--text-primary); }
 .lb-count { color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; }
 .lb-empty { padding: 48px; text-align: center; color: var(--text-muted); font-size: 14px; font-family: var(--font-mono); letter-spacing: 1px; }
-
-/* Score visibility notice */
 .score-notice {
   display: flex; align-items: center; gap: 10px;
   background: var(--surface-2); border: 1px solid var(--border);
@@ -66,6 +66,14 @@
   font-family: var(--font-mono); font-size: 11px;
   letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;
 }
+.lb-cta {
+  margin-top: 32px; padding: 28px 32px;
+  background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+  border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+}
+.lb-cta p { font-size: 14px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; }
 </style>
 {% endblock %}
 
@@ -83,15 +91,27 @@
 
   {# ── FILTERS ── #}
   <div class="lb-filters">
+
     <div class="lb-filter-group">
       <label>Period</label>
       <div class="lb-pills">
         {% for val, label in [('all','All time'),('month','This month'),('week','This week')] %}
-        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}"
+        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
            class="lb-pill {% if period == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
     </div>
+
+    <div class="lb-filter-group">
+      <label>Track</label>
+      <div class="lb-pills">
+        {% for val, label in [('all','All tracks'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}"
+           class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="lb-filter-row">
       <div class="lb-filter-group">
         <label for="genre-sel">Genre</label>
@@ -112,13 +132,14 @@
         </select>
       </div>
     </div>
+
   </div>
 
   {# ── TABS ── #}
   <div class="lb-tabs">
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}"
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='images' %}active{% endif %}">Top Images</a>
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}"
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
        class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
   </div>
 
@@ -134,6 +155,7 @@
           <th>Image</th>
           <th class="col-genre">Genre</th>
           <th class="col-tier">Tier</th>
+          <th class="col-track">Track</th>
           <th>Photographer</th>
         </tr>
       </thead>
@@ -172,6 +194,15 @@
               {{ image.tier or '—' }}
             </span>
           </td>
+          <td class="col-track">
+            {% if image.camera_track %}
+            <span class="lb-track-pill {{ image.camera_track }}">
+              {{ '📷' if image.camera_track == 'camera' else '📱' }} {{ image.camera_track }}
+            </span>
+            {% else %}
+            <span class="lb-track-pill">—</span>
+            {% endif %}
+          </td>
           <td>{{ image.photographer_name or '—' }}</td>
         </tr>
         {% endfor %}
@@ -191,6 +222,7 @@
         <tr>
           <th class="col-rank">#</th>
           <th>Photographer</th>
+          <th>Best Tier</th>
           <th class="col-count">Images</th>
         </tr>
       </thead>
@@ -205,6 +237,15 @@
             {% endif %}
           </td>
           <td><span class="lb-photographer-name">{{ p.photographer_name or 'Anonymous' }}</span></td>
+          <td>
+            {% set best_score = p.best_score %}
+            {% if best_score >= 9.7 %}<span class="lb-tier tier-legend">Legend</span>
+            {% elif best_score >= 9.0 %}<span class="lb-tier tier-grandmaster">Grandmaster</span>
+            {% elif best_score >= 7.6 %}<span class="lb-tier tier-master">Master</span>
+            {% elif best_score >= 5.1 %}<span class="lb-tier tier-practitioner">Practitioner</span>
+            {% else %}<span class="lb-tier tier-apprentice">Apprentice</span>
+            {% endif %}
+          </td>
           <td class="col-count">
             <span class="lb-count">{{ p.image_count }}</span>
           </td>
@@ -215,6 +256,17 @@
     {% else %}
     <div class="lb-empty">No photographers match these filters.</div>
     {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── CTA for non-logged-in visitors ── #}
+  {% if not current_user.is_authenticated %}
+  <div class="lb-cta">
+    <p>See where your photography stands. 3 free scored images — no credit card required.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Score →</a>
+      <a href="{{ url_for('login') }}" class="btn">Log In</a>
+    </div>
   </div>
   {% endif %}
 
