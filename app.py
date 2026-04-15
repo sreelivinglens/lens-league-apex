@@ -181,20 +181,10 @@ def admin_required(f):
 # ---------------------------------------------------------------------------
 
 def is_open_contest_active() -> bool:
-    """
-    Returns True if the Open Competition is currently accepting entries.
-    Set OPEN_CONTEST_ACTIVE=1 in Railway env vars to enable.
-    """
     return os.getenv('OPEN_CONTEST_ACTIVE', '0') == '1'
 
 
 def is_bow_active() -> bool:
-    """
-    Returns True if Body of Work submissions are currently open.
-    BOW accepts submissions from Month 1 through end of Month 11 of the platform year.
-    Env var BOW_ACTIVE='1' enables; defaults to '0' (closed) until contest system is built.
-    Replace with a date-range check tied to the platform year when subscription system is built.
-    """
     return os.getenv('BOW_ACTIVE', '0') == '1'
 
 
@@ -401,6 +391,63 @@ def dashboard():
                            query=query, search_enabled=(total_images >= 20))
 
 
+# ---------------------------------------------------------------------------
+# Profile — edit name/username + change password (combined page)
+# ---------------------------------------------------------------------------
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    images_used = Image.query.filter_by(user_id=current_user.id).count()
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        # ── Update profile details ────────────────────────────────────────
+        if action == 'update_profile':
+            new_username  = request.form.get('username', '').strip()
+            new_full_name = request.form.get('full_name', '').strip()
+
+            if not new_username:
+                flash('Username cannot be empty.', 'error')
+                return redirect(url_for('profile'))
+
+            existing = User.query.filter_by(username=new_username).first()
+            if existing and existing.id != current_user.id:
+                flash('That username is already taken.', 'error')
+                return redirect(url_for('profile'))
+
+            current_user.username  = new_username
+            current_user.full_name = new_full_name
+            db.session.commit()
+            flash('Profile updated successfully.', 'success')
+            return redirect(url_for('profile'))
+
+        # ── Change password ───────────────────────────────────────────────
+        elif action == 'change_password':
+            current_pw = request.form.get('current_password', '')
+            new_pw     = request.form.get('new_password', '')
+            confirm_pw = request.form.get('confirm_password', '')
+
+            if not check_password_hash(current_user.password_hash, current_pw):
+                flash('Current password is incorrect.', 'error')
+                return redirect(url_for('profile'))
+            if len(new_pw) < 8:
+                flash('New password must be at least 8 characters.', 'error')
+                return redirect(url_for('profile'))
+            if new_pw != confirm_pw:
+                flash('New passwords do not match.', 'error')
+                return redirect(url_for('profile'))
+
+            current_user.password_hash = generate_password_hash(new_pw)
+            db.session.commit()
+            flash('Password updated. Please log in again with your new password.', 'success')
+            logout_user()
+            return redirect(url_for('login'))
+
+    return render_template('profile.html', images_used=images_used)
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -466,7 +513,6 @@ def upload():
             exif_data.get('iso',''), exif_data.get('shutter',''),
         ]))
 
-        # Normalise genre from form input
         raw_genre = request.form.get('genre', 'Wildlife')
         genre     = normalise_genre(raw_genre)
 
@@ -486,7 +532,7 @@ def upload():
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
-            camera_track      = getattr(current_user, 'subscription_track', None),
+            camera_track      = request.form.get('camera_track') or getattr(current_user, 'subscription_track', None),
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
@@ -519,12 +565,8 @@ def upload():
                 img.scored_at=datetime.utcnow()
                 audit = build_audit_data(result, img)
                 img.set_audit(audit)
-
-                # Commit scores immediately — card building is non-critical
                 db.session.commit()
 
-                # Build and upload card — wrapped separately so a card failure
-                # never rolls back the score that was already saved
                 try:
                     card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                                   f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
@@ -561,7 +603,6 @@ def upload():
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
 @login_required
 def retry_score(image_id):
-    """User-facing retry for pending images where auto-scoring failed at upload time."""
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id:
         abort(403)
@@ -569,7 +610,6 @@ def retry_score(image_id):
         flash('This image has already been scored.', 'info')
         return redirect(url_for('image_detail', image_id=image_id))
     if not img.thumb_path or not os.path.exists(img.thumb_path):
-        # thumb_path not on disk — try fetching from R2
         if not img.thumb_url:
             flash('Image file not found. Please contact support.', 'error')
             return redirect(url_for('image_detail', image_id=image_id))
@@ -584,7 +624,6 @@ def retry_score(image_id):
         from engine.auto_score import auto_score, build_audit_data
         from engine.compositor import build_card1
 
-        # If thumb not on disk, download from R2 to a temp file
         thumb_path = img.thumb_path
         temp_file  = None
         if not thumb_path or not os.path.exists(thumb_path):
@@ -624,7 +663,6 @@ def retry_score(image_id):
         img.set_audit(audit)
         db.session.commit()
 
-        # Build and upload card — non-critical, don't block on failure
         try:
             uid       = str(uuid.uuid4())
             card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
@@ -731,7 +769,6 @@ def score_image(image_id):
 
 @app.route('/image/<int:image_id>/download')
 def download_card(image_id):
-    """Public. Generates two landscape cards and serves as ZIP."""
     img = Image.query.get_or_404(image_id)
     if not img.score:
         return "This image has not been scored yet.", 404
@@ -740,7 +777,7 @@ def download_card(image_id):
     from engine.compositor import build_card1, build_card2
 
     audit = img.get_audit() or {}
-    app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())} rows_count={len(audit.get("rows",[]))} byline_1_len={len(audit.get("byline_1",""))} byline_2={len(audit.get("byline_2",""))} byline_2_body={len(audit.get("byline_2_body",""))}')
+    app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())}')
     modules = [(n,v) for n,v in [
         ('DoD',        img.dod_score),
         ('Disruption', img.disruption_score),
@@ -821,7 +858,6 @@ def download_card(image_id):
 @app.route('/image/<int:image_id>/thumb')
 @login_required
 def serve_thumb(image_id):
-    """Redirect to R2 URL if available, otherwise serve local file."""
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
@@ -835,204 +871,8 @@ def serve_thumb(image_id):
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    if request.method == 'POST':
-        current  = request.form.get('current_password', '')
-        new_pw   = request.form.get('new_password', '')
-        confirm  = request.form.get('confirm_password', '')
-        if not check_password_hash(current_user.password_hash, current):
-            flash('Current password is incorrect.', 'error')
-            return redirect(url_for('change_password'))
-        if len(new_pw) < 8:
-            flash('New password must be at least 8 characters.', 'error')
-            return redirect(url_for('change_password'))
-        if new_pw != confirm:
-            flash('New passwords do not match.', 'error')
-            return redirect(url_for('change_password'))
-        current_user.password_hash = generate_password_hash(new_pw)
-        db.session.commit()
-        db.session.refresh(current_user)
-        flash('Password updated. Please log in again with your new password.', 'success')
-        logout_user()
-        return redirect(url_for('login'))
-    return render_template('change_password.html')
-
-
-@app.route('/bulk-upload', methods=['GET', 'POST'])
-@login_required
-def bulk_upload():
-    results = []
-    if request.method == 'POST':
-        files = request.files.getlist('images')
-        if len(files) > 10:
-            flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
-            return redirect(url_for('bulk_upload'))
-        raw_genre = request.form.get('genre', '').strip()
-        if not raw_genre:
-            flash('Please select a genre before uploading.', 'error')
-            return redirect(url_for('bulk_upload'))
-        genre = normalise_genre(raw_genre)
-
-        # ── Free quota check ──────────────────────────────────────────────
-        if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-            user_total = Image.query.filter_by(user_id=current_user.id).count()
-            if user_total >= FREE_IMAGE_LIMIT:
-                flash(
-                    f'You have used all {FREE_IMAGE_LIMIT} free images. '
-                    'Upgrade to Camera or Mobile track to continue uploading.',
-                    'error'
-                )
-                return redirect(url_for('pricing'))
-        photographer = (request.form.get('photographer_name') or '').strip()
-        if not photographer:
-            photographer = current_user.full_name or current_user.username
-        api_key = os.getenv('ANTHROPIC_API_KEY', '')
-        for file in files:
-            if not file or not file.filename:
-                continue
-            if not allowed_file(file.filename):
-                results.append({'filename': file.filename, 'score': None, 'tier': None, 'status': 'skipped'})
-                continue
-            result_row = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
-            try:
-                uid      = str(uuid.uuid4())
-                filename = secure_filename(file.filename)
-                raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
-                file.save(raw_path)
-                thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
-                if os.path.exists(raw_path): os.remove(raw_path)
-
-                from engine.processor import hash_similarity_pct
-                existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
-                duplicate_found = False
-                for ex in existing_imgs:
-                    sim = hash_similarity_pct(phash, ex.phash)
-                    if sim >= 90.0:
-                        if ex.user_id == current_user.id:
-                            result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
-                        else:
-                            result_row['status'] = 'rejected: image already submitted by another member'
-                        duplicate_found = True
-                        if os.path.exists(thumb_path): os.remove(thumb_path)
-                        break
-                if duplicate_found:
-                    results.append(result_row)
-                    continue
-
-                thumb_url = _r2_upload_thumb(thumb_path, uid)
-
-                from models import Image as ImageModel
-                img = ImageModel(
-                    user_id=current_user.id, original_filename=filename,
-                    stored_filename=os.path.basename(thumb_path),
-                    thumb_path=thumb_path, thumb_url=thumb_url,
-                    file_size_kb=int(os.path.getsize(thumb_path)/1024),
-                    width=w, height=h, format=fmt,
-                    asset_name=auto_title(filename, genre),
-                    phash=phash, genre=genre, photographer_name=photographer,
-                    camera_track=getattr(current_user, 'subscription_track', None),
-                    status='pending',
-                )
-                db.session.add(img)
-                db.session.flush()
-                if api_key:
-                    from engine.auto_score import auto_score, build_audit_data
-                    from engine.compositor import build_card1 as _build_card
-                    scored = auto_score(image_path=img.thumb_path, genre=genre,
-                                        title=img.asset_name, photographer=photographer)
-                    img.dod_score=float(scored.get('dod',0))
-                    img.disruption_score=float(scored.get('disruption',0))
-                    img.dm_score=float(scored.get('dm',0))
-                    img.wonder_score=float(scored.get('wonder',0))
-                    img.aq_score=float(scored.get('aq',0))
-                    img.score=float(scored.get('score',0))
-                    img.tier=get_tier(float(scored.get('score',0)))
-                    img.archetype=scored.get('archetype','')
-                    img.soul_bonus=scored.get('soul_bonus',False)
-                    img.status='scored'; img.scored_at=datetime.utcnow()
-                    audit = build_audit_data(scored, img)
-                    img.set_audit(audit)
-                    card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                                  f"{secure_filename(photographer.replace(' ',''))}_{genre}_{img.score}.jpg")
-                    card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                    _build_card(img.thumb_path, audit, card_path)
-                    img.card_path = card_path
-                    card_url = _r2_upload_card(card_path, uid + '_card')
-                    if card_url: img.card_url = card_url
-                    result_row['score']=img.score; result_row['tier']=img.tier; result_row['status']='scored'
-                else:
-                    img.status='pending'; result_row['status']='uploaded'
-                db.session.commit()
-            except Exception as e:
-                try:
-                    db.session.rollback()
-                except:
-                    pass
-                import traceback
-                err_detail = traceback.format_exc()
-                app.logger.error(f'Bulk upload error for {file.filename}: {err_detail}')
-                result_row['status'] = f'error: {str(e)[:120]}'
-            results.append(result_row)
-    try:
-        db.session.commit()
-    except Exception as ce:
-        app.logger.error(f'Final bulk commit error: {ce}')
-        try:
-            db.session.rollback()
-        except:
-            pass
-
-    if request.method == 'POST' and results:
-        scored_count  = sum(1 for r in results if r['status'] == 'scored')
-        saved_count   = sum(1 for r in results if 'saved' in r['status'] or r['status'] == 'uploaded')
-        error_count   = sum(1 for r in results if 'error' in r['status'])
-        msg_parts = []
-        if scored_count:  msg_parts.append(f'{scored_count} scored')
-        if saved_count:   msg_parts.append(f'{saved_count} saved (pending)')
-        if error_count:   msg_parts.append(f'{error_count} failed')
-        flash(f"Bulk upload complete: {', '.join(msg_parts)}.", 'success')
-        return redirect(url_for('dashboard'))
-    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
-
-
-@app.route('/share/<int:image_id>')
-def share_image(image_id):
-    img = Image.query.get_or_404(image_id)
-    if img.status != 'scored':
-        abort(404)
-    audit = img.get_audit()
-    return render_template('share.html', image=img, audit=audit)
-
-
-@app.route('/admin/fix-tiers', methods=['POST'])
-@login_required
-@admin_required
-def fix_tiers():
-    images = Image.query.filter(Image.score.isnot(None), Image.score > 0).all()
-    fixed = 0
-    for img in images:
-        correct_tier = get_tier(float(img.score))
-        if img.tier != correct_tier:
-            img.tier = correct_tier
-            fixed += 1
-    db.session.commit()
-    flash(f'Fixed {fixed} image(s) with incorrect tier assignments.', 'success')
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/fix-photographer-names', methods=['POST'])
-@login_required
-@admin_required
-def fix_photographer_names():
-    old_name = request.form.get('old_name', '').strip()
-    new_name = request.form.get('new_name', '').strip()
-    if not old_name or not new_name:
-        flash('Both old and new name required.', 'error')
-        return redirect(url_for('admin_dashboard'))
-    updated = Image.query.filter(Image.photographer_name == old_name).all()
-    for img in updated:
-        img.photographer_name = new_name
-    db.session.commit()
-    flash(f'Updated {len(updated)} image(s) from "{old_name}" to "{new_name}".', 'success')
-    return redirect(url_for('admin_dashboard'))
+    # Redirect to the new unified profile page
+    return redirect(url_for('profile'))
 
 
 # ---------------------------------------------------------------------------
@@ -1380,7 +1220,6 @@ def admin_feedback(image_id):
 @app.route('/image/score-single', methods=['POST'])
 @login_required
 def score_single_image():
-    """Score one image at a time — used by progressive bulk upload."""
     if 'image' not in request.files:
         return jsonify({'error': 'No file'}), 400
 
@@ -1615,6 +1454,39 @@ def admin_transfer_images():
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/admin/fix-tiers', methods=['POST'])
+@login_required
+@admin_required
+def fix_tiers():
+    images = Image.query.filter(Image.score.isnot(None), Image.score > 0).all()
+    fixed = 0
+    for img in images:
+        correct_tier = get_tier(float(img.score))
+        if img.tier != correct_tier:
+            img.tier = correct_tier
+            fixed += 1
+    db.session.commit()
+    flash(f'Fixed {fixed} image(s) with incorrect tier assignments.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/fix-photographer-names', methods=['POST'])
+@login_required
+@admin_required
+def fix_photographer_names():
+    old_name = request.form.get('old_name', '').strip()
+    new_name = request.form.get('new_name', '').strip()
+    if not old_name or not new_name:
+        flash('Both old and new name required.', 'error')
+        return redirect(url_for('admin_dashboard'))
+    updated = Image.query.filter(Image.photographer_name == old_name).all()
+    for img in updated:
+        img.photographer_name = new_name
+    db.session.commit()
+    flash(f'Updated {len(updated)} image(s) from "{old_name}" to "{new_name}".', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/admin/fix-calibration-table', methods=['POST'])
 @login_required
 @admin_required
@@ -1708,16 +1580,13 @@ def debug_images():
 def science():
     return render_template('science.html')
 
-
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
 
-
 @app.route('/contest-rules')
 def contest_rules():
     return render_template('contest_rules.html')
-
 
 @app.route('/pricing')
 def pricing():
@@ -1735,7 +1604,6 @@ def contests():
     next_month  = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     days_left   = (next_month - now).days
 
-    # Top 3 images this month per genre per track (raw SQL for camera_track compatibility)
     monthly_top = {}
     for genre in GENRE_IDS:
         base = (Image.query
@@ -1780,21 +1648,18 @@ def contests():
 @app.route('/bow/submit', methods=['GET', 'POST'])
 @login_required
 def bow_submit():
-    """Body of Work submission — 6 to 12 scored images as a unified thematic series."""
     from models import BowSubmission
 
     if not getattr(current_user, 'is_subscribed', False):
         flash('An active Camera or Mobile subscription is required to submit a Body of Work.', 'error')
         return redirect(url_for('pricing'))
 
-    # Check if already submitted this platform year
     current_year = datetime.utcnow().year
     existing = BowSubmission.query.filter_by(
         user_id=current_user.id,
         platform_year=current_year
     ).first()
 
-    # All scored images for this user — available to select
     scored_images = (Image.query
                      .filter_by(user_id=current_user.id, status='scored')
                      .filter(Image.score != None)
@@ -1806,7 +1671,6 @@ def bow_submit():
         thematic_statement = request.form.get('thematic_statement', '').strip()
         selected_ids       = request.form.getlist('image_ids')
 
-        # Validation
         errors = []
         if not series_title:
             errors.append('Series title is required.')
@@ -1819,7 +1683,6 @@ def bow_submit():
         if existing:
             errors.append('You have already submitted a Body of Work for this platform year.')
 
-        # Verify all selected images belong to this user and are scored
         valid_ids = {str(img.id) for img in scored_images}
         invalid = [i for i in selected_ids if i not in valid_ids]
         if invalid:
@@ -1837,7 +1700,6 @@ def bow_submit():
                 min_images=6, max_images=12,
             )
 
-        # Save submission
         sub = BowSubmission(
             user_id            = current_user.id,
             series_title       = series_title,
@@ -1865,20 +1727,12 @@ def bow_submit():
 
 
 # ---------------------------------------------------------------------------
-# Open Competition entry
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# Monthly Contest Entry — photographer chooses their entry per genre
+# Monthly Contest Entry
 # ---------------------------------------------------------------------------
 
 @app.route('/contest/enter/monthly/<genre>', methods=['GET', 'POST'])
 @login_required
 def contest_enter_monthly(genre):
-    """
-    Photographer selects one of their scored images to enter the monthly contest
-    for a specific genre. One entry per genre per track per month per user.
-    """
     from datetime import date as _date
 
     if not getattr(current_user, 'is_subscribed', False):
@@ -1890,7 +1744,6 @@ def contest_enter_monthly(genre):
     month = now.strftime('%Y-%m')
     track = getattr(current_user, 'subscription_track', 'camera') or 'camera'
 
-    # Check if already entered this genre+track this month
     existing = ContestEntry.query.filter_by(
         user_id      = current_user.id,
         genre        = genre,
@@ -1899,7 +1752,6 @@ def contest_enter_monthly(genre):
         contest_type = 'monthly',
     ).first()
 
-    # All scored images for this user in this genre matching their track
     eligible = (Image.query
                 .filter_by(user_id=current_user.id, status='scored', genre=genre)
                 .filter(Image.score != None)
@@ -1922,7 +1774,6 @@ def contest_enter_monthly(genre):
             return redirect(request.url)
 
         if existing:
-            # Update existing entry to new image
             existing.image_id   = image_id
             existing.entered_at = datetime.utcnow()
             db.session.commit()
@@ -1957,7 +1808,6 @@ def contest_enter_monthly(genre):
 @app.route('/contest/my-entries')
 @login_required
 def my_contest_entries():
-    """Dashboard view of all the user's contest entries."""
     now     = datetime.utcnow()
     month   = now.strftime('%Y-%m')
     entries = (ContestEntry.query
@@ -1975,13 +1825,6 @@ def my_contest_entries():
 @app.route('/open-contest/enter', methods=['GET', 'POST'])
 @login_required
 def open_contest_enter():
-    """
-    Open Competition entry point.
-    Stub — full implementation in roadmap item #8 (contest system).
-    When live: OPEN_CONTEST_ACTIVE env var must be '1'.
-    Entry fee: ₹50/image (OPEN_PRIZES['Entry_Fee']).
-    No track split — Camera and Mobile compete together.
-    """
     if not is_open_contest_active():
         flash('The Open Competition is not currently accepting entries. Check back closer to Grand Prix.', 'info')
         return redirect(url_for('contests'))
@@ -1990,16 +1833,8 @@ def open_contest_enter():
         flash('An active Camera or Mobile subscription is required to enter the Open Competition.', 'error')
         return redirect(url_for('pricing'))
 
-    # TODO: Implement full Open Competition entry flow:
-    #   - Genre selection (from GENRE_IDS)
-    #   - Image selection (must be previously scored on this account)
-    #   - Razorpay payment: OPEN_PRIZES['Entry_Fee'] (₹50) per entry
-    #   - One entry per genre per photographer
-    #   - Store entry in OpenContestEntry model (to be created)
     flash('Open Competition entry is coming soon. You will be notified when entries open.', 'info')
     return redirect(url_for('contests'))
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -2014,7 +1849,7 @@ def subscribe(track):
 
     razorpay_key = os.getenv('RAZORPAY_KEY_ID', '')
     prices = {
-        'camera': {'monthly': 20000, 'annual': 200000},  # paise
+        'camera': {'monthly': 20000, 'annual': 200000},
         'mobile': {'monthly': 10000, 'annual': 100000},
     }
     plan   = request.args.get('plan', 'monthly')
@@ -2079,15 +1914,157 @@ def cancel_subscription():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def bulk_upload():
+    results = []
+    if request.method == 'POST':
+        files = request.files.getlist('images')
+        if len(files) > 10:
+            flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
+            return redirect(url_for('bulk_upload'))
+        raw_genre = request.form.get('genre', '').strip()
+        if not raw_genre:
+            flash('Please select a genre before uploading.', 'error')
+            return redirect(url_for('bulk_upload'))
+        genre = normalise_genre(raw_genre)
+
+        if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+            user_total = Image.query.filter_by(user_id=current_user.id).count()
+            if user_total >= FREE_IMAGE_LIMIT:
+                flash(
+                    f'You have used all {FREE_IMAGE_LIMIT} free images. '
+                    'Upgrade to Camera or Mobile track to continue uploading.',
+                    'error'
+                )
+                return redirect(url_for('pricing'))
+        photographer = (request.form.get('photographer_name') or '').strip()
+        if not photographer:
+            photographer = current_user.full_name or current_user.username
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        for file in files:
+            if not file or not file.filename:
+                continue
+            if not allowed_file(file.filename):
+                results.append({'filename': file.filename, 'score': None, 'tier': None, 'status': 'skipped'})
+                continue
+            result_row = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
+            try:
+                uid      = str(uuid.uuid4())
+                filename = secure_filename(file.filename)
+                raw_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
+                file.save(raw_path)
+                thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+                if os.path.exists(raw_path): os.remove(raw_path)
+
+                from engine.processor import hash_similarity_pct
+                existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
+                duplicate_found = False
+                for ex in existing_imgs:
+                    sim = hash_similarity_pct(phash, ex.phash)
+                    if sim >= 90.0:
+                        if ex.user_id == current_user.id:
+                            result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
+                        else:
+                            result_row['status'] = 'rejected: image already submitted by another member'
+                        duplicate_found = True
+                        if os.path.exists(thumb_path): os.remove(thumb_path)
+                        break
+                if duplicate_found:
+                    results.append(result_row)
+                    continue
+
+                thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+                from models import Image as ImageModel
+                img = ImageModel(
+                    user_id=current_user.id, original_filename=filename,
+                    stored_filename=os.path.basename(thumb_path),
+                    thumb_path=thumb_path, thumb_url=thumb_url,
+                    file_size_kb=int(os.path.getsize(thumb_path)/1024),
+                    width=w, height=h, format=fmt,
+                    asset_name=auto_title(filename, genre),
+                    phash=phash, genre=genre, photographer_name=photographer,
+                    camera_track=getattr(current_user, 'subscription_track', None),
+                    status='pending',
+                )
+                db.session.add(img)
+                db.session.flush()
+                if api_key:
+                    from engine.auto_score import auto_score, build_audit_data
+                    from engine.compositor import build_card1 as _build_card
+                    scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                        title=img.asset_name, photographer=photographer)
+                    img.dod_score=float(scored.get('dod',0))
+                    img.disruption_score=float(scored.get('disruption',0))
+                    img.dm_score=float(scored.get('dm',0))
+                    img.wonder_score=float(scored.get('wonder',0))
+                    img.aq_score=float(scored.get('aq',0))
+                    img.score=float(scored.get('score',0))
+                    img.tier=get_tier(float(scored.get('score',0)))
+                    img.archetype=scored.get('archetype','')
+                    img.soul_bonus=scored.get('soul_bonus',False)
+                    img.status='scored'; img.scored_at=datetime.utcnow()
+                    audit = build_audit_data(scored, img)
+                    img.set_audit(audit)
+                    card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                  f"{secure_filename(photographer.replace(' ',''))}_{genre}_{img.score}.jpg")
+                    card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                    _build_card(img.thumb_path, audit, card_path)
+                    img.card_path = card_path
+                    card_url = _r2_upload_card(card_path, uid + '_card')
+                    if card_url: img.card_url = card_url
+                    result_row['score']=img.score; result_row['tier']=img.tier; result_row['status']='scored'
+                else:
+                    img.status='pending'; result_row['status']='uploaded'
+                db.session.commit()
+            except Exception as e:
+                try:
+                    db.session.rollback()
+                except:
+                    pass
+                import traceback
+                app.logger.error(f'Bulk upload error for {file.filename}: {traceback.format_exc()}')
+                result_row['status'] = f'error: {str(e)[:120]}'
+            results.append(result_row)
+    try:
+        db.session.commit()
+    except Exception as ce:
+        app.logger.error(f'Final bulk commit error: {ce}')
+        try:
+            db.session.rollback()
+        except:
+            pass
+
+    if request.method == 'POST' and results:
+        scored_count  = sum(1 for r in results if r['status'] == 'scored')
+        saved_count   = sum(1 for r in results if 'saved' in r['status'] or r['status'] == 'uploaded')
+        error_count   = sum(1 for r in results if 'error' in r['status'])
+        msg_parts = []
+        if scored_count:  msg_parts.append(f'{scored_count} scored')
+        if saved_count:   msg_parts.append(f'{saved_count} saved (pending)')
+        if error_count:   msg_parts.append(f'{error_count} failed')
+        flash(f"Bulk upload complete: {', '.join(msg_parts)}.", 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
+
+
+@app.route('/share/<int:image_id>')
+def share_image(image_id):
+    img = Image.query.get_or_404(image_id)
+    if img.status != 'scored':
+        abort(404)
+    audit = img.get_audit()
+    return render_template('share.html', image=img, audit=audit)
+
+
 @app.errorhandler(404)
 def not_found(e):
     return render_template('404.html'), 404
 
-
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
-
 
 @app.route('/health')
 def health():
