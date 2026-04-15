@@ -1,10 +1,45 @@
 {% extends "base.html" %}
 {% block title %}Lens League Apex — Find out what your photography is really worth{% endblock %}
 
-{% block extra_head %}
+{% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+
+<style>
+  /* ── Escape base <main> constraints for full-bleed homepage ── */
+  body:has(.homepage-root) main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Fallback for browsers without :has() */
+  .homepage-root {
+    margin: -40px calc(-1 * var(--page-pad, 48px));
+    width: calc(100% + 2 * var(--page-pad, 48px));
+  }
+  /* Override base nav to match new design */
+  body:has(.homepage-root) nav {
+    background: rgba(13,13,11,0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    position: fixed !important;
+    top: 0 !important;
+  }
+  body:has(.homepage-root) nav .nav-brand {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.04em !important;
+    font-weight: 700 !important;
+  }
+  body:has(.homepage-root) nav .nav-links a {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.875rem !important;
+    letter-spacing: 0.01em !important;
+  }
+  body:has(.homepage-root) footer {
+    display: none; /* homepage has its own footer */
+  }
+</style>
 <style>
   /* ─── Reset & Base ─────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1031,28 +1066,8 @@
 {% endblock %}
 
 {% block content %}
-
-<!-- ═══════════════════════ NAV ════════════════════════════ -->
-<nav class="apex-nav">
-  <a href="/" class="nav-logo">Lens League <span>Apex</span></a>
-  <ul class="nav-links">
-    <li><a href="/upload">Score My Photo</a></li>
-    <li><a href="/contests">Contests</a></li>
-    <li><a href="/leaderboard">Leaderboard</a></li>
-    <li><a href="/pricing">Pricing</a></li>
-    {% if current_user.is_authenticated %}
-      <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="/logout">Logout</a></li>
-    {% else %}
-      <li><a href="/login">Login</a></li>
-      <li><a href="/upload" class="btn-nav-cta">Score Free →</a></li>
-    {% endif %}
-  </ul>
-  <div class="nav-mobile-toggle" onclick="toggleMobileNav()">
-    <span></span><span></span><span></span>
-  </div>
-</nav>
-
+<!-- Full-bleed escape from base <main> max-width/padding -->
+<div class="homepage-root">
 
 <!-- ═══════════════════════ HERO ══════════════════════════ -->
 <section class="hero">
@@ -1451,5 +1466,7 @@
     statsObserver.observe(statsRow);
   }
 </script>
+
+</div><!-- /.homepage-root -->
 
 {% endblock %}
