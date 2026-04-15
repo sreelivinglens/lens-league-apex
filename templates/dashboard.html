@@ -13,6 +13,24 @@
   }
   .dash-header .page-header { margin-bottom: 0; }
 
+  .track-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    background: rgba(200,168,75,0.06);
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
   /* Search bar */
   .search-form {
     display: flex;
@@ -85,9 +103,7 @@
     border-color: var(--gold-dark);
     transform: translateY(-2px);
   }
-  .img-card-info {
-    padding: 14px 16px;
-  }
+  .img-card-info { padding: 14px 16px; }
   .img-card-title {
     font-size: 15px;
     font-weight: 600;
@@ -118,9 +134,19 @@
     font-size: 10px;
     color: var(--text-muted);
   }
-  .img-card-auth {
-    font-size: 12px;
+  .img-track-pill {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
   }
+  .img-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
+  .img-track-pill.mobile { border-color: var(--border); color: var(--text-muted); }
 
   /* Judge referral indicator */
   .judge-indicator {
@@ -143,11 +169,7 @@
     padding: 80px 20px;
     color: var(--text-muted);
   }
-  .empty-state-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-    opacity: 0.4;
-  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.4; }
   .empty-state-title {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -179,7 +201,15 @@
 <!-- Header -->
 <div class="dash-header">
   <div class="page-header">
-    <h1>{{ current_user.full_name or current_user.username }}</h1>
+    <h1>
+      {{ current_user.full_name or current_user.username }}
+      {% if current_user.is_subscribed and current_user.subscription_track %}
+        <span class="track-badge">
+          {% if current_user.subscription_track == 'camera' %}📷{% else %}📱{% endif %}
+          {{ current_user.subscription_track | title }} Track
+        </span>
+      {% endif %}
+    </h1>
     <p>Your photography portfolio &amp; scores</p>
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -256,7 +286,11 @@
       </div>
       <div class="img-card-footer">
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
-
+        {% if img.camera_track %}
+        <span class="img-track-pill {{ img.camera_track }}">
+          {{ '📷' if img.camera_track == 'camera' else '📱' }} {{ img.camera_track }}
+        </span>
+        {% endif %}
       </div>
     </div>
   </a>

@@ -20,7 +20,6 @@
     flex-shrink: 0;
   }
 
-  /* Left column */
   .detail-image {
     width: 100%;
     border: 1px solid var(--border);
@@ -28,7 +27,6 @@
     display: block;
   }
 
-  /* EXIF block */
   .exif-block {
     margin-top: 16px;
     padding: 16px;
@@ -36,7 +34,7 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
   }
-  .exif-block.verified  { border-color: var(--green); }
+  .exif-block.verified   { border-color: var(--green); }
   .exif-block.suspicious { border-color: var(--red); }
   .exif-status-row {
     display: flex;
@@ -60,7 +58,6 @@
     gap: 6px;
   }
 
-  /* Score panel */
   .score-panel {
     margin-top: 20px;
     background: var(--surface-2);
@@ -131,14 +128,11 @@
     white-space: nowrap;
   }
 
-  /* Module bars */
   .modules-panel {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
   }
-  .module-row {
-    margin-bottom: 14px;
-  }
+  .module-row { margin-bottom: 14px; }
   .module-row:last-child { margin-bottom: 0; }
   .module-row-header {
     display: flex;
@@ -173,7 +167,6 @@
     transition: width 0.6s ease;
   }
 
-  /* Archetype */
   .archetype-panel {
     padding: 16px 24px;
     display: flex;
@@ -199,7 +192,7 @@
   /* Pending state */
   .pending-panel {
     margin-top: 16px;
-    padding: 20px;
+    padding: 24px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -213,7 +206,6 @@
     text-transform: uppercase;
   }
 
-  /* Right column — scoring form */
   .form-section-label {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -241,7 +233,16 @@
 <div class="detail-header">
   <div class="page-header">
     <h1>{{ image.asset_name or image.original_filename }}</h1>
-    <p>{{ image.genre }}&nbsp;·&nbsp;{{ image.format }}&nbsp;·&nbsp;{{ image.photographer_name }}</p>
+    <p>
+      {{ image.genre }}&nbsp;·&nbsp;{{ image.format }}&nbsp;·&nbsp;{{ image.photographer_name }}
+      {% if image.camera_track %}
+      &nbsp;·&nbsp;
+      <span style="font-family:var(--font-mono); font-size:11px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--gold); text-transform:uppercase;">
+        {{ '📷' if image.camera_track == 'camera' else '📱' }} {{ image.camera_track | title }}
+      </span>
+      {% endif %}
+    </p>
   </div>
   <div class="detail-actions">
     <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
@@ -281,7 +282,7 @@
           {% elif image.exif_status == 'suspicious' %}⚠️
           {% else %}❓{% endif %}
         </span>
-        <span class="exif-status-label" title="Camera Authentication" title="Camera Authentication Status"
+        <span class="exif-status-label"
               style="color:{% if image.exif_status == 'verified' %}var(--green){% elif image.exif_status == 'suspicious' %}var(--red){% else %}var(--text-secondary){% endif %};">
           {{ image.exif_status.upper() }}
           {% if image.legal_declaration %}&nbsp;·&nbsp;LEGALLY DECLARED{% endif %}
@@ -354,14 +355,28 @@
       </div>
       {% endif %}
     </div>
+
     {% else %}
+    <!-- Pending panel with Retry Scoring button -->
     <div class="pending-panel">
       <div class="pending-label">⏳ Awaiting Scoring</div>
-      <p style="font-size:14px; color:var(--text-secondary); margin-top:8px;">
-        Fill in the scoring form and click Generate to score this image.
+      <p style="font-size:14px; color:var(--text-secondary); margin-top:8px; margin-bottom:16px;">
+        Your image was saved but scoring didn't complete — the AI engine was busy at upload time.
       </p>
+      {% if current_user.role != 'admin' %}
+      <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}">
+        <button type="submit" class="btn btn-solid"
+                style="padding:12px 28px; font-size:12px; letter-spacing:1.5px;">
+          ↻ Retry Scoring
+        </button>
+      </form>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">
+        Takes 10–20 seconds. If it fails again, try during off-peak hours (6am–11am IST).
+      </p>
+      {% endif %}
     </div>
     {% endif %}
+
   </div>
 
   <!-- ── RIGHT COLUMN — Scoring form ── -->
@@ -461,7 +476,6 @@
       </div>
 
       <form method="POST" action="{{ url_for('admin_feedback', image_id=image.id) }}">
-
         <div class="grid-2" style="gap:12px;">
           <div class="form-group" style="margin-bottom:14px;">
             <label>Module to Correct</label>
@@ -499,7 +513,6 @@
         </button>
       </form>
 
-      <!-- Existing notes for this image -->
       {% if image.calibration_notes %}
       <div style="margin-top:20px;">
         <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px;

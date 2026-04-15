@@ -174,16 +174,25 @@
     <div class="rule-pill">👑 POTY ₹50L · BOW ₹5.25L · Open ₹8L</div>
   </div>
 
-  <!-- Genre leaderboards -->
+  <!-- Genre leaderboards — split by track -->
   {% if monthly_top %}
-    {% for genre, images in monthly_top.items() %}
+    {% for genre, tracks in monthly_top.items() %}
     <div class="genre-section">
       <div class="genre-header">
         <span class="genre-title">{{ genre }}</span>
-        <span class="genre-count">{{ images|length }} entr{{ 'y' if images|length == 1 else 'ies' }} this month</span>
+        <span class="genre-count">
+          {{ tracks.camera|length + tracks.mobile|length }} entr{{ 'y' if (tracks.camera|length + tracks.mobile|length) == 1 else 'ies' }} this month
+        </span>
       </div>
-      <div class="podium-grid">
-        {% for img in images %}
+
+      <!-- Camera Track -->
+      {% if tracks.camera %}
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px;
+                  color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
+        📷 Camera
+      </div>
+      <div class="podium-grid" style="margin-bottom:24px;">
+        {% for img in tracks.camera %}
         <a href="{{ url_for('share_image', image_id=img.id) }}" class="podium-card rank-{{ loop.index }}" target="_blank">
           <div class="rank-badge">{{ loop.index }}</div>
           <div class="img-thumb" style="height:160px;">
@@ -198,6 +207,38 @@
         </a>
         {% endfor %}
       </div>
+      {% endif %}
+
+      <!-- Mobile Track -->
+      {% if tracks.mobile %}
+      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px;
+                  color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
+        📱 Mobile
+      </div>
+      <div class="podium-grid">
+        {% for img in tracks.mobile %}
+        <a href="{{ url_for('share_image', image_id=img.id) }}" class="podium-card rank-{{ loop.index }}" target="_blank">
+          <div class="rank-badge">{{ loop.index }}</div>
+          <div class="img-thumb" style="height:160px;">
+            <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+                 alt="{{ img.asset_name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div class="podium-info">
+            <div class="podium-tier">{{ img.tier }}</div>
+            <div class="podium-title">{{ img.asset_name or 'Untitled' }}</div>
+            <div class="podium-meta">{{ genre }} &middot; {{ img.photographer_name or 'Anonymous' }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if not tracks.camera and not tracks.mobile %}
+      <div class="empty-state" style="padding:20px;">
+        <p style="font-size:13px; color:var(--text-muted); margin:0;">No entries this month in {{ genre }}.</p>
+      </div>
+      {% endif %}
+
     </div>
     {% endfor %}
   {% else %}
