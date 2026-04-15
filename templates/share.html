@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}</title>
+<title>{{ image.asset_name }} · {{ image.tier }} · Lens League Apex</title>
 
 <!-- Open Graph -->
-<meta property="og:title"       content="{{ image.asset_name }} · LL-Score {{ image.score }} · {{ image.tier }}">
+<meta property="og:title"       content="{{ image.asset_name }} · {{ image.tier }} · Lens League Apex">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
 <meta property="og:image"       content="{{ image.thumb_url or (request.host_url ~ 'image/' ~ image.id ~ '/thumb') }}">
 <meta property="og:url"         content="{{ request.url }}">
@@ -165,6 +165,34 @@
     letter-spacing: 1.5px;
     color: var(--gold);
     backdrop-filter: blur(8px);
+  }
+
+  /* Locked badge (for logged-out) */
+  .locked-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(13,13,11,0.85);
+    border: 2px solid var(--border-md);
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 80px;
+    backdrop-filter: blur(8px);
+  }
+  .locked-badge .lock-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .locked-badge .lock-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-3);
+    text-transform: uppercase;
   }
 
   /* Image info */
@@ -353,6 +381,71 @@
     color: var(--text-3);
   }
 
+  /* Locked section for non-authenticated visitors */
+  .score-locked {
+    padding: 40px 28px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+  .score-locked .lock-big {
+    font-size: 2.8rem;
+    margin-bottom: 14px;
+    opacity: 0.45;
+    display: block;
+  }
+  .score-locked .lock-heading {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .score-locked p {
+    font-size: 14px;
+    color: var(--text-3);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .score-locked .locked-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-join {
+    padding: 11px 28px;
+    background: var(--gold);
+    color: var(--black);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: opacity 0.2s;
+  }
+  .btn-join:hover { opacity: 0.85; }
+  .btn-login {
+    padding: 11px 22px;
+    border: 1px solid var(--border-md);
+    color: var(--text-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-login:hover { border-color: var(--gold-dark); color: var(--gold); }
+
   /* Card footer */
   .card-footer {
     padding: 16px 28px;
@@ -486,20 +579,30 @@
     <span class="engine-tag">APEX DDI ENGINE · FULL EVALUATION</span>
   </div>
 
-  <!-- Photo -->
+  <!-- Photo — always visible -->
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <div class="score-badge">
-      <div class="score-num">{{ image.score }}</div>
-      <div class="score-tier">{{ image.tier }}</div>
-    </div>
-    {% if image.judge_referral %}
-    <div class="judge-badge">⚖️ JUDGE REVIEW</div>
+
+    {% if current_user.is_authenticated %}
+      <!-- Logged in: show full score badge -->
+      <div class="score-badge">
+        <div class="score-num">{{ image.score }}</div>
+        <div class="score-tier">{{ image.tier }}</div>
+      </div>
+      {% if image.judge_referral %}
+      <div class="judge-badge">⚖️ JUDGE REVIEW</div>
+      {% endif %}
+    {% else %}
+      <!-- Logged out: show locked badge -->
+      <div class="locked-badge">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">{{ image.tier }}</span>
+      </div>
     {% endif %}
   </div>
 
-  <!-- Image info -->
+  <!-- Image info — always visible -->
   <div class="img-info">
     <div class="img-title">{{ image.asset_name or 'Untitled' }}</div>
     <div class="img-meta">
@@ -508,6 +611,9 @@
       {% if image.location %}&nbsp;·&nbsp;{{ image.location }}{% endif %}
     </div>
   </div>
+
+  {% if current_user.is_authenticated %}
+  <!-- ══ AUTHENTICATED: full score content ══ -->
 
   {% if image.soul_bonus %}
   <div class="soul-bonus">★ SOUL BONUS ACTIVE — AQ ≥ 8.0</div>
@@ -608,22 +714,41 @@
     {% endif %}
   </div>
 
-  <!-- Footer -->
+  {% else %}
+  <!-- ══ NOT AUTHENTICATED: locked state ══ -->
+  <div class="score-locked">
+    <span class="lock-big">🔒</span>
+    <div class="lock-heading">Score Visible After Sign In</div>
+    <p>Create a free account to see the full DDI score, module breakdown, and improvement analysis for this image.</p>
+    <div class="locked-btns">
+      <a href="/register" class="btn-join">Join Free</a>
+      <a href="/login" class="btn-login">Log In</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Card footer — always visible (no scores, just archetype + photographer) -->
   <div class="card-footer">
     <div>
+      {% if image.archetype %}
       <div class="archetype-label">{{ image.archetype }}</div>
+      {% endif %}
       <div class="photographer-label">{{ image.photographer_name }}</div>
     </div>
-    <div class="score-stamp">LL · {{ image.score }} · {{ image.tier.upper() }}</div>
+    <div class="score-stamp">{{ image.tier.upper() if image.tier else '' }}</div>
   </div>
 
 </div>
 
 <!-- Action buttons -->
 <div class="actions">
+  {% if current_user.is_authenticated %}
   <a href="{{ url_for('download_card', image_id=image.id) }}"
      class="action-btn action-primary"
      download="LensLeague_RatingCards.zip">↓ Save Rating Cards (ZIP)</a>
+  {% else %}
+  <a href="/register" class="action-btn action-primary">Get My Images Rated Free →</a>
+  {% endif %}
   <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
 </div>
 
@@ -634,7 +759,7 @@
 <script>
 function shareThis() {
   const url   = window.location.href;
-  const title = "{{ image.asset_name }} — LL Score {{ image.score }} · {{ image.tier }}";
+  const title = "{{ image.asset_name }} — {{ image.tier }} · Lens League Apex";
   const text  = "Rated by the Apex DDI Engine on Lens League Apex";
 
   if (navigator.share) {
