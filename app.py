@@ -13,10 +13,10 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
-from models import db, User, Image, CalibrationLog
+from models import db, User, Image, CalibrationLog, ContestEntry
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
-                              OPEN_PRIZES)
+                              OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
 from engine.processor import ingest_image, allowed_file
 import storage as r2
 
@@ -121,6 +121,27 @@ with app.app_context():
             print('calibration_logs schema OK.')
         except Exception as ce:
             print(f'calibration_logs migration warning: {ce}')
+
+        # contest_entries table
+        try:
+            with db.engine.connect() as conn3:
+                conn3.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS contest_entries (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        genre VARCHAR(60) NOT NULL,
+                        track VARCHAR(20) NOT NULL,
+                        contest_month VARCHAR(7) NOT NULL,
+                        contest_type VARCHAR(20) DEFAULT \'monthly\',
+                        entered_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(user_id, genre, track, contest_month, contest_type)
+                    )
+                '''))
+                conn3.commit()
+            print('contest_entries schema OK.')
+        except Exception as ce:
+            print(f'contest_entries migration warning: {ce}')
 
         print('Columns migrated OK.')
     except Exception as e:
@@ -465,7 +486,7 @@ def upload():
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
                                                   current_user.full_name or current_user.username),
-            camera_track      = request.form.get('camera_track') or getattr(current_user, 'subscription_track', None),
+            camera_track      = getattr(current_user, 'subscription_track', None),
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
@@ -534,7 +555,7 @@ def upload():
 
         return redirect(url_for('image_detail', image_id=img.id))
 
-    return render_template('upload.html', genres=GENRE_IDS)
+    return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
@@ -1746,6 +1767,7 @@ def contests():
         days_left          = days_left,
         month_name         = now.strftime('%B %Y'),
         genres             = GENRE_IDS,
+        genre_labels       = GENRE_LABELS,
         open_contest_active= is_open_contest_active(),
         bow_active         = is_bow_active(),
     )
@@ -1845,6 +1867,110 @@ def bow_submit():
 # ---------------------------------------------------------------------------
 # Open Competition entry
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Monthly Contest Entry — photographer chooses their entry per genre
+# ---------------------------------------------------------------------------
+
+@app.route('/contest/enter/monthly/<genre>', methods=['GET', 'POST'])
+@login_required
+def contest_enter_monthly(genre):
+    """
+    Photographer selects one of their scored images to enter the monthly contest
+    for a specific genre. One entry per genre per track per month per user.
+    """
+    from datetime import date as _date
+
+    if not getattr(current_user, 'is_subscribed', False):
+        flash('An active subscription is required to enter contests.', 'error')
+        return redirect(url_for('pricing'))
+
+    genre = normalise_genre(genre)
+    now   = datetime.utcnow()
+    month = now.strftime('%Y-%m')
+    track = getattr(current_user, 'subscription_track', 'camera') or 'camera'
+
+    # Check if already entered this genre+track this month
+    existing = ContestEntry.query.filter_by(
+        user_id      = current_user.id,
+        genre        = genre,
+        track        = track,
+        contest_month= month,
+        contest_type = 'monthly',
+    ).first()
+
+    # All scored images for this user in this genre matching their track
+    eligible = (Image.query
+                .filter_by(user_id=current_user.id, status='scored', genre=genre)
+                .filter(Image.score != None)
+                .filter(db.or_(
+                    Image.camera_track == track,
+                    Image.camera_track == None,
+                ))
+                .order_by(Image.score.desc())
+                .all())
+
+    if request.method == 'POST':
+        image_id = request.form.get('image_id', type=int)
+        if not image_id:
+            flash('Please select an image to enter.', 'error')
+            return redirect(request.url)
+
+        img = Image.query.get(image_id)
+        if not img or img.user_id != current_user.id or img.status != 'scored':
+            flash('Invalid image selection.', 'error')
+            return redirect(request.url)
+
+        if existing:
+            # Update existing entry to new image
+            existing.image_id   = image_id
+            existing.entered_at = datetime.utcnow()
+            db.session.commit()
+            flash(f'Your {GENRE_LABELS.get(genre, genre)} entry has been updated to "{img.asset_name}".', 'success')
+        else:
+            entry = ContestEntry(
+                user_id       = current_user.id,
+                image_id      = image_id,
+                genre         = genre,
+                track         = track,
+                contest_month = month,
+                contest_type  = 'monthly',
+            )
+            db.session.add(entry)
+            db.session.commit()
+            flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)} — {track.title()} Track · {now.strftime("%B %Y")}.', 'success')
+
+        return redirect(url_for('contests'))
+
+    genre_label = GENRE_LABELS.get(genre, genre)
+    return render_template('contest_enter.html',
+        genre        = genre,
+        genre_label  = genre_label,
+        track        = track,
+        month_name   = now.strftime('%B %Y'),
+        eligible     = eligible,
+        existing     = existing,
+        genre_labels = GENRE_LABELS,
+    )
+
+
+@app.route('/contest/my-entries')
+@login_required
+def my_contest_entries():
+    """Dashboard view of all the user's contest entries."""
+    now     = datetime.utcnow()
+    month   = now.strftime('%Y-%m')
+    entries = (ContestEntry.query
+               .filter_by(user_id=current_user.id, contest_type='monthly')
+               .order_by(ContestEntry.entered_at.desc())
+               .all())
+    return render_template('my_entries.html',
+        entries      = entries,
+        current_month= month,
+        genre_labels = GENRE_LABELS,
+        month_name   = now.strftime('%B %Y'),
+    )
+
 
 @app.route('/open-contest/enter', methods=['GET', 'POST'])
 @login_required

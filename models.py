@@ -15,27 +15,22 @@ class User(db.Model, UserMixin):
     password_hash     = db.Column(db.String(256), nullable=False)
     full_name         = db.Column(db.String(120), nullable=True)
 
-    # Role-based access: 'member' | 'admin'
     role              = db.Column(db.String(20), default='member', nullable=False)
-
     is_active         = db.Column(db.Boolean, default=True, nullable=False)
     last_login        = db.Column(db.DateTime, nullable=True)
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Security question for password recovery (3-step flow)
     security_question = db.Column(db.String(255), nullable=True)
-    security_answer   = db.Column(db.String(255), nullable=True)  # stored lowercase
+    security_answer   = db.Column(db.String(255), nullable=True)
 
-    # Member agreement acceptance timestamp
     agreed_at         = db.Column(db.DateTime, nullable=True)
 
-    # Subscription
-    is_subscribed       = db.Column(db.Boolean, default=False)
-    subscription_track  = db.Column(db.String(20), nullable=True)   # 'camera' | 'mobile'
-    subscription_plan   = db.Column(db.String(20), nullable=True)   # 'monthly' | 'annual' | 'beta'
-    subscribed_at       = db.Column(db.DateTime, nullable=True)
+    is_subscribed        = db.Column(db.Boolean, default=False)
+    subscription_track   = db.Column(db.String(20), nullable=True)   # 'camera' | 'mobile'
+    subscription_plan    = db.Column(db.String(20), nullable=True)   # 'monthly' | 'annual' | 'beta'
+    subscribed_at        = db.Column(db.DateTime, nullable=True)
     monthly_uploads_used = db.Column(db.Integer, default=0)
-    monthly_reset_date  = db.Column(db.Date, nullable=True)
+    monthly_reset_date   = db.Column(db.Date, nullable=True)
 
     images            = db.relationship('Image', backref='author', lazy=True)
 
@@ -49,7 +44,6 @@ class Image(db.Model):
     id                  = db.Column(db.Integer, primary_key=True)
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    # File info
     original_filename   = db.Column(db.String(260), nullable=True)
     stored_filename     = db.Column(db.String(260), nullable=True)
     phash               = db.Column(db.String(64),  nullable=True, index=True)
@@ -62,7 +56,6 @@ class Image(db.Model):
     height              = db.Column(db.Integer,  nullable=True)
     format              = db.Column(db.String(10), nullable=True)
 
-    # Metadata entered at upload
     asset_name          = db.Column(db.String(180), nullable=True)
     genre               = db.Column(db.String(60),  nullable=True)
     subject             = db.Column(db.String(180), nullable=True)
@@ -73,17 +66,14 @@ class Image(db.Model):
     # Competition track: 'camera' | 'mobile' | None (free users)
     camera_track        = db.Column(db.String(20), nullable=True)
 
-    # Legal
     legal_declaration   = db.Column(db.Boolean, default=False)
 
-    # EXIF authenticity: 'verified' | 'unverified' | 'suspicious'
     exif_status         = db.Column(db.String(20),  default='unverified')
     exif_camera         = db.Column(db.String(120), nullable=True)
     exif_date_taken     = db.Column(db.String(60),  nullable=True)
     exif_settings       = db.Column(db.String(180), nullable=True)
     exif_warning        = db.Column(db.Text,         nullable=True)
 
-    # Apex DDI Engine scores
     dod_score           = db.Column(db.Float, nullable=True)
     disruption_score    = db.Column(db.Float, nullable=True)
     dm_score            = db.Column(db.Float, nullable=True)
@@ -94,18 +84,13 @@ class Image(db.Model):
     archetype           = db.Column(db.String(120), nullable=True)
     soul_bonus          = db.Column(db.Boolean, default=False)
 
-    # Calibration example flag
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
-
-    # Judge referral flag
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
 
-    # Workflow status: 'pending' | 'scored'
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
     created_at          = db.Column(db.DateTime,  default=datetime.utcnow)
 
-    # Audit JSON blob (scoring breakdown)
     _audit_json         = db.Column('audit_json', db.Text, nullable=True)
 
     def set_audit(self, data: dict):
@@ -123,22 +108,51 @@ class Image(db.Model):
         return f'<Image {self.id} – {self.asset_name} ({self.score})>'
 
 
+class ContestEntry(db.Model):
+    """
+    A photographer's chosen entry for a monthly contest slot.
+    One entry per user per genre per track per month.
+    Photographer explicitly selects which scored image to enter.
+    """
+    __tablename__ = 'contest_entries'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    user_id       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id      = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    genre         = db.Column(db.String(60),  nullable=False)
+    track         = db.Column(db.String(20),  nullable=False)   # 'camera' | 'mobile'
+    contest_month = db.Column(db.String(7),   nullable=False)   # 'YYYY-MM'
+    contest_type  = db.Column(db.String(20),  default='monthly')# 'monthly' | 'open'
+    entered_at    = db.Column(db.DateTime,    default=datetime.utcnow)
+
+    user  = db.relationship('User',  foreign_keys=[user_id],  backref='contest_entries', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='contest_entries', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'genre', 'track', 'contest_month', 'contest_type',
+                            name='uq_contest_entry'),
+    )
+
+    def __repr__(self):
+        return f'<ContestEntry user={self.user_id} genre={self.genre} track={self.track} month={self.contest_month}>'
+
+
 class BowSubmission(db.Model):
     """Body of Work annual submission — 6 to 12 curated images as a unified series."""
     __tablename__ = 'bow_submissions'
 
-    id                = db.Column(db.Integer, primary_key=True)
-    user_id           = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    series_title      = db.Column(db.String(180), nullable=False)
-    thematic_statement= db.Column(db.Text, nullable=False)
-    image_ids_json    = db.Column(db.Text, nullable=False)   # JSON list of image IDs
-    image_count       = db.Column(db.Integer, nullable=False)
-    status            = db.Column(db.String(20), default='submitted')  # submitted | under_review | awarded
-    platform_year     = db.Column(db.Integer, nullable=False)          # e.g. 2026
-    submitted_at      = db.Column(db.DateTime, default=datetime.utcnow)
-    notes             = db.Column(db.Text, nullable=True)              # admin/jury notes
+    id                 = db.Column(db.Integer, primary_key=True)
+    user_id            = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    series_title       = db.Column(db.String(180), nullable=False)
+    thematic_statement = db.Column(db.Text, nullable=False)
+    image_ids_json     = db.Column(db.Text, nullable=False)
+    image_count        = db.Column(db.Integer, nullable=False)
+    status             = db.Column(db.String(20), default='submitted')
+    platform_year      = db.Column(db.Integer, nullable=False)
+    submitted_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    notes              = db.Column(db.Text, nullable=True)
 
-    user              = db.relationship('User', foreign_keys=[user_id], backref='bow_submissions', lazy=True)
+    user = db.relationship('User', foreign_keys=[user_id], backref='bow_submissions', lazy=True)
 
     def get_image_ids(self):
         try:
@@ -168,8 +182,8 @@ class CalibrationNote(db.Model):
     is_active       = db.Column(db.Boolean, default=True)
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
 
-    image           = db.relationship('Image', foreign_keys=[image_id], backref='calibration_notes', lazy=True)
-    admin           = db.relationship('User', foreign_keys=[admin_id], backref='admin_calibration_notes', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='calibration_notes', lazy=True)
+    admin = db.relationship('User',  foreign_keys=[admin_id], backref='admin_calibration_notes', lazy=True)
 
     def __repr__(self):
         return f'<CalibrationNote image={self.image_id} module={self.module} {self.original_score}→{self.corrected_score}>'
@@ -204,7 +218,6 @@ def run_migrations(app):
     with app.app_context():
         db.create_all()
 
-        # users table
         _col('users', 'full_name',            'VARCHAR(120)')
         _col('users', 'role',                 "VARCHAR(20) DEFAULT 'member'")
         _col('users', 'is_active',            'BOOLEAN DEFAULT TRUE')
@@ -219,7 +232,6 @@ def run_migrations(app):
         _col('users', 'monthly_uploads_used', 'INTEGER DEFAULT 0')
         _col('users', 'monthly_reset_date',   'DATE')
 
-        # images table
         _col('images', 'card_path',               'VARCHAR(512)')
         _col('images', 'card_url',                'VARCHAR(512)')
         _col('images', 'thumb_url',               'VARCHAR(512)')
@@ -235,9 +247,8 @@ def run_migrations(app):
         _col('images', 'phash',                   'VARCHAR(64)')
         _col('images', 'is_calibration_example', 'BOOLEAN DEFAULT FALSE')
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
-        _col('images', 'camera_track',            'VARCHAR(20)')  # 'camera' | 'mobile' | NULL
+        _col('images', 'camera_track',            'VARCHAR(20)')
 
-        # bow_submissions table
         db.session.execute(db.text('''
             CREATE TABLE IF NOT EXISTS bow_submissions (
                 id SERIAL PRIMARY KEY,
@@ -253,6 +264,7 @@ def run_migrations(app):
             )
         '''))
         db.session.commit()
+
         db.session.execute(db.text('''
             CREATE TABLE IF NOT EXISTS calibration_notes (
                 id SERIAL PRIMARY KEY,
@@ -265,6 +277,21 @@ def run_migrations(app):
                 reason TEXT NOT NULL,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT NOW()
+            )
+        '''))
+        db.session.commit()
+
+        db.session.execute(db.text('''
+            CREATE TABLE IF NOT EXISTS contest_entries (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                genre VARCHAR(60) NOT NULL,
+                track VARCHAR(20) NOT NULL,
+                contest_month VARCHAR(7) NOT NULL,
+                contest_type VARCHAR(20) DEFAULT 'monthly',
+                entered_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, genre, track, contest_month, contest_type)
             )
         '''))
         db.session.commit()
