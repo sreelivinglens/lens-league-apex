@@ -112,6 +112,14 @@
     border-color: var(--red);
     opacity: 1;
   }
+  .img-card.under-review {
+    border-color: var(--gold-dark);
+    opacity: 0.9;
+  }
+  .img-card.under-review:hover {
+    border-color: var(--gold-dark);
+    opacity: 1;
+  }
   .img-card-info { padding: 14px 16px; }
   .img-card-title {
     font-size: 15px;
@@ -173,6 +181,23 @@
     background: var(--red-dim);
     border: 1px solid var(--red);
     color: var(--red);
+  }
+  /* Under review badge — gold pill */
+  .review-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(180,130,0,0.12);
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+  }
   }
 
   /* Judge referral indicator */
@@ -312,7 +337,7 @@
 <div class="img-grid">
   {% for img in images.items %}
   <a href="{{ url_for('image_detail', image_id=img.id) }}"
-     class="img-card{% if img.is_flagged %} flagged{% endif %}">
+     class="img-card{% if img.is_flagged %} flagged{% elif img.needs_review %} under-review{% endif %}">
     <div class="img-thumb">
       <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
            alt="{{ img.asset_name }}" loading="lazy">
@@ -322,6 +347,13 @@
         <div class="ai-flag-overlay">
           <div class="ai-flag-overlay-text">🚫 Flagged</div>
         </div>
+      {% elif img.needs_review %}
+        <div class="ai-flag-overlay" style="background:rgba(120,80,0,0.72);">
+          <div class="ai-flag-overlay-text">🔍 In Review</div>
+        </div>
+        {% if img.score %}
+        <div class="score-overlay">{{ img.score }}</div>
+        {% endif %}
       {% elif img.score %}
         <div class="score-overlay">{{ img.score }}</div>
         <div class="status-badge scored">{{ img.tier }}</div>
@@ -333,20 +365,27 @@
     <div class="img-card-info">
       <div class="img-card-title">
         {{ img.asset_name or img.original_filename or 'Untitled' }}
-        {% if img.judge_referral and not img.is_flagged %}
+        {% if img.judge_referral and not img.is_flagged and not img.needs_review %}
         <span class="judge-indicator">⚖️ REVIEW</span>
         {% endif %}
       </div>
       <div class="img-card-meta">
         {{ img.genre or '—' }}
-        {% if img.archetype and not img.is_flagged %}&nbsp;·&nbsp;{{ img.archetype }}{% endif %}
+        {% if img.archetype and not img.is_flagged and not img.needs_review %}&nbsp;·&nbsp;{{ img.archetype }}{% endif %}
         {% if img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--red);">Hidden from public</span>{% endif %}
+        {% if img.needs_review and not img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--gold);">Pending review</span>{% endif %}
       </div>
       <div class="img-card-footer">
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
         <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
           {% if img.is_flagged %}
             <span class="flagged-badge">🚫 AI Flagged</span>
+          {% elif img.needs_review %}
+            {% if img.score and img.score >= 9.0 %}
+              <span class="review-badge">🏆 RAW Verify</span>
+            {% else %}
+              <span class="review-badge">🔍 Under Review</span>
+            {% endif %}
           {% elif img.camera_track %}
             <span class="img-track-pill {{ img.camera_track }}">
               {{ '📷' if img.camera_track == 'camera' else '📱' }} {{ img.camera_track }}
