@@ -533,6 +533,14 @@
         window.location.href = '/login?next=/upload'; return;
       }
 
+      if (resp && resp.status === 'flagged') {
+        // AI-generated image detected — show error and redirect to dashboard
+        document.getElementById('scoringOverlay').classList.remove('active');
+        showError(resp.message || '🚫 This image was flagged as potentially AI-generated.');
+        setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 4000);
+        return;
+      }
+
       if (resp && resp.status === 'ok' && resp.image_id) {
         document.getElementById('overlayPhase').textContent  = 'COMPLETE';
         document.getElementById('overlayStatus').textContent = resp.score

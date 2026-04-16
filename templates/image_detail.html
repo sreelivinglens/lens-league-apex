@@ -20,11 +20,50 @@
     flex-shrink: 0;
   }
 
+  /* AI flagged banner */
+  .ai-flagged-banner {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-left: 4px solid var(--red);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .ai-flagged-banner-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ai-flagged-banner-body {
+    font-size: 14px;
+    color: #F0A0A0;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .ai-flagged-banner-reason {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(240,160,160,0.7);
+    line-height: 1.6;
+  }
+
   .detail-image {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     display: block;
+  }
+  /* Red border on flagged image */
+  .detail-image.flagged-img {
+    border-color: var(--red);
+    opacity: 0.7;
   }
 
   .exif-block {
@@ -189,6 +228,35 @@
     color: var(--gold);
   }
 
+  /* AI suspicion meter (shown to admin only) */
+  .ai-suspicion-panel {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .ai-suspicion-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .ai-suspicion-bar-track {
+    height: 6px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .ai-suspicion-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+  }
+
   /* Pending state */
   .pending-panel {
     margin-top: 16px;
@@ -246,12 +314,12 @@
   </div>
   <div class="detail-actions">
     <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
-    {% if image.status == 'scored' %}
+    {% if image.status == 'scored' and not image.is_flagged %}
     <a href="{{ url_for('share_image', image_id=image.id) }}"
        class="btn" target="_blank"
        style="border-color:var(--gold-dark); color:var(--gold);">🔗 Share</a>
     {% endif %}
-    {% if image.status == 'scored' or image.score %}
+    {% if (image.status == 'scored' or image.score) and not image.is_flagged %}
     <a href="{{ url_for('download_card', image_id=image.id) }}"
        class="btn btn-solid"
        download="LensLeague_RatingCards.zip">↓ Save Rating Cards</a>
@@ -266,12 +334,33 @@
   </div>
 </div>
 
+<!-- ── AI FLAGGED BANNER — shown to owner and admin ── -->
+{% if image.is_flagged %}
+<div class="ai-flagged-banner">
+  <div class="ai-flagged-banner-title">🚫 Image Flagged — AI Generation Detected</div>
+  <div class="ai-flagged-banner-body">
+    This image has been identified as potentially AI-generated and has been removed from public view.
+    It remains in your account for reference but will not appear on the leaderboard, share pages, or any public area of the platform.
+    <br><br>
+    If you believe this is an error — for example, a heavily post-processed real photograph — please contact
+    <a href="mailto:verify@lensleague.com" style="color:var(--red); font-weight:600;">verify@lensleague.com</a>
+    with your original RAW file for manual review.
+  </div>
+  {% if image.flagged_reason %}
+  <div class="ai-flagged-banner-reason">
+    Detection note: {{ image.flagged_reason }}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="grid-2" style="gap:36px; align-items:start;">
 
   <!-- ── LEFT COLUMN ── -->
   <div>
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
-         alt="{{ image.asset_name }}" class="detail-image">
+         alt="{{ image.asset_name }}"
+         class="detail-image{% if image.is_flagged %} flagged-img{% endif %}">
 
     <!-- EXIF Block -->
     {% if image.exif_status %}
@@ -303,84 +392,136 @@
     </div>
     {% endif %}
 
-    <!-- Score Panel -->
-    {% if image.status == 'scored' %}
-    <div class="score-panel">
-      <div class="score-main">
-        <div>
-          <div class="score-label">LL-Score</div>
-          <div class="score-number">{{ image.score }}</div>
-          <div class="score-tier">{{ image.tier }}</div>
-        </div>
-        <div class="score-badges">
-          {% if image.soul_bonus %}
-          <div class="soul-badge">★ Soul Bonus</div>
-          {% endif %}
-          {% if image.judge_referral %}
-          <div class="judge-badge">⚖️ Judge Review</div>
-          {% endif %}
+    <!-- AI Suspicion Panel — admin only -->
+    {% if current_user.role == 'admin' and image.ai_suspicion is not none %}
+    <div class="ai-suspicion-panel">
+      <div class="ai-suspicion-label">AI Suspicion Score (Admin Only)</div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+        <span style="font-family:var(--font-mono); font-size:20px; font-weight:700;
+                     color:{% if image.ai_suspicion >= 0.7 %}var(--red){% elif image.ai_suspicion >= 0.4 %}var(--amber){% else %}var(--green){% endif %};">
+          {{ "%.2f"|format(image.ai_suspicion) }}
+        </span>
+        <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          {% if image.ai_suspicion >= 0.7 %}HIGH RISK
+          {% elif image.ai_suspicion >= 0.4 %}UNCERTAIN
+          {% else %}LIKELY REAL{% endif %}
+        </span>
+      </div>
+      <div class="ai-suspicion-bar-track">
+        <div class="ai-suspicion-bar-fill" style="
+          width:{{ (image.ai_suspicion * 100)|int }}%;
+          background:{% if image.ai_suspicion >= 0.7 %}var(--red){% elif image.ai_suspicion >= 0.4 %}var(--amber){% else %}var(--green){% endif %};">
         </div>
       </div>
+      {% if image.ai_suspicion_reason %}
+      <div style="font-size:13px; color:var(--text-secondary); margin-top:8px; line-height:1.6;">
+        {{ image.ai_suspicion_reason }}
+      </div>
+      {% endif %}
 
-      <!-- Module bars -->
-      <div class="modules-panel">
-        {% set mods = [
-          ('DoD', image.dod_score),
-          ('Disruption', image.disruption_score),
-          ('DM', image.dm_score),
-          ('Wonder', image.wonder_score),
-          ('AQ', image.aq_score)
-        ] %}
-        {% for name, score in mods %}
-        {% if score %}
-        <div class="module-row">
-          <div class="module-row-header">
-            <span class="module-name">{{ name }}</span>
-            <span class="module-score">{{ score }}</span>
+      <!-- Admin flag/unflag actions -->
+      <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+        {% if image.is_flagged %}
+        <form method="POST" action="{{ url_for('admin_unflag_image', image_id=image.id) }}">
+          <button type="submit" class="btn"
+                  style="border-color:var(--green); color:var(--green); padding:7px 16px; font-size:11px;">
+            ✓ Unflag — Restore to Public
+          </button>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('admin_flag_image', image_id=image.id) }}"
+              onsubmit="return confirm('Flag this image as AI-generated? It will be hidden from public view.');">
+          <input type="hidden" name="reason" value="Manually flagged as AI-generated by admin">
+          <button type="submit" class="btn btn-danger" style="padding:7px 16px; font-size:11px;">
+            🚫 Flag as AI-Generated
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Score Panel — only shown if not flagged -->
+    {% if not image.is_flagged %}
+      {% if image.status == 'scored' %}
+      <div class="score-panel">
+        <div class="score-main">
+          <div>
+            <div class="score-label">LL-Score</div>
+            <div class="score-number">{{ image.score }}</div>
+            <div class="score-tier">{{ image.tier }}</div>
           </div>
-          <div class="module-bar">
-            <div class="module-bar-fill" style="width:{{ (score/10*100)|int }}%"></div>
+          <div class="score-badges">
+            {% if image.soul_bonus %}
+            <div class="soul-badge">★ Soul Bonus</div>
+            {% endif %}
+            {% if image.judge_referral %}
+            <div class="judge-badge">⚖️ Judge Review</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Module bars -->
+        <div class="modules-panel">
+          {% set mods = [
+            ('DoD', image.dod_score),
+            ('Disruption', image.disruption_score),
+            ('DM', image.dm_score),
+            ('Wonder', image.wonder_score),
+            ('AQ', image.aq_score)
+          ] %}
+          {% for name, score in mods %}
+          {% if score %}
+          <div class="module-row">
+            <div class="module-row-header">
+              <span class="module-name">{{ name }}</span>
+              <span class="module-score">{{ score }}</span>
+            </div>
+            <div class="module-bar">
+              <div class="module-bar-fill" style="width:{{ (score/10*100)|int }}%"></div>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if image.archetype %}
+        <div class="archetype-panel">
+          <div>
+            <div class="archetype-label">Affective State</div>
+            <div class="archetype-value">{{ image.archetype }}</div>
           </div>
         </div>
         {% endif %}
-        {% endfor %}
       </div>
 
-      {% if image.archetype %}
-      <div class="archetype-panel">
-        <div>
-          <div class="archetype-label">Affective State</div>
-          <div class="archetype-value">{{ image.archetype }}</div>
-        </div>
+      {% else %}
+      <!-- Pending panel with Retry Scoring button -->
+      <div class="pending-panel">
+        <div class="pending-label">⏳ Awaiting Scoring</div>
+        <p style="font-size:14px; color:var(--text-secondary); margin-top:8px; margin-bottom:16px;">
+          Your image was saved but scoring didn't complete — the AI engine was busy at upload time.
+        </p>
+        {% if current_user.role != 'admin' %}
+        <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}">
+          <button type="submit" class="btn btn-solid"
+                  style="padding:12px 28px; font-size:12px; letter-spacing:1.5px;">
+            ↻ Retry Scoring
+          </button>
+        </form>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">
+          Takes 10–20 seconds. If it fails again, try during off-peak hours (6am–11am IST).
+        </p>
+        {% endif %}
       </div>
       {% endif %}
-    </div>
-
-    {% else %}
-    <!-- Pending panel with Retry Scoring button -->
-    <div class="pending-panel">
-      <div class="pending-label">⏳ Awaiting Scoring</div>
-      <p style="font-size:14px; color:var(--text-secondary); margin-top:8px; margin-bottom:16px;">
-        Your image was saved but scoring didn't complete — the AI engine was busy at upload time.
-      </p>
-      {% if current_user.role != 'admin' %}
-      <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}">
-        <button type="submit" class="btn btn-solid"
-                style="padding:12px 28px; font-size:12px; letter-spacing:1.5px;">
-          ↻ Retry Scoring
-        </button>
-      </form>
-      <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">
-        Takes 10–20 seconds. If it fails again, try during off-peak hours (6am–11am IST).
-      </p>
-      {% endif %}
-    </div>
     {% endif %}
 
   </div>
 
-  <!-- ── RIGHT COLUMN — Scoring form ── -->
+  <!-- ── RIGHT COLUMN — Scoring form (hidden for flagged images unless admin) ── -->
   <div>
+    {% if not image.is_flagged or current_user.role == 'admin' %}
     <div class="form-section-label">
       {% if image.status == 'scored' %}Rescore Image{% else %}Score This Image{% endif %}
     </div>
@@ -459,6 +600,25 @@
         Generate Score + Rating Card
       </button>
     </form>
+    {% else %}
+    <!-- Non-admin owner seeing flagged image — show explanation instead of score form -->
+    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:28px 24px;">
+      <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px;
+                  color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">What Happens Next</div>
+      <p style="font-size:14px; color:var(--text-secondary); line-height:1.8; margin-bottom:16px;">
+        This image has been removed from public view because it was identified as potentially AI-generated.
+        It remains in your account and will not be deleted.
+      </p>
+      <p style="font-size:14px; color:var(--text-secondary); line-height:1.8; margin-bottom:20px;">
+        If this is a genuine photograph that was incorrectly flagged — for example, a heavily processed image or
+        an unusual photographic technique — please email your original RAW or full-resolution file to
+        <strong style="color:var(--text-primary);">verify@lensleague.com</strong> for manual review.
+      </p>
+      <a href="mailto:verify@lensleague.com" class="btn btn-solid" style="padding:12px 24px;">
+        Contact Verification Team
+      </a>
+    </div>
+    {% endif %}
 
     <!-- Admin Calibration Feedback -->
     {% if current_user.role == 'admin' and image.status == 'scored' %}
@@ -502,9 +662,9 @@
         </div>
 
         <div class="form-group" style="margin-bottom:14px;">
-          <label>Reason <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(required — explain what the engine missed)</span></label>
+          <label>Reason <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(required)</span></label>
           <textarea name="reason" style="min-height:100px;"
-                    placeholder="e.g. Engine penalised blur as technical failure but this is controlled ICM technique executed in low light at dawn. DoD should be 8+ for this level of movement control in challenging conditions."></textarea>
+                    placeholder="e.g. Engine penalised blur as technical failure but this is controlled ICM technique..."></textarea>
         </div>
 
         <button type="submit" class="btn" style="width:100%; padding:13px; font-size:12px;
