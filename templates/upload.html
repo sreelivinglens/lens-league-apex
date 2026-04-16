@@ -13,44 +13,51 @@
     overflow: hidden;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    height: 72px;
+    height: 88px;
+    cursor: pointer;
   }
   .carousel-track {
     display: flex;
-    height: 100%;
-    transition: transform 0.5s ease;
+    height: calc(100% - 3px);
+    transition: transform 0.4s ease;
   }
   .carousel-slide {
     min-width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 48px;
-    text-align: center;
+    padding: 0 24px;
+    border-left: 4px solid transparent;
+  }
+  .carousel-slide.slide-info   { border-left-color: var(--gold); }
+  .carousel-slide.slide-danger { border-left-color: var(--red); background: rgba(180,30,30,0.04); }
+  .carousel-slide.slide-warn   { border-left-color: var(--gold-dark); background: rgba(180,130,0,0.04); }
+  .carousel-slide.slide-ok     { border-left-color: var(--green); background: rgba(30,100,60,0.04); }
+  .carousel-msg {
     font-size: 17px;
     font-weight: 600;
-    letter-spacing: 0.3px;
     line-height: 1.3;
+    color: var(--text-primary);
   }
-  .carousel-slide.slide-info   { color: var(--text-primary); border-left: 3px solid var(--gold); }
-  .carousel-slide.slide-danger { color: #ff6b6b; border-left: 3px solid var(--red); background: rgba(180,30,30,0.06); }
-  .carousel-slide.slide-warn   { color: var(--gold); border-left: 3px solid var(--gold-dark); background: rgba(180,130,0,0.06); }
-  .carousel-dots {
+  .carousel-slide.slide-danger .carousel-msg { color: #ff6b6b; }
+  .carousel-slide.slide-warn   .carousel-msg { color: var(--gold); }
+  .carousel-slide.slide-ok     .carousel-msg { color: var(--green, #3ea06e); }
+  .carousel-sub {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .carousel-progress {
     position: absolute;
-    bottom: 7px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 5px;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 0 2px 0 0;
+    transition: width 2.5s linear;
   }
-  .carousel-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--border);
-    transition: background 0.3s;
-  }
-  .carousel-dot.active { background: var(--gold); }
 
   .drop-zone {
     border: 2px dashed var(--border-strong);
@@ -227,13 +234,23 @@
   <!-- ── UPLOAD CAROUSEL ── -->
   <div class="upload-carousel" id="uploadCarousel">
     <div class="carousel-track" id="carouselTrack">
-      <div class="carousel-slide slide-info">📷&nbsp; Max 20 MB &nbsp;·&nbsp; JPG or PNG &nbsp;·&nbsp; any device, any camera</div>
-      <div class="carousel-slide slide-danger">🚫&nbsp; AI-generated images are strictly prohibited</div>
-      <div class="carousel-slide slide-warn">⚠️&nbsp; Any image may be selected for RAW verification at any time</div>
-      <div class="carousel-slide slide-danger">🔒&nbsp; Fraud detected = account permanently deleted &amp; prizes forfeited</div>
-      <div class="carousel-slide slide-info">✅&nbsp; Original photographs only &nbsp;·&nbsp; taken by you</div>
+      <div class="carousel-slide slide-info">
+        <div><div class="carousel-msg">Max 20 MB &nbsp;·&nbsp; JPG or PNG &nbsp;·&nbsp; any device or camera</div><div class="carousel-sub">Format</div></div>
+      </div>
+      <div class="carousel-slide slide-danger">
+        <div><div class="carousel-msg">AI-generated images are strictly prohibited</div><div class="carousel-sub">Prohibited</div></div>
+      </div>
+      <div class="carousel-slide slide-warn">
+        <div><div class="carousel-msg">Any image may be selected for RAW verification at any time</div><div class="carousel-sub">Verification</div></div>
+      </div>
+      <div class="carousel-slide slide-danger">
+        <div><div class="carousel-msg">Fraud = account deleted &amp; all prizes forfeited</div><div class="carousel-sub">Penalty</div></div>
+      </div>
+      <div class="carousel-slide slide-ok">
+        <div><div class="carousel-msg">Original photographs only &nbsp;·&nbsp; taken by you</div><div class="carousel-sub">Your commitment</div></div>
+      </div>
     </div>
-    <div class="carousel-dots" id="carouselDots"></div>
+    <div class="carousel-progress" id="carouselProgress" style="width:0%"></div>
   </div>
 
   <div class="card">
@@ -324,19 +341,13 @@
         For best results upload the original JPEG straight from your camera or phone gallery.
       </div>
 
-      <div id="legalBox" style="display:flex; flex-direction:column; gap:10px; margin-bottom:4px;">
-        <div class="legal-box" id="legalBox1">
-          <input type="checkbox" id="decl_original" name="legal_declaration" value="1">
-          <label for="decl_original">This is an original photograph taken by me — not AI-generated, not stolen, not composited.</label>
-        </div>
-        <div class="legal-box" id="legalBox2">
-          <input type="checkbox" id="decl_raw" name="decl_raw" value="1">
-          <label for="decl_raw">I understand any image may be selected for RAW file verification at any time and I will comply within 7 days.</label>
-        </div>
-        <div class="legal-box" id="legalBox3">
-          <input type="checkbox" id="decl_penalty" name="decl_penalty" value="1">
-          <label for="decl_penalty">I accept that fraud = permanent account deletion, prize forfeiture, and ban from all future competitions. I agree to the <a href="/terms" target="_blank">Terms</a> and <a href="/contest-rules" target="_blank">Contest Rules</a>.</label>
-        </div>
+      <div class="legal-box" id="legalBox">
+        <input type="checkbox" id="legal_declaration" name="legal_declaration" value="1">
+        <label for="legal_declaration">
+          I confirm this is my original photograph and not AI-generated. I understand any image may be selected for RAW verification and that fraud results in permanent account deletion and prize forfeiture. I agree to the
+          <a href="/terms" target="_blank">Terms &amp; Conditions</a> and
+          <a href="/contest-rules" target="_blank">Contest Rules</a>.
+        </label>
       </div>
 
       <div style="margin-top:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
@@ -407,30 +418,33 @@
   const form           = document.getElementById('uploadForm');
   const submitBtn      = document.getElementById('submitBtn');
   const legalBox       = document.getElementById('legalBox');
-  const legalCheck     = document.getElementById('decl_original');
-  const declRaw        = document.getElementById('decl_raw');
-  const declPenalty    = document.getElementById('decl_penalty');
+  const legalCheck     = document.getElementById('legal_declaration');
   const trackHint      = document.getElementById('trackRequiredHint');
 
   // ── Carousel ─────────────────────────────────────────────────────────────
   (function() {
-    const track  = document.getElementById('carouselTrack');
-    const dotsEl = document.getElementById('carouselDots');
+    const carousel = document.getElementById('uploadCarousel');
+    const track    = document.getElementById('carouselTrack');
+    const prog     = document.getElementById('carouselProgress');
     if (!track) return;
     const slides = track.querySelectorAll('.carousel-slide');
-    let current  = 0;
-    slides.forEach((_, i) => {
-      const d = document.createElement('div');
-      d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-      dotsEl.appendChild(d);
-    });
+    const N = slides.length;
+    let cur = 0, touchStartX = 0;
     function goTo(n) {
-      current = (n + slides.length) % slides.length;
-      track.style.transform = `translateX(-${current * 100}%)`;
-      dotsEl.querySelectorAll('.carousel-dot').forEach((d, i) =>
-        d.classList.toggle('active', i === current));
+      cur = (n + N) % N;
+      track.style.transform = `translateX(-${cur * 100}%)`;
+      prog.style.transition = 'none';
+      prog.style.width = '0%';
+      setTimeout(() => { prog.style.transition = 'width 2.5s linear'; prog.style.width = '100%'; }, 30);
     }
-    setInterval(() => goTo(current + 1), 4000);
+    goTo(0);
+    setInterval(() => goTo(cur + 1), 2500);
+    carousel.addEventListener('click', () => goTo(cur + 1));
+    carousel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    carousel.addEventListener('touchend', e => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 30) goTo(cur + (diff > 0 ? 1 : -1));
+    });
   })();
 
   const MAX_MB         = 20;   // hard limit — Flask also set to 20 MB
@@ -533,17 +547,11 @@
       return;
     }
 
-    if (!legalCheck.checked || !declRaw.checked || !declPenalty.checked) {
-      // highlight unchecked boxes
-      [
-        { check: legalCheck,   box: document.getElementById('legalBox1') },
-        { check: declRaw,      box: document.getElementById('legalBox2') },
-        { check: declPenalty,  box: document.getElementById('legalBox3') },
-      ].forEach(({ check, box }) => {
-        if (!check.checked) box.classList.add('error-highlight');
-        check.addEventListener('change', () => box.classList.remove('error-highlight'), { once: true });
-      });
-      document.getElementById('legalBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!legalCheck.checked) {
+      legalBox.classList.add('error-highlight');
+      legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      legalCheck.addEventListener('change', () =>
+        legalBox.classList.remove('error-highlight'), { once: true });
       return;
     }
 
