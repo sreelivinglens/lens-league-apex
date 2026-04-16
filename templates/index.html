@@ -64,7 +64,7 @@
 
   .hero-headline {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(1.9rem, 4.5vw, 3.6rem);
+    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
     font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
     color: var(--white); margin-bottom: 0.65rem;
     opacity: 0; animation: fadeUp 0.7s 0.2s ease forwards;
@@ -138,33 +138,31 @@
   .mc-prize { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--gold); margin-top: 3px; }
   .mc-hook  { font-size: 0.68rem; color: var(--muted); line-height: 1.5; margin-top: 3px; }
 
-  /* DISCOVERY TABS */
+  /* DISCOVERY TABS — pure bold yellow CTA buttons */
   .discovery-block { opacity: 0; animation: fadeUp 0.7s 0.52s ease forwards; }
 
   .discovery-tabs {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
   }
 
   .dtab {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 14px 12px;
-    background: rgba(200,168,75,0.05);
-    border: 1px solid var(--border-gold);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px 12px;
+    background: rgba(200,168,75,0.08);
+    border: 1.5px solid var(--gold);
     border-radius: 10px;
-    text-decoration: none; color: inherit; text-align: center;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
   }
   .dtab:hover {
-    background: rgba(200,168,75,0.1);
-    border-color: var(--gold);
+    background: rgba(200,168,75,0.18);
     transform: translateY(-2px);
   }
-  .dtab-icon { font-size: 1.2rem; }
   .dtab-label {
-    font-size: 0.82rem; font-weight: 700; color: var(--gold); line-height: 1.2;
-  }
-  .dtab-sub {
-    font-size: 0.68rem; color: var(--muted); line-height: 1.45;
+    font-size: clamp(0.85rem, 1.4vw, 1rem);
+    font-weight: 700; color: var(--gold);
+    text-align: center; line-height: 1.2;
+    letter-spacing: 0.02em;
   }
 
   /* CLOSING CTA */
@@ -261,31 +259,27 @@
           <div class="mc-freq">Every Month</div>
           <div class="mc-name">Monthly Contest</div>
           <div class="mc-prize">₹18,000</div>
-          <div class="mc-hook">Overall champion + 8 genre winners. Auto-enters on every upload.</div>
         </a>
 
-        <a href="/contests" class="medal-card m2">
+        <a href="/contests#poty" class="medal-card m2">
           <div class="mc-icon">👑</div>
           <div class="mc-freq">Annual Grand Prix</div>
           <div class="mc-name">Photographer of the Year</div>
           <div class="mc-prize">₹50L</div>
-          <div class="mc-hook">Top-6 per genre. Camera &amp; Mobile. Grand Prize ₹10L.</div>
         </a>
 
-        <a href="/contests" class="medal-card m3">
+        <a href="/contests#bow" class="medal-card m3">
           <div class="mc-icon">🎨</div>
           <div class="mc-freq">Series · Jury Only</div>
           <div class="mc-name">Body of Work</div>
           <div class="mc-prize">₹5.25L</div>
-          <div class="mc-hook">6–12 images as a unified series. Jury Legends only.</div>
         </a>
 
-        <a href="/contests" class="medal-card m4">
+        <a href="/contests#open" class="medal-card m4">
           <div class="mc-icon">🌍</div>
           <div class="mc-freq">Annual · Open Entry</div>
           <div class="mc-name">Open Competition</div>
           <div class="mc-prize">₹8L</div>
-          <div class="mc-hook">₹50/entry. No track split. Grand Open ₹2,00,000.</div>
         </a>
 
       </div>
@@ -296,21 +290,15 @@
       <div class="discovery-tabs">
 
         <a href="/how-it-works" class="dtab">
-          <div class="dtab-icon">🔬</div>
           <div class="dtab-label">How It Works →</div>
-          <div class="dtab-sub">The 5-module DDI framework. Genre weights. Tier system.</div>
         </a>
 
         <a href="/example-score" class="dtab">
-          <div class="dtab-icon">⭐</div>
-          <div class="dtab-label">See an Example Score →</div>
-          <div class="dtab-sub">Real image. Full DDI breakdown. Archetype. One improvement tip.</div>
+          <div class="dtab-label">Example Score →</div>
         </a>
 
         <a href="/stats" class="dtab">
-          <div class="dtab-icon">📊</div>
           <div class="dtab-label">Live Stats →</div>
-          <div class="dtab-sub">{{ stats.total_images if stats else '—' }} images rated. {{ stats.total_members if stats else '—' }} photographers. Avg {{ '%.2f'|format(stats.avg_score) if stats and stats.avg_score else '—' }}.</div>
         </a>
 
       </div>

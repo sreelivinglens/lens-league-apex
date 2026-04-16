@@ -91,13 +91,6 @@
     border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
   }
   .stats-cta p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
-
-  @media (max-width: 640px) {
-    .big-stats { grid-template-columns: 1fr; }
-    .big-stat { border-right: none; border-bottom: 1px solid var(--border); }
-    .big-stat:last-child { border-bottom: none; }
-    .genre-name { width: 100px; }
-  }
 </style>
 {% endblock %}
 
@@ -143,34 +136,6 @@
         <div class="genre-count">{{ s.count }}</div>
       </div>
       {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Top images -->
-  {% if top_images %}
-  <div class="lb-section">
-    <div class="lb-section-label">Top Rated Images</div>
-    <div class="lb-list">
-      {% for img in top_images[:8] %}
-      <a href="{{ url_for('share_image', image_id=img.id) }}" class="lb-row" target="_blank">
-        <div class="lb-rank">#{{ loop.index }}</div>
-        {% if img.thumb_url %}
-        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" class="lb-thumb">
-        {% else %}
-        <div class="lb-thumb"></div>
-        {% endif %}
-        <div class="lb-info">
-          <div class="lb-title">{{ img.asset_name or 'Untitled' }}</div>
-          <div class="lb-by">{{ img.photographer_name or 'Anonymous' }} · {{ img.genre }}</div>
-        </div>
-        <div class="lb-score">{{ img.score }}</div>
-        <div class="lb-tier">{{ img.tier }}</div>
-      </a>
-      {% endfor %}
-    </div>
-    <div style="text-align:center; margin-top:1rem;">
-      <a href="/leaderboard" style="font-size:0.8rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border); padding-bottom:2px;">View full leaderboard →</a>
     </div>
   </div>
   {% endif %}
