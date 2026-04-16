@@ -539,8 +539,9 @@ img {
   user-select: none;
   pointer-events: none; /* blocks drag + right-click save on images */
 }
-/* Re-enable pointer events on linked images (nav brand icon etc) */
-a img { pointer-events: auto; }
+/* Re-enable pointer events on nav/logo images only — NOT content images */
+.nav-brand img,
+.nav-logo img { pointer-events: auto; }
 
 </style>
 {% block extra_css %}{% endblock %}
@@ -666,7 +667,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── Right-click protection on images ────────────────────────────────────────
 // Blocks right-click > Save Image and long-press save on mobile
 document.addEventListener('contextmenu', function(e) {
-  if (e.target.tagName === 'IMG') {
+  if (e.target.tagName === 'IMG' || e.target.closest('img')) {
+    e.preventDefault();
+    return false;
+  }
+  // Also block right-click on anchor tags that contain images
+  if (e.target.tagName === 'A' && e.target.querySelector('img')) {
     e.preventDefault();
     return false;
   }
@@ -677,6 +683,28 @@ document.addEventListener('dragstart', function(e) {
     e.preventDefault();
     return false;
   }
+});
+// Block long-press save on iOS/Android
+document.addEventListener('touchstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.target.style.webkitUserSelect = 'none';
+    e.target.style.webkitTouchCallout = 'none';
+  }
+}, { passive: true });
+// Apply -webkit-touch-callout to all images on load (Safari iOS)
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('img').forEach(function(img) {
+    img.style.webkitTouchCallout = 'none';
+    img.style.webkitUserSelect   = 'none';
+    // Prevent the anchor wrapping the image from being right-clicked
+    var parent = img.parentElement;
+    if (parent && parent.tagName === 'A') {
+      parent.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+  });
 });
 </script>
 
