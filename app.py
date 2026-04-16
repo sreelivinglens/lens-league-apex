@@ -1653,11 +1653,7 @@ def stats_page():
     avg_score     = db.session.query(db.func.avg(Image.score)).filter(Image.score != None).scalar() or 0
     stats = {'total_images': total_images, 'total_members': total_members, 'avg_score': avg_score}
     genre_stats = compute_calibration_stats(Image.query.filter_by(status='scored').all())
-    top_images = (Image.query
-                  .filter(Image.status=='scored', Image.score != None, Image.is_public == True)
-                  .order_by(Image.score.desc())
-                  .limit(8).all())
-    return render_template('stats.html', stats=stats, genre_stats=genre_stats, top_images=top_images)
+    return render_template('stats.html', stats=stats, genre_stats=genre_stats)
 
 @app.route('/science')
 def science():
