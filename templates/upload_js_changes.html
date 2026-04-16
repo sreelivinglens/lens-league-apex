@@ -1,0 +1,78 @@
+<!-- 
+  THREE CHANGES to make in upload.html
+  =====================================
+
+  CHANGE 1 — Drop zone hint text (line with "Max 5 MB"):
+  
+  FROM:
+    <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB</div>
+  
+  TO:
+    <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB &nbsp;·&nbsp; Resize to 2000px before uploading</div>
+
+
+  CHANGE 2 — handleFile() function: remove the size check here entirely.
+  iOS Safari reports file.size = 0 for camera roll photos at select time,
+  so the check is useless and lets oversized files through silently.
+  
+  REMOVE these lines from handleFile():
+  
+    if (file.size > MAX_MB * 1024 * 1024) {
+      showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`);
+      previewArea.style.display = 'none'; fileInput.value = ''; return;
+    }
+
+  (Keep the file type check. Just remove the size check from handleFile.)
+
+
+  CHANGE 3 — In the form submit handler, BEFORE the XHR send,
+  add a definitive size check (by this point iOS has finished 
+  copying the asset and file.size is accurate):
+
+  Find this block in the submit handler:
+    const file = fileInput.files[0];
+    if (!file)                             { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type))      { showError('Only JPG and PNG files are accepted.'); return; }
+    if (file.size > MAX_MB * 1024 * 1024) { showError(`File exceeds ${MAX_MB} MB.`); return; }
+
+  REPLACE the size check line with this improved version:
+-->
+
+    const file = fileInput.files[0];
+    if (!file) { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
+
+    // Size check at submit time — more reliable on iOS than at file-select time
+    // iOS Camera Roll photos report size=0 until the asset is fully copied
+    if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      showError(
+        `⚠️ Your image is ${sizeMB} MB — over the 5 MB limit.\n\n` +
+        `Please resize before uploading:\n` +
+        `• iPhone: use a free app like Compress Photos, or share → Mail → resize\n` +
+        `• Android: use your gallery's "resize" option when sharing\n` +
+        `• Desktop: export at 2000px wide from Lightroom / Photos / any editor`
+      );
+      return;
+    }
+
+<!--
+  Also update the XHR onload handler to catch 413 responses from Flask
+  (for cases where file.size was 0 on iOS and the check was bypassed):
+  
+  In the xhr.addEventListener('load', ...) block, ADD this check
+  BEFORE the existing status checks:
+-->
+
+      if (xhr.status === 413) {
+        overlay.classList.remove('active');
+        submitBtn.disabled = false;
+        showError(
+          '⚠️ File too large — please resize your image to under 5 MB.\n' +
+          'On iPhone: share the photo → tap the size option → choose "Small" or "Medium".\n' +
+          'On Android: use your gallery app\'s resize/compress option before uploading.'
+        );
+        fileInput.value = '';
+        previewArea.style.display = 'none';
+        return;
+      }
