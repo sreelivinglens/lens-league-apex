@@ -20,6 +20,28 @@
   .dz-label { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
   .dz-hint { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; color: var(--text-muted); }
 
+  /* Shot On — mobile-safe, no emoji dependency for layout */
+  .shot-on-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .shot-on-tile { position: relative; }
+  .shot-on-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .shot-on-tile label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 16px 12px; min-height: 80px;
+    background: var(--surface-3); border: 2px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; text-align: center;
+  }
+  .shot-on-tile label .tile-icon {
+    font-size: 28px; line-height: 1;
+    /* Force emoji rendering on mobile */
+    font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji", sans-serif;
+  }
+  .shot-on-tile label .tile-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .shot-on-tile label .tile-sub  { font-size: 11px; color: var(--text-muted); }
+  .shot-on-tile input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); }
+  .shot-on-tile input[type="radio"]:checked + label .tile-name { color: var(--gold); }
+  .shot-on-tile label:hover { border-color: var(--border-strong); }
+
   .results-section { margin-top: 36px; }
   .results-count { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
   .results-count span { color: var(--gold); font-family: var(--font-mono); font-size: 20px; font-weight: 700; }
@@ -36,47 +58,22 @@
   .result-border { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
 
   /* ══ SCORING OVERLAY ══ */
-  #scoringOverlay {
-    display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
-    flex-direction: column; align-items: center; justify-content: center; padding: 32px;
-  }
+  #scoringOverlay { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10,10,8,.97); backdrop-filter: blur(12px); flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
   #scoringOverlay.active { display: flex; }
-
-  .overlay-engine-tag {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
-    margin-bottom: 44px; opacity: .55;
-  }
-
-  /* Breath hero */
+  .overlay-engine-tag { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
   .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
   @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .breath-ring-hero {
-    width: 140px; height: 140px; border-radius: 50%;
-    border: 3px solid rgba(200,168,75,0.5);
-    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
-    animation: breatheHero 8s ease-in-out infinite;
-    display: flex; align-items: center; justify-content: center;
-  }
-  @keyframes breatheHero {
-    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
-    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
-    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
-  }
+  .breath-ring-hero { width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(200,168,75,0.5); background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%); animation: breatheHero 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
+  @keyframes breatheHero { 0% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } 50% { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); } 100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } }
   .breath-inner-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: breatheInner 8s ease-in-out infinite; }
   @keyframes breatheInner { 0% { transform: scale(1.4); opacity: 0.4; } 50% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.4); opacity: 0.4; } }
   .breath-word { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase; text-align: center; min-width: 160px; }
   .breath-counts { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
-  .breath-tagline { font-size: 15px; color: rgba(184,182,174,0.6); font-style: italic; letter-spacing: 0.3px; }
-
-  /* Phase copy */
+  .breath-tagline { font-size: 15px; color: rgba(184,182,174,0.6); font-style: italic; }
   .overlay-copy { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px; opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards; }
   .overlay-phase { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
   .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
   .overlay-substatus { font-family: var(--font-mono); font-size: 10px; color: rgba(122,120,112,0.55); text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
-
-  /* Mini timer */
   .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
   .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
   .mini-clock-svg { transform: rotate(-90deg); }
@@ -85,8 +82,6 @@
   .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
   .mini-clock-unit { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
-
-  /* Overlay error */
   .overlay-error { display: none; margin-top: 24px; padding: 16px 24px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--radius-md); font-size: 15px; color: #F0A0A0; text-align: center; max-width: 480px; line-height: 1.6; }
   .overlay-error a { color: var(--gold); text-decoration: underline; cursor: pointer; }
 </style>
@@ -134,7 +129,7 @@
   </div>
 
   <div class="card">
-    <form method="POST" enctype="multipart/form-data" id="bulkForm">
+    <form method="POST" enctype="multipart/form-data" id="bulkForm" action="/bulk-upload">
 
       <div class="drop-zone" id="dropzone"
            onclick="document.getElementById('filesInput').click()"
@@ -167,20 +162,28 @@
         </div>
       </div>
 
-      <!-- Shot On -->
+      <!-- Shot On — column tiles, emoji forced with font-family -->
       <div class="form-group" style="margin-bottom:20px;">
-        <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">
+        <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">
           Shot On <span style="color:var(--red); font-size:13px;">*</span>
         </label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_camera">
-            <input type="radio" name="camera_track" value="camera" id="bulk_track_camera" style="accent-color:var(--gold);" onchange="highlightTrack()">
-            <span><span style="font-size:1.3rem;">📷</span><span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Camera</span><small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">DSLR · Mirrorless · Film</small></span>
-          </label>
-          <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_mobile">
-            <input type="radio" name="camera_track" value="mobile" id="bulk_track_mobile" style="accent-color:var(--gold);" onchange="highlightTrack()">
-            <span><span style="font-size:1.3rem;">📱</span><span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Mobile</span><small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">iPhone · Android · Smartphone</small></span>
-          </label>
+        <div class="shot-on-grid">
+          <div class="shot-on-tile">
+            <input type="radio" name="camera_track" value="camera" id="bulk_track_camera">
+            <label for="bulk_track_camera">
+              <span class="tile-icon">📷</span>
+              <span class="tile-name">Camera</span>
+              <span class="tile-sub">DSLR · Mirrorless · Film</span>
+            </label>
+          </div>
+          <div class="shot-on-tile">
+            <input type="radio" name="camera_track" value="mobile" id="bulk_track_mobile">
+            <label for="bulk_track_mobile">
+              <span class="tile-icon">📱</span>
+              <span class="tile-name">Mobile</span>
+              <span class="tile-sub">iPhone · Android · Smartphone</span>
+            </label>
+          </div>
         </div>
         <div id="bulkTrackHint" style="font-size:12px; color:var(--red); margin-top:6px; display:none;">Please select Camera or Mobile before uploading.</div>
       </div>
@@ -188,14 +191,14 @@
       <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
         The Apex DDI Engine analyses each image automatically. Allow ~35 seconds per image. <strong style="color:var(--amber);">Maximum 10 images per batch.</strong> Keep this tab open until complete.<br><br>
-        <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong> 6:00 AM – 10:00 AM &nbsp;·&nbsp; 2:00 PM – 5:00 PM &nbsp;·&nbsp; After 11:00 PM
+        <strong style="color:var(--amber);">⏰ Best times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM
       </div>
 
       <!-- Leaderboard Visibility Toggle -->
       <div style="margin-bottom:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
           <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Leaderboard</div>
-          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately — not shown on the public leaderboard.</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
@@ -218,18 +221,12 @@
   <div class="results-section">
     {% set scored_count = results | selectattr('status', 'equalto', 'scored') | list | length %}
     {% set busy_count   = results | selectattr('status', 'containing', 'busy') | list | length %}
-
     {% if scored_count > 0 %}
-    <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:var(--green);">
-      ✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully.
-    </div>
+    <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:var(--green);">✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully.</div>
     {% endif %}
     {% if busy_count > 0 %}
-    <div style="background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:#F0C888;">
-      ⏳ {{ busy_count }} image{{ 's' if busy_count != 1 }} saved — AI servers busy. Retry from your dashboard during off-peak hours.
-    </div>
+    <div style="background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:#F0C888;">⏳ {{ busy_count }} image{{ 's' if busy_count != 1 }} saved — AI servers busy. Retry from dashboard during off-peak hours.</div>
     {% endif %}
-
     <div class="results-count"><span>{{ results|length }}</span> image{{ 's' if results|length != 1 }} processed</div>
     <div class="result-border">
       <div style="display:flex; gap:16px; padding:12px 20px; background:var(--surface-3); border-bottom:1px solid var(--border);">
@@ -244,7 +241,7 @@
         <div class="result-filename">{{ r.filename }}</div>
         <div class="result-score">{{ r.score or '—' }}</div>
         <div class="result-tier">{{ r.tier or '—' }}</div>
-        <div class="result-status {{ 'ok' if is_ok else ('err' if 'error' in r.status else '') }}" {% if 'busy' in r.status %}style="color:var(--amber);"{% endif %}>{{ r.status }}</div>
+        <div class="result-status {{ 'ok' if is_ok else '' }}" {% if 'busy' in r.status %}style="color:var(--amber);"{% elif 'error' in r.status %}style="color:var(--red);"{% endif %}>{{ r.status }}</div>
       </div>
       {% endfor %}
     </div>
@@ -260,25 +257,17 @@
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Bulk Scoring</div>
-
-  <!-- BREATH HERO — fades in at 1s -->
   <div class="breath-hero">
-    <div class="breath-ring-hero">
-      <div class="breath-inner-dot"></div>
-    </div>
+    <div class="breath-ring-hero"><div class="breath-inner-dot"></div></div>
     <div class="breath-word" id="breathLabel">Inhale</div>
     <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
     <div class="breath-tagline">Watch your breath while you wait</div>
   </div>
-
-  <!-- Phase / status — secondary -->
   <div class="overlay-copy">
     <div class="overlay-phase" id="overlayPhase">Uploading</div>
     <div class="overlay-status" id="overlayStatus">Sending your images…</div>
     <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open</div>
   </div>
-
-  <!-- MINI TIMER — appears first at 0.2s -->
   <div class="mini-timer">
     <div class="mini-clock-wrap">
       <svg class="mini-clock-svg" width="72" height="72" viewBox="0 0 72 72">
@@ -291,7 +280,6 @@
       </div>
     </div>
   </div>
-
   <div class="overlay-error" id="overlayError">
     <strong>Upload failed.</strong><br>
     <span id="overlayErrorMsg"></span><br><br>
@@ -334,16 +322,6 @@ function proceedToUpload() {
   document.getElementById('uploadContent').style.display = 'block';
 }
 
-function highlightTrack() {
-  const camera = document.getElementById('bulk_track_camera');
-  const mobile = document.getElementById('bulk_track_mobile');
-  document.getElementById('lbl_camera').style.borderColor = camera.checked ? 'var(--gold)' : 'var(--border)';
-  document.getElementById('lbl_camera').style.background  = camera.checked ? 'var(--gold-subtle)' : 'var(--surface-3)';
-  document.getElementById('lbl_mobile').style.borderColor = mobile.checked ? 'var(--gold)' : 'var(--border)';
-  document.getElementById('lbl_mobile').style.background  = mobile.checked ? 'var(--gold-subtle)' : 'var(--surface-3)';
-  document.getElementById('bulkTrackHint').style.display = 'none';
-}
-
 const input    = document.getElementById('filesInput');
 const dropzone = document.getElementById('dropzone');
 
@@ -357,7 +335,7 @@ function showFiles(files) {
   const fc = document.getElementById('filecount');
   const fl = document.getElementById('filelist');
   const overLimit = files.length > 10;
-  fc.textContent = overLimit ? `⚠️ ${files.length} files selected — maximum is 10.` : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  fc.textContent = overLimit ? `⚠️ ${files.length} files — maximum is 10.` : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
   fc.style.color = overLimit ? 'var(--red)' : 'var(--gold)';
   fc.style.display = 'block';
   dropzone.style.borderColor = 'var(--gold)';
@@ -401,7 +379,6 @@ form.addEventListener('submit', function(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
 
-  // ── Overlay ──────────────────────────────────────────────────────────────
   const total        = Math.min(files.length, 10);
   const overlay      = document.getElementById('scoringOverlay');
   const clockRing    = document.getElementById('clockRing');
@@ -412,13 +389,12 @@ form.addEventListener('submit', function(e) {
   const breathLabel  = document.getElementById('breathLabel');
 
   const PER_IMAGE    = 35;
-  const CIRCUMFERENCE= 195; // 2π × 31
+  const CIRCUMFERENCE= 195;
 
   overlay.classList.add('active');
   document.getElementById('overlayError').style.display = 'none';
   clockSecs.textContent = PER_IMAGE;
 
-  // Breath cycling
   let breathPhase = 0;
   const breathCycle = setInterval(() => {
     breathPhase = (breathPhase + 1) % 2;
@@ -432,36 +408,27 @@ form.addEventListener('submit', function(e) {
     const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;
     const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
     clockSecs.textContent = imgRemain;
-    const imgPct = imgSecs / PER_IMAGE;
-    clockRing.style.strokeDashoffset = CIRCUMFERENCE - (imgPct * CIRCUMFERENCE);
-
-    if (imgSecs < 4) {
-      overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
-      overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;
-      overlaySub.textContent    = 'Transferring to server.';
-    } else if (imgSecs < 10) {
-      overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
-      overlayStatus.textContent = `Apex DDI Engine scoring image ${imgNum}…`;
-      overlaySub.textContent    = 'DoD · Disruption · DM · Wonder · AQ';
-    } else if (imgSecs < 28) {
-      overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
-      overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;
-      overlaySub.textContent    = 'Applying genre weights and safeguards.';
-    } else {
-      overlayPhase.textContent  = `FINALISING ${imgNum}/${total}`;
-      overlayStatus.textContent = `Generating score card for image ${imgNum}…`;
-      overlaySub.textContent    = 'Building archetype and improvement tip.';
-    }
+    clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
+    if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`; overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`; overlaySub.textContent = 'Transferring to server.'; }
+    else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`; overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`; overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
+    else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;   overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`; overlaySub.textContent = 'Applying genre weights and safeguards.'; }
+    else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`; overlaySub.textContent = 'Building archetype and improvement tip.'; }
   }, 1000);
 
-  // ── XHR ──────────────────────────────────────────────────────────────────
+  function showOverlayError(msg) {
+    clearInterval(ticker); clearInterval(breathCycle);
+    document.getElementById('overlayErrorMsg').textContent = msg;
+    document.getElementById('overlayError').style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = '⬆ Upload & Auto-Score All';
+  }
+
   const xhr = new XMLHttpRequest();
-  xhr.open('POST', form.action || window.location.pathname);
-  xhr.timeout = 360000; // 6 min for 10 images
+  xhr.open('POST', '/bulk-upload');
+  xhr.timeout = 360000;
 
   xhr.onload = function() {
-    clearInterval(ticker);
-    clearInterval(breathCycle);
+    clearInterval(ticker); clearInterval(breathCycle);
     if (xhr.status === 200) {
       clockSecs.textContent = '✓';
       clockRing.style.strokeDashoffset = '0';
@@ -473,24 +440,11 @@ form.addEventListener('submit', function(e) {
       sessionStorage.removeItem('bulk_processing');
       setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
     } else {
-      showOverlayError(`Server error ${xhr.status}. Your images may have been saved. Check your dashboard, or try again.`);
+      showOverlayError(`Server error ${xhr.status}. Check your dashboard — images may have been saved.`);
     }
   };
-
-  xhr.onerror = function() {
-    clearInterval(ticker); clearInterval(breathCycle);
-    showOverlayError('Network error — connection lost. Check your dashboard to see if any images were saved, then try again.');
-  };
-
-  xhr.ontimeout = function() {
-    clearInterval(ticker); clearInterval(breathCycle);
-    showOverlayError('The request timed out in your browser, but the server may still be scoring. Check your dashboard in 2–3 minutes.');
-  };
-
-  function showOverlayError(msg) {
-    document.getElementById('overlayErrorMsg').textContent = msg;
-    document.getElementById('overlayError').style.display = 'block';
-  }
+  xhr.onerror   = function() { showOverlayError('Network error. Check your dashboard to see if any images were saved.'); };
+  xhr.ontimeout = function() { showOverlayError('Request timed out. Check your dashboard in 2–3 minutes — images may still be processing.'); };
 
   xhr.send(new FormData(form));
 });
@@ -499,7 +453,7 @@ window.addEventListener('DOMContentLoaded', initPage);
 
 // Leaderboard toggle
 (function() {
-  const cb    = document.getElementById('isPublicToggle');
+  const cb = document.getElementById('isPublicToggle');
   const track = document.getElementById('bulkToggleTrack');
   const thumb = document.getElementById('bulkToggleThumb');
   const label = document.getElementById('bulkToggleLabel');
