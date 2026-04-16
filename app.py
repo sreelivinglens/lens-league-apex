@@ -31,7 +31,7 @@ app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-m
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lensleague.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER']       = os.getenv('UPLOAD_FOLDER', 'uploads')
-app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 52428800))
+app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
 
 # Session cookie settings — required for mobile Safari (iOS ITP)
 # SameSite=Lax allows cookies to be sent with same-site XHR requests
@@ -97,6 +97,11 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
             ]
             for sql in _migrations:
                 try:
@@ -343,9 +348,24 @@ def login():
         password = request.form.get('password', '')
         user     = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password):
+            # Check for images flagged as AI-generated since last login
+            last_seen = user.last_login or datetime(2000, 1, 1)
+            flagged_since = Image.query.filter(
+                Image.user_id == user.id,
+                Image.is_flagged == True,
+                Image.flagged_at != None,
+                Image.flagged_at > last_seen
+            ).count()
             user.last_login = datetime.utcnow()
             db.session.commit()
             login_user(user)
+            if flagged_since:
+                flash(
+                    f'⚠️ {flagged_since} of your image{"s" if flagged_since > 1 else ""} '
+                    f'{"were" if flagged_since > 1 else "was"} flagged as potentially AI-generated '
+                    f'and removed from public view. Visit your dashboard to review.',
+                    'warning'
+                )
             return redirect(url_for('dashboard'))
         flash('Invalid email or password.', 'error')
     return render_template('login.html')
@@ -598,36 +618,68 @@ def upload():
                 result = auto_score(image_path=img.thumb_path, genre=img.genre,
                                     title=img.asset_name, photographer=img.photographer_name,
                                     subject=img.subject, location=img.location)
-                img.dod_score=float(result.get('dod',0))
-                img.disruption_score=float(result.get('disruption',0))
-                img.dm_score=float(result.get('dm',0))
-                img.wonder_score=float(result.get('wonder',0))
-                img.aq_score=float(result.get('aq',0))
-                img.score=float(result.get('score',0))
-                img.tier=get_tier(float(result.get('score',0)))
-                img.archetype=result.get('archetype','')
-                img.soul_bonus=result.get('soul_bonus',False)
-                img.status='scored'
-                img.scored_at=datetime.utcnow()
-                audit = build_audit_data(result, img)
-                img.set_audit(audit)
-                db.session.commit()
 
-                try:
-                    card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                                  f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                                  f"{img.genre}_{img.score}.jpg")
-                    card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                    build_card1(img.thumb_path, audit, card_path)
-                    img.card_path = card_path
-                    card_url = _r2_upload_card(card_path, uid + '_card')
-                    if card_url:
-                        img.card_url = card_url
+                # ── AI suspicion check ────────────────────────────────────
+                ai_suspicion = float(result.get('ai_suspicion', 0.0))
+                img.ai_suspicion = ai_suspicion
+                img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
+
+                if ai_suspicion >= 0.7:
+                    # Flag as AI-generated — save to DB but hide from public
+                    img.score            = 0.0
+                    img.tier             = 'Apprentice'
+                    img.dod_score        = 0.0
+                    img.disruption_score = 0.0
+                    img.dm_score         = 0.0
+                    img.wonder_score     = 0.0
+                    img.aq_score         = 0.0
+                    img.archetype        = ''
+                    img.soul_bonus       = False
+                    img.status           = 'scored'
+                    img.scored_at        = datetime.utcnow()
+                    img.is_flagged       = True
+                    img.is_public        = False
+                    img.flagged_reason   = f'AI generation detected (suspicion: {ai_suspicion:.2f}). {img.ai_suspicion_reason or ""}'.strip()
+                    img.flagged_at       = datetime.utcnow()
                     db.session.commit()
-                except Exception as card_err:
-                    app.logger.error(f'[upload card build error] {traceback.format_exc()}')
+                    flash(
+                        '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. '
+                        'Only original photographs taken by you are accepted. '
+                        'If you believe this is an error, contact verify@lensleague.com.',
+                        'error'
+                    )
+                else:
+                    # Real photograph — score normally
+                    img.dod_score        = float(result.get('dod',0))
+                    img.disruption_score = float(result.get('disruption',0))
+                    img.dm_score         = float(result.get('dm',0))
+                    img.wonder_score     = float(result.get('wonder',0))
+                    img.aq_score         = float(result.get('aq',0))
+                    img.score            = float(result.get('score',0))
+                    img.tier             = get_tier(float(result.get('score',0)))
+                    img.archetype        = result.get('archetype','')
+                    img.soul_bonus       = result.get('soul_bonus',False)
+                    img.status           = 'scored'
+                    img.scored_at        = datetime.utcnow()
+                    audit = build_audit_data(result, img)
+                    img.set_audit(audit)
+                    db.session.commit()
 
-                flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
+                    try:
+                        card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                      f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                                      f"{img.genre}_{img.score}.jpg")
+                        card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                        build_card1(img.thumb_path, audit, card_path)
+                        img.card_path = card_path
+                        card_url = _r2_upload_card(card_path, uid + '_card')
+                        if card_url:
+                            img.card_url = card_url
+                        db.session.commit()
+                    except Exception as card_err:
+                        app.logger.error(f'[upload card build error] {traceback.format_exc()}')
+
+                    flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
             except Exception as e:
                 app.logger.error(f'[upload scoring error] {traceback.format_exc()}')
                 db.session.commit()
@@ -644,6 +696,13 @@ def upload():
         # XHR (upload.html) gets JSON so JS controls the redirect
         # Standard form POST (fallback) gets the normal redirect
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if getattr(img, 'is_flagged', False):
+                return jsonify({
+                    'status': 'flagged',
+                    'image_id': img.id,
+                    'message': '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact verify@lensleague.com.',
+                    'redirect': url_for('dashboard')
+                })
             return jsonify({
                 'status': 'ok',
                 'image_id': img.id,
@@ -956,7 +1015,8 @@ def leaderboard():
             Image.score.isnot(None),
             Image.score > 0,
             Image.status == 'scored',
-            Image.is_public == True
+            Image.is_public == True,
+            db.or_(Image.is_flagged == False, Image.is_flagged == None)
         )
         if since:
             q = q.filter(Image.created_at >= since)
@@ -1509,6 +1569,39 @@ def admin_transfer_images():
 
     flash(f'✅ Transferred {len(images)} image{"s" if len(images)>1 else ""} to {target_user.full_name or target_user.username}.', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/image/<int:image_id>/flag', methods=['POST'])
+@login_required
+@admin_required
+def admin_flag_image(image_id):
+    """Flag an image as AI-generated — hides from public, keeps in DB for ML."""
+    img    = Image.query.get_or_404(image_id)
+    reason = request.form.get('reason', 'Manually flagged as AI-generated by admin').strip()
+    img.is_flagged     = True
+    img.is_public      = False
+    img.flagged_reason = reason
+    img.flagged_at     = datetime.utcnow()
+    img.score          = 0.0
+    img.tier           = 'Apprentice'
+    db.session.commit()
+    flash(f'Image "{img.asset_name}" flagged and hidden from public view.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/image/<int:image_id>/unflag', methods=['POST'])
+@login_required
+@admin_required
+def admin_unflag_image(image_id):
+    """Unflag an image — returns it to normal visibility."""
+    img = Image.query.get_or_404(image_id)
+    img.is_flagged     = False
+    img.is_public      = True
+    img.flagged_reason = None
+    img.flagged_at     = None
+    db.session.commit()
+    flash(f'Image "{img.asset_name}" unflagged and restored to public view.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
 
 
 @app.route('/admin/fix-tiers', methods=['POST'])
@@ -2244,7 +2337,11 @@ def not_found(e):
 
 @app.errorhandler(413)
 def file_too_large(e):
-    msg = '⚠️ File too large. Please resize your image to under 5 MB before uploading.'
+    msg = (
+        '⚠️ File too large. Maximum file size is 20 MB. '
+        'On iPhone: share your photo and choose "Medium" size. '
+        'On Samsung/Android: use Gallery → resize before sharing.'
+    )
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'error': True, 'message': msg}), 413
     flash(msg, 'error')

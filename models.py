@@ -88,6 +88,13 @@ class Image(db.Model):
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
     is_public              = db.Column(db.Boolean, default=True,  nullable=False)
 
+    # AI generation detection
+    ai_suspicion           = db.Column(db.Float,   default=0.0,   nullable=True)
+    ai_suspicion_reason    = db.Column(db.Text,                    nullable=True)
+    is_flagged             = db.Column(db.Boolean, default=False,  nullable=False)
+    flagged_reason         = db.Column(db.Text,                    nullable=True)
+    flagged_at             = db.Column(db.DateTime,                nullable=True)
+
     status              = db.Column(db.String(20), default='pending')
     scored_at           = db.Column(db.DateTime,  nullable=True)
     created_at          = db.Column(db.DateTime,  default=datetime.utcnow)
