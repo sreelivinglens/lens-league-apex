@@ -18,41 +18,49 @@ MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
 DETECTION_MODEL   = "claude-sonnet-4-6"   # Sonnet for AI detection — better visual reasoning
 
 # Maximum dimension sent to the API — keeps payload small and response fast
-API_MAX_PX = 800
+API_MAX_PX       = 800   # Haiku DDI scoring — keeps payload small and fast
+DETECTION_MAX_PX = 1600  # Sonnet detection — higher res needed to catch watermarks and text
 
 # Detection prompt — sent to Sonnet only, focused solely on AI detection
 DETECTION_PROMPT = """You are an AI image authentication specialist for a photography competition platform.
 Your ONLY job is to determine whether this image is AI-generated or a real photograph.
 
-Examine the image carefully for these signals:
+IMPORTANT: You are examining a HIGH RESOLUTION image. Look carefully at fine details — small watermarks,
+text on signs, and subtle physics errors that only appear at full resolution.
 
-UNIVERSAL AI TELLS:
-- Hyperreal perfection: impossibly smooth skin/fur, flawless lighting with zero real-world imperfections
-- Anatomical errors: extra/fused limbs, malformed extremities, impossible body proportions, merged body parts
-- Text artefacts: garbled, repeated, or nonsensical text anywhere in frame (signs, licence plates, labels)
-- Repeated elements: identical or near-identical objects/people/structures appearing multiple times
-- Background incoherence: dissolving backgrounds, impossible structures, inconsistent depth or perspective
-- Known AI watermarks: 4-pointed star (Gemini), dream-like vignettes, stylistic signatures of AI tools
-- Over-rendered textures: fur, skin, fabric that looks painted or digitally sculpted rather than photographic
-- Noise patterns: AI upscaling artefacts, unnatural grain, smeared fine detail in hair/fur/foliage
+STEP 1 — CHECK THESE FIRST (highest confidence signals):
 
-WILDLIFE & NATURE SPECIFIC:
-- Paw/hoof/claw ground contact: real paws compress, splay, deform. AI paws hover or make impossibly clean contact
+WATERMARKS & SIGNATURES (immediate high suspicion if found):
+- A small 4-pointed or 8-pointed star symbol anywhere in the image — this is a Gemini AI watermark
+- Any stylised logo, symbol or geometric mark in corners or edges that doesn't belong to the scene
+- Faint overlaid text or symbols that appear to be from an AI generation tool
+
+TEXT IN THE IMAGE (examine every sign, label, plate carefully):
+- Read ALL text visible in the image — signs, billboards, licence plates, labels
+- Count how many times the SAME text or sign appears — AI frequently duplicates signage
+- Licence plates: check if the text is a valid format or gibberish/random characters
+- If the same business name, sign, or text block appears more than once in the same scene → HIGH suspicion
+
+STEP 2 — PHYSICS & ANATOMY CHECKS:
+
+WILDLIFE & NATURE:
+- Paw/hoof/claw ground contact: real paws compress and deform. AI paws hover or make impossibly clean contact
 - Dust/mud/water physics: AI dust is too uniform and symmetric. Real dust is chaotic and directional
-- Water splash physics: AI splashes are decorative and symmetric. Real splashes follow impact with asymmetric droplets
-- Fur-skin boundaries: around eyes, muzzle, ears — AI blends incorrectly or shows digital smearing
-- Eye catch-lights: real animal eyes have irregular catch-lights consistent with light source position
-- Multi-animal contact points: fur interpenetration, merged body boundaries at contact zones
-- Shadow direction: all shadows must originate from one consistent light source
-- Animal scale/proportion: AI frequently gets size relationships between animals wrong
-- Impossible timing: simultaneous perfect composition of multiple rare action elements
+- Multi-animal contact points: check for fur interpenetration or merged body boundaries
+- Shadow direction: all shadows must come from ONE consistent light source
+- Animal scale/proportion between subjects
 
-STREET & PEOPLE SPECIFIC:
-- Licence plates: real plates have valid formats. AI generates plausible-looking but invalid text
-- Crowd figures: repeated silhouettes or faces in background crowds
-- Hand/finger anatomy: where hands grip objects — merged fingers, impossible joint angles
-- Clothing physics: fabric folds that defy gravity or motion direction
-- Facial features: uncanny valley smoothness, asymmetric iris sizes, eyelash irregularities
+STREET & PEOPLE:
+- Hands gripping objects: check for merged fingers or impossible joint angles
+- Crowd backgrounds: look for repeated identical silhouettes or faces
+- Clothing physics: fabric that defies gravity or motion direction
+- Facial features: unnaturally smooth skin, asymmetric iris sizes
+
+STEP 3 — GENERAL AI TELLS:
+- Hyperreal perfection: impossibly smooth textures, flawless lighting with zero real-world imperfections
+- Anatomical errors: extra/fused limbs, malformed extremities, merged body parts
+- Background incoherence: dissolving backgrounds, impossible structures
+- Over-rendered textures: fur/skin/fabric that looks painted rather than photographic
 
 Respond ONLY with a valid JSON object — no preamble, no markdown:
 {
@@ -63,10 +71,10 @@ Respond ONLY with a valid JSON object — no preamble, no markdown:
 }
 
 Scoring scale:
-  0.0 — 0.39: Clearly real photograph. Camera noise, real-world imperfections, natural physics visible.
-  0.4  — 0.69: Uncertain — multiple anomalies present. Could be real but warrants human review.
-  0.7  — 0.84: Strong AI signals. Multiple tells present across different categories.
-  0.85 — 1.0:  Almost certainly AI-generated.
+  0.0 — 0.39: Clearly real photograph. Natural imperfections, consistent physics, no watermarks.
+  0.4  — 0.69: Uncertain — anomalies present. Warrants human review.
+  0.7  — 0.84: Strong AI signals. Multiple tells present.
+  0.85 — 1.0:  Almost certainly AI-generated. Watermark found, or multiple strong signals.
 """
 
 SYSTEM_BRIEF = """
@@ -383,6 +391,30 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
+def encode_image_for_detection(image_path: str):
+    """
+    Higher-resolution encode for Sonnet AI detection.
+    Uses DETECTION_MAX_PX (1600px) to preserve watermarks, text, and fine detail
+    that compress away at 800px and cause missed detections.
+    """
+    img = PILImage.open(image_path).convert('RGB')
+    w, h = img.size
+    if max(w, h) > DETECTION_MAX_PX:
+        if w >= h:
+            new_w = DETECTION_MAX_PX
+            new_h = int(h * DETECTION_MAX_PX / w)
+        else:
+            new_h = DETECTION_MAX_PX
+            new_w = int(w * DETECTION_MAX_PX / h)
+        img = img.resize((new_w, new_h), PILImage.LANCZOS)
+
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=92, optimize=True)  # higher quality for detection
+    buf.seek(0)
+    encoded = base64.standard_b64encode(buf.read()).decode('utf-8')
+    return encoded, 'image/jpeg'
+
+
 def _call_api(model, system, prompt, img_data, media_type, max_tokens=512, temperature=0.1):
     """Single API call with retry logic. Returns parsed JSON dict."""
     payload = {
@@ -490,10 +522,11 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
 
-    img_data, media_type = encode_image(image_path)
+    img_data, media_type         = encode_image(image_path)             # 800px for Haiku DDI
+    det_img_data, det_media_type = encode_image_for_detection(image_path)  # 1600px for Sonnet
 
     # ── CALL 1: Sonnet — AI detection only ───────────────────────────────────
-    detection    = detect_ai(img_data, media_type)
+    detection    = detect_ai(det_img_data, det_media_type)
     ai_suspicion = detection["ai_suspicion"]
     print(f"[detect_ai] suspicion={ai_suspicion:.2f} needs_review={detection['needs_review']} "
           f"signals={detection['detection_signals']}")
