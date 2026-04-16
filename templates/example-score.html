@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}See an Example Score — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  .ex-wrap { max-width: 800px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 0; }
+
+  .ex-eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .ex-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
+
+  .ex-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2;
+    color: var(--text-primary); margin-bottom: 0.75rem;
+  }
+  .ex-headline em { font-style: italic; color: var(--gold); }
+
+  .ex-intro { font-size: 1rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 2.5rem; max-width: 560px; }
+
+  /* Score card layout */
+  .score-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 2rem;
+  }
+
+  .sc-image {
+    width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block;
+    background: var(--surface-3);
+  }
+  .sc-image-placeholder {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #111118 0%, #1a1a2e 50%, #0d1b2a 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  .sc-body { padding: 28px 28px 24px; }
+
+  .sc-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+
+  .sc-meta {}
+  .sc-title { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .sc-info { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+
+  .sc-score-block { text-align: right; flex-shrink: 0; }
+  .sc-score-num {
+    font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 700;
+    color: var(--gold); line-height: 1;
+  }
+  .sc-tier {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-top: 4px;
+  }
+
+  /* Module bars */
+  .modules { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .mod-row { display: flex; align-items: center; gap: 12px; }
+  .mod-name { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+  .mod-bar-track { flex: 1; height: 5px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
+  .mod-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
+  .mod-val { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--text-primary); width: 30px; text-align: right; }
+
+  /* Archetype + badges */
+  .sc-archetype {
+    padding: 14px 18px; background: var(--surface-3); border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    display: flex; gap: 12px; align-items: center;
+  }
+  .sc-arch-label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+  .sc-arch-value { font-size: 1rem; font-weight: 600; color: var(--gold); }
+
+  .sc-tip {
+    background: rgba(200,168,75,0.06); border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 14px 18px; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7;
+  }
+  .sc-tip strong { color: var(--gold); }
+
+  /* No image state */
+  .no-image-state {
+    background: var(--surface-2); border: 1px dashed var(--border);
+    border-radius: var(--radius-lg); padding: 48px 32px; text-align: center; margin-bottom: 2rem;
+  }
+  .no-image-state p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.7; }
+
+  .ex-cta {
+    text-align: center; padding: 28px;
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+  }
+  .ex-cta p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ex-wrap">
+
+  <div class="ex-eyebrow">Example Score</div>
+
+  <h1 class="ex-headline">This is what you<br><em>actually receive.</em></h1>
+
+  <p class="ex-intro">
+    Not a number from 1 to 5. A precise multi-dimensional analysis — five module scores, a photographer archetype, and one specific improvement tip targeted to your image.
+  </p>
+
+  {% if example_image %}
+  {% set audit = example_image.get_audit() or {} %}
+
+  <div class="score-card">
+    {% if example_image.thumb_url %}
+    <img src="{{ example_image.thumb_url }}" alt="{{ example_image.asset_name }}" class="sc-image">
+    {% else %}
+    <div class="sc-image-placeholder">Example Image</div>
+    {% endif %}
+
+    <div class="sc-body">
+      <div class="sc-top">
+        <div class="sc-meta">
+          <div class="sc-title">{{ example_image.asset_name or 'Untitled' }}</div>
+          <div class="sc-info">
+            {{ example_image.genre }} &nbsp;·&nbsp; {{ example_image.photographer_name or 'Anonymous' }}
+            {% if example_image.camera_track %}&nbsp;·&nbsp; {{ example_image.camera_track | title }} Track{% endif %}
+          </div>
+        </div>
+        <div class="sc-score-block">
+          <div class="sc-score-num">{{ example_image.score }}</div>
+          <div class="sc-tier">{{ example_image.tier }}</div>
+        </div>
+      </div>
+
+      <div class="modules">
+        {% for name, val in [('DoD', example_image.dod_score), ('Disruption', example_image.disruption_score), ('DM', example_image.dm_score), ('Wonder', example_image.wonder_score), ('AQ', example_image.aq_score)] %}
+        {% if val %}
+        <div class="mod-row">
+          <div class="mod-name">{{ name }}</div>
+          <div class="mod-bar-track"><div class="mod-bar-fill" style="width:{{ (val/10*100)|int }}%"></div></div>
+          <div class="mod-val">{{ val }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if example_image.archetype %}
+      <div class="sc-archetype">
+        <div>
+          <div class="sc-arch-label">Affective State</div>
+          <div class="sc-arch-value">{{ example_image.archetype }}</div>
+        </div>
+        {% if example_image.soul_bonus %}
+        <div style="margin-left:auto; font-family:var(--font-mono); font-size:0.65rem; font-weight:600; letter-spacing:1.5px; color:var(--gold); background:rgba(200,168,75,0.08); border:1px solid var(--gold-dark); padding:4px 10px; border-radius:99px;">★ SOUL BONUS</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% set tip = audit.get('byline_2_body') or audit.get('byline_2') %}
+      {% if tip %}
+      <div class="sc-tip"><strong>The One Improvement:</strong> {{ tip }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:2rem;">
+    This is a real image scored by a real member. Score and analysis generated by the Apex DDI Engine.
+    <a href="{{ url_for('share_image', image_id=example_image.id) }}" style="color:var(--gold); text-decoration:none; margin-left:4px;">View full score card →</a>
+  </div>
+
+  {% else %}
+  <div class="no-image-state">
+    <p>No scored images available to display yet. Upload your first photograph to see what a full DDI score looks like.</p>
+    <a href="/upload" class="btn btn-solid">Upload Free</a>
+  </div>
+  {% endif %}
+
+  <div class="ex-cta">
+    <p>Every image you upload receives this full breakdown — score, archetype, module analysis, and one specific improvement.</p>
+    <a href="/upload" class="btn btn-solid" style="padding:13px 32px;">Get My Score Free</a>
+  </div>
+
+</div>
+{% endblock %}

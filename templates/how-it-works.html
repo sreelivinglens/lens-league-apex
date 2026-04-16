@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}How It Works — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  .hiw-wrap { max-width: 720px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 0; }
+
+  .hiw-eyebrow {
+    font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .hiw-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
+
+  .hiw-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2;
+    color: var(--text-primary); margin-bottom: 1rem;
+  }
+  .hiw-headline em { font-style: italic; color: var(--gold); }
+
+  .hiw-intro {
+    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8;
+    margin-bottom: 3rem; max-width: 580px;
+  }
+
+  /* 5 modules */
+  .modules-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 3rem; }
+
+  .module-item {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 20px 24px;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+
+  .module-abbr {
+    font-family: var(--font-mono); font-size: 1rem; font-weight: 700;
+    color: var(--gold); min-width: 80px; flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .module-content {}
+  .module-name {
+    font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px;
+  }
+  .module-desc {
+    font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7;
+  }
+
+  /* Tier table */
+  .tier-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    margin-bottom: 3rem;
+  }
+  .tier-cell {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 10px; text-align: center;
+  }
+  .tier-cell.legend { border-color: var(--gold-dark); }
+  .tier-name { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .tier-range { font-family: var(--font-mono); font-size: 0.7rem; color: var(--gold); }
+
+  /* Safeguards */
+  .safeguards-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 3rem; }
+  .safeguard-row {
+    display: flex; gap: 14px; align-items: flex-start; padding: 14px 18px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+  }
+  .safeguard-name { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--gold); min-width: 140px; flex-shrink: 0; padding-top: 1px; }
+  .safeguard-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+  .hiw-cta {
+    text-align: center; padding: 32px;
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+  }
+  .hiw-cta p { font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+  @media (max-width: 640px) {
+    .tier-grid { grid-template-columns: repeat(2, 1fr); }
+    .module-item { flex-direction: column; gap: 8px; }
+    .module-abbr { min-width: auto; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hiw-wrap">
+
+  <div class="hiw-eyebrow">Apex DDI Engine</div>
+
+  <h1 class="hiw-headline">Rated by science.<br><em>Not opinion.</em></h1>
+
+  <p class="hiw-intro">
+    The Apex DDI Engine evaluates every photograph across five independently-weighted modules. Each module addresses a distinct dimension of photographic achievement. Together they produce the DDI — the Dimensional Diagnostic Index.
+  </p>
+
+  <!-- 5 Modules -->
+  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">The Five Modules</div>
+  <div class="modules-list">
+    <div class="module-item">
+      <div class="module-abbr">DoD</div>
+      <div class="module-content">
+        <div class="module-name">Depth of Difficulty</div>
+        <div class="module-desc">Technical and situational difficulty of capturing the image. Environmental constraints, timing precision, subject accessibility. Sharpness IS DoD for Macro. Technique IS DoD for Creative.</div>
+      </div>
+    </div>
+    <div class="module-item">
+      <div class="module-abbr">DIS</div>
+      <div class="module-content">
+        <div class="module-name">Visual Disruption</div>
+        <div class="module-desc">How strongly the image breaks from visual convention. Intentional deviation that creates a more powerful or unexpected visual statement — not chaos, but deliberate originality.</div>
+      </div>
+    </div>
+    <div class="module-item">
+      <div class="module-abbr">DM</div>
+      <div class="module-content">
+        <div class="module-name">Decisive Moment</div>
+        <div class="module-desc">Timing, irreversibility, and completeness of the captured moment. Whether the shutter was released at the precise instant where all elements align simultaneously.</div>
+      </div>
+    </div>
+    <div class="module-item">
+      <div class="module-abbr">WON</div>
+      <div class="module-content">
+        <div class="module-name">Wonder Factor</div>
+        <div class="module-desc">The image's capacity to arrest attention, provoke curiosity, and sustain engagement. Rare behaviour, impossible perspectives, the unseen truth.</div>
+      </div>
+    </div>
+    <div class="module-item">
+      <div class="module-abbr">AQ</div>
+      <div class="module-content">
+        <div class="module-name">Affective Quotient</div>
+        <div class="module-desc">The emotional truth and human resonance. A felt experience rather than merely a recorded one. AQ is the soul of the score — it can override technical penalties entirely.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tiers -->
+  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">Five Tiers</div>
+  <div class="tier-grid">
+    <div class="tier-cell"><div class="tier-name">Apprentice</div><div class="tier-range">0 — 5.0</div></div>
+    <div class="tier-cell"><div class="tier-name">Practitioner</div><div class="tier-range">5.1 — 7.5</div></div>
+    <div class="tier-cell"><div class="tier-name">Master</div><div class="tier-range">7.6 — 8.9</div></div>
+    <div class="tier-cell"><div class="tier-name">Grandmaster</div><div class="tier-range">9.0 — 9.6</div></div>
+    <div class="tier-cell legend"><div class="tier-name" style="color:var(--gold);">Legend</div><div class="tier-range">9.7 — 9.9</div></div>
+  </div>
+
+  <!-- Safeguards -->
+  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">Scoring Safeguards</div>
+  <div class="safeguards-list">
+    <div class="safeguard-row">
+      <div class="safeguard-name">Soul Bonus</div>
+      <div class="safeguard-desc">AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.</div>
+    </div>
+    <div class="safeguard-row">
+      <div class="safeguard-name">Humanity Check</div>
+      <div class="safeguard-desc">AQ &lt; 4.0 adds −1.5 to the AQ component. Technical perfection without emotional truth is not a high score.</div>
+    </div>
+    <div class="safeguard-row">
+      <div class="safeguard-name">Iconic Wall</div>
+      <div class="safeguard-desc">Scores ≥ 9.0 require both Disruption AND AQ &gt; 8.5. The highest tier cannot be reached by optimising one dimension alone.</div>
+    </div>
+    <div class="safeguard-row">
+      <div class="safeguard-name">Plateau Penalty</div>
+      <div class="safeguard-desc">DoD ≥ 9.5 + Disruption &lt; 5.0 caps at 7.9. Technical perfection without creative ambition is not mastery.</div>
+    </div>
+  </div>
+
+  <div class="hiw-cta">
+    <p>See exactly how your image scores across all five modules.</p>
+    <a href="/upload" class="btn btn-solid" style="padding:13px 32px;">Upload Free — Get My Score</a>
+  </div>
+
+</div>
+{% endblock %}

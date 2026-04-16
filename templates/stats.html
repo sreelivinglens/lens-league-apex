@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Live Stats — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  .stats-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 0; }
+
+  .stats-eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .stats-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
+
+  .stats-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2;
+    color: var(--text-primary); margin-bottom: 0.75rem;
+  }
+  .stats-headline em { font-style: italic; color: var(--gold); }
+
+  .stats-intro { font-size: 1rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 2.5rem; max-width: 520px; }
+
+  /* Big stat numbers */
+  .big-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; margin-bottom: 2.5rem;
+  }
+  .big-stat {
+    padding: 2rem 1.5rem; text-align: center;
+    border-right: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .big-stat:last-child { border-right: none; }
+  .big-stat-num {
+    font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 4vw, 3rem);
+    font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 6px;
+  }
+  .big-stat-label {
+    font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+  }
+
+  /* Genre breakdown */
+  .genre-section { margin-bottom: 2.5rem; }
+  .genre-section-label {
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .genre-bars { display: flex; flex-direction: column; gap: 10px; }
+  .genre-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .genre-name { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); width: 140px; flex-shrink: 0; }
+  .genre-bar-track { flex: 1; height: 4px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
+  .genre-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
+  .genre-count { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); min-width: 40px; text-align: right; }
+
+  /* Leaderboard preview */
+  .lb-section { margin-bottom: 2.5rem; }
+  .lb-section-label {
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .lb-list { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row {
+    display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s;
+  }
+  .lb-row:hover { border-color: var(--gold-dark); }
+  .lb-rank { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--text-muted); width: 24px; flex-shrink: 0; }
+  .lb-thumb { width: 40px; height: 30px; border-radius: 4px; object-fit: cover; flex-shrink: 0; background: var(--surface-3); }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-by { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+  .lb-score { font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+  .lb-tier { font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); flex-shrink: 0; min-width: 90px; text-align: right; }
+
+  .stats-cta {
+    text-align: center; padding: 28px;
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
+  }
+  .stats-cta p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+  @media (max-width: 640px) {
+    .big-stats { grid-template-columns: 1fr; }
+    .big-stat { border-right: none; border-bottom: 1px solid var(--border); }
+    .big-stat:last-child { border-bottom: none; }
+    .genre-name { width: 100px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-wrap">
+
+  <div class="stats-eyebrow">Live Platform Stats</div>
+
+  <h1 class="stats-headline">Photographers who know<br><em>where they stand.</em></h1>
+
+  <p class="stats-intro">
+    Every image scored, every tier earned, every archetype assigned — live data from the Apex DDI Engine. Updated in real time.
+  </p>
+
+  <!-- Big 3 numbers -->
+  <div class="big-stats">
+    <div class="big-stat">
+      <div class="big-stat-num" id="count-images">{{ stats.total_images if stats else '0' }}</div>
+      <div class="big-stat-label">Images Rated</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-num" id="count-members">{{ stats.total_members if stats else '0' }}</div>
+      <div class="big-stat-label">Photographers</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-num" id="count-avg">{{ '%.2f'|format(stats.avg_score) if stats and stats.avg_score else '—' }}</div>
+      <div class="big-stat-label">Platform Average</div>
+    </div>
+  </div>
+
+  <!-- Genre breakdown -->
+  {% if genre_stats %}
+  <div class="genre-section">
+    <div class="genre-section-label">Images by Genre</div>
+    <div class="genre-bars">
+      {% set max_count = genre_stats.values() | map(attribute='count') | max %}
+      {% for genre, s in genre_stats.items() %}
+      <div class="genre-row">
+        <div class="genre-name">{{ genre }}</div>
+        <div class="genre-bar-track">
+          <div class="genre-bar-fill" style="width:{{ ((s.count / max_count) * 100)|int }}%"></div>
+        </div>
+        <div class="genre-count">{{ s.count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Top images -->
+  {% if top_images %}
+  <div class="lb-section">
+    <div class="lb-section-label">Top Rated Images</div>
+    <div class="lb-list">
+      {% for img in top_images[:8] %}
+      <a href="{{ url_for('share_image', image_id=img.id) }}" class="lb-row" target="_blank">
+        <div class="lb-rank">#{{ loop.index }}</div>
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" class="lb-thumb">
+        {% else %}
+        <div class="lb-thumb"></div>
+        {% endif %}
+        <div class="lb-info">
+          <div class="lb-title">{{ img.asset_name or 'Untitled' }}</div>
+          <div class="lb-by">{{ img.photographer_name or 'Anonymous' }} · {{ img.genre }}</div>
+        </div>
+        <div class="lb-score">{{ img.score }}</div>
+        <div class="lb-tier">{{ img.tier }}</div>
+      </a>
+      {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:1rem;">
+      <a href="/leaderboard" style="font-size:0.8rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border); padding-bottom:2px;">View full leaderboard →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="stats-cta">
+    <p>Add your photographs to the leaderboard. 3 free scores — no credit card.</p>
+    <a href="/upload" class="btn btn-solid" style="padding:13px 32px;">Upload Free</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate counters on load
+function animateCounter(el, target, duration, isDecimal) {
+  if (!el || isNaN(parseFloat(target))) return;
+  const numTarget = parseFloat(target);
+  const start = performance.now();
+  function update(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = isDecimal
+      ? (numTarget * ease).toFixed(2)
+      : Math.floor(numTarget * ease).toLocaleString('en-IN');
+    if (p < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const imgs = document.getElementById('count-images');
+  const mems = document.getElementById('count-members');
+  const avg  = document.getElementById('count-avg');
+  if (imgs && imgs.textContent !== '—') animateCounter(imgs, imgs.textContent.replace(/,/g,''), 1400, false);
+  if (mems && mems.textContent !== '—') animateCounter(mems, mems.textContent.replace(/,/g,''), 1400, false);
+  if (avg  && avg.textContent  !== '—') animateCounter(avg,  avg.textContent,  1400, true);
+});
+</script>
+{% endblock %}
