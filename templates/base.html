@@ -65,9 +65,17 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
 }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
+
+/* ── Global mobile safety ───────────────────────────────────────────────── */
+/* Prevents any element from causing horizontal scroll on mobile */
+* { max-width: 100%; }
+/* Allow tables to scroll horizontally rather than breaking layout */
+table { max-width: none; }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 nav {
@@ -447,8 +455,18 @@ hr.divider {
 }
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; min-width: 500px; }
+/* ALL tables globally wrapped in scrollable container on mobile */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  /* min-width removed — let overflow-x handle it */
+}
 thead tr { background: var(--surface-3); }
 th {
   padding: 12px 16px;
@@ -513,6 +531,16 @@ footer {
   .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-val { font-size: 28px; }
 }
+
+/* ── Image right-click protection — sitewide ─────────────────────────────── */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  pointer-events: none; /* blocks drag + right-click save on images */
+}
+/* Re-enable pointer events on linked images (nav brand icon etc) */
+a img { pointer-events: auto; }
 
 </style>
 {% block extra_css %}{% endblock %}
@@ -633,6 +661,22 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => el.remove(), 300);
     }, 6000);
   });
+});
+
+// ── Right-click protection on images ────────────────────────────────────────
+// Blocks right-click > Save Image and long-press save on mobile
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
+  }
+});
+// Block drag-to-desktop on desktop browsers
+document.addEventListener('dragstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
+  }
 });
 </script>
 
