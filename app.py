@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 from models import db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
@@ -25,6 +26,7 @@ load_dotenv()
 FREE_IMAGE_LIMIT = 3  # Lifetime free images for non-subscribed users
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lensleague.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -639,15 +641,6 @@ def upload():
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
-        # XHR requests get JSON so mobile browsers redirect cleanly
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                'status': 'ok',
-                'image_id': img.id,
-                'score': img.score,
-                'tier': img.tier,
-                'redirect': url_for('image_detail', image_id=img.id)
-            })
         return redirect(url_for('image_detail', image_id=img.id))
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
