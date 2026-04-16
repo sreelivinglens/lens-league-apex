@@ -3,29 +3,25 @@
 
 {% block extra_css %}
 <style>
-  /* ── STATUTORY ADVISORY ── */
-  .upload-advisory {
-    display: flex; align-items: flex-start; gap: 14px;
-    background: rgba(200,168,75,0.07); border: 1px solid var(--gold-dark);
-    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
+  /* ── UPLOAD CAROUSEL ── */
+  .upload-carousel {
+    position: relative; border-radius: var(--radius-md); margin-bottom: 24px;
+    overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); height: 72px;
   }
-  .advisory-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-  .advisory-body { flex: 1; }
-  .advisory-title {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 5px;
+  .carousel-track { display: flex; height: 100%; transition: transform 0.5s ease; }
+  .carousel-slide {
+    min-width: 100%; height: 100%; display: flex; align-items: center;
+    justify-content: center; padding: 0 48px; text-align: center;
+    font-size: 17px; font-weight: 600; letter-spacing: 0.3px; line-height: 1.3;
   }
-  .advisory-text { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
-  .advisory-text strong { color: var(--text-primary); }
-  .advisory-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .advisory-chip {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1px; padding: 3px 10px; border-radius: 99px;
-    border: 1px solid var(--border); color: var(--text-muted);
-    background: var(--surface-3);
+  .carousel-slide.slide-info   { color: var(--text-primary); border-left: 3px solid var(--gold); }
+  .carousel-slide.slide-danger { color: #ff6b6b; border-left: 3px solid var(--red); background: rgba(180,30,30,0.06); }
+  .carousel-slide.slide-warn   { color: var(--gold); border-left: 3px solid var(--gold-dark); background: rgba(180,130,0,0.06); }
+  .carousel-dots {
+    position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px;
   }
-  .advisory-chip.ok { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .carousel-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .carousel-dot.active { background: var(--gold); }
 
   .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
@@ -122,23 +118,23 @@
 <div id="legalModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-eyebrow">Copyright Declaration — Required</div>
+      <div class="modal-eyebrow">Declaration — Required Before Upload</div>
       <h2 class="modal-title">Before You Upload</h2>
     </div>
     <div class="modal-body">
       <div style="background:var(--surface-3); border:1px solid var(--border); padding:18px; margin-bottom:20px; border-radius:var(--radius-sm);">
-        <p style="margin-bottom:14px;">By uploading images to Lens League, you <strong>certify and declare</strong> that:</p>
+        <p style="margin-bottom:14px;">By uploading images to Lens League Apex, you <strong>certify and declare</strong> that:</p>
         <ol>
-          <li>All images were <strong>photographed by you</strong>, or you hold written authorisation from the original creator.</li>
+          <li>All images were <strong>photographed by you</strong> — not AI-generated, not stolen, not composited using generative AI tools.</li>
           <li>You are <strong>solely responsible</strong> for every image submitted under your account.</li>
-          <li>Submitting another photographer's work constitutes <strong>copyright infringement</strong> under the Copyright Act of India, 1957 and applicable international law.</li>
-          <li>Violations will result in <strong>permanent account suspension</strong> and potential legal action.</li>
-          <li>You may be held <strong>legally liable</strong> for damages and costs arising from infringement claims.</li>
+          <li>Submitting AI-generated or another photographer's work constitutes <strong>fraud</strong> under Lens League Apex rules and may constitute copyright infringement under applicable law.</li>
+          <li>Any image may be selected for <strong>RAW file verification at any time</strong>. You agree to provide the original RAW file within 7 days of any verification request.</li>
+          <li>If fraud is detected: <strong>all images removed, account permanently deleted, all prizes forfeited</strong>, and permanent ban from all future competitions.</li>
         </ol>
       </div>
       <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
         <input type="checkbox" id="modalCheckbox" style="width:18px; height:18px; min-width:18px; margin-top:3px; accent-color:var(--gold); flex-shrink:0;">
-        <span style="font-size:15px; color:var(--text-secondary); line-height:1.65;">I have read and understood the above. I confirm all images are my original photographs and accept full legal responsibility.</span>
+        <span style="font-size:15px; color:var(--text-secondary); line-height:1.65;">I have read and understood the above. I confirm all images are my original photographs, not AI-generated, and I accept full responsibility including the fraud penalty clause.</span>
       </label>
       <p style="margin-top:14px; font-size:12px; color:var(--text-muted); text-align:center; font-family:var(--font-mono);">This declaration is logged with your account, IP address, and timestamp.</p>
     </div>
@@ -157,59 +153,17 @@
     <p>Upload multiple images at once — AI scores each one automatically</p>
   </div>
 
-  <!-- ── STATUTORY ADVISORY ── -->
-  <div class="upload-advisory">
-    <div class="advisory-icon">📋</div>
-    <div class="advisory-body">
-      <div class="advisory-title">Image Upload Advisory</div>
-      <div class="advisory-text">
-        Upload straight from your phone gallery or camera card.
-        <strong>We recommend files under 5 MB each</strong> for fastest bulk processing.
-        Files up to 20 MB per image are accepted — the engine resizes automatically.
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip ok">✓ iPhone — any size</span>
-        <span class="advisory-chip ok">✓ Samsung — any size</span>
-        <span class="advisory-chip ok">✓ DSLR JPEG — any size</span>
-        <span class="advisory-chip">Max 20 MB per file</span>
-        <span class="advisory-chip">Max 10 files per batch</span>
-      </div>
+  <!-- ── UPLOAD CAROUSEL ── -->
+  <!-- ── UPLOAD CAROUSEL ── -->
+  <div class="upload-carousel" id="uploadCarousel">
+    <div class="carousel-track" id="carouselTrack">
+      <div class="carousel-slide slide-info">📷&nbsp; Max 20 MB &nbsp;·&nbsp; JPG or PNG &nbsp;·&nbsp; any device, any camera</div>
+      <div class="carousel-slide slide-danger">🚫&nbsp; AI-generated images are strictly prohibited</div>
+      <div class="carousel-slide slide-warn">⚠️&nbsp; Any image may be selected for RAW verification at any time</div>
+      <div class="carousel-slide slide-danger">🔒&nbsp; Fraud detected = account permanently deleted &amp; prizes forfeited</div>
+      <div class="carousel-slide slide-info">✅&nbsp; Original photographs only &nbsp;·&nbsp; taken by you</div>
     </div>
-  </div>
-
-  <div class="upload-advisory" style="border-color: var(--red); background: rgba(180,30,30,0.07); margin-top: 10px;">
-    <div class="advisory-icon">🚫</div>
-    <div class="advisory-body">
-      <div class="advisory-title" style="color: var(--red);">AI-Generated Images Are Strictly Prohibited</div>
-      <div class="advisory-text">
-        Only original photographs taken by you are permitted. Images created or substantially altered using
-        generative AI tools — including Midjourney, DALL-E, Gemini, Stable Diffusion, Firefly, or any similar tool —
-        are <strong>not permitted</strong> and will be detected and removed.
-        <strong>Submitting AI-generated content constitutes fraud.</strong>
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip" style="border-color:var(--red); color:var(--red);">🚫 No AI-generated images</span>
-        <span class="advisory-chip" style="border-color:var(--red); color:var(--red);">🚫 No generative compositing</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="upload-advisory" style="border-color: var(--gold-dark); background: rgba(180,130,0,0.07); margin-top: 10px;">
-    <div class="advisory-icon">⚠️</div>
-    <div class="advisory-body">
-      <div class="advisory-title" style="color: var(--gold);">RAW Verification & Fraud Penalty</div>
-      <div class="advisory-text">
-        Any image on this platform may be selected for <strong>RAW file verification at any time</strong> —
-        not just finalists. Random spot checks are conducted to maintain platform integrity.
-        If fraud is detected at any stage, the consequences are immediate and permanent:
-        <strong>all images removed, account permanently deleted, banned from all future competitions,
-        and forfeiture of any prizes won.</strong>
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip" style="border-color:var(--gold-dark); color:var(--gold);">⚠️ Random RAW checks apply to all images</span>
-        <span class="advisory-chip" style="border-color:var(--gold-dark); color:var(--gold);">⚠️ Fraud = permanent account deletion</span>
-      </div>
-    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
   </div>
 
   <div class="card">
@@ -382,6 +336,27 @@
 const AGREED_KEY  = 'bulk_upload_agreed';
 const MAX_MB      = 20;   // hard limit per file
 const WARN_MB     = 5;    // soft advisory threshold
+
+// ── Carousel ─────────────────────────────────────────────────────────────
+(function() {
+  const track  = document.getElementById('carouselTrack');
+  const dotsEl = document.getElementById('carouselDots');
+  if (!track) return;
+  const slides = track.querySelectorAll('.carousel-slide');
+  let current  = 0;
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
+  function goTo(n) {
+    current = (n + slides.length) % slides.length;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dotsEl.querySelectorAll('.carousel-dot').forEach((d, i) =>
+      d.classList.toggle('active', i === current));
+  }
+  setInterval(() => goTo(current + 1), 4000);
+})();
 
 function initPage() {
   sessionStorage.removeItem('bulk_processing');

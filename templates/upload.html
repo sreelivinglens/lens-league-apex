@@ -5,33 +5,52 @@
 <style>
   .upload-wrap { max-width: 680px; margin: 0 auto; }
 
-  /* ── STATUTORY ADVISORY ── */
-  .upload-advisory {
-    display: flex; align-items: flex-start; gap: 14px;
-    background: rgba(200,168,75,0.07); border: 1px solid var(--gold-dark);
-    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
+  /* ── UPLOAD CAROUSEL ── */
+  .upload-carousel {
+    position: relative;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    height: 72px;
   }
-  .advisory-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-  .advisory-body { flex: 1; }
-  .advisory-title {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 5px;
+  .carousel-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s ease;
   }
-  .advisory-text {
-    font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+  .carousel-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 48px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
   }
-  .advisory-text strong { color: var(--text-primary); }
-  .advisory-chips {
-    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  .carousel-slide.slide-info   { color: var(--text-primary); border-left: 3px solid var(--gold); }
+  .carousel-slide.slide-danger { color: #ff6b6b; border-left: 3px solid var(--red); background: rgba(180,30,30,0.06); }
+  .carousel-slide.slide-warn   { color: var(--gold); border-left: 3px solid var(--gold-dark); background: rgba(180,130,0,0.06); }
+  .carousel-dots {
+    position: absolute;
+    bottom: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
   }
-  .advisory-chip {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 1px; padding: 3px 10px; border-radius: 99px;
-    border: 1px solid var(--border); color: var(--text-muted);
-    background: var(--surface-3);
+  .carousel-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
   }
-  .advisory-chip.ok { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .carousel-dot.active { background: var(--gold); }
 
   .drop-zone {
     border: 2px dashed var(--border-strong);
@@ -205,59 +224,16 @@
     <p>Submit your photograph for AI scoring via the Apex DDI Engine</p>
   </div>
 
-  <!-- ── STATUTORY ADVISORY — shown before file selection ── -->
-  <div class="upload-advisory">
-    <div class="advisory-icon">📋</div>
-    <div class="advisory-body">
-      <div class="advisory-title">Image Upload Advisory</div>
-      <div class="advisory-text">
-        Upload your photo straight from your phone or camera.
-        <strong>We recommend files under 5 MB</strong> for the fastest upload experience.
-        Files up to 20 MB are accepted — the engine automatically resizes everything for scoring.
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip ok">✓ iPhone — any size</span>
-        <span class="advisory-chip ok">✓ Samsung — any size</span>
-        <span class="advisory-chip ok">✓ DSLR JPEG — any size</span>
-        <span class="advisory-chip">Max 20 MB per file</span>
-        <span class="advisory-chip">JPG · PNG accepted</span>
-      </div>
+  <!-- ── UPLOAD CAROUSEL ── -->
+  <div class="upload-carousel" id="uploadCarousel">
+    <div class="carousel-track" id="carouselTrack">
+      <div class="carousel-slide slide-info">📷&nbsp; Max 20 MB &nbsp;·&nbsp; JPG or PNG &nbsp;·&nbsp; any device, any camera</div>
+      <div class="carousel-slide slide-danger">🚫&nbsp; AI-generated images are strictly prohibited</div>
+      <div class="carousel-slide slide-warn">⚠️&nbsp; Any image may be selected for RAW verification at any time</div>
+      <div class="carousel-slide slide-danger">🔒&nbsp; Fraud detected = account permanently deleted &amp; prizes forfeited</div>
+      <div class="carousel-slide slide-info">✅&nbsp; Original photographs only &nbsp;·&nbsp; taken by you</div>
     </div>
-  </div>
-
-  <div class="upload-advisory" style="border-color: var(--red); background: rgba(180,30,30,0.07); margin-top: 10px;">
-    <div class="advisory-icon">🚫</div>
-    <div class="advisory-body">
-      <div class="advisory-title" style="color: var(--red);">AI-Generated Images Are Strictly Prohibited</div>
-      <div class="advisory-text">
-        Only original photographs taken by you are permitted. Images created or substantially altered using
-        generative AI tools — including Midjourney, DALL-E, Gemini, Stable Diffusion, Firefly, or any similar tool —
-        are <strong>not permitted</strong> and will be detected and removed.
-        <strong>Submitting AI-generated content constitutes fraud.</strong>
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip" style="border-color:var(--red); color:var(--red);">🚫 No AI-generated images</span>
-        <span class="advisory-chip" style="border-color:var(--red); color:var(--red);">🚫 No generative compositing</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="upload-advisory" style="border-color: var(--gold-dark); background: rgba(180,130,0,0.07); margin-top: 10px;">
-    <div class="advisory-icon">⚠️</div>
-    <div class="advisory-body">
-      <div class="advisory-title" style="color: var(--gold);">RAW Verification & Fraud Penalty</div>
-      <div class="advisory-text">
-        Any image on this platform may be selected for <strong>RAW file verification at any time</strong> —
-        not just finalists. Random spot checks are conducted to maintain platform integrity.
-        If fraud is detected at any stage, the consequences are immediate and permanent:
-        <strong>all images removed, account permanently deleted, banned from all future competitions,
-        and forfeiture of any prizes won.</strong>
-      </div>
-      <div class="advisory-chips">
-        <span class="advisory-chip" style="border-color:var(--gold-dark); color:var(--gold);">⚠️ Random RAW checks apply to all images</span>
-        <span class="advisory-chip" style="border-color:var(--gold-dark); color:var(--gold);">⚠️ Fraud = permanent account deletion</span>
-      </div>
-    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
   </div>
 
   <div class="card">
@@ -348,13 +324,19 @@
         For best results upload the original JPEG straight from your camera or phone gallery.
       </div>
 
-      <div class="legal-box" id="legalBox">
-        <input type="checkbox" id="legal_declaration" name="legal_declaration" value="1">
-        <label for="legal_declaration">
-          I declare that this is my original work, I own all rights to this image, and I have not submitted it under a different account. I agree to the
-          <a href="/terms" target="_blank">Terms &amp; Conditions</a> and
-          <a href="/contest-rules" target="_blank">Contest Rules</a>.
-        </label>
+      <div id="legalBox" style="display:flex; flex-direction:column; gap:10px; margin-bottom:4px;">
+        <div class="legal-box" id="legalBox1">
+          <input type="checkbox" id="decl_original" name="legal_declaration" value="1">
+          <label for="decl_original">This is an original photograph taken by me — not AI-generated, not stolen, not composited.</label>
+        </div>
+        <div class="legal-box" id="legalBox2">
+          <input type="checkbox" id="decl_raw" name="decl_raw" value="1">
+          <label for="decl_raw">I understand any image may be selected for RAW file verification at any time and I will comply within 7 days.</label>
+        </div>
+        <div class="legal-box" id="legalBox3">
+          <input type="checkbox" id="decl_penalty" name="decl_penalty" value="1">
+          <label for="decl_penalty">I accept that fraud = permanent account deletion, prize forfeiture, and ban from all future competitions. I agree to the <a href="/terms" target="_blank">Terms</a> and <a href="/contest-rules" target="_blank">Contest Rules</a>.</label>
+        </div>
       </div>
 
       <div style="margin-top:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
@@ -425,8 +407,31 @@
   const form           = document.getElementById('uploadForm');
   const submitBtn      = document.getElementById('submitBtn');
   const legalBox       = document.getElementById('legalBox');
-  const legalCheck     = document.getElementById('legal_declaration');
+  const legalCheck     = document.getElementById('decl_original');
+  const declRaw        = document.getElementById('decl_raw');
+  const declPenalty    = document.getElementById('decl_penalty');
   const trackHint      = document.getElementById('trackRequiredHint');
+
+  // ── Carousel ─────────────────────────────────────────────────────────────
+  (function() {
+    const track  = document.getElementById('carouselTrack');
+    const dotsEl = document.getElementById('carouselDots');
+    if (!track) return;
+    const slides = track.querySelectorAll('.carousel-slide');
+    let current  = 0;
+    slides.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dotsEl.appendChild(d);
+    });
+    function goTo(n) {
+      current = (n + slides.length) % slides.length;
+      track.style.transform = `translateX(-${current * 100}%)`;
+      dotsEl.querySelectorAll('.carousel-dot').forEach((d, i) =>
+        d.classList.toggle('active', i === current));
+    }
+    setInterval(() => goTo(current + 1), 4000);
+  })();
 
   const MAX_MB         = 20;   // hard limit — Flask also set to 20 MB
   const WARN_MB        = 5;    // soft advisory threshold
@@ -528,12 +533,17 @@
       return;
     }
 
-    if (!legalCheck.checked) {
-      legalBox.classList.add('error-highlight');
-      legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      legalCheck.addEventListener('change', () =>
-        legalBox.classList.remove('error-highlight'), { once: true }
-      );
+    if (!legalCheck.checked || !declRaw.checked || !declPenalty.checked) {
+      // highlight unchecked boxes
+      [
+        { check: legalCheck,   box: document.getElementById('legalBox1') },
+        { check: declRaw,      box: document.getElementById('legalBox2') },
+        { check: declPenalty,  box: document.getElementById('legalBox3') },
+      ].forEach(({ check, box }) => {
+        if (!check.checked) box.classList.add('error-highlight');
+        check.addEventListener('change', () => box.classList.remove('error-highlight'), { once: true });
+      });
+      document.getElementById('legalBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
