@@ -8,13 +8,9 @@
   .drop-zone {
     border: 2px dashed var(--border-strong);
     border-radius: var(--radius-md);
-    padding: 52px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
-    background: var(--surface-3);
-    position: relative;
-    margin-bottom: 8px;
+    padding: 52px 24px; text-align: center;
+    cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    background: var(--surface-3); position: relative; margin-bottom: 8px;
   }
   .drop-zone:hover, .drop-zone.dragover { background: var(--surface-4); border-color: var(--gold); }
   .drop-zone input[type="file"] {
@@ -29,26 +25,18 @@
     display: none; margin-top: 16px; background: var(--surface-3);
     border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
   }
-  .preview-area img {
-    width: 100%; max-height: 340px; object-fit: contain; display: block; background: var(--surface-3);
-  }
-  .file-info {
-    padding: 10px 16px; font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-muted); border-top: 1px solid var(--border);
-  }
+  .preview-area img { width: 100%; max-height: 340px; object-fit: contain; display: block; background: var(--surface-3); }
+  .file-info { padding: 10px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
+
   .file-error {
     display: none; margin-top: 10px; padding: 12px 16px;
     background: var(--red-dim); border: 1px solid var(--red);
-    border-radius: var(--radius-sm); color: #F0A0A0; font-size: 14px;
+    border-radius: var(--radius-sm); color: #F0A0A0; font-size: 14px; line-height: 1.6;
   }
-  .genre-hint {
-    min-height: 20px; font-size: 13px; color: var(--text-muted);
-    line-height: 1.6; margin-top: 6px; padding: 0 2px; transition: opacity 0.2s;
-  }
+  .genre-hint { min-height: 20px; font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 6px; padding: 0 2px; }
   .exif-note {
     margin-top: 20px; padding: 14px 18px; background: var(--surface-3);
-    border-left: 3px solid var(--gold-dark);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-left: 3px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-size: 14px; color: var(--text-secondary); line-height: 1.65;
   }
   .exif-note strong { color: var(--gold); }
@@ -69,12 +57,8 @@
   }
   .shot-on-option label .shot-icon { font-size: 1.4rem; }
   .shot-on-option label .shot-text { line-height: 1.3; }
-  .shot-on-option label .shot-text small {
-    display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px;
-  }
-  .shot-on-option input[type="radio"]:checked + label {
-    border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary);
-  }
+  .shot-on-option label .shot-text small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+  .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
   .shot-on-option input[type="radio"]:checked + label .shot-text { color: var(--gold); }
   .shot-on-option label:hover { border-color: var(--border-strong); background: var(--surface-4); }
   .shot-on-required-hint { font-size: 12px; color: var(--red); margin-top: 6px; display: none; }
@@ -84,94 +68,88 @@
     border: 1px solid var(--border); border-radius: var(--radius-md);
     display: flex; gap: 12px; align-items: flex-start;
   }
-  .legal-box input[type="checkbox"] {
-    margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer;
-  }
+  .legal-box input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
   .legal-box label { font-size: 13px; color: var(--text-secondary); line-height: 1.6; cursor: pointer; }
   .legal-box label a { color: var(--gold); text-decoration: none; }
   .legal-box label a:hover { text-decoration: underline; }
   .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
 
-  /* ── Scoring Overlay ── */
+  /* ══ SCORING OVERLAY ══ */
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.96); backdrop-filter: blur(8px);
+    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
     flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
+
   .overlay-engine-tag {
     font-family: var(--font-mono); font-size: 11px; font-weight: 600;
     letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
-    margin-bottom: 40px; opacity: .7;
+    margin-bottom: 44px; opacity: .55;
   }
-  .clock-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 36px; flex-shrink: 0; }
-  .clock-svg { transform: rotate(-90deg); }
-  .clock-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 6; }
-  .clock-ring-fill {
-    fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round;
-    stroke-dasharray: 534; stroke-dashoffset: 534; transition: stroke-dashoffset .9s linear;
-  }
-  .clock-center {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-  }
-  .clock-secs { font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #fff; line-height: 1; }
-  .clock-unit { font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-  .overlay-phase {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 14px;
-  }
-  .overlay-status {
-    font-size: 20px; font-weight: 600; color: #fff; text-align: center;
-    max-width: 460px; line-height: 1.4; margin-bottom: 12px; min-height: 56px;
-  }
-  .overlay-substatus {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
-    text-align: center; max-width: 400px; line-height: 1.6; letter-spacing: .5px;
-  }
-  .dot-pulse { display: inline-flex; gap: 6px; margin-top: 28px; }
-  .dot-pulse span {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
-    animation: pulse 1.4s ease-in-out infinite; opacity: .3;
-  }
-  .dot-pulse span:nth-child(2) { animation-delay: .2s; }
-  .dot-pulse span:nth-child(3) { animation-delay: .4s; }
-  @keyframes pulse { 0%,80%,100% { opacity:.3; transform:scale(.8); } 40% { opacity:1; transform:scale(1.1); } }
 
-  /* ── Breath Cue ── */
-  .breath-cue {
-    margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 8px;
-    opacity: 0; animation: fadeInBreath 1.5s 2.5s ease forwards;
+  /* Breath hero */
+  .breath-hero {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px;
   }
   @keyframes fadeInBreath {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .breath-ring {
-    width: 44px; height: 44px; border-radius: 50%;
-    border: 2px solid rgba(200,168,75,0.3);
-    background: rgba(200,168,75,0.06);
-    animation: breathe 8s ease-in-out infinite;
-    margin-bottom: 4px;
+  .breath-ring-hero {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 3px solid rgba(200,168,75,0.5);
+    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
+    animation: breatheHero 8s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
   }
-  @keyframes breathe {
-    0%   { transform: scale(0.75); border-color: rgba(200,168,75,0.2); background: rgba(200,168,75,0.04); }
-    50%  { transform: scale(1.3);  border-color: rgba(200,168,75,0.65); background: rgba(200,168,75,0.13); }
-    100% { transform: scale(0.75); border-color: rgba(200,168,75,0.2); background: rgba(200,168,75,0.04); }
+  @keyframes breatheHero {
+    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
+    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
   }
-  .breath-label {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
-    min-width: 80px; text-align: center;
-    transition: opacity 0.6s ease;
+  .breath-inner-dot {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7;
+    animation: breatheInner 8s ease-in-out infinite;
   }
-  .breath-instruction {
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
-    color: rgba(122,120,112,0.8); text-transform: uppercase;
+  @keyframes breatheInner {
+    0%   { transform: scale(1.4); opacity: 0.4; }
+    50%  { transform: scale(0.7); opacity: 0.95; }
+    100% { transform: scale(1.4); opacity: 0.4; }
   }
-  .breath-tagline {
-    font-size: 13px; color: rgba(122,120,112,0.7); font-style: italic; margin-top: 2px;
+  .breath-word {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase;
+    text-align: center; min-width: 160px;
   }
+  .breath-counts {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px;
+    color: rgba(200,168,75,0.65); text-transform: uppercase;
+  }
+  .breath-tagline { font-size: 15px; color: rgba(184,182,174,0.6); font-style: italic; letter-spacing: 0.3px; }
+
+  /* Phase / status copy */
+  .overlay-copy {
+    display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px;
+    opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards;
+  }
+  .overlay-phase { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
+  .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
+  .overlay-substatus { font-family: var(--font-mono); font-size: 10px; color: rgba(122,120,112,0.55); text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
+
+  /* Mini timer */
+  .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
+  .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
+  .mini-clock-svg { transform: rotate(-90deg); }
+  .mini-ring-bg  { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+  .mini-ring-fill {
+    fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4; stroke-linecap: round;
+    stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset .9s linear;
+  }
+  .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
+  .mini-clock-unit { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
 </style>
 {% endblock %}
 
@@ -190,7 +168,7 @@
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
         <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB</div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB &nbsp;·&nbsp; Resize to 2000px before uploading</div>
       </div>
 
       <div class="file-error" id="fileError"></div>
@@ -202,8 +180,7 @@
 
       <div class="form-group" style="margin-top:24px;">
         <label for="asset_name">Image Title</label>
-        <input type="text" id="asset_name" name="asset_name"
-               placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
+        <input type="text" id="asset_name" name="asset_name" placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
       </div>
 
       <div class="form-group">
@@ -253,15 +230,12 @@
 
       <div class="form-group">
         <label for="location">Location <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
-        <input type="text" id="location" name="location"
-               placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
+        <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
       </div>
 
       <div class="form-group">
         <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
-        <textarea id="subject" name="subject"
-                  placeholder="Brief context about this image — subject, conditions, technique…"
-                  maxlength="500"></textarea>
+        <textarea id="subject" name="subject" placeholder="Brief context about this image — subject, conditions, technique…" maxlength="500"></textarea>
       </div>
 
       <div class="exif-note">
@@ -278,7 +252,6 @@
         </label>
       </div>
 
-      <!-- Leaderboard Visibility Toggle -->
       <div style="margin-top:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
           <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Leaderboard</div>
@@ -286,8 +259,7 @@
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
-            <input type="checkbox" name="is_public" value="1" id="isPublicToggle" checked
-                   style="opacity:0; position:absolute; width:0; height:0;">
+            <input type="checkbox" name="is_public" value="1" id="isPublicToggle" checked style="opacity:0; position:absolute; width:0; height:0;">
             <div id="toggleTrack" style="position:absolute; inset:0; border-radius:99px; background:var(--gold); transition:background .2s;"></div>
             <div id="toggleThumb" style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s;"></div>
           </div>
@@ -295,46 +267,51 @@
         </label>
       </div>
 
-      <div style="padding:12px 16px; background:var(--surface-3); border:1px solid var(--border);
-                  border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-                  font-size:13px; color:var(--text-secondary); line-height:1.6; margin-top:20px; margin-bottom:16px;">
-        ⏰ <strong style="color:var(--amber);">Best upload times (IST):</strong>
-        6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM<br>
+      <div style="padding:12px 16px; background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:13px; color:var(--text-secondary); line-height:1.6; margin-top:20px; margin-bottom:16px;">
+        ⏰ <strong style="color:var(--amber);">Best upload times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM<br>
         <span style="color:var(--text-muted);">High global demand during 6–10 PM IST may slow scoring.</span>
       </div>
 
-      <button type="submit" class="btn btn-solid" id="submitBtn"
-              style="width:100%; padding:15px; font-size:13px; letter-spacing:2px; margin-top:4px;">
+      <button type="submit" class="btn btn-solid" id="submitBtn" style="width:100%; padding:15px; font-size:13px; letter-spacing:2px; margin-top:4px;">
         ⬆ Submit for Scoring
       </button>
     </form>
   </div>
 </div>
 
-<!-- Scoring Overlay -->
+<!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
-  <div class="clock-wrap">
-    <svg class="clock-svg" width="200" height="200" viewBox="0 0 200 200">
-      <circle class="clock-ring-bg" cx="100" cy="100" r="85"/>
-      <circle class="clock-ring-fill" id="clockRing" cx="100" cy="100" r="85"/>
-    </svg>
-    <div class="clock-center">
-      <div class="clock-secs" id="clockSecs">35</div>
-      <div class="clock-unit">seconds</div>
-    </div>
-  </div>
-  <div class="overlay-phase" id="overlayPhase">Uploading</div>
-  <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
-  <div class="overlay-substatus" id="overlaySubstatus">Your image is being sent to the server securely.</div>
-  <div class="dot-pulse"><span></span><span></span><span></span></div>
 
-  <!-- ── Breath Cue ── -->
-  <div class="breath-cue">
-    <div class="breath-ring"></div>
-    <div class="breath-label" id="breathLabel">Inhale</div>
-    <div class="breath-instruction">Inhale 4 sec &nbsp;·&nbsp; Exhale 4 sec</div>
+  <!-- BREATH HERO — fades in at 1s, is the main focus -->
+  <div class="breath-hero">
+    <div class="breath-ring-hero">
+      <div class="breath-inner-dot"></div>
+    </div>
+    <div class="breath-word" id="breathLabel">Inhale</div>
+    <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
     <div class="breath-tagline">Watch your breath while you wait</div>
+  </div>
+
+  <!-- Phase / status — small, secondary -->
+  <div class="overlay-copy">
+    <div class="overlay-phase" id="overlayPhase">Uploading</div>
+    <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
+    <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
+  </div>
+
+  <!-- MINI TIMER — appears first at 0.2s, small at bottom -->
+  <div class="mini-timer">
+    <div class="mini-clock-wrap">
+      <svg class="mini-clock-svg" width="72" height="72" viewBox="0 0 72 72">
+        <circle class="mini-ring-bg"   cx="36" cy="36" r="31"/>
+        <circle class="mini-ring-fill" id="clockRing" cx="36" cy="36" r="31"/>
+      </svg>
+      <div class="mini-clock-center">
+        <div class="mini-clock-secs" id="clockSecs">35</div>
+        <div class="mini-clock-unit">sec</div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -353,37 +330,22 @@
   const legalBox    = document.getElementById('legalBox');
   const legalCheck  = document.getElementById('legal_declaration');
   const trackHint   = document.getElementById('trackRequiredHint');
+  const MAX_MB      = 5;
+  const ALLOWED     = ['image/jpeg', 'image/png'];
 
-  const MAX_MB  = 5;
-  const ALLOWED = ['image/jpeg', 'image/png'];
-
-  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
-    ev.preventDefault(); dropZone.classList.add('dragover');
-  }));
-  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
-    ev.preventDefault(); dropZone.classList.remove('dragover');
-  }));
-  dropZone.addEventListener('drop', e => {
-    const file = e.dataTransfer.files[0];
-    if (file) { fileInput.files = e.dataTransfer.files; handleFile(file); }
-  });
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
-  });
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); }));
+  dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); } });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
 
   function handleFile(file) {
     fileError.style.display = 'none';
-    if (!ALLOWED.includes(file.type)) {
-      showError('Only JPG and PNG files are accepted.'); previewArea.style.display = 'none'; fileInput.value = ''; return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`); previewArea.style.display = 'none'; fileInput.value = ''; return;
-    }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); previewArea.style.display = 'none'; fileInput.value = ''; return; }
+    // Do NOT check size here — iOS reports file.size=0 at select time. Check at submit.
     const reader = new FileReader();
     reader.onload = ev => {
-      previewImg.src = ev.target.result;
-      previewArea.style.display = 'block';
-      fileInfo.textContent = `${file.name}  ·  ${(file.size/1024/1024).toFixed(2)} MB`;
+      previewImg.src = ev.target.result; previewArea.style.display = 'block';
+      fileInfo.textContent = file.size > 0 ? `${file.name}  ·  ${(file.size/1024/1024).toFixed(2)} MB` : file.name;
     };
     reader.readAsDataURL(file);
   }
@@ -391,37 +353,35 @@
   function showError(msg) { fileError.textContent = msg; fileError.style.display = 'block'; }
 
   const genreHints = {
-    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent.',
-    'Drone':      '🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
-    'Wildlife':   '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street':     '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
-    'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water and clouds is rewarded.',
-    'Macro':      '🔬 Extreme precision focus required. Sharpness on the primary subject is the primary DoD criterion.',
-    'Wedding':    '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
-    'People':     '👤 Emotional connection and authentic expression are paramount. AQ is the dominant scoring signal.',
+    'Creative':      '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
+    'Drone & Aerial':'🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
+    'Wildlife':      '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
+    'Street':        '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
+    'Landscape':     '🌄 Light quality, composition, patience. Long-exposure blur on water and clouds is rewarded.',
+    'Macro':         '🔬 Extreme precision focus required. Sharpness on the primary subject is the key DoD criterion.',
+    'Wedding':       '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
+    'People':        '👤 Emotional connection and authentic expression paramount. AQ is the dominant scoring signal.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
   });
-
-  document.querySelectorAll('input[name="camera_track"]').forEach(radio => {
-    radio.addEventListener('change', () => { trackHint.style.display = 'none'; });
-  });
+  document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-
     const file = fileInput.files[0];
-    if (!file)                             { showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type))      { showError('Only JPG and PNG files are accepted.'); return; }
-    if (file.size > MAX_MB * 1024 * 1024) { showError(`File exceeds ${MAX_MB} MB.`); return; }
+    if (!file) { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
 
-    const trackSelected = document.querySelector('input[name="camera_track"]:checked');
-    if (!trackSelected) {
-      trackHint.style.display = 'block';
-      trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Accurate size check at submit time (iOS file.size is 0 at select time)
+    if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      showError(`Your image is ${sizeMB} MB — over the 5 MB limit. Please resize to under 5 MB before uploading. Most gallery apps have a resize or compress option.`);
       return;
     }
+
+    const trackSelected = document.querySelector('input[name="camera_track"]:checked');
+    if (!trackSelected) { trackHint.style.display = 'block'; trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
 
     if (!legalCheck.checked) {
       legalBox.classList.add('error-highlight');
@@ -432,53 +392,54 @@
 
     submitBtn.disabled = true;
 
-    // ── Scoring Overlay ──────────────────────────────────────────────────────
+    // ── Overlay ──────────────────────────────────────────────────────────────
     const overlay      = document.getElementById('scoringOverlay');
     const clockRing    = document.getElementById('clockRing');
     const clockSecs    = document.getElementById('clockSecs');
     const overlayPhase = document.getElementById('overlayPhase');
     const overlayStatus= document.getElementById('overlayStatus');
     const overlaySub   = document.getElementById('overlaySubstatus');
+    const breathLabel  = document.getElementById('breathLabel');
 
     const TOTAL_SECS   = 35;
-    const CIRCUMFERENCE= 534;
+    const CIRCUMFERENCE= 195; // 2π × 31 for mini ring
 
     const phases = [
-      { from: 0,  to: 4,  phase: 'UPLOADING',  status: 'Transferring your image…',          sub: 'Your image is being sent to the server securely.' },
-      { from: 4,  to: 10, phase: 'PROCESSING',  status: 'Preparing for analysis…',           sub: 'Extracting metadata, verifying file integrity.' },
-      { from: 10, to: 24, phase: 'ANALYSING',   status: 'Apex DDI Engine is evaluating…',   sub: 'Scoring across 5 modules: DoD · Disruption · DM · Wonder · AQ' },
-      { from: 24, to: 31, phase: 'SCORING',     status: 'Calculating your DDI score…',       sub: 'Applying genre weights and safeguards.' },
-      { from: 31, to: 35, phase: 'FINALISING',  status: 'Generating your score card…',       sub: 'Almost there — building your archetype and improvement tip.' },
+      { from: 0,  to: 4,  phase: 'UPLOADING',  status: 'Transferring your image…',       sub: 'Sending to server securely.' },
+      { from: 4,  to: 10, phase: 'PROCESSING',  status: 'Preparing for analysis…',        sub: 'Extracting metadata and verifying.' },
+      { from: 10, to: 24, phase: 'ANALYSING',   status: 'Apex DDI Engine evaluating…',   sub: 'DoD · Disruption · DM · Wonder · AQ' },
+      { from: 24, to: 31, phase: 'SCORING',     status: 'Calculating your DDI score…',    sub: 'Applying genre weights and safeguards.' },
+      { from: 31, to: 35, phase: 'FINALISING',  status: 'Generating your score card…',    sub: 'Building archetype and improvement tip.' },
     ];
 
     overlay.classList.add('active');
-    let elapsed = 0;
+    clockSecs.textContent = TOTAL_SECS;
 
-    // Breath cue cycling
-    const breathLabel = document.getElementById('breathLabel');
+    // Breath cycling — Inhale/Exhale every 4s
     let breathPhase = 0;
     const breathCycle = setInterval(() => {
       breathPhase = (breathPhase + 1) % 2;
-      breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
+      if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
     }, 4000);
 
+    let elapsed = 0;
     const ticker = setInterval(() => {
       elapsed++;
       const remaining = Math.max(TOTAL_SECS - elapsed, 0);
       clockSecs.textContent = remaining;
       const pct = Math.min(elapsed / TOTAL_SECS, 1);
       clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
-      if (elapsed >= 31) clockRing.style.stroke = '#fff';
       const phase = phases.find(p => elapsed >= p.from && elapsed < p.to) || phases[phases.length - 1];
       overlayPhase.textContent  = phase.phase;
       overlayStatus.textContent = phase.status;
       overlaySub.textContent    = phase.sub;
     }, 1000);
 
+    // ── XHR ──────────────────────────────────────────────────────────────────
     const xhr = new XMLHttpRequest();
     xhr.open('POST', form.action);
-    // Mark as XHR so Flask returns JSON instead of a redirect
-    // (redirect-following breaks on mobile browsers mid-XHR)
+    // CRITICAL: tells Flask to return JSON, not a 302 redirect
+    // (302 redirect following breaks silently on mobile Safari/Chrome)
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.timeout = 120000;
 
@@ -486,72 +447,47 @@
       clearInterval(ticker);
       clearInterval(breathCycle);
 
-      // Handle duplicate (409) first
+      if (xhr.status === 413) {
+        overlay.classList.remove('active'); submitBtn.disabled = false;
+        showError('File too large. Please resize your image to under 5 MB before uploading.');
+        fileInput.value = ''; previewArea.style.display = 'none'; return;
+      }
       if (xhr.status === 409) {
-        overlay.classList.remove('active');
-        submitBtn.disabled = false;
-        try {
-          const resp = JSON.parse(xhr.responseText);
-          showError(resp.message || 'Duplicate image detected.');
-        } catch(err) {
-          showError('This image has already been submitted. Please upload a different photograph.');
-        }
-        fileInput.value = ''; previewArea.style.display = 'none';
-        return;
+        overlay.classList.remove('active'); submitBtn.disabled = false;
+        try { const r = JSON.parse(xhr.responseText); showError(r.message || 'Duplicate image detected.'); }
+        catch(e) { showError('This image has already been submitted. Please upload a different photograph.'); }
+        fileInput.value = ''; previewArea.style.display = 'none'; return;
       }
 
-      // Try to parse JSON response
       let resp = null;
       try { resp = JSON.parse(xhr.responseText); } catch(e) {}
 
-      // Success: got JSON with status ok OR a 200 with image_id
-      if (resp && resp.status === 'ok' && resp.image_id) {
+      if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
         clockSecs.textContent = '✓';
         clockRing.style.strokeDashoffset = '0';
-        clockRing.style.stroke = 'var(--gold)';
+        clockRing.style.stroke = 'rgba(200,168,75,0.9)';
         overlayPhase.textContent  = 'COMPLETE';
-        overlayStatus.textContent = resp.score
-          ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
-          : 'Image uploaded!';
-        overlaySub.textContent = 'Redirecting to your score card…';
+        overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
+        overlaySub.textContent    = 'Redirecting to your score card…';
         if (breathLabel) breathLabel.textContent = '🙏';
-        const dest = resp.redirect || `/image/${resp.image_id}`;
-        setTimeout(() => { window.location.href = dest; }, 1000);
+        setTimeout(() => { window.location.href = resp.redirect || `/image/${resp.image_id}`; }, 1200);
         return;
       }
 
-      // Fallback: non-JSON 200 (shouldn't happen after the app.py fix,
-      // but handle gracefully — redirect to dashboard)
-      if (xhr.status === 200) {
-        clockSecs.textContent = '✓';
-        clockRing.style.strokeDashoffset = '0';
-        clockRing.style.stroke = 'var(--gold)';
-        overlayPhase.textContent  = 'COMPLETE';
-        overlayStatus.textContent = 'Image uploaded!';
-        overlaySub.textContent    = 'Redirecting to your dashboard…';
-        if (breathLabel) breathLabel.textContent = '🙏';
-        setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
-        return;
-      }
-
-      // Any other status = error
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      showError(`Upload failed (${xhr.status}). Please try again.`);
+      overlay.classList.remove('active'); submitBtn.disabled = false;
+      showError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
     });
 
     xhr.addEventListener('error', function () {
       clearInterval(ticker); clearInterval(breathCycle);
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      showError('Network error. Please check your connection and try again.');
+      overlay.classList.remove('active'); submitBtn.disabled = false;
+      showError('Network error — check your connection and try again.');
     });
 
     xhr.addEventListener('timeout', function () {
       clearInterval(ticker); clearInterval(breathCycle);
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      showError('Request timed out. Your image may still be processing — check your dashboard in a minute.');
+      overlay.classList.remove('active'); submitBtn.disabled = false;
+      showError('Request timed out. Check your dashboard in a minute — your image may have been saved.');
     });
 
     xhr.send(new FormData(form));
@@ -560,19 +496,14 @@
 
 // Leaderboard visibility toggle
 (function() {
-  const cb    = document.getElementById('isPublicToggle');
+  const cb = document.getElementById('isPublicToggle');
   const track = document.getElementById('toggleTrack');
   const thumb = document.getElementById('toggleThumb');
   const label = document.getElementById('toggleLabel');
   if (!cb) return;
   cb.addEventListener('change', function() {
-    if (this.checked) {
-      track.style.background = 'var(--gold)'; thumb.style.left = '23px';
-      label.style.color = 'var(--gold)'; label.textContent = 'Public';
-    } else {
-      track.style.background = 'var(--border)'; thumb.style.left = '3px';
-      label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden';
-    }
+    if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
+    else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
   });
 })();
 </script>

@@ -3,142 +3,98 @@
 
 {% block extra_css %}
 <style>
-  /* Modal */
-  .modal-overlay {
-    position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,0.88);
-    display: none;
-    align-items: center; justify-content: center;
-    padding: 16px; overflow-y: auto;
-  }
+  .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
-  .modal-box {
-    background: var(--surface-2);
-    border: 1px solid var(--gold-dark);
-    max-width: 580px; width: 100%;
-    border-radius: var(--radius-md);
-    display: flex; flex-direction: column; max-height: 90vh;
-  }
+  .modal-box { background: var(--surface-2); border: 1px solid var(--gold-dark); max-width: 580px; width: 100%; border-radius: var(--radius-md); display: flex; flex-direction: column; max-height: 90vh; }
   .modal-header { padding: 22px 28px 18px; border-bottom: 1px solid var(--border); }
-  .modal-eyebrow {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px;
-  }
+  .modal-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
   .modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0; }
-  .modal-body {
-    padding: 22px 28px; overflow-y: auto; flex: 1;
-    font-size: 15px; line-height: 1.75; color: var(--text-secondary);
-  }
+  .modal-body { padding: 22px 28px; overflow-y: auto; flex: 1; font-size: 15px; line-height: 1.75; color: var(--text-secondary); }
   .modal-body ol { padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
   .modal-body strong { color: var(--text-primary); }
   .modal-footer { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
 
-  /* Drop zone */
-  .drop-zone {
-    border: 2px dashed var(--border-strong);
-    border-radius: var(--radius-md);
-    padding: 48px 24px; text-align: center;
-    cursor: pointer; transition: border-color 0.2s, background 0.2s;
-    background: var(--surface-3); margin-bottom: 8px;
-  }
-  .drop-zone:hover, .drop-zone.dragover {
-    border-color: var(--gold); background: var(--surface-4);
-  }
+  .drop-zone { border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: var(--surface-3); margin-bottom: 8px; }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--gold); background: var(--surface-4); }
   .dz-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
   .dz-label { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
   .dz-hint { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; color: var(--text-muted); }
 
-  /* Results */
   .results-section { margin-top: 36px; }
   .results-count { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
   .results-count span { color: var(--gold); font-family: var(--font-mono); font-size: 20px; font-weight: 700; }
-  .result-row {
-    display: flex; align-items: flex-start; gap: 16px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-subtle);
-    background: var(--surface-2);
-  }
+  .result-row { display: flex; align-items: flex-start; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); background: var(--surface-2); }
   .result-row:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
   .result-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
   .result-row:only-child { border-radius: var(--radius-md); }
-  .result-filename {
-    flex: 1; font-size: 14px; color: var(--text-secondary);
-    word-break: break-word; min-width: 0;
-  }
-  .result-score {
-    font-family: var(--font-mono); font-size: 20px; font-weight: 700;
-    color: var(--gold); flex-shrink: 0; min-width: 48px; text-align: right;
-  }
-  .result-tier {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    color: var(--text-secondary); flex-shrink: 0; min-width: 90px;
-    letter-spacing: 1px; text-transform: uppercase;
-  }
-  .result-status {
-    font-size: 13px; flex-shrink: 0; min-width: 120px;
-    line-height: 1.5; word-break: break-word;
-  }
+  .result-filename { flex: 1; font-size: 14px; color: var(--text-secondary); word-break: break-word; min-width: 0; }
+  .result-score { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); flex-shrink: 0; min-width: 48px; text-align: right; }
+  .result-tier { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; min-width: 90px; letter-spacing: 1px; text-transform: uppercase; }
+  .result-status { font-size: 13px; flex-shrink: 0; min-width: 120px; line-height: 1.5; word-break: break-word; }
   .result-status.ok { color: var(--green); }
   .result-status.err { color: var(--red); }
   .result-border { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
 
-  /* ── Scoring Overlay ── */
+  /* ══ SCORING OVERLAY ══ */
   #scoringOverlay {
-    display: none;
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.96);
-    backdrop-filter: blur(8px);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
+    flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
+
   .overlay-engine-tag {
     font-family: var(--font-mono); font-size: 11px; font-weight: 600;
     letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
-    margin-bottom: 40px; opacity: .7;
+    margin-bottom: 44px; opacity: .55;
   }
-  .clock-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 36px; flex-shrink: 0; }
-  .clock-svg { transform: rotate(-90deg); }
-  .clock-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 6; }
-  .clock-ring-fill {
-    fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round;
-    stroke-dasharray: 534; stroke-dashoffset: 534;
-    transition: stroke-dashoffset .9s linear;
-  }
-  .clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .clock-secs { font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #fff; line-height: 1; }
-  .clock-unit { font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-  .overlay-phase { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 14px; }
-  .overlay-status { font-size: 20px; font-weight: 600; color: #fff; text-align: center; max-width: 460px; line-height: 1.4; margin-bottom: 12px; min-height: 56px; }
-  .overlay-substatus { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: center; max-width: 400px; line-height: 1.6; letter-spacing: .5px; }
-  .dot-pulse { display: inline-flex; gap: 6px; margin-top: 28px; }
-  .dot-pulse span { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 1.4s ease-in-out infinite; opacity: .3; }
-  .dot-pulse span:nth-child(2) { animation-delay: .2s; }
-  .dot-pulse span:nth-child(3) { animation-delay: .4s; }
-  @keyframes pulse { 0%,80%,100% { opacity:.3; transform:scale(.8); } 40% { opacity:1; transform:scale(1.1); } }
 
-  /* Error banner shown inside overlay on failure */
-  .overlay-error {
-    display: none;
-    margin-top: 24px;
-    padding: 16px 24px;
-    background: var(--red-dim);
-    border: 1px solid var(--red);
-    border-radius: var(--radius-md);
-    font-size: 15px; color: #F0A0A0;
-    text-align: center; max-width: 480px; line-height: 1.6;
+  /* Breath hero */
+  .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
+  @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .breath-ring-hero {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 3px solid rgba(200,168,75,0.5);
+    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
+    animation: breatheHero 8s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
   }
-  .overlay-error a {
-    color: var(--gold); text-decoration: underline; cursor: pointer;
+  @keyframes breatheHero {
+    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
+    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
   }
+  .breath-inner-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: breatheInner 8s ease-in-out infinite; }
+  @keyframes breatheInner { 0% { transform: scale(1.4); opacity: 0.4; } 50% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.4); opacity: 0.4; } }
+  .breath-word { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase; text-align: center; min-width: 160px; }
+  .breath-counts { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
+  .breath-tagline { font-size: 15px; color: rgba(184,182,174,0.6); font-style: italic; letter-spacing: 0.3px; }
+
+  /* Phase copy */
+  .overlay-copy { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px; opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards; }
+  .overlay-phase { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
+  .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
+  .overlay-substatus { font-family: var(--font-mono); font-size: 10px; color: rgba(122,120,112,0.55); text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
+
+  /* Mini timer */
+  .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
+  .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
+  .mini-clock-svg { transform: rotate(-90deg); }
+  .mini-ring-bg  { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+  .mini-ring-fill { fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset .9s linear; }
+  .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
+  .mini-clock-unit { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
+
+  /* Overlay error */
+  .overlay-error { display: none; margin-top: 24px; padding: 16px 24px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--radius-md); font-size: 15px; color: #F0A0A0; text-align: center; max-width: 480px; line-height: 1.6; }
+  .overlay-error a { color: var(--gold); text-decoration: underline; cursor: pointer; }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Legal Declaration Modal -->
+<!-- Legal Modal -->
 <div id="legalModal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
@@ -157,22 +113,13 @@
         </ol>
       </div>
       <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
-        <input type="checkbox" id="modalCheckbox"
-               style="width:18px; height:18px; min-width:18px; margin-top:3px; accent-color:var(--gold); flex-shrink:0;">
-        <span style="font-size:15px; color:var(--text-secondary); line-height:1.65;">
-          I have read and understood the above. I confirm all images are my original photographs and accept full legal responsibility.
-        </span>
+        <input type="checkbox" id="modalCheckbox" style="width:18px; height:18px; min-width:18px; margin-top:3px; accent-color:var(--gold); flex-shrink:0;">
+        <span style="font-size:15px; color:var(--text-secondary); line-height:1.65;">I have read and understood the above. I confirm all images are my original photographs and accept full legal responsibility.</span>
       </label>
-      <p style="margin-top:14px; font-size:12px; color:var(--text-muted); text-align:center; font-family:var(--font-mono);">
-        This declaration is logged with your account, IP address, and timestamp.
-      </p>
+      <p style="margin-top:14px; font-size:12px; color:var(--text-muted); text-align:center; font-family:var(--font-mono);">This declaration is logged with your account, IP address, and timestamp.</p>
     </div>
     <div class="modal-footer">
-      <button onclick="proceedToUpload()" id="agreeBtn" disabled
-              class="btn btn-solid"
-              style="flex:1; padding:14px; font-size:12px; letter-spacing:2px; opacity:0.4; cursor:not-allowed;">
-        I Agree — Proceed to Upload
-      </button>
+      <button onclick="proceedToUpload()" id="agreeBtn" disabled class="btn btn-solid" style="flex:1; padding:14px; font-size:12px; letter-spacing:2px; opacity:0.4; cursor:not-allowed;">I Agree — Proceed to Upload</button>
       <a href="{{ url_for('dashboard') }}" class="btn" style="padding:14px 20px;">Cancel</a>
     </div>
   </div>
@@ -189,7 +136,6 @@
   <div class="card">
     <form method="POST" enctype="multipart/form-data" id="bulkForm">
 
-      <!-- Drop zone -->
       <div class="drop-zone" id="dropzone"
            onclick="document.getElementById('filesInput').click()"
            ondragover="event.preventDefault(); this.classList.add('dragover');"
@@ -217,13 +163,11 @@
         </div>
         <div class="form-group">
           <label>Photographer Name</label>
-          <input type="text" name="photographer_name"
-                 value="{{ current_user.full_name or current_user.username }}"
-                 placeholder="Leave blank to use account name">
+          <input type="text" name="photographer_name" value="{{ current_user.full_name or current_user.username }}" placeholder="Leave blank to use account name">
         </div>
       </div>
 
-      <!-- Shot On — mandatory track selector -->
+      <!-- Shot On -->
       <div class="form-group" style="margin-bottom:20px;">
         <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">
           Shot On <span style="color:var(--red); font-size:13px;">*</span>
@@ -231,37 +175,20 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_camera">
             <input type="radio" name="camera_track" value="camera" id="bulk_track_camera" style="accent-color:var(--gold);" onchange="highlightTrack()">
-            <span>
-              <span style="font-size:1.3rem;">📷</span>
-              <span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Camera</span>
-              <small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">DSLR · Mirrorless · Film</small>
-            </span>
+            <span><span style="font-size:1.3rem;">📷</span><span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Camera</span><small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">DSLR · Mirrorless · Film</small></span>
           </label>
           <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_mobile">
             <input type="radio" name="camera_track" value="mobile" id="bulk_track_mobile" style="accent-color:var(--gold);" onchange="highlightTrack()">
-            <span>
-              <span style="font-size:1.3rem;">📱</span>
-              <span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Mobile</span>
-              <small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">iPhone · Android · Smartphone</small>
-            </span>
+            <span><span style="font-size:1.3rem;">📱</span><span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Mobile</span><small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">iPhone · Android · Smartphone</small></span>
           </label>
         </div>
         <div id="bulkTrackHint" style="font-size:12px; color:var(--red); margin-top:6px; display:none;">Please select Camera or Mobile before uploading.</div>
       </div>
 
-      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
-                  border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px;
-                  font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
+      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
-        The Apex DDI Engine analyses each image automatically. Allow ~35 seconds per image.
-        <strong style="color:var(--amber);">Maximum 10 images per batch.</strong>
-        Duplicates are detected and skipped. Keep this tab open until complete.
-        <br><br>
-        <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong>
-        6:00 AM – 10:00 AM &nbsp;·&nbsp; 2:00 PM – 5:00 PM &nbsp;·&nbsp; After 11:00 PM<br>
-        <span style="color:var(--text-muted); font-size:13px;">
-        Peak hours (6 PM – 10 PM IST) may cause scoring delays due to high global API demand.
-        </span>
+        The Apex DDI Engine analyses each image automatically. Allow ~35 seconds per image. <strong style="color:var(--amber);">Maximum 10 images per batch.</strong> Keep this tab open until complete.<br><br>
+        <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong> 6:00 AM – 10:00 AM &nbsp;·&nbsp; 2:00 PM – 5:00 PM &nbsp;·&nbsp; After 11:00 PM
       </div>
 
       <!-- Leaderboard Visibility Toggle -->
@@ -272,8 +199,7 @@
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
-            <input type="checkbox" name="is_public" value="1" id="isPublicToggle" checked
-                   style="opacity:0; position:absolute; width:0; height:0;">
+            <input type="checkbox" name="is_public" value="1" id="isPublicToggle" checked style="opacity:0; position:absolute; width:0; height:0;">
             <div id="bulkToggleTrack" style="position:absolute; inset:0; border-radius:99px; background:var(--gold); transition:background .2s;"></div>
             <div id="bulkToggleThumb" style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s;"></div>
           </div>
@@ -281,8 +207,7 @@
         </label>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn btn-solid"
-              style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;">
+      <button type="submit" id="submitBtn" class="btn btn-solid" style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;">
         ⬆ Upload &amp; Auto-Score All
       </button>
     </form>
@@ -291,59 +216,38 @@
   <!-- Results -->
   {% if results %}
   <div class="results-section">
-
-    {% set busy_count = results | selectattr('status', 'containing', 'API busy') | list | length %}
-    {% set error_count = results | selectattr('status', 'containing', 'error') | list | length %}
     {% set scored_count = results | selectattr('status', 'equalto', 'scored') | list | length %}
-
-    {% if busy_count > 0 %}
-    <div style="background:var(--amber-dim); border:1px solid var(--amber);
-                border-radius:var(--radius-md); padding:20px 24px; margin-bottom:20px;">
-      <div style="font-family:var(--font-mono); font-size:12px; font-weight:600;
-                  letter-spacing:2px; color:var(--amber); text-transform:uppercase; margin-bottom:10px;">
-        ⏳ AI Servers Currently Busy
-      </div>
-      <p style="font-size:15px; color:#F0C888; line-height:1.7; margin-bottom:12px;">
-        {{ busy_count }} image{{ 's' if busy_count != 1 }} were saved but could not be scored right now.
-        Your images are safe — retry from your dashboard during off-peak hours.
-      </p>
-    </div>
-    {% endif %}
+    {% set busy_count   = results | selectattr('status', 'containing', 'busy') | list | length %}
 
     {% if scored_count > 0 %}
-    <div style="background:var(--green-dim); border:1px solid var(--green);
-                border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px;
-                font-size:15px; color:var(--green);">
+    <div style="background:var(--green-dim); border:1px solid var(--green); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:var(--green);">
       ✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully.
     </div>
     {% endif %}
-
-    <div class="results-count">
-      <span>{{ results|length }}</span> image{{ 's' if results|length != 1 }} processed
+    {% if busy_count > 0 %}
+    <div style="background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px; font-size:15px; color:#F0C888;">
+      ⏳ {{ busy_count }} image{{ 's' if busy_count != 1 }} saved — AI servers busy. Retry from your dashboard during off-peak hours.
     </div>
+    {% endif %}
 
+    <div class="results-count"><span>{{ results|length }}</span> image{{ 's' if results|length != 1 }} processed</div>
     <div class="result-border">
       <div style="display:flex; gap:16px; padding:12px 20px; background:var(--surface-3); border-bottom:1px solid var(--border);">
         <div style="flex:1; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">File</div>
-        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Score</div>
-        <div style="min-width:90px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Tier</div>
-        <div style="min-width:120px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Status</div>
+        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Score</div>
+        <div style="min-width:90px; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Tier</div>
+        <div style="min-width:120px; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Status</div>
       </div>
       {% for r in results %}
-      {% set is_ok = r.status in ['scored', 'uploaded', 'saved — scoring queued (API busy)'] %}
+      {% set is_ok = r.status in ['scored', 'uploaded'] %}
       <div class="result-row">
         <div class="result-filename">{{ r.filename }}</div>
         <div class="result-score">{{ r.score or '—' }}</div>
         <div class="result-tier">{{ r.tier or '—' }}</div>
-        {% if 'busy' in r.status %}
-        <div class="result-status" style="color:var(--amber);">{{ r.status }}</div>
-        {% else %}
-        <div class="result-status {{ 'ok' if is_ok else 'err' }}">{{ r.status }}</div>
-        {% endif %}
+        <div class="result-status {{ 'ok' if is_ok else ('err' if 'error' in r.status else '') }}" {% if 'busy' in r.status %}style="color:var(--amber);"{% endif %}>{{ r.status }}</div>
       </div>
       {% endfor %}
     </div>
-
     <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
       <a href="{{ url_for('bulk_upload') }}" class="btn">⬆ Upload More</a>
       <a href="{{ url_for('dashboard') }}" class="btn btn-solid">View Dashboard →</a>
@@ -353,24 +257,41 @@
 
 </div>
 
-<!-- Scoring Overlay -->
+<!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Bulk Scoring</div>
-  <div class="clock-wrap">
-    <svg class="clock-svg" width="200" height="200" viewBox="0 0 200 200">
-      <circle class="clock-ring-bg" cx="100" cy="100" r="85"/>
-      <circle class="clock-ring-fill" id="clockRing" cx="100" cy="100" r="85"/>
-    </svg>
-    <div class="clock-center">
-      <div class="clock-secs" id="clockSecs">—</div>
-      <div class="clock-unit" id="clockUnit">seconds</div>
+
+  <!-- BREATH HERO — fades in at 1s -->
+  <div class="breath-hero">
+    <div class="breath-ring-hero">
+      <div class="breath-inner-dot"></div>
+    </div>
+    <div class="breath-word" id="breathLabel">Inhale</div>
+    <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
+    <div class="breath-tagline">Watch your breath while you wait</div>
+  </div>
+
+  <!-- Phase / status — secondary -->
+  <div class="overlay-copy">
+    <div class="overlay-phase" id="overlayPhase">Uploading</div>
+    <div class="overlay-status" id="overlayStatus">Sending your images…</div>
+    <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open</div>
+  </div>
+
+  <!-- MINI TIMER — appears first at 0.2s -->
+  <div class="mini-timer">
+    <div class="mini-clock-wrap">
+      <svg class="mini-clock-svg" width="72" height="72" viewBox="0 0 72 72">
+        <circle class="mini-ring-bg"   cx="36" cy="36" r="31"/>
+        <circle class="mini-ring-fill" id="clockRing" cx="36" cy="36" r="31"/>
+      </svg>
+      <div class="mini-clock-center">
+        <div class="mini-clock-secs" id="clockSecs">—</div>
+        <div class="mini-clock-unit">sec</div>
+      </div>
     </div>
   </div>
-  <div class="overlay-phase" id="overlayPhase">Uploading</div>
-  <div class="overlay-status" id="overlayStatus">Sending your images…</div>
-  <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open while scoring is in progress.</div>
-  <div class="dot-pulse"><span></span><span></span><span></span></div>
-  <!-- Error shown inside overlay so user sees it without overlay dismissing prematurely -->
+
   <div class="overlay-error" id="overlayError">
     <strong>Upload failed.</strong><br>
     <span id="overlayErrorMsg"></span><br><br>
@@ -385,7 +306,6 @@ const AGREED_KEY = 'bulk_upload_agreed';
 
 function initPage() {
   sessionStorage.removeItem('bulk_processing');
-
   {% if results %}
   document.getElementById('legalModal').classList.remove('open');
   document.getElementById('uploadContent').style.display = 'block';
@@ -414,7 +334,6 @@ function proceedToUpload() {
   document.getElementById('uploadContent').style.display = 'block';
 }
 
-// Track highlight on selection
 function highlightTrack() {
   const camera = document.getElementById('bulk_track_camera');
   const mobile = document.getElementById('bulk_track_mobile');
@@ -425,25 +344,20 @@ function highlightTrack() {
   document.getElementById('bulkTrackHint').style.display = 'none';
 }
 
-// File handling
 const input    = document.getElementById('filesInput');
 const dropzone = document.getElementById('dropzone');
 
 function handleDrop(e) {
-  e.preventDefault();
-  dropzone.classList.remove('dragover');
+  e.preventDefault(); dropzone.classList.remove('dragover');
   try { input.files = e.dataTransfer.files; } catch(err) {}
   showFiles(e.dataTransfer.files);
 }
-
 function showFiles(files) {
   if (!files.length) return;
   const fc = document.getElementById('filecount');
   const fl = document.getElementById('filelist');
   const overLimit = files.length > 10;
-  fc.textContent = overLimit
-    ? `⚠️ ${files.length} files selected — maximum is 10. Please select fewer images.`
-    : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  fc.textContent = overLimit ? `⚠️ ${files.length} files selected — maximum is 10.` : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
   fc.style.color = overLimit ? 'var(--red)' : 'var(--gold)';
   fc.style.display = 'block';
   dropzone.style.borderColor = 'var(--gold)';
@@ -464,7 +378,6 @@ function dismissOverlayError() {
   document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Score All';
 }
 
-// ── Main submit handler ──────────────────────────────────────────────────────
 const form      = document.getElementById('bulkForm');
 const submitBtn = document.getElementById('submitBtn');
 
@@ -474,7 +387,6 @@ form.addEventListener('submit', function(e) {
   const files = input.files;
   if (!files.length) { alert('Please select images first.'); return; }
 
-  // Validate track
   const trackSelected = document.querySelector('input[name="camera_track"]:checked');
   if (!trackSelected) {
     document.getElementById('bulkTrackHint').style.display = 'block';
@@ -483,33 +395,35 @@ form.addEventListener('submit', function(e) {
   }
 
   let oversized = [];
-  for (let f of files) {
-    if (f.size > 5 * 1024 * 1024) oversized.push(f.name);
-  }
-  if (oversized.length) {
-    alert('These files exceed 5MB:\n' + oversized.join('\n'));
-    return;
-  }
+  for (let f of files) { if (f.size > 0 && f.size > 5 * 1024 * 1024) oversized.push(f.name); }
+  if (oversized.length) { alert('These files exceed 5 MB — please resize before uploading:\n' + oversized.join('\n')); return; }
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
 
-  // ── Scoring Overlay ──────────────────────────────────────────────────────
+  // ── Overlay ──────────────────────────────────────────────────────────────
   const total        = Math.min(files.length, 10);
   const overlay      = document.getElementById('scoringOverlay');
   const clockRing    = document.getElementById('clockRing');
   const clockSecs    = document.getElementById('clockSecs');
-  const clockUnit    = document.getElementById('clockUnit');
   const overlayPhase = document.getElementById('overlayPhase');
   const overlayStatus= document.getElementById('overlayStatus');
   const overlaySub   = document.getElementById('overlaySubstatus');
+  const breathLabel  = document.getElementById('breathLabel');
 
   const PER_IMAGE    = 35;
-  const CIRCUMFERENCE= 534;
+  const CIRCUMFERENCE= 195; // 2π × 31
 
   overlay.classList.add('active');
   document.getElementById('overlayError').style.display = 'none';
   clockSecs.textContent = PER_IMAGE;
+
+  // Breath cycling
+  let breathPhase = 0;
+  const breathCycle = setInterval(() => {
+    breathPhase = (breathPhase + 1) % 2;
+    if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
+  }, 4000);
 
   let secs = 0;
   const ticker = setInterval(() => {
@@ -517,12 +431,9 @@ form.addEventListener('submit', function(e) {
     const imgNum    = Math.min(Math.ceil(secs / PER_IMAGE), total);
     const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;
     const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
-
     clockSecs.textContent = imgRemain;
-    clockUnit.textContent = imgRemain === 1 ? 'second' : 'seconds';
     const imgPct = imgSecs / PER_IMAGE;
     clockRing.style.strokeDashoffset = CIRCUMFERENCE - (imgPct * CIRCUMFERENCE);
-    clockRing.style.stroke = imgRemain <= 3 ? '#fff' : 'var(--gold)';
 
     if (imgSecs < 4) {
       overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
@@ -530,7 +441,7 @@ form.addEventListener('submit', function(e) {
       overlaySub.textContent    = 'Transferring to server.';
     } else if (imgSecs < 10) {
       overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
-      overlayStatus.textContent = `Apex DDI Engine is scoring image ${imgNum}…`;
+      overlayStatus.textContent = `Apex DDI Engine scoring image ${imgNum}…`;
       overlaySub.textContent    = 'DoD · Disruption · DM · Wonder · AQ';
     } else if (imgSecs < 28) {
       overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
@@ -543,51 +454,42 @@ form.addEventListener('submit', function(e) {
     }
   }, 1000);
 
-  // XHR — timeout set to 360s (6 min) to handle 10 images × 35s + server overhead
+  // ── XHR ──────────────────────────────────────────────────────────────────
   const xhr = new XMLHttpRequest();
   xhr.open('POST', form.action || window.location.pathname);
-  xhr.timeout = 360000;
+  xhr.timeout = 360000; // 6 min for 10 images
 
   xhr.onload = function() {
     clearInterval(ticker);
+    clearInterval(breathCycle);
     if (xhr.status === 200) {
-      // Success — show completion then redirect to dashboard
       clockSecs.textContent = '✓';
-      clockUnit.textContent = 'done';
       clockRing.style.strokeDashoffset = '0';
-      clockRing.style.stroke = 'var(--gold)';
+      clockRing.style.stroke = 'rgba(200,168,75,0.9)';
       overlayPhase.textContent  = 'COMPLETE';
       overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} processed!`;
       overlaySub.textContent    = 'Redirecting to your dashboard…';
+      if (breathLabel) breathLabel.textContent = '🙏';
       sessionStorage.removeItem('bulk_processing');
-      setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
     } else {
-      // Server returned an error status — show inside overlay
       showOverlayError(`Server error ${xhr.status}. Your images may have been saved. Check your dashboard, or try again.`);
     }
   };
 
   xhr.onerror = function() {
-    clearInterval(ticker);
-    showOverlayError('Network error — connection lost mid-upload. Check your dashboard to see if any images were saved, then try again.');
+    clearInterval(ticker); clearInterval(breathCycle);
+    showOverlayError('Network error — connection lost. Check your dashboard to see if any images were saved, then try again.');
   };
 
   xhr.ontimeout = function() {
-    clearInterval(ticker);
-    // Timeout likely means server is still processing (not necessarily failed)
-    clockSecs.textContent = '?';
-    clockUnit.textContent = '';
-    overlayPhase.textContent  = 'STILL PROCESSING';
-    overlayStatus.textContent = 'The server is taking longer than expected.';
-    overlaySub.textContent    = '';
-    showOverlayError('The request timed out in your browser, but the server may still be scoring your images. Check your dashboard in 2–3 minutes. If images appear there, scoring completed successfully.');
+    clearInterval(ticker); clearInterval(breathCycle);
+    showOverlayError('The request timed out in your browser, but the server may still be scoring. Check your dashboard in 2–3 minutes.');
   };
 
   function showOverlayError(msg) {
     document.getElementById('overlayErrorMsg').textContent = msg;
     document.getElementById('overlayError').style.display = 'block';
-    // Stop the dot pulse animation
-    document.querySelector('.dot-pulse').style.display = 'none';
   }
 
   xhr.send(new FormData(form));
@@ -595,7 +497,7 @@ form.addEventListener('submit', function(e) {
 
 window.addEventListener('DOMContentLoaded', initPage);
 
-// Leaderboard visibility toggle
+// Leaderboard toggle
 (function() {
   const cb    = document.getElementById('isPublicToggle');
   const track = document.getElementById('bulkToggleTrack');
@@ -603,17 +505,8 @@ window.addEventListener('DOMContentLoaded', initPage);
   const label = document.getElementById('bulkToggleLabel');
   if (!cb) return;
   cb.addEventListener('change', function() {
-    if (this.checked) {
-      track.style.background = 'var(--gold)';
-      thumb.style.left = '23px';
-      label.style.color = 'var(--gold)';
-      label.textContent = 'Public';
-    } else {
-      track.style.background = 'var(--border)';
-      thumb.style.left = '3px';
-      label.style.color = 'var(--text-muted)';
-      label.textContent = 'Hidden';
-    }
+    if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
+    else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
   });
 })();
 </script>
