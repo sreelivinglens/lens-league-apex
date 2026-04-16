@@ -76,24 +76,7 @@
   .legal-box label a { color: var(--gold); text-decoration: none; }
   .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
 
-  /* ── Session Modal ── */
-  #sessionModal {
-    display: none; position: fixed; inset: 0; z-index: 10000;
-    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
-    align-items: center; justify-content: center; padding: 32px;
-  }
-  #sessionModal.active { display: flex; }
-  .session-modal-box {
-    background: var(--surface-2); border: 1px solid var(--gold-dark);
-    border-radius: var(--radius-lg); padding: 36px 32px; max-width: 440px; width: 100%;
-    text-align: center;
-  }
-  .session-modal-icon { font-size: 48px; margin-bottom: 20px; }
-  .session-modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
-  .session-modal-body { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; }
-  .session-modal-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
-  /* ── SCORING OVERLAY ── */
+  /* ══ SCORING OVERLAY ══ */
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
     background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
@@ -248,23 +231,7 @@
   </div>
 </div>
 
-<!-- SESSION EXPIRED MODAL -->
-<div id="sessionModal">
-  <div class="session-modal-box">
-    <div class="session-modal-icon">🔐</div>
-    <div class="session-modal-title">Session Expired</div>
-    <div class="session-modal-body">
-      Your login session has expired — this is common on mobile after the browser has been idle for a while.<br><br>
-      Please log in again, then come straight back to upload your image.
-    </div>
-    <div class="session-modal-btns">
-      <a href="/login?next=/upload" class="btn btn-solid" style="padding:12px 28px;">Log In Again →</a>
-      <button onclick="dismissSessionModal()" class="btn" style="padding:12px 20px;">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- SCORING OVERLAY -->
+<!-- SCORING OVERLAY — shows on submit, browser handles redirect naturally -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
   <div class="breath-hero">
@@ -334,64 +301,55 @@
 
   // ── Genre hints ───────────────────────────────────────────────────────────
   const genreHints = {
-    'Creative':      '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
-    'Drone & Aerial':'🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
-    'Wildlife':      '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street':        '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
-    'Landscape':     '🌄 Light quality, composition, patience. Long-exposure blur on water and clouds is rewarded.',
-    'Macro':         '🔬 Extreme precision focus required. Sharpness on the primary subject is the key DoD criterion.',
-    'Wedding':       '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
-    'People':        '👤 Emotional connection and authentic expression paramount. AQ is the dominant signal.',
+    'Creative':       '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
+    'Drone & Aerial': '🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
+    'Wildlife':       '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
+    'Street':         '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
+    'Landscape':      '🌄 Light quality, composition, patience. Long-exposure blur on water and clouds is rewarded.',
+    'Macro':          '🔬 Extreme precision focus required. Sharpness on the primary subject is the key DoD criterion.',
+    'Wedding':        '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
+    'People':         '👤 Emotional connection and authentic expression paramount. AQ is the dominant signal.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
 
-  // ── Session expired — redirect straight to login ─────────────────────────
-  function showSessionModal() {
-    document.getElementById('scoringOverlay').classList.remove('active');
-    submitBtn.disabled = false;
-    submitBtn.textContent = '⬆ Submit for Scoring';
-    // Redirect immediately to login with return URL
-    window.location.href = '/login?next=/upload';
-  }
-  window.dismissSessionModal = function() {
-    document.getElementById('sessionModal').classList.remove('active');
-  };
-
-  // ── Form submit ───────────────────────────────────────────────────────────
+  // ── Form submit — validate, show overlay, then let browser POST normally ──
   form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
     const file = fileInput.files[0];
-    if (!file) { showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
 
+    // Client-side validations first (prevent submit if they fail)
+    if (!file) { e.preventDefault(); showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type)) { e.preventDefault(); showError('Only JPG and PNG files are accepted.'); return; }
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-      showError(`⚠️ Your image is ${sizeMB} MB — over the 5 MB limit. Please resize before uploading.`);
+      e.preventDefault();
+      showError(`⚠️ Your image is ${(file.size/1024/1024).toFixed(1)} MB — over the 5 MB limit. Please resize before uploading.`);
       return;
     }
-
     const trackSelected = document.querySelector('input[name="camera_track"]:checked');
-    if (!trackSelected) { trackHint.style.display = 'block'; trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-
+    if (!trackSelected) {
+      e.preventDefault();
+      trackHint.style.display = 'block';
+      trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     if (!legalCheck.checked) {
+      e.preventDefault();
       legalBox.classList.add('error-highlight');
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       legalCheck.addEventListener('change', () => legalBox.classList.remove('error-highlight'), { once: true });
       return;
     }
 
+    // All validations passed — show overlay and let the form POST naturally
     submitBtn.disabled = true;
-    doUpload();
+    startOverlay();
+    // Form submits normally — browser follows the redirect from Flask
   });
 
-  // ── Upload with overlay ───────────────────────────────────────────────────
-  function doUpload() {
-    submitBtn.textContent = 'Processing…';
-
+  // ── Overlay ───────────────────────────────────────────────────────────────
+  function startOverlay() {
     const overlay      = document.getElementById('scoringOverlay');
     const clockRing    = document.getElementById('clockRing');
     const clockSecs    = document.getElementById('clockSecs');
@@ -414,13 +372,13 @@
     clockSecs.textContent = TOTAL_SECS;
 
     let breathPhase = 0;
-    const breathCycle = setInterval(() => {
+    setInterval(() => {
       breathPhase = (breathPhase + 1) % 2;
       if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
     }, 4000);
 
     let elapsed = 0;
-    const ticker = setInterval(() => {
+    setInterval(() => {
       elapsed++;
       clockSecs.textContent = Math.max(TOTAL_SECS - elapsed, 0);
       clockRing.style.strokeDashoffset = CIRCUMFERENCE - (Math.min(elapsed / TOTAL_SECS, 1) * CIRCUMFERENCE);
@@ -429,96 +387,13 @@
       overlayStatus.textContent = phase.status;
       overlaySub.textContent    = phase.sub;
     }, 1000);
-
-    function stopAll() { clearInterval(ticker); clearInterval(breathCycle); }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload');
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.withCredentials = true;
-    xhr.timeout = 120000;
-
-    xhr.addEventListener('load', function () {
-      stopAll();
-
-      if (xhr.status === 401) {
-        showSessionModal();
-        return;
-      }
-      if (xhr.status === 413) {
-        overlay.classList.remove('active');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '⬆ Submit for Scoring';
-        showError('File too large — please resize to under 5 MB.');
-        fileInput.value = ''; previewArea.style.display = 'none'; return;
-      }
-      if (xhr.status === 409) {
-        overlay.classList.remove('active');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '⬆ Submit for Scoring';
-        let msg = 'Duplicate image detected.';
-        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-        showError(msg); fileInput.value = ''; previewArea.style.display = 'none'; return;
-      }
-      if (xhr.status === 403) {
-        overlay.classList.remove('active');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '⬆ Submit for Scoring';
-        let msg = 'Upload limit reached. Please upgrade to continue.';
-        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-        showError(msg); return;
-      }
-
-      // Try parsing JSON
-      let resp = null;
-      try { resp = JSON.parse(xhr.responseText); } catch(e) {
-        // Got HTML — this is a session issue that slipped through the ping
-        showSessionModal();
-        return;
-      }
-
-      if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
-        clockSecs.textContent = '✓';
-        clockRing.style.strokeDashoffset = '0';
-        clockRing.style.stroke = 'rgba(200,168,75,0.9)';
-        overlayPhase.textContent  = 'COMPLETE';
-        overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
-        overlaySub.textContent    = 'Redirecting to your score card…';
-        if (breathLabel) breathLabel.textContent = '🙏';
-        setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 1200);
-        return;
-      }
-
-      // Any other non-200 with parseable JSON
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⬆ Submit for Scoring';
-      showError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
-    });
-
-    xhr.addEventListener('error', function () {
-      stopAll();
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⬆ Submit for Scoring';
-      showError('Network error — check your connection and try again.');
-    });
-    xhr.addEventListener('timeout', function () {
-      stopAll();
-      overlay.classList.remove('active');
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⬆ Submit for Scoring';
-      showError('Request timed out. Check your dashboard in a minute — your image may have been saved.');
-    });
-
-    xhr.send(new FormData(form));
   }
 
 })();
 
 // ── Leaderboard visibility toggle ─────────────────────────────────────────
 (function() {
-  const cb = document.getElementById('isPublicToggle');
+  const cb    = document.getElementById('isPublicToggle');
   const track = document.getElementById('toggleTrack');
   const thumb = document.getElementById('toggleThumb');
   const label = document.getElementById('toggleLabel');
