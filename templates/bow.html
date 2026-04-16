@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}Body of Work — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  .bow-wrap { max-width: 720px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
+
+  .page-eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #A89BCE;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: #6B5F8A; }
+
+  .page-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
+    color: var(--text-primary); margin-bottom: 0.75rem;
+  }
+  .page-headline em { font-style: italic; color: #A89BCE; }
+
+  .page-intro {
+    font-size: 1rem; color: var(--text-secondary); line-height: 1.85;
+    margin-bottom: 2.5rem; max-width: 580px;
+  }
+
+  /* Prereq bar */
+  .prereq-bar {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(168,155,206,0.07);
+    border: 1px solid rgba(168,155,206,0.2);
+    border-left: 3px solid #A89BCE;
+    border-radius: var(--radius-md); padding: 18px 22px;
+    margin-bottom: 28px;
+  }
+  .prereq-icon {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(168,155,206,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: #A89BCE;
+  }
+  .prereq-label {
+    font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #A89BCE; margin-bottom: 4px;
+  }
+  .prereq-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+  .prereq-text strong { color: var(--text-primary); }
+
+  /* Section heads */
+  .bow-section { margin-bottom: 2.5rem; }
+  .bow-section-title {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+
+  /* Instruction list */
+  .bow-rules { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .bow-rules li {
+    display: flex; align-items: flex-start; gap: 14px;
+    font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;
+  }
+  .bow-rules li .rule-num {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--surface-3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
+    color: #A89BCE; margin-top: 2px;
+  }
+  .bow-rules li strong { color: var(--text-primary); }
+
+  /* Prize table */
+  .prize-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .prize-table th {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 8px 16px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .prize-table td {
+    padding: 13px 16px; color: var(--text-secondary);
+    border-bottom: 1px solid var(--surface-3);
+    vertical-align: middle;
+  }
+  .prize-table tr:last-child td { border-bottom: none; }
+  .prize-table td:last-child { color: var(--gold); font-weight: 600; font-family: var(--font-mono); font-size: 0.95rem; }
+  .medal-gold   { color: #FFD700; font-size: 1.1rem; }
+  .medal-silver { color: #C0C0C0; font-size: 1.1rem; }
+  .medal-bronze { color: #CD7F32; font-size: 1.1rem; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
+  .timeline::before {
+    content: ''; position: absolute; left: 15px; top: 12px; bottom: 12px;
+    width: 1px; background: var(--border);
+  }
+  .tl-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 10px 0;
+  }
+  .tl-dot {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.68rem; color: #A89BCE;
+    position: relative; z-index: 1;
+  }
+  .tl-dot.active { background: rgba(168,155,206,0.15); border-color: #A89BCE; }
+  .tl-content { padding-top: 6px; }
+  .tl-month { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; }
+  .tl-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
+  .tl-desc strong { color: var(--text-primary); }
+
+  /* Subscriber gate */
+  .gate-box {
+    margin-top: 2.5rem;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-top: 3px solid #A89BCE;
+    border-radius: var(--radius-md); padding: 28px 32px;
+    text-align: center;
+  }
+  .gate-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+  .gate-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.7; }
+  .gate-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bow-wrap">
+
+  <div class="page-eyebrow">Body of Work</div>
+  <h1 class="page-headline">The platform's<br>most <em>prestigious</em> competition.</h1>
+  <p class="page-intro">
+    Not a collection of your best images. A unified thematic series — with a single narrative arc, a coherent visual language, and a point of view that holds together from first frame to last. Judged exclusively by Jury Legends. No engine. No peer rating. Pure human judgement.
+  </p>
+
+  <!-- Pre-qualifying bar -->
+  <div class="prereq-bar">
+    <div class="prereq-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <div class="prereq-label">Pre-qualifying Requirement</div>
+      <div class="prereq-text">
+        You must hold a <strong>rolling average of 7.5 or above</strong> across your last 20 scored images to unlock the Body of Work entry form. This ensures the jury reviews only work that has proven itself at the highest platform standard.
+        Subscribers only. Active subscription must be maintained through submission close.
+      </div>
+    </div>
+  </div>
+
+  <!-- What to submit -->
+  <div class="bow-section">
+    <div class="bow-section-title">Submission Requirements</div>
+    <ul class="bow-rules">
+      <li>
+        <div class="rule-num">1</div>
+        <div>Submit between <strong>6 and 12 images</strong>. More is not better — the jury evaluates coherence and editorial restraint. Every image must earn its place in the series.</div>
+      </li>
+      <li>
+        <div class="rule-num">2</div>
+        <div>The series must be <strong>cross-genre</strong>. Images from a single genre are not accepted. The BOW is designed to demonstrate range within a unified vision.</div>
+      </li>
+      <li>
+        <div class="rule-num">3</div>
+        <div>You must submit a <strong>series statement</strong> of 80 to 200 words. This is read by every juror before they view a single image. It frames your intent — not your technique.</div>
+      </li>
+      <li>
+        <div class="rule-num">4</div>
+        <div>All images must have been <strong>previously scored on the platform</strong> with a minimum individual score of 6.5. You cannot submit work that has not gone through the Apex DDI Engine.</div>
+      </li>
+      <li>
+        <div class="rule-num">5</div>
+        <div>Image order matters. You will sequence your submission — the jury views images in the exact order you specify. <strong>Sequence is part of the judging criteria.</strong></div>
+      </li>
+      <li>
+        <div class="rule-num">6</div>
+        <div>One submission per photographer per year. You may <strong>not withdraw and resubmit</strong> once the submission window closes. Review your series carefully before submitting.</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Prizes -->
+  <div class="bow-section">
+    <div class="bow-section-title">Prize Structure</div>
+    <table class="prize-table">
+      <thead>
+        <tr>
+          <th>Award</th>
+          <th>What it recognises</th>
+          <th>Prize</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="medal-gold">◆</span> &nbsp;Gold</td>
+          <td>The single most powerful unified body of work submitted that year</td>
+          <td>₹3,00,000</td>
+        </tr>
+        <tr>
+          <td><span class="medal-silver">◆</span> &nbsp;Silver</td>
+          <td>Outstanding series with exceptional coherence and narrative strength</td>
+          <td>₹1,50,000</td>
+        </tr>
+        <tr>
+          <td><span class="medal-bronze">◆</span> &nbsp;Bronze</td>
+          <td>Remarkable submission demonstrating distinctive visual voice</td>
+          <td>₹75,000</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.78rem; color:var(--text-muted); margin-top:10px; line-height:1.6;">
+      The jury may decline to award Gold if no submission meets the required standard. Highly commended citations may be awarded at the jury's discretion, carrying no monetary prize.
+    </p>
+  </div>
+
+  <!-- Timeline -->
+  <div class="bow-section">
+    <div class="bow-section-title">Annual Timeline</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">01</div>
+        <div class="tl-content">
+          <div class="tl-month">Month 1 – Month 9</div>
+          <div class="tl-desc"><strong>Build your average.</strong> Score images continuously. Maintain a rolling average ≥ 7.5 to stay eligible.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot active">10</div>
+        <div class="tl-content">
+          <div class="tl-month">Month 10 — Submissions Open</div>
+          <div class="tl-desc"><strong>Entry window opens.</strong> Eligible photographers (avg ≥ 7.5, active subscription) can access the submission form.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot active">11</div>
+        <div class="tl-content">
+          <div class="tl-month">End of Month 11 — Submissions Close</div>
+          <div class="tl-desc"><strong>No late entries accepted.</strong> Jury review begins. Results announced in Month 12.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">12</div>
+        <div class="tl-content">
+          <div class="tl-month">Month 12 — Results</div>
+          <div class="tl-desc"><strong>Gold, Silver, Bronze announced.</strong> Winning series published in the platform gallery. Prize transfer within 14 working days.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Subscriber gate / CTA -->
+  {% if current_user.is_authenticated %}
+    {% if current_user.is_subscribed %}
+      {% set avg = current_user.rolling_average or 0 %}
+      {% if avg >= 7.5 %}
+        <div class="gate-box">
+          <div class="gate-title">You're eligible to submit.</div>
+          <div class="gate-sub">
+            Your rolling average qualifies you for the Body of Work.<br>
+            Make sure your series is ready before you submit — there are no re-submissions.
+          </div>
+          <div class="gate-actions">
+            <a href="{{ url_for('bow_submit') }}" class="btn btn-solid" style="padding:13px 32px; font-size:1rem;">Submit My Body of Work →</a>
+          </div>
+        </div>
+      {% else %}
+        <div class="gate-box">
+          <div class="gate-title">Keep building your average.</div>
+          <div class="gate-sub">
+            Your current rolling average is <strong style="color:var(--text-primary);">{{ "%.1f"|format(avg) }}</strong>.
+            The Body of Work requires a rolling average of 7.5 or above across your last 20 scored images.<br><br>
+            Upload more images, focus on quality, and the submission form will unlock automatically when you qualify.
+          </div>
+          <div class="gate-actions">
+            <a href="{{ url_for('upload') }}" class="btn btn-solid" style="padding:11px 28px;">Upload an Image →</a>
+            <a href="{{ url_for('dashboard') }}" class="btn" style="padding:11px 20px;">Dashboard</a>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="gate-box">
+        <div class="gate-title">Active subscription required.</div>
+        <div class="gate-sub">
+          The Body of Work is open to subscribers only. An active subscription must be maintained through the end of Month 11 for your submission to remain eligible.
+        </div>
+        <div class="gate-actions">
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">View Pricing →</a>
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="gate-box">
+      <div class="gate-title">Join to compete.</div>
+      <div class="gate-sub">
+        Create a free account, start scoring your work, and build toward the Body of Work. It takes time — and that's the point.
+      </div>
+      <div class="gate-actions">
+        <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:11px 28px;">Create Free Account →</a>
+        <a href="{{ url_for('login') }}" class="btn" style="padding:11px 20px;">Log In</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <div style="margin-top:1.75rem; text-align:center;">
+    <a href="/contests" style="font-size:0.82rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border);">← All Competitions</a>
+  </div>
+
+</div>
+{% endblock %}
