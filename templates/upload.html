@@ -383,20 +383,9 @@
       showError(msg);
     }
 
-    // ── Pre-flight session check ─────────────────────────────────────────────
-    // Verify session cookie is being sent before firing the real upload XHR.
-    // On mobile Safari, cookies can silently fail on XHR if ITP blocks them.
-    fetch('/health', { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.status !== 'ok') throw new Error('Health check failed');
-        // Session is fine — fire the upload
-        doUpload();
-      })
-      .catch(() => {
-        // Health check failed — try upload anyway, session error will surface clearly
-        doUpload();
-      });
+    // Fire upload directly — no preflight needed now that session cookies
+    // are configured correctly with SameSite=Lax + Secure in app.py
+    doUpload();
 
     function doUpload() {
       const xhr = new XMLHttpRequest();
