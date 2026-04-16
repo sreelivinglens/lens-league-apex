@@ -5,6 +5,34 @@
 <style>
   .upload-wrap { max-width: 680px; margin: 0 auto; }
 
+  /* ── STATUTORY ADVISORY ── */
+  .upload-advisory {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(200,168,75,0.07); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
+  }
+  .advisory-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .advisory-body { flex: 1; }
+  .advisory-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 5px;
+  }
+  .advisory-text {
+    font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+  }
+  .advisory-text strong { color: var(--text-primary); }
+  .advisory-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .advisory-chip {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; padding: 3px 10px; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--text-muted);
+    background: var(--surface-3);
+  }
+  .advisory-chip.ok { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
   .drop-zone {
     border: 2px dashed var(--border-strong);
     border-radius: var(--radius-md);
@@ -28,6 +56,12 @@
   .preview-area img { width: 100%; max-height: 340px; object-fit: contain; display: block; background: var(--surface-3); }
   .file-info { padding: 10px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
 
+  /* size warning — soft, amber, not red */
+  .file-size-warning {
+    display: none; margin-top: 10px; padding: 12px 16px;
+    background: var(--amber-dim); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm); color: #F0C888; font-size: 14px; line-height: 1.6;
+  }
   .file-error {
     display: none; margin-top: 10px; padding: 12px 16px;
     background: var(--red-dim); border: 1px solid var(--red);
@@ -170,6 +204,27 @@
     <h1>Upload Image</h1>
     <p>Submit your photograph for AI scoring via the Apex DDI Engine</p>
   </div>
+
+  <!-- ── STATUTORY ADVISORY — shown before file selection ── -->
+  <div class="upload-advisory">
+    <div class="advisory-icon">📋</div>
+    <div class="advisory-body">
+      <div class="advisory-title">Image Upload Advisory</div>
+      <div class="advisory-text">
+        Upload your photo straight from your phone or camera.
+        <strong>We recommend files under 5 MB</strong> for the fastest upload experience.
+        Files up to 20 MB are accepted — the engine automatically resizes everything for scoring.
+      </div>
+      <div class="advisory-chips">
+        <span class="advisory-chip ok">✓ iPhone — any size</span>
+        <span class="advisory-chip ok">✓ Samsung — any size</span>
+        <span class="advisory-chip ok">✓ DSLR JPEG — any size</span>
+        <span class="advisory-chip">Max 20 MB per file</span>
+        <span class="advisory-chip">JPG · PNG accepted</span>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
 
@@ -177,9 +232,15 @@
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
         <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB &nbsp;·&nbsp; Resize to 2000px before uploading</div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Recommended under 5 MB &nbsp;·&nbsp; Max 20 MB accepted</div>
       </div>
 
+      <!-- Soft size warning — amber, not a block -->
+      <div class="file-size-warning" id="fileSizeWarning">
+        ⚠️ This file is larger than 5 MB. It will still upload fine — the engine resizes automatically. Larger files just take a little longer to transfer.
+      </div>
+
+      <!-- Hard error — wrong type etc -->
       <div class="file-error" id="fileError"></div>
 
       <div class="preview-area" id="previewArea">
@@ -249,7 +310,7 @@
 
       <div class="exif-note">
         📋 <strong>EXIF metadata</strong> is automatically extracted to verify camera authenticity.
-        For best results upload the original JPEG straight from your camera.
+        For best results upload the original JPEG straight from your camera or phone gallery.
       </div>
 
       <div class="legal-box" id="legalBox">
@@ -319,45 +380,77 @@
 {% block extra_js %}
 <script>
 (function () {
-  const dropZone    = document.getElementById('dropZone');
-  const fileInput   = document.getElementById('imageInput');
-  const previewArea = document.getElementById('previewArea');
-  const previewImg  = document.getElementById('previewImg');
-  const fileInfo    = document.getElementById('fileInfo');
-  const fileError   = document.getElementById('fileError');
-  const form        = document.getElementById('uploadForm');
-  const submitBtn   = document.getElementById('submitBtn');
-  const legalBox    = document.getElementById('legalBox');
-  const legalCheck  = document.getElementById('legal_declaration');
-  const trackHint   = document.getElementById('trackRequiredHint');
-  const MAX_MB      = 5;
-  const ALLOWED     = ['image/jpeg', 'image/png'];
+  const dropZone       = document.getElementById('dropZone');
+  const fileInput      = document.getElementById('imageInput');
+  const previewArea    = document.getElementById('previewArea');
+  const previewImg     = document.getElementById('previewImg');
+  const fileInfo       = document.getElementById('fileInfo');
+  const fileError      = document.getElementById('fileError');
+  const fileSizeWarn   = document.getElementById('fileSizeWarning');
+  const form           = document.getElementById('uploadForm');
+  const submitBtn      = document.getElementById('submitBtn');
+  const legalBox       = document.getElementById('legalBox');
+  const legalCheck     = document.getElementById('legal_declaration');
+  const trackHint      = document.getElementById('trackRequiredHint');
 
-  // ── Drag & drop ───────────────────────────────────────────────────────────
-  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); }));
-  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); }));
-  dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); } });
-  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+  const MAX_MB         = 20;   // hard limit — Flask also set to 20 MB
+  const WARN_MB        = 5;    // soft advisory threshold
+  const ALLOWED        = ['image/jpeg', 'image/png'];
+
+  // ── Drag & drop ─────────────────────────────────────────────────────────
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.add('dragover');
+  }));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
+    ev.preventDefault(); dropZone.classList.remove('dragover');
+  }));
+  dropZone.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); }
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
 
   function handleFile(file) {
-    fileError.style.display = 'none';
-    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); previewArea.style.display = 'none'; fileInput.value = ''; return; }
+    fileError.style.display    = 'none';
+    fileSizeWarn.style.display = 'none';
+
+    if (!ALLOWED.includes(file.type)) {
+      showError('Only JPG and PNG files are accepted.');
+      previewArea.style.display = 'none';
+      fileInput.value = '';
+      return;
+    }
+
+    // Show soft advisory for files over 5 MB (if size is known — iOS may report 0)
+    if (file.size > 0 && file.size > WARN_MB * 1024 * 1024) {
+      fileSizeWarn.style.display = 'block';
+    }
+
     const reader = new FileReader();
     reader.onload = ev => {
-      previewImg.src = ev.target.result; previewArea.style.display = 'block';
-      fileInfo.textContent = file.size > 0 ? `${file.name}  ·  ${(file.size/1024/1024).toFixed(2)} MB` : file.name;
+      previewImg.src = ev.target.result;
+      previewArea.style.display = 'block';
+      if (file.size > 0) {
+        fileInfo.textContent = `${file.name}  ·  ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      } else {
+        fileInfo.textContent = file.name;
+      }
     };
     reader.readAsDataURL(file);
   }
 
   function showError(msg) {
-    fileError.textContent = msg; fileError.style.display = 'block';
-    submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
+    fileError.textContent    = msg;
+    fileError.style.display  = 'block';
+    submitBtn.disabled       = false;
+    submitBtn.textContent    = '⬆ Submit for Scoring';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  // ── Genre hints ───────────────────────────────────────────────────────────
+  // ── Genre hints ──────────────────────────────────────────────────────────
   const genreHints = {
     'Creative':       '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting.',
     'Drone & Aerial': '🚁 Aerial photography. Geometric patterns score highest.',
@@ -371,28 +464,41 @@
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
   });
-  document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
+  document.querySelectorAll('input[name="camera_track"]').forEach(r =>
+    r.addEventListener('change', () => { trackHint.style.display = 'none'; })
+  );
 
-  // ── Form submit — validate then XHR ──────────────────────────────────────
+  // ── Form submit — validate then XHR ─────────────────────────────────────
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const file = fileInput.files[0];
-    if (!file)                        { showError('Please select an image to upload.'); return; }
+    if (!file) { showError('Please select an image to upload.'); return; }
     if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
+
+    // Hard block only above 20 MB (and only when iOS has reported a real size)
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      showError(`⚠️ Your image is ${(file.size/1024/1024).toFixed(1)} MB — over the 5 MB limit. Please resize before uploading.`);
+      showError(
+        `⚠️ This file is ${(file.size / 1024 / 1024).toFixed(1)} MB — over the 20 MB limit. ` +
+        `Please reduce the file size before uploading.\n\n` +
+        `On iPhone: share the photo → choose "Medium" or "Small" size.\n` +
+        `On Samsung: use Gallery → share → resize before sending.`
+      );
       return;
     }
+
     if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+
     if (!legalCheck.checked) {
       legalBox.classList.add('error-highlight');
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      legalCheck.addEventListener('change', () => legalBox.classList.remove('error-highlight'), { once: true });
+      legalCheck.addEventListener('change', () =>
+        legalBox.classList.remove('error-highlight'), { once: true }
+      );
       return;
     }
 
@@ -404,19 +510,22 @@
     xhr.open('POST', '/upload');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.withCredentials = true;
-    xhr.timeout = 120000;
+    xhr.timeout = 180000; // 3 min — larger files need more transfer time
 
     xhr.onload = function () {
-      if (xhr.status === 413) { showError('File too large — please resize to under 5 MB.'); return; }
+      if (xhr.status === 413) {
+        showError('File too large — please keep files under 20 MB.');
+        return;
+      }
       if (xhr.status === 409) {
         let msg = 'Duplicate image detected.';
         try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-        showError(msg); return;
+        showError(msg);
+        return;
       }
 
       let resp = null;
       try { resp = JSON.parse(xhr.responseText); } catch(e) {
-        // Got HTML — session issue. Redirect to login.
         window.location.href = '/login?next=/upload'; return;
       }
 
@@ -425,16 +534,15 @@
       }
 
       if (resp && resp.status === 'ok' && resp.image_id) {
-        // Success — update overlay then redirect
         document.getElementById('overlayPhase').textContent  = 'COMPLETE';
         document.getElementById('overlayStatus').textContent = resp.score
           ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
           : 'Image uploaded!';
         document.getElementById('overlaySubstatus').textContent = 'Loading your score card…';
         document.getElementById('breathLabel').textContent = '🙏';
-        document.getElementById('clockSecs').textContent = '✓';
+        document.getElementById('clockSecs').textContent   = '✓';
         document.getElementById('clockRing').style.strokeDashoffset = '0';
-        document.getElementById('clockRing').style.stroke = 'rgba(200,168,75,0.9)';
+        document.getElementById('clockRing').style.stroke  = 'rgba(200,168,75,0.9)';
         setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 800);
         return;
       }
@@ -448,7 +556,7 @@
     xhr.send(new FormData(form));
   });
 
-  // ── Overlay ticker ────────────────────────────────────────────────────────
+  // ── Overlay ticker ───────────────────────────────────────────────────────
   function startOverlay() {
     const overlay   = document.getElementById('scoringOverlay');
     const clockRing = document.getElementById('clockRing');
@@ -471,31 +579,27 @@
     clockSecs.textContent = TOTAL;
 
     let bp = 0;
-    const bc = setInterval(() => { bp = (bp+1)%2; breath.textContent = bp === 0 ? 'Inhale' : 'Exhale'; }, 4000);
+    const bc = setInterval(() => {
+      bp = (bp + 1) % 2;
+      breath.textContent = bp === 0 ? 'Inhale' : 'Exhale';
+    }, 4000);
 
     let elapsed = 0;
     const tick = setInterval(() => {
       elapsed++;
       clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
-      clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed/TOTAL,1)*CIRC);
-      const p = phases.find(x => elapsed >= x.from && elapsed < x.to) || phases[phases.length-1];
-      phase.textContent = p.p; status.textContent = p.s; sub.textContent = p.ss;
+      clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed / TOTAL, 1) * CIRC);
+      const p = phases.find(x => elapsed >= x.from && elapsed < x.to) || phases[phases.length - 1];
+      phase.textContent  = p.p;
+      status.textContent = p.s;
+      sub.textContent    = p.ss;
     }, 1000);
 
-    // Store intervals so showError can clear them
-    overlay._bc = bc; overlay._tick = tick;
+    overlay._bc   = bc;
+    overlay._tick = tick;
   }
 
-  // Patch showError to also stop overlay intervals
-  const _origShowError = window._showError;
-  document.getElementById('scoringOverlay').addEventListener('classchange', () => {});
-
-})();
-
-// Patch showError to clear overlay timers when error shown
-(function() {
-  const origShowError = window.showError;
-  // showError is local to the IIFE above, so we hook via overlay removal
+  // Clear overlay timers when error shown
   const obs = new MutationObserver(() => {
     const overlay = document.getElementById('scoringOverlay');
     if (!overlay.classList.contains('active')) {
@@ -504,9 +608,10 @@
     }
   });
   obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
+
 })();
 
-// ── Leaderboard toggle ─────────────────────────────────────────────────────
+// ── Leaderboard toggle ───────────────────────────────────────────────────
 (function() {
   const cb = document.getElementById('isPublicToggle');
   const tr = document.getElementById('toggleTrack');
@@ -514,8 +619,13 @@
   const lb = document.getElementById('toggleLabel');
   if (!cb) return;
   cb.addEventListener('change', function() {
-    if (this.checked) { tr.style.background='var(--gold)'; th.style.left='23px'; lb.style.color='var(--gold)'; lb.textContent='Public'; }
-    else { tr.style.background='var(--border)'; th.style.left='3px'; lb.style.color='var(--text-muted)'; lb.textContent='Hidden'; }
+    if (this.checked) {
+      tr.style.background = 'var(--gold)'; th.style.left = '23px';
+      lb.style.color = 'var(--gold)'; lb.textContent = 'Public';
+    } else {
+      tr.style.background = 'var(--border)'; th.style.left = '3px';
+      lb.style.color = 'var(--text-muted)'; lb.textContent = 'Hidden';
+    }
   });
 })();
 </script>

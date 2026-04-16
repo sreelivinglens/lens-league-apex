@@ -3,6 +3,30 @@
 
 {% block extra_css %}
 <style>
+  /* ── STATUTORY ADVISORY ── */
+  .upload-advisory {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(200,168,75,0.07); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
+  }
+  .advisory-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .advisory-body { flex: 1; }
+  .advisory-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 5px;
+  }
+  .advisory-text { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+  .advisory-text strong { color: var(--text-primary); }
+  .advisory-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .advisory-chip {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; padding: 3px 10px; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--text-muted);
+    background: var(--surface-3);
+  }
+  .advisory-chip.ok { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
   .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: var(--surface-2); border: 1px solid var(--gold-dark); max-width: 580px; width: 100%; border-radius: var(--radius-md); display: flex; flex-direction: column; max-height: 90vh; }
@@ -20,7 +44,13 @@
   .dz-label { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
   .dz-hint { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; color: var(--text-muted); }
 
-  /* Shot On — mobile-safe, no emoji dependency for layout */
+  /* Soft per-file size warning strip */
+  .bulk-size-warning {
+    display: none; margin-top: 8px; padding: 10px 14px;
+    background: var(--amber-dim); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm); font-size: 13px; color: #F0C888; line-height: 1.6;
+  }
+
   .shot-on-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
   .shot-on-tile { position: relative; }
   .shot-on-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -33,7 +63,6 @@
   }
   .shot-on-tile label .tile-icon {
     font-size: 28px; line-height: 1;
-    /* Force emoji rendering on mobile */
     font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji", sans-serif;
   }
   .shot-on-tile label .tile-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
@@ -128,6 +157,26 @@
     <p>Upload multiple images at once — AI scores each one automatically</p>
   </div>
 
+  <!-- ── STATUTORY ADVISORY ── -->
+  <div class="upload-advisory">
+    <div class="advisory-icon">📋</div>
+    <div class="advisory-body">
+      <div class="advisory-title">Image Upload Advisory</div>
+      <div class="advisory-text">
+        Upload straight from your phone gallery or camera card.
+        <strong>We recommend files under 5 MB each</strong> for fastest bulk processing.
+        Files up to 20 MB per image are accepted — the engine resizes automatically.
+      </div>
+      <div class="advisory-chips">
+        <span class="advisory-chip ok">✓ iPhone — any size</span>
+        <span class="advisory-chip ok">✓ Samsung — any size</span>
+        <span class="advisory-chip ok">✓ DSLR JPEG — any size</span>
+        <span class="advisory-chip">Max 20 MB per file</span>
+        <span class="advisory-chip">Max 10 files per batch</span>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <form method="POST" enctype="multipart/form-data" id="bulkForm" action="/bulk-upload">
 
@@ -138,11 +187,16 @@
            ondrop="handleDrop(event)">
         <span class="dz-icon">📁</span>
         <div class="dz-label">Drop images here or <strong style="color:var(--gold);">click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 5 MB each &nbsp;·&nbsp; <strong style="color:var(--amber);">Max 10 images per batch</strong></div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Recommended under 5 MB each &nbsp;·&nbsp; Max 20 MB per file &nbsp;·&nbsp; <strong style="color:var(--amber);">Max 10 images per batch</strong></div>
         <div id="filecount" style="margin-top:14px; font-size:14px; font-weight:600; color:var(--gold); display:none;"></div>
         <div id="filelist" style="margin-top:10px; font-size:13px; color:var(--text-muted); text-align:left; max-height:120px; overflow-y:auto; display:none;"></div>
       </div>
       <input type="file" id="filesInput" name="images" multiple accept=".jpg,.jpeg,.png" style="display:none;" required>
+
+      <!-- Soft size warning for bulk -->
+      <div class="bulk-size-warning" id="bulkSizeWarning">
+        ⚠️ One or more files exceed 5 MB. They will still upload — the engine resizes automatically. Larger files take longer per image.
+      </div>
 
       <hr style="border:none; border-top:1px solid var(--border-subtle); margin:24px 0;">
 
@@ -162,7 +216,7 @@
         </div>
       </div>
 
-      <!-- Shot On — column tiles, emoji forced with font-family -->
+      <!-- Shot On -->
       <div class="form-group" style="margin-bottom:20px;">
         <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">
           Shot On <span style="color:var(--red); font-size:13px;">*</span>
@@ -290,7 +344,9 @@
 
 {% block extra_js %}
 <script>
-const AGREED_KEY = 'bulk_upload_agreed';
+const AGREED_KEY  = 'bulk_upload_agreed';
+const MAX_MB      = 20;   // hard limit per file
+const WARN_MB     = 5;    // soft advisory threshold
 
 function initPage() {
   sessionStorage.removeItem('bulk_processing');
@@ -330,23 +386,39 @@ function handleDrop(e) {
   try { input.files = e.dataTransfer.files; } catch(err) {}
   showFiles(e.dataTransfer.files);
 }
+
 function showFiles(files) {
   if (!files.length) return;
   const fc = document.getElementById('filecount');
   const fl = document.getElementById('filelist');
-  const overLimit = files.length > 10;
-  fc.textContent = overLimit ? `⚠️ ${files.length} files — maximum is 10.` : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
-  fc.style.color = overLimit ? 'var(--red)' : 'var(--gold)';
+  const sw = document.getElementById('bulkSizeWarning');
+
+  const overLimit  = files.length > 10;
+  let   hasLarge   = false;
+
+  fc.textContent = overLimit
+    ? `⚠️ ${files.length} files — maximum is 10.`
+    : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  fc.style.color   = overLimit ? 'var(--red)' : 'var(--gold)';
   fc.style.display = 'block';
   dropzone.style.borderColor = 'var(--gold)';
-  fl.innerHTML = Array.from(files).map(f =>
-    `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
-       <span>${f.name}</span>
-       <span style="color:var(--text-muted); font-family:var(--font-mono); margin-left:12px;">${(f.size/1024/1024).toFixed(1)}MB</span>
-     </div>`
-  ).join('');
+
+  fl.innerHTML = Array.from(files).map(f => {
+    const sizeMB = f.size > 0 ? (f.size / 1024 / 1024).toFixed(1) : '?';
+    if (f.size > 0 && f.size > WARN_MB * 1024 * 1024) hasLarge = true;
+    const sizeColor = (f.size > 0 && f.size > WARN_MB * 1024 * 1024)
+      ? 'color:var(--amber);'
+      : 'color:var(--text-muted);';
+    return `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+      <span>${f.name}</span>
+      <span style="font-family:var(--font-mono); margin-left:12px; ${sizeColor}">${sizeMB}MB</span>
+    </div>`;
+  }).join('');
   fl.style.display = 'block';
+
+  sw.style.display = hasLarge ? 'block' : 'none';
 }
+
 input.addEventListener('change', () => showFiles(input.files));
 
 function dismissOverlayError() {
@@ -372,9 +444,19 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
+  // Hard block only files genuinely over 20 MB
   let oversized = [];
-  for (let f of files) { if (f.size > 0 && f.size > 5 * 1024 * 1024) oversized.push(f.name); }
-  if (oversized.length) { alert('These files exceed 5 MB — please resize before uploading:\n' + oversized.join('\n')); return; }
+  for (let f of files) {
+    if (f.size > 0 && f.size > MAX_MB * 1024 * 1024) oversized.push(f.name);
+  }
+  if (oversized.length) {
+    alert(
+      `These files exceed 20 MB — please reduce their size before uploading:\n` +
+      oversized.join('\n') +
+      `\n\nOn iPhone: share → choose "Medium" size.\nOn Samsung: use Gallery resize option.`
+    );
+    return;
+  }
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
@@ -409,10 +491,10 @@ form.addEventListener('submit', function(e) {
     const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
     clockSecs.textContent = imgRemain;
     clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
-    if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`; overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`; overlaySub.textContent = 'Transferring to server.'; }
-    else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`; overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`; overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
-    else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;   overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`; overlaySub.textContent = 'Applying genre weights and safeguards.'; }
-    else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`; overlaySub.textContent = 'Building archetype and improvement tip.'; }
+    if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;          overlaySub.textContent = 'Transferring to server.'; }
+    else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`;            overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
+    else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;     overlaySub.textContent = 'Applying genre weights and safeguards.'; }
+    else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`;     overlaySub.textContent = 'Building archetype and improvement tip.'; }
   }, 1000);
 
   function showOverlayError(msg) {
@@ -425,7 +507,7 @@ form.addEventListener('submit', function(e) {
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/bulk-upload');
-  xhr.timeout = 360000;
+  xhr.timeout = 600000; // 10 min for large batches
 
   xhr.onload = function() {
     clearInterval(ticker); clearInterval(breathCycle);
