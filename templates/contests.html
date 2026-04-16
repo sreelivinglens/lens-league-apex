@@ -211,7 +211,7 @@
     </div>
 
     <div class="comp-actions">
-      {% if is_open_contest_active() %}
+      {% if open_contest_active %}
         {% if current_user.is_authenticated and current_user.is_subscribed %}
           <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid" style="padding:11px 28px;">Enter Open Competition →</a>
         {% elif current_user.is_authenticated %}
