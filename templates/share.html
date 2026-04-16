@@ -75,7 +75,9 @@
   .card-header .engine-tag { font-family: var(--font-mono); font-size: 10px; color: rgba(0,0,0,0.5); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
-  .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover; }
+  .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover;
+    -webkit-user-select: none; -moz-user-select: none; user-select: none;
+    -webkit-touch-callout: none; }
 
   /* Full score badge — logged in */
   .score-badge {
@@ -473,6 +475,25 @@ function showFeedback() {
   fb.style.display = 'block';
   setTimeout(() => { fb.style.display = 'none'; }, 3000);
 }
+
+// ── Image right-click & long-press protection ─────────────────────────────
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+  if (e.target.tagName === 'A' && e.target.querySelector('img')) { e.preventDefault(); return false; }
+});
+document.addEventListener('dragstart', function(e) {
+  if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+});
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('img').forEach(function(img) {
+    img.style.webkitTouchCallout = 'none';
+    img.style.webkitUserSelect   = 'none';
+    var parent = img.parentElement;
+    if (parent && parent.tagName === 'A') {
+      parent.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+    }
+  });
+});
 </script>
 </body>
 </html>
