@@ -533,15 +533,13 @@ footer {
 }
 
 /* ── Image right-click protection — sitewide ─────────────────────────────── */
+/* Protection is handled by JS below — CSS only adds user-select */
 img {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
-  pointer-events: none; /* blocks drag + right-click save on images */
+  -webkit-touch-callout: none; /* iOS Safari long-press save */
 }
-/* Re-enable pointer events on nav/logo images only — NOT content images */
-.nav-brand img,
-.nav-logo img { pointer-events: auto; }
 
 </style>
 {% block extra_css %}{% endblock %}
