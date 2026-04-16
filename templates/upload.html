@@ -53,199 +53,124 @@
   }
   .exif-note strong { color: var(--gold); }
 
-  /* ── Shot On (track) selector ── */
-  .shot-on-group {
-    margin-top: 24px;
-    margin-bottom: 0;
-  }
+  .shot-on-group { margin-top: 24px; margin-bottom: 0; }
   .shot-on-group label.field-label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 10px;
+    display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
   }
-  .shot-on-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .shot-on-option {
-    position: relative;
-  }
-  .shot-on-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
+  .shot-on-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .shot-on-option { position: relative; }
+  .shot-on-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
   .shot-on-option label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: var(--surface-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    user-select: none;
+    display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    font-size: 14px; font-weight: 500; color: var(--text-secondary); user-select: none;
   }
   .shot-on-option label .shot-icon { font-size: 1.4rem; }
   .shot-on-option label .shot-text { line-height: 1.3; }
   .shot-on-option label .shot-text small {
-    display: block;
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 400;
-    margin-top: 1px;
+    display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px;
   }
   .shot-on-option input[type="radio"]:checked + label {
-    border-color: var(--gold);
-    background: var(--gold-subtle);
-    color: var(--text-primary);
+    border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary);
   }
   .shot-on-option input[type="radio"]:checked + label .shot-text { color: var(--gold); }
-  .shot-on-option label:hover {
-    border-color: var(--border-strong);
-    background: var(--surface-4);
-  }
-  .shot-on-required-hint {
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 6px;
-    display: none;
-  }
+  .shot-on-option label:hover { border-color: var(--border-strong); background: var(--surface-4); }
+  .shot-on-required-hint { font-size: 12px; color: var(--red); margin-top: 6px; display: none; }
 
-  /* ── Legal declaration ── */
   .legal-box {
-    margin-top: 24px;
-    padding: 16px 18px;
-    background: var(--surface-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+    margin-top: 24px; padding: 16px 18px; background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    display: flex; gap: 12px; align-items: flex-start;
   }
   .legal-box input[type="checkbox"] {
-    margin-top: 3px;
-    width: 16px;
-    height: 16px;
-    accent-color: var(--gold);
-    flex-shrink: 0;
-    cursor: pointer;
+    margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer;
   }
-  .legal-box label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    cursor: pointer;
-  }
-  .legal-box label a {
-    color: var(--gold);
-    text-decoration: none;
-  }
+  .legal-box label { font-size: 13px; color: var(--text-secondary); line-height: 1.6; cursor: pointer; }
+  .legal-box label a { color: var(--gold); text-decoration: none; }
   .legal-box label a:hover { text-decoration: underline; }
-  .legal-box.error-highlight {
-    border-color: var(--red);
-    background: var(--red-dim);
-  }
+  .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
 
-  .progress-wrap {
-    display: none; margin-top: 20px; background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px;
-  }
-  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .progress-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
-  .progress-elapsed { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
-  .progress-track { background: var(--surface-3); border-radius: 99px; height: 8px; overflow: hidden; }
-  .progress-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
-    border-radius: 99px; transition: width 0.3s ease;
-  }
-  .progress-pct { display: flex; justify-content: space-between; margin-top: 8px; }
-  .progress-pct span { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
-  .progress-status { margin-top: 12px; font-size: 14px; color: var(--text-secondary); text-align: center; min-height: 22px; }
   /* ── Scoring Overlay ── */
   #scoringOverlay {
-    display: none;
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.96);
-    backdrop-filter: blur(8px);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,10,8,.96); backdrop-filter: blur(8px);
+    flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
-
   .overlay-engine-tag {
     font-family: var(--font-mono); font-size: 11px; font-weight: 600;
     letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
     margin-bottom: 40px; opacity: .7;
   }
-
-  /* Clock ring */
   .clock-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 36px; flex-shrink: 0; }
   .clock-svg { transform: rotate(-90deg); }
   .clock-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 6; }
   .clock-ring-fill {
-    fill: none; stroke: var(--gold); stroke-width: 6;
-    stroke-linecap: round;
-    stroke-dasharray: 534; /* 2π × 85 */
-    stroke-dashoffset: 534;
-    transition: stroke-dashoffset .9s linear;
+    fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 534; stroke-dashoffset: 534; transition: stroke-dashoffset .9s linear;
   }
   .clock-center {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
+    position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
   }
-  .clock-secs {
-    font-family: var(--font-display); font-size: 52px; font-weight: 700;
-    color: #fff; line-height: 1;
-  }
-  .clock-unit {
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px;
-    color: var(--text-muted); text-transform: uppercase; margin-top: 4px;
-  }
-
+  .clock-secs { font-family: var(--font-display); font-size: 52px; font-weight: 700; color: #fff; line-height: 1; }
+  .clock-unit { font-family: var(--font-mono); font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
   .overlay-phase {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
-    margin-bottom: 14px;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 14px;
   }
   .overlay-status {
-    font-size: 20px; font-weight: 600; color: #fff;
-    text-align: center; max-width: 460px; line-height: 1.4;
-    margin-bottom: 12px; min-height: 56px;
+    font-size: 20px; font-weight: 600; color: #fff; text-align: center;
+    max-width: 460px; line-height: 1.4; margin-bottom: 12px; min-height: 56px;
   }
   .overlay-substatus {
     font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
-    text-align: center; max-width: 400px; line-height: 1.6;
-    letter-spacing: .5px;
+    text-align: center; max-width: 400px; line-height: 1.6; letter-spacing: .5px;
   }
-
-  /* Dot pulse */
   .dot-pulse { display: inline-flex; gap: 6px; margin-top: 28px; }
   .dot-pulse span {
     width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
-    animation: pulse 1.4s ease-in-out infinite;
-    opacity: .3;
+    animation: pulse 1.4s ease-in-out infinite; opacity: .3;
   }
   .dot-pulse span:nth-child(2) { animation-delay: .2s; }
   .dot-pulse span:nth-child(3) { animation-delay: .4s; }
-  @keyframes pulse {
-    0%, 80%, 100% { opacity: .3; transform: scale(.8); }
-    40% { opacity: 1; transform: scale(1.1); }
+  @keyframes pulse { 0%,80%,100% { opacity:.3; transform:scale(.8); } 40% { opacity:1; transform:scale(1.1); } }
+
+  /* ── Breath Cue ── */
+  .breath-cue {
+    margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeInBreath 1.5s 2.5s ease forwards;
+  }
+  @keyframes fadeInBreath {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .breath-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 2px solid rgba(200,168,75,0.3);
+    background: rgba(200,168,75,0.06);
+    animation: breathe 8s ease-in-out infinite;
+    margin-bottom: 4px;
+  }
+  @keyframes breathe {
+    0%   { transform: scale(0.75); border-color: rgba(200,168,75,0.2); background: rgba(200,168,75,0.04); }
+    50%  { transform: scale(1.3);  border-color: rgba(200,168,75,0.65); background: rgba(200,168,75,0.13); }
+    100% { transform: scale(0.75); border-color: rgba(200,168,75,0.2); background: rgba(200,168,75,0.04); }
+  }
+  .breath-label {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
+    min-width: 80px; text-align: center;
+    transition: opacity 0.6s ease;
+  }
+  .breath-instruction {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    color: rgba(122,120,112,0.8); text-transform: uppercase;
+  }
+  .breath-tagline {
+    font-size: 13px; color: rgba(122,120,112,0.7); font-style: italic; margin-top: 2px;
   }
 </style>
 {% endblock %}
@@ -261,7 +186,6 @@
   <div class="card">
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
 
-      <!-- Drop Zone -->
       <div class="drop-zone" id="dropZone">
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
@@ -276,24 +200,19 @@
         <div class="file-info" id="fileInfo"></div>
       </div>
 
-      <!-- Title -->
       <div class="form-group" style="margin-top:24px;">
         <label for="asset_name">Image Title</label>
         <input type="text" id="asset_name" name="asset_name"
-               placeholder="e.g. Golden Hour at Hampi"
-               maxlength="120" required>
+               placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
       </div>
 
-      <!-- Photographer Name -->
       <div class="form-group">
         <label for="photographer_name">Photographer Name</label>
         <input type="text" id="photographer_name" name="photographer_name"
-               placeholder="e.g. Sreekumar Krishnan"
-               maxlength="120"
+               placeholder="e.g. Sreekumar Krishnan" maxlength="120"
                value="{{ current_user.full_name or current_user.username }}">
       </div>
 
-      <!-- Genre -->
       <div class="form-group">
         <label for="genre">Genre</label>
         <select id="genre" name="genre" required>
@@ -311,7 +230,6 @@
         <div class="genre-hint" id="genre-hint"></div>
       </div>
 
-      <!-- ── Shot On — mandatory track selector ── -->
       <div class="form-group shot-on-group">
         <label class="field-label">Shot On <span style="color:var(--red);font-size:13px;">*</span></label>
         <div class="shot-on-options">
@@ -319,35 +237,26 @@
             <input type="radio" id="track_camera" name="camera_track" value="camera" required>
             <label for="track_camera">
               <span class="shot-icon">📷</span>
-              <span class="shot-text">
-                Camera
-                <small>DSLR · Mirrorless · Film</small>
-              </span>
+              <span class="shot-text">Camera<small>DSLR · Mirrorless · Film</small></span>
             </label>
           </div>
           <div class="shot-on-option">
             <input type="radio" id="track_mobile" name="camera_track" value="mobile">
             <label for="track_mobile">
               <span class="shot-icon">📱</span>
-              <span class="shot-text">
-                Mobile
-                <small>iPhone · Android · Smartphone</small>
-              </span>
+              <span class="shot-text">Mobile<small>iPhone · Android · Smartphone</small></span>
             </label>
           </div>
         </div>
         <div class="shot-on-required-hint" id="trackRequiredHint">Please select Camera or Mobile.</div>
       </div>
 
-      <!-- Location -->
       <div class="form-group">
         <label for="location">Location <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
         <input type="text" id="location" name="location"
-               placeholder="e.g. Keoladeo National Park, Rajasthan"
-               maxlength="180">
+               placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
       </div>
 
-      <!-- Subject -->
       <div class="form-group">
         <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
         <textarea id="subject" name="subject"
@@ -360,7 +269,6 @@
         For best results, upload the original JPEG straight from your camera without stripping metadata.
       </div>
 
-      <!-- ── Legal Declaration ── -->
       <div class="legal-box" id="legalBox">
         <input type="checkbox" id="legal_declaration" name="legal_declaration" value="1">
         <label for="legal_declaration">
@@ -412,7 +320,7 @@
       <circle class="clock-ring-fill" id="clockRing" cx="100" cy="100" r="85"/>
     </svg>
     <div class="clock-center">
-      <div class="clock-secs" id="clockSecs">45</div>
+      <div class="clock-secs" id="clockSecs">35</div>
       <div class="clock-unit">seconds</div>
     </div>
   </div>
@@ -420,25 +328,31 @@
   <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
   <div class="overlay-substatus" id="overlaySubstatus">Your image is being sent to the server securely.</div>
   <div class="dot-pulse"><span></span><span></span><span></span></div>
+
+  <!-- ── Breath Cue ── -->
+  <div class="breath-cue">
+    <div class="breath-ring"></div>
+    <div class="breath-label" id="breathLabel">Inhale</div>
+    <div class="breath-instruction">Inhale 4 sec &nbsp;·&nbsp; Exhale 4 sec</div>
+    <div class="breath-tagline">Watch your breath while you wait</div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function () {
-  const dropZone      = document.getElementById('dropZone');
-  const fileInput     = document.getElementById('imageInput');
-  const previewArea   = document.getElementById('previewArea');
-  const previewImg    = document.getElementById('previewImg');
-  const fileInfo      = document.getElementById('fileInfo');
-  const fileError     = document.getElementById('fileError');
-  const form          = document.getElementById('uploadForm');
-  const submitBtn     = document.getElementById('submitBtn');
-  const progressWrap  = null; // replaced by overlay
-  const genreHintEl   = document.getElementById('genre-hint');
-  const legalBox      = document.getElementById('legalBox');
-  const legalCheck    = document.getElementById('legal_declaration');
-  const trackHint     = document.getElementById('trackRequiredHint');
+  const dropZone    = document.getElementById('dropZone');
+  const fileInput   = document.getElementById('imageInput');
+  const previewArea = document.getElementById('previewArea');
+  const previewImg  = document.getElementById('previewImg');
+  const fileInfo    = document.getElementById('fileInfo');
+  const fileError   = document.getElementById('fileError');
+  const form        = document.getElementById('uploadForm');
+  const submitBtn   = document.getElementById('submitBtn');
+  const legalBox    = document.getElementById('legalBox');
+  const legalCheck  = document.getElementById('legal_declaration');
+  const trackHint   = document.getElementById('trackRequiredHint');
 
   const MAX_MB  = 5;
   const ALLOWED = ['image/jpeg', 'image/png'];
@@ -460,12 +374,10 @@
   function handleFile(file) {
     fileError.style.display = 'none';
     if (!ALLOWED.includes(file.type)) {
-      showError('Only JPG and PNG files are accepted.');
-      previewArea.style.display = 'none'; fileInput.value = ''; return;
+      showError('Only JPG and PNG files are accepted.'); previewArea.style.display = 'none'; fileInput.value = ''; return;
     }
     if (file.size > MAX_MB * 1024 * 1024) {
-      showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`);
-      previewArea.style.display = 'none'; fileInput.value = ''; return;
+      showError(`File exceeds ${MAX_MB} MB. Please compress or resize your image.`); previewArea.style.display = 'none'; fileInput.value = ''; return;
     }
     const reader = new FileReader();
     reader.onload = ev => {
@@ -476,41 +388,34 @@
     reader.readAsDataURL(file);
   }
 
-  function showError(msg) {
-    fileError.textContent = msg; fileError.style.display = 'block';
-  }
+  function showError(msg) { fileError.textContent = msg; fileError.style.display = 'block'; }
 
   const genreHints = {
-    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent. Scores 7.0+ referred for judge review.',
-    'Drone':      '🚁 Aerial photography. DoD covers wind, altitude, vibration and regulatory complexity. Geometric patterns and impossible ground-level perspectives score highest.',
+    'Creative':   '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Long Exposure · Layered Blur. Sharpness rewarded when present, never penalised when absent.',
+    'Drone':      '🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
     'Wildlife':   '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street':     '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable and often enhances energy.',
+    'Street':     '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
     'Landscapes': '🌄 Light quality, composition, and patience. Long-exposure blur on water and clouds is rewarded.',
     'Macro':      '🔬 Extreme precision focus required. Sharpness on the primary subject is the primary DoD criterion.',
     'Wedding':    '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
     'People':     '👤 Emotional connection and authentic expression are paramount. AQ is the dominant scoring signal.',
   };
   document.getElementById('genre').addEventListener('change', function () {
-    genreHintEl.textContent = genreHints[this.value] || '';
+    document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
   });
 
-  // Clear track error hint when user selects
   document.querySelectorAll('input[name="camera_track"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      trackHint.style.display = 'none';
-    });
+    radio.addEventListener('change', () => { trackHint.style.display = 'none'; });
   });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    // Validate file
     const file = fileInput.files[0];
     if (!file)                             { showError('Please select an image to upload.'); return; }
     if (!ALLOWED.includes(file.type))      { showError('Only JPG and PNG files are accepted.'); return; }
     if (file.size > MAX_MB * 1024 * 1024) { showError(`File exceeds ${MAX_MB} MB.`); return; }
 
-    // Validate track selection
     const trackSelected = document.querySelector('input[name="camera_track"]:checked');
     if (!trackSelected) {
       trackHint.style.display = 'block';
@@ -518,7 +423,6 @@
       return;
     }
 
-    // Validate legal declaration
     if (!legalCheck.checked) {
       legalBox.classList.add('error-highlight');
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -528,7 +432,7 @@
 
     submitBtn.disabled = true;
 
-    // ── Scoring Overlay ──────────────────────────────────────────────
+    // ── Scoring Overlay ──────────────────────────────────────────────────────
     const overlay      = document.getElementById('scoringOverlay');
     const clockRing    = document.getElementById('clockRing');
     const clockSecs    = document.getElementById('clockSecs');
@@ -537,7 +441,7 @@
     const overlaySub   = document.getElementById('overlaySubstatus');
 
     const TOTAL_SECS   = 35;
-    const CIRCUMFERENCE= 534; // 2π × 85
+    const CIRCUMFERENCE= 534;
 
     const phases = [
       { from: 0,  to: 4,  phase: 'UPLOADING',  status: 'Transferring your image…',          sub: 'Your image is being sent to the server securely.' },
@@ -550,30 +454,34 @@
     overlay.classList.add('active');
     let elapsed = 0;
 
+    // Breath cue cycling
+    const breathLabel = document.getElementById('breathLabel');
+    let breathPhase = 0;
+    const breathCycle = setInterval(() => {
+      breathPhase = (breathPhase + 1) % 2;
+      breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
+    }, 4000);
+
     const ticker = setInterval(() => {
       elapsed++;
       const remaining = Math.max(TOTAL_SECS - elapsed, 0);
       clockSecs.textContent = remaining;
-
-      // Ring fill — progress from 0 to full
       const pct = Math.min(elapsed / TOTAL_SECS, 1);
       clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
-
-      // Phase copy
+      if (elapsed >= 31) clockRing.style.stroke = '#fff';
       const phase = phases.find(p => elapsed >= p.from && elapsed < p.to) || phases[phases.length - 1];
       overlayPhase.textContent  = phase.phase;
       overlayStatus.textContent = phase.status;
       overlaySub.textContent    = phase.sub;
-
-      // Ring colour shift on final phase
-      if (elapsed >= 31) clockRing.style.stroke = '#fff';
     }, 1000);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', form.action);
+    xhr.timeout = 120000;
 
     xhr.addEventListener('load', function () {
       clearInterval(ticker);
+      clearInterval(breathCycle);
       if (xhr.status === 200) {
         clockSecs.textContent = '✓';
         clockRing.style.strokeDashoffset = '0';
@@ -581,6 +489,7 @@
         overlayPhase.textContent  = 'COMPLETE';
         overlayStatus.textContent = 'Your score is ready!';
         overlaySub.textContent    = 'Redirecting to your score card…';
+        if (breathLabel) breathLabel.textContent = '🙏';
         setTimeout(() => { window.location.href = xhr.responseURL || '/dashboard'; }, 600);
       } else if (xhr.status === 409) {
         overlay.classList.remove('active');
@@ -591,8 +500,7 @@
         } catch(err) {
           showError('This image has already been submitted. Please upload a different photograph.');
         }
-        fileInput.value = '';
-        previewArea.style.display = 'none';
+        fileInput.value = ''; previewArea.style.display = 'none';
       } else {
         overlay.classList.remove('active');
         submitBtn.disabled = false;
@@ -601,7 +509,7 @@
     });
 
     xhr.addEventListener('error', function () {
-      clearInterval(ticker);
+      clearInterval(ticker); clearInterval(breathCycle);
       overlay.classList.remove('active');
       submitBtn.disabled = false;
       showError('Network error. Please try again.');
@@ -620,15 +528,11 @@
   if (!cb) return;
   cb.addEventListener('change', function() {
     if (this.checked) {
-      track.style.background = 'var(--gold)';
-      thumb.style.left = '23px';
-      label.style.color = 'var(--gold)';
-      label.textContent = 'Public';
+      track.style.background = 'var(--gold)'; thumb.style.left = '23px';
+      label.style.color = 'var(--gold)'; label.textContent = 'Public';
     } else {
-      track.style.background = 'var(--border)';
-      thumb.style.left = '3px';
-      label.style.color = 'var(--text-muted)';
-      label.textContent = 'Hidden';
+      track.style.background = 'var(--border)'; thumb.style.left = '3px';
+      label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden';
     }
   });
 })();
