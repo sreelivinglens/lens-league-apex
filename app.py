@@ -1175,6 +1175,12 @@ def admin_delete_image(image_id):
             r2.delete_file(key)
         except Exception:
             pass
+    # Delete related calibration notes first to avoid NOT NULL FK violation
+    try:
+        from models import CalibrationNote
+        CalibrationNote.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
     db.session.delete(img)
     db.session.commit()
     flash(f'Image deleted.', 'success')
@@ -1218,9 +1224,16 @@ def admin_bulk_delete():
                     r2.delete_file(key)
                 except Exception:
                     pass
+            # Delete related calibration notes first to avoid NOT NULL FK violation
+            try:
+                from models import CalibrationNote
+                CalibrationNote.query.filter_by(image_id=img.id).delete()
+            except Exception:
+                pass
             db.session.delete(img)
             deleted += 1
         except Exception as e:
+            db.session.rollback()
             print(f'[bulk delete] image {image_id}: {e}')
     db.session.commit()
     flash(f'Deleted {deleted} image(s).', 'success')
