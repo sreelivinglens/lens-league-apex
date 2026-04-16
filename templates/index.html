@@ -59,8 +59,8 @@
   .hero-headline em { font-style:italic; color:var(--gold); }
 
   .hero-sub {
-    font-size:clamp(1rem,2vw,1.175rem); font-weight:300; color:var(--muted);
-    max-width:520px; margin:0 auto 2.5rem; line-height:1.65;
+    font-size:clamp(1.1rem,2.2vw,1.35rem); font-weight:400; color:#B8B8C8;
+    max-width:560px; margin:0 auto 2.5rem; line-height:1.7;
     opacity:0; animation:fadeUp 0.9s 0.4s ease forwards;
   }
 
@@ -88,7 +88,8 @@
   .btn-ghost:hover { color:var(--white); border-color:rgba(255,255,255,0.2); }
 
   .hero-note {
-    margin-top:1.25rem; font-size:0.8rem; color:var(--muted);
+    margin-top:1.25rem; font-size:clamp(0.9rem,1.6vw,1.05rem); font-weight:500;
+    color:#9A9AAA; letter-spacing:0.02em;
     opacity:0; animation:fadeUp 0.9s 0.7s ease forwards;
   }
   .hero-note strong { color:var(--green); }
@@ -141,13 +142,14 @@
     font-weight:700; letter-spacing:-0.01em;
   }
   .contest-line-bottom {
-    display:block; margin-top:0.3rem;
+    display:block; margin-top:0.35rem;
     font-size:clamp(1rem,2.4vw,1.4rem);
-    font-weight:600; font-style:italic; color:var(--gold);
+    font-weight:700; font-style:normal; color:var(--gold);
+    letter-spacing:0.01em;
   }
   .contest-sub {
-    margin-top:0.9rem; font-size:clamp(0.82rem,1.5vw,0.95rem); color:var(--muted);
-    letter-spacing:0.04em; font-family:'DM Sans',sans-serif; line-height:1.5;
+    margin-top:0.9rem; font-size:clamp(0.95rem,1.8vw,1.1rem); color:#9A9AAA;
+    font-weight:500; letter-spacing:0.02em; font-family:'DM Sans',sans-serif; line-height:1.5;
   }
 
   /* 3 yellow buttons */
@@ -174,7 +176,10 @@
     font-weight:700; color:var(--white); margin-bottom:0.4rem; line-height:1.25;
   }
   .closing-headline em { font-style:italic; color:var(--gold); }
-  .closing-sub { font-size:0.875rem; color:var(--muted); margin-bottom:1.25rem; line-height:1.6; }
+  .closing-sub {
+    font-size:clamp(1.1rem,2.2vw,1.4rem); font-weight:500; color:#B8B8C8;
+    margin-bottom:1.5rem; line-height:1.6;
+  }
 
   /* Footer */
   .hp-footer {

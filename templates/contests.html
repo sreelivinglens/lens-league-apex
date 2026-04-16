@@ -55,8 +55,8 @@
   }
   .comp-prize {
     font-family: 'Playfair Display', serif;
-    font-size: 1.75rem; font-weight: 700; color: var(--gold);
-    text-align: right; flex-shrink: 0; line-height: 1;
+    font-size: clamp(1.3rem, 2.5vw, 1.75rem); font-weight: 700; color: var(--gold);
+    text-align: right; flex-shrink: 0; line-height: 1; white-space: nowrap;
   }
   .comp-prize small {
     display: block; font-family: var(--font-mono); font-size: 0.62rem;
@@ -66,8 +66,8 @@
   }
 
   .comp-desc {
-    font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8;
-    margin-bottom: 16px;
+    font-size:1rem; color: var(--text-secondary); line-height:1.85;
+    margin-bottom:16px;
   }
 
   .comp-prizes {
@@ -76,13 +76,13 @@
     display: flex; flex-wrap: wrap; gap: 8px 24px;
   }
   .comp-prize-item {
-    font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary);
+    font-family: var(--font-mono); font-size: 0.92rem; color: var(--text-secondary);
   }
   .comp-prize-item strong { color: var(--gold); }
 
   .comp-note {
-    font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;
-    padding: 10px 14px; background: var(--surface-3);
+    font-size: 0.95rem; color: var(--text-muted); line-height: 1.7;
+    padding: 12px 16px; background: var(--surface-3);
     border-left: 2px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     margin-bottom: 20px; font-style: italic;
   }
@@ -111,7 +111,7 @@
         <div class="comp-freq">Every Calendar Month</div>
         <div class="comp-title">Monthly Contest</div>
       </div>
-      <div class="comp-prize">₹18,000<small>Per Month</small></div>
+      <div class="comp-prize">₹ 18,000<small>Per Month</small></div>
     </div>
 
     <div class="comp-desc">
@@ -121,9 +121,9 @@
     </div>
 
     <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹10,000</strong> Overall Champion</div>
-      <div class="comp-prize-item"><strong>₹5,000</strong> 2nd Place</div>
-      <div class="comp-prize-item"><strong>₹3,000</strong> 3rd Place</div>
+      <div class="comp-prize-item"><strong>₹ 10,000</strong> Overall Champion</div>
+      <div class="comp-prize-item"><strong>₹ 5,000</strong> 2nd Place</div>
+      <div class="comp-prize-item"><strong>₹ 3,000</strong> 3rd Place</div>
       <div class="comp-prize-item"><strong>Badge + Certificate</strong> × 8 Genre Winners</div>
     </div>
 
@@ -150,7 +150,7 @@
         <div class="comp-freq">Annual Grand Prix</div>
         <div class="comp-title">Photographer of the Year</div>
       </div>
-      <div class="comp-prize">₹50L<small>Total Prize Pool</small></div>
+      <div class="comp-prize">₹ 50,00,000<small>Total Prize Pool</small></div>
     </div>
 
     <div class="comp-desc">
@@ -160,14 +160,14 @@
     </div>
 
     <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹1,50,000</strong> Camera Gold (×8)</div>
-      <div class="comp-prize-item"><strong>₹75,000</strong> Mobile Gold (×8)</div>
-      <div class="comp-prize-item"><strong>₹75,000</strong> Camera Silver (×8)</div>
-      <div class="comp-prize-item"><strong>₹50,000</strong> Mobile Silver (×8)</div>
-      <div class="comp-prize-item"><strong>₹50,000</strong> Camera Bronze (×8)</div>
-      <div class="comp-prize-item"><strong>₹25,000</strong> Mobile Bronze (×8)</div>
-      <div class="comp-prize-item"><strong>₹10,00,000</strong> Grand POTY Camera</div>
-      <div class="comp-prize-item"><strong>₹6,00,000</strong> Grand POTY Mobile</div>
+      <div class="comp-prize-item"><strong>₹ 1,50,000</strong> Camera Gold (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 75,000</strong> Mobile Gold (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 75,000</strong> Camera Silver (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 50,000</strong> Mobile Silver (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 50,000</strong> Camera Bronze (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 25,000</strong> Mobile Bronze (×8)</div>
+      <div class="comp-prize-item"><strong>₹ 10,00,000</strong> Grand POTY Camera</div>
+      <div class="comp-prize-item"><strong>₹ 6,00,000</strong> Grand POTY Mobile</div>
     </div>
 
     <div class="comp-actions">
@@ -191,7 +191,7 @@
         <div class="comp-freq">Annual · Paid Entry</div>
         <div class="comp-title">Open Competition</div>
       </div>
-      <div class="comp-prize">₹8L<small>Total Prize Pool</small></div>
+      <div class="comp-prize">₹ 8,00,000<small>Total Prize Pool</small></div>
     </div>
 
     <div class="comp-desc">
@@ -201,9 +201,9 @@
     </div>
 
     <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹75,000</strong> Category Winner (×8 genres)</div>
-      <div class="comp-prize-item"><strong>₹2,00,000</strong> Grand Open Winner</div>
-      <div class="comp-prize-item"><strong>₹50</strong> per entry</div>
+      <div class="comp-prize-item"><strong>₹ 75,000</strong> Category Winner (×8 genres)</div>
+      <div class="comp-prize-item"><strong>₹ 2,00,000</strong> Grand Open Winner</div>
+      <div class="comp-prize-item"><strong>₹ 50</strong> per entry</div>
     </div>
 
     <div class="comp-note">
@@ -232,7 +232,7 @@
         <div class="comp-freq">Annual · Curated Series</div>
         <div class="comp-title">Body of Work</div>
       </div>
-      <div class="comp-prize">₹5.25L<small>Total Prize Pool</small></div>
+      <div class="comp-prize">₹ 5,25,000<small>Total Prize Pool</small></div>
     </div>
 
     <div class="comp-desc">
@@ -240,9 +240,9 @@
     </div>
 
     <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹3,00,000</strong> Gold</div>
-      <div class="comp-prize-item"><strong>₹1,50,000</strong> Silver</div>
-      <div class="comp-prize-item"><strong>₹75,000</strong> Bronze</div>
+      <div class="comp-prize-item"><strong>₹ 3,00,000</strong> Gold</div>
+      <div class="comp-prize-item"><strong>₹ 1,50,000</strong> Silver</div>
+      <div class="comp-prize-item"><strong>₹ 75,000</strong> Bronze</div>
     </div>
 
     <div class="comp-actions">

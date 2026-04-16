@@ -21,8 +21,8 @@
   .page-headline em { font-style: italic; color: #A89BCE; }
 
   .page-intro {
-    font-size: 1rem; color: var(--text-secondary); line-height: 1.85;
-    margin-bottom: 2.5rem; max-width: 580px;
+    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.85;
+    margin-bottom: 2.5rem; max-width: 600px;
   }
 
   /* Prereq bar */
@@ -41,25 +41,25 @@
     color: #A89BCE;
   }
   .prereq-label {
-    font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.14em;
-    text-transform: uppercase; color: #A89BCE; margin-bottom: 4px;
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #A89BCE; margin-bottom: 6px;
   }
-  .prereq-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+  .prereq-text { font-size: 1rem; color: var(--text-secondary); line-height: 1.7; }
   .prereq-text strong { color: var(--text-primary); }
 
   /* Section heads */
   .bow-section { margin-bottom: 2.5rem; }
   .bow-section-title {
-    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
     letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted);
-    margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+    margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
   }
 
   /* Instruction list */
   .bow-rules { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
   .bow-rules li {
     display: flex; align-items: flex-start; gap: 14px;
-    font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;
+    font-size: 1rem; color: var(--text-secondary); line-height: 1.8;
   }
   .bow-rules li .rule-num {
     flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
@@ -71,20 +71,20 @@
   .bow-rules li strong { color: var(--text-primary); }
 
   /* Prize table */
-  .prize-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .prize-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
   .prize-table th {
-    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em;
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--text-muted);
-    padding: 8px 16px; text-align: left;
+    padding: 10px 16px; text-align: left;
     border-bottom: 1px solid var(--border);
   }
   .prize-table td {
-    padding: 13px 16px; color: var(--text-secondary);
+    padding: 15px 16px; color: var(--text-secondary);
     border-bottom: 1px solid var(--surface-3);
-    vertical-align: middle;
+    vertical-align: middle; font-size: 1rem;
   }
   .prize-table tr:last-child td { border-bottom: none; }
-  .prize-table td:last-child { color: var(--gold); font-weight: 600; font-family: var(--font-mono); font-size: 0.95rem; }
+  .prize-table td:last-child { color: var(--gold); font-weight: 600; font-family: var(--font-mono); font-size: 1.05rem; }
   .medal-gold   { color: #FFD700; font-size: 1.1rem; }
   .medal-silver { color: #C0C0C0; font-size: 1.1rem; }
   .medal-bronze { color: #CD7F32; font-size: 1.1rem; }
@@ -108,8 +108,8 @@
   }
   .tl-dot.active { background: rgba(168,155,206,0.15); border-color: #A89BCE; }
   .tl-content { padding-top: 6px; }
-  .tl-month { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; }
-  .tl-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
+  .tl-month { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+  .tl-desc { font-size: 1rem; color: var(--text-secondary); line-height: 1.65; }
   .tl-desc strong { color: var(--text-primary); }
 
   /* Subscriber gate */
@@ -122,10 +122,10 @@
   }
   .gate-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.4rem; font-weight: 700; color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 0.6rem;
   }
-  .gate-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.7; }
+  .gate-sub { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.75; }
   .gate-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
   .divider { height: 1px; background: var(--border); margin: 2rem 0; }
@@ -201,17 +201,17 @@
         <tr>
           <td><span class="medal-gold">◆</span> &nbsp;Gold</td>
           <td>The single most powerful unified body of work submitted that year</td>
-          <td>₹3,00,000</td>
+          <td>₹ 3,00,000</td>
         </tr>
         <tr>
           <td><span class="medal-silver">◆</span> &nbsp;Silver</td>
           <td>Outstanding series with exceptional coherence and narrative strength</td>
-          <td>₹1,50,000</td>
+          <td>₹ 1,50,000</td>
         </tr>
         <tr>
           <td><span class="medal-bronze">◆</span> &nbsp;Bronze</td>
           <td>Remarkable submission demonstrating distinctive visual voice</td>
-          <td>₹75,000</td>
+          <td>₹ 75,000</td>
         </tr>
       </tbody>
     </table>
