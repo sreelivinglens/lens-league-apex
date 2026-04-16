@@ -76,7 +76,24 @@
   .legal-box label a { color: var(--gold); text-decoration: none; }
   .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
 
-  /* ══ SCORING OVERLAY ══ */
+  /* ── Session Modal ── */
+  #sessionModal {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
+    align-items: center; justify-content: center; padding: 32px;
+  }
+  #sessionModal.active { display: flex; }
+  .session-modal-box {
+    background: var(--surface-2); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-lg); padding: 36px 32px; max-width: 440px; width: 100%;
+    text-align: center;
+  }
+  .session-modal-icon { font-size: 48px; margin-bottom: 20px; }
+  .session-modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+  .session-modal-body { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; }
+  .session-modal-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── SCORING OVERLAY ── */
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
     background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
@@ -231,6 +248,22 @@
   </div>
 </div>
 
+<!-- SESSION EXPIRED MODAL -->
+<div id="sessionModal">
+  <div class="session-modal-box">
+    <div class="session-modal-icon">🔐</div>
+    <div class="session-modal-title">Session Expired</div>
+    <div class="session-modal-body">
+      Your login session has expired — this is common on mobile after the browser has been idle for a while.<br><br>
+      Please log in again, then come straight back to upload your image.
+    </div>
+    <div class="session-modal-btns">
+      <a href="/login?next=/upload" class="btn btn-solid" style="padding:12px 28px;">Log In Again →</a>
+      <button onclick="dismissSessionModal()" class="btn" style="padding:12px 20px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
@@ -277,6 +310,7 @@
   const MAX_MB      = 5;
   const ALLOWED     = ['image/jpeg', 'image/png'];
 
+  // ── Drag & drop ──────────────────────────────────────────────────────────
   ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); }));
   ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); }));
   dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); } });
@@ -298,6 +332,7 @@
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  // ── Genre hints ───────────────────────────────────────────────────────────
   const genreHints = {
     'Creative':      '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
     'Drone & Aerial':'🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
@@ -313,14 +348,50 @@
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
 
+  // ── Session modal ─────────────────────────────────────────────────────────
+  function showSessionModal() {
+    document.getElementById('scoringOverlay').classList.remove('active');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '⬆ Submit for Scoring';
+    document.getElementById('sessionModal').classList.add('active');
+  }
+  window.dismissSessionModal = function() {
+    document.getElementById('sessionModal').classList.remove('active');
+  };
+
+  // ── Ping to verify session before uploading ───────────────────────────────
+  function pingSession(callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/ping');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.withCredentials = true;
+    xhr.timeout = 8000;
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        callback(true);
+      } else {
+        // 401 or anything else — session is gone
+        callback(false);
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      // Network issue — try uploading anyway, let the upload XHR handle failure
+      callback(true);
+    };
+    xhr.send();
+  }
+
+  // ── Form submit ───────────────────────────────────────────────────────────
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const file = fileInput.files[0];
     if (!file) { showError('Please select an image to upload.'); return; }
     if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
+
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      showError(`Your image is ${(file.size/1024/1024).toFixed(1)} MB — over the 5 MB limit. Please resize before uploading.`);
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      showError(`⚠️ Your image is ${sizeMB} MB — over the 5 MB limit. Please resize before uploading.`);
       return;
     }
 
@@ -335,6 +406,22 @@
     }
 
     submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking session…';
+
+    // ── Step 1: ping session first ─────────────────────────────────────────
+    pingSession(function(sessionOk) {
+      if (!sessionOk) {
+        showSessionModal();
+        return;
+      }
+      // ── Step 2: session confirmed — start upload ───────────────────────
+      doUpload();
+    });
+  });
+
+  // ── Upload with overlay ───────────────────────────────────────────────────
+  function doUpload() {
+    submitBtn.textContent = 'Processing…';
 
     const overlay      = document.getElementById('scoringOverlay');
     const clockRing    = document.getElementById('clockRing');
@@ -376,82 +463,91 @@
 
     function stopAll() { clearInterval(ticker); clearInterval(breathCycle); }
 
-    function overlayError(msg) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.withCredentials = true;
+    xhr.timeout = 120000;
+
+    xhr.addEventListener('load', function () {
+      stopAll();
+
+      if (xhr.status === 401) {
+        showSessionModal();
+        return;
+      }
+      if (xhr.status === 413) {
+        overlay.classList.remove('active');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '⬆ Submit for Scoring';
+        showError('File too large — please resize to under 5 MB.');
+        fileInput.value = ''; previewArea.style.display = 'none'; return;
+      }
+      if (xhr.status === 409) {
+        overlay.classList.remove('active');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '⬆ Submit for Scoring';
+        let msg = 'Duplicate image detected.';
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+        showError(msg); fileInput.value = ''; previewArea.style.display = 'none'; return;
+      }
+      if (xhr.status === 403) {
+        overlay.classList.remove('active');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '⬆ Submit for Scoring';
+        let msg = 'Upload limit reached. Please upgrade to continue.';
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+        showError(msg); return;
+      }
+
+      // Try parsing JSON
+      let resp = null;
+      try { resp = JSON.parse(xhr.responseText); } catch(e) {
+        // Got HTML — this is a session issue that slipped through the ping
+        showSessionModal();
+        return;
+      }
+
+      if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
+        clockSecs.textContent = '✓';
+        clockRing.style.strokeDashoffset = '0';
+        clockRing.style.stroke = 'rgba(200,168,75,0.9)';
+        overlayPhase.textContent  = 'COMPLETE';
+        overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
+        overlaySub.textContent    = 'Redirecting to your score card…';
+        if (breathLabel) breathLabel.textContent = '🙏';
+        setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 1200);
+        return;
+      }
+
+      // Any other non-200 with parseable JSON
+      overlay.classList.remove('active');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '⬆ Submit for Scoring';
+      showError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
+    });
+
+    xhr.addEventListener('error', function () {
       stopAll();
       overlay.classList.remove('active');
       submitBtn.disabled = false;
-      showError(msg);
-    }
+      submitBtn.textContent = '⬆ Submit for Scoring';
+      showError('Network error — check your connection and try again.');
+    });
+    xhr.addEventListener('timeout', function () {
+      stopAll();
+      overlay.classList.remove('active');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '⬆ Submit for Scoring';
+      showError('Request timed out. Check your dashboard in a minute — your image may have been saved.');
+    });
 
-    // Fire upload directly — no preflight needed now that session cookies
-    // are configured correctly with SameSite=Lax + Secure in app.py
-    doUpload();
+    xhr.send(new FormData(form));
+  }
 
-    function doUpload() {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/upload');
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      // Send cookies explicitly
-      xhr.withCredentials = true;
-      xhr.timeout = 120000;
-
-      xhr.addEventListener('load', function () {
-        stopAll();
-
-        // Handle known status codes first
-        if (xhr.status === 401) {
-          overlayError('Your session expired. Please log out and log back in, then try uploading again.');
-          return;
-        }
-        if (xhr.status === 413) {
-          overlayError('File too large — please resize to under 5 MB.');
-          fileInput.value = ''; previewArea.style.display = 'none'; return;
-        }
-        if (xhr.status === 409) {
-          let msg = 'Duplicate image detected.';
-          try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-          overlayError(msg); fileInput.value = ''; previewArea.style.display = 'none'; return;
-        }
-        if (xhr.status === 403) {
-          let msg = 'Upload limit reached. Please upgrade to continue.';
-          try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-          overlayError(msg); return;
-        }
-
-        // Parse JSON
-        let resp = null;
-        try { resp = JSON.parse(xhr.responseText); } catch(e) {
-          // Got HTML — almost certainly a session/redirect issue
-          overlayError('Session issue detected. Please reload the page, log in again, and try uploading.');
-          return;
-        }
-
-        // Success
-        if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
-          clockSecs.textContent = '✓';
-          clockRing.style.strokeDashoffset = '0';
-          clockRing.style.stroke = 'rgba(200,168,75,0.9)';
-          overlay.classList.add('active');
-          overlayPhase.textContent  = 'COMPLETE';
-          overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
-          overlaySub.textContent    = 'Redirecting to your score card…';
-          if (breathLabel) breathLabel.textContent = '🙏';
-          setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 1200);
-          return;
-        }
-
-        overlayError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
-      });
-
-      xhr.addEventListener('error', function () { overlayError('Network error — check your connection and try again.'); });
-      xhr.addEventListener('timeout', function () { overlayError('Request timed out. Check your dashboard in a minute — your image may have been saved.'); });
-
-      xhr.send(new FormData(form));
-    }
-  });
 })();
 
-// Leaderboard visibility toggle
+// ── Leaderboard visibility toggle ─────────────────────────────────────────
 (function() {
   const cb = document.getElementById('isPublicToggle');
   const track = document.getElementById('toggleTrack');
