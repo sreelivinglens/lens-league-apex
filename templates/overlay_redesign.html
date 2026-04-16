@@ -1,0 +1,249 @@
+<!-- 
+=================================================================================
+OVERLAY REDESIGN — replace the entire #scoringOverlay block and its CSS in both:
+  - templates/upload.html
+  - templates/bulk_upload.html
+=================================================================================
+-->
+
+<!-- ── CSS — replace existing overlay + breath-cue styles ── -->
+<style>
+  /* ── Scoring Overlay ── */
+  #scoringOverlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px; gap: 0;
+  }
+  #scoringOverlay.active { display: flex; }
+
+  .overlay-engine-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 48px; opacity: .6;
+  }
+
+  /* ── BREATH HERO — shown first, large, bright ── */
+  .breath-hero {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    opacity: 0;
+    animation: fadeInBreath 0.8s 1s ease forwards;
+    margin-bottom: 20px;
+  }
+  @keyframes fadeInBreath {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* The big breathing ring */
+  .breath-ring-hero {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 3px solid rgba(200,168,75,0.5);
+    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
+    animation: breatheHero 8s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  @keyframes breatheHero {
+    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3);
+           box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.85);
+           box-shadow: 0 0 40px 8px rgba(200,168,75,0.15); }
+    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3);
+           box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+  }
+
+  /* Inner dot that pulses opposite */
+  .breath-inner-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--gold); opacity: 0.7;
+    animation: breatheInner 8s ease-in-out infinite;
+  }
+  @keyframes breatheInner {
+    0%   { transform: scale(1.4); opacity: 0.4; }
+    50%  { transform: scale(0.7); opacity: 0.9; }
+    100% { transform: scale(1.4); opacity: 0.4; }
+  }
+
+  /* Inhale / Exhale label — large and bright */
+  .breath-word {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase;
+    text-align: center; min-width: 160px;
+    transition: opacity 0.5s ease;
+  }
+
+  .breath-counts {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px;
+    color: rgba(200,168,75,0.7); text-transform: uppercase;
+  }
+
+  .breath-tagline {
+    font-size: 15px; color: rgba(184,182,174,0.65);
+    font-style: italic; letter-spacing: 0.3px;
+  }
+
+  /* ── Phase + status text — below breath ── */
+  .overlay-copy {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    margin-bottom: 36px;
+    opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards;
+  }
+  .overlay-phase {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; color: rgba(200,168,75,0.7); text-transform: uppercase;
+  }
+  .overlay-status {
+    font-size: 15px; font-weight: 500; color: rgba(184,182,174,0.7);
+    text-align: center; max-width: 360px; line-height: 1.5;
+  }
+  .overlay-substatus {
+    font-family: var(--font-mono); font-size: 11px; color: rgba(122,120,112,0.6);
+    text-align: center; max-width: 320px; line-height: 1.6; letter-spacing: .5px;
+  }
+
+  /* ── MINI TIMER — small, at bottom, secondary ── */
+  .mini-timer {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards;
+  }
+  .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
+  .mini-clock-svg { transform: rotate(-90deg); }
+  .mini-ring-bg  { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+  .mini-ring-fill {
+    fill: none; stroke: rgba(200,168,75,0.5); stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 195; /* 2π × 31 */
+    stroke-dashoffset: 195;
+    transition: stroke-dashoffset .9s linear;
+  }
+  .mini-clock-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .mini-clock-secs {
+    font-family: var(--font-mono); font-size: 16px; font-weight: 700;
+    color: rgba(200,168,75,0.8); line-height: 1;
+  }
+  .mini-clock-unit {
+    font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px;
+    color: rgba(122,120,112,0.6); text-transform: uppercase; margin-top: 2px;
+  }
+</style>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+  SINGLE UPLOAD overlay HTML — replace entire #scoringOverlay div
+  in templates/upload.html
+══════════════════════════════════════════════════════════════════ -->
+<div id="scoringOverlay">
+  <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
+
+  <!-- HERO: Breathing ring — fades in at 1s -->
+  <div class="breath-hero">
+    <div class="breath-ring-hero">
+      <div class="breath-inner-dot"></div>
+    </div>
+    <div class="breath-word" id="breathLabel">Inhale</div>
+    <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
+    <div class="breath-tagline">Watch your breath while you wait</div>
+  </div>
+
+  <!-- Phase / status copy — secondary -->
+  <div class="overlay-copy">
+    <div class="overlay-phase" id="overlayPhase">Uploading</div>
+    <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
+    <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
+  </div>
+
+  <!-- MINI TIMER — small, at bottom, appears first at 0.2s -->
+  <div class="mini-timer">
+    <div class="mini-clock-wrap">
+      <svg class="mini-clock-svg" width="72" height="72" viewBox="0 0 72 72">
+        <circle class="mini-ring-bg"   cx="36" cy="36" r="31"/>
+        <circle class="mini-ring-fill" id="clockRing" cx="36" cy="36" r="31"/>
+      </svg>
+      <div class="mini-clock-center">
+        <div class="mini-clock-secs" id="clockSecs">35</div>
+        <div class="mini-clock-unit">sec</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+  BULK UPLOAD overlay HTML — replace entire #scoringOverlay div
+  in templates/bulk_upload.html
+  (identical except engine-tag and adds overlayError div)
+══════════════════════════════════════════════════════════════════ -->
+<div id="scoringOverlay">
+  <div class="overlay-engine-tag">Apex DDI Engine · Bulk Scoring</div>
+
+  <!-- HERO: Breathing ring — fades in at 1s -->
+  <div class="breath-hero">
+    <div class="breath-ring-hero">
+      <div class="breath-inner-dot"></div>
+    </div>
+    <div class="breath-word" id="breathLabel">Inhale</div>
+    <div class="breath-counts">4 sec inhale &nbsp;·&nbsp; 4 sec exhale</div>
+    <div class="breath-tagline">Watch your breath while you wait</div>
+  </div>
+
+  <!-- Phase / status copy — secondary -->
+  <div class="overlay-copy">
+    <div class="overlay-phase" id="overlayPhase">Uploading</div>
+    <div class="overlay-status" id="overlayStatus">Sending your images…</div>
+    <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open</div>
+  </div>
+
+  <!-- MINI TIMER — small, at bottom -->
+  <div class="mini-timer">
+    <div class="mini-clock-wrap">
+      <svg class="mini-clock-svg" width="72" height="72" viewBox="0 0 72 72">
+        <circle class="mini-ring-bg"   cx="36" cy="36" r="31"/>
+        <circle class="mini-ring-fill" id="clockRing" cx="36" cy="36" r="31"/>
+      </svg>
+      <div class="mini-clock-center">
+        <div class="mini-clock-secs" id="clockSecs">—</div>
+        <div class="mini-clock-unit">sec</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error panel (bulk only) -->
+  <div class="overlay-error" id="overlayError">
+    <strong>Upload failed.</strong><br>
+    <span id="overlayErrorMsg"></span><br><br>
+    <a onclick="dismissOverlayError()">← Try again</a>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+  JS CHANGES — update the ticker in both templates
+
+  The mini ring uses circumference 195 (2π × 31) not 534.
+  Replace the CIRCUMFERENCE constant and ring update logic:
+══════════════════════════════════════════════════════════════════ -->
+<script>
+// In upload.html — replace these lines in the ticker:
+//
+// OLD:
+//   const CIRCUMFERENCE = 534;
+//   clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+//   if (elapsed >= 31) clockRing.style.stroke = '#fff';
+//
+// NEW:
+const CIRCUMFERENCE = 195; // mini ring: 2π × 31
+// In ticker:
+clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+// Remove the stroke colour change line — mini ring stays gold throughout
+
+// ── Breath cycling — same as before, no changes needed ──
+// breathLabel cycles Inhale/Exhale every 4s
+// breathCycle setInterval stays the same
+
+// ── On COMPLETE — update breath word to 🙏 ──
+// breathLabel.textContent = '🙏';  ← already in existing code, keep it
+</script>
