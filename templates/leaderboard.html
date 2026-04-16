@@ -24,7 +24,7 @@
 .lb-tab:hover:not(.active) { color: var(--text-secondary); }
 .lb-table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
 .lb-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 480px; }
-.col-thumb a { display: block; line-height: 0; }
+.col-thumb a { display: block; line-height: 0; width: 44px; height: 44px; overflow: hidden; }
 .lb-table thead tr { background: var(--surface-3); }
 .lb-table thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .lb-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background .1s; }
@@ -41,14 +41,15 @@
 .medal.silver { background: #8a8a8a; color: #1a1a1a; }
 .medal.bronze { background: #8B5E3C; color: #fff; }
 .rank-num { font-size: 13px; color: var(--text-disabled); font-family: var(--font-mono); }
-.lb-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-sm); display: block; border: 1px solid var(--border); }
-.lb-thumb-placeholder { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border); display: block; }
+.lb-thumb { width: 44px; height: 44px; min-width: 44px; min-height: 44px; max-width: 44px; object-fit: cover; border-radius: var(--radius-sm); display: block; border: 1px solid var(--border); flex-shrink: 0; }
+.lb-thumb-placeholder { width: 44px; height: 44px; min-width: 44px; max-width: 44px; min-height: 44px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border); display: block; flex-shrink: 0; }
+.col-thumb { width: 56px; min-width: 56px; }
 /* Mobile leaderboard */
 @media (max-width: 600px) {
   .lb-table { min-width: 0; font-size: 13px; }
   .col-genre, .col-track { display: none; }
-  .lb-thumb { width: 38px; height: 38px; }
-  .lb-thumb-placeholder { width: 38px; height: 38px; }
+  .lb-thumb { width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; }
+  .lb-thumb-placeholder { width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; }
   .lb-byline { max-width: 140px; }
   .lb-filter-row { flex-direction: column; }
 }
