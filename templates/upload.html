@@ -348,38 +348,17 @@
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
 
-  // ── Session modal ─────────────────────────────────────────────────────────
+  // ── Session expired — redirect straight to login ─────────────────────────
   function showSessionModal() {
     document.getElementById('scoringOverlay').classList.remove('active');
     submitBtn.disabled = false;
     submitBtn.textContent = '⬆ Submit for Scoring';
-    document.getElementById('sessionModal').classList.add('active');
+    // Redirect immediately to login with return URL
+    window.location.href = '/login?next=/upload';
   }
   window.dismissSessionModal = function() {
     document.getElementById('sessionModal').classList.remove('active');
   };
-
-  // ── Ping to verify session before uploading ───────────────────────────────
-  function pingSession(callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', '/api/ping');
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.withCredentials = true;
-    xhr.timeout = 8000;
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        callback(true);
-      } else {
-        // 401 or anything else — session is gone
-        callback(false);
-      }
-    };
-    xhr.onerror = xhr.ontimeout = function() {
-      // Network issue — try uploading anyway, let the upload XHR handle failure
-      callback(true);
-    };
-    xhr.send();
-  }
 
   // ── Form submit ───────────────────────────────────────────────────────────
   form.addEventListener('submit', function (e) {
@@ -406,17 +385,7 @@
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Checking session…';
-
-    // ── Step 1: ping session first ─────────────────────────────────────────
-    pingSession(function(sessionOk) {
-      if (!sessionOk) {
-        showSessionModal();
-        return;
-      }
-      // ── Step 2: session confirmed — start upload ───────────────────────
-      doUpload();
-    });
+    doUpload();
   });
 
   // ── Upload with overlay ───────────────────────────────────────────────────
