@@ -624,9 +624,7 @@ def upload():
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
-        # XHR requests (upload.html sends X-Requested-With header) get JSON
-        # so mobile browsers can redirect cleanly without following a 302.
-        # Normal form submissions get the standard redirect.
+        # XHR requests get JSON so mobile browsers redirect cleanly
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({
                 'status': 'ok',
@@ -2185,7 +2183,6 @@ def share_image(image_id):
     if img.status != 'scored':
         abort(404)
     audit = img.get_audit()
-    # Numeric DDI score + module numbers visible only to the owner (or admin)
     show_score = (
         current_user.is_authenticated and
         (current_user.id == img.user_id or current_user.role == 'admin')
@@ -2199,8 +2196,7 @@ def not_found(e):
 
 @app.errorhandler(413)
 def file_too_large(e):
-    msg = ('⚠️ File too large. Please resize your image to under 5 MB before uploading. '
-           'Most gallery apps have a resize or compress option.')
+    msg = '⚠️ File too large. Please resize your image to under 5 MB before uploading.'
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'error': True, 'message': msg}), 413
     flash(msg, 'error')
@@ -2213,6 +2209,28 @@ def server_error(e):
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
+
+
+@app.route('/upload-debug', methods=['POST'])
+@login_required
+def upload_debug():
+    """Temporary debug route — remove after mobile upload is confirmed working."""
+    files_info = {}
+    for key, f in request.files.items():
+        data = f.read()
+        files_info[key] = {
+            'filename': f.filename,
+            'content_type': f.content_type,
+            'size_bytes': len(data),
+        }
+    return jsonify({
+        'xhr_header': request.headers.get('X-Requested-With', 'NOT SET'),
+        'content_type': request.content_type,
+        'form_keys': list(request.form.keys()),
+        'form_camera_track': request.form.get('camera_track', 'NOT SET'),
+        'files': files_info,
+        'user_agent': request.headers.get('User-Agent', ''),
+    })
 
 
 if __name__ == '__main__':
