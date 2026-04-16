@@ -641,6 +641,16 @@ def upload():
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
+        # XHR (upload.html) gets JSON so JS controls the redirect
+        # Standard form POST (fallback) gets the normal redirect
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'ok',
+                'image_id': img.id,
+                'score': img.score,
+                'tier': img.tier,
+                'redirect': url_for('image_detail', image_id=img.id)
+            })
         return redirect(url_for('image_detail', image_id=img.id))
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
