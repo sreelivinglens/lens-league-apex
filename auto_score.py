@@ -15,9 +15,59 @@ from PIL import Image as PILImage
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
+DETECTION_MODEL   = "claude-sonnet-4-6"   # Sonnet for AI detection — better visual reasoning
 
 # Maximum dimension sent to the API — keeps payload small and response fast
 API_MAX_PX = 800
+
+# Detection prompt — sent to Sonnet only, focused solely on AI detection
+DETECTION_PROMPT = """You are an AI image authentication specialist for a photography competition platform.
+Your ONLY job is to determine whether this image is AI-generated or a real photograph.
+
+Examine the image carefully for these signals:
+
+UNIVERSAL AI TELLS:
+- Hyperreal perfection: impossibly smooth skin/fur, flawless lighting with zero real-world imperfections
+- Anatomical errors: extra/fused limbs, malformed extremities, impossible body proportions, merged body parts
+- Text artefacts: garbled, repeated, or nonsensical text anywhere in frame (signs, licence plates, labels)
+- Repeated elements: identical or near-identical objects/people/structures appearing multiple times
+- Background incoherence: dissolving backgrounds, impossible structures, inconsistent depth or perspective
+- Known AI watermarks: 4-pointed star (Gemini), dream-like vignettes, stylistic signatures of AI tools
+- Over-rendered textures: fur, skin, fabric that looks painted or digitally sculpted rather than photographic
+- Noise patterns: AI upscaling artefacts, unnatural grain, smeared fine detail in hair/fur/foliage
+
+WILDLIFE & NATURE SPECIFIC:
+- Paw/hoof/claw ground contact: real paws compress, splay, deform. AI paws hover or make impossibly clean contact
+- Dust/mud/water physics: AI dust is too uniform and symmetric. Real dust is chaotic and directional
+- Water splash physics: AI splashes are decorative and symmetric. Real splashes follow impact with asymmetric droplets
+- Fur-skin boundaries: around eyes, muzzle, ears — AI blends incorrectly or shows digital smearing
+- Eye catch-lights: real animal eyes have irregular catch-lights consistent with light source position
+- Multi-animal contact points: fur interpenetration, merged body boundaries at contact zones
+- Shadow direction: all shadows must originate from one consistent light source
+- Animal scale/proportion: AI frequently gets size relationships between animals wrong
+- Impossible timing: simultaneous perfect composition of multiple rare action elements
+
+STREET & PEOPLE SPECIFIC:
+- Licence plates: real plates have valid formats. AI generates plausible-looking but invalid text
+- Crowd figures: repeated silhouettes or faces in background crowds
+- Hand/finger anatomy: where hands grip objects — merged fingers, impossible joint angles
+- Clothing physics: fabric folds that defy gravity or motion direction
+- Facial features: uncanny valley smoothness, asymmetric iris sizes, eyelash irregularities
+
+Respond ONLY with a valid JSON object — no preamble, no markdown:
+{
+  "ai_suspicion": <float 0.0-1.0>,
+  "ai_suspicion_reason": "<concise explanation listing the specific signals detected, or null if clearly real>",
+  "needs_review": <true if ai_suspicion >= 0.4, else false>,
+  "detection_signals": ["<signal 1>", "<signal 2>"]
+}
+
+Scoring scale:
+  0.0 — 0.39: Clearly real photograph. Camera noise, real-world imperfections, natural physics visible.
+  0.4  — 0.69: Uncertain — multiple anomalies present. Could be real but warrants human review.
+  0.7  — 0.84: Strong AI signals. Multiple tells present across different categories.
+  0.85 — 1.0:  Almost certainly AI-generated.
+"""
 
 SYSTEM_BRIEF = """
 You are the Apex DDI Engine for The Lens League photography rating platform.
@@ -157,49 +207,10 @@ Set judge_referral=true if score >= 7.0 or technique is exceptional.
 For all other genres: check for intentional motion blur before applying
 genre rules (STEP 1). If detected, technique overrides genre DoD criteria.
 
-AI GENERATION DETECTION — evaluate BEFORE scoring:
-Examine this image carefully for signs of AI generation. Modern AI tools (Midjourney, DALL-E, Gemini, Firefly, Stable Diffusion) can produce photorealistic wildlife and action images that appear convincing at first glance. You MUST look carefully at the following:
-
-GENERAL AI TELLS:
-- Hyperreal perfection: impossibly smooth skin/fur, perfect symmetry, flawless studio-quality lighting with zero real-world imperfections
-- Anatomical errors: extra or fused limbs, malformed paws/hands/feet, impossible body proportions, merged body parts
-- Text artefacts: garbled or nonsensical text anywhere in frame
-- Background incoherence: backgrounds that dissolve into noise, contain impossible structures, or have inconsistent depth
-- Watermarks from known AI platforms (even partially removed)
-- Noise patterns: AI upscaling artefacts, unnatural grain, smeared fine detail in fur, feathers, or foliage
-- Over-rendered textures: fur, skin, feathers that look painted or digitally sculpted rather than photographic
-
-WILDLIFE & ACTION SPECIFIC AI TELLS (highest priority signals):
-- Paw/hoof/claw contact: in real photos, paws compress, splay, and deform against ground surfaces. AI paws hover or make impossibly clean contact
-- Dust and mud physics: AI dust is too uniform, too symmetrical, or radiates from wrong impact points. Real dust is chaotic and directional
-- Water splash physics: AI splashes are decorative and symmetric. Real splashes follow impact direction with asymmetric droplet trails
-- Fur-skin boundaries: where fur meets bare skin (around eyes, muzzle, ears) AI blends incorrectly or shows digital smearing
-- Eye catch-lights: real wildlife eyes have irregular, position-consistent catch-lights. AI eyes often have perfect circular or absent catch-lights
-- Multiple animal interactions: AI frequently errors at contact points where two animals touch — fur interpenetration, merged body boundaries
-- Motion blur consistency: in real panning shots, blur is directional and consistent. AI motion blur is often applied globally and incorrectly
-- Shadow direction: all shadows must originate from one consistent light source. AI frequently generates contradictory shadow directions
-- Scale and proportion between subjects: AI frequently gets the size relationship between animals wrong
-- Impossible timing: scenes that would be extraordinarily rare in reality (multiple peak-action elements all perfectly composed simultaneously) warrant higher suspicion
-- Background forest/vegetation: AI trees and foliage often have fractal repetition patterns, unnaturally uniform branch density, or impossible species mixing
-
-Score ai_suspicion from 0.0 to 1.0:
-  0.0 — 0.39: Clearly a real photograph. Camera noise, real-world imperfections, natural physics visible.
-  0.4  — 0.69: Uncertain — unusually perfect or multiple minor anomalies. Could be real but warrants human review.
-  0.7  — 0.84: Strong signals of AI generation. Multiple tells present across different categories.
-  0.85 — 1.0:  Almost certainly AI-generated. Do not score this as genuine photography.
-
-THREE-TIER RESPONSE RULES:
-- If ai_suspicion >= 0.7: set score = 0.0, tier = "Apprentice", needs_review = true, and explain in ai_suspicion_reason.
-- If ai_suspicion >= 0.4 and < 0.7: proceed with normal DDI scoring but set needs_review = true and explain anomalies in ai_suspicion_reason.
-- If ai_suspicion < 0.4: proceed with normal DDI scoring, needs_review = false, ai_suspicion_reason = null.
-
 Score all five modules. Apply all Apex layer rules. Calculate final weighted score.
 
 Return this exact JSON structure:
 {{
-  "ai_suspicion": <float 0.0-1.0>,
-  "ai_suspicion_reason": "<explanation of signals detected, or null if clearly real>",
-  "needs_review": <true if ai_suspicion >= 0.4 OR score >= 9.0, else false>,
   "dod": <float 0-10>,
   "disruption": <float 0-10>,
   "dm": <float 0-10>,
@@ -372,31 +383,13 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location=""):
-    if not ANTHROPIC_API_KEY:
-        raise ValueError("ANTHROPIC_API_KEY not set")
-
-    img_data, media_type = encode_image(image_path)
-
-    calibration_block = get_calibration_examples(genre)
-    correction_block  = get_calibration_notes(genre)
-
-    prompt = SCORE_PROMPT.format(
-        genre                = genre,
-        photographer         = photographer,
-        title                = title,
-        subject              = subject or "Not specified",
-        location             = location or "Not specified",
-        genre_context        = get_genre_context(genre),
-        calibration_examples = calibration_block,
-        calibration_notes    = correction_block,
-    )
-
+def _call_api(model, system, prompt, img_data, media_type, max_tokens=512, temperature=0.1):
+    """Single API call with retry logic. Returns parsed JSON dict."""
     payload = {
-        "model":       MODEL,
-        "max_tokens":  1500,
-        "temperature": 0.2,
-        "system":      SYSTEM_BRIEF,
+        "model":       model,
+        "max_tokens":  max_tokens,
+        "temperature": temperature,
+        "system":      system,
         "messages": [
             {
                 "role": "user",
@@ -414,8 +407,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
             }
         ],
     }
-
-    response  = None
+    response   = None
     last_error = None
     for attempt in range(5):
         try:
@@ -431,39 +423,125 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
             )
             if response.status_code == 529:
                 wait = (attempt + 1) * 20
-                print(f"[auto_score] API overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
+                print(f"[{model}] overloaded (529), retrying in {wait}s... (attempt {attempt+1}/5)")
                 _time.sleep(wait)
                 continue
             break
         except httpx.TimeoutException as e:
             last_error = e
             wait = (attempt + 1) * 15
-            print(f"[auto_score] Timeout on attempt {attempt+1}/5, retrying in {wait}s...")
+            print(f"[{model}] Timeout on attempt {attempt+1}/5, retrying in {wait}s...")
             _time.sleep(wait)
             continue
         except Exception as e:
             last_error = e
-            print(f"[auto_score] Request error on attempt {attempt+1}/5: {e}")
+            print(f"[{model}] Request error on attempt {attempt+1}/5: {e}")
             break
 
     if response is None:
         raise ValueError(f"All retry attempts failed. Last error: {last_error}")
-
     if response.status_code != 200:
         raise ValueError(f"API error {response.status_code}: {response.text}")
 
-    content = response.json()
     text = ""
-    for block in content.get("content", []):
+    for block in response.json().get("content", []):
         if block.get("type") == "text":
             text += block.get("text", "")
-
     text = re.sub(r"```json|```", "", text).strip()
-
     try:
-        result = json.loads(text)
+        return json.loads(text)
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
+
+
+def detect_ai(img_data, media_type):
+    """
+    Call 1 — Sonnet only, focused purely on AI detection.
+    Returns dict with ai_suspicion, needs_review, ai_suspicion_reason, detection_signals.
+    Falls back to clean result on any error so scoring can always proceed.
+    """
+    try:
+        result = _call_api(
+            model       = DETECTION_MODEL,
+            system      = "You are an AI image authentication specialist. Respond only with valid JSON.",
+            prompt      = DETECTION_PROMPT,
+            img_data    = img_data,
+            media_type  = media_type,
+            max_tokens  = 512,
+            temperature = 0.1,
+        )
+        return {
+            "ai_suspicion":        float(result.get("ai_suspicion", 0.0)),
+            "ai_suspicion_reason": result.get("ai_suspicion_reason") or None,
+            "needs_review":        bool(result.get("needs_review", False)),
+            "detection_signals":   result.get("detection_signals", []),
+        }
+    except Exception as e:
+        print(f"[detect_ai] Detection call failed: {e} — proceeding with suspicion=0")
+        return {
+            "ai_suspicion":        0.0,
+            "ai_suspicion_reason": None,
+            "needs_review":        False,
+            "detection_signals":   [],
+        }
+
+
+def auto_score(image_path, genre, title, photographer, subject="", location=""):
+    if not ANTHROPIC_API_KEY:
+        raise ValueError("ANTHROPIC_API_KEY not set")
+
+    img_data, media_type = encode_image(image_path)
+
+    # ── CALL 1: Sonnet — AI detection only ───────────────────────────────────
+    detection    = detect_ai(img_data, media_type)
+    ai_suspicion = detection["ai_suspicion"]
+    print(f"[detect_ai] suspicion={ai_suspicion:.2f} needs_review={detection['needs_review']} "
+          f"signals={detection['detection_signals']}")
+
+    # If clearly AI-generated skip DDI scoring — return early with zeroed scores
+    if ai_suspicion >= 0.7:
+        return {
+            "ai_suspicion":        ai_suspicion,
+            "ai_suspicion_reason": detection["ai_suspicion_reason"],
+            "needs_review":        True,
+            "dod":        0.0, "disruption": 0.0, "dm": 0.0, "wonder": 0.0, "aq": 0.0,
+            "score":      0.0, "tier": "Apprentice", "archetype": "",
+            "soul_bonus": False, "judge_referral": False,
+            "row_technical": "", "row_geometric": "", "row_dm": "",
+            "row_wonder": "", "row_aq": "",
+            "byline_1": "", "byline_2": "",
+            "badges_g": [], "badges_w": [], "iucn_tag": None,
+        }
+
+    # ── CALL 2: Haiku — DDI scoring only ─────────────────────────────────────
+    calibration_block = get_calibration_examples(genre)
+    correction_block  = get_calibration_notes(genre)
+
+    prompt = SCORE_PROMPT.format(
+        genre                = genre,
+        photographer         = photographer,
+        title                = title,
+        subject              = subject or "Not specified",
+        location             = location or "Not specified",
+        genre_context        = get_genre_context(genre),
+        calibration_examples = calibration_block,
+        calibration_notes    = correction_block,
+    )
+
+    result = _call_api(
+        model       = MODEL,
+        system      = SYSTEM_BRIEF,
+        prompt      = prompt,
+        img_data    = img_data,
+        media_type  = media_type,
+        max_tokens  = 1500,
+        temperature = 0.2,
+    )
+
+    # Merge detection results into DDI result
+    result["ai_suspicion"]        = ai_suspicion
+    result["ai_suspicion_reason"] = detection["ai_suspicion_reason"]
+    result["needs_review"]        = detection["needs_review"]  # app.py also sets for Grandmaster
 
     return result
 
