@@ -55,7 +55,10 @@
     border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.2s, background 0.2s;
     font-size: 14px; font-weight: 500; color: var(--text-secondary); user-select: none;
   }
-  .shot-on-option label .shot-icon { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+  .shot-on-option label .shot-icon {
+    font-size: 1.6rem; line-height: 1; flex-shrink: 0;
+    font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  }
   .shot-on-option label .shot-text { line-height: 1.3; }
   .shot-on-option label .shot-text small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
   .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
@@ -80,25 +83,11 @@
     flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
-  .overlay-engine-tag {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
-    margin-bottom: 44px; opacity: .55;
-  }
+  .overlay-engine-tag { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
   .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
   @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .breath-ring-hero {
-    width: 140px; height: 140px; border-radius: 50%;
-    border: 3px solid rgba(200,168,75,0.5);
-    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
-    animation: breatheHero 8s ease-in-out infinite;
-    display: flex; align-items: center; justify-content: center;
-  }
-  @keyframes breatheHero {
-    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
-    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
-    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
-  }
+  .breath-ring-hero { width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(200,168,75,0.5); background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%); animation: breatheHero 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
+  @keyframes breatheHero { 0% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } 50% { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); } 100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } }
   .breath-inner-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: breatheInner 8s ease-in-out infinite; }
   @keyframes breatheInner { 0% { transform: scale(1.4); opacity: 0.4; } 50% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.4); opacity: 0.4; } }
   .breath-word { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase; text-align: center; min-width: 160px; }
@@ -126,7 +115,6 @@
     <p>Submit your photograph for AI scoring via the Apex DDI Engine</p>
   </div>
   <div class="card">
-    <!-- action is explicit /upload, not relative — fixes mobile URL resolution -->
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
 
       <div class="drop-zone" id="dropZone">
@@ -172,7 +160,6 @@
         <div class="genre-hint" id="genre-hint"></div>
       </div>
 
-      <!-- Shot On -->
       <div class="form-group shot-on-group">
         <span class="field-label">Shot On <span style="color:var(--red);font-size:13px;">*</span></span>
         <div class="shot-on-options">
@@ -306,7 +293,10 @@
     reader.readAsDataURL(file);
   }
 
-  function showError(msg) { fileError.textContent = msg; fileError.style.display = 'block'; fileError.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  function showError(msg) {
+    fileError.textContent = msg; fileError.style.display = 'block';
+    fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   const genreHints = {
     'Creative':      '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
@@ -316,7 +306,7 @@
     'Landscape':     '🌄 Light quality, composition, patience. Long-exposure blur on water and clouds is rewarded.',
     'Macro':         '🔬 Extreme precision focus required. Sharpness on the primary subject is the key DoD criterion.',
     'Wedding':       '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
-    'People':        '👤 Emotional connection and authentic expression paramount. AQ is the dominant scoring signal.',
+    'People':        '👤 Emotional connection and authentic expression paramount. AQ is the dominant signal.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
@@ -330,8 +320,7 @@
     if (!file) { showError('Please select an image to upload.'); return; }
     if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-      showError(`Your image is ${sizeMB} MB — over the 5 MB limit. Please resize to under 5 MB before uploading.`);
+      showError(`Your image is ${(file.size/1024/1024).toFixed(1)} MB — over the 5 MB limit. Please resize before uploading.`);
       return;
     }
 
@@ -354,7 +343,6 @@
     const overlayStatus= document.getElementById('overlayStatus');
     const overlaySub   = document.getElementById('overlaySubstatus');
     const breathLabel  = document.getElementById('breathLabel');
-
     const TOTAL_SECS   = 35;
     const CIRCUMFERENCE= 195;
 
@@ -379,84 +367,98 @@
     const ticker = setInterval(() => {
       elapsed++;
       clockSecs.textContent = Math.max(TOTAL_SECS - elapsed, 0);
-      const pct = Math.min(elapsed / TOTAL_SECS, 1);
-      clockRing.style.strokeDashoffset = CIRCUMFERENCE - (pct * CIRCUMFERENCE);
+      clockRing.style.strokeDashoffset = CIRCUMFERENCE - (Math.min(elapsed / TOTAL_SECS, 1) * CIRCUMFERENCE);
       const phase = phases.find(p => elapsed >= p.from && elapsed < p.to) || phases[phases.length - 1];
       overlayPhase.textContent  = phase.phase;
       overlayStatus.textContent = phase.status;
       overlaySub.textContent    = phase.sub;
     }, 1000);
 
-    function stopOverlay() { clearInterval(ticker); clearInterval(breathCycle); }
+    function stopAll() { clearInterval(ticker); clearInterval(breathCycle); }
 
     function overlayError(msg) {
-      stopOverlay();
+      stopAll();
       overlay.classList.remove('active');
       submitBtn.disabled = false;
       showError(msg);
     }
 
-    // ── XHR ──────────────────────────────────────────────────────────────────
-    const xhr = new XMLHttpRequest();
-    // Explicit absolute URL — avoids mobile browser URL resolution issues
-    xhr.open('POST', '/upload');
-    // This header tells Flask to return JSON instead of a redirect
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.timeout = 120000;
+    // ── Pre-flight session check ─────────────────────────────────────────────
+    // Verify session cookie is being sent before firing the real upload XHR.
+    // On mobile Safari, cookies can silently fail on XHR if ITP blocks them.
+    fetch('/health', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status !== 'ok') throw new Error('Health check failed');
+        // Session is fine — fire the upload
+        doUpload();
+      })
+      .catch(() => {
+        // Health check failed — try upload anyway, session error will surface clearly
+        doUpload();
+      });
 
-    xhr.addEventListener('load', function () {
-      stopOverlay();
+    function doUpload() {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      // Send cookies explicitly
+      xhr.withCredentials = true;
+      xhr.timeout = 120000;
 
-      // Log raw response for debugging — remove after confirmed working
-      console.log('[upload] status:', xhr.status, 'response:', xhr.responseText.substring(0, 300));
+      xhr.addEventListener('load', function () {
+        stopAll();
 
-      if (xhr.status === 413) { overlayError('File too large — please resize to under 5 MB.'); fileInput.value = ''; previewArea.style.display = 'none'; return; }
-      if (xhr.status === 409) {
-        let msg = 'Duplicate image detected.';
-        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-        overlayError(msg); fileInput.value = ''; previewArea.style.display = 'none'; return;
-      }
-      if (xhr.status === 403) {
-        let msg = 'Upload limit reached.';
-        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
-        overlayError(msg); return;
-      }
+        // Handle known status codes first
+        if (xhr.status === 401) {
+          overlayError('Your session expired. Please log out and log back in, then try uploading again.');
+          return;
+        }
+        if (xhr.status === 413) {
+          overlayError('File too large — please resize to under 5 MB.');
+          fileInput.value = ''; previewArea.style.display = 'none'; return;
+        }
+        if (xhr.status === 409) {
+          let msg = 'Duplicate image detected.';
+          try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+          overlayError(msg); fileInput.value = ''; previewArea.style.display = 'none'; return;
+        }
+        if (xhr.status === 403) {
+          let msg = 'Upload limit reached. Please upgrade to continue.';
+          try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+          overlayError(msg); return;
+        }
 
-      // Parse JSON
-      let resp = null;
-      try { resp = JSON.parse(xhr.responseText); } catch(e) {
-        // Got HTML instead of JSON — app.py fix not deployed yet
-        overlayError('Server returned unexpected response. The app.py fix may not be deployed. Check Railway logs.');
-        return;
-      }
+        // Parse JSON
+        let resp = null;
+        try { resp = JSON.parse(xhr.responseText); } catch(e) {
+          // Got HTML — almost certainly a session/redirect issue
+          overlayError('Session issue detected. Please reload the page, log in again, and try uploading.');
+          return;
+        }
 
-      if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
-        clockSecs.textContent = '✓';
-        clockRing.style.strokeDashoffset = '0';
-        clockRing.style.stroke = 'rgba(200,168,75,0.9)';
-        overlay.classList.add('active'); // keep overlay visible during redirect
-        overlayPhase.textContent  = 'COMPLETE';
-        overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
-        overlaySub.textContent    = 'Redirecting to your score card…';
-        if (breathLabel) breathLabel.textContent = '🙏';
-        setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 1200);
-        return;
-      }
+        // Success
+        if (xhr.status === 200 && resp && resp.status === 'ok' && resp.image_id) {
+          clockSecs.textContent = '✓';
+          clockRing.style.strokeDashoffset = '0';
+          clockRing.style.stroke = 'rgba(200,168,75,0.9)';
+          overlay.classList.add('active');
+          overlayPhase.textContent  = 'COMPLETE';
+          overlayStatus.textContent = resp.score ? `Scored! LL-Score: ${resp.score} — ${resp.tier}` : 'Image uploaded!';
+          overlaySub.textContent    = 'Redirecting to your score card…';
+          if (breathLabel) breathLabel.textContent = '🙏';
+          setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 1200);
+          return;
+        }
 
-      // Any other response — show what we got
-      const errMsg = (resp && resp.message) ? resp.message : `Upload failed (status ${xhr.status}).`;
-      overlayError(errMsg);
-    });
+        overlayError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
+      });
 
-    xhr.addEventListener('error', function () {
-      overlayError('Network error — check your connection and try again.');
-    });
+      xhr.addEventListener('error', function () { overlayError('Network error — check your connection and try again.'); });
+      xhr.addEventListener('timeout', function () { overlayError('Request timed out. Check your dashboard in a minute — your image may have been saved.'); });
 
-    xhr.addEventListener('timeout', function () {
-      overlayError('Request timed out. Check your dashboard in a minute — your image may have been saved.');
-    });
-
-    xhr.send(new FormData(form));
+      xhr.send(new FormData(form));
+    }
   });
 })();
 
