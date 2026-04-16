@@ -477,21 +477,17 @@
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', form.action);
+    // Mark as XHR so Flask returns JSON instead of a redirect
+    // (redirect-following breaks on mobile browsers mid-XHR)
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.timeout = 120000;
 
     xhr.addEventListener('load', function () {
       clearInterval(ticker);
       clearInterval(breathCycle);
-      if (xhr.status === 200) {
-        clockSecs.textContent = '✓';
-        clockRing.style.strokeDashoffset = '0';
-        clockRing.style.stroke = 'var(--gold)';
-        overlayPhase.textContent  = 'COMPLETE';
-        overlayStatus.textContent = 'Your score is ready!';
-        overlaySub.textContent    = 'Redirecting to your score card…';
-        if (breathLabel) breathLabel.textContent = '🙏';
-        setTimeout(() => { window.location.href = xhr.responseURL || '/dashboard'; }, 600);
-      } else if (xhr.status === 409) {
+
+      // Handle duplicate (409) first
+      if (xhr.status === 409) {
         overlay.classList.remove('active');
         submitBtn.disabled = false;
         try {
@@ -501,18 +497,61 @@
           showError('This image has already been submitted. Please upload a different photograph.');
         }
         fileInput.value = ''; previewArea.style.display = 'none';
-      } else {
-        overlay.classList.remove('active');
-        submitBtn.disabled = false;
-        showError('Upload failed. Please try again.');
+        return;
       }
+
+      // Try to parse JSON response
+      let resp = null;
+      try { resp = JSON.parse(xhr.responseText); } catch(e) {}
+
+      // Success: got JSON with status ok OR a 200 with image_id
+      if (resp && resp.status === 'ok' && resp.image_id) {
+        clockSecs.textContent = '✓';
+        clockRing.style.strokeDashoffset = '0';
+        clockRing.style.stroke = 'var(--gold)';
+        overlayPhase.textContent  = 'COMPLETE';
+        overlayStatus.textContent = resp.score
+          ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
+          : 'Image uploaded!';
+        overlaySub.textContent = 'Redirecting to your score card…';
+        if (breathLabel) breathLabel.textContent = '🙏';
+        const dest = resp.redirect || `/image/${resp.image_id}`;
+        setTimeout(() => { window.location.href = dest; }, 1000);
+        return;
+      }
+
+      // Fallback: non-JSON 200 (shouldn't happen after the app.py fix,
+      // but handle gracefully — redirect to dashboard)
+      if (xhr.status === 200) {
+        clockSecs.textContent = '✓';
+        clockRing.style.strokeDashoffset = '0';
+        clockRing.style.stroke = 'var(--gold)';
+        overlayPhase.textContent  = 'COMPLETE';
+        overlayStatus.textContent = 'Image uploaded!';
+        overlaySub.textContent    = 'Redirecting to your dashboard…';
+        if (breathLabel) breathLabel.textContent = '🙏';
+        setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+        return;
+      }
+
+      // Any other status = error
+      overlay.classList.remove('active');
+      submitBtn.disabled = false;
+      showError(`Upload failed (${xhr.status}). Please try again.`);
     });
 
     xhr.addEventListener('error', function () {
       clearInterval(ticker); clearInterval(breathCycle);
       overlay.classList.remove('active');
       submitBtn.disabled = false;
-      showError('Network error. Please try again.');
+      showError('Network error. Please check your connection and try again.');
+    });
+
+    xhr.addEventListener('timeout', function () {
+      clearInterval(ticker); clearInterval(breathCycle);
+      overlay.classList.remove('active');
+      submitBtn.disabled = false;
+      showError('Request timed out. Your image may still be processing — check your dashboard in a minute.');
     });
 
     xhr.send(new FormData(form));
