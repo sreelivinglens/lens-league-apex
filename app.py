@@ -624,6 +624,17 @@ def upload():
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
+        # XHR requests (upload.html sends X-Requested-With header) get JSON
+        # so mobile browsers can redirect cleanly without following a 302.
+        # Normal form submissions get the standard redirect.
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'status': 'ok',
+                'image_id': img.id,
+                'score': img.score,
+                'tier': img.tier,
+                'redirect': url_for('image_detail', image_id=img.id)
+            })
         return redirect(url_for('image_detail', image_id=img.id))
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
@@ -2174,12 +2185,26 @@ def share_image(image_id):
     if img.status != 'scored':
         abort(404)
     audit = img.get_audit()
-    return render_template('share.html', image=img, audit=audit)
+    # Numeric DDI score + module numbers visible only to the owner (or admin)
+    show_score = (
+        current_user.is_authenticated and
+        (current_user.id == img.user_id or current_user.role == 'admin')
+    )
+    return render_template('share.html', image=img, audit=audit, show_score=show_score)
 
 
 @app.errorhandler(404)
 def not_found(e):
     return render_template('404.html'), 404
+
+@app.errorhandler(413)
+def file_too_large(e):
+    msg = ('⚠️ File too large. Please resize your image to under 5 MB before uploading. '
+           'Most gallery apps have a resize or compress option.')
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': True, 'message': msg}), 413
+    flash(msg, 'error')
+    return redirect(url_for('upload'))
 
 @app.errorhandler(500)
 def server_error(e):
