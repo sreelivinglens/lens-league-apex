@@ -48,19 +48,6 @@
   .dz-label { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
   .dz-hint { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; color: var(--text-muted); }
 
-  /* Progress */
-  .progress-wrap {
-    display: none; background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: var(--radius-md);
-    padding: 20px; margin-bottom: 20px;
-  }
-  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .progress-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
-  .progress-elapsed { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
-  .progress-track { background: var(--surface-3); border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 10px; }
-  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; transition: width 0.4s ease; }
-  .progress-status { font-size: 14px; color: var(--text-secondary); }
-
   /* Results */
   .results-section { margin-top: 36px; }
   .results-count { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
@@ -131,6 +118,21 @@
   .dot-pulse span:nth-child(2) { animation-delay: .2s; }
   .dot-pulse span:nth-child(3) { animation-delay: .4s; }
   @keyframes pulse { 0%,80%,100% { opacity:.3; transform:scale(.8); } 40% { opacity:1; transform:scale(1.1); } }
+
+  /* Error banner shown inside overlay on failure */
+  .overlay-error {
+    display: none;
+    margin-top: 24px;
+    padding: 16px 24px;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: var(--radius-md);
+    font-size: 15px; color: #F0A0A0;
+    text-align: center; max-width: 480px; line-height: 1.6;
+  }
+  .overlay-error a {
+    color: var(--gold); text-decoration: underline; cursor: pointer;
+  }
 </style>
 {% endblock %}
 
@@ -184,8 +186,6 @@
     <p>Upload multiple images at once — AI scores each one automatically</p>
   </div>
 
-
-
   <div class="card">
     <form method="POST" enctype="multipart/form-data" id="bulkForm">
 
@@ -223,31 +223,45 @@
         </div>
       </div>
 
+      <!-- Shot On — mandatory track selector -->
+      <div class="form-group" style="margin-bottom:20px;">
+        <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">
+          Shot On <span style="color:var(--red); font-size:13px;">*</span>
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_camera">
+            <input type="radio" name="camera_track" value="camera" id="bulk_track_camera" style="accent-color:var(--gold);" onchange="highlightTrack()">
+            <span>
+              <span style="font-size:1.3rem;">📷</span>
+              <span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Camera</span>
+              <small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">DSLR · Mirrorless · Film</small>
+            </span>
+          </label>
+          <label style="display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); cursor:pointer; transition:border-color .2s;" id="lbl_mobile">
+            <input type="radio" name="camera_track" value="mobile" id="bulk_track_mobile" style="accent-color:var(--gold);" onchange="highlightTrack()">
+            <span>
+              <span style="font-size:1.3rem;">📱</span>
+              <span style="font-size:14px; font-weight:500; color:var(--text-secondary); margin-left:6px;">Mobile</span>
+              <small style="display:block; font-size:11px; color:var(--text-muted); margin-left:28px;">iPhone · Android · Smartphone</small>
+            </span>
+          </label>
+        </div>
+        <div id="bulkTrackHint" style="font-size:12px; color:var(--red); margin-top:6px; display:none;">Please select Camera or Mobile before uploading.</div>
+      </div>
+
       <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark);
                   border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px;
                   font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
-        The Apex DDI Engine analyses each image automatically. Allow ~15–20 seconds per image. <strong style="color:var(--amber);">Maximum 10 images per batch.</strong>
+        The Apex DDI Engine analyses each image automatically. Allow ~35 seconds per image.
+        <strong style="color:var(--amber);">Maximum 10 images per batch.</strong>
         Duplicates are detected and skipped. Keep this tab open until complete.
         <br><br>
         <strong style="color:var(--amber);">⏰ Best times to upload (IST):</strong>
         6:00 AM – 10:00 AM &nbsp;·&nbsp; 2:00 PM – 5:00 PM &nbsp;·&nbsp; After 11:00 PM<br>
         <span style="color:var(--text-muted); font-size:13px;">
         Peak hours (6 PM – 10 PM IST) may cause scoring delays due to high global API demand.
-        Images are always saved — scoring happens automatically when servers are available.
         </span>
-      </div>
-
-      <!-- Progress -->
-      <div class="progress-wrap" id="progressArea">
-        <div class="progress-header">
-          <span class="progress-label" id="progressLabel">Processing</span>
-          <span class="progress-elapsed" id="elapsedDisplay">0s elapsed</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-status" id="progressText" style="margin-top:10px;"></div>
       </div>
 
       <!-- Leaderboard Visibility Toggle -->
@@ -274,7 +288,7 @@
     </form>
   </div>
 
-  <!-- Results — redesigned as card rows instead of table -->
+  <!-- Results -->
   {% if results %}
   <div class="results-section">
 
@@ -291,19 +305,7 @@
       </div>
       <p style="font-size:15px; color:#F0C888; line-height:1.7; margin-bottom:12px;">
         {{ busy_count }} image{{ 's' if busy_count != 1 }} were saved but could not be scored right now.
-        The Apex DDI Engine runs on Anthropic AI servers which experience high demand at certain times.
-        Your images are safe — you can score them from your dashboard when the servers are less busy.
-      </p>
-      <div style="background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); padding:14px 18px;
-                  font-size:14px; color:#F0C888; line-height:1.9;">
-        <strong style="color:var(--amber);">Generally busy periods (IST):</strong><br>
-        🔴 &nbsp;6:00 PM – 11:00 PM &nbsp;·&nbsp; Peak evening hours<br>
-        🟡 &nbsp;12:00 PM – 2:00 PM &nbsp;·&nbsp; Lunch hour load<br>
-        🟢 &nbsp;6:00 AM – 11:00 AM &nbsp;·&nbsp; Best time to upload<br>
-        🟢 &nbsp;11:00 PM – 5:00 AM &nbsp;·&nbsp; Off-peak, fastest scoring
-      </div>
-      <p style="font-size:13px; color:var(--text-muted); margin-top:12px; font-family:var(--font-mono);">
-        TIP: Go to Dashboard → click any pending image → click "Generate Score" to retry scoring individually.
+        Your images are safe — retry from your dashboard during off-peak hours.
       </p>
     </div>
     {% endif %}
@@ -312,7 +314,7 @@
     <div style="background:var(--green-dim); border:1px solid var(--green);
                 border-radius:var(--radius-md); padding:14px 20px; margin-bottom:20px;
                 font-size:15px; color:var(--green);">
-      ✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully by the Apex DDI Engine.
+      ✅ {{ scored_count }} image{{ 's' if scored_count != 1 }} scored successfully.
     </div>
     {% endif %}
 
@@ -321,29 +323,16 @@
     </div>
 
     <div class="result-border">
-      <!-- Header row -->
       <div style="display:flex; gap:16px; padding:12px 20px; background:var(--surface-3); border-bottom:1px solid var(--border);">
         <div style="flex:1; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">File</div>
         <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Score</div>
         <div style="min-width:90px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Tier</div>
         <div style="min-width:120px; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Status</div>
       </div>
-
-      {% set has_busy = results | selectattr('status', 'equalto', 'saved — scoring queued (API busy)') | list | length > 0 %}
-      {% if has_busy %}
-      <div style="padding:16px 20px; background:var(--amber-dim); border:1px solid var(--amber);
-                  border-radius:var(--radius-sm) var(--radius-sm) 0 0;
-                  font-size:15px; color:#F0C888; line-height:1.7;">
-        ⏳ <strong>AI scoring servers are currently busy.</strong>
-        Your images have been saved safely and will appear in your dashboard.
-        You can rescore them manually from the image detail page, or try again during off-peak hours.<br>
-        <strong>Best times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM
-      </div>
-      {% endif %}
       {% for r in results %}
       {% set is_ok = r.status in ['scored', 'uploaded', 'saved — scoring queued (API busy)'] %}
       <div class="result-row">
-        <div class="result-filename" style="word-break:break-word; overflow-wrap:anywhere; font-size:13px; color:var(--text-muted);">{{ r.filename }}</div>
+        <div class="result-filename">{{ r.filename }}</div>
         <div class="result-score">{{ r.score or '—' }}</div>
         <div class="result-tier">{{ r.tier or '—' }}</div>
         {% if 'busy' in r.status %}
@@ -381,6 +370,12 @@
   <div class="overlay-status" id="overlayStatus">Sending your images…</div>
   <div class="overlay-substatus" id="overlaySubstatus">Please keep this tab open while scoring is in progress.</div>
   <div class="dot-pulse"><span></span><span></span><span></span></div>
+  <!-- Error shown inside overlay so user sees it without overlay dismissing prematurely -->
+  <div class="overlay-error" id="overlayError">
+    <strong>Upload failed.</strong><br>
+    <span id="overlayErrorMsg"></span><br><br>
+    <a onclick="dismissOverlayError()">← Try again</a>
+  </div>
 </div>
 {% endblock %}
 
@@ -389,9 +384,7 @@
 const AGREED_KEY = 'bulk_upload_agreed';
 
 function initPage() {
-  // Always clear processing flags on page load
   sessionStorage.removeItem('bulk_processing');
-  sessionStorage.removeItem('bulk_started');
 
   {% if results %}
   document.getElementById('legalModal').classList.remove('open');
@@ -419,6 +412,17 @@ function proceedToUpload() {
   sessionStorage.setItem(AGREED_KEY, '1');
   document.getElementById('legalModal').classList.remove('open');
   document.getElementById('uploadContent').style.display = 'block';
+}
+
+// Track highlight on selection
+function highlightTrack() {
+  const camera = document.getElementById('bulk_track_camera');
+  const mobile = document.getElementById('bulk_track_mobile');
+  document.getElementById('lbl_camera').style.borderColor = camera.checked ? 'var(--gold)' : 'var(--border)';
+  document.getElementById('lbl_camera').style.background  = camera.checked ? 'var(--gold-subtle)' : 'var(--surface-3)';
+  document.getElementById('lbl_mobile').style.borderColor = mobile.checked ? 'var(--gold)' : 'var(--border)';
+  document.getElementById('lbl_mobile').style.background  = mobile.checked ? 'var(--gold-subtle)' : 'var(--surface-3)';
+  document.getElementById('bulkTrackHint').style.display = 'none';
 }
 
 // File handling
@@ -451,23 +455,32 @@ function showFiles(files) {
   ).join('');
   fl.style.display = 'block';
 }
-
 input.addEventListener('change', () => showFiles(input.files));
 
-// Submit with XHR so JS keeps running (elapsed timer works)
+function dismissOverlayError() {
+  document.getElementById('scoringOverlay').classList.remove('active');
+  document.getElementById('overlayError').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Score All';
+}
+
+// ── Main submit handler ──────────────────────────────────────────────────────
 const form      = document.getElementById('bulkForm');
 const submitBtn = document.getElementById('submitBtn');
-const progArea  = document.getElementById('progressArea');
-const progBar   = document.getElementById('progressBar');
-const progText  = document.getElementById('progressText');
-const progLabel = document.getElementById('progressLabel');
-const elapsed   = document.getElementById('elapsedDisplay');
 
 form.addEventListener('submit', function(e) {
   e.preventDefault();
 
   const files = input.files;
   if (!files.length) { alert('Please select images first.'); return; }
+
+  // Validate track
+  const trackSelected = document.querySelector('input[name="camera_track"]:checked');
+  if (!trackSelected) {
+    document.getElementById('bulkTrackHint').style.display = 'block';
+    document.getElementById('bulkTrackHint').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
 
   let oversized = [];
   for (let f of files) {
@@ -478,13 +491,11 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
-  // Lock UI
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
-  sessionStorage.setItem('bulk_processing', '1');
 
-  // ── Scoring Overlay ──────────────────────────────────────────────
-  const total        = files.length;
+  // ── Scoring Overlay ──────────────────────────────────────────────────────
+  const total        = Math.min(files.length, 10);
   const overlay      = document.getElementById('scoringOverlay');
   const clockRing    = document.getElementById('clockRing');
   const clockSecs    = document.getElementById('clockSecs');
@@ -494,29 +505,25 @@ form.addEventListener('submit', function(e) {
   const overlaySub   = document.getElementById('overlaySubstatus');
 
   const PER_IMAGE    = 35;
-  const totalSecs    = total * PER_IMAGE;
   const CIRCUMFERENCE= 534;
 
   overlay.classList.add('active');
+  document.getElementById('overlayError').style.display = 'none';
   clockSecs.textContent = PER_IMAGE;
 
   let secs = 0;
   const ticker = setInterval(() => {
     secs++;
-
-    // Per-image position
     const imgNum    = Math.min(Math.ceil(secs / PER_IMAGE), total);
-    const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;  // 1..PER_IMAGE within current image
+    const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;
     const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
 
-    // Clock resets each image
     clockSecs.textContent = imgRemain;
     clockUnit.textContent = imgRemain === 1 ? 'second' : 'seconds';
     const imgPct = imgSecs / PER_IMAGE;
     clockRing.style.strokeDashoffset = CIRCUMFERENCE - (imgPct * CIRCUMFERENCE);
     clockRing.style.stroke = imgRemain <= 3 ? '#fff' : 'var(--gold)';
 
-    // Phase copy
     if (imgSecs < 4) {
       overlayPhase.textContent  = `UPLOADING ${imgNum}/${total}`;
       overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;
@@ -524,7 +531,7 @@ form.addEventListener('submit', function(e) {
     } else if (imgSecs < 10) {
       overlayPhase.textContent  = `ANALYSING ${imgNum}/${total}`;
       overlayStatus.textContent = `Apex DDI Engine is scoring image ${imgNum}…`;
-      overlaySub.textContent    = 'DoD \u00b7 Disruption \u00b7 DM \u00b7 Wonder \u00b7 AQ';
+      overlaySub.textContent    = 'DoD · Disruption · DM · Wonder · AQ';
     } else if (imgSecs < 28) {
       overlayPhase.textContent  = `SCORING ${imgNum}/${total}`;
       overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;
@@ -536,59 +543,54 @@ form.addEventListener('submit', function(e) {
     }
   }, 1000);
 
-  // XHR submit
+  // XHR — timeout set to 360s (6 min) to handle 10 images × 35s + server overhead
   const xhr = new XMLHttpRequest();
   xhr.open('POST', form.action || window.location.pathname);
+  xhr.timeout = 360000;
 
   xhr.onload = function() {
     clearInterval(ticker);
     if (xhr.status === 200) {
+      // Success — show completion then redirect to dashboard
       clockSecs.textContent = '✓';
       clockUnit.textContent = 'done';
       clockRing.style.strokeDashoffset = '0';
       clockRing.style.stroke = 'var(--gold)';
       overlayPhase.textContent  = 'COMPLETE';
-      overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} scored!`;
+      overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} processed!`;
       overlaySub.textContent    = 'Redirecting to your dashboard…';
       sessionStorage.removeItem('bulk_processing');
-      sessionStorage.removeItem('bulk_started');
-      setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
     } else {
-      overlay.classList.remove('active');
-      progText.textContent = `❌ Error ${xhr.status} — please try again.`;
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⬆ Upload & Auto-Score All';
+      // Server returned an error status — show inside overlay
+      showOverlayError(`Server error ${xhr.status}. Your images may have been saved. Check your dashboard, or try again.`);
     }
   };
 
   xhr.onerror = function() {
     clearInterval(ticker);
-    overlay.classList.remove('active');
-    progText.textContent = '❌ Network error — please try again.';
-    submitBtn.disabled = false;
-    submitBtn.textContent = '⬆ Upload & Auto-Score All';
+    showOverlayError('Network error — connection lost mid-upload. Check your dashboard to see if any images were saved, then try again.');
   };
 
   xhr.ontimeout = function() {
     clearInterval(ticker);
-    progText.textContent = '⏱ Request timed out — images may still be processing. Refresh the page to check.';
+    // Timeout likely means server is still processing (not necessarily failed)
+    clockSecs.textContent = '?';
+    clockUnit.textContent = '';
+    overlayPhase.textContent  = 'STILL PROCESSING';
+    overlayStatus.textContent = 'The server is taking longer than expected.';
+    overlaySub.textContent    = '';
+    showOverlayError('The request timed out in your browser, but the server may still be scoring your images. Check your dashboard in 2–3 minutes. If images appear there, scoring completed successfully.');
   };
 
-  xhr.timeout = 300000; // 5 minute timeout for large batches
+  function showOverlayError(msg) {
+    document.getElementById('overlayErrorMsg').textContent = msg;
+    document.getElementById('overlayError').style.display = 'block';
+    // Stop the dot pulse animation
+    document.querySelector('.dot-pulse').style.display = 'none';
+  }
 
   xhr.send(new FormData(form));
-});
-
-// Clear processing state when results load
-{% if results %}
-sessionStorage.removeItem('bulk_processing');
-{% endif %}
-
-// Handle tab visibility change — show notice if user switches away and back
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && sessionStorage.getItem('bulk_processing') === '1') {
-    document.getElementById('processingNotice').style.display = 'block';
-  }
 });
 
 window.addEventListener('DOMContentLoaded', initPage);
