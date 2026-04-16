@@ -166,7 +166,7 @@ def get_tier(score: float) -> str:
     if score <= 5.0:  return 'Apprentice'
     if score <  7.6:  return 'Practitioner'
     if score <  9.0:  return 'Master'
-    if score <= 9.6:  return 'Grandmaster'
+    if score <  9.7:  return 'Grandmaster'
     return 'Legend'
 
 
