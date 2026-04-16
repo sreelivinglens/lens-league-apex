@@ -91,6 +91,7 @@ class Image(db.Model):
     # AI generation detection
     ai_suspicion           = db.Column(db.Float,   default=0.0,   nullable=True)
     ai_suspicion_reason    = db.Column(db.Text,                    nullable=True)
+    needs_review           = db.Column(db.Boolean, default=False,  nullable=False)
     is_flagged             = db.Column(db.Boolean, default=False,  nullable=False)
     flagged_reason         = db.Column(db.Text,                    nullable=True)
     flagged_at             = db.Column(db.DateTime,                nullable=True)

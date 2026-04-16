@@ -158,31 +158,48 @@ For all other genres: check for intentional motion blur before applying
 genre rules (STEP 1). If detected, technique overrides genre DoD criteria.
 
 AI GENERATION DETECTION — evaluate BEFORE scoring:
-Examine this image carefully for signs of AI generation. Look for:
-- Hyperreal perfection: impossibly smooth skin, perfect symmetry, flawless lighting with no real-world imperfections
-- Midjourney/DALL-E aesthetic: painterly over-saturation, dreamlike unreality, overly rendered textures
-- Anatomical errors: extra fingers, malformed hands, impossible body proportions, merged limbs
-- Text artefacts: garbled or nonsensical text within the image
-- Depth and physics errors: objects that defy gravity or perspective in ways no camera could capture
-- Telltale noise patterns: AI upscaling artefacts, unnatural grain, smeared fine detail in hair or foliage
-- Background incoherence: backgrounds that dissolve into noise or contain impossible structures
-- Watermarks from known AI platforms
+Examine this image carefully for signs of AI generation. Modern AI tools (Midjourney, DALL-E, Gemini, Firefly, Stable Diffusion) can produce photorealistic wildlife and action images that appear convincing at first glance. You MUST look carefully at the following:
+
+GENERAL AI TELLS:
+- Hyperreal perfection: impossibly smooth skin/fur, perfect symmetry, flawless studio-quality lighting with zero real-world imperfections
+- Anatomical errors: extra or fused limbs, malformed paws/hands/feet, impossible body proportions, merged body parts
+- Text artefacts: garbled or nonsensical text anywhere in frame
+- Background incoherence: backgrounds that dissolve into noise, contain impossible structures, or have inconsistent depth
+- Watermarks from known AI platforms (even partially removed)
+- Noise patterns: AI upscaling artefacts, unnatural grain, smeared fine detail in fur, feathers, or foliage
+- Over-rendered textures: fur, skin, feathers that look painted or digitally sculpted rather than photographic
+
+WILDLIFE & ACTION SPECIFIC AI TELLS (highest priority signals):
+- Paw/hoof/claw contact: in real photos, paws compress, splay, and deform against ground surfaces. AI paws hover or make impossibly clean contact
+- Dust and mud physics: AI dust is too uniform, too symmetrical, or radiates from wrong impact points. Real dust is chaotic and directional
+- Water splash physics: AI splashes are decorative and symmetric. Real splashes follow impact direction with asymmetric droplet trails
+- Fur-skin boundaries: where fur meets bare skin (around eyes, muzzle, ears) AI blends incorrectly or shows digital smearing
+- Eye catch-lights: real wildlife eyes have irregular, position-consistent catch-lights. AI eyes often have perfect circular or absent catch-lights
+- Multiple animal interactions: AI frequently errors at contact points where two animals touch — fur interpenetration, merged body boundaries
+- Motion blur consistency: in real panning shots, blur is directional and consistent. AI motion blur is often applied globally and incorrectly
+- Shadow direction: all shadows must originate from one consistent light source. AI frequently generates contradictory shadow directions
+- Scale and proportion between subjects: AI frequently gets the size relationship between animals wrong
+- Impossible timing: scenes that would be extraordinarily rare in reality (multiple peak-action elements all perfectly composed simultaneously) warrant higher suspicion
+- Background forest/vegetation: AI trees and foliage often have fractal repetition patterns, unnaturally uniform branch density, or impossible species mixing
 
 Score ai_suspicion from 0.0 to 1.0:
-  0.0 — 0.3: Clearly a real photograph. Normal camera noise, real-world imperfections visible.
-  0.3 — 0.6: Some unusual qualities but could be heavily post-processed real photo. Uncertain.
-  0.6 — 0.8: Strong signals of AI generation. Multiple tells present.
-  0.8 — 1.0: Almost certainly AI-generated. Do not score this as genuine photography.
+  0.0 — 0.39: Clearly a real photograph. Camera noise, real-world imperfections, natural physics visible.
+  0.4  — 0.69: Uncertain — unusually perfect or multiple minor anomalies. Could be real but warrants human review.
+  0.7  — 0.84: Strong signals of AI generation. Multiple tells present across different categories.
+  0.85 — 1.0:  Almost certainly AI-generated. Do not score this as genuine photography.
 
-If ai_suspicion >= 0.7, set score = 0.0, tier = "Apprentice", and explain in ai_suspicion_reason.
-If ai_suspicion < 0.7, proceed with normal DDI scoring.
+THREE-TIER RESPONSE RULES:
+- If ai_suspicion >= 0.7: set score = 0.0, tier = "Apprentice", needs_review = true, and explain in ai_suspicion_reason.
+- If ai_suspicion >= 0.4 and < 0.7: proceed with normal DDI scoring but set needs_review = true and explain anomalies in ai_suspicion_reason.
+- If ai_suspicion < 0.4: proceed with normal DDI scoring, needs_review = false, ai_suspicion_reason = null.
 
 Score all five modules. Apply all Apex layer rules. Calculate final weighted score.
 
 Return this exact JSON structure:
 {{
   "ai_suspicion": <float 0.0-1.0>,
-  "ai_suspicion_reason": "<one sentence explanation of signals detected, or null if clearly real>",
+  "ai_suspicion_reason": "<explanation of signals detected, or null if clearly real>",
+  "needs_review": <true if ai_suspicion >= 0.4 OR score >= 9.0, else false>,
   "dod": <float 0-10>,
   "disruption": <float 0-10>,
   "dm": <float 0-10>,

@@ -99,6 +99,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
@@ -356,6 +357,12 @@ def login():
                 Image.flagged_at != None,
                 Image.flagged_at > last_seen
             ).count()
+            # Check for images held under review (amber zone or Grandmaster)
+            review_pending = Image.query.filter(
+                Image.user_id == user.id,
+                Image.needs_review == True,
+                Image.is_flagged == False
+            ).count()
             user.last_login = datetime.utcnow()
             db.session.commit()
             login_user(user)
@@ -365,6 +372,13 @@ def login():
                     f'{"were" if flagged_since > 1 else "was"} flagged as potentially AI-generated '
                     f'and removed from public view. Visit your dashboard to review.',
                     'warning'
+                )
+            if review_pending:
+                flash(
+                    f'🔍 {review_pending} of your image{"s" if review_pending > 1 else ""} '
+                    f'{"are" if review_pending > 1 else "is"} currently under admin review '
+                    f'and not yet visible to the public.',
+                    'info'
                 )
             return redirect(url_for('dashboard'))
         flash('Invalid email or password.', 'error')
@@ -621,11 +635,12 @@ def upload():
 
                 # ── AI suspicion check ────────────────────────────────────
                 ai_suspicion = float(result.get('ai_suspicion', 0.0))
-                img.ai_suspicion = ai_suspicion
+                img.ai_suspicion        = ai_suspicion
                 img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
+                img.needs_review        = bool(result.get('needs_review', False))
 
                 if ai_suspicion >= 0.7:
-                    # Flag as AI-generated — save to DB but hide from public
+                    # TIER 3 — Auto-flagged: almost certainly AI-generated
                     img.score            = 0.0
                     img.tier             = 'Apprentice'
                     img.dod_score        = 0.0
@@ -638,6 +653,7 @@ def upload():
                     img.status           = 'scored'
                     img.scored_at        = datetime.utcnow()
                     img.is_flagged       = True
+                    img.needs_review     = True
                     img.is_public        = False
                     img.flagged_reason   = f'AI generation detected (suspicion: {ai_suspicion:.2f}). {img.ai_suspicion_reason or ""}'.strip()
                     img.flagged_at       = datetime.utcnow()
@@ -649,7 +665,7 @@ def upload():
                         'error'
                     )
                 else:
-                    # Real photograph — score normally
+                    # Score normally
                     img.dod_score        = float(result.get('dod',0))
                     img.disruption_score = float(result.get('disruption',0))
                     img.dm_score         = float(result.get('dm',0))
@@ -663,6 +679,20 @@ def upload():
                     img.scored_at        = datetime.utcnow()
                     audit = build_audit_data(result, img)
                     img.set_audit(audit)
+
+                    # TIER 2 — Needs human review:
+                    # (a) AI suspicion in amber zone 0.4–0.69, OR
+                    # (b) Grandmaster score (9.0+) — always requires RAW verification
+                    if ai_suspicion >= 0.4 or img.score >= 9.0:
+                        img.needs_review    = True
+                        img.is_public       = False   # held from public until admin clears
+                        review_reason_parts = []
+                        if ai_suspicion >= 0.4:
+                            review_reason_parts.append(f'AI suspicion score {ai_suspicion:.2f} (amber zone)')
+                        if img.score >= 9.0:
+                            review_reason_parts.append(f'Grandmaster score {img.score} requires RAW verification')
+                        img.flagged_reason  = ' · '.join(review_reason_parts)
+
                     db.session.commit()
 
                     try:
@@ -680,6 +710,20 @@ def upload():
                         app.logger.error(f'[upload card build error] {traceback.format_exc()}')
 
                     flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
+                    if getattr(img, 'needs_review', False):
+                        if img.score >= 9.0 and ai_suspicion < 0.4:
+                            flash(
+                                f'🏆 Grandmaster score! Your image has been submitted for RAW verification. '
+                                f'Email your original RAW file to verify@lensleague.com within 7 days.',
+                                'warning'
+                            )
+                        else:
+                            flash(
+                                f'⚠️ Your image has been flagged for human review before going public. '
+                                f'This is usually resolved within 24–48 hours. '
+                                f'Contact verify@lensleague.com if you have questions.',
+                                'warning'
+                            )
             except Exception as e:
                 app.logger.error(f'[upload scoring error] {traceback.format_exc()}')
                 db.session.commit()
@@ -702,6 +746,21 @@ def upload():
                     'image_id': img.id,
                     'message': '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact verify@lensleague.com.',
                     'redirect': url_for('dashboard')
+                })
+            if getattr(img, 'needs_review', False):
+                if img.score >= 9.0:
+                    msg = (f'🏆 Grandmaster score ({img.score})! Your image has been held for RAW verification. '
+                           f'Email your original RAW file to verify@lensleague.com within 7 days.')
+                else:
+                    msg = ('⚠️ Your image has been held for human review before going public. '
+                           'Usually resolved within 24–48 hours.')
+                return jsonify({
+                    'status': 'needs_review',
+                    'image_id': img.id,
+                    'score': img.score,
+                    'tier': img.tier,
+                    'message': msg,
+                    'redirect': url_for('image_detail', image_id=img.id)
                 })
             return jsonify({
                 'status': 'ok',
@@ -1016,7 +1075,8 @@ def leaderboard():
             Image.score > 0,
             Image.status == 'scored',
             Image.is_public == True,
-            db.or_(Image.is_flagged == False, Image.is_flagged == None)
+            db.or_(Image.is_flagged == False, Image.is_flagged == None),
+            db.or_(Image.needs_review == False, Image.needs_review == None)
         )
         if since:
             q = q.filter(Image.created_at >= since)
@@ -1592,6 +1652,7 @@ def admin_flag_image(image_id):
     img    = Image.query.get_or_404(image_id)
     reason = request.form.get('reason', 'Manually flagged as AI-generated by admin').strip()
     img.is_flagged     = True
+    img.needs_review   = True
     img.is_public      = False
     img.flagged_reason = reason
     img.flagged_at     = datetime.utcnow()
@@ -1609,11 +1670,26 @@ def admin_unflag_image(image_id):
     """Unflag an image — returns it to normal visibility."""
     img = Image.query.get_or_404(image_id)
     img.is_flagged     = False
+    img.needs_review   = False
     img.is_public      = True
     img.flagged_reason = None
     img.flagged_at     = None
     db.session.commit()
     flash(f'Image "{img.asset_name}" unflagged and restored to public view.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/image/<int:image_id>/approve-review', methods=['POST'])
+@login_required
+@admin_required
+def admin_approve_review(image_id):
+    """Clear the needs_review flag — approves image for public display."""
+    img = Image.query.get_or_404(image_id)
+    img.needs_review   = False
+    img.is_public      = True
+    img.flagged_reason = None
+    db.session.commit()
+    flash(f'Image "{img.asset_name}" approved — now visible to public.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
