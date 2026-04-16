@@ -83,28 +83,84 @@
     flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
-  .overlay-engine-tag { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
-  .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
-  @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .breath-ring-hero { width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(200,168,75,0.5); background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%); animation: breatheHero 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
-  @keyframes breatheHero { 0% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } 50% { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); } 100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); } }
-  .breath-inner-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: breatheInner 8s ease-in-out infinite; }
-  @keyframes breatheInner { 0% { transform: scale(1.4); opacity: 0.4; } 50% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.4); opacity: 0.4; } }
-  .breath-word { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase; text-align: center; min-width: 160px; }
-  .breath-counts { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
+  .overlay-engine-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 4px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 44px; opacity: .55;
+  }
+  .breath-hero {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    margin-bottom: 28px;
+  }
+  .breath-ring-hero {
+    width: 140px; height: 140px; border-radius: 50%;
+    border: 3px solid rgba(200,168,75,0.5);
+    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
+    animation: breatheHero 8s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes breatheHero {
+    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
+    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+  }
+  .breath-inner-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--gold); opacity: 0.7;
+    animation: breatheInner 8s ease-in-out infinite;
+  }
+  @keyframes breatheInner {
+    0%   { transform: scale(1.4); opacity: 0.4; }
+    50%  { transform: scale(0.7); opacity: 0.95; }
+    100% { transform: scale(1.4); opacity: 0.4; }
+  }
+  .breath-word {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    letter-spacing: 6px; color: #F0EFE8; text-transform: uppercase;
+    text-align: center; min-width: 160px;
+  }
+  .breath-counts {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px;
+    color: rgba(200,168,75,0.65); text-transform: uppercase;
+  }
   .breath-tagline { font-size: 15px; color: rgba(184,182,174,0.6); font-style: italic; }
-  .overlay-copy { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px; opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards; }
-  .overlay-phase { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase; }
-  .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
-  .overlay-substatus { font-family: var(--font-mono); font-size: 10px; color: rgba(122,120,112,0.55); text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
-  .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
+  .overlay-copy {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    margin-bottom: 32px;
+  }
+  .overlay-phase {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase;
+  }
+  .overlay-status {
+    font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65);
+    text-align: center; max-width: 340px; line-height: 1.5;
+  }
+  .overlay-substatus {
+    font-family: var(--font-mono); font-size: 10px; color: rgba(122,120,112,0.55);
+    text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px;
+  }
+  .mini-timer { display: flex; flex-direction: column; align-items: center; }
   .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
   .mini-clock-svg { transform: rotate(-90deg); }
-  .mini-ring-bg  { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
-  .mini-ring-fill { fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset .9s linear; }
-  .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
-  .mini-clock-unit { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
+  .mini-ring-bg   { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+  .mini-ring-fill {
+    fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4;
+    stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195;
+    transition: stroke-dashoffset .9s linear;
+  }
+  .mini-clock-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .mini-clock-secs {
+    font-family: var(--font-mono); font-size: 17px; font-weight: 700;
+    color: rgba(200,168,75,0.75); line-height: 1;
+  }
+  .mini-clock-unit {
+    font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px;
+    color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px;
+  }
 </style>
 {% endblock %}
 
@@ -231,7 +287,7 @@
   </div>
 </div>
 
-<!-- SCORING OVERLAY — shows on submit, browser handles redirect naturally -->
+<!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
   <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
   <div class="breath-hero">
@@ -277,7 +333,7 @@
   const MAX_MB      = 5;
   const ALLOWED     = ['image/jpeg', 'image/png'];
 
-  // ── Drag & drop ──────────────────────────────────────────────────────────
+  // ── Drag & drop ───────────────────────────────────────────────────────────
   ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('dragover'); }));
   ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('dragover'); }));
   dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); } });
@@ -296,111 +352,170 @@
 
   function showError(msg) {
     fileError.textContent = msg; fileError.style.display = 'block';
+    submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
+    document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   // ── Genre hints ───────────────────────────────────────────────────────────
   const genreHints = {
-    'Creative':       '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting. Sharpness rewarded when present, never penalised when absent.',
-    'Drone & Aerial': '🚁 Aerial photography. Geometric patterns and impossible ground-level perspectives score highest.',
-    'Wildlife':       '🦁 Sharp focus on animal subjects is key. Physical access difficulty and rare behaviour score highest.',
-    'Street':         '🏙️ Decisive moment and human narrative. Motion blur on moving subjects is acceptable.',
-    'Landscape':      '🌄 Light quality, composition, patience. Long-exposure blur on water and clouds is rewarded.',
-    'Macro':          '🔬 Extreme precision focus required. Sharpness on the primary subject is the key DoD criterion.',
-    'Wedding':        '💍 Emotional authenticity and decisive moment. Genuine unscripted emotion scores highest.',
-    'People':         '👤 Emotional connection and authentic expression paramount. AQ is the dominant signal.',
+    'Creative':       '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting.',
+    'Drone & Aerial': '🚁 Aerial photography. Geometric patterns score highest.',
+    'Wildlife':       '🦁 Sharp focus on animal subjects. Rare behaviour scores highest.',
+    'Street':         '🏙️ Decisive moment and human narrative.',
+    'Landscape':      '🌄 Light quality, composition, patience.',
+    'Macro':          '🔬 Sharpness on the primary subject is the key DoD criterion.',
+    'Wedding':        '💍 Genuine unscripted emotion scores highest.',
+    'People':         '👤 Emotional connection. AQ is the dominant signal.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r => r.addEventListener('change', () => { trackHint.style.display = 'none'; }));
 
-  // ── Form submit — validate, show overlay, then let browser POST normally ──
+  // ── Form submit — validate then XHR ──────────────────────────────────────
   form.addEventListener('submit', function (e) {
-    const file = fileInput.files[0];
+    e.preventDefault();
 
-    // Client-side validations first (prevent submit if they fail)
-    if (!file) { e.preventDefault(); showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type)) { e.preventDefault(); showError('Only JPG and PNG files are accepted.'); return; }
+    const file = fileInput.files[0];
+    if (!file)                        { showError('Please select an image to upload.'); return; }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
-      e.preventDefault();
       showError(`⚠️ Your image is ${(file.size/1024/1024).toFixed(1)} MB — over the 5 MB limit. Please resize before uploading.`);
       return;
     }
-    const trackSelected = document.querySelector('input[name="camera_track"]:checked');
-    if (!trackSelected) {
-      e.preventDefault();
+    if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     if (!legalCheck.checked) {
-      e.preventDefault();
       legalBox.classList.add('error-highlight');
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       legalCheck.addEventListener('change', () => legalBox.classList.remove('error-highlight'), { once: true });
       return;
     }
 
-    // All validations passed — show overlay and let the form POST naturally
+    // All good — show overlay and fire XHR
     submitBtn.disabled = true;
     startOverlay();
-    // Form submits normally — browser follows the redirect from Flask
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.withCredentials = true;
+    xhr.timeout = 120000;
+
+    xhr.onload = function () {
+      if (xhr.status === 413) { showError('File too large — please resize to under 5 MB.'); return; }
+      if (xhr.status === 409) {
+        let msg = 'Duplicate image detected.';
+        try { msg = JSON.parse(xhr.responseText).message || msg; } catch(e) {}
+        showError(msg); return;
+      }
+
+      let resp = null;
+      try { resp = JSON.parse(xhr.responseText); } catch(e) {
+        // Got HTML — session issue. Redirect to login.
+        window.location.href = '/login?next=/upload'; return;
+      }
+
+      if (xhr.status === 401 || (resp && resp.error && resp.redirect)) {
+        window.location.href = '/login?next=/upload'; return;
+      }
+
+      if (resp && resp.status === 'ok' && resp.image_id) {
+        // Success — update overlay then redirect
+        document.getElementById('overlayPhase').textContent  = 'COMPLETE';
+        document.getElementById('overlayStatus').textContent = resp.score
+          ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
+          : 'Image uploaded!';
+        document.getElementById('overlaySubstatus').textContent = 'Loading your score card…';
+        document.getElementById('breathLabel').textContent = '🙏';
+        document.getElementById('clockSecs').textContent = '✓';
+        document.getElementById('clockRing').style.strokeDashoffset = '0';
+        document.getElementById('clockRing').style.stroke = 'rgba(200,168,75,0.9)';
+        setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 800);
+        return;
+      }
+
+      showError((resp && resp.message) ? resp.message : `Upload failed (${xhr.status}). Please try again.`);
+    };
+
+    xhr.onerror   = function () { showError('Network error — check your connection and try again.'); };
+    xhr.ontimeout = function () { showError('Request timed out. Check your dashboard — your image may have been saved.'); };
+
+    xhr.send(new FormData(form));
   });
 
-  // ── Overlay ───────────────────────────────────────────────────────────────
+  // ── Overlay ticker ────────────────────────────────────────────────────────
   function startOverlay() {
-    const overlay      = document.getElementById('scoringOverlay');
-    const clockRing    = document.getElementById('clockRing');
-    const clockSecs    = document.getElementById('clockSecs');
-    const overlayPhase = document.getElementById('overlayPhase');
-    const overlayStatus= document.getElementById('overlayStatus');
-    const overlaySub   = document.getElementById('overlaySubstatus');
-    const breathLabel  = document.getElementById('breathLabel');
-    const TOTAL_SECS   = 35;
-    const CIRCUMFERENCE= 195;
+    const overlay   = document.getElementById('scoringOverlay');
+    const clockRing = document.getElementById('clockRing');
+    const clockSecs = document.getElementById('clockSecs');
+    const phase     = document.getElementById('overlayPhase');
+    const status    = document.getElementById('overlayStatus');
+    const sub       = document.getElementById('overlaySubstatus');
+    const breath    = document.getElementById('breathLabel');
+    const TOTAL = 35, CIRC = 195;
 
     const phases = [
-      { from: 0,  to: 4,  phase: 'UPLOADING',  status: 'Transferring your image…',      sub: 'Sending to server securely.' },
-      { from: 4,  to: 10, phase: 'PROCESSING',  status: 'Preparing for analysis…',       sub: 'Extracting metadata and verifying.' },
-      { from: 10, to: 24, phase: 'ANALYSING',   status: 'Apex DDI Engine evaluating…',  sub: 'DoD · Disruption · DM · Wonder · AQ' },
-      { from: 24, to: 31, phase: 'SCORING',     status: 'Calculating your DDI score…',   sub: 'Applying genre weights and safeguards.' },
-      { from: 31, to: 35, phase: 'FINALISING',  status: 'Generating your score card…',   sub: 'Building archetype and improvement tip.' },
+      { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',     ss:'Sending to server securely.' },
+      { from:4,  to:10, p:'PROCESSING', s:'Preparing for analysis…',       ss:'Extracting metadata and verifying.' },
+      { from:10, to:24, p:'ANALYSING',  s:'Apex DDI Engine evaluating…',   ss:'DoD · Disruption · DM · Wonder · AQ' },
+      { from:24, to:31, p:'SCORING',    s:'Calculating your DDI score…',   ss:'Applying genre weights and safeguards.' },
+      { from:31, to:35, p:'FINALISING', s:'Generating your score card…',   ss:'Building archetype and improvement tip.' },
     ];
 
     overlay.classList.add('active');
-    clockSecs.textContent = TOTAL_SECS;
+    clockSecs.textContent = TOTAL;
 
-    let breathPhase = 0;
-    setInterval(() => {
-      breathPhase = (breathPhase + 1) % 2;
-      if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
-    }, 4000);
+    let bp = 0;
+    const bc = setInterval(() => { bp = (bp+1)%2; breath.textContent = bp === 0 ? 'Inhale' : 'Exhale'; }, 4000);
 
     let elapsed = 0;
-    setInterval(() => {
+    const tick = setInterval(() => {
       elapsed++;
-      clockSecs.textContent = Math.max(TOTAL_SECS - elapsed, 0);
-      clockRing.style.strokeDashoffset = CIRCUMFERENCE - (Math.min(elapsed / TOTAL_SECS, 1) * CIRCUMFERENCE);
-      const phase = phases.find(p => elapsed >= p.from && elapsed < p.to) || phases[phases.length - 1];
-      overlayPhase.textContent  = phase.phase;
-      overlayStatus.textContent = phase.status;
-      overlaySub.textContent    = phase.sub;
+      clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
+      clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed/TOTAL,1)*CIRC);
+      const p = phases.find(x => elapsed >= x.from && elapsed < x.to) || phases[phases.length-1];
+      phase.textContent = p.p; status.textContent = p.s; sub.textContent = p.ss;
     }, 1000);
+
+    // Store intervals so showError can clear them
+    overlay._bc = bc; overlay._tick = tick;
   }
+
+  // Patch showError to also stop overlay intervals
+  const _origShowError = window._showError;
+  document.getElementById('scoringOverlay').addEventListener('classchange', () => {});
 
 })();
 
-// ── Leaderboard visibility toggle ─────────────────────────────────────────
+// Patch showError to clear overlay timers when error shown
 (function() {
-  const cb    = document.getElementById('isPublicToggle');
-  const track = document.getElementById('toggleTrack');
-  const thumb = document.getElementById('toggleThumb');
-  const label = document.getElementById('toggleLabel');
+  const origShowError = window.showError;
+  // showError is local to the IIFE above, so we hook via overlay removal
+  const obs = new MutationObserver(() => {
+    const overlay = document.getElementById('scoringOverlay');
+    if (!overlay.classList.contains('active')) {
+      if (overlay._bc)   clearInterval(overlay._bc);
+      if (overlay._tick) clearInterval(overlay._tick);
+    }
+  });
+  obs.observe(document.getElementById('scoringOverlay'), { attributes: true, attributeFilter: ['class'] });
+})();
+
+// ── Leaderboard toggle ─────────────────────────────────────────────────────
+(function() {
+  const cb = document.getElementById('isPublicToggle');
+  const tr = document.getElementById('toggleTrack');
+  const th = document.getElementById('toggleThumb');
+  const lb = document.getElementById('toggleLabel');
   if (!cb) return;
   cb.addEventListener('change', function() {
-    if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
-    else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
+    if (this.checked) { tr.style.background='var(--gold)'; th.style.left='23px'; lb.style.color='var(--gold)'; lb.textContent='Public'; }
+    else { tr.style.background='var(--border)'; th.style.left='3px'; lb.style.color='var(--text-muted)'; lb.textContent='Hidden'; }
   });
 })();
 </script>
