@@ -449,6 +449,62 @@
   <a href="{{ url_for('register') }}" class="action-btn action-primary">Get My Images Rated Free →</a>
   {% endif %}
   <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
+  {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
+  <button onclick="document.getElementById('report-modal-share').style.display='flex'"
+          class="action-btn action-secondary"
+          style="border-color:#6b3a3a; color:#c97b7b;">⚑ Report</button>
+  {% endif %}
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal-share" style="
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.80); align-items:center; justify-content:center;">
+  <div style="
+    background:#1a1a1a; border:1px solid #333;
+    border-radius:10px; padding:28px 32px; width:100%; max-width:400px; margin:16px;">
+    <div style="font-family:monospace; font-size:10px; letter-spacing:2px;
+                text-transform:uppercase; color:#666; margin-bottom:16px;">
+      Report Image
+    </div>
+    <form method="POST" action="{{ url_for('report_image', image_id=image.id) }}">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#aaa; display:block; margin-bottom:8px;">Reason</label>
+        <select name="reason" required style="
+          width:100%; background:#252525; border:1px solid #333; color:#eee;
+          border-radius:6px; padding:10px 12px; font-size:12px; font-family:monospace;">
+          <option value="">— select —</option>
+          <option value="AI-generated">AI-generated</option>
+          <option value="Stolen">Stolen / not their work</option>
+          <option value="Duplicate">Duplicate submission</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px; color:#aaa; display:block; margin-bottom:8px;">
+          Details <span style="color:#555">(optional)</span>
+        </label>
+        <textarea name="detail" maxlength="500" rows="3" style="
+          width:100%; background:#252525; border:1px solid #333; color:#eee;
+          border-radius:6px; padding:10px 12px; font-size:13px; resize:vertical;
+          box-sizing:border-box;" placeholder="Any additional context…"></textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="submit" style="
+          flex:1; background:#C8A84B; color:#000; border:none; border-radius:6px;
+          padding:11px; font-family:monospace; font-size:11px; font-weight:700;
+          letter-spacing:1px; text-transform:uppercase; cursor:pointer;">
+          Submit Report
+        </button>
+        <button type="button"
+                onclick="document.getElementById('report-modal-share').style.display='none'"
+                style="flex:1; background:transparent; color:#666; border:1px solid #333;
+                       border-radius:6px; padding:11px; font-size:11px; cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="copy-feedback" id="copyFeedback">✓ Share link copied to clipboard!</div>
