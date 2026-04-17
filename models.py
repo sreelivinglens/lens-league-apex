@@ -1,6 +1,6 @@
 import json
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
 from flask_login import UserMixin
 
 db = SQLAlchemy()
@@ -32,10 +32,27 @@ class User(db.Model, UserMixin):
     monthly_uploads_used = db.Column(db.Integer, default=0)
     monthly_reset_date   = db.Column(db.Date, nullable=True)
 
+    # Peer rating credits
+    rating_credits       = db.Column(db.Integer, default=20)
+    credits_reset_date   = db.Column(db.Date, nullable=True)
+    lifetime_ratings_given = db.Column(db.Integer, default=0)
+    # Bias detection flag set by admin or auto-detection
+    rating_bias_flag     = db.Column(db.Boolean, default=False)
+    rating_bias_note     = db.Column(db.Text, nullable=True)
+
     images            = db.relationship('Image', backref='author', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username} ({self.role})>'
+
+    def reset_credits_if_needed(self):
+        """Reset rating credits to 20 at start of each month."""
+        today = date.today()
+        if self.credits_reset_date is None or self.credits_reset_date.month != today.month or self.credits_reset_date.year != today.year:
+            self.rating_credits = 20
+            self.credits_reset_date = today
+            return True
+        return False
 
 
 class Image(db.Model):
@@ -84,6 +101,18 @@ class Image(db.Model):
     archetype           = db.Column(db.String(120), nullable=True)
     soul_bonus          = db.Column(db.Boolean, default=False)
 
+    # Peer rating aggregates
+    peer_avg_score      = db.Column(db.Float, nullable=True)
+    peer_rating_count   = db.Column(db.Integer, default=0)
+    blended_score       = db.Column(db.Float, nullable=True)   # 80% DDI + 20% peer (≥5 ratings)
+
+    # Peer module averages
+    peer_avg_dod        = db.Column(db.Float, nullable=True)
+    peer_avg_disruption = db.Column(db.Float, nullable=True)
+    peer_avg_dm         = db.Column(db.Float, nullable=True)
+    peer_avg_wonder     = db.Column(db.Float, nullable=True)
+    peer_avg_aq         = db.Column(db.Float, nullable=True)
+
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
     is_public              = db.Column(db.Boolean, default=True,  nullable=False)
@@ -113,25 +142,93 @@ class Image(db.Model):
                 return {}
         return {}
 
+    def update_blended_score(self):
+        """Recalculate blended score after a new peer rating is submitted."""
+        if self.peer_rating_count and self.peer_rating_count >= 5 and self.peer_avg_score and self.score:
+            self.blended_score = round(self.score * 0.80 + self.peer_avg_score * 0.20, 2)
+        else:
+            self.blended_score = self.score
+
     def __repr__(self):
         return f'<Image {self.id} – {self.asset_name} ({self.score})>'
 
 
+class RatingAssignment(db.Model):
+    """
+    Queue-based peer rating assignment.
+    One record per rater-image pairing. Tracks the full lifecycle:
+    assigned → started (image viewed) → submitted | expired.
+    """
+    __tablename__ = 'rating_assignments'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    rater_id        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    assigned_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    started_at      = db.Column(db.DateTime, nullable=True)   # set when /rate page loads the image
+    submitted_at    = db.Column(db.DateTime, nullable=True)
+    time_spent_seconds = db.Column(db.Integer, nullable=True)
+    status          = db.Column(db.String(20), default='assigned')  # assigned|started|submitted|expired
+
+    rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='rating_assignments', lazy=True)
+    image  = db.relationship('Image', foreign_keys=[image_id],  backref='rating_assignments', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('rater_id', 'image_id', name='uq_rating_assignment'),
+    )
+
+    def __repr__(self):
+        return f'<RatingAssignment rater={self.rater_id} image={self.image_id} status={self.status}>'
+
+
+class PeerRating(db.Model):
+    """
+    Completed peer rating record. One per rater per image.
+    All 5 DDI modules scored individually; peer_ll_score computed
+    using the same genre-weighted formula as DDI.
+    delta_from_ddi = peer_ll_score - image.score (signed).
+    """
+    __tablename__ = 'peer_ratings'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    rater_id        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    genre           = db.Column(db.String(60), nullable=False)
+
+    # Module scores — same scale as DDI (0.0–10.0)
+    dod             = db.Column(db.Float, nullable=False)
+    disruption      = db.Column(db.Float, nullable=False)
+    dm              = db.Column(db.Float, nullable=False)
+    wonder          = db.Column(db.Float, nullable=False)
+    aq              = db.Column(db.Float, nullable=False)
+
+    peer_ll_score   = db.Column(db.Float, nullable=False)   # genre-weighted, same formula as DDI
+    delta_from_ddi  = db.Column(db.Float, nullable=True)    # signed: positive = rated higher than DDI
+
+    time_spent_seconds = db.Column(db.Integer, nullable=True)
+    rated_at        = db.Column(db.DateTime, default=datetime.utcnow)
+
+    rater  = db.relationship('User',  foreign_keys=[rater_id],  backref='peer_ratings_given', lazy=True)
+    image  = db.relationship('Image', foreign_keys=[image_id],  backref='peer_ratings_received', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('rater_id', 'image_id', name='uq_peer_rating'),
+    )
+
+    def __repr__(self):
+        return f'<PeerRating rater={self.rater_id} image={self.image_id} score={self.peer_ll_score} delta={self.delta_from_ddi}>'
+
+
 class ContestEntry(db.Model):
-    """
-    A photographer's chosen entry for a monthly contest slot.
-    One entry per user per genre per track per month.
-    Photographer explicitly selects which scored image to enter.
-    """
     __tablename__ = 'contest_entries'
 
     id            = db.Column(db.Integer, primary_key=True)
     user_id       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     image_id      = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
     genre         = db.Column(db.String(60),  nullable=False)
-    track         = db.Column(db.String(20),  nullable=False)   # 'camera' | 'mobile'
-    contest_month = db.Column(db.String(7),   nullable=False)   # 'YYYY-MM'
-    contest_type  = db.Column(db.String(20),  default='monthly')# 'monthly' | 'open'
+    track         = db.Column(db.String(20),  nullable=False)
+    contest_month = db.Column(db.String(7),   nullable=False)
+    contest_type  = db.Column(db.String(20),  default='monthly')
     entered_at    = db.Column(db.DateTime,    default=datetime.utcnow)
 
     user  = db.relationship('User',  foreign_keys=[user_id],  backref='contest_entries', lazy=True)
@@ -142,12 +239,8 @@ class ContestEntry(db.Model):
                             name='uq_contest_entry'),
     )
 
-    def __repr__(self):
-        return f'<ContestEntry user={self.user_id} genre={self.genre} track={self.track} month={self.contest_month}>'
-
 
 class BowSubmission(db.Model):
-    """Body of Work annual submission — 6 to 12 curated images as a unified series."""
     __tablename__ = 'bow_submissions'
 
     id                 = db.Column(db.Integer, primary_key=True)
@@ -172,16 +265,8 @@ class BowSubmission(db.Model):
     def set_image_ids(self, ids: list):
         self.image_ids_json = json.dumps(ids)
 
-    def __repr__(self):
-        return f'<BowSubmission {self.id} user={self.user_id} images={self.image_count} year={self.platform_year}>'
-
 
 class OpenContestEntry(db.Model):
-    """
-    A paid entry into the annual Open Competition.
-    One entry per user per genre. ₹50 per entry (dummy payment gate until #7).
-    No track split — Camera and Mobile compete together.
-    """
     __tablename__ = 'open_contest_entries'
 
     id           = db.Column(db.Integer, primary_key=True)
@@ -189,25 +274,20 @@ class OpenContestEntry(db.Model):
     image_id     = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
     genre        = db.Column(db.String(60), nullable=False)
     platform_year= db.Column(db.Integer,   nullable=False)
-    amount_paise = db.Column(db.Integer,   default=5000)   # ₹50 = 5000 paise
-    payment_ref  = db.Column(db.String(120), nullable=True) # Razorpay order id when live
-    status       = db.Column(db.String(20), default='confirmed')  # confirmed | pending
+    amount_paise = db.Column(db.Integer,   default=5000)
+    payment_ref  = db.Column(db.String(120), nullable=True)
+    status       = db.Column(db.String(20), default='confirmed')
     entered_at   = db.Column(db.DateTime,  default=datetime.utcnow)
 
     user  = db.relationship('User',  foreign_keys=[user_id],  backref='open_contest_entries', lazy=True)
     image = db.relationship('Image', foreign_keys=[image_id], backref='open_contest_entries', lazy=True)
 
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'genre', 'platform_year',
-                            name='uq_open_contest_entry'),
+        db.UniqueConstraint('user_id', 'genre', 'platform_year', name='uq_open_contest_entry'),
     )
-
-    def __repr__(self):
-        return f'<OpenContestEntry user={self.user_id} genre={self.genre} year={self.platform_year}>'
 
 
 class CalibrationNote(db.Model):
-    """Admin feedback on individual scored images — feeds back into engine prompt."""
     __tablename__ = 'calibration_notes'
 
     id              = db.Column(db.Integer, primary_key=True)
@@ -224,12 +304,8 @@ class CalibrationNote(db.Model):
     image = db.relationship('Image', foreign_keys=[image_id], backref='calibration_notes', lazy=True)
     admin = db.relationship('User',  foreign_keys=[admin_id], backref='admin_calibration_notes', lazy=True)
 
-    def __repr__(self):
-        return f'<CalibrationNote image={self.image_id} module={self.module} {self.original_score}→{self.corrected_score}>'
-
 
 class CalibrationLog(db.Model):
-    """Stores admin calibration snapshots for score drift monitoring."""
     __tablename__ = 'calibration_logs'
 
     id          = db.Column(db.Integer, primary_key=True)
@@ -245,17 +321,228 @@ class CalibrationLog(db.Model):
     logged_by   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     logged_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<CalibrationLog {self.genre} avg={self.avg_score}>'
+
+class ImageReport(db.Model):
+    __tablename__ = 'image_reports'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    image_id    = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'),  nullable=False)
+    reason      = db.Column(db.String(40),  nullable=False)
+    detail      = db.Column(db.Text,        nullable=True)
+    reported_at = db.Column(db.DateTime,    default=datetime.utcnow)
+    status      = db.Column(db.String(20),  default='open')
+
+    image    = db.relationship('Image', backref=db.backref('reports', lazy='dynamic'))
+    reporter = db.relationship('User',  backref=db.backref('filed_reports', lazy='dynamic'))
 
 
 # ---------------------------------------------------------------------------
-# Auto-migration — runs on every startup, safe for production
+# Peer Rating helpers — standalone functions used in app.py
 # ---------------------------------------------------------------------------
+
+def get_or_assign_next_image(rater_id: int):
+    """
+    Return the next RatingAssignment for this rater.
+    Priority: images with fewest peer ratings among subscriber-owned,
+    public, scored images the rater has not yet rated.
+    Expires old assignments (>30 min, not submitted) before selecting.
+    Returns RatingAssignment or None if pool is empty.
+    """
+    from datetime import timedelta
+    from sqlalchemy import func
+
+    # Expire stale assigned-but-not-started assignments older than 30 min
+    cutoff = datetime.utcnow() - timedelta(minutes=30)
+    stale = RatingAssignment.query.filter(
+        RatingAssignment.rater_id == rater_id,
+        RatingAssignment.status == 'assigned',
+        RatingAssignment.assigned_at < cutoff,
+    ).all()
+    for s in stale:
+        s.status = 'expired'
+    if stale:
+        db.session.commit()
+
+    # Check for an in-progress assignment (started but not submitted)
+    in_progress = RatingAssignment.query.filter_by(
+        rater_id=rater_id, status='started'
+    ).first()
+    if in_progress:
+        return in_progress
+
+    # Check for a fresh assigned (not yet started)
+    fresh = RatingAssignment.query.filter_by(
+        rater_id=rater_id, status='assigned'
+    ).first()
+    if fresh:
+        return fresh
+
+    # Find the rater's user_id to exclude their own images
+    rater = User.query.get(rater_id)
+    if not rater:
+        return None
+
+    # IDs already rated or assigned by this rater
+    already_seen = db.session.query(RatingAssignment.image_id).filter(
+        RatingAssignment.rater_id == rater_id,
+        RatingAssignment.status.in_(['assigned', 'started', 'submitted']),
+    ).subquery()
+
+    # Eligible pool — subscriber images only, public, scored, not own
+    eligible = (
+        Image.query
+        .join(User, Image.user_id == User.id)
+        .filter(
+            Image.status == 'scored',
+            Image.is_public == True,
+            Image.is_flagged == False,
+            Image.needs_review == False,
+            Image.score != None,
+            Image.user_id != rater_id,
+            User.is_subscribed == True,
+            Image.id.notin_(already_seen),
+        )
+        .order_by(
+            Image.peer_rating_count.asc().nullsfirst(),
+            Image.scored_at.asc(),
+        )
+        .first()
+    )
+
+    if not eligible:
+        return None
+
+    assignment = RatingAssignment(
+        rater_id   = rater_id,
+        image_id   = eligible.id,
+        status     = 'assigned',
+    )
+    db.session.add(assignment)
+    db.session.commit()
+    return assignment
+
+
+def submit_peer_rating(assignment: RatingAssignment, dod: float, disruption: float,
+                       dm: float, wonder: float, aq: float,
+                       time_spent: int) -> PeerRating:
+    """
+    Complete a rating assignment, create PeerRating record,
+    update image aggregates and rater credits.
+    Returns the created PeerRating.
+    """
+    from engine.scoring import calculate_score, normalise_genre
+
+    image = assignment.image
+    genre = normalise_genre(image.genre)
+
+    # Compute peer_ll_score using the same weighted formula as DDI
+    peer_ll, _, _, _ = calculate_score(genre, dod, disruption, dm, wonder, aq)
+
+    delta = round(peer_ll - (image.score or 0), 2)
+
+    rating = PeerRating(
+        rater_id           = assignment.rater_id,
+        image_id           = assignment.image_id,
+        genre              = genre,
+        dod                = dod,
+        disruption         = disruption,
+        dm                 = dm,
+        wonder             = wonder,
+        aq                 = aq,
+        peer_ll_score      = peer_ll,
+        delta_from_ddi     = delta,
+        time_spent_seconds = time_spent,
+    )
+    db.session.add(rating)
+
+    # Update assignment
+    assignment.status             = 'submitted'
+    assignment.submitted_at       = datetime.utcnow()
+    assignment.time_spent_seconds = time_spent
+    assignment.dod        = dod
+    assignment.disruption = disruption
+    assignment.dm         = dm
+    assignment.wonder     = wonder
+    assignment.aq         = aq
+    assignment.peer_ll_score = peer_ll
+
+    # Update image aggregates
+    all_ratings = PeerRating.query.filter_by(image_id=image.id).all()
+    # Include the one we're about to add
+    all_scores      = [r.peer_ll_score for r in all_ratings] + [peer_ll]
+    all_dod         = [r.dod for r in all_ratings] + [dod]
+    all_disruption  = [r.disruption for r in all_ratings] + [disruption]
+    all_dm          = [r.dm for r in all_ratings] + [dm]
+    all_wonder      = [r.wonder for r in all_ratings] + [wonder]
+    all_aq          = [r.aq for r in all_ratings] + [aq]
+    n = len(all_scores)
+
+    image.peer_rating_count   = n
+    image.peer_avg_score      = round(sum(all_scores) / n, 2)
+    image.peer_avg_dod        = round(sum(all_dod) / n, 2)
+    image.peer_avg_disruption = round(sum(all_disruption) / n, 2)
+    image.peer_avg_dm         = round(sum(all_dm) / n, 2)
+    image.peer_avg_wonder     = round(sum(all_wonder) / n, 2)
+    image.peer_avg_aq         = round(sum(all_aq) / n, 2)
+    image.update_blended_score()
+
+    # Credit the rater: +1 credit, cap at 40
+    rater = assignment.rater
+    rater.reset_credits_if_needed()
+    rater.rating_credits = min(40, (rater.rating_credits or 0) + 1)
+    rater.lifetime_ratings_given = (rater.lifetime_ratings_given or 0) + 1
+
+    db.session.commit()
+
+    # Check for bias after every 20 ratings
+    _check_rater_bias(assignment.rater_id)
+
+    return rating
+
+
+def _check_rater_bias(rater_id: int):
+    """
+    After 20+ completed ratings, compute per-module avg delta.
+    If any module avg delta magnitude > 2.5 → flag rater.
+    """
+    MIN_RATINGS = 20
+    THRESHOLD   = 2.5
+
+    ratings = PeerRating.query.filter_by(rater_id=rater_id).all()
+    if len(ratings) < MIN_RATINGS:
+        return
+
+    rater = User.query.get(rater_id)
+    if not rater:
+        return
+
+    # Compare per-module peer scores vs DDI scores on the same images
+    module_deltas = {'dod': [], 'disruption': [], 'dm': [], 'wonder': [], 'aq': []}
+    for r in ratings:
+        img = r.image
+        if img.dod_score:        module_deltas['dod'].append(r.dod - img.dod_score)
+        if img.disruption_score: module_deltas['disruption'].append(r.disruption - img.disruption_score)
+        if img.dm_score:         module_deltas['dm'].append(r.dm - img.dm_score)
+        if img.wonder_score:     module_deltas['wonder'].append(r.wonder - img.wonder_score)
+        if img.aq_score:         module_deltas['aq'].append(r.aq - img.aq_score)
+
+    bias_modules = []
+    for mod, deltas in module_deltas.items():
+        if deltas:
+            avg_delta = sum(deltas) / len(deltas)
+            if abs(avg_delta) > THRESHOLD:
+                direction = 'over' if avg_delta > 0 else 'under'
+                bias_modules.append(f'{mod.upper()} ({direction}-scores by avg {abs(avg_delta):.1f})')
+
+    if bias_modules:
+        rater.rating_bias_flag = True
+        rater.rating_bias_note = 'Auto-detected: ' + ', '.join(bias_modules)
+        db.session.commit()
+
 
 def run_migrations(app):
     with app.app_context():
-        # Clear any pre-existing broken transaction before we start
         try:
             db.session.rollback()
         except Exception:
@@ -276,6 +563,11 @@ def run_migrations(app):
         _col('users', 'subscribed_at',        'TIMESTAMP')
         _col('users', 'monthly_uploads_used', 'INTEGER DEFAULT 0')
         _col('users', 'monthly_reset_date',   'DATE')
+        _col('users', 'rating_credits',       'INTEGER DEFAULT 20')
+        _col('users', 'credits_reset_date',   'DATE')
+        _col('users', 'lifetime_ratings_given', 'INTEGER DEFAULT 0')
+        _col('users', 'rating_bias_flag',     'BOOLEAN DEFAULT FALSE')
+        _col('users', 'rating_bias_note',     'TEXT')
 
         _col('images', 'card_path',               'VARCHAR(512)')
         _col('images', 'card_url',                'VARCHAR(512)')
@@ -294,89 +586,68 @@ def run_migrations(app):
         _col('images', 'judge_referral',          'BOOLEAN DEFAULT FALSE')
         _col('images', 'camera_track',            'VARCHAR(20)')
         _col('images', 'is_public',               'BOOLEAN DEFAULT TRUE')
+        _col('images', 'peer_avg_score',          'FLOAT')
+        _col('images', 'peer_rating_count',       'INTEGER DEFAULT 0')
+        _col('images', 'blended_score',           'FLOAT')
+        _col('images', 'peer_avg_dod',            'FLOAT')
+        _col('images', 'peer_avg_disruption',     'FLOAT')
+        _col('images', 'peer_avg_dm',             'FLOAT')
+        _col('images', 'peer_avg_wonder',         'FLOAT')
+        _col('images', 'peer_avg_aq',             'FLOAT')
 
+        # rating_assignments table
         try:
-            db.session.execute(db.text("""
-                CREATE TABLE IF NOT EXISTS bow_submissions (
+            db.session.execute(db.text('''
+                CREATE TABLE IF NOT EXISTS rating_assignments (
                     id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                    series_title VARCHAR(180) NOT NULL,
-                    thematic_statement TEXT NOT NULL,
-                    image_ids_json TEXT NOT NULL,
-                    image_count INTEGER NOT NULL,
-                    status VARCHAR(20) DEFAULT 'submitted',
-                    platform_year INTEGER NOT NULL,
-                    submitted_at TIMESTAMP DEFAULT NOW(),
-                    notes TEXT
-                )
-            """))
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f'[migration] bow_submissions: {e}')
-
-        try:
-            db.session.execute(db.text("""
-                CREATE TABLE IF NOT EXISTS calibration_notes (
-                    id SERIAL PRIMARY KEY,
+                    rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                     image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                    admin_id INTEGER REFERENCES users(id),
-                    genre VARCHAR(60) NOT NULL,
-                    module VARCHAR(20) NOT NULL,
-                    original_score FLOAT,
-                    corrected_score FLOAT,
-                    reason TEXT NOT NULL,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT NOW()
+                    assigned_at TIMESTAMP DEFAULT NOW(),
+                    started_at TIMESTAMP,
+                    submitted_at TIMESTAMP,
+                    time_spent_seconds INTEGER,
+                    dod FLOAT,
+                    disruption FLOAT,
+                    dm FLOAT,
+                    wonder FLOAT,
+                    aq FLOAT,
+                    peer_ll_score FLOAT,
+                    status VARCHAR(20) DEFAULT \'assigned\',
+                    UNIQUE(rater_id, image_id)
                 )
-            """))
+            '''))
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            print(f'[migration] calibration_notes: {e}')
+            print(f'[migration] rating_assignments: {e}')
 
+        # peer_ratings table
         try:
-            db.session.execute(db.text("""
-                CREATE TABLE IF NOT EXISTS contest_entries (
+            db.session.execute(db.text('''
+                CREATE TABLE IF NOT EXISTS peer_ratings (
                     id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                     image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
                     genre VARCHAR(60) NOT NULL,
-                    track VARCHAR(20) NOT NULL,
-                    contest_month VARCHAR(7) NOT NULL,
-                    contest_type VARCHAR(20) DEFAULT 'monthly',
-                    entered_at TIMESTAMP DEFAULT NOW(),
-                    UNIQUE(user_id, genre, track, contest_month, contest_type)
+                    dod FLOAT NOT NULL,
+                    disruption FLOAT NOT NULL,
+                    dm FLOAT NOT NULL,
+                    wonder FLOAT NOT NULL,
+                    aq FLOAT NOT NULL,
+                    peer_ll_score FLOAT NOT NULL,
+                    delta_from_ddi FLOAT,
+                    time_spent_seconds INTEGER,
+                    rated_at TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(rater_id, image_id)
                 )
-            """))
+            '''))
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            print(f'[migration] contest_entries: {e}')
-
-        try:
-            db.session.execute(db.text("""
-                CREATE TABLE IF NOT EXISTS open_contest_entries (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                    genre VARCHAR(60) NOT NULL,
-                    platform_year INTEGER NOT NULL,
-                    amount_paise INTEGER DEFAULT 5000,
-                    payment_ref VARCHAR(120),
-                    status VARCHAR(20) DEFAULT 'confirmed',
-                    entered_at TIMESTAMP DEFAULT NOW(),
-                    UNIQUE(user_id, genre, platform_year)
-                )
-            """))
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f'[migration] open_contest_entries: {e}')
+            print(f'[migration] peer_ratings: {e}')
 
 
 def _col(table, column, col_type):
-    """ALTER TABLE … ADD COLUMN IF NOT EXISTS — PostgreSQL 9.6+."""
     sql = f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type};"
     try:
         db.session.execute(db.text(sql))
@@ -384,19 +655,3 @@ def _col(table, column, col_type):
     except Exception as e:
         db.session.rollback()
         print(f"[migration] {table}.{column}: {e}")
-
-
-class ImageReport(db.Model):
-    """Community-submitted reports on scored images."""
-    __tablename__ = 'image_reports'
-
-    id          = db.Column(db.Integer, primary_key=True)
-    image_id    = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
-    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'),  nullable=False)
-    reason      = db.Column(db.String(40),  nullable=False)   # AI-generated | Stolen | Duplicate | Other
-    detail      = db.Column(db.Text,        nullable=True)
-    reported_at = db.Column(db.DateTime,    default=datetime.utcnow)
-    status      = db.Column(db.String(20),  default='open')   # open | dismissed | actioned
-
-    image    = db.relationship('Image', backref=db.backref('reports', lazy='dynamic'))
-    reporter = db.relationship('User',  backref=db.backref('filed_reports', lazy='dynamic'))
