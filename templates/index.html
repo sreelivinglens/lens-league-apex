@@ -154,29 +154,42 @@
 
   /* ── SPRINT 3: Live feed strip ── */
   .live-feed-strip {
-    width:100%; display:flex; flex-direction:column; align-items:center; gap:0.75rem;
+    width:100%; display:flex; flex-direction:column; align-items:center; gap:1rem;
   }
+  .live-feed-heading {
+    font-family:'Playfair Display',serif;
+    font-size:clamp(1rem,2vw,1.25rem); font-weight:700;
+    color:rgba(255,255,255,0.55); text-align:center; line-height:1.4;
+  }
+  .live-feed-heading strong { color:var(--gold); }
   .live-feed-label {
     font-size:0.65rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
-    color:rgba(255,255,255,0.2);
+    color:rgba(255,255,255,0.2); margin-bottom:0.25rem;
   }
   .live-feed-row {
-    display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap;
+    display:flex; align-items:stretch; justify-content:center; gap:0.6rem; flex-wrap:wrap;
+    width:100%;
   }
   .live-feed-item {
-    display:flex; align-items:center; gap:0.5rem;
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
-    border-radius:8px; padding:0.4rem 0.75rem;
-    font-size:0.72rem; color:rgba(255,255,255,0.35);
+    display:flex; flex-direction:column; align-items:center; gap:0.35rem;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
+    border-radius:10px; padding:0.7rem 1rem; min-width:90px;
+    transition:border-color 0.2s;
+  }
+  .live-feed-item:hover { border-color:rgba(201,168,76,0.3); }
+  .live-feed-item .lf-genre {
+    font-size:0.78rem; font-weight:500; color:rgba(255,255,255,0.45);
+    letter-spacing:0.02em;
   }
   .live-feed-item .lf-tier {
-    font-weight:700; font-size:0.68rem; letter-spacing:0.08em;
-    padding:0.15rem 0.45rem; border-radius:4px;
+    font-weight:700; font-size:0.72rem; letter-spacing:0.06em;
+    padding:0.2rem 0.6rem; border-radius:5px; white-space:nowrap;
   }
   .lf-tier.master       { background:rgba(59,130,200,0.2);  color:#7abfff; }
   .lf-tier.grandmaster  { background:rgba(138,97,175,0.2);  color:#c49eff; }
   .lf-tier.practitioner { background:rgba(76,175,115,0.2);  color:#7adfa8; }
   .lf-tier.legend       { background:rgba(201,168,76,0.15); color:#C9A84C; }
+  .lf-tier.apprentice   { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.35); }
 
   /* Contest line */
   .contest-line {
@@ -294,7 +307,7 @@
     No jury opinions. No social media likes. Five scientific dimensions —
     and exactly where you rank against every photographer on this platform.
     <br><br>
-    <span style="font-size:0.95em; color:rgba(255,255,255,0.5);">Shot on iPhone? You compete in your own track.</span>
+    <span style="font-size:0.95em; color:rgba(255,255,255,0.5);">Shot on Mobile? You compete in your own track.</span>
   </p>
 
   {# SPRINT 1: CTA group — Upload Free + Enter the Contest #}
@@ -335,15 +348,18 @@
 <section class="discover" id="discover">
   <div class="discover-inner">
 
-    {# SPRINT 3: Live feed — last 6 scored images, tier badge + genre only, no names/scores #}
+    {# SPRINT 3: Live feed — last 6 scored images, genre + tier only, no names/scores #}
     {% if top_images %}
     <div class="live-feed-strip reveal">
-      <div class="live-feed-label">Engine active &nbsp;·&nbsp; latest scores</div>
+      <div class="live-feed-heading">
+        <strong>{{ top_images|length }} images</strong> scored recently by the Apex DDI Engine
+      </div>
+      <div class="live-feed-label">Engine active &nbsp;·&nbsp; latest scores &nbsp;·&nbsp; no names shown</div>
       <div class="live-feed-row">
         {% for img in top_images[:6] %}
         <div class="live-feed-item">
-          <span>{{ img.genre }}</span>
-          <span class="lf-tier {{ img.tier | lower if img.tier else 'practitioner' }}">{{ img.tier or 'Practitioner' }}</span>
+          <span class="lf-genre">{{ img.genre }}</span>
+          <span class="lf-tier {{ (img.tier or 'Practitioner') | lower }}">{{ img.tier or 'Practitioner' }}</span>
         </div>
         {% endfor %}
       </div>
