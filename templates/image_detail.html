@@ -508,10 +508,7 @@
         ">
           <div style="font-family:var(--font-mono); font-size:10px; font-weight:600;
                       letter-spacing:2px; text-transform:uppercase; color:var(--text-muted);">
-            Global Percentile
-          </div>
-          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">
-            {{ percentile.total_images }} scored images
+            Global Rank
           </div>
         </div>
 
@@ -519,11 +516,11 @@
           <div>
             <div style="font-family:var(--font-mono); font-size:36px; font-weight:700;
                         color:var(--gold); line-height:1;">
-              Top {{ percentile.top_pct }}%
+              Ranked #{{ percentile.rank }}
             </div>
             <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);
                         margin-top:4px; letter-spacing:0.5px;">
-              of photographers on this platform
+              on this platform
             </div>
           </div>
           <div style="margin-left:auto; text-align:right;">
@@ -595,7 +592,7 @@
         " onmouseover="this.style.background='rgba(200,168,75,0.14)'"
            onmouseout="this.style.background='linear-gradient(90deg, rgba(200,168,75,0.08), transparent)'">
           {% if percentile.top_pct <= 15 %}
-            You're in the top {{ percentile.top_pct }}% — enter the contest to compete →
+            You're ranking in the top tier — enter the contest to compete →
           {% elif percentile.top10_in_genre %}
             Top 10 in {{ image.genre }} are at {{ percentile.top10_in_genre }}+ — enter to compete →
           {% else %}
