@@ -262,9 +262,26 @@
 
 <div class="card">
 
-  <div class="card-header">
-    <span class="brand-dark">THE LENS LEAGUE</span>
-    <span class="engine-tag">APEX DDI ENGINE · FULL EVALUATION</span>
+  <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+    <div>
+      <span class="brand-dark">THE LENS LEAGUE</span>
+      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
+    </div>
+    {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
+      {% if already_reported %}
+      <span style="font-family:monospace; font-size:11px; color:rgba(0,0,0,0.45); letter-spacing:1px;
+                   padding:4px 12px; border:1px solid rgba(0,0,0,0.2); border-radius:999px; white-space:nowrap;">
+        ✓ Reported
+      </span>
+      {% else %}
+      <button onclick="document.getElementById('report-modal-share').style.display='flex'"
+              style="background:rgba(0,0,0,0.25); border:1px solid rgba(0,0,0,0.35); color:rgba(0,0,0,0.65);
+                     border-radius:999px; padding:4px 14px; font-size:11px; font-family:monospace;
+                     font-weight:600; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+        ⚑ Report Image
+      </button>
+      {% endif %}
+    {% endif %}
   </div>
 
   <!-- Photo — always visible -->
@@ -439,16 +456,6 @@
 
 </div>
 
-{% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
-<div style="text-align:right; margin-bottom:10px;">
-  <button onclick="document.getElementById('report-modal-share').style.display='flex'"
-          style="background:#111; border:1px solid #444; color:#ccc;
-                 border-radius:999px; padding:4px 14px; font-size:11px; font-family:monospace;
-                 font-weight:600; letter-spacing:0.5px; cursor:pointer; white-space:nowrap;">
-    ⚑ Report Image
-  </button>
-</div>
-{% endif %}
 
 <!-- Actions -->
 <div class="actions">
