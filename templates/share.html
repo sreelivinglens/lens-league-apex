@@ -439,6 +439,17 @@
 
 </div>
 
+{% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
+<div style="text-align:right; margin-bottom:10px;">
+  <button onclick="document.getElementById('report-modal-share').style.display='flex'"
+          style="background:transparent; border:1px solid #6b3a3a; color:#c97b7b;
+                 border-radius:6px; padding:7px 16px; font-size:12px; font-family:monospace;
+                 letter-spacing:1px; cursor:pointer;">
+    ⚑ Report Image
+  </button>
+</div>
+{% endif %}
+
 <!-- Actions -->
 <div class="actions">
   {% if current_user.is_authenticated %}
@@ -449,11 +460,6 @@
   <a href="{{ url_for('register') }}" class="action-btn action-primary">Get My Images Rated Free →</a>
   {% endif %}
   <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
-  {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
-  <button onclick="document.getElementById('report-modal-share').style.display='flex'"
-          class="action-btn action-secondary"
-          style="border-color:#6b3a3a; color:#c97b7b;">⚑ Report</button>
-  {% endif %}
 </div>
 
 <!-- Report Modal -->
