@@ -1374,6 +1374,76 @@ def admin_delete_image(image_id):
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/admin/image/<int:image_id>/regen-thumb', methods=['POST'])
+@login_required
+@admin_required
+def admin_regen_thumb(image_id):
+    """Regenerate and re-upload thumbnail for an image with a broken/missing thumb."""
+    img = Image.query.get_or_404(image_id)
+
+    # Try to find the original source — check R2 for the full image first,
+    # then fall back to any existing thumb_path on disk
+    import tempfile, shutil
+
+    source_path = None
+    temp_file   = None
+
+    # 1. If thumb_path exists locally, use it directly
+    if img.thumb_path and os.path.exists(img.thumb_path):
+        source_path = img.thumb_path
+
+    # 2. Try to pull existing thumb from R2 (re-upload it)
+    if not source_path and img.thumb_url:
+        try:
+            key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+            tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            tf.close()
+            r2.get_client().download_fileobj(r2.BUCKET, key, open(tf.name, 'wb'))
+            source_path = tf.name
+            temp_file   = tf.name
+        except Exception as e:
+            app.logger.warning(f'[regen_thumb] R2 download failed for image {image_id}: {e}')
+
+    if not source_path:
+        flash(f'Cannot regenerate thumbnail — no source file found for image {image_id}.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        # Re-run ingest to produce a clean resized thumb
+        new_thumb_path, w, h, fmt, phash = ingest_image(source_path, app.config['UPLOAD_FOLDER'])
+
+        # Upload new thumb to R2
+        uid      = str(uuid.uuid4())
+        new_url  = _r2_upload_thumb(new_thumb_path, uid)
+        if not new_url:
+            flash(f'R2 upload failed during thumb regen for image {image_id}.', 'error')
+            return redirect(url_for('admin_dashboard'))
+
+        # Delete old R2 thumb if different key
+        if img.thumb_url and img.thumb_url != new_url:
+            try:
+                old_key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                r2.delete_file(old_key)
+            except Exception:
+                pass
+
+        img.thumb_url  = new_url
+        img.thumb_path = new_thumb_path
+        img.width      = w
+        img.height     = h
+        db.session.commit()
+        flash(f'✅ Thumbnail regenerated for "{img.asset_name or img.original_filename}".', 'success')
+
+    except Exception as e:
+        app.logger.error(f'[regen_thumb] Failed for image {image_id}: {e}')
+        flash(f'Thumbnail regeneration failed: {e}', 'error')
+    finally:
+        if temp_file and os.path.exists(temp_file):
+            os.remove(temp_file)
+
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/admin/cleanup', methods=['POST'])
 @login_required
 @admin_required
