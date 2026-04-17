@@ -14,7 +14,7 @@ from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from models import db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry
+from models import db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
@@ -103,6 +103,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
+                "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
             ]
             for sql in _migrations:
                 try:
@@ -1203,10 +1204,11 @@ def admin_dashboard():
 
     all_users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
 
+    open_reports_count = ImageReport.query.filter_by(status='open').count()
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
-                           all_users=all_users)
+                           all_users=all_users, open_reports_count=open_reports_count)
 
 
 @app.route('/admin/calibrate', methods=['POST'])
@@ -1698,6 +1700,87 @@ def admin_approve_review(image_id):
     db.session.commit()
     flash(f'Image "{img.asset_name}" approved — now visible to public.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+
+# ── Community Report Routes ───────────────────────────────────────────────────
+
+@app.route('/image/<int:image_id>/report', methods=['POST'])
+@login_required
+def report_image(image_id):
+    """Submit a community report on a scored image."""
+    img = Image.query.get_or_404(image_id)
+
+    # Anti-abuse: reporter must have at least 3 scored images
+    reporter_scored = Image.query.filter_by(
+        user_id=current_user.id, status='scored'
+    ).count()
+    if reporter_scored < 3:
+        flash('You need at least 3 scored images to submit a report.', 'warning')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    # One report per image per user (enforced by DB UNIQUE constraint too)
+    existing = ImageReport.query.filter_by(
+        image_id=image_id, reporter_id=current_user.id
+    ).first()
+    if existing:
+        flash('You have already submitted a report for this image.', 'info')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    reason = request.form.get('reason', '').strip()
+    detail = request.form.get('detail', '').strip()[:500]
+    valid_reasons = ['AI-generated', 'Stolen', 'Duplicate', 'Other']
+    if reason not in valid_reasons:
+        flash('Invalid report reason.', 'danger')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    report = ImageReport(
+        image_id=image_id,
+        reporter_id=current_user.id,
+        reason=reason,
+        detail=detail or None,
+    )
+    db.session.add(report)
+    db.session.commit()
+    flash('Report submitted. Our team will review it.', 'success')
+    return redirect(url_for('image_detail', image_id=image_id))
+
+
+@app.route('/admin/reports')
+@login_required
+@admin_required
+def admin_reports():
+    """Admin view of all open community reports."""
+    reports = (ImageReport.query
+               .filter_by(status='open')
+               .order_by(ImageReport.reported_at.desc())
+               .all())
+    return render_template('admin_reports.html', reports=reports)
+
+
+@app.route('/admin/report/<int:report_id>/dismiss', methods=['POST'])
+@login_required
+@admin_required
+def admin_dismiss_report(report_id):
+    rpt = ImageReport.query.get_or_404(report_id)
+    rpt.status = 'dismissed'
+    db.session.commit()
+    flash('Report dismissed.', 'success')
+    return redirect(url_for('admin_reports'))
+
+
+@app.route('/admin/report/<int:report_id>/request-raw', methods=['POST'])
+@login_required
+@admin_required
+def admin_report_request_raw(report_id):
+    rpt = ImageReport.query.get_or_404(report_id)
+    img = rpt.image
+    img.judge_referral = True
+    img.needs_review   = True
+    rpt.status         = 'actioned'
+    db.session.commit()
+    flash(f'RAW requested for "{img.asset_name}" — image held for review.', 'success')
+    return redirect(url_for('admin_reports'))
 
 
 @app.route('/admin/fix-tiers', methods=['POST'])

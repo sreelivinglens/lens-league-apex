@@ -384,3 +384,19 @@ def _col(table, column, col_type):
     except Exception as e:
         db.session.rollback()
         print(f"[migration] {table}.{column}: {e}")
+
+
+class ImageReport(db.Model):
+    """Community-submitted reports on scored images."""
+    __tablename__ = 'image_reports'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    image_id    = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'),  nullable=False)
+    reason      = db.Column(db.String(40),  nullable=False)   # AI-generated | Stolen | Duplicate | Other
+    detail      = db.Column(db.Text,        nullable=True)
+    reported_at = db.Column(db.DateTime,    default=datetime.utcnow)
+    status      = db.Column(db.String(20),  default='open')   # open | dismissed | actioned
+
+    image    = db.relationship('Image', backref=db.backref('reports', lazy='dynamic'))
+    reporter = db.relationship('User',  backref=db.backref('filed_reports', lazy='dynamic'))
