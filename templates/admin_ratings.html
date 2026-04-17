@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Peer Rating Audit — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .audit-table th {
+    padding: 13px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-secondary); text-align: left;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+    background: var(--surface-3); text-transform: uppercase;
+  }
+  .audit-table td {
+    padding: 12px 16px; font-size: 14px; color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle); white-space: nowrap; vertical-align: middle;
+  }
+  .audit-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+  .mono { font-family: var(--font-mono); font-size: 13px; }
+  .delta-pos { color: var(--green); font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .delta-neg { color: var(--red);   font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .delta-neu { color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; }
+  .bias-flag { display: inline-block; padding: 2px 8px; font-family: var(--font-mono);
+               font-size: 10px; font-weight: 700; letter-spacing: 1px; border-radius: 4px;
+               background: var(--amber-dim); border: 1px solid var(--amber); color: #F0C888; }
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface-2); border: 1px solid var(--border);
+               border-radius: var(--radius-md); padding: 18px 20px; }
+  .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+  .filter-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
+  .filter-row select, .filter-row input {
+    background: var(--surface-3); border: 1px solid var(--border); color: var(--text-primary);
+    padding: 9px 14px; font-size: 14px; border-radius: var(--radius-sm); outline: none;
+  }
+  .filter-row select:focus, .filter-row input:focus { border-color: var(--gold-dark); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Peer Rating Audit</h1>
+    <p>Full audit trail — every rating, every rater, every delta</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_export_ratings_csv') }}" class="btn btn-solid" style="padding:10px 20px;">
+      ↓ Export CSV
+    </a>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn" style="padding:10px 20px;">← Admin</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stat-row">
+  <div class="stat-card"><div class="stat-val">{{ total_ratings }}</div><div class="stat-lbl">Total Ratings</div></div>
+  <div class="stat-card"><div class="stat-val">{{ total_raters }}</div><div class="stat-lbl">Active Raters</div></div>
+  <div class="stat-card"><div class="stat-val">{{ images_with_peer }}</div><div class="stat-lbl">Images Rated</div></div>
+  <div class="stat-card"><div class="stat-val">{{ biased_raters }}</div><div class="stat-lbl">Bias Flags</div></div>
+</div>
+
+<!-- Rater bias summary -->
+{% if biased_users %}
+<div style="background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md);
+            padding:18px 22px; margin-bottom:28px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px;
+              text-transform:uppercase; color:#F0C888; margin-bottom:12px;">⚠ Raters with Bias Flags</div>
+  {% for u in biased_users %}
+  <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+    <span style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</span>
+    <span style="font-family:var(--font-mono); font-size:11px; color:#F0C888;">{{ u.rating_bias_note }}</span>
+    <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      {{ u.lifetime_ratings_given }} ratings given
+    </span>
+    <form method="POST" action="{{ url_for('admin_clear_bias_flag', user_id=u.id) }}" style="margin-left:auto;">
+      <button type="submit" class="btn" style="padding:4px 14px; font-size:11px;
+              border-color:var(--gold-dark); color:var(--gold);">Clear Flag</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Filter bar -->
+<form method="GET" class="filter-row">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase;">Rater</div>
+    <select name="rater_id" onchange="this.form.submit()">
+      <option value="">All raters</option>
+      {% for u in all_raters %}
+      <option value="{{ u.id }}" {{ 'selected' if rater_filter == u.id|string }}>
+        {{ u.full_name or u.username }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase;">Genre</div>
+    <select name="genre" onchange="this.form.submit()">
+      <option value="">All genres</option>
+      {% for g in all_genres %}
+      <option value="{{ g }}" {{ 'selected' if genre_filter == g }}>{{ g }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase;">Show</div>
+    <select name="outliers" onchange="this.form.submit()">
+      <option value="">All ratings</option>
+      <option value="1" {{ 'selected' if outliers_only }}>Outliers only (|delta| &gt; 2)</option>
+    </select>
+  </div>
+</form>
+
+<!-- Ratings table -->
+<div class="table-wrap">
+  <table class="audit-table" style="width:100%; border-collapse:collapse; min-width:900px;">
+    <thead>
+      <tr>
+        <th>Rater</th>
+        <th>Image</th>
+        <th>Genre</th>
+        <th>Time</th>
+        <th>DoD</th>
+        <th>DIS</th>
+        <th>DM</th>
+        <th>WON</th>
+        <th>AQ</th>
+        <th>Peer LL</th>
+        <th>DDI</th>
+        <th>Delta</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in ratings %}
+      <tr>
+        <td>
+          <div style="font-weight:600;">{{ r.rater.full_name or r.rater.username if r.rater else '—' }}</div>
+          {% if r.rater and r.rater.rating_bias_flag %}
+          <span class="bias-flag">⚠ BIAS</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('image_detail', image_id=r.image_id) }}"
+             style="color:var(--gold); text-decoration:none; font-size:13px;">
+            {{ r.image.asset_name[:30] if r.image else '—' }}{% if r.image and r.image.asset_name|length > 30 %}…{% endif %}
+          </a>
+        </td>
+        <td><span class="mono">{{ r.genre }}</span></td>
+        <td><span class="mono">{{ r.time_spent_seconds or '—' }}s</span></td>
+        <td><span class="mono">{{ r.dod }}</span></td>
+        <td><span class="mono">{{ r.disruption }}</span></td>
+        <td><span class="mono">{{ r.dm }}</span></td>
+        <td><span class="mono">{{ r.wonder }}</span></td>
+        <td><span class="mono">{{ r.aq }}</span></td>
+        <td><span class="mono" style="font-weight:700; color:var(--gold);">{{ r.peer_ll_score }}</span></td>
+        <td><span class="mono">{{ r.image.score if r.image else '—' }}</span></td>
+        <td>
+          {% if r.delta_from_ddi is not none %}
+            {% set d = r.delta_from_ddi %}
+            <span class="{{ 'delta-pos' if d > 0.5 else ('delta-neg' if d < -0.5 else 'delta-neu') }}">
+              {{ '%+.2f'|format(d) }}
+            </span>
+          {% else %}
+            <span class="delta-neu">—</span>
+          {% endif %}
+        </td>
+        <td><span class="mono" style="font-size:11px; color:var(--text-muted);">{{ r.rated_at.strftime('%d %b %Y') }}</span></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="13" style="text-align:center; padding:40px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; letter-spacing:2px;">
+          NO RATINGS YET
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if pages > 1 %}
+<div class="pagination" style="margin-top:20px;">
+  {% if page > 1 %}
+  <a href="?page={{ page-1 }}&rater_id={{ rater_filter }}&genre={{ genre_filter }}&outliers={{ '1' if outliers_only else '' }}">← Prev</a>
+  {% endif %}
+  {% for p in range(1, pages+1) %}
+  <a href="?page={{ p }}&rater_id={{ rater_filter }}&genre={{ genre_filter }}&outliers={{ '1' if outliers_only else '' }}"
+     class="{{ 'active' if p == page }}">{{ p }}</a>
+  {% endfor %}
+  {% if page < pages %}
+  <a href="?page={{ page+1 }}&rater_id={{ rater_filter }}&genre={{ genre_filter }}&outliers={{ '1' if outliers_only else '' }}">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+{% block title %}Rate Images — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rate-wrap { max-width: 720px; margin: 0 auto; }
+
+  /* ── Credit bar ── */
+  .credit-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 14px 20px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .credit-count {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    color: var(--text-primary);
+  }
+  .credit-count span { color: var(--gold); font-size: 22px; }
+  .credit-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .5px; }
+  .credit-bar-fill-wrap {
+    flex: 1; min-width: 120px; height: 5px;
+    background: var(--surface-3); border-radius: 99px; overflow: hidden;
+  }
+  .credit-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Image card ── */
+  .rating-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;
+  }
+  .rating-card-header {
+    padding: 14px 20px; background: var(--surface-3);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .rating-card-blind {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .blind-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold); animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .genre-pill {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 99px;
+    border: 1px solid var(--gold-dark); color: var(--gold);
+    background: var(--gold-subtle);
+  }
+
+  .rating-img-wrap { position: relative; background: var(--surface-3); }
+  .rating-img-wrap img {
+    width: 100%; max-height: 480px; object-fit: contain; display: block;
+    -webkit-user-select: none; -moz-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Timer overlay */
+  .timer-overlay {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(13,13,11,0.90); border: 2px solid var(--gold);
+    border-radius: 8px; padding: 10px 16px; text-align: center;
+    backdrop-filter: blur(8px); min-width: 72px;
+  }
+  .timer-num {
+    font-family: var(--font-mono); font-size: 32px; font-weight: 700;
+    color: var(--gold); line-height: 1;
+    transition: color 0.3s;
+  }
+  .timer-num.done { color: var(--green); }
+  .timer-label {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px;
+    color: var(--text-muted); text-transform: uppercase; margin-top: 3px;
+  }
+
+  /* ── Module sliders ── */
+  .modules-form { padding: 28px 24px; }
+  .modules-form-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    display: block;
+  }
+  .module-row { margin-bottom: 22px; }
+  .module-row-header {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;
+  }
+  .module-label {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary);
+  }
+  .module-label small {
+    font-family: var(--font-body); font-size: 11px; font-weight: 400;
+    letter-spacing: 0; color: var(--text-muted); text-transform: none; margin-left: 6px;
+  }
+  .module-value-display {
+    font-family: var(--font-mono); font-size: 24px; font-weight: 700;
+    color: var(--gold); min-width: 36px; text-align: right; line-height: 1;
+  }
+
+  /* Slider styling */
+  .module-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 99px;
+    background: var(--surface-3); outline: none; cursor: pointer;
+  }
+  .module-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gold); cursor: pointer;
+    border: 2px solid var(--gold-dark);
+    box-shadow: 0 2px 8px rgba(200,168,75,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .module-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 2px 16px rgba(200,168,75,0.5);
+  }
+  .module-slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gold); cursor: pointer;
+    border: 2px solid var(--gold-dark);
+  }
+  .slider-track-wrap { position: relative; }
+  .slider-pips {
+    display: flex; justify-content: space-between;
+    padding: 0 2px; margin-top: 4px;
+  }
+  .slider-pip {
+    font-family: var(--font-mono); font-size: 9px; color: var(--text-muted);
+    letter-spacing: .5px;
+  }
+
+  /* Module descriptions */
+  .module-desc-box {
+    margin-top: 8px; padding: 10px 14px;
+    background: var(--surface-3); border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--text-muted); line-height: 1.6;
+    display: none;
+  }
+  .module-desc-box.visible { display: block; }
+
+  /* ── Submit area ── */
+  .submit-area { padding: 0 24px 28px; }
+  .submit-locked-msg {
+    padding: 14px 18px; margin-bottom: 16px;
+    background: var(--amber-dim); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 12px; color: #F0C888;
+    letter-spacing: .5px; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .submit-locked-msg.hidden { display: none; }
+
+  /* Skip button */
+  .skip-note {
+    text-align: center; margin-top: 12px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: .5px;
+  }
+  .skip-note a { color: var(--text-muted); text-decoration: underline; cursor: pointer; }
+  .skip-note a:hover { color: var(--text-secondary); }
+
+  /* ── Empty state ── */
+  .empty-pool {
+    text-align: center; padding: 60px 24px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .empty-pool-icon { font-size: 48px; margin-bottom: 20px; }
+  .empty-pool-title { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  .empty-pool-text { font-size: 15px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.7; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+  /* ── No credits state ── */
+  .no-credits {
+    text-align: center; padding: 40px 24px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* ── How to rate guide ── */
+  .guide-strip {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    margin-bottom: 24px;
+  }
+  .guide-item {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 10px; text-align: center;
+  }
+  .guide-abbr { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+  .guide-name { font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .guide-desc { font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+
+  @media(max-width: 600px) {
+    .guide-strip { grid-template-columns: 1fr 1fr; }
+    .modules-form { padding: 20px 16px; }
+    .submit-area { padding: 0 16px 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rate-wrap">
+
+  <div class="page-header">
+    <h1>Rate Images</h1>
+    <p>Blind peer rating — no names, no DDI scores. Score each module honestly.</p>
+  </div>
+
+  <!-- Credit bar -->
+  <div class="credit-bar">
+    <div>
+      <div class="credit-count"><span>{{ credits }}</span> rating credits</div>
+      <div class="credit-note">Resets 1st of each month · +1 credit per rating given · max 40</div>
+    </div>
+    <div class="credit-bar-fill-wrap">
+      <div class="credit-bar-fill" style="width:{{ [(credits / 40 * 100)|int, 100]|min }}%"></div>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); white-space:nowrap;">
+      {{ lifetime_given }} rated all-time
+    </div>
+  </div>
+
+  {% if not is_subscriber %}
+  <!-- Non-subscriber gate -->
+  <div class="no-credits">
+    <div style="font-size:40px; margin-bottom:16px;">🔒</div>
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">Subscribers Only</div>
+    <p style="font-size:15px; color:var(--text-secondary); margin-bottom:20px; line-height:1.7;">
+      Peer rating is available to Camera and Mobile subscribers. Your images also enter the rating pool.
+    </p>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid">View Pricing →</a>
+  </div>
+
+  {% elif credits <= 0 %}
+  <!-- No credits -->
+  <div class="no-credits">
+    <div style="font-size:40px; margin-bottom:16px;">⏳</div>
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">No Credits Remaining</div>
+    <p style="font-size:15px; color:var(--text-secondary); margin-bottom:8px; line-height:1.7;">
+      You've used all 20 credits this month. Credits reset on the 1st of next month.
+    </p>
+    <p style="font-size:13px; color:var(--text-muted);">Come back {{ next_reset }} for a fresh 20 credits.</p>
+  </div>
+
+  {% elif not assignment %}
+  <!-- Empty pool -->
+  <div class="empty-pool">
+    <div class="empty-pool-icon">📷</div>
+    <div class="empty-pool-title">No Images in Queue</div>
+    <p class="empty-pool-text">
+      You've rated all available images, or there are no subscriber images ready for peer rating yet.
+      Check back after other photographers upload — or upload your own images to add to the pool.
+    </p>
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image</a>
+  </div>
+
+  {% else %}
+  <!-- Module guide -->
+  <div class="guide-strip">
+    {% for abbr, name, desc in [
+      ('DoD',  'Difficulty',    'How hard was this to capture?'),
+      ('DIS',  'Disruption',    'How visually original?'),
+      ('DM',   'Dec. Moment',   'Was this the right instant?'),
+      ('WON',  'Wonder',        'Does it show something rare?'),
+      ('AQ',   'Soul',          'What feeling does it give?'),
+    ] %}
+    <div class="guide-item">
+      <div class="guide-abbr">{{ abbr }}</div>
+      <div class="guide-name">{{ name }}</div>
+      <div class="guide-desc">{{ desc }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Rating card -->
+  <div class="rating-card">
+    <div class="rating-card-header">
+      <div class="rating-card-blind">
+        <div class="blind-dot"></div>
+        Blind Rating — Photographer &amp; Score Hidden
+      </div>
+      <span class="genre-pill">{{ image.genre }}</span>
+    </div>
+
+    <div class="rating-img-wrap" id="imgWrap">
+      <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
+           alt="Image for rating" id="ratingImg">
+      <div class="timer-overlay">
+        <div class="timer-num" id="timerNum">15</div>
+        <div class="timer-label">sec min</div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_rating') }}" id="ratingForm">
+      <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+      <input type="hidden" name="started_at" value="{{ assignment.started_at.isoformat() if assignment.started_at else '' }}" id="startedAtInput">
+      <input type="hidden" name="client_start_ts" id="clientStartTs">
+
+      <div class="modules-form">
+        <span class="modules-form-label">Score Each Dimension — 1 (lowest) to 10 (highest)</span>
+
+        {% set modules = [
+          ('dod',        'DoD',        'Difficulty of Delivery',  'Physical risk, access, technical precision, environmental challenge'),
+          ('disruption', 'Disruption', 'Visual Originality',      'How strongly does this break from visual convention?'),
+          ('dm',         'DM',         'Decisive Moment',         'Was the shutter released at exactly the right instant?'),
+          ('wonder',     'Wonder',     'Wonder Factor',           'Rare behaviour, unseen perspective, scientific significance'),
+          ('aq',         'AQ',         'Affective Quotient',      'The emotional truth — what does this image make you feel?'),
+        ] %}
+
+        {% for field, abbr, label, desc in modules %}
+        <div class="module-row">
+          <div class="module-row-header">
+            <div class="module-label">
+              {{ abbr }} — {{ label }}
+              <small id="desc-toggle-{{ field }}" onclick="toggleDesc('{{ field }}')" style="cursor:pointer; color:var(--gold);">?</small>
+            </div>
+            <div class="module-value-display" id="val-{{ field }}">5.0</div>
+          </div>
+          <div class="module-desc-box" id="desc-{{ field }}">{{ desc }}</div>
+          <div class="slider-track-wrap">
+            <input type="range" class="module-slider" name="{{ field }}"
+                   id="slider-{{ field }}" min="1" max="10" step="0.5" value="5"
+                   oninput="updateVal('{{ field }}', this.value)">
+            <div class="slider-pips">
+              <span class="slider-pip">1</span>
+              <span class="slider-pip">2</span>
+              <span class="slider-pip">3</span>
+              <span class="slider-pip">4</span>
+              <span class="slider-pip">5</span>
+              <span class="slider-pip">6</span>
+              <span class="slider-pip">7</span>
+              <span class="slider-pip">8</span>
+              <span class="slider-pip">9</span>
+              <span class="slider-pip">10</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div><!-- /modules-form -->
+
+      <div class="submit-area">
+        <div class="submit-locked-msg" id="lockedMsg">
+          ⏳ &nbsp; View for <span id="lockCountdown">15</span>s before submitting
+        </div>
+        <button type="submit" class="btn btn-solid" id="submitBtn"
+                style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;" disabled>
+          Submit Rating →
+        </button>
+        <div class="skip-note">
+          <a onclick="skipImage()">Skip this image</a>
+          &nbsp;·&nbsp; Skipping costs no credits but the image will reappear later.
+        </div>
+      </div>
+    </form>
+
+  </div><!-- /rating-card -->
+
+  <!-- Stats strip -->
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
+    <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      Images rated this month: <strong style="color:var(--text-secondary);">{{ month_given }}</strong>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+      Queue remaining: <strong style="color:var(--text-secondary);">{{ queue_remaining }}+</strong>
+    </div>
+    {% if bias_flag %}
+    <div style="font-family:var(--font-mono); font-size:11px; color:var(--amber);">
+      ⚠ Scoring pattern flagged for review
+    </div>
+    {% endif %}
+  </div>
+
+  {% endif %} {# end assignment block #}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const MIN_SECONDS = 15;
+  let elapsed       = 0;
+  let timerDone     = false;
+  const timerNum    = document.getElementById('timerNum');
+  const lockMsg     = document.getElementById('lockedMsg');
+  const submitBtn   = document.getElementById('submitBtn');
+  const clientTs    = document.getElementById('clientStartTs');
+  const countdown   = document.getElementById('lockCountdown');
+
+  // Record client-side start timestamp
+  const startTs = Date.now();
+  if (clientTs) clientTs.value = startTs;
+
+  {% if assignment %}
+  // Countdown timer
+  const tick = setInterval(() => {
+    elapsed++;
+    const remaining = Math.max(MIN_SECONDS - elapsed, 0);
+
+    if (timerNum) {
+      timerNum.textContent = remaining;
+      if (remaining === 0) timerNum.classList.add('done');
+    }
+    if (countdown) countdown.textContent = remaining;
+
+    if (elapsed >= MIN_SECONDS && !timerDone) {
+      timerDone = true;
+      clearInterval(tick);
+      if (lockMsg) lockMsg.classList.add('hidden');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Rating →';
+      }
+    }
+  }, 1000);
+
+  // On form submit — attach time spent
+  const form = document.getElementById('ratingForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      if (!timerDone) { e.preventDefault(); return; }
+      // Inject time_spent as hidden field
+      const ts = document.createElement('input');
+      ts.type  = 'hidden';
+      ts.name  = 'time_spent';
+      ts.value = Math.round((Date.now() - startTs) / 1000);
+      form.appendChild(ts);
+    });
+  }
+  {% endif %}
+
+  // Slider value display
+  window.updateVal = function(field, val) {
+    const el = document.getElementById('val-' + field);
+    if (el) el.textContent = parseFloat(val).toFixed(1);
+  };
+
+  // Module description toggle
+  window.toggleDesc = function(field) {
+    const box = document.getElementById('desc-' + field);
+    if (box) box.classList.toggle('visible');
+  };
+
+  // Skip — POST to skip route
+  window.skipImage = function() {
+    {% if assignment %}
+    const f = document.createElement('form');
+    f.method = 'POST';
+    f.action = '{{ url_for("skip_rating") }}';
+    const inp = document.createElement('input');
+    inp.type  = 'hidden';
+    inp.name  = 'assignment_id';
+    inp.value = '{{ assignment.id }}';
+    f.appendChild(inp);
+    document.body.appendChild(f);
+    f.submit();
+    {% endif %}
+  };
+
+  // Right-click protection
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+  });
+  document.addEventListener('dragstart', function(e) {
+    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+  });
+})();
+</script>
+{% endblock %}
