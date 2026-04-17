@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 36px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dash-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
+
+  .track-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 99px;
+    border: 1px solid var(--gold-dark); color: var(--gold);
+    background: rgba(200,168,75,0.06); margin-left: 10px; vertical-align: middle;
+  }
+
+  /* ── Peer Rating Widget ── */
+  .peer-widget {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .peer-widget-header {
+    padding: 16px 22px;
+    background: var(--surface-3);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .peer-widget-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+  }
+  .peer-widget-body { padding: 20px 22px; }
+
+  /* Progress track */
+  .rating-progress-wrap {
+    margin-bottom: 20px;
+  }
+  .rating-progress-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .rating-progress-text {
+    font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+  }
+  .rating-progress-text strong { color: var(--text-primary); }
+  .rating-progress-count {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+  }
+  .rating-track {
+    height: 8px; background: var(--surface-3); border-radius: 99px; overflow: hidden;
+    position: relative;
+  }
+  .rating-track-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+  .rating-track-milestone {
+    position: absolute; top: 0; height: 100%; width: 2px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* Stats row */
+  .peer-stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
+  }
+  .peer-stat {
+    background: var(--surface-3); border-radius: var(--radius-sm);
+    padding: 12px 14px; text-align: center;
+  }
+  .peer-stat-val {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    color: var(--gold); line-height: 1; margin-bottom: 4px;
+  }
+  .peer-stat-lbl {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+
+  /* Exchange explainer */
+  .exchange-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    padding: 12px 16px; background: var(--surface-3);
+    border-radius: var(--radius-sm); flex-wrap: wrap;
+  }
+  .exchange-step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-secondary);
+  }
+  .exchange-step strong { color: var(--text-primary); }
+  .exchange-arrow {
+    font-family: var(--font-mono); color: var(--gold); font-size: 14px; font-weight: 700;
+  }
+
+  /* Pool entry prompt */
+  .pool-entry-prompt {
+    background: linear-gradient(135deg, rgba(76,175,115,0.08), rgba(76,175,115,0.03));
+    border: 1px solid rgba(76,175,115,0.4);
+    border-radius: var(--radius-md);
+    padding: 18px 20px; margin-bottom: 20px;
+  }
+  .pool-entry-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--green);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .pool-entry-title::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); display: inline-block;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.3);} }
+  .pool-entry-desc {
+    font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;
+  }
+  .pool-candidate-card {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+  }
+  .pool-candidate-thumb {
+    width: 52px; height: 40px; object-fit: cover; border-radius: 4px;
+    flex-shrink: 0; border: 1px solid var(--border);
+  }
+  .pool-candidate-info { flex: 1; min-width: 0; }
+  .pool-candidate-name {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pool-candidate-score {
+    font-family: var(--font-mono); font-size: 11px; color: var(--gold); margin-top: 2px;
+  }
+  .pool-candidate-default {
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* Pool entry select dropdown */
+  .pool-select-row {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .pool-select-row select {
+    flex: 1; background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 9px 14px; font-size: 14px;
+    border-radius: var(--radius-sm); outline: none;
+    transition: border-color 0.2s; min-width: 0;
+  }
+  .pool-select-row select:focus { border-color: var(--green); }
+
+  /* Already in pool state */
+  .pool-active-strip {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: rgba(76,175,115,0.08); border: 1px solid rgba(76,175,115,0.25);
+    border-radius: var(--radius-sm); margin-bottom: 16px;
+    font-size: 13px; color: var(--green);
+  }
+
+  /* Search bar */
+  .search-form {
+    display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap;
+  }
+  .search-form input {
+    flex: 1; min-width: 200px; background: var(--surface-3);
+    border: 1px solid var(--border); color: var(--text-primary);
+    padding: 11px 16px; font-family: var(--font-body); font-size: 15px;
+    border-radius: var(--radius-sm); outline: none; transition: border-color 0.2s;
+  }
+  .search-form input:focus { border-color: var(--gold); }
+  .search-form input::placeholder { color: var(--text-muted); }
+  .search-locked {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+    padding: 12px 16px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .search-locked-text { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); }
+  .search-progress { flex: 1; height: 4px; background: var(--surface-3); border-radius: 99px; overflow: hidden; max-width: 120px; }
+  .search-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
+
+  /* Image grid */
+  .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .img-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden; text-decoration: none;
+    color: inherit; display: block; transition: border-color 0.2s, transform 0.2s;
+  }
+  .img-card:hover { border-color: var(--gold-dark); transform: translateY(-2px); }
+  .img-card.flagged { border-color: var(--red); opacity: 0.85; }
+  .img-card.flagged:hover { border-color: var(--red); opacity: 1; }
+  .img-card.under-review { border-color: var(--gold-dark); opacity: 0.9; }
+  .img-card.under-review:hover { border-color: var(--gold-dark); opacity: 1; }
+  .img-card.in-pool { border-color: rgba(76,175,115,0.5); }
+  .img-card-info { padding: 14px 16px; }
+  .img-card-title {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;
+  }
+  .img-card-meta {
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+    letter-spacing: 1px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .img-card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 6px; flex-wrap: wrap; gap: 4px;
+  }
+  .img-card-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .img-track-pill {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--text-muted);
+  }
+  .img-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
+  .peer-pill {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 99px;
+    border: 1px solid rgba(76,175,115,0.4); color: var(--green);
+    background: rgba(76,175,115,0.08);
+  }
+  .flagged-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 99px;
+    background: var(--red-dim); border: 1px solid var(--red); color: var(--red);
+  }
+  .review-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 99px;
+    background: rgba(180,130,0,0.12); border: 1px solid var(--gold-dark); color: var(--gold);
+  }
+  .judge-indicator {
+    display: inline-block; font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; color: var(--gold); border: 1px solid var(--gold-dark);
+    padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;
+  }
+  .ai-flag-overlay {
+    position: absolute; inset: 0; background: rgba(224, 85, 85, 0.15);
+    display: flex; align-items: center; justify-content: center; pointer-events: none;
+  }
+  .ai-flag-overlay-text {
+    background: rgba(224, 85, 85, 0.9); color: #fff; font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px;
+    border-radius: var(--radius-sm); text-transform: uppercase;
+  }
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+  .empty-state-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.4; }
+  .empty-state-title { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px; }
+  .empty-state-text { font-size: 16px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .img-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .dash-header { flex-direction: column; align-items: stretch; }
+    .peer-stats-row { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .img-grid { grid-template-columns: 1fr; }
+    .peer-stats-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="dash-header">
+  <div class="page-header">
+    <h1>
+      {{ current_user.full_name or current_user.username }}
+      {% if current_user.is_subscribed and current_user.subscription_track %}
+        <span class="track-badge">
+          {% if current_user.subscription_track == 'camera' %}📷{% else %}📱{% endif %}
+          {{ current_user.subscription_track | title }} Track
+        </span>
+      {% endif %}
+    </h1>
+    <p>Your photography portfolio &amp; scores</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="grid-4" style="margin-bottom:36px;">
+  <div class="stat-box">
+    <div class="stat-val">{{ stats.total }}</div>
+    <div class="stat-lbl">Images</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ stats.scored }}</div>
+    <div class="stat-lbl">Scored</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ "%.1f"|format(stats.avg_score) }}</div>
+    <div class="stat-lbl">Avg Score</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ stats.best_score }}</div>
+    <div class="stat-lbl">Best Score</div>
+  </div>
+</div>
+
+<!-- ── PEER RATING WIDGET — subscribers only ── -->
+{% if rating_widget %}
+{% set rw = rating_widget %}
+<div class="peer-widget">
+  <div class="peer-widget-header">
+    <div class="peer-widget-title">Peer Rating</div>
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="padding:8px 20px; font-size:11px;">
+      Rate Now →
+    </a>
+  </div>
+  <div class="peer-widget-body">
+
+    <!-- The exchange — one clear sentence -->
+    <div class="exchange-row">
+      <div class="exchange-step">Rate <strong>5 images</strong></div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step">Earn <strong>1 unlock</strong></div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step">Submit <strong>1 of your images</strong> for peer scoring</div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step">Get a <strong>Blended Score</strong> (DDI + peer)</div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="peer-stats-row">
+      <div class="peer-stat">
+        <div class="peer-stat-val">{{ rw.lifetime_given }}</div>
+        <div class="peer-stat-lbl">Images Rated</div>
+      </div>
+      <div class="peer-stat">
+        <div class="peer-stat-val" style="{{ 'color:var(--green);' if rw.unlocks_pending > 0 }}">
+          {{ rw.unlocks_pending }}
+        </div>
+        <div class="peer-stat-lbl">Unlocks Ready</div>
+      </div>
+      <div class="peer-stat">
+        <div class="peer-stat-val">{{ rw.images_in_pool }}</div>
+        <div class="peer-stat-lbl">In Peer Pool</div>
+      </div>
+    </div>
+
+    <!-- Progress to next unlock -->
+    {% if rw.unlocks_pending == 0 %}
+    <div class="rating-progress-wrap">
+      <div class="rating-progress-label">
+        <div class="rating-progress-text">
+          Rate <strong>{{ rw.credits_to_next }} more image{{ 's' if rw.credits_to_next != 1 }}</strong> to unlock peer scoring for one of your images
+        </div>
+        <div class="rating-progress-count">{{ 5 - rw.credits_to_next }}/5</div>
+      </div>
+      <div class="rating-track">
+        <div class="rating-track-fill" style="width:{{ ((5 - rw.credits_to_next) / 5 * 100)|int }}%"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Pool entry prompt — if user has unlocks to spend -->
+    {% if rw.unlocks_pending > 0 %}
+    <div class="pool-entry-prompt">
+      <div class="pool-entry-title">
+        {{ rw.unlocks_pending }} Pool {{ 'Entry' if rw.unlocks_pending == 1 else 'Entries' }} Unlocked
+      </div>
+      <div class="pool-entry-desc">
+        You've earned peer rating for {{ rw.unlocks_pending }} image{{ 's' if rw.unlocks_pending > 1 }}. Choose which image to submit — other photographers will score it across all 5 DDI modules. Once you have 5 peer ratings, your image gets a <strong style="color:var(--text-primary);">Blended Score</strong> (80% DDI + 20% peer).
+      </div>
+
+      {% if rw.pool_candidate %}
+      <!-- Pre-selected candidate -->
+      <div class="pool-candidate-card">
+        {% if rw.pool_candidate.thumb_url %}
+        <img src="{{ rw.pool_candidate.thumb_url }}" alt="{{ rw.pool_candidate.asset_name }}" class="pool-candidate-thumb">
+        {% endif %}
+        <div class="pool-candidate-info">
+          <div class="pool-candidate-name">{{ rw.pool_candidate.asset_name or 'Untitled' }}</div>
+          <div class="pool-candidate-score">DDI Score: {{ rw.pool_candidate.score }} · {{ rw.pool_candidate.tier }}</div>
+          <div class="pool-candidate-default">Recommended — your highest rated image not yet in pool</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Form — confirm or swap -->
+      <form method="POST" action="{{ url_for('enter_peer_pool') }}">
+        <div class="pool-select-row">
+          <select name="image_id" id="poolImageSelect">
+            {% set user_images = images.items | selectattr('status', 'equalto', 'scored') | selectattr('is_in_peer_pool', 'equalto', False) | list %}
+            {% if not user_images %}
+              {# fallback: all scored images not in pool #}
+            {% endif %}
+            {% for img in images.items %}
+              {% if img.status == 'scored' and not img.is_in_peer_pool and img.score and not img.is_flagged and not img.needs_review %}
+              <option value="{{ img.id }}"
+                {{ 'selected' if rw.pool_candidate and img.id == rw.pool_candidate.id }}>
+                {{ img.asset_name or 'Untitled' }} — {{ img.score }} ({{ img.tier }})
+              </option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-solid"
+                  style="padding:9px 20px; font-size:12px; white-space:nowrap;
+                         background:var(--green); border-color:var(--green);">
+            Submit for Peer Rating ✓
+          </button>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:var(--text-muted);">
+          Tap the dropdown to choose a different image. Your highest scored image is pre-selected.
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Active pool images -->
+    {% if rw.images_in_pool > 0 %}
+    <div class="pool-active-strip">
+      <span style="font-size:16px;">●</span>
+      {{ rw.images_in_pool }} of your image{{ 's' if rw.images_in_pool != 1 }} {{ 'are' if rw.images_in_pool != 1 else 'is' }} currently in the peer rating pool.
+      {% if rw.images_with_peer > 0 %}
+      {{ rw.images_with_peer }} {{ 'have' if rw.images_with_peer != 1 else 'has' }} received peer ratings so far.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- First-time empty state -->
+    {% if rw.lifetime_given == 0 %}
+    <div style="text-align:center; padding:8px 0 4px; font-size:13px; color:var(--text-muted); line-height:1.7;">
+      Start by rating 5 images — it takes about 2 minutes. Your scores help other photographers improve, and unlock peer scoring for your own work.
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endif %}
+
+<!-- Search -->
+{% if search_enabled %}
+<form method="GET" class="search-form">
+  <input type="text" name="q" value="{{ query }}"
+         placeholder="Search by title, genre, location…">
+  <button type="submit" class="btn" style="padding:11px 24px;">Search</button>
+  {% if query %}
+  <a href="{{ url_for('dashboard') }}" class="btn" style="padding:11px 20px;">✕ Clear</a>
+  {% endif %}
+</form>
+{% else %}
+<div class="search-locked">
+  <span class="search-locked-text">SEARCH UNLOCKS AT 20 IMAGES</span>
+  <div class="search-progress">
+    <div class="search-progress-fill" style="width:{{ [stats.total / 20 * 100, 100]|min|int }}%"></div>
+  </div>
+  <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">{{ stats.total }}/20</span>
+</div>
+{% endif %}
+
+<!-- Image Grid -->
+{% if images.items %}
+<div class="img-grid">
+  {% for img in images.items %}
+  <a href="{{ url_for('image_detail', image_id=img.id) }}"
+     class="img-card{% if img.is_flagged %} flagged{% elif img.needs_review %} under-review{% elif img.is_in_peer_pool %} in-pool{% endif %}">
+    <div class="img-thumb">
+      <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+           alt="{{ img.asset_name }}" loading="lazy">
+
+      {% if img.is_flagged %}
+        <div class="ai-flag-overlay"><div class="ai-flag-overlay-text">🚫 Flagged</div></div>
+      {% elif img.needs_review %}
+        <div class="ai-flag-overlay" style="background:rgba(120,80,0,0.72);">
+          <div class="ai-flag-overlay-text">🔍 In Review</div>
+        </div>
+        {% if img.score %}<div class="score-overlay">{{ img.score }}</div>{% endif %}
+      {% elif img.score %}
+        {# Show blended score if available, DDI otherwise #}
+        <div class="score-overlay">{{ img.blended_score if (img.blended_score and img.peer_rating_count and img.peer_rating_count >= 5) else img.score }}</div>
+        <div class="status-badge scored">{{ img.tier }}</div>
+      {% else %}
+        <div class="status-badge pending">Pending</div>
+      {% endif %}
+    </div>
+
+    <div class="img-card-info">
+      <div class="img-card-title">
+        {{ img.asset_name or img.original_filename or 'Untitled' }}
+        {% if img.judge_referral and not img.is_flagged and not img.needs_review %}
+        <span class="judge-indicator">⚖️ REVIEW</span>
+        {% endif %}
+      </div>
+      <div class="img-card-meta">
+        {{ img.genre or '—' }}
+        {% if img.archetype and not img.is_flagged and not img.needs_review %}&nbsp;·&nbsp;{{ img.archetype }}{% endif %}
+        {% if img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--red);">Hidden from public</span>{% endif %}
+        {% if img.needs_review and not img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--gold);">Pending review</span>{% endif %}
+      </div>
+      {% if img.judge_referral and img.needs_review %}
+      <div style="margin-top:8px; padding:8px 10px; background:rgba(180,130,0,0.08);
+                  border:1px solid var(--gold-dark); border-radius:6px;
+                  font-size:11px; line-height:1.5; color:var(--gold);">
+        📂 <strong>RAW file requested.</strong> Score held pending verification.<br>
+        <a href="mailto:sreeks@gmail.com?subject=RAW File — {{ img.asset_name | urlencode }}&body=Hi%2C%0A%0APlease find attached the RAW file for my image '{{ img.asset_name | urlencode }}'%20(Image%20ID%3A%20{{ img.id }}).%0A%0AThank%20you."
+           style="color:var(--gold); text-decoration:underline; font-weight:600;"
+           onclick="event.stopPropagation();">
+          Click here to submit RAW →
+        </a>
+      </div>
+      {% endif %}
+      <div class="img-card-footer">
+        <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
+        <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+          {% if img.is_flagged %}
+            <span class="flagged-badge">🚫 AI Flagged</span>
+          {% elif img.judge_referral and img.needs_review %}
+            <span class="review-badge">📂 RAW Requested</span>
+          {% elif img.needs_review %}
+            <span class="review-badge">🔍 Under Review</span>
+          {% elif img.is_in_peer_pool %}
+            <span class="peer-pill">● Peer Pool</span>
+            {% if img.peer_rating_count and img.peer_rating_count > 0 %}
+            <span class="peer-pill" style="border-color:var(--green); color:var(--green);">{{ img.peer_rating_count }} rated</span>
+            {% endif %}
+          {% elif img.camera_track %}
+            <span class="img-track-pill {{ img.camera_track }}">
+              {{ '📷' if img.camera_track == 'camera' else '📱' }} {{ img.camera_track }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if images.pages > 1 %}
+<div class="pagination">
+  {% if images.has_prev %}
+    <a href="{{ url_for('dashboard', page=images.prev_num, q=query) }}">← Prev</a>
+  {% endif %}
+  {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}
+      <a href="{{ url_for('dashboard', page=p, q=query) }}"
+         class="{{ 'active' if p == images.page }}">{{ p }}</a>
+    {% else %}
+      <span style="padding:8px 4px; color:var(--text-muted);">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if images.has_next %}
+    <a href="{{ url_for('dashboard', page=images.next_num, q=query) }}">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">📷</div>
+  <div class="empty-state-title">No Images Yet</div>
+  <p class="empty-state-text">Upload your first photograph to receive<br>an Apex DDI score and full analysis.</p>
+  <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Single Image</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
