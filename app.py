@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
-                    RatingAssignment, PeerRating, get_or_assign_next_image, submit_peer_rating)
+                    RatingAssignment, PeerRating, PeerPoolEntry,
+                    get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
@@ -105,7 +106,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
                 "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
-                # v27 peer rating columns
+                # v27 peer rating columns — updated
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 20",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_ratings_given INTEGER DEFAULT 0",
@@ -119,6 +120,9 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dm FLOAT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_wonder FLOAT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_aq FLOAT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_pool_unlocks INTEGER DEFAULT 0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS pool_entry_chosen_at TIMESTAMP",
             ]
             for sql in _migrations:
                 try:
@@ -527,8 +531,42 @@ def dashboard():
         'best_score': db.session.query(db.func.max(Image.score))
                         .filter(Image.user_id==current_user.id).scalar() or 0,
     }
+    # Peer rating widget data
+    rating_widget = None
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        credits          = current_user.rating_credits or 0
+        lifetime_given   = current_user.lifetime_ratings_given or 0
+        unlocks_earned   = lifetime_given // 5
+        unlocks_used     = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
+        unlocks_pending  = unlocks_earned - unlocks_used  # earned but not yet assigned to an image
+        credits_to_next  = 5 - (lifetime_given % 5) if lifetime_given % 5 != 0 else (0 if lifetime_given > 0 else 5)
+        images_in_pool   = Image.query.filter_by(user_id=current_user.id, is_in_peer_pool=True).count()
+        images_with_peer = Image.query.filter(
+            Image.user_id == current_user.id,
+            Image.peer_rating_count > 0
+        ).count()
+        # Best candidate for pool entry (highest DDI, not already in pool, scored)
+        pool_candidate = None
+        if unlocks_pending > 0:
+            pool_candidate = (Image.query
+                .filter_by(user_id=current_user.id, status='scored', is_in_peer_pool=False)
+                .filter(Image.score != None, Image.is_flagged == False, Image.needs_review == False)
+                .order_by(Image.score.desc())
+                .first())
+        rating_widget = {
+            'credits':          credits,
+            'lifetime_given':   lifetime_given,
+            'unlocks_earned':   unlocks_earned,
+            'unlocks_pending':  unlocks_pending,
+            'credits_to_next':  credits_to_next,
+            'images_in_pool':   images_in_pool,
+            'images_with_peer': images_with_peer,
+            'pool_candidate':   pool_candidate,
+        }
+
     return render_template('dashboard.html', images=images, stats=stats,
-                           query=query, search_enabled=(total_images >= 20))
+                           query=query, search_enabled=(total_images >= 20),
+                           rating_widget=rating_widget)
 
 
 # ---------------------------------------------------------------------------
@@ -2851,6 +2889,80 @@ def admin_clear_bias_flag(user_id):
     db.session.commit()
     flash(f'Bias flag cleared for {user.full_name or user.username}.', 'success')
     return redirect(url_for('admin_ratings'))
+
+
+
+# ---------------------------------------------------------------------------
+# Peer Pool Entry — user chooses which image to submit for peer rating
+# ---------------------------------------------------------------------------
+
+@app.route('/rate/enter-pool', methods=['POST'])
+@login_required
+def enter_peer_pool():
+    """Submit a chosen image into the peer rating pool."""
+    image_id = request.form.get('image_id', type=int)
+    if not image_id:
+        flash('Please select an image.', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Verify the user has pending unlocks
+    lifetime_given  = current_user.lifetime_ratings_given or 0
+    unlocks_earned  = lifetime_given // 5
+    unlocks_used    = PeerPoolEntry.query.filter_by(user_id=current_user.id).count()
+    unlocks_pending = unlocks_earned - unlocks_used
+
+    if unlocks_pending <= 0:
+        flash('No pool entry unlocks available. Rate more images to earn one.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    # Verify the image belongs to this user and is eligible
+    img = Image.query.filter_by(id=image_id, user_id=current_user.id, status='scored').first()
+    if not img:
+        flash('Invalid image selection.', 'error')
+        return redirect(url_for('dashboard'))
+
+    if img.is_in_peer_pool:
+        flash('This image is already in the peer rating pool.', 'info')
+        return redirect(url_for('dashboard'))
+
+    # Create pool entry
+    entry = PeerPoolEntry(
+        user_id       = current_user.id,
+        image_id      = image_id,
+        unlock_number = unlocks_used + 1,
+    )
+    db.session.add(entry)
+    img.is_in_peer_pool      = True
+    img.pool_entry_chosen_at = datetime.utcnow()
+    current_user.peer_pool_unlocks = unlocks_used + 1
+    db.session.commit()
+
+    flash(f'✅ "{img.asset_name}" is now in the peer rating pool. Other photographers will start rating it soon.', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/admin/reset-rating-credits', methods=['POST'])
+@login_required
+@admin_required
+def admin_reset_rating_credits():
+    """Reset all users' rating credits to 0 (v27 migration)."""
+    updated = User.query.filter(User.role != 'admin').all()
+    for u in updated:
+        u.rating_credits         = 0
+        u.lifetime_ratings_given = 0
+        u.peer_pool_unlocks      = 0
+    # Also clear any existing pool entries and reset image flags
+    try:
+        db.session.execute(db.text('DELETE FROM peer_pool_entries'))
+        db.session.execute(db.text('UPDATE images SET is_in_peer_pool = FALSE, pool_entry_chosen_at = NULL'))
+        db.session.execute(db.text('DELETE FROM rating_assignments'))
+        db.session.execute(db.text('DELETE FROM peer_ratings'))
+        db.session.execute(db.text('UPDATE images SET peer_avg_score=NULL, peer_rating_count=0, blended_score=NULL, peer_avg_dod=NULL, peer_avg_disruption=NULL, peer_avg_dm=NULL, peer_avg_wonder=NULL, peer_avg_aq=NULL'))
+    except Exception as e:
+        app.logger.error(f'[reset_credits] {e}')
+    db.session.commit()
+    flash(f'Reset rating credits and peer data for {len(updated)} users.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/share/<int:image_id>')
 def share_image(image_id):

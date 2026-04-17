@@ -33,10 +33,11 @@ class User(db.Model, UserMixin):
     monthly_reset_date   = db.Column(db.Date, nullable=True)
 
     # Peer rating credits
-    rating_credits       = db.Column(db.Integer, default=20)
+    rating_credits       = db.Column(db.Integer, default=0)
     credits_reset_date   = db.Column(db.Date, nullable=True)
     lifetime_ratings_given = db.Column(db.Integer, default=0)
     # Bias detection flag set by admin or auto-detection
+    peer_pool_unlocks    = db.Column(db.Integer, default=0)  # how many pool entries earned
     rating_bias_flag     = db.Column(db.Boolean, default=False)
     rating_bias_note     = db.Column(db.Text, nullable=True)
 
@@ -46,13 +47,26 @@ class User(db.Model, UserMixin):
         return f'<User {self.username} ({self.role})>'
 
     def reset_credits_if_needed(self):
-        """Reset rating credits to 20 at start of each month."""
+        """Track monthly reset date — credits no longer reset monthly.
+        Credits are earned by rating (5 credits = 1 pool entry).
+        This method kept for compatibility but no longer zeroes credits."""
         today = date.today()
-        if self.credits_reset_date is None or self.credits_reset_date.month != today.month or self.credits_reset_date.year != today.year:
-            self.rating_credits = 20
+        if self.credits_reset_date is None:
             self.credits_reset_date = today
             return True
         return False
+
+    @property
+    def credits_to_next_unlock(self):
+        """Credits needed until next pool entry unlock (every 5 credits)."""
+        if not self.lifetime_ratings_given:
+            return 5
+        return 5 - (self.lifetime_ratings_given % 5)
+
+    @property 
+    def total_unlocks_earned(self):
+        """Total pool entries earned based on lifetime ratings given."""
+        return (self.lifetime_ratings_given or 0) // 5
 
 
 class Image(db.Model):
@@ -100,6 +114,9 @@ class Image(db.Model):
     tier                = db.Column(db.String(60),  nullable=True)
     archetype           = db.Column(db.String(120), nullable=True)
     soul_bonus          = db.Column(db.Boolean, default=False)
+
+    is_in_peer_pool     = db.Column(db.Boolean, default=False)  # user chose this for peer rating
+    pool_entry_chosen_at = db.Column(db.DateTime, nullable=True)
 
     # Peer rating aggregates
     peer_avg_score      = db.Column(db.Float, nullable=True)
@@ -217,6 +234,33 @@ class PeerRating(db.Model):
 
     def __repr__(self):
         return f'<PeerRating rater={self.rater_id} image={self.image_id} score={self.peer_ll_score} delta={self.delta_from_ddi}>'
+
+
+
+class PeerPoolEntry(db.Model):
+    """
+    Tracks which images a photographer has chosen to submit to the peer rating pool.
+    One entry is unlocked for every 5 ratings the photographer gives.
+    The photographer chooses which image to submit — defaults to highest DDI score.
+    """
+    __tablename__ = 'peer_pool_entries'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    unlock_number   = db.Column(db.Integer, nullable=False)  # which unlock (1st, 2nd, etc.)
+    chosen_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    status          = db.Column(db.String(20), default='active')  # active | completed
+
+    user  = db.relationship('User',  foreign_keys=[user_id],  backref='pool_entries', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='pool_entries', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'unlock_number', name='uq_pool_entry_unlock'),
+    )
+
+    def __repr__(self):
+        return f'<PeerPoolEntry user={self.user_id} image={self.image_id} unlock={self.unlock_number}>'
 
 
 class ContestEntry(db.Model):
@@ -487,10 +531,10 @@ def submit_peer_rating(assignment: RatingAssignment, dod: float, disruption: flo
     image.peer_avg_aq         = round(sum(all_aq) / n, 2)
     image.update_blended_score()
 
-    # Credit the rater: +1 credit, cap at 40
+    # Credit the rater: +1 credit per rating given (no monthly cap)
     rater = assignment.rater
     rater.reset_credits_if_needed()
-    rater.rating_credits = min(40, (rater.rating_credits or 0) + 1)
+    rater.rating_credits      = (rater.rating_credits or 0) + 1
     rater.lifetime_ratings_given = (rater.lifetime_ratings_given or 0) + 1
 
     db.session.commit()
@@ -563,11 +607,14 @@ def run_migrations(app):
         _col('users', 'subscribed_at',        'TIMESTAMP')
         _col('users', 'monthly_uploads_used', 'INTEGER DEFAULT 0')
         _col('users', 'monthly_reset_date',   'DATE')
-        _col('users', 'rating_credits',       'INTEGER DEFAULT 20')
+        _col('users', 'rating_credits',       'INTEGER DEFAULT 0')
         _col('users', 'credits_reset_date',   'DATE')
         _col('users', 'lifetime_ratings_given', 'INTEGER DEFAULT 0')
         _col('users', 'rating_bias_flag',     'BOOLEAN DEFAULT FALSE')
         _col('users', 'rating_bias_note',     'TEXT')
+        _col('users', 'peer_pool_unlocks',   'INTEGER DEFAULT 0')
+        _col('images', 'is_in_peer_pool',    'BOOLEAN DEFAULT FALSE')
+        _col('images', 'pool_entry_chosen_at', 'TIMESTAMP')
 
         _col('images', 'card_path',               'VARCHAR(512)')
         _col('images', 'card_url',                'VARCHAR(512)')
@@ -620,6 +667,24 @@ def run_migrations(app):
         except Exception as e:
             db.session.rollback()
             print(f'[migration] rating_assignments: {e}')
+
+        # peer_pool_entries table
+        try:
+            db.session.execute(db.text('''
+                CREATE TABLE IF NOT EXISTS peer_pool_entries (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                    unlock_number INTEGER NOT NULL,
+                    chosen_at TIMESTAMP DEFAULT NOW(),
+                    status VARCHAR(20) DEFAULT 'active',
+                    UNIQUE(user_id, unlock_number)
+                )
+            '''))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'[migration] peer_pool_entries: {e}')
 
         # peer_ratings table
         try:
