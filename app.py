@@ -2510,7 +2510,13 @@ def share_image(image_id):
         current_user.is_authenticated and
         (current_user.id == img.user_id or current_user.role == 'admin')
     )
-    return render_template('share.html', image=img, audit=audit, show_score=show_score)
+    already_reported = False
+    if current_user.is_authenticated and current_user.id != img.user_id:
+        already_reported = ImageReport.query.filter_by(
+            image_id=image_id, reporter_id=current_user.id
+        ).first() is not None
+    return render_template('share.html', image=img, audit=audit, show_score=show_score,
+                           already_reported=already_reported)
 
 
 @app.errorhandler(404)
