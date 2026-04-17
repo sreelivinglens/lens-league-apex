@@ -280,3 +280,84 @@ def compute_calibration_stats(images):
             'avg_aq':     round(sum(i.aq_score           for i in imgs) / n, 2),
         }
     return stats
+
+
+# ── Global Percentile Engine ──────────────────────────────────────────────────
+def compute_percentile(score: float, genre: str = None) -> dict:
+    """
+    Returns percentile position and comparison benchmarks for a scored image.
+
+    Queries the DB at call time — import is deferred to avoid circular imports.
+    Returns {} (empty dict) on any failure; template silently skips the block.
+
+    Keys returned:
+        top_pct         : int   — e.g. 12  means "Top 12%"
+        platform_avg    : float — mean score across ALL scored images
+        master_avg      : float — mean score for Master tier images
+        grandmaster_avg : float — mean score for Grandmaster tier images
+        top10_in_genre  : float — avg of top-10 scores in same genre (or None)
+        genre           : str   — canonical genre used for genre query
+        context         : str   — one-line adaptive sentence for display
+        total_scored    : int   — total scored images on platform
+    """
+    try:
+        from models import Image as ImageModel   # deferred — avoids circular import
+
+        scored = ImageModel.query.filter(
+            ImageModel.status == 'scored',
+            ImageModel.score.isnot(None),
+            ImageModel.is_flagged.isnot(True),
+            ImageModel.needs_review.isnot(True),
+        ).with_entities(ImageModel.score, ImageModel.genre).all()
+
+        if not scored:
+            return {}
+
+        all_scores = [float(r.score) for r in scored]
+        total = len(all_scores)
+
+        # How many images score BELOW this one → percentile rank
+        below = sum(1 for s in all_scores if s < score)
+        top_pct = max(1, round((1 - below / total) * 100))
+
+        platform_avg = round(sum(all_scores) / total, 2)
+
+        master_scores = [s for s in all_scores if 7.6 <= s < 9.0]
+        master_avg = round(sum(master_scores) / len(master_scores), 2) if master_scores else None
+
+        gm_scores = [s for s in all_scores if s >= 9.0]
+        grandmaster_avg = round(sum(gm_scores) / len(gm_scores), 2) if gm_scores else None
+
+        # Top-10 in same genre
+        canonical = normalise_genre(genre) if genre else None
+        genre_scores = sorted(
+            [float(r.score) for r in scored if normalise_genre(r.genre) == canonical],
+            reverse=True
+        ) if canonical else []
+        top10_in_genre = round(sum(genre_scores[:10]) / len(genre_scores[:10]), 2) if len(genre_scores) >= 3 else None
+
+        # Adaptive context sentence
+        if top_pct <= 5:
+            context = f"You're in the top {top_pct}% on the platform — elite territory."
+        elif top_pct <= 15:
+            context = f"Top {top_pct}% globally — you're competing at a high level."
+        elif top_pct <= 35:
+            context = f"Top {top_pct}% — above average and climbing."
+        else:
+            context = f"You're in the top {top_pct}% — keep shooting and rescoring to move up."
+
+        return {
+            'top_pct':         top_pct,
+            'platform_avg':    platform_avg,
+            'master_avg':      master_avg,
+            'grandmaster_avg': grandmaster_avg,
+            'top10_in_genre':  top10_in_genre,
+            'genre':           canonical,
+            'context':         context,
+            'total_scored':    total,
+        }
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f'[compute_percentile] {e}')
+        return {}
