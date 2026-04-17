@@ -262,9 +262,25 @@
 
 <div class="card">
 
-  <div class="card-header">
-    <span class="brand-dark">THE LENS LEAGUE</span>
-    <span class="engine-tag">APEX DDI ENGINE · FULL EVALUATION</span>
+  <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+    <div>
+      <span class="brand-dark">THE LENS LEAGUE</span>
+      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
+    </div>
+    {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
+    {% if already_reported %}
+    <span style="font-family:monospace; font-size:11px; color:#6b3a3a; letter-spacing:1px; padding:6px 12px; border:1px solid #3a1a1a; border-radius:6px;">
+      ✓ Reported
+    </span>
+    {% else %}
+    <button onclick="document.getElementById('report-modal-share').style.display='flex'"
+            style="background:transparent; border:1px solid #6b3a3a; color:#c97b7b;
+                   border-radius:6px; padding:6px 14px; font-size:11px; font-family:monospace;
+                   letter-spacing:1px; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+      ⚑ Report Image
+    </button>
+    {% endif %}
+    {% endif %}
   </div>
 
   <!-- Photo — always visible -->
@@ -439,16 +455,6 @@
 
 </div>
 
-{% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
-<div style="text-align:right; margin-bottom:10px;">
-  <button onclick="document.getElementById('report-modal-share').style.display='flex'"
-          style="background:transparent; border:1px solid #6b3a3a; color:#c97b7b;
-                 border-radius:6px; padding:7px 16px; font-size:12px; font-family:monospace;
-                 letter-spacing:1px; cursor:pointer;">
-    ⚑ Report Image
-  </button>
-</div>
-{% endif %}
 
 <!-- Actions -->
 <div class="actions">
