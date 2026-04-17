@@ -14,7 +14,8 @@ from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from models import db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport
+from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
+                    RatingAssignment, PeerRating, get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
@@ -104,6 +105,20 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
                 "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
+                # v27 peer rating columns
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 20",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_ratings_given INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_flag BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_note TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_rating_count INTEGER DEFAULT 0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS blended_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dod FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_disruption FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dm FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_wonder FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_aq FLOAT",
             ]
             for sql in _migrations:
                 try:
@@ -189,6 +204,51 @@ with app.app_context():
             print('open_contest_entries schema OK.')
         except Exception as ce:
             print(f'open_contest_entries migration warning: {ce}')
+
+        # v27 — peer rating tables
+        try:
+            with db.engine.connect() as conn5:
+                conn5.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS rating_assignments (
+                        id SERIAL PRIMARY KEY,
+                        rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        assigned_at TIMESTAMP DEFAULT NOW(),
+                        started_at TIMESTAMP,
+                        submitted_at TIMESTAMP,
+                        time_spent_seconds INTEGER,
+                        dod FLOAT, disruption FLOAT, dm FLOAT, wonder FLOAT, aq FLOAT,
+                        peer_ll_score FLOAT,
+                        status VARCHAR(20) DEFAULT \'assigned\',
+                        UNIQUE(rater_id, image_id)
+                    )
+                '''))
+                conn5.commit()
+            print('rating_assignments schema OK.')
+        except Exception as ce:
+            print(f'rating_assignments migration warning: {ce}')
+
+        try:
+            with db.engine.connect() as conn6:
+                conn6.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS peer_ratings (
+                        id SERIAL PRIMARY KEY,
+                        rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        genre VARCHAR(60) NOT NULL,
+                        dod FLOAT NOT NULL, disruption FLOAT NOT NULL,
+                        dm FLOAT NOT NULL, wonder FLOAT NOT NULL, aq FLOAT NOT NULL,
+                        peer_ll_score FLOAT NOT NULL,
+                        delta_from_ddi FLOAT,
+                        time_spent_seconds INTEGER,
+                        rated_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(rater_id, image_id)
+                    )
+                '''))
+                conn6.commit()
+            print('peer_ratings schema OK.')
+        except Exception as ce:
+            print(f'peer_ratings migration warning: {ce}')
 
         print('Columns migrated OK.')
     except Exception as e:
@@ -1106,31 +1166,51 @@ def leaderboard():
                   .limit(20)
                   .all())
 
-    pg_query = db.session.query(
-        Image.photographer_name,
-        func.max(Image.score).label('best_score'),
-        func.avg(Image.score).label('avg_score'),
-        func.count(Image.id).label('image_count')
+    # Top Photographers — grouped by user_id, sorted by avg_score DESC
+    pg_base = (
+        db.session.query(
+            Image.user_id,
+            User.username,
+            User.full_name,
+            func.avg(Image.score).label('avg_score'),
+            func.max(Image.score).label('best_score'),
+            func.count(Image.id).label('image_count'),
+            func.sum(Image.peer_rating_count).label('total_peer_ratings'),
+        )
+        .join(User, Image.user_id == User.id)
     )
-    pg_query = apply_filters(pg_query)
-    photographer_stats = (pg_query
-                          .group_by(Image.photographer_name)
-                          .order_by(desc('best_score'))
-                          .limit(10)
-                          .all())
+    pg_base = apply_filters(pg_base)
+    pg_rows = (
+        pg_base
+        .group_by(Image.user_id, User.username, User.full_name)
+        .order_by(desc('avg_score'))
+        .limit(20)
+        .all()
+    )
+    photographer_stats = []
+    for row in pg_rows:
+        photographer_stats.append({
+            'user_id':            row.user_id,
+            'username':           row.username,
+            'display_name':       row.full_name or row.username,
+            'avg_score':          round(float(row.avg_score), 2) if row.avg_score else 0,
+            'best_score':         float(row.best_score) if row.best_score else 0,
+            'image_count':        row.image_count,
+            'total_peer_ratings': int(row.total_peer_ratings or 0),
+        })
 
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
 
     return render_template('leaderboard.html',
-        top_images=top_images,
-        photographer_stats=photographer_stats,
-        all_genres=GENRE_IDS,
-        all_tiers=all_tiers,
-        genre=genre,
-        tier=tier,
-        period=period,
-        track=track,
-        tab=tab,
+        top_images         = top_images,
+        photographer_stats = photographer_stats,
+        all_genres         = GENRE_IDS,
+        all_tiers          = all_tiers,
+        genre              = genre,
+        tier               = tier,
+        period             = period,
+        track              = track,
+        tab                = tab,
     )
 
 
@@ -2499,6 +2579,278 @@ def bulk_upload():
         return redirect(url_for('dashboard'))
     return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
 
+
+
+
+# ---------------------------------------------------------------------------
+# Peer Rating Routes
+# ---------------------------------------------------------------------------
+
+@app.route('/rate')
+@login_required
+def rate():
+    """Blind peer rating queue page."""
+    from datetime import date as _date
+    from sqlalchemy import extract
+
+    user = current_user
+    user.reset_credits_if_needed()
+    db.session.commit()
+
+    is_subscriber = getattr(user, 'is_subscribed', False)
+    credits       = user.rating_credits or 0
+    lifetime      = user.lifetime_ratings_given or 0
+
+    now = datetime.utcnow()
+    month_given = PeerRating.query.filter(
+        PeerRating.rater_id == user.id,
+        extract('month', PeerRating.rated_at) == now.month,
+        extract('year',  PeerRating.rated_at) == now.year,
+    ).count()
+
+    assignment      = None
+    image           = None
+    queue_remaining = 0
+
+    if is_subscriber and credits > 0:
+        assignment = get_or_assign_next_image(user.id)
+        if assignment:
+            if assignment.status == 'assigned':
+                assignment.status     = 'started'
+                assignment.started_at = datetime.utcnow()
+                db.session.commit()
+            image = assignment.image
+
+        already = db.session.query(RatingAssignment.image_id).filter(
+            RatingAssignment.rater_id == user.id,
+        ).subquery()
+        queue_remaining = (
+            Image.query
+            .join(User, Image.user_id == User.id)
+            .filter(
+                Image.status == 'scored', Image.is_public == True,
+                Image.is_flagged == False, Image.needs_review == False,
+                Image.score != None, Image.user_id != user.id,
+                User.is_subscribed == True,
+                Image.id.notin_(already),
+            ).count()
+        )
+
+    today = _date.today()
+    if today.month == 12:
+        next_reset = _date(today.year + 1, 1, 1)
+    else:
+        next_reset = _date(today.year, today.month + 1, 1)
+
+    return render_template('rate.html',
+        is_subscriber   = is_subscriber,
+        credits         = credits,
+        lifetime_given  = lifetime,
+        month_given     = month_given,
+        assignment      = assignment,
+        image           = image,
+        queue_remaining = queue_remaining,
+        next_reset      = next_reset.strftime('%-d %B'),
+        bias_flag       = getattr(user, 'rating_bias_flag', False),
+    )
+
+
+@app.route('/rate/submit', methods=['POST'])
+@login_required
+def submit_rating():
+    """Submit a completed peer rating."""
+    assignment_id = request.form.get('assignment_id', type=int)
+    if not assignment_id:
+        flash('Invalid submission.', 'error')
+        return redirect(url_for('rate'))
+
+    assignment = RatingAssignment.query.get(assignment_id)
+    if not assignment or assignment.rater_id != current_user.id:
+        flash('Rating assignment not found.', 'error')
+        return redirect(url_for('rate'))
+
+    if assignment.status == 'submitted':
+        flash('You have already submitted this rating.', 'info')
+        return redirect(url_for('rate'))
+
+    current_user.reset_credits_if_needed()
+    if (current_user.rating_credits or 0) <= 0:
+        flash('No rating credits remaining this month.', 'warning')
+        return redirect(url_for('rate'))
+
+    # Server-side time check — must be ≥13s (2s tolerance for network)
+    client_start = request.form.get('client_start_ts', type=int)
+    time_spent   = request.form.get('time_spent', type=int) or 0
+    if client_start:
+        server_elapsed = int((datetime.utcnow().timestamp() * 1000 - client_start) / 1000)
+        if server_elapsed < 13:
+            flash('Please spend more time viewing the image before rating.', 'warning')
+            return redirect(url_for('rate'))
+
+    try:
+        dod        = float(request.form.get('dod', 5))
+        disruption = float(request.form.get('disruption', 5))
+        dm         = float(request.form.get('dm', 5))
+        wonder     = float(request.form.get('wonder', 5))
+        aq         = float(request.form.get('aq', 5))
+    except (ValueError, TypeError):
+        flash('Invalid scores submitted.', 'error')
+        return redirect(url_for('rate'))
+
+    def clamp(v):
+        return max(1.0, min(10.0, round(v * 2) / 2))
+    dod        = clamp(dod)
+    disruption = clamp(disruption)
+    dm         = clamp(dm)
+    wonder     = clamp(wonder)
+    aq         = clamp(aq)
+
+    try:
+        rating = submit_peer_rating(
+            assignment = assignment,
+            dod        = dod,
+            disruption = disruption,
+            dm         = dm,
+            wonder     = wonder,
+            aq         = aq,
+            time_spent = time_spent,
+        )
+        flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} · +1 credit earned.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[submit_rating] {e}')
+        flash('Submission failed. Please try again.', 'error')
+
+    return redirect(url_for('rate'))
+
+
+@app.route('/rate/skip', methods=['POST'])
+@login_required
+def skip_rating():
+    """Skip a rating assignment — expires it, no credit cost."""
+    assignment_id = request.form.get('assignment_id', type=int)
+    if assignment_id:
+        a = RatingAssignment.query.get(assignment_id)
+        if a and a.rater_id == current_user.id and a.status != 'submitted':
+            a.status = 'expired'
+            db.session.commit()
+    return redirect(url_for('rate'))
+
+
+# ---------------------------------------------------------------------------
+# Admin Rating Audit Routes
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/ratings')
+@login_required
+@admin_required
+def admin_ratings():
+    page          = request.args.get('page', 1, type=int)
+    rater_filter  = request.args.get('rater_id', '').strip()
+    genre_filter  = request.args.get('genre', '').strip()
+    outliers_only = request.args.get('outliers', '') == '1'
+
+    q = PeerRating.query
+    if rater_filter:
+        q = q.filter(PeerRating.rater_id == int(rater_filter))
+    if genre_filter:
+        q = q.filter(PeerRating.genre == genre_filter)
+    if outliers_only:
+        q = q.filter(
+            db.or_(PeerRating.delta_from_ddi > 2, PeerRating.delta_from_ddi < -2)
+        )
+    q = q.order_by(PeerRating.rated_at.desc())
+
+    per_page         = 50
+    total            = q.count()
+    pages            = max(1, (total + per_page - 1) // per_page)
+    ratings          = q.offset((page - 1) * per_page).limit(per_page).all()
+
+    total_ratings    = PeerRating.query.count()
+    total_raters     = db.session.query(PeerRating.rater_id).distinct().count()
+    images_with_peer = db.session.query(PeerRating.image_id).distinct().count()
+    biased_raters    = User.query.filter_by(rating_bias_flag=True).count()
+    biased_users     = User.query.filter_by(rating_bias_flag=True).all()
+
+    all_raters = (
+        User.query
+        .filter(User.role != 'admin', User.is_subscribed == True)
+        .order_by(User.full_name)
+        .all()
+    )
+
+    return render_template('admin_ratings.html',
+        ratings          = ratings,
+        page             = page,
+        pages            = pages,
+        total_ratings    = total_ratings,
+        total_raters     = total_raters,
+        images_with_peer = images_with_peer,
+        biased_raters    = biased_raters,
+        biased_users     = biased_users,
+        all_raters       = all_raters,
+        all_genres       = GENRE_IDS,
+        rater_filter     = rater_filter,
+        genre_filter     = genre_filter,
+        outliers_only    = outliers_only,
+    )
+
+
+@app.route('/admin/ratings/export-csv')
+@login_required
+@admin_required
+def admin_export_ratings_csv():
+    """Export full peer rating audit as CSV."""
+    import io, csv
+    from flask import Response
+
+    ratings = PeerRating.query.order_by(PeerRating.rated_at.desc()).all()
+    output  = io.StringIO()
+    writer  = csv.writer(output)
+    writer.writerow([
+        'rated_at', 'rater_username', 'rater_name',
+        'image_id', 'image_title', 'photographer', 'genre',
+        'time_spent_seconds',
+        'peer_dod', 'peer_disruption', 'peer_dm', 'peer_wonder', 'peer_aq',
+        'peer_ll_score', 'ddi_score', 'delta_from_ddi', 'rater_bias_flag',
+    ])
+    for r in ratings:
+        img   = r.image
+        rater = r.rater
+        writer.writerow([
+            r.rated_at.strftime('%Y-%m-%d %H:%M:%S') if r.rated_at else '',
+            rater.username  if rater else '',
+            rater.full_name if rater else '',
+            r.image_id,
+            img.asset_name        if img else '',
+            img.photographer_name if img else '',
+            r.genre,
+            r.time_spent_seconds or '',
+            r.dod, r.disruption, r.dm, r.wonder, r.aq,
+            r.peer_ll_score,
+            img.score if img else '',
+            r.delta_from_ddi if r.delta_from_ddi is not None else '',
+            '1' if (rater and rater.rating_bias_flag) else '0',
+        ])
+
+    filename = f'lens_league_peer_ratings_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+    )
+
+
+@app.route('/admin/user/<int:user_id>/clear-bias-flag', methods=['POST'])
+@login_required
+@admin_required
+def admin_clear_bias_flag(user_id):
+    user = User.query.get_or_404(user_id)
+    user.rating_bias_flag = False
+    user.rating_bias_note = None
+    db.session.commit()
+    flash(f'Bias flag cleared for {user.full_name or user.username}.', 'success')
+    return redirect(url_for('admin_ratings'))
 
 @app.route('/share/<int:image_id>')
 def share_image(image_id):
