@@ -3,7 +3,7 @@ flask-login==0.6.3
 flask-sqlalchemy==3.1.1
 flask-migrate==4.0.7
 flask-wtf==1.2.1
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 Pillow==10.4.0
 gunicorn==22.0.0
 python-dotenv==1.0.1
