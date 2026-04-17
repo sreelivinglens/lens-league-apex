@@ -21,7 +21,7 @@
   html { scroll-behavior:smooth; }
   body { background:var(--black); color:var(--white); font-family:'DM Sans',sans-serif; overflow-x:hidden; }
 
-  /* ── HERO — original, untouched ── */
+  /* ── HERO ── */
   .hero {
     min-height:100svh; display:flex; flex-direction:column;
     align-items:center; justify-content:center; text-align:center;
@@ -41,13 +41,21 @@
   }
   .hero > * { position:relative; z-index:2; }
 
+  /* ── SPRINT 1: Science tag above eyebrow ── */
+  .hero-science-tag {
+    display:inline-flex; align-items:center; gap:0.5rem;
+    font-size:0.7rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:0.6rem;
+    opacity:0; animation:fadeUp 0.7s 0.0s ease forwards;
+  }
+
   .hero-eyebrow {
     display:inline-flex; align-items:center; gap:0.5rem;
     font-size:0.75rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--gold); margin-bottom:1.75rem;
+    color:rgba(255,255,255,0.45); margin-bottom:1.75rem;
     opacity:0; animation:fadeUp 0.8s 0.1s ease forwards;
   }
-  .hero-eyebrow::before,.hero-eyebrow::after { content:''; display:block; width:28px; height:1px; background:var(--gold-dim); }
+  .hero-eyebrow::before,.hero-eyebrow::after { content:''; display:block; width:28px; height:1px; background:rgba(255,255,255,0.2); }
 
   .hero-headline {
     font-family:'Playfair Display',serif;
@@ -59,10 +67,21 @@
   .hero-headline em { font-style:italic; color:var(--gold); }
 
   .hero-sub {
-    font-size:clamp(1.1rem,2.2vw,1.35rem); font-weight:400; color:#B8B8C8;
-    max-width:560px; margin:0 auto 2.5rem; line-height:1.7;
+    font-size:clamp(1.05rem,2vw,1.25rem); font-weight:400; color:#B8B8C8;
+    max-width:580px; margin:0 auto 2.5rem; line-height:1.75;
     opacity:0; animation:fadeUp 0.9s 0.4s ease forwards;
   }
+
+  /* ── SPRINT 1: Mobile track callout pill ── */
+  .hero-mobile-pill {
+    display:inline-flex; align-items:center; gap:0.4rem;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    border-radius:99px; padding:0.35rem 0.9rem;
+    font-size:0.75rem; font-weight:500; color:rgba(255,255,255,0.55);
+    margin-bottom:2rem;
+    opacity:0; animation:fadeUp 0.8s 0.35s ease forwards;
+  }
+  .hero-mobile-pill strong { color:var(--gold); font-weight:600; }
 
   .hero-cta-group {
     display:flex; align-items:center; gap:1rem; justify-content:center; flex-wrap:wrap;
@@ -78,6 +97,17 @@
   }
   .btn-primary:hover { background:#D9B85C; transform:translateY(-2px); box-shadow:0 8px 32px rgba(201,168,76,0.25); }
 
+  /* ── SPRINT 1: Second CTA — contest entry ── */
+  .btn-contest {
+    display:inline-flex; align-items:center; gap:0.4rem;
+    background:transparent; color:var(--gold);
+    font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600;
+    padding:0.875rem 1.5rem; border-radius:8px;
+    border:1.5px solid rgba(201,168,76,0.45);
+    text-decoration:none; transition:all 0.2s;
+  }
+  .btn-contest:hover { border-color:var(--gold); background:rgba(201,168,76,0.08); transform:translateY(-1px); }
+
   .btn-ghost {
     display:inline-flex; align-items:center; gap:0.4rem;
     background:transparent; color:var(--muted);
@@ -87,12 +117,17 @@
   }
   .btn-ghost:hover { color:var(--white); border-color:rgba(255,255,255,0.2); }
 
+  /* ── SPRINT 1: Upgraded reassurance line ── */
   .hero-note {
-    margin-top:1.25rem; font-size:clamp(0.9rem,1.6vw,1.05rem); font-weight:500;
-    color:#9A9AAA; letter-spacing:0.02em;
+    margin-top:1.4rem; display:flex; align-items:center; justify-content:center;
+    flex-wrap:wrap; gap:0.4rem 1rem;
+    font-size:clamp(0.8rem,1.4vw,0.9rem); font-weight:500; color:#7A7A8A;
     opacity:0; animation:fadeUp 0.9s 0.7s ease forwards;
   }
+  .hero-note .note-sep { color:rgba(255,255,255,0.15); }
   .hero-note strong { color:var(--green); }
+  .hero-note .note-prize { color:var(--gold); font-weight:600; }
+  .hero-note .note-device { color:rgba(255,255,255,0.4); }
 
   .scroll-hint {
     position:absolute; bottom:2rem; left:50%; transform:translateX(-50%);
@@ -116,6 +151,32 @@
     display:flex; flex-direction:column; align-items:center;
     gap:clamp(2rem,5vh,3.5rem); text-align:center;
   }
+
+  /* ── SPRINT 3: Live feed strip ── */
+  .live-feed-strip {
+    width:100%; display:flex; flex-direction:column; align-items:center; gap:0.75rem;
+  }
+  .live-feed-label {
+    font-size:0.65rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
+    color:rgba(255,255,255,0.2);
+  }
+  .live-feed-row {
+    display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap;
+  }
+  .live-feed-item {
+    display:flex; align-items:center; gap:0.5rem;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px; padding:0.4rem 0.75rem;
+    font-size:0.72rem; color:rgba(255,255,255,0.35);
+  }
+  .live-feed-item .lf-tier {
+    font-weight:700; font-size:0.68rem; letter-spacing:0.08em;
+    padding:0.15rem 0.45rem; border-radius:4px;
+  }
+  .lf-tier.master       { background:rgba(59,130,200,0.2);  color:#7abfff; }
+  .lf-tier.grandmaster  { background:rgba(138,97,175,0.2);  color:#c49eff; }
+  .lf-tier.practitioner { background:rgba(76,175,115,0.2);  color:#7adfa8; }
+  .lf-tier.legend       { background:rgba(201,168,76,0.15); color:#C9A84C; }
 
   /* Contest line */
   .contest-line {
@@ -177,7 +238,7 @@
   }
   .closing-headline em { font-style:italic; color:var(--gold); }
   .closing-sub {
-    font-size:clamp(1.1rem,2.2vw,1.4rem); font-weight:500; color:#B8B8C8;
+    font-size:clamp(1.05rem,2vw,1.3rem); font-weight:500; color:#B8B8C8;
     margin-bottom:1.5rem; line-height:1.6;
   }
 
@@ -203,6 +264,8 @@
     .dtabs { grid-template-columns:1fr; gap:8px; }
     .dtab { padding:0.875rem; }
     .contest-line { padding:1.1rem 1.25rem; }
+    .hero-note { flex-direction:column; gap:0.3rem; }
+    .live-feed-row { gap:0.35rem; }
   }
 </style>
 {% endblock %}
@@ -212,24 +275,56 @@
 
 <!-- PAGE 1: HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">Science-Based Photography Scoring</div>
+
+  {# SPRINT 1: Science tagline — pulled from footer to screen 1 #}
+  <div class="hero-science-tag">
+    ★&nbsp; Rated by Science. Not Opinion. &nbsp;★
+  </div>
+
+  <div class="hero-eyebrow">
+    <span></span>Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index<span></span>
+  </div>
+
   <h1 class="hero-headline">
     Find out what your<br>photography is <em>really</em> worth.
   </h1>
+
+  {# SPRINT 1: Sub-line now includes ranking hook + mobile callout #}
   <p class="hero-sub">
-    No jury opinions. No social media likes. Just an honest, objective score across five technical and artistic dimensions — and exactly what to fix next.
+    No jury opinions. No social media likes. Five scientific dimensions —
+    and exactly where you rank against every photographer on this platform.
+    <br><br>
+    <span style="font-size:0.95em; color:rgba(255,255,255,0.5);">Shot on iPhone? You compete in your own track.</span>
   </p>
+
+  {# SPRINT 1: CTA group — Upload Free + Enter the Contest #}
   <div class="hero-cta-group">
     <a href="/upload" class="btn-primary">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload Free
+    </a>
+    <a href="/contests" class="btn-contest">
+      🏆 Enter the Contest
     </a>
     <a href="#discover" class="btn-ghost">
       Explore
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </a>
   </div>
-  <p class="hero-note"><strong>3 free scores</strong> &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Camera &amp; Mobile tracks</p>
+
+  {# SPRINT 1: Upgraded reassurance — device-explicit, prize pool visible #}
+  <p class="hero-note">
+    <span><strong>3 free scores</strong></span>
+    <span class="note-sep">·</span>
+    <span class="note-device">📷 Camera</span>
+    <span class="note-sep">·</span>
+    <span class="note-device">📱 iPhone &amp; Android</span>
+    <span class="note-sep">·</span>
+    <span>No credit card</span>
+    <span class="note-sep">·</span>
+    <span class="note-prize">Compete for ₹65L in annual prizes</span>
+  </p>
+
   <div class="scroll-hint">
     <span>Scroll</span>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -240,12 +335,27 @@
 <section class="discover" id="discover">
   <div class="discover-inner">
 
+    {# SPRINT 3: Live feed — last 6 scored images, tier badge + genre only, no names/scores #}
+    {% if top_images %}
+    <div class="live-feed-strip reveal">
+      <div class="live-feed-label">Engine active &nbsp;·&nbsp; latest scores</div>
+      <div class="live-feed-row">
+        {% for img in top_images[:6] %}
+        <div class="live-feed-item">
+          <span>{{ img.genre }}</span>
+          <span class="lf-tier {{ img.tier | lower if img.tier else 'practitioner' }}">{{ img.tier or 'Practitioner' }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
     <div style="width:100%;" class="reveal">
       <a href="/contests" class="contest-line">
         <span class="contest-line-top">Enter Monthly Contest</span>
         <span class="contest-line-bottom">Qualify for Photographer of the Year</span>
       </a>
-      <div class="contest-sub">₹65,41,000 in annual prizes &nbsp;·&nbsp; Four competitions &nbsp;·&nbsp; Camera &amp; Mobile tracks</div>
+      <div class="contest-sub">₹65,41,000 in annual prizes &nbsp;·&nbsp; Four competitions &nbsp;·&nbsp; 📷 Camera &amp; 📱 Mobile tracks</div>
     </div>
 
     <div class="dtabs">
@@ -256,7 +366,7 @@
 
     <div class="reveal d4" style="text-align:center;">
       <div class="closing-headline">Your photography deserves <em>honest</em> feedback.</div>
-      <div class="closing-sub">Improve image after image. A mentor, 24×7.</div>
+      <div class="closing-sub">A mentor that never sleeps. A score that never flatters.</div>
       <a href="/upload" class="btn-primary">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload Free Now
