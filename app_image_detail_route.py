@@ -1,6 +1,12 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# REPLACE the existing /image/<int:image_id> route in app.py with this version.
-# Only change: computes percentile stats and passes them to the template.
+# PERCENTILE NOT SHOWING — MOST LIKELY CAUSE:
+# The image_detail route in app.py was NOT updated to pass percentile= to the template.
+# The template block is silently skipped when percentile is undefined.
+#
+# In app.py find the image_detail route. It ends with:
+#     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES)
+#
+# REPLACE the entire route with the block below.
 # ─────────────────────────────────────────────────────────────────────────────
 
 @app.route('/image/<int:image_id>')
@@ -10,15 +16,12 @@ def image_detail(image_id):
     if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
 
-    # ── SPRINT 2: Compute percentile stats for scored images ──────────────────
+    # Compute global percentile for scored, unflagged images
     percentile_data = {}
-    if img.status == 'scored' and img.score and not img.is_flagged:
+    if img.status == 'scored' and img.score and not getattr(img, 'is_flagged', False):
         try:
             from engine.scoring import compute_percentile
-            percentile_data = compute_percentile(
-                score=float(img.score),
-                genre=img.genre,
-            )
+            percentile_data = compute_percentile(float(img.score), genre=img.genre)
         except Exception as e:
             app.logger.warning(f'[percentile] {e}')
 
