@@ -648,12 +648,23 @@
     let elapsed = 0;
     const tick = setInterval(() => {
       elapsed++;
-      clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
-      clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed / TOTAL, 1) * CIRC);
-      const p = phases.find(x => elapsed >= x.from && elapsed < x.to) || phases[phases.length - 1];
-      phase.textContent  = p.p;
-      status.textContent = p.s;
-      sub.textContent    = p.ss;
+      if (elapsed <= TOTAL) {
+        clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
+        clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed / TOTAL, 1) * CIRC);
+      } else {
+        clockSecs.textContent = '…';
+      }
+      const p = phases.find(x => elapsed >= x.from && elapsed < x.to);
+      if (p) {
+        phase.textContent  = p.p;
+        status.textContent = p.s;
+        sub.textContent    = p.ss;
+      } else {
+        // Server still processing — keep overlay alive with extended wait message
+        phase.textContent  = 'PROCESSING';
+        status.textContent = 'Apex DDI Engine still analysing…';
+        sub.textContent    = 'Complex images can take up to 2 minutes. Keep this tab open.';
+      }
     }, 1000);
 
     overlay._bc   = bc;

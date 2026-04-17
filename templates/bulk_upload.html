@@ -533,6 +533,8 @@ form.addEventListener('submit', function(e) {
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/bulk-upload');
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+  xhr.withCredentials = true;
   xhr.timeout = 600000; // 10 min for large batches
 
   xhr.onload = function() {
