@@ -559,6 +559,9 @@ img {
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
       <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
       <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
+      {% if current_user.is_subscribed %}
+      <a href="{{ url_for('rate') }}" class="{% if request.endpoint == 'rate' %}nav-active{% endif %}" style="color:var(--green);">★ Rate</a>
+      {% endif %}
       {% if current_user.role == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="nav-admin">Admin</a>
       {% endif %}
@@ -588,6 +591,9 @@ img {
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
     <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
+    {% if current_user.is_subscribed %}
+    <a href="{{ url_for('rate') }}" onclick="toggleNav()" style="color:var(--green);">★ Rate</a>
+    {% endif %}
     {% if current_user.role == 'admin' %}
       <a href="{{ url_for('admin_dashboard') }}" class="nav-admin" onclick="toggleNav()">Admin</a>
     {% endif %}
