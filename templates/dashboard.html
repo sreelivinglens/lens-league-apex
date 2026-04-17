@@ -378,17 +378,27 @@
         {% if img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--red);">Hidden from public</span>{% endif %}
         {% if img.needs_review and not img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--gold);">Pending review</span>{% endif %}
       </div>
+      {% if img.judge_referral and img.needs_review %}
+      <div style="margin-top:8px; padding:8px 10px; background:rgba(180,130,0,0.08);
+                  border:1px solid var(--gold-dark); border-radius:6px;
+                  font-size:11px; line-height:1.5; color:var(--gold);">
+        📂 <strong>RAW file requested.</strong> Score held pending verification.<br>
+        <a href="mailto:sreeks@gmail.com?subject=RAW File — {{ img.asset_name | urlencode }}&body=Hi%2C%0A%0APlease find attached the RAW file for my image '{{ img.asset_name | urlencode }}'%20(Image%20ID%3A%20{{ img.id }}).%0A%0AThank%20you."
+           style="color:var(--gold); text-decoration:underline; font-weight:600;"
+           onclick="event.stopPropagation();">
+          Click here to submit RAW →
+        </a>
+      </div>
+      {% endif %}
       <div class="img-card-footer">
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
         <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
           {% if img.is_flagged %}
             <span class="flagged-badge">🚫 AI Flagged</span>
+          {% elif img.judge_referral and img.needs_review %}
+            <span class="review-badge">📂 RAW Requested</span>
           {% elif img.needs_review %}
-            {% if img.score and img.score >= 9.0 %}
-              <span class="review-badge">🏆 RAW Verify</span>
-            {% else %}
-              <span class="review-badge">🔍 Under Review</span>
-            {% endif %}
+            <span class="review-badge">🔍 Under Review</span>
           {% elif img.camera_track %}
             <span class="img-track-pill {{ img.camera_track }}">
               {{ '📷' if img.camera_track == 'camera' else '📱' }} {{ img.camera_track }}

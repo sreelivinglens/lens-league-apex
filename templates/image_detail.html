@@ -340,6 +340,30 @@
   </div>
 </div>
 
+<!-- RAW request banner -->
+{% if image.judge_referral and image.needs_review and not image.is_flagged %}
+<div style="margin-bottom:20px; padding:18px 22px;
+            background:rgba(180,130,0,0.08); border:1px solid var(--gold-dark);
+            border-left:4px solid var(--gold); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:700;
+              letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">
+    📂 RAW File Requested — Score Held
+  </div>
+  <div style="font-size:13px; color:var(--text-secondary); line-height:1.7;">
+    Our team has requested your original RAW file to verify this image.
+    Your score and rating are held pending verification and the image is temporarily hidden from public view.
+    <br><br>
+    <a href="mailto:sreeks@gmail.com?subject=RAW%20File%20—%20{{ image.asset_name | urlencode }}&body=Hi%2C%0A%0APlease%20find%20attached%20the%20RAW%20file%20for%20my%20image%20'{{ image.asset_name | urlencode }}'%20(Image%20ID%3A%20{{ image.id }}).%0A%0AThank%20you."
+       style="display:inline-block; padding:9px 20px; background:var(--gold);
+              color:#000; border-radius:6px; font-family:var(--font-mono);
+              font-size:11px; font-weight:700; letter-spacing:1px;
+              text-transform:uppercase; text-decoration:none;">
+      📧 Submit RAW File to sreeks@gmail.com →
+    </a>
+  </div>
+</div>
+{% endif %}
+
 <!-- AI flagged banner -->
 {% if image.is_flagged %}
 <div class="ai-flagged-banner">
