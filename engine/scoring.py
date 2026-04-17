@@ -319,6 +319,7 @@ def compute_percentile(score: float, genre: str = None) -> dict:
         # How many images score BELOW this one → percentile rank
         below = sum(1 for s in all_scores if s < score)
         top_pct = max(1, round((1 - below / total) * 100))
+        rank = total - below  # 1 = best
 
         platform_avg = round(sum(all_scores) / total, 2)
 
@@ -336,18 +337,19 @@ def compute_percentile(score: float, genre: str = None) -> dict:
         ) if canonical else []
         top10_in_genre = round(sum(genre_scores[:10]) / len(genre_scores[:10]), 2) if len(genre_scores) >= 3 else None
 
-        # Adaptive context sentence
+        # Adaptive context sentence — no pool size mention
         if top_pct <= 5:
-            context = f"You're in the top {top_pct}% on the platform — elite territory."
+            context = "Elite territory — your score puts you among the highest rated on this platform."
         elif top_pct <= 15:
-            context = f"Top {top_pct}% globally — you're competing at a high level."
+            context = "You're scoring at a high level — well above the platform average."
         elif top_pct <= 35:
-            context = f"Top {top_pct}% — above average and climbing."
+            context = "Above average — keep refining your craft to close the gap to Master tier."
         else:
-            context = f"You're in the top {top_pct}% — keep shooting and rescoring to move up."
+            context = "Every rescore is a chance to move up — focus on Disruption and AQ to climb."
 
         return {
             'top_pct':         top_pct,
+            'rank':            rank,
             'platform_avg':    platform_avg,
             'master_avg':      master_avg,
             'grandmaster_avg': grandmaster_avg,
