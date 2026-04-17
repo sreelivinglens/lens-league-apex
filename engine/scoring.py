@@ -354,7 +354,8 @@ def compute_percentile(score: float, genre: str = None) -> dict:
             'top10_in_genre':  top10_in_genre,
             'genre':           canonical,
             'context':         context,
-            'total_scored':    total,
+            'total_images':    total,
+            'genre_images':    len(genre_scores),
         }
 
     except Exception as e:
