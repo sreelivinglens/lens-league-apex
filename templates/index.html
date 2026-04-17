@@ -171,19 +171,35 @@
     width:100%;
   }
   .live-feed-item {
-    display:flex; flex-direction:column; align-items:center; gap:0.35rem;
+    display:flex; flex-direction:column; align-items:center; gap:0;
     background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
-    border-radius:10px; padding:0.7rem 1rem; min-width:90px;
-    transition:border-color 0.2s;
+    border-radius:10px; overflow:hidden; width:90px;
+    transition:border-color 0.2s, transform 0.2s;
+    flex-shrink:0;
   }
-  .live-feed-item:hover { border-color:rgba(201,168,76,0.3); }
+  .live-feed-item:hover { border-color:rgba(201,168,76,0.4); transform:translateY(-2px); }
+  .lf-thumb {
+    width:90px; height:68px; object-fit:cover; display:block;
+    filter:grayscale(100%) brightness(0.75);
+    transition:filter 0.3s;
+  }
+  .live-feed-item:hover .lf-thumb { filter:grayscale(60%) brightness(0.9); }
+  .lf-thumb-placeholder {
+    width:90px; height:68px; background:rgba(255,255,255,0.04);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; flex-shrink:0;
+  }
+  .lf-meta {
+    display:flex; flex-direction:column; align-items:center; gap:0.25rem;
+    padding:0.45rem 0.5rem; width:100%;
+  }
   .live-feed-item .lf-genre {
-    font-size:0.78rem; font-weight:500; color:rgba(255,255,255,0.45);
-    letter-spacing:0.02em;
+    font-size:0.68rem; font-weight:500; color:rgba(255,255,255,0.4);
+    letter-spacing:0.02em; text-align:center;
   }
   .live-feed-item .lf-tier {
-    font-weight:700; font-size:0.72rem; letter-spacing:0.06em;
-    padding:0.2rem 0.6rem; border-radius:5px; white-space:nowrap;
+    font-weight:700; font-size:0.65rem; letter-spacing:0.06em;
+    padding:0.15rem 0.5rem; border-radius:4px; white-space:nowrap;
   }
   .lf-tier.master       { background:rgba(59,130,200,0.2);  color:#7abfff; }
   .lf-tier.grandmaster  { background:rgba(138,97,175,0.2);  color:#c49eff; }
@@ -358,8 +374,15 @@
       <div class="live-feed-row">
         {% for img in top_images[:6] %}
         <div class="live-feed-item">
-          <span class="lf-genre">{{ img.genre }}</span>
-          <span class="lf-tier {{ (img.tier or 'Practitioner') | lower }}">{{ img.tier or 'Practitioner' }}</span>
+          {% if img.thumb_url %}
+          <img src="{{ img.thumb_url }}" alt="{{ img.genre }}" class="lf-thumb">
+          {% else %}
+          <div class="lf-thumb-placeholder">🖼</div>
+          {% endif %}
+          <div class="lf-meta">
+            <span class="lf-genre">{{ img.genre }}</span>
+            <span class="lf-tier {{ (img.tier or 'Practitioner') | lower }}">{{ img.tier or 'Practitioner' }}</span>
+          </div>
         </div>
         {% endfor %}
       </div>
