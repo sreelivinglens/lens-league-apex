@@ -330,6 +330,13 @@
       <button type="submit" class="btn btn-danger">🗑 Delete</button>
     </form>
     {% endif %}
+    {% if image.status == 'scored' and image.user_id != current_user.id and current_user.role != 'admin' %}
+    <button onclick="document.getElementById('report-modal').style.display='flex'"
+            class="btn"
+            style="border-color:#6b3a3a; color:#c97b7b; font-size:11px; padding:7px 14px;">
+      ⚑ Report
+    </button>
+    {% endif %}
   </div>
 </div>
 

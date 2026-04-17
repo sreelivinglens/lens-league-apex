@@ -145,6 +145,10 @@
        style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
       🔧 Calibration Notes
     </a>
+    <a href="{{ url_for('admin_reports') }}" class="btn"
+       style="border-color:#6b3a3a; color:#c97b7b; padding:10px 20px;">
+      ⚑ Reports{% if open_reports_count %} <span style="background:#c97b7b; color:#000; border-radius:99px; padding:1px 7px; font-size:10px; margin-left:4px;">{{ open_reports_count }}</span>{% endif %}
+    </a>
   </div>
 </div>
 

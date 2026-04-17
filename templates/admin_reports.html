@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Reports — Admin{% endblock %}
+{% block content %}
+<div style="max-width:900px; margin:0 auto; padding:40px 16px;">
+
+  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:32px;">
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;">
+        Admin
+      </div>
+      <h1 style="font-size:clamp(1.4rem,3vw,2rem); font-weight:700; margin:0;">
+        Community Reports
+      </h1>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn" style="padding:9px 18px;">← Dashboard</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div style="padding:12px 16px; margin-bottom:16px; border-radius:6px;
+                background:{% if cat=='success' %}rgba(80,180,100,0.1){% else %}rgba(200,168,75,0.1){% endif %};
+                border:1px solid {% if cat=='success' %}#3a6e48{% else %}var(--gold-dark){% endif %};
+                color:{% if cat=='success' %}#7ecf8e{% else %}var(--gold){% endif %};
+                font-size:13px;">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if not reports %}
+  <div style="text-align:center; padding:60px 20px; color:var(--text-muted);
+              font-family:var(--font-mono); font-size:13px; letter-spacing:1px;">
+    NO OPEN REPORTS
+  </div>
+  {% else %}
+  <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px;
+              text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">
+    {{ reports|length }} open report{{ 's' if reports|length != 1 else '' }}
+  </div>
+
+  {% for rpt in reports %}
+  <div style="background:var(--surface-2); border:1px solid var(--border);
+              border-radius:var(--radius-md); margin-bottom:16px; overflow:hidden;">
+
+    <!-- Report header -->
+    <div style="padding:14px 20px; border-bottom:1px solid var(--border);
+                display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:3px;">
+          <a href="{{ url_for('image_detail', image_id=rpt.image_id) }}"
+             style="color:var(--gold); text-decoration:none;">
+            {{ rpt.image.asset_name or ('Image #' ~ rpt.image_id) }}
+          </a>
+          <span style="color:var(--text-muted); font-size:12px; margin-left:8px;">
+            by {{ rpt.image.user.username if rpt.image.user else '—' }}
+          </span>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          Reported by {{ rpt.reporter.username if rpt.reporter else '—' }}
+          · {{ rpt.reported_at.strftime('%d %b %Y, %H:%M') if rpt.reported_at else '—' }}
+        </div>
+      </div>
+      <div style="background:rgba(201,123,123,0.15); border:1px solid #6b3a3a;
+                  color:#c97b7b; border-radius:99px; padding:4px 12px;
+                  font-family:var(--font-mono); font-size:11px; font-weight:600;
+                  white-space:nowrap;">
+        {{ rpt.reason }}
+      </div>
+    </div>
+
+    <!-- Detail -->
+    {% if rpt.detail %}
+    <div style="padding:12px 20px; font-size:13px; color:var(--text-secondary);
+                border-bottom:1px solid var(--border); line-height:1.6;">
+      {{ rpt.detail }}
+    </div>
+    {% endif %}
+
+    <!-- Image info -->
+    <div style="padding:10px 20px; border-bottom:1px solid var(--border);
+                display:flex; gap:24px; flex-wrap:wrap;">
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+        Genre: <span style="color:var(--text-secondary);">{{ rpt.image.genre or '—' }}</span>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+        Score: <span style="color:var(--gold);">{{ rpt.image.score or '—' }}</span>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+        Tier: <span style="color:var(--text-secondary);">{{ rpt.image.tier or '—' }}</span>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+        Already flagged: <span style="color:{% if rpt.image.is_flagged %}#c97b7b{% else %}var(--text-secondary){% endif %};">
+          {{ 'Yes' if rpt.image.is_flagged else 'No' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="padding:12px 20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <form method="POST" action="{{ url_for('admin_report_request_raw', report_id=rpt.id) }}"
+            onsubmit="return confirm('Request RAW and hold image for review?');">
+        <button type="submit" class="btn btn-solid" style="padding:8px 16px; font-size:11px;">
+          📂 Request RAW — Hold for Review
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('admin_dismiss_report', report_id=rpt.id) }}">
+        <button type="submit" class="btn" style="padding:8px 16px; font-size:11px;
+                border-color:var(--border); color:var(--text-muted);">
+          Dismiss
+        </button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+  {% endif %}
+
+</div>
+{% endblock %}
