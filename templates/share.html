@@ -276,6 +276,7 @@
       <div class="score-badge">
         <div class="score-num">{{ image.score }}</div>
         <div class="score-tier-line">{{ image.tier }}</div>
+        <div style="font-family:var(--font-mono); font-size:8px; letter-spacing:1.5px; color:rgba(200,168,75,0.55); text-transform:uppercase; margin-top:4px;">DDI Score</div>
       </div>
       {% if image.judge_referral %}
       <div class="judge-badge">⚖️ JUDGE REVIEW</div>
@@ -284,6 +285,7 @@
       <div class="tier-badge">
         <div class="tier-word">{{ image.tier }}</div>
         <div class="tier-sub">DDI Tier</div>
+        <div style="font-family:var(--font-mono); font-size:7px; letter-spacing:1px; color:rgba(122,120,112,0.6); text-transform:uppercase; margin-top:2px;">Dimensional Diagnostic Index</div>
       </div>
     {% endif %}
   </div>
@@ -414,7 +416,7 @@
   <div class="register-cta">
     <div class="cta-eyebrow">Your photography. Honestly scored.</div>
     <h3>What would your images score?</h3>
-    <p>Get 3 free scores — no credit card. See your full DDI number, module breakdown, and what to fix next.</p>
+    <p>Get 3 free scores — no credit card. See your full DDI (Dimensional Diagnostic Index) score, five-module breakdown, and the one specific change that would move your image to the next tier.</p>
     <div class="cta-btns">
       <a href="{{ url_for('register') }}" class="btn-join-cta">Get My Free Score</a>
       <a href="{{ url_for('login') }}"    class="btn-login-cta">Log In</a>
