@@ -1711,13 +1711,16 @@ def report_image(image_id):
     """Submit a community report on a scored image."""
     img = Image.query.get_or_404(image_id)
 
+    # Determine safe redirect — reporter may not own the image so image_detail would 403
+    back_url = url_for('share_image', image_id=image_id)
+
     # Anti-abuse: reporter must have at least 3 scored images
     reporter_scored = Image.query.filter_by(
         user_id=current_user.id, status='scored'
     ).count()
     if reporter_scored < 3:
         flash('You need at least 3 scored images to submit a report.', 'warning')
-        return redirect(url_for('image_detail', image_id=image_id))
+        return redirect(back_url)
 
     # One report per image per user (enforced by DB UNIQUE constraint too)
     existing = ImageReport.query.filter_by(
@@ -1725,14 +1728,14 @@ def report_image(image_id):
     ).first()
     if existing:
         flash('You have already submitted a report for this image.', 'info')
-        return redirect(url_for('image_detail', image_id=image_id))
+        return redirect(back_url)
 
     reason = request.form.get('reason', '').strip()
     detail = request.form.get('detail', '').strip()[:500]
     valid_reasons = ['AI-generated', 'Stolen', 'Duplicate', 'Other']
     if reason not in valid_reasons:
         flash('Invalid report reason.', 'danger')
-        return redirect(url_for('image_detail', image_id=image_id))
+        return redirect(back_url)
 
     report = ImageReport(
         image_id=image_id,
@@ -1743,7 +1746,7 @@ def report_image(image_id):
     db.session.add(report)
     db.session.commit()
     flash('Report submitted. Our team will review it.', 'success')
-    return redirect(url_for('image_detail', image_id=image_id))
+    return redirect(back_url)
 
 
 @app.route('/admin/reports')
