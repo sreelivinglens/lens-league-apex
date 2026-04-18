@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Welcome — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .location-row { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
+  <div style="width:100%; max-width:520px;">
+
+    <div style="text-align:center; margin-bottom:36px;">
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">ONE LAST STEP</div>
+      <h1 style="font-size:clamp(22px,4vw,30px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">
+        Hi, {{ current_user.full_name or current_user.username }} 👋
+      </h1>
+      <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
+        Tell us where you're based so we can rank you on your city leaderboard.<br>
+        Takes 10 seconds.
+      </p>
+    </div>
+
+    <div class="card">
+      <form method="POST" action="{{ url_for('onboarding') }}">
+
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+          Your Location
+        </div>
+        <p style="font-size:15px; color:var(--text-muted); margin-bottom:18px; margin-top:-8px; line-height:1.6;">
+          Used for city rankings — "Master · 📷 · Bengaluru". Helps brands find local photographers.
+        </p>
+
+        <div class="location-row" style="margin-bottom:24px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="country">Country <span style="color:var(--red);">*</span></label>
+            <select id="country" name="country" required onchange="updateStates()">
+              <option value="" disabled selected>Select country…</option>
+              <option value="India">India</option>
+              <optgroup label="──────────">
+              {% for c in countries %}
+              {% if c != 'India' %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endif %}
+              {% endfor %}
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="state">State / Province <span style="color:var(--red);">*</span></label>
+            <select id="state" name="state" required onchange="updateCities()" disabled>
+              <option value="" disabled selected>Select state…</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="city">City <span style="color:var(--red);">*</span></label>
+            <select id="city" name="city" required disabled>
+              <option value="" disabled selected>Select city…</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+          Member Agreement
+        </div>
+
+        <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
+                    background:var(--surface-3); border:1px solid var(--border);
+                    border-radius:var(--radius-sm); margin-bottom:24px;">
+          <input type="checkbox" id="agreed" name="agreed" value="1"
+                 required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
+          <label for="agreed" style="font-size:15px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
+            I confirm all images I submit are my original photographs — not AI-generated, not belonging to another photographer.
+            I accept the
+            <button type="button" onclick="openAgreement()"
+                    style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:15px; padding:0;">
+              Member Agreement
+            </button>
+            and understand that fraud results in permanent account deletion and prize forfeiture.
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:15px; letter-spacing:2px;">
+          Go to my dashboard →
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- Member Agreement Modal -->
+<div id="agreementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); max-width:580px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+    <div style="padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="font-size:18px; font-weight:700; color:var(--gold); margin:0;">Lens League Member Agreement</h2>
+      <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:16px; color:var(--text-secondary); line-height:1.7;">
+      <p style="margin-bottom:16px;">By registering, you agree to:</p>
+      <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
+        <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
+        <li>You shoot in the correct league for your device — Camera League for DSLR/mirrorless/film, Mobile League for smartphones.</li>
+        <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
+        <li>Fraud = all images removed, account permanently deleted, all prizes forfeited.</li>
+        <li>You retain full copyright on all images. Lens League gets a non-exclusive licence to display them on the platform.</li>
+      </ol>
+    </div>
+    <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+      <button onclick="closeAgreement()" class="btn" style="padding:10px 24px;">Close</button>
+      <button onclick="acceptAgreement()" class="btn btn-solid" style="padding:10px 24px;">I Agree ✓</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const LOCATION_DATA = {{ location_data_json | safe }};
+
+function updateStates() {
+  const country = document.getElementById('country').value;
+  const stateEl = document.getElementById('state');
+  const cityEl  = document.getElementById('city');
+  stateEl.innerHTML = '<option value="" disabled selected>Select state…</option>';
+  cityEl.innerHTML  = '<option value="" disabled selected>Select city…</option>';
+  stateEl.disabled = true;
+  cityEl.disabled  = true;
+  if (!country || !LOCATION_DATA[country]) return;
+  Object.keys(LOCATION_DATA[country]).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    stateEl.appendChild(opt);
+  });
+  stateEl.disabled = false;
+}
+
+function updateCities() {
+  const country = document.getElementById('country').value;
+  const state   = document.getElementById('state').value;
+  const cityEl  = document.getElementById('city');
+  cityEl.innerHTML = '<option value="" disabled selected>Select city…</option>';
+  cityEl.disabled = true;
+  if (!country || !state) return;
+  ((LOCATION_DATA[country] || {})[state] || []).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    cityEl.appendChild(opt);
+  });
+  cityEl.disabled = false;
+}
+
+function openAgreement()  { document.getElementById('agreementModal').style.display = 'flex'; }
+function closeAgreement() { document.getElementById('agreementModal').style.display = 'none'; }
+function acceptAgreement() { document.getElementById('agreed').checked = true; closeAgreement(); }
+document.getElementById('agreementModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAgreement();
+});
+</script>
+{% endblock %}
