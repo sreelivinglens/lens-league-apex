@@ -3,6 +3,7 @@ import uuid
 import json
 from datetime import datetime, date, timedelta
 from functools import wraps
+from authlib.integrations.flask_client import OAuth
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    flash, send_file, jsonify, abort, session)
@@ -54,6 +55,16 @@ if uri and uri.startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = uri.replace('postgres://', 'postgresql://', 1)
 
 db.init_app(app)
+
+# ── Google OAuth ──────────────────────────────────────────────────────────
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID', ''),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET', ''),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -138,6 +149,10 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
+                # v29 — Google OAuth
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT FALSE",
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_google_id ON users (google_id) WHERE google_id IS NOT NULL",
             ]
             for sql in _migrations:
                 try:
@@ -379,55 +394,156 @@ def index():
                            now=datetime.utcnow())
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register')
 def register():
+    # Old register page now just redirects to login (Google OAuth)
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        if not request.form.get('agreed') and not request.form.get('user_agreed'):
-            flash('You must accept the Member Agreement to register.', 'error')
-            return redirect(url_for('register'))
-        email    = request.form.get('email', '').strip().lower()
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        fullname = request.form.get('full_name', '').strip()
-        sq       = request.form.get('security_question', '').strip()
-        sa       = request.form.get('security_answer', '').strip().lower()
-        # Location — mandatory
-        country = request.form.get('country', '').strip()
-        state   = request.form.get('state', '').strip()
-        city    = request.form.get('city', '').strip()
-        if not sq or not sa:
-            flash('Please select a security question and provide an answer.', 'error')
-            return redirect(url_for('register'))
-        if not country or not state or not city:
-            flash('Please select your country, state/province, and city.', 'error')
-            return redirect(url_for('register'))
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered.', 'error')
-            return redirect(url_for('register'))
-        if User.query.filter_by(username=username).first():
-            flash('Username already taken.', 'error')
-            return redirect(url_for('register'))
+    return redirect(url_for('login'))
+
+
+# ── Google OAuth routes ───────────────────────────────────────────────────
+
+@app.route('/auth/google')
+def auth_google():
+    """Redirect to Google login."""
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    """Handle Google's callback — create or log in the user."""
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        if not user_info:
+            flash('Could not retrieve your Google profile. Please try again.', 'error')
+            return redirect(url_for('login'))
+    except Exception as e:
+        app.logger.error(f'[google_oauth] {e}')
+        flash('Google sign-in failed. Please try again.', 'error')
+        return redirect(url_for('login'))
+
+    google_id = user_info.get('sub')
+    email     = user_info.get('email', '').strip().lower()
+    full_name = user_info.get('name', '').strip()
+
+    if not google_id or not email:
+        flash('Google did not return required profile information.', 'error')
+        return redirect(url_for('login'))
+
+    # Find existing user by google_id first, then fall back to email
+    user = User.query.filter_by(google_id=google_id).first()
+    if not user:
+        user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Existing user — link google_id if not already set
+        if not user.google_id:
+            user.google_id = google_id
+        # Check login notifications (same as existing login route)
+        last_seen = user.last_login or datetime(2000, 1, 1)
+        flagged_since = Image.query.filter(
+            Image.user_id == user.id,
+            Image.is_flagged == True,
+            Image.flagged_at != None,
+            Image.flagged_at > last_seen
+        ).count()
+        review_pending = Image.query.filter(
+            Image.user_id == user.id,
+            Image.needs_review == True,
+            Image.is_flagged == False
+        ).count()
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        login_user(user)
+        if flagged_since:
+            flash(
+                f'⚠️ {flagged_since} of your image{"s" if flagged_since > 1 else ""} '
+                f'{"were" if flagged_since > 1 else "was"} flagged as potentially AI-generated '
+                f'and removed from public view. Visit your dashboard to review.',
+                'warning'
+            )
+        if review_pending:
+            flash(
+                f'🔍 {review_pending} of your image{"s" if review_pending > 1 else ""} '
+                f'{"are" if review_pending > 1 else "is"} currently under admin review '
+                f'and not yet visible to the public.',
+                'info'
+            )
+        if getattr(user, 'league_suspended', False):
+            flash(
+                '🚫 Your contest access is suspended due to repeated league mismatches. '
+                'Contact verify@lensleague.com to resolve.',
+                'error'
+            )
+        # Send to onboarding if location never captured
+        if not getattr(user, 'onboarding_complete', False):
+            return redirect(url_for('onboarding'))
+        return redirect(url_for('dashboard'))
+
+    else:
+        # Brand new user — create account
+        # Generate a unique username from their Google display name
+        base_username = full_name.replace(' ', '').lower()[:30] or 'photographer'
+        username = base_username
+        suffix = 1
+        while User.query.filter_by(username=username).first():
+            username = f'{base_username}{suffix}'
+            suffix += 1
+
         user = User(
-            email=email, username=username,
-            password_hash=generate_password_hash(password),
-            full_name=fullname, security_question=sq,
-            security_answer=sa, agreed_at=datetime.utcnow(),
-            country=country, state=state, city=city,
+            email=email,
+            google_id=google_id,
+            username=username,
+            full_name=full_name,
+            password_hash=None,
+            agreed_at=None,           # set at onboarding
+            onboarding_complete=False,
+            last_login=datetime.utcnow(),
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash('Welcome to Lens League!', 'success')
+        return redirect(url_for('onboarding'))
+
+
+@app.route('/onboarding', methods=['GET', 'POST'])
+@login_required
+def onboarding():
+    """Collect location + member agreement for new Google OAuth users."""
+    if getattr(current_user, 'onboarding_complete', False):
         return redirect(url_for('dashboard'))
-    # Build location data for cascading JS dropdowns
+
+    if request.method == 'POST':
+        country = request.form.get('country', '').strip()
+        state   = request.form.get('state', '').strip()
+        city    = request.form.get('city', '').strip()
+        agreed  = request.form.get('agreed', '')
+
+        if not country or not state or not city:
+            flash('Please select your country, state/province, and city.', 'error')
+        elif not agreed:
+            flash('You must accept the Member Agreement to continue.', 'error')
+        else:
+            current_user.country            = country
+            current_user.state              = state
+            current_user.city               = city
+            current_user.agreed_at          = datetime.utcnow()
+            current_user.onboarding_complete = True
+            db.session.commit()
+            flash('Welcome to Lens League!', 'success')
+            return redirect(url_for('dashboard'))
+
+    # Build location data for JS dropdowns
     _loc = {}
     for _s, _c in INDIA_STATES_CITIES.items():
         _loc.setdefault('India', {})[_s] = _c
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
-    return render_template('register.html',
+
+    return render_template('onboarding.html',
         countries          = get_countries(),
         location_data_json = json.dumps(_loc),
     )
@@ -437,50 +553,6 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        email    = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        user     = User.query.filter_by(email=email).first()
-        if user and check_password_hash(user.password_hash, password):
-            # Check for images flagged as AI-generated since last login
-            last_seen = user.last_login or datetime(2000, 1, 1)
-            flagged_since = Image.query.filter(
-                Image.user_id == user.id,
-                Image.is_flagged == True,
-                Image.flagged_at != None,
-                Image.flagged_at > last_seen
-            ).count()
-            # Check for images held under review (amber zone or Grandmaster)
-            review_pending = Image.query.filter(
-                Image.user_id == user.id,
-                Image.needs_review == True,
-                Image.is_flagged == False
-            ).count()
-            user.last_login = datetime.utcnow()
-            db.session.commit()
-            login_user(user)
-            if flagged_since:
-                flash(
-                    f'⚠️ {flagged_since} of your image{"s" if flagged_since > 1 else ""} '
-                    f'{"were" if flagged_since > 1 else "was"} flagged as potentially AI-generated '
-                    f'and removed from public view. Visit your dashboard to review.',
-                    'warning'
-                )
-            if review_pending:
-                flash(
-                    f'🔍 {review_pending} of your image{"s" if review_pending > 1 else ""} '
-                    f'{"are" if review_pending > 1 else "is"} currently under admin review '
-                    f'and not yet visible to the public.',
-                    'info'
-                )
-            if getattr(user, 'league_suspended', False):
-                flash(
-                    '🚫 Your contest access is suspended due to repeated league mismatches. '
-                    'Contact verify@lensleague.com to resolve.',
-                    'error'
-                )
-            return redirect(url_for('dashboard'))
-        flash('Invalid email or password.', 'error')
     return render_template('login.html')
 
 

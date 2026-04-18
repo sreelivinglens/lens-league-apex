@@ -19,7 +19,9 @@ class User(db.Model, UserMixin):
     id                = db.Column(db.Integer, primary_key=True)
     username          = db.Column(db.String(80),  unique=True, nullable=False)
     email             = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash     = db.Column(db.String(256), nullable=False)
+    password_hash     = db.Column(db.String(256), nullable=True)   # nullable — Google OAuth users have no password
+    google_id         = db.Column(db.String(128), unique=True, nullable=True, index=True)
+    onboarding_complete = db.Column(db.Boolean, default=False, nullable=False)
     full_name         = db.Column(db.String(120), nullable=True)
 
     # Location — collected at registration, used for city rankings
