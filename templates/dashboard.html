@@ -426,6 +426,112 @@
 {% endif %}
 
 {# ══════════════════════════════════════════
+   POTY TRACKER — subscribers only
+   Shows live top-6 average per genre
+   ══════════════════════════════════════════ #}
+{% if poty_tracker %}
+{% set pt = poty_tracker %}
+<div class="card" style="margin-bottom:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">POTY Standing</div>
+      <div style="font-size:16px; font-weight:700; color:var(--text-primary);">Your top-6 average per genre</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">Updates with every scored image · Deletions do not improve your average</div>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; background:var(--surface-3); color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-sm); padding:5px 12px; text-transform:uppercase; white-space:nowrap;">
+      Cutoff announced Month 9
+    </div>
+  </div>
+
+  {# Summary row #}
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;">
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Best genre avg</div>
+      <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--gold);">{{ pt.best_avg }}</div>
+    </div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Genres active</div>
+      <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--text-primary);">{{ pt.active_genres }} / 8</div>
+    </div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Scored images</div>
+      <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--text-primary);">{{ pt.total_scored }}</div>
+    </div>
+  </div>
+
+  {# Genre table header #}
+  <div style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:4px;">
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Genre</div>
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Images</div>
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Top-6 average</div>
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Avg</div>
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Status</div>
+  </div>
+
+  {# Genre rows #}
+  {% for row in pt.genre_rows %}
+  {% set bar_color = '#3B6D11' if row.top6_avg >= 78 else ('#854F0B' if row.top6_avg >= 65 else '#9A9890') %}
+  <div style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+    <div style="font-size:13px; font-weight:600; color:var(--text-primary);">{{ row.genre }}</div>
+    <div style="font-size:13px; color:var(--text-muted);">{{ row.count }} img{{ 's' if row.count != 1 }}</div>
+    <div style="height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
+      <div style="height:100%; width:{{ row.bar_pct }}%; background:{{ bar_color }}; border-radius:4px;"></div>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); text-align:right;">
+      {% if row.top6_avg %}{{ row.top6_avg }}{% else %}—{% endif %}
+    </div>
+    <div style="font-family:var(--font-mono); font-size:11px; text-align:right;">
+      {% if not row.qualifies %}
+        <span style="color:var(--text-muted);">Need {{ pt.min_images }} min</span>
+      {% elif row.top6_avg >= 78 %}
+        <span style="color:#3B6D11;">Strong</span>
+      {% elif row.top6_avg >= 65 %}
+        <span style="color:#854F0B;">Building</span>
+      {% else %}
+        <span style="color:var(--text-muted);">Keep going</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if not pt.genre_rows %}
+  <div style="text-align:center; padding:32px; color:var(--text-muted); font-size:14px;">
+    Upload and score your first image to start building your POTY standing.
+  </div>
+  {% endif %}
+
+  {# Top-6 images for best genre #}
+  {% if pt.genre_rows and pt.genre_rows[0].top6_images %}
+  {% set best = pt.genre_rows[0] %}
+  <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">
+      {{ best.genre }} — your top 6 images contributing to this average
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;">
+      {% for img in best.top6_images %}
+      <div style="aspect-ratio:1; border-radius:var(--radius-sm); overflow:hidden; position:relative; background:var(--surface-3); border:1px solid var(--border);">
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+        {% endif %}
+        <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.65); padding:3px 5px; text-align:center;">
+          <span style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:#C8A84B;">{{ img.score }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:8px; font-style:italic;">
+      Upload stronger {{ best.genre }} images to replace weaker scores and raise your average.
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="margin-top:16px; padding:12px 16px; background:var(--surface-3); border-left:2px solid var(--gold-dark); font-size:13px; color:var(--text-muted); line-height:1.6;">
+    The qualifying threshold is announced at Month 9. You can keep uploading until the platform year deadline — if your top-6 average clears the threshold by then, you qualify for POTY consideration.
+  </div>
+</div>
+{% endif %}
+
+{# ══════════════════════════════════════════
    PEER RATING WIDGET — subscribers only
    Requires rating_widget dict from dashboard route
    ══════════════════════════════════════════ #}
