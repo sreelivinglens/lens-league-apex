@@ -150,6 +150,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
                 # v29 — Google OAuth
+                "ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT FALSE",
                 "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_google_id ON users (google_id) WHERE google_id IS NOT NULL",
