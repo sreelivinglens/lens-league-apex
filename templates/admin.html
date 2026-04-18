@@ -127,6 +127,12 @@
   }
   .bulk-bar label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--gold); }
   .selected-count { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+  /* Export card text wrapping fix */
+  .admin-export-grid { min-width: 0; }
+  .admin-export-grid a { white-space: normal !important; min-width: 0; overflow: hidden; }
+  .admin-export-grid a > div { min-width: 0; overflow: hidden; }
+  .admin-export-grid a > div > div { white-space: normal; overflow: hidden; text-overflow: ellipsis; }
+
   @media (max-width: 900px) {
     .admin-stats-bar { grid-template-columns: 1fr 1fr !important; }
     .admin-export-grid { grid-template-columns: 1fr 1fr !important; }
@@ -526,7 +532,7 @@
   </div>
 
   <!-- Export buttons grid -->
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;" class="admin-export-grid">
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; min-width:0;" class="admin-export-grid">
 
     <a href="{{ url_for('admin_export_users') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
       <span style="font-size:20px;">👥</span>
