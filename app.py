@@ -1663,6 +1663,108 @@ def admin_toggle_subscription(user_id):
     return redirect(url_for('admin_users'))
 
 
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.role == 'admin':
+        flash('Cannot delete an admin account.', 'error')
+        return redirect(url_for('admin_users'))
+
+    username = user.full_name or user.username
+
+    try:
+        # 1. CalibrationNotes by this user (as admin) and on their images
+        try:
+            from models import CalibrationNote
+            CalibrationNote.query.filter_by(admin_id=user_id).delete()
+            image_ids = [img.id for img in user.images]
+            if image_ids:
+                CalibrationNote.query.filter(CalibrationNote.image_id.in_(image_ids)).delete(synchronize_session=False)
+        except Exception as e:
+            app.logger.warning(f'[delete_user] calibration notes: {e}')
+
+        # 2. ImageReports filed by this user + reports on their images
+        try:
+            ImageReport.query.filter_by(reporter_id=user_id).delete()
+            if image_ids:
+                ImageReport.query.filter(ImageReport.image_id.in_(image_ids)).delete(synchronize_session=False)
+        except Exception as e:
+            app.logger.warning(f'[delete_user] image reports: {e}')
+
+        # 3. Peer ratings given by this user + received on their images
+        try:
+            PeerRating.query.filter_by(rater_id=user_id).delete()
+            if image_ids:
+                PeerRating.query.filter(PeerRating.image_id.in_(image_ids)).delete(synchronize_session=False)
+        except Exception as e:
+            app.logger.warning(f'[delete_user] peer ratings: {e}')
+
+        # 4. Rating assignments
+        try:
+            RatingAssignment.query.filter_by(rater_id=user_id).delete()
+            if image_ids:
+                RatingAssignment.query.filter(RatingAssignment.image_id.in_(image_ids)).delete(synchronize_session=False)
+        except Exception as e:
+            app.logger.warning(f'[delete_user] rating assignments: {e}')
+
+        # 5. Peer pool entries
+        try:
+            PeerPoolEntry.query.filter_by(user_id=user_id).delete()
+            if image_ids:
+                PeerPoolEntry.query.filter(PeerPoolEntry.image_id.in_(image_ids)).delete(synchronize_session=False)
+        except Exception as e:
+            app.logger.warning(f'[delete_user] peer pool: {e}')
+
+        # 6. Contest entries
+        try:
+            ContestEntry.query.filter_by(user_id=user_id).delete()
+        except Exception as e:
+            app.logger.warning(f'[delete_user] contest entries: {e}')
+
+        # 7. Open contest entries
+        try:
+            OpenContestEntry.query.filter_by(user_id=user_id).delete()
+        except Exception as e:
+            app.logger.warning(f'[delete_user] open contest entries: {e}')
+
+        # 8. BOW submissions
+        try:
+            from models import BowSubmission
+            BowSubmission.query.filter_by(user_id=user_id).delete()
+        except Exception as e:
+            app.logger.warning(f'[delete_user] bow submissions: {e}')
+
+        # 9. Delete images + R2 cleanup
+        for img in list(user.images):
+            if img.thumb_url:
+                try:
+                    key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            if img.card_url:
+                try:
+                    key = img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            db.session.delete(img)
+
+        # 10. Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User "{username}" and all associated data permanently deleted.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_delete_user] failed for user {user_id}: {e}')
+        flash(f'Delete failed: {str(e)[:120]}', 'error')
+
+    return redirect(url_for('admin_users'))
+
+
 @app.route('/admin/fix-beta-plans', methods=['POST'])
 @login_required
 @admin_required
