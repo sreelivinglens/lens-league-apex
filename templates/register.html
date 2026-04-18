@@ -1,20 +1,59 @@
 {% extends "base.html" %}
 {% block title %}Create Account — Lens League Apex{% endblock %}
 
+{% block extra_css %}
+<style>
+  .league-option { position: relative; }
+  .league-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .league-tile {
+    display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px;
+    background: var(--surface-3); border: 2px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; user-select: none;
+  }
+  .league-tile:hover { border-color: var(--border-strong); }
+  .league-option input[type="radio"]:checked + .league-tile {
+    border-color: var(--gold); background: var(--gold-subtle);
+  }
+  .league-icon { font-size: 28px; line-height: 1; flex-shrink: 0; margin-top: 2px;
+    font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
+  .league-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .league-option input[type="radio"]:checked + .league-tile .league-name { color: var(--gold); }
+  .league-sub { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .league-prize { font-family: var(--font-mono); font-size: 11px; color: var(--gold); margin-top: 5px; letter-spacing: 0.5px; }
+
+  .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .camera-section { margin-top: 6px; }
+  .camera-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .section-divider {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase;
+    margin: 28px 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    display: block;
+  }
+
+  @media (max-width: 640px) {
+    .location-row { grid-template-columns: 1fr; }
+    .camera-row { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:580px; margin:48px auto;">
+<div style="max-width:600px; margin:48px auto;">
 
   <div style="text-align:center; margin-bottom:36px;">
     <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">JOIN THE LEAGUE</div>
     <h1 style="font-size:clamp(24px,4vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">Create Your Account</h1>
-    <p style="font-size:15px; color:var(--text-secondary);">Start scoring your photography with the Apex DDI Engine.</p>
+    <p style="font-size:15px; color:var(--text-secondary);">Get your photography scientifically scored and ranked.</p>
   </div>
 
   <div class="card">
     <form method="POST" action="/register">
 
-      <!-- Account Details -->
-      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">Account Details</div>
+      <!-- ── Account details ── -->
+      <span class="section-divider">Account Details</span>
 
       <div class="form-group">
         <label for="username">Username</label>
@@ -27,8 +66,7 @@
       <div class="form-group">
         <label for="full_name">Full Name</label>
         <input type="text" id="full_name" name="full_name" placeholder="Your real name"
-               maxlength="120" value="{{ request.form.get('full_name', '') }}"
-               autocomplete="name">
+               maxlength="120" value="{{ request.form.get('full_name', '') }}" autocomplete="name">
       </div>
 
       <div class="form-group">
@@ -41,66 +79,168 @@
         <div class="form-group">
           <label for="password">Password</label>
           <input type="password" id="password" name="password"
-                 placeholder="Minimum 8 characters"
-                 minlength="8" required autocomplete="new-password">
+                 placeholder="Minimum 8 characters" minlength="8" required autocomplete="new-password">
         </div>
         <div class="form-group">
           <label for="confirm_password">Confirm Password</label>
           <input type="password" id="confirm_password" name="confirm_password"
-                 placeholder="Repeat password"
-                 minlength="8" required autocomplete="new-password">
+                 placeholder="Repeat password" minlength="8" required autocomplete="new-password">
         </div>
       </div>
 
-      <hr style="border:none; border-top:1px solid var(--border-subtle); margin:24px 0;">
+      <!-- ── Location ── -->
+      <span class="section-divider">Your Location</span>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
+        Used for city rankings — "Master · 📷 · Bengaluru". Helps brands and clients find local photographers.
+      </p>
 
-      <!-- Security Question -->
-      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">🔐 Security Question</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px;">Used to recover your account if you forget your password.</p>
+      <div class="location-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="country">Country <span style="color:var(--red);">*</span></label>
+          <select id="country" name="country" required onchange="updateStates()">
+            <option value="" disabled selected>Select country…</option>
+            <option value="India" {% if request.form.get('country') == 'India' %}selected{% endif %}>India</option>
+            <optgroup label="──────────">
+            {% for c in countries %}
+            {% if c != 'India' %}
+            <option value="{{ c }}" {% if request.form.get('country') == c %}selected{% endif %}>{{ c }}</option>
+            {% endif %}
+            {% endfor %}
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="state">State / Province <span style="color:var(--red);">*</span></label>
+          <select id="state" name="state" required onchange="updateCities()" disabled>
+            <option value="" disabled selected>Select state…</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="city">City <span style="color:var(--red);">*</span></label>
+          <select id="city" name="city" required disabled>
+            <option value="" disabled selected>Select city…</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── League selection ── -->
+      <span class="section-divider">Choose Your League</span>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; margin-top:-10px; line-height:1.6;">
+        Camera and Mobile compete separately — same genres, same science, same prize structure. You can upgrade later.
+      </p>
+
+      <div class="grid-2" style="gap:14px; margin-bottom:20px;">
+        <label class="league-option">
+          <input type="radio" name="subscription_league" value="camera"
+                 {% if request.form.get('subscription_league') == 'camera' %}checked{% endif %}>
+          <div class="league-tile">
+            <span class="league-icon">📷</span>
+            <div>
+              <div class="league-name">Camera League</div>
+              <div class="league-sub">DSLR · Mirrorless · Film · Compact</div>
+              <div class="league-prize">₹599/month · ₹50L prize pool</div>
+            </div>
+          </div>
+        </label>
+        <label class="league-option">
+          <input type="radio" name="subscription_league" value="mobile"
+                 {% if request.form.get('subscription_league') == 'mobile' %}checked{% endif %}>
+          <div class="league-tile">
+            <span class="league-icon">📱</span>
+            <div>
+              <div class="league-name">Mobile League</div>
+              <div class="league-sub">iPhone · Android · Any smartphone</div>
+              <div class="league-prize">₹299/month · Dedicated prize pool</div>
+            </div>
+          </div>
+        </label>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:0; line-height:1.6;">
+        Not subscribing yet? You still get 6 free scored images in your first month.
+        Your league selection activates when you subscribe.
+      </p>
+
+      <!-- ── Camera / Phone ── -->
+      <span class="section-divider">What Do You Shoot On?</span>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
+        This helps brands and clients find you — e.g. "Sony photographers in Mumbai". Your EXIF data
+        is also extracted automatically from each image and used for rankings.
+      </p>
+
+      <div class="camera-row camera-section">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="camera_brand">Brand</label>
+          <select id="camera_brand" name="camera_brand" onchange="updateModels()">
+            <option value="" selected>Select brand… (optional)</option>
+            <optgroup label="── Cameras ──">
+              {% for brand in camera_brands %}
+              <option value="{{ brand }}" {% if request.form.get('camera_brand') == brand %}selected{% endif %}>{{ brand }}</option>
+              {% endfor %}
+            </optgroup>
+            <optgroup label="── Phones ──">
+              {% for brand in phone_brands %}
+              <option value="{{ brand }}" {% if request.form.get('camera_brand') == brand %}selected{% endif %}>{{ brand }}</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="declared_camera">Model</label>
+          <select id="declared_camera" name="declared_camera" disabled>
+            <option value="" selected>Select model… (optional)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Security question ── -->
+      <span class="section-divider">Account Recovery</span>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px; margin-top:-10px;">Used to recover your account if you forget your password.</p>
 
       <div class="form-group">
-        <label for="security_question">Choose a Question</label>
+        <label for="security_question">Security Question</label>
         <select id="security_question" name="security_question" required>
           <option value="" disabled {% if not request.form.get('security_question') %}selected{% endif %}>Select a question…</option>
-          <option value="What was the name of your first pet?" {% if request.form.get('security_question') == "What was the name of your first pet?" %}selected{% endif %}>What was the name of your first pet?</option>
-          <option value="What is your mother's maiden name?" {% if request.form.get('security_question') == "What is your mother's maiden name?" %}selected{% endif %}>What is your mother's maiden name?</option>
-          <option value="What city were you born in?" {% if request.form.get('security_question') == "What city were you born in?" %}selected{% endif %}>What city were you born in?</option>
-          <option value="What was the make of your first car?" {% if request.form.get('security_question') == "What was the make of your first car?" %}selected{% endif %}>What was the make of your first car?</option>
-          <option value="What is the name of the street you grew up on?" {% if request.form.get('security_question') == "What is the name of the street you grew up on?" %}selected{% endif %}>What is the name of the street you grew up on?</option>
-          <option value="What was the name of your primary school?" {% if request.form.get('security_question') == "What was the name of your primary school?" %}selected{% endif %}>What was the name of your primary school?</option>
-          <option value="What is your oldest sibling's middle name?" {% if request.form.get('security_question') == "What is your oldest sibling's middle name?" %}selected{% endif %}>What is your oldest sibling's middle name?</option>
+          {% for q in [
+            "What was the name of your first pet?",
+            "What is your mother's maiden name?",
+            "What city were you born in?",
+            "What was the make of your first car?",
+            "What is the name of the street you grew up on?",
+            "What was the name of your primary school?",
+            "What is your oldest sibling's middle name?",
+          ] %}
+          <option value="{{ q }}" {% if request.form.get('security_question') == q %}selected{% endif %}>{{ q }}</option>
+          {% endfor %}
         </select>
       </div>
 
       <div class="form-group">
         <label for="security_answer">Your Answer</label>
         <input type="text" id="security_answer" name="security_answer"
-               placeholder="Answer (case-insensitive)"
-               maxlength="120" value="{{ request.form.get('security_answer', '') }}" required>
-        <div style="margin-top:5px; font-size:13px; color:var(--text-muted);">Remember this — required during password recovery.</div>
+               placeholder="Answer (case-insensitive)" maxlength="120"
+               value="{{ request.form.get('security_answer', '') }}" required>
       </div>
 
-      <hr style="border:none; border-top:1px solid var(--border-subtle); margin:24px 0;">
+      <!-- ── Member Agreement ── -->
+      <span class="section-divider">Member Agreement</span>
 
-      <!-- Member Agreement -->
-      <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">📋 Member Agreement</div>
-
-      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
+      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
+                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
         <input type="checkbox" id="agreed" name="agreed" value="1"
                {% if request.form.get('agreed') %}checked{% endif %}
-               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); cursor:pointer; flex-shrink:0;">
+               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
         <label for="agreed" style="font-size:14px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
-          I have read and agree to the
+          I confirm all images I submit are my original photographs — not AI-generated, not belonging to another photographer.
+          I accept the
           <button type="button" onclick="openAgreement()"
                   style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:14px; padding:0;">
-            Lens League Member Agreement
-          </button>.
-          I understand that image scoring is AI-assisted, competition results are final,
-          and submitting AI-generated or plagiarised images may result in permanent disqualification.
+            Member Agreement
+          </button>
+          and understand that submitting false work results in permanent account deletion and prize forfeiture.
         </label>
       </div>
 
-      <button type="submit" class="btn btn-solid" id="submitBtn"
+      <button type="submit" class="btn btn-solid"
               style="width:100%; padding:14px; font-size:13px; letter-spacing:2px; margin-top:24px;">
         Create My Account
       </button>
@@ -115,39 +255,22 @@
   </div>
 </div>
 
-<!-- Member Agreement Modal -->
+<!-- Member Agreement Modal (unchanged from before) -->
 <div id="agreementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:16px;">
   <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); max-width:580px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
     <div style="padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
       <h2 style="font-size:17px; font-weight:700; color:var(--gold); margin:0;">Lens League Member Agreement</h2>
-      <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer; line-height:1; padding:0 4px;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+      <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
     </div>
     <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:14px; color:var(--text-secondary); line-height:1.7;">
-      <p style="margin-bottom:16px;">Welcome to Lens League Apex. By registering, you agree to the following terms:</p>
-
-      {% for title, body in [
-        ('1. Image Authenticity', 'All images you submit must be your own original photographs. Submitting AI-generated images, heavily composited work presented as single captures, or images taken by another photographer is strictly prohibited and will result in immediate disqualification and account suspension.'),
-        ('2. EXIF & Metadata', 'We use EXIF metadata to verify camera authenticity. Absence of EXIF does not automatically disqualify an image — but it will be flagged as Unverified. Suspicious metadata patterns may trigger manual review.'),
-        ('3. AI Scoring', 'Images are scored by the Apex DDI Engine, an AI-powered scoring system. Scores represent an objective assessment of photographic merit and are subject to calibration updates over time.'),
-        ('5. Copyright', 'You retain copyright of all images you upload. By uploading, you grant Lens League Apex a non-exclusive licence to display your images on the platform. You may request removal of your images at any time.'),
-        ('6. Community Standards', 'Images containing illegal content, nudity, hate speech, or graphic violence are strictly prohibited and will be removed immediately. Repeat violations will result in permanent bans.'),
-        ('7. Account Security', 'You are responsible for keeping your password secure. Password changes will log you out of all active sessions — this is by design for your security.'),
-        ('8. Force Majeure', 'Lens League Apex shall not be liable for delays or failures caused by circumstances beyond our reasonable control.'),
-      ] %}
-      <div style="margin-bottom:16px;">
-        <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">{{ title }}</div>
-        <p style="margin:0;">{{ body }}</p>
-      </div>
-      {% endfor %}
-
-      <div style="margin-bottom:16px;">
-        <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">4. Competitions & Prizes</div>
-        <ul style="padding-left:20px; display:flex; flex-direction:column; gap:6px;">
-          <li>Monthly and annual prizes are awarded based on cumulative scores.</li>
-          <li>Prize eligibility is subject to tax regulations in your country (India: TDS/GST; International: local tax laws).</li>
-          <li>Lens League Apex reserves the right to withhold prizes in cases of suspected fraud or policy violations.</li>
-        </ul>
-      </div>
+      <p style="margin-bottom:16px;">By registering, you agree to:</p>
+      <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
+        <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
+        <li>You are in the correct league for your device. Camera League = DSLR/mirrorless/film. Mobile League = smartphone. EXIF data is checked on every upload.</li>
+        <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
+        <li>Fraud = all images removed, account permanently deleted, all prizes forfeited.</li>
+        <li>You retain full copyright on all images. Lens League gets a non-exclusive licence to display them on the platform.</li>
+      </ol>
     </div>
     <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
       <button onclick="closeAgreement()" class="btn" style="padding:10px 24px;">Close</button>
@@ -155,22 +278,73 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-function openAgreement() {
-  const m = document.getElementById('agreementModal');
-  m.style.display = 'flex';
+// ── Location cascade data (injected from server) ──────────────────────────
+const LOCATION_DATA = {{ location_data_json | safe }};
+
+function updateStates() {
+  const country = document.getElementById('country').value;
+  const stateEl = document.getElementById('state');
+  const cityEl  = document.getElementById('city');
+
+  stateEl.innerHTML = '<option value="" disabled selected>Select state…</option>';
+  cityEl.innerHTML  = '<option value="" disabled selected>Select city…</option>';
+  stateEl.disabled = true;
+  cityEl.disabled  = true;
+
+  if (!country || !LOCATION_DATA[country]) return;
+
+  const states = Object.keys(LOCATION_DATA[country]);
+  states.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    stateEl.appendChild(opt);
+  });
+  stateEl.disabled = false;
 }
-function closeAgreement() {
-  document.getElementById('agreementModal').style.display = 'none';
+
+function updateCities() {
+  const country = document.getElementById('country').value;
+  const state   = document.getElementById('state').value;
+  const cityEl  = document.getElementById('city');
+
+  cityEl.innerHTML = '<option value="" disabled selected>Select city…</option>';
+  cityEl.disabled = true;
+
+  if (!country || !state) return;
+  const cities = (LOCATION_DATA[country] || {})[state] || [];
+  cities.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    cityEl.appendChild(opt);
+  });
+  cityEl.disabled = false;
 }
-function acceptAgreement() {
-  document.getElementById('agreed').checked = true;
-  closeAgreement();
+
+// ── Camera / phone model cascade ─────────────────────────────────────────
+const CAMERA_DATA = {{ camera_data_json | safe }};
+
+function updateModels() {
+  const brand   = document.getElementById('camera_brand').value;
+  const modelEl = document.getElementById('declared_camera');
+
+  modelEl.innerHTML = '<option value="">Select model… (optional)</option>';
+  modelEl.disabled = true;
+
+  if (!brand || !CAMERA_DATA[brand]) return;
+
+  CAMERA_DATA[brand].forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    modelEl.appendChild(opt);
+  });
+  modelEl.disabled = false;
 }
-document.getElementById('agreementModal').addEventListener('click', function(e) {
-  if (e.target === this) closeAgreement();
-});
+
+// ── Form validation ──────────────────────────────────────────────────────
 document.querySelector('form').addEventListener('submit', function(e) {
   const pw  = document.getElementById('password').value;
   const cpw = document.getElementById('confirm_password').value;
@@ -180,5 +354,33 @@ document.querySelector('form').addEventListener('submit', function(e) {
     document.getElementById('confirm_password').focus();
   }
 });
+
+// ── Modal ────────────────────────────────────────────────────────────────
+function openAgreement()  { document.getElementById('agreementModal').style.display = 'flex'; }
+function closeAgreement() { document.getElementById('agreementModal').style.display = 'none'; }
+function acceptAgreement() { document.getElementById('agreed').checked = true; closeAgreement(); }
+document.getElementById('agreementModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAgreement();
+});
+
+// ── Restore selections on validation error ───────────────────────────────
+{% if request.form.get('country') %}
+document.getElementById('country').value = {{ request.form.get('country') | tojson }};
+updateStates();
+{% if request.form.get('state') %}
+document.getElementById('state').value = {{ request.form.get('state') | tojson }};
+updateCities();
+{% if request.form.get('city') %}
+document.getElementById('city').value = {{ request.form.get('city') | tojson }};
+{% endif %}
+{% endif %}
+{% endif %}
+{% if request.form.get('camera_brand') %}
+document.getElementById('camera_brand').value = {{ request.form.get('camera_brand') | tojson }};
+updateModels();
+{% if request.form.get('declared_camera') %}
+document.getElementById('declared_camera').value = {{ request.form.get('declared_camera') | tojson }};
+{% endif %}
+{% endif %}
 </script>
 {% endblock %}
