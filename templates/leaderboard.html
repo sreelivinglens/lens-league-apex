@@ -109,7 +109,7 @@
       <label>Period</label>
       <div class="lb-pills">
         {% for val, label in [('all','All time'),('month','This month'),('week','This week')] %}
-        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
+        <a href="?tab={{ tab }}&period={{ val }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
            class="lb-pill {% if period == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
@@ -118,7 +118,7 @@
       <label>Track</label>
       <div class="lb-pills">
         {% for val, label in [('all','All Leagues'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
-        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}"
+        <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}&city={{ city }}"
            class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
       </div>
@@ -142,14 +142,25 @@
           {% endfor %}
         </select>
       </div>
+      {% if cities %}
+      <div class="lb-filter-group">
+        <label for="city-sel">City</label>
+        <select id="city-sel" onchange="applyFilter('city', this.value)">
+          <option value="all" {% if city=='all' %}selected{% endif %}>All cities</option>
+          {% for c in cities %}
+          <option value="{{ c }}" {% if city==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
     </div>
   </div>
 
   <!-- TABS -->
   <div class="lb-tabs">
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
        class="lb-tab {% if tab=='images' %}active{% endif %}">Top Images</a>
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}"
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
        class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
   </div>
 
