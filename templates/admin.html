@@ -485,6 +485,22 @@
   </div>
 </form>
 
+<!-- PEER RATING RESET -->
+<div style="background:var(--surface-2); border:1px solid #5a1a1a; border-radius:var(--radius-md); padding:24px; margin-top:36px;">
+ <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--red); text-transform:uppercase; margin-bottom:8px;">
+ ⚠️ Peer Rating — v27 One-Time Migration
+ </div>
+ <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
+ Resets all users' <code>rating_credits</code> to 0 and clears all peer rating data (assignments, ratings, pool entries, blended scores). Run once after v27 deploy. <strong style="color:var(--red);">Cannot be undone.</strong>
+ </p>
+ <form method="POST" action="{{ url_for('admin_reset_rating_credits') }}"
+ onsubmit="return confirm('Reset ALL peer rating credits and data to zero? This cannot be undone.');">
+ <button type="submit" class="btn btn-danger" style="padding:10px 24px;">
+ 🔄 Reset All Rating Credits &amp; Peer Data
+ </button>
+ </form>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
