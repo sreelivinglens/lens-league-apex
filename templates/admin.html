@@ -485,6 +485,103 @@
   </div>
 </form>
 
+
+<!-- DATA EXPORTS -->
+<div style="margin-top:40px;">
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">
+    📊 Data Exports &amp; Admin Reports
+  </div>
+
+  <!-- Subscription summary bar -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:20px; display:flex; gap:32px; flex-wrap:wrap; align-items:center;">
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Subscribers</div>
+      <div style="font-size:22px; font-weight:700; color:var(--gold);">{{ stats.subscribers }}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Camera Track</div>
+      <div style="font-size:22px; font-weight:700; color:var(--text-primary);">{{ stats.camera_subs }}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Mobile Track</div>
+      <div style="font-size:22px; font-weight:700; color:var(--text-primary);">{{ stats.mobile_subs }}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">Free Users</div>
+      <div style="font-size:22px; font-weight:700; color:var(--text-secondary);">{{ stats.free_users }}</div>
+    </div>
+    <div style="margin-left:auto;">
+      <a href="{{ url_for('admin_subscriptions') }}" class="btn btn-solid" style="padding:10px 20px;">
+        View Subscriptions →
+      </a>
+    </div>
+  </div>
+
+  <!-- Export buttons grid -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px;">
+
+    <a href="{{ url_for('admin_export_users') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">👥</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">User Base</div>
+        <div style="font-size:12px; color:var(--text-muted);">All users · subscription status · credits</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_subscriptions') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">💳</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Subscriptions</div>
+        <div style="font-size:12px; color:var(--text-muted);">Active subscribers · plan · Razorpay IDs</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_images') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">🖼️</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Images &amp; Scores</div>
+        <div style="font-size:12px; color:var(--text-muted);">All scored images · DDI scores · EXIF data</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_peer_ratings_full') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">⭐</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Peer-to-Peer Ratings</div>
+        <div style="font-size:12px; color:var(--text-muted);">Full audit · bias flags · delta from DDI</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_camera_rankings') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">📷</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Camera &amp; Phone Rankings</div>
+        <div style="font-size:12px; color:var(--text-muted);">Avg score by camera/phone model</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_lens_rankings') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">🔭</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Lens Rankings</div>
+        <div style="font-size:12px; color:var(--text-muted);">Avg score by lens model · brand data</div>
+      </div>
+    </a>
+
+    <a href="{{ url_for('admin_export_ratings_csv') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
+      <span style="font-size:20px;">📊</span>
+      <div>
+        <div style="font-weight:600; color:var(--text-primary); font-size:14px;">Ratings Audit</div>
+        <div style="font-size:12px; color:var(--text-muted);">Existing peer ratings export</div>
+      </div>
+    </a>
+
+  </div>
+  <div style="font-size:12px; color:var(--text-muted); margin-top:12px;">
+    All exports download as CSV. Winners export will be available once the judging system is live.
+  </div>
+</div>
+
 <!-- PEER RATING RESET -->
 <div style="background:var(--surface-2); border:1px solid #5a1a1a; border-radius:var(--radius-md); padding:24px; margin-top:36px;">
  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--red); text-transform:uppercase; margin-bottom:8px;">

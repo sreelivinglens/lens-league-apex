@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Subscriptions — Admin — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sub-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px; margin-bottom:32px; }
+  .sub-stat { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; }
+  .sub-stat-val { font-size:28px; font-weight:700; color:var(--gold); line-height:1; margin-bottom:4px; }
+  .sub-stat-lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; }
+  .sub-table { width:100%; border-collapse:collapse; font-size:14px; }
+  .sub-table th { font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+  .sub-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:middle; }
+  .sub-table tr:hover td { background:var(--surface-3); }
+  .track-pill { display:inline-flex; align-items:center; gap:4px; font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:3px 10px; border-radius:99px; }
+  .track-pill.camera { background:rgba(200,168,75,.1); border:1px solid var(--gold-dark); color:var(--gold); }
+  .track-pill.mobile { background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--text-muted); }
+  .plan-pill { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); }
+  .export-bar { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad);">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+    <div>
+      <div class="page-header" style="margin-bottom:4px;"><h1>Subscriptions</h1></div>
+      <p style="color:var(--text-muted); font-size:14px;">Active subscribers and revenue overview</p>
+    </div>
+    <div class="export-bar">
+      <a href="{{ url_for('admin_export_subscriptions') }}" class="btn btn-solid" style="padding:10px 18px;">⬇ Export CSV</a>
+      <a href="{{ url_for('admin_export_users') }}" class="btn" style="padding:10px 18px;">⬇ All Users CSV</a>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn" style="padding:10px 18px;">← Admin Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="sub-stats">
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ subscribers | length }}</div>
+      <div class="sub-stat-lbl">Total Subscribers</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ subscribers | selectattr('subscription_track', 'eq', 'camera') | list | length }}</div>
+      <div class="sub-stat-lbl">Camera Track</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ subscribers | selectattr('subscription_track', 'eq', 'mobile') | list | length }}</div>
+      <div class="sub-stat-lbl">Mobile Track</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ subscribers | selectattr('subscription_plan', 'eq', 'monthly') | list | length }}</div>
+      <div class="sub-stat-lbl">Monthly Plans</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ subscribers | selectattr('subscription_plan', 'eq', 'annual') | list | length }}</div>
+      <div class="sub-stat-lbl">Annual Plans</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">₹{{ "{:,}".format(total_mrr) }}</div>
+      <div class="sub-stat-lbl">Monthly MRR</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">₹{{ "{:,}".format(total_arr) }}</div>
+      <div class="sub-stat-lbl">Annual ARR</div>
+    </div>
+    <div class="sub-stat">
+      <div class="sub-stat-val">{{ free_users | length }}</div>
+      <div class="sub-stat-lbl">Free Users</div>
+    </div>
+  </div>
+
+  <!-- Subscribers table -->
+  {% if subscribers %}
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+    Active Subscribers ({{ subscribers | length }})
+  </div>
+  <div style="overflow-x:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:40px;">
+    <table class="sub-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Track</th>
+          <th>Plan</th>
+          <th>Value</th>
+          <th>Subscribed</th>
+          <th>Images</th>
+          <th>Razorpay Sub ID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in subscribers %}
+        {% set img_count = u.images | length %}
+        {% set price = 299 if (u.subscription_track == 'mobile' and u.subscription_plan == 'monthly')
+                  else 2499 if (u.subscription_track == 'mobile' and u.subscription_plan == 'annual')
+                  else 599 if (u.subscription_track == 'camera' and u.subscription_plan == 'monthly')
+                  else 4999 %}
+        <tr>
+          <td>
+            <div style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</div>
+            <div style="font-size:12px; color:var(--text-muted);">{{ u.email }}</div>
+          </td>
+          <td>
+            <span class="track-pill {{ u.subscription_track or '' }}">
+              {{ '📷' if u.subscription_track == 'camera' else '📱' }}
+              {{ u.subscription_track | title if u.subscription_track else '—' }}
+            </span>
+          </td>
+          <td><span class="plan-pill">{{ u.subscription_plan | title if u.subscription_plan else '—' }}</span></td>
+          <td style="font-family:var(--font-mono); color:var(--gold);">₹{{ "{:,}".format(price) }}</td>
+          <td style="font-size:13px;">{{ u.subscribed_at.strftime('%d %b %Y') if u.subscribed_at else '—' }}</td>
+          <td style="font-family:var(--font-mono);">{{ img_count }}</td>
+          <td style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+            {{ u.razorpay_sub_id or '—' }}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=u.id) }}"
+                  onsubmit="return confirm('Deactivate subscription for {{ u.username }}?');"
+                  style="display:inline;">
+              <button type="submit" class="btn" style="padding:5px 12px; font-size:12px; color:var(--red); border-color:var(--red);">
+                Deactivate
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:48px; color:var(--text-muted);">No active subscribers yet.</div>
+  {% endif %}
+
+  <!-- Free users table -->
+  {% if free_users %}
+  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+    Free Users ({{ free_users | length }})
+  </div>
+  <div style="overflow-x:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);">
+    <table class="sub-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Joined</th>
+          <th>Images</th>
+          <th>Ratings Given</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in free_users %}
+        <tr>
+          <td>
+            <div style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</div>
+            <div style="font-size:12px; color:var(--text-muted);">{{ u.email }}</div>
+          </td>
+          <td style="font-size:13px;">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
+          <td style="font-family:var(--font-mono);">{{ u.images | length }}</td>
+          <td style="font-family:var(--font-mono);">{{ u.lifetime_ratings_given or 0 }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=u.id) }}"
+                  onsubmit="return confirm('Manually activate subscription for {{ u.username }}?');"
+                  style="display:inline;">
+              <button type="submit" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">
+                Activate
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
