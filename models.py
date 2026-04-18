@@ -40,6 +40,7 @@ class User(db.Model, UserMixin):
     peer_pool_unlocks    = db.Column(db.Integer, default=0)  # how many pool entries earned
     rating_bias_flag     = db.Column(db.Boolean, default=False)
     rating_bias_note     = db.Column(db.Text, nullable=True)
+    razorpay_sub_id      = db.Column(db.String(64), nullable=True)  # Razorpay subscription ID
 
     images            = db.relationship('Image', backref='author', lazy=True)
 
@@ -613,6 +614,7 @@ def run_migrations(app):
         _col('users', 'rating_bias_flag',     'BOOLEAN DEFAULT FALSE')
         _col('users', 'rating_bias_note',     'TEXT')
         _col('users', 'peer_pool_unlocks',   'INTEGER DEFAULT 0')
+        _col('users', 'razorpay_sub_id',     'VARCHAR(64)')
         _col('images', 'is_in_peer_pool',    'BOOLEAN DEFAULT FALSE')
         _col('images', 'pool_entry_chosen_at', 'TIMESTAMP')
 
