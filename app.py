@@ -401,10 +401,6 @@ def register():
         country = request.form.get('country', '').strip()
         state   = request.form.get('state', '').strip()
         city    = request.form.get('city', '').strip()
-        # Camera / phone — optional, brand + model combined
-        camera_brand = request.form.get('camera_brand', '').strip()
-        camera_model = request.form.get('declared_camera', '').strip()
-        declared_camera = f"{camera_brand} {camera_model}".strip() if camera_brand else None
         if not sq or not sa:
             flash('Please select a security question and provide an answer.', 'error')
             return redirect(url_for('register'))
@@ -423,14 +419,13 @@ def register():
             full_name=fullname, security_question=sq,
             security_answer=sa, agreed_at=datetime.utcnow(),
             country=country, state=state, city=city,
-            declared_camera=declared_camera,
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
         flash('Welcome to Lens League!', 'success')
         return redirect(url_for('dashboard'))
-    # Build location + camera data for cascading JS dropdowns
+    # Build location data for cascading JS dropdowns
     _loc = {}
     for _s, _c in INDIA_STATES_CITIES.items():
         _loc.setdefault('India', {})[_s] = _c
@@ -439,9 +434,6 @@ def register():
     return render_template('register.html',
         countries          = get_countries(),
         location_data_json = json.dumps(_loc),
-        camera_data_json   = json.dumps({**CAMERA_BRANDS, **PHONE_BRANDS}),
-        camera_brands      = list(CAMERA_BRANDS.keys()),
-        phone_brands       = list(PHONE_BRANDS.keys()),
     )
 
 
