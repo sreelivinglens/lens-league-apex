@@ -580,6 +580,17 @@
   <div style="font-size:12px; color:var(--text-muted); margin-top:12px;">
     All exports download as CSV. Winners export will be available once the judging system is live.
   </div>
+
+  <!-- Fix beta plan labels -->
+  <div style="margin-top:20px; padding:16px 20px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+      <div style="font-size:14px; font-weight:600; color:var(--text-primary);">Fix Beta Plan Labels</div>
+      <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Updates all manually-activated 'beta' users to 'monthly' so MRR calculates correctly.</div>
+    </div>
+    <form method="POST" action="{{ url_for('admin_fix_beta_plans') }}" onsubmit="return confirm('Update all beta users to monthly plan?');">
+      <button type="submit" class="btn" style="padding:8px 18px; font-size:12px;">Run Fix</button>
+    </form>
+  </div>
 </div>
 
 <!-- PEER RATING RESET -->
