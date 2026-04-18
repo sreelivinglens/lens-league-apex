@@ -2532,13 +2532,15 @@ def subscribe(track):
             return redirect(url_for('pricing'))
 
         try:
-            import razorpay
-            client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
-            client.utility.verify_payment_signature({
-                'razorpay_payment_id':      payment_id,
-                'razorpay_subscription_id': subscription_id,
-                'razorpay_signature':        signature,
-            })
+            import hmac as _hmac, hashlib as _hashlib
+            # Subscription signature: HMAC-SHA256 of payment_id|subscription_id
+            expected_sig = _hmac.new(
+                razorpay_secret.encode('utf-8'),
+                f'{payment_id}|{subscription_id}'.encode('utf-8'),
+                _hashlib.sha256
+            ).hexdigest()
+            if not _hmac.compare_digest(expected_sig, signature):
+                raise Exception('Payment signature verification failed')
 
             current_user.subscription_track = track
             current_user.subscription_plan  = plan
