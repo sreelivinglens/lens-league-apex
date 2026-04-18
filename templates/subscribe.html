@@ -1,105 +1,170 @@
 {% extends "base.html" %}
-{% block title %}Subscribe — Lens League Apex{% endblock %}
+{% block title %}Subscribe — {{ track | title }} Track — Lens League Apex{% endblock %}
 
 {% block extra_css %}
 <style>
-  .subscribe-wrap { max-width:560px; margin:60px auto; padding:0 var(--page-pad); }
-  .subscribe-card { background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-lg); padding:40px; }
-  .sub-title { font-size:26px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .sub-track { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:28px; }
-  .sub-summary { display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:28px; }
-  .sub-plan-name { font-size:16px; font-weight:600; color:var(--text-primary); }
-  .sub-plan-desc { font-size:13px; color:var(--text-muted); margin-top:2px; }
-  .sub-amount { font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--gold); }
-  .sub-period { font-size:13px; color:var(--text-muted); }
-  .sub-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:10px; }
-  .sub-features li { font-size:14px; color:var(--text-secondary); display:flex; align-items:center; gap:10px; }
-  .sub-features .check { color:var(--gold); font-weight:700; }
-  .pay-btn { display:block; width:100%; padding:16px; background:var(--gold); color:#0D0D0B; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; border:none; border-radius:var(--radius-md); cursor:pointer; text-align:center; transition:.2s; }
-  .pay-btn:hover { opacity:.85; }
-  .no-razorpay { background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; text-align:center; }
-  .no-razorpay p { font-size:14px; color:var(--text-muted); line-height:1.7; }
-  .secure-note { margin-top:16px; text-align:center; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+  .sub-wrap { max-width: 520px; margin: 0 auto; padding: clamp(40px,6vw,72px) var(--page-pad); }
+  .sub-header { text-align: center; margin-bottom: 40px; }
+  .sub-track-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+  .sub-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+  .sub-title { font-size: clamp(24px, 4vw, 34px); font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .sub-plan-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 99px; padding: 6px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+  .sub-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; }
+  .sub-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+  .sub-price-amount { font-size: 48px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .sub-price-period { font-size: 16px; color: var(--text-muted); }
+  .sub-price-note { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-bottom: 24px; }
+  .sub-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .sub-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
+  .sub-feature .check { color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .sub-btn { display: block; width: 100%; padding: 16px; background: var(--gold); color: #0D0D0B; border: none; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: opacity .2s; margin-bottom: 12px; }
+  .sub-btn:hover { opacity: .85; }
+  .sub-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .sub-note { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+  .sub-note a { color: var(--gold); text-decoration: none; }
+  .sub-security { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; margin-top: 20px; }
+
+  .plan-toggle { display: flex; gap: 8px; margin-bottom: 28px; }
+  .plan-opt { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); text-align: center; cursor: pointer; text-decoration: none; transition: .2s; }
+  .plan-opt.active { border-color: var(--gold); background: rgba(200,168,75,.06); }
+  .plan-opt-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .plan-opt.active .plan-opt-label { color: var(--gold); }
+  .plan-opt-price { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+  .plan-opt-save { font-size: 10px; font-family: var(--font-mono); color: var(--green); margin-top: 2px; }
+
+  .no-payment { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="subscribe-wrap">
-  <div class="subscribe-card">
-    <div class="sub-title">{{ track|title }} Track</div>
-    <div class="sub-track">{{ plan|title }} Subscription</div>
+<div class="sub-wrap">
 
-    <div class="sub-summary">
-      <div>
-        <div class="sub-plan-name">
-          {% if track == 'camera' %}📷 Camera Track{% else %}📱 Mobile Track{% endif %}
-          — {{ plan|title }}
-        </div>
-        <div class="sub-plan-desc">
-          {% if plan == 'monthly' %}4 images/month · renews monthly
-          {% else %}4 images/month · billed annually{% endif %}
-        </div>
-      </div>
-      <div>
-        <div class="sub-amount">
-          ₹{% if track == 'camera' %}{% if plan == 'monthly' %}200{% else %}2,000{% endif %}
-          {% else %}{% if plan == 'monthly' %}100{% else %}1,000{% endif %}{% endif %}
-        </div>
-        <div class="sub-period">{% if plan == 'monthly' %}/month{% else %}/year{% endif %}</div>
-      </div>
+  <div class="sub-header">
+    <span class="sub-track-icon">{{ '📷' if track == 'camera' else '📱' }}</span>
+    <div class="sub-eyebrow">{{ track | title }} Track</div>
+    <h1 class="sub-title">Subscribe to Lens League</h1>
+    <div class="sub-plan-badge">
+      {{ '📷 DSLR · Mirrorless · Film' if track == 'camera' else '📱 iPhone · Android · Smartphone' }}
+    </div>
+  </div>
+
+  <!-- Plan toggle -->
+  <div class="plan-toggle">
+    <a href="{{ url_for('subscribe', track=track) }}?plan=monthly"
+       class="plan-opt {{ 'active' if plan == 'monthly' else '' }}">
+      <div class="plan-opt-label">Monthly</div>
+      <div class="plan-opt-price">₹{{ '299' if track == 'mobile' else '599' }}</div>
+      <div class="plan-opt-save">&nbsp;</div>
+    </a>
+    <a href="{{ url_for('subscribe', track=track) }}?plan=annual"
+       class="plan-opt {{ 'active' if plan == 'annual' else '' }}">
+      <div class="plan-opt-label">Annual</div>
+      <div class="plan-opt-price">₹{{ '2,499' if track == 'mobile' else '4,999' }}</div>
+      <div class="plan-opt-save">Save 30%</div>
+    </a>
+  </div>
+
+  <div class="sub-card">
+    <div class="sub-price-row">
+      <span class="sub-price-amount">₹{{ amount | int }}</span>
+      <span class="sub-price-period">{% if plan == 'annual' %}/year{% else %}/month{% endif %}</span>
+    </div>
+    <div class="sub-price-note">
+      {% if plan == 'annual' %}
+        Billed annually · renews automatically
+      {% else %}
+        Billed monthly · renews automatically · cancel anytime
+      {% endif %}
     </div>
 
-    <ul class="sub-features">
-      <li><span class="check">✓</span> 4 scored images per month</li>
-      <li><span class="check">✓</span> Full Apex DDI analysis every image</li>
-      <li><span class="check">✓</span> Apex Byline improvement tip</li>
-      <li><span class="check">✓</span> Monthly genre contests</li>
-      <li><span class="check">✓</span> Leaderboard ranking</li>
-      <li><span class="check">✓</span> Shareable rating card</li>
-    </ul>
+    <hr class="sub-divider">
 
-    {% if razorpay_key and order %}
-      <button class="pay-btn" id="pay-btn">Pay Securely with Razorpay →</button>
-      <div class="secure-note">🔒 Secured by Razorpay · 256-bit SSL</div>
+    <div class="sub-feature"><span class="check">✓</span> Unlimited scored images per month</div>
+    <div class="sub-feature"><span class="check">✓</span> Full Apex DDI analysis — 5 scoring modules</div>
+    <div class="sub-feature"><span class="check">✓</span> Monthly genre contests &amp; leaderboard</div>
+    <div class="sub-feature"><span class="check">✓</span> Peer-to-peer blind rating system</div>
+    <div class="sub-feature"><span class="check">✓</span>
+      {% if track == 'camera' %}Annual Grand Prix — POTY prize pool{% else %}Annual Mobile POTY prize pool{% endif %}
+    </div>
+    <div class="sub-feature"><span class="check">✓</span> Open Competition eligible</div>
+    <div class="sub-feature"><span class="check">✓</span> Shareable Apex rating card</div>
 
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      <script>
-        document.getElementById('pay-btn').addEventListener('click', function() {
-          var options = {
-            key: '{{ razorpay_key }}',
-            amount: {{ amount }},
-            currency: 'INR',
-            name: 'Lens League Apex',
-            description: '{{ track|title }} Track — {{ plan|title }}',
-            order_id: '{{ order.id }}',
-            handler: function(response) {
-              var form = document.createElement('form');
-              form.method = 'POST';
-              form.action = '';
-              ['razorpay_payment_id','razorpay_order_id','razorpay_signature'].forEach(function(k) {
-                var inp = document.createElement('input');
-                inp.type = 'hidden'; inp.name = k; inp.value = response[k];
-                form.appendChild(inp);
-              });
-              document.body.appendChild(form);
-              form.submit();
-            },
-            prefill: { email: '{{ current_user.email }}', name: '{{ current_user.full_name or current_user.username }}' },
-            theme: { color: '#C8A84B' }
-          };
-          var rzp = new Razorpay(options);
-          rzp.open();
-        });
-      </script>
+    <hr class="sub-divider">
+
+    {% if subscription %}
+      <button class="sub-btn" id="pay-btn" onclick="startPayment()">
+        Pay ₹{{ amount | int }} — Activate Subscription
+      </button>
+
+      <form id="payment-form" action="{{ url_for('subscribe', track=track, plan=plan) }}" method="POST" style="display:none;">
+        <input type="hidden" name="razorpay_payment_id"      id="rzp_payment_id">
+        <input type="hidden" name="razorpay_subscription_id" id="rzp_subscription_id">
+        <input type="hidden" name="razorpay_signature"        id="rzp_signature">
+      </form>
+
+      <p class="sub-note">
+        By subscribing you agree to our <a href="{{ url_for('terms') }}#subscriptions">Terms &amp; Conditions</a>
+        and authorise recurring {{ plan }} charges. Cancel anytime from your dashboard.
+        {% if plan == 'annual' %}7-day refund available on first annual purchase.{% endif %}
+      </p>
+
     {% else %}
-      <div class="no-razorpay">
-        <p>Payment processing is being set up. To subscribe, contact us at <strong>support@lenslague.com</strong> and we'll activate your account manually.</p>
+      <div class="no-payment">
+        Payment system is currently unavailable. Please try again shortly or contact
+        <a href="mailto:verify@lensleague.com" style="color:var(--gold);">verify@lensleague.com</a>
       </div>
     {% endif %}
 
-    <div style="margin-top:20px; text-align:center;">
-      <a href="{{ url_for('pricing') }}" style="font-size:13px; color:var(--text-muted); text-decoration:none;">← Back to Pricing</a>
-    </div>
   </div>
+
+  <div class="sub-security">
+    🔒 &nbsp; Secured by Razorpay &nbsp;·&nbsp; SSL encrypted &nbsp;·&nbsp; UPI · Cards · Net Banking
+  </div>
+
+  <div style="text-align:center; margin-top:24px;">
+    <a href="{{ url_for('pricing') }}" style="font-size:13px; color:var(--text-muted); text-decoration:none;">← Back to pricing</a>
+  </div>
+
 </div>
+
+{% if subscription %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function startPayment() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Opening payment…';
+
+  const options = {
+    key:             '{{ razorpay_key }}',
+    subscription_id: '{{ subscription.id }}',
+    name:            'Lens League Apex',
+    description:     '{{ track | title }} Track — {{ plan | title }}',
+    image:           '/static/logo.png',
+    handler: function(response) {
+      document.getElementById('rzp_payment_id').value      = response.razorpay_payment_id;
+      document.getElementById('rzp_subscription_id').value = response.razorpay_subscription_id;
+      document.getElementById('rzp_signature').value        = response.razorpay_signature;
+      document.getElementById('payment-form').submit();
+    },
+    prefill: {
+      email: '{{ current_user.email }}',
+      name:  '{{ current_user.full_name or current_user.username }}',
+    },
+    theme: { color: '#C8A84B' },
+    modal: {
+      ondismiss: function() {
+        btn.disabled    = false;
+        btn.textContent = 'Pay ₹{{ amount | int }} — Activate Subscription';
+      }
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+</script>
+{% endif %}
 {% endblock %}
