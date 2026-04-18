@@ -30,6 +30,7 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 
 /* CONTEST BANNER */
 .cb { background:linear-gradient(135deg,#FDF8EE 0%,#F5EDD4 100%); border-bottom:1px solid #E8D9A8; padding:26px clamp(24px,5vw,80px); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.cb-inner { display:flex; align-items:center; gap:18px; }
 .cb-badge { background:#B8892A; color:#fff; font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; padding:6px 14px; border-radius:3px; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
 .cb h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:3px; font-family:Georgia,serif; }
 .cb p  { font-size:14px; color:#8A7040; }
@@ -112,18 +113,43 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 
 /* RESPONSIVE */
 @media (max-width:900px) {
-  .hero   { grid-template-columns:1fr; }
-  .ddi-card { display:none; }
-  .tracks { grid-template-columns:1fr; }
-  .mentor { grid-template-columns:1fr; }
+  .hero    { grid-template-columns:1fr; }
+  .ddi-card{ display:none; }
+  .tracks  { grid-template-columns:1fr; }
+  .mentor  { grid-template-columns:1fr; }
   .proof-grid { grid-template-columns:1fr 1fr; }
   .prize-grid { grid-template-columns:1fr 1fr; }
   .ms-row     { grid-template-columns:1fr 1fr; }
   .cb-prizes  { display:none; }
+  /* Contest banner — stack vertically on tablet/mobile */
+  .cb {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px 24px;
+  }
+  .cb-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .btn-g { align-self: flex-start; }
 }
 @media (max-width:600px) {
-  .proof-grid { grid-template-columns:1fr 1fr; }
-  .fcta-btns  { flex-direction:column; align-items:center; }
+  .proof-grid  { grid-template-columns:1fr 1fr; }
+  .fcta-btns   { flex-direction:column; align-items:center; }
+  .prize-grid  { grid-template-columns:1fr 1fr; }
+  .ms-row      { grid-template-columns:1fr; }
+  /* Hero font shrink on small screens */
+  .hero { padding: 40px 20px 36px; }
+  .hero-h1 { font-size: 32px; }
+  .hero-ddi { font-size: 15px; }
+  .hero-sub { font-size: 16px; }
+  /* Sections tighten */
+  .sec { padding: 40px 20px; }
+  .sec.warm { padding: 40px 20px; }
+  .proof-sec { padding: 32px 20px; }
+  .fcta { padding: 44px 20px; }
 }
 </style>
 {% endblock %}
@@ -186,7 +212,7 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 
   <!-- CONTEST BANNER -->
   <div class="cb">
-    <div style="display:flex;align-items:center;gap:18px;">
+    <div class="cb-inner">
       <div class="cb-badge">Live now</div>
       <div>
         <h3>{{ contest_month_label|default('Monthly Contest') }} — enter free with every upload</h3>
