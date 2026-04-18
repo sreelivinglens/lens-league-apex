@@ -95,6 +95,7 @@
         <th>Status</th>
         <th>Track</th>
         <th>Action</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -118,7 +119,7 @@
             <span class="badge badge-free">Free</span>
           {% endif %}
         </td>
-        <td colspan="2">
+        <td colspan="1">
           <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=user.id) }}"
                 style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <input type="hidden" name="plan" value="uat">
@@ -132,14 +133,36 @@
             </button>
           </form>
         </td>
+        <td>
+          <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                onsubmit="return confirmDelete('{{ user.full_name or user.username }}', {{ user.images|length if user.images else 0 }}, {{ 'true' if user.is_subscribed else 'false' }})">
+            <button type="submit" class="btn-action"
+                    style="background:rgba(220,50,50,.12); color:#e05555; border:1px solid rgba(220,50,50,.25);">
+              Delete
+            </button>
+          </form>
+        </td>
       </tr>
       {% else %}
       <tr>
-        <td colspan="7" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
+        <td colspan="8" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(name, imageCount, isSubscribed) {
+  let msg = `Permanently delete "${name}"?\n\nThis will delete:\n• ${imageCount} image${imageCount !== 1 ? 's' : ''} and all scores\n• All ratings, contest entries, and pool data\n`;
+  if (isSubscribed) {
+    msg += `\n⚠️ WARNING: This user has an active subscription.\nCancel their Razorpay subscription manually first.\n`;
+  }
+  msg += `\nThis cannot be undone.`;
+  return confirm(msg);
+}
+</script>
 {% endblock %}
