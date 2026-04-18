@@ -377,6 +377,33 @@
   <div class="stat-box"><div class="stat-val">{{ stats.best_score }}</div><div class="stat-lbl">Best Score</div></div>
 </div>
 
+{# ── Free tier upgrade nudge ─────────────────────────────────────── #}
+{% if free_tier %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">
+      Free Plan
+      {% if free_tier.in_month1 %} · Welcome Month{% endif %}
+    </div>
+    <div style="font-size:15px; color:var(--text-primary); font-weight:600;">
+      {{ free_tier.remaining }} of {{ free_tier.limit }} free scored image{{ 's' if free_tier.limit != 1 }} remaining this month
+    </div>
+    <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">
+      {% if free_tier.remaining == 0 %}
+        You've used all your free images for this month. Resets on the 1st.
+      {% elif free_tier.in_month1 %}
+        6 images this month to get you started. From next month, 3 free images per month.
+      {% else %}
+        3 free images per month. Upgrade for unlimited uploads and contest entry.
+      {% endif %}
+    </div>
+  </div>
+  <a href="{{ url_for('pricing') }}" style="flex-shrink:0; padding:10px 20px; background:var(--gold); color:#0D0D0B; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; white-space:nowrap;">
+    Upgrade →
+  </a>
+</div>
+{% endif %}
+
 {# ══════════════════════════════════════════
    PEER RATING WIDGET — subscribers only
    Requires rating_widget dict from dashboard route
