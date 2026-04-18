@@ -377,6 +377,27 @@
   <div class="stat-box"><div class="stat-val">{{ stats.best_score }}</div><div class="stat-lbl">Best Score</div></div>
 </div>
 
+{# ── Public profile link ─────────────────────────────────────────── #}
+{% if stats.scored > 0 %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:5px;">Your Public Portfolio</div>
+    <div style="font-size:13px; color:var(--text-muted);">Share this link with clients, brands, or agencies.</div>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <code id="profile-url" style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 12px; white-space:nowrap;">{{ request.host_url }}u/{{ current_user.username }}</code>
+    <button onclick="copyProfileUrl()" id="copy-btn"
+            style="font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 14px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:color 0.2s, border-color 0.2s;">
+      Copy Link
+    </button>
+    <a href="{{ url_for('public_profile', username=current_user.username) }}" target="_blank"
+       style="font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 14px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); text-decoration:none; white-space:nowrap;">
+      View →
+    </a>
+  </div>
+</div>
+{% endif %}
+
 {# ── Free tier upgrade nudge ─────────────────────────────────────── #}
 {% if free_tier %}
 <div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
@@ -704,4 +725,23 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyProfileUrl() {
+  const url = document.getElementById('profile-url').textContent.trim();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'Copy Link';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+</script>
 {% endblock %}
