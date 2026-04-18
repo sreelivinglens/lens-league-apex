@@ -22,6 +22,10 @@ from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
 from engine.processor import ingest_image, allowed_file
 import storage as r2
+from location_data import (
+    get_countries, INDIA_STATES_CITIES, WORLD_LOCATIONS,
+    CAMERA_BRANDS, PHONE_BRANDS
+)
 
 load_dotenv()
 
@@ -125,6 +129,15 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_sub_id VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS pool_entry_chosen_at TIMESTAMP",
+                # v28 — location + league integrity
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS declared_camera VARCHAR(120)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS camera_mismatch_count INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
             ]
             for sql in _migrations:
                 try:
@@ -384,8 +397,19 @@ def register():
         fullname = request.form.get('full_name', '').strip()
         sq       = request.form.get('security_question', '').strip()
         sa       = request.form.get('security_answer', '').strip().lower()
+        # Location — mandatory
+        country = request.form.get('country', '').strip()
+        state   = request.form.get('state', '').strip()
+        city    = request.form.get('city', '').strip()
+        # Camera / phone — optional, brand + model combined
+        camera_brand = request.form.get('camera_brand', '').strip()
+        camera_model = request.form.get('declared_camera', '').strip()
+        declared_camera = f"{camera_brand} {camera_model}".strip() if camera_brand else None
         if not sq or not sa:
             flash('Please select a security question and provide an answer.', 'error')
+            return redirect(url_for('register'))
+        if not country or not state or not city:
+            flash('Please select your country, state/province, and city.', 'error')
             return redirect(url_for('register'))
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
@@ -398,13 +422,27 @@ def register():
             password_hash=generate_password_hash(password),
             full_name=fullname, security_question=sq,
             security_answer=sa, agreed_at=datetime.utcnow(),
+            country=country, state=state, city=city,
+            declared_camera=declared_camera,
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
         flash('Welcome to Lens League!', 'success')
         return redirect(url_for('dashboard'))
-    return render_template('register.html')
+    # Build location + camera data for cascading JS dropdowns
+    _loc = {}
+    for _s, _c in INDIA_STATES_CITIES.items():
+        _loc.setdefault('India', {})[_s] = _c
+    for _country, _states in WORLD_LOCATIONS.items():
+        _loc[_country] = _states
+    return render_template('register.html',
+        countries          = get_countries(),
+        location_data_json = json.dumps(_loc),
+        camera_data_json   = json.dumps({**CAMERA_BRANDS, **PHONE_BRANDS}),
+        camera_brands      = list(CAMERA_BRANDS.keys()),
+        phone_brands       = list(PHONE_BRANDS.keys()),
+    )
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -446,6 +484,12 @@ def login():
                     f'{"are" if review_pending > 1 else "is"} currently under admin review '
                     f'and not yet visible to the public.',
                     'info'
+                )
+            if getattr(user, 'league_suspended', False):
+                flash(
+                    '🚫 Your contest access is suspended due to repeated league mismatches. '
+                    'Contact verify@lensleague.com to resolve.',
+                    'error'
                 )
             return redirect(url_for('dashboard'))
         flash('Invalid email or password.', 'error')
@@ -753,23 +797,62 @@ def upload():
         db.session.add(img)
         db.session.commit()
 
-        # ── EXIF track cheat detection ────────────────────────────────────
-        # If user is on mobile track but EXIF shows a known camera brand → flag for review
-        _CAMERA_BRANDS = ('canon', 'nikon', 'sony', 'fuji', 'fujifilm', 'olympus',
-                          'panasonic', 'leica', 'hasselblad', 'pentax', 'sigma', 'ricoh')
-        _user_track = getattr(current_user, 'subscription_track', None) or ''
-        _exif_cam   = (exif_data.get('camera', '') or '').lower()
-        if _user_track == 'mobile' and any(b in _exif_cam for b in _CAMERA_BRANDS):
+        # ── League integrity check (three-strike system) ──────────────────
+        # Mobile League users uploading camera EXIF images get graduated penalties.
+        # Only flags images uploaded AFTER subscription date (protects legacy images).
+        _CAMERA_BRANDS_EXIF = ('canon', 'nikon', 'sony', 'fuji', 'fujifilm', 'olympus',
+                               'panasonic', 'leica', 'hasselblad', 'pentax', 'sigma',
+                               'ricoh', 'om system', 'om-system')
+        _user_league    = getattr(current_user, 'subscription_track', None) or ''
+        _exif_cam_lower = (exif_data.get('camera', '') or '').lower()
+        _subscribed_at  = getattr(current_user, 'subscribed_at', None)
+        _after_sub      = (_subscribed_at is None or datetime.utcnow() >= _subscribed_at)
+
+        if (_user_league == 'mobile'
+                and any(b in _exif_cam_lower for b in _CAMERA_BRANDS_EXIF)
+                and _after_sub):
+
+            strike = current_user.record_mismatch(img.id, exif_data.get('camera', ''), db.session)
+
             img.needs_review = True
-            img.exif_warning = (img.exif_warning or '') + \
-                f' [TRACK MISMATCH: Camera EXIF "{exif_data.get("camera","")}" detected on Mobile subscription]'
-            db.session.commit()
-            app.logger.warning(f'[exif_cheat] user={current_user.id} image={img.id} exif={_exif_cam}')
-            flash(
-                '⚠️ Your image was flagged for admin review — EXIF data suggests it was captured on a dedicated camera, '
-                'but you are on the Mobile track. If this is incorrect, contact verify@lensleague.com.',
-                'warning'
+            img.exif_warning = (img.exif_warning or '') + (
+                f' [LEAGUE MISMATCH: Camera EXIF "{exif_data.get("camera","")}" '
+                f'detected on Mobile League subscription — strike {strike}/3]'
             )
+            db.session.commit()
+            app.logger.warning(
+                f'[league_mismatch] user={current_user.id} image={img.id} '
+                f'exif={_exif_cam_lower} strike={strike}'
+            )
+
+            if strike == 1:
+                flash(
+                    '⚠️ League check: this image appears to have been taken on a dedicated camera, '
+                    'but you are in the Mobile League. The image has been held for review. '
+                    'If you shoot on a camera, please switch to the Camera League. '
+                    'Contact verify@lensleague.com with questions.',
+                    'warning'
+                )
+            elif strike == 2:
+                flash(
+                    '⚠️ Second league mismatch. This image has been held for review and '
+                    'your contest entries for this month have been removed pending admin review. '
+                    'One more mismatch will suspend your contest access.',
+                    'warning'
+                )
+                _month = datetime.utcnow().strftime('%Y-%m')
+                ContestEntry.query.filter_by(user_id=current_user.id, contest_month=_month).delete()
+                db.session.commit()
+            elif strike >= 3:
+                flash(
+                    '🚫 Three league mismatches detected. Your contest access has been suspended '
+                    'and this month\'s contest entries have been removed. '
+                    'Contact verify@lensleague.com to resolve.',
+                    'error'
+                )
+                _month = datetime.utcnow().strftime('%Y-%m')
+                ContestEntry.query.filter_by(user_id=current_user.id, contest_month=_month).delete()
+                db.session.commit()
 
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
@@ -1215,6 +1298,7 @@ def leaderboard():
     period = request.args.get('period', 'all')
     track  = request.args.get('track', 'all')
     tab    = request.args.get('tab', 'images')
+    city   = request.args.get('city', 'all')
 
     now = datetime.utcnow()
     if period == 'week':
@@ -1246,6 +1330,8 @@ def leaderboard():
             ))
         elif track == 'mobile':
             q = q.filter(db.text("camera_track = 'mobile'"))
+        if city != 'all':
+            q = q.join(User, Image.user_id == User.id).filter(User.city == city)
         return q
 
     top_images = (apply_filters(Image.query)
@@ -1259,6 +1345,8 @@ def leaderboard():
             Image.user_id,
             User.username,
             User.full_name,
+            User.city,
+            User.state,
             func.avg(Image.score).label('avg_score'),
             func.max(Image.score).label('best_score'),
             func.count(Image.id).label('image_count'),
@@ -1269,7 +1357,7 @@ def leaderboard():
     pg_base = apply_filters(pg_base)
     pg_rows = (
         pg_base
-        .group_by(Image.user_id, User.username, User.full_name)
+        .group_by(Image.user_id, User.username, User.full_name, User.city, User.state)
         .order_by(desc('avg_score'))
         .limit(20)
         .all()
@@ -1280,11 +1368,21 @@ def leaderboard():
             'user_id':            row.user_id,
             'username':           row.username,
             'display_name':       row.full_name or row.username,
+            'city':               row.city,
+            'state':              row.state,
             'avg_score':          round(float(row.avg_score), 2) if row.avg_score else 0,
             'best_score':         float(row.best_score) if row.best_score else 0,
             'image_count':        row.image_count,
             'total_peer_ratings': int(row.total_peer_ratings or 0),
         })
+
+    # Cities for filter dropdown
+    cities = [c[0] for c in (
+        db.session.query(User.city)
+        .join(Image, Image.user_id == User.id)
+        .filter(User.city != None, Image.status == 'scored', Image.is_public == True)
+        .distinct().order_by(User.city).all()
+    ) if c[0]]
 
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
 
@@ -1293,11 +1391,13 @@ def leaderboard():
         photographer_stats = photographer_stats,
         all_genres         = GENRE_IDS,
         all_tiers          = all_tiers,
+        cities             = cities,
         genre              = genre,
         tier               = tier,
         period             = period,
         track              = track,
         tab                = tab,
+        city               = city,
     )
 
 
@@ -1373,6 +1473,13 @@ def admin_dashboard():
 
     open_reports_count = ImageReport.query.filter_by(status='open').count()
 
+    # League integrity summary
+    suspended_users = User.query.filter_by(league_suspended=True).all()
+    mismatch_users  = User.query.filter(
+        User.camera_mismatch_count >= 1,
+        db.or_(User.league_suspended == False, User.league_suspended == None)
+    ).all()
+
     # Subscription stats for export panel
     stats_sub = {
         'subscribers':  User.query.filter_by(is_subscribed=True).count(),
@@ -1388,7 +1495,23 @@ def admin_dashboard():
                            scored=scored, pending=pending, recent=recent,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
+                           suspended_users=suspended_users, mismatch_users=mismatch_users,
                            stats=stats_sub)
+
+
+@app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
+@login_required
+@admin_required
+def admin_clear_suspension(user_id):
+    """Clear league suspension and reset mismatch count for a user."""
+    user = User.query.get_or_404(user_id)
+    user.league_suspended        = False
+    user.league_suspended_at     = None
+    user.league_suspended_reason = None
+    user.camera_mismatch_count   = 0
+    db.session.commit()
+    flash(f'League suspension cleared for {user.full_name or user.username}.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
 
 
 @app.route('/admin/calibrate', methods=['POST'])
@@ -2313,6 +2436,10 @@ def contest_enter_monthly(genre):
     if not getattr(current_user, 'is_subscribed', False):
         flash('An active subscription is required to enter contests.', 'error')
         return redirect(url_for('pricing'))
+
+    if getattr(current_user, 'league_suspended', False):
+        flash('🚫 Your contest access is suspended due to league mismatches. Contact verify@lensleague.com to resolve.', 'error')
+        return redirect(url_for('contests'))
 
     genre = normalise_genre(genre)
     now   = datetime.utcnow()
