@@ -447,7 +447,7 @@
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;">
     <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
       <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Best genre avg</div>
-      <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--gold);">{{ pt.best_avg }}</div>
+      <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--gold);">{% if pt.best_avg is not none %}{{ pt.best_avg }}{% else %}—{% endif %}</div>
     </div>
     <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
       <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Genres active</div>
@@ -456,6 +456,37 @@
     <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
       <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Scored images</div>
       <div style="font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--text-primary);">{{ pt.total_scored }}</div>
+    </div>
+  </div>
+
+  {# How POTY scoring works — guideline message #}
+  <div style="background:var(--surface-3); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:16px 18px; margin-bottom:20px;">
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">How your POTY average is calculated</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">1.</span>
+        <span>Your <strong style="color:var(--text-primary);">best 6 scored images</strong> in each genre are automatically selected — you don't choose them. The system always picks your highest-scoring 6.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">2.</span>
+        <span>A <strong style="color:var(--text-primary);">minimum of 6 scored images</strong> in a genre is required before an average is shown. With fewer than 6, no average is calculated.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">3.</span>
+        <span>Every time you upload a stronger image, it <strong style="color:var(--text-primary);">automatically replaces</strong> the weakest in your top 6 — raising your average. You never need to delete old images.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">4.</span>
+        <span>Peer ratings can also <strong style="color:var(--text-primary);">improve existing scores</strong> — a better blended score on an image already in your top 6 pushes your average up without uploading anything new.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">5.</span>
+        <span>You need <strong style="color:var(--text-primary);">at least 24 scored images</strong> in a genre to qualify for POTY prizes in that genre. The qualifying threshold is announced at Month 9 — you can keep uploading until the year-end deadline.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">6.</span>
+        <span><strong style="color:var(--text-primary);">Deleting images does not improve your average.</strong> All scored images count toward your POTY record regardless of deletion.</span>
+      </div>
     </div>
   </div>
 
@@ -470,19 +501,25 @@
 
   {# Genre rows #}
   {% for row in pt.genre_rows %}
-  {% set bar_color = '#3B6D11' if row.top6_avg >= 78 else ('#854F0B' if row.top6_avg >= 65 else '#9A9890') %}
-  <div style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+  {% if row.top6_avg is not none %}
+    {% set bar_color = '#3B6D11' if row.top6_avg >= 78 else ('#854F0B' if row.top6_avg >= 65 else '#9A9890') %}
+  {% else %}
+    {% set bar_color = '#9A9890' %}
+  {% endif %}
+  <div style="display:grid; grid-template-columns:110px 70px 1fr 56px 120px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
     <div style="font-size:13px; font-weight:600; color:var(--text-primary);">{{ row.genre }}</div>
     <div style="font-size:13px; color:var(--text-muted);">{{ row.count }} img{{ 's' if row.count != 1 }}</div>
     <div style="height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
       <div style="height:100%; width:{{ row.bar_pct }}%; background:{{ bar_color }}; border-radius:4px;"></div>
     </div>
     <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); text-align:right;">
-      {% if row.top6_avg %}{{ row.top6_avg }}{% else %}—{% endif %}
+      {% if row.top6_avg is not none %}{{ row.top6_avg }}{% else %}—{% endif %}
     </div>
     <div style="font-family:var(--font-mono); font-size:11px; text-align:right;">
-      {% if not row.qualifies %}
-        <span style="color:var(--text-muted);">Need {{ pt.min_images }} min</span>
+      {% if not row.has_enough %}
+        <span style="color:var(--text-muted);">+{{ row.images_needed }} more for avg</span>
+      {% elif not row.qualifies %}
+        <span style="color:var(--text-muted);">Need {{ pt.min_images }} for POTY</span>
       {% elif row.top6_avg >= 78 %}
         <span style="color:#3B6D11;">Strong</span>
       {% elif row.top6_avg >= 65 %}
