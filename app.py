@@ -2670,7 +2670,7 @@ def rate():
     image           = None
     queue_remaining = 0
 
-    if is_subscriber and credits > 0:
+    if is_subscriber:
         assignment = get_or_assign_next_image(user.id)
         if assignment:
             if assignment.status == 'assigned':
@@ -2732,9 +2732,6 @@ def submit_rating():
         return redirect(url_for('rate'))
 
     current_user.reset_credits_if_needed()
-    if (current_user.rating_credits or 0) <= 0:
-        flash('No rating credits remaining this month.', 'warning')
-        return redirect(url_for('rate'))
 
     # Server-side time check — must be ≥13s (2s tolerance for network)
     client_start = request.form.get('client_start_ts', type=int)
