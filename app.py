@@ -566,9 +566,29 @@ def dashboard():
             'pool_candidate':   pool_candidate,
         }
 
+    # Free tier context for upgrade nudge
+    free_tier = None
+    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+        from datetime import date as _date
+        today      = _date.today()
+        reg_date   = current_user.created_at.date() if current_user.created_at else today
+        in_month1  = (today.year == reg_date.year and today.month == reg_date.month)
+        free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
+        month_start = datetime(today.year, today.month, 1)
+        month_count = Image.query.filter(
+            Image.user_id == current_user.id,
+            Image.created_at >= month_start,
+        ).count()
+        free_tier = {
+            'used':      month_count,
+            'limit':     free_limit,
+            'remaining': max(0, free_limit - month_count),
+            'in_month1': in_month1,
+        }
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
-                           rating_widget=rating_widget)
+                           rating_widget=rating_widget, free_tier=free_tier)
 
 
 # ---------------------------------------------------------------------------
@@ -745,6 +765,11 @@ def upload():
                 f' [TRACK MISMATCH: Camera EXIF "{exif_data.get("camera","")}" detected on Mobile subscription]'
             db.session.commit()
             app.logger.warning(f'[exif_cheat] user={current_user.id} image={img.id} exif={_exif_cam}')
+            flash(
+                '⚠️ Your image was flagged for admin review — EXIF data suggests it was captured on a dedicated camera, '
+                'but you are on the Mobile track. If this is incorrect, contact verify@lensleague.com.',
+                'warning'
+            )
 
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
