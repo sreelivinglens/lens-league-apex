@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}{{ user.full_name or user.username }} — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-wrap { max-width: 900px; margin: 0 auto; padding: 40px var(--page-pad) 80px; }
+
+  /* ── Header ── */
+  .profile-header {
+    display: flex; align-items: flex-start; gap: 28px;
+    padding: 32px; margin-bottom: 32px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .profile-avatar {
+    width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+    background: var(--surface-3); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+    color: var(--gold); text-transform: uppercase; letter-spacing: -1px;
+  }
+  .profile-meta { flex: 1; min-width: 0; }
+  .profile-name {
+    font-size: clamp(20px, 3vw, 28px); font-weight: 700;
+    color: var(--text-primary); margin-bottom: 4px; line-height: 1.2;
+  }
+  .profile-handle {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-muted); margin-bottom: 14px;
+  }
+  .profile-badges {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .profile-badge {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: var(--radius-sm);
+  }
+  .badge-league {
+    background: var(--gold-subtle); color: var(--gold);
+    border: 1px solid var(--gold-dark);
+  }
+  .badge-tier-grandmaster { background: rgba(138,97,175,0.15); color: #c49eff; border: 1px solid rgba(138,97,175,0.3); }
+  .badge-tier-master      { background: rgba(59,130,200,0.15);  color: #7abfff; border: 1px solid rgba(59,130,200,0.3); }
+  .badge-tier-practitioner{ background: rgba(76,175,115,0.15);  color: #7adfa8; border: 1px solid rgba(76,175,115,0.3); }
+  .badge-tier-legend      { background: var(--gold-subtle);     color: var(--gold); border: 1px solid var(--gold-dark); }
+  .badge-tier-apprentice  { background: var(--surface-3);       color: var(--text-muted); border: 1px solid var(--border); }
+  .profile-location {
+    font-size: 13px; color: var(--text-muted); margin-top: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── Stats row ── */
+  .profile-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 32px;
+  }
+  .pstat {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 16px 18px; text-align: center;
+  }
+  .pstat-val {
+    font-family: var(--font-mono); font-size: 26px; font-weight: 700;
+    color: var(--gold); line-height: 1; margin-bottom: 4px;
+  }
+  .pstat-lbl {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
+  }
+
+  /* ── Genre bar ── */
+  .genre-section { margin-bottom: 32px; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .genre-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .genre-pill {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    padding: 5px 12px; border-radius: var(--radius-sm);
+    background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .genre-pill.top { border-color: var(--gold-dark); color: var(--gold); background: var(--gold-subtle); }
+
+  /* ── Image grid ── */
+  .images-section { margin-bottom: 32px; }
+  .images-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .img-card {
+    position: relative; border-radius: var(--radius-md); overflow: hidden;
+    background: var(--surface-3); border: 1px solid var(--border);
+    aspect-ratio: 4/3; cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .img-card:hover { border-color: var(--gold-dark); transform: translateY(-2px); }
+  .img-card img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: opacity 0.2s;
+  }
+  .img-card:hover img { opacity: 0.85; }
+  .img-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 8px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.82));
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .img-genre {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+  }
+  .img-tier-badge {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 3px;
+  }
+  .img-tier-badge.grandmaster { background: rgba(138,97,175,0.4); color: #c49eff; }
+  .img-tier-badge.master      { background: rgba(59,130,200,0.4);  color: #7abfff; }
+  .img-tier-badge.practitioner{ background: rgba(76,175,115,0.4);  color: #7adfa8; }
+  .img-tier-badge.legend      { background: rgba(201,168,76,0.3);  color: var(--gold); }
+  .img-tier-badge.apprentice  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+
+  /* ── Best score spotlight ── */
+  .best-score-card {
+    display: flex; align-items: center; gap: 20px;
+    padding: 20px 24px; margin-bottom: 32px;
+    background: var(--surface-2); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md);
+  }
+  .best-score-num {
+    font-family: var(--font-mono); font-size: 48px; font-weight: 700;
+    color: var(--gold); line-height: 1; flex-shrink: 0;
+  }
+  .best-score-meta { flex: 1; min-width: 0; }
+  .best-score-label {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .best-score-title {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .best-score-genre {
+    font-size: 13px; color: var(--text-muted);
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); color: var(--text-muted); font-size: 14px;
+  }
+
+  /* ── CTA footer ── */
+  .profile-cta {
+    text-align: center; padding: 32px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .profile-cta p {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .profile-header { flex-direction: column; gap: 16px; }
+    .profile-stats  { grid-template-columns: repeat(2, 1fr); }
+    .images-grid    { grid-template-columns: repeat(2, 1fr); }
+    .best-score-card { flex-direction: column; text-align: center; }
+  }
+  @media (max-width: 400px) {
+    .images-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrap">
+
+  <!-- ── Header ── -->
+  <div class="profile-header">
+    <div class="profile-avatar">
+      {{ (user.full_name or user.username)[:2] | upper }}
+    </div>
+    <div class="profile-meta">
+      <div class="profile-name">{{ user.full_name or user.username }}</div>
+      <div class="profile-handle">@{{ user.username }}</div>
+      <div class="profile-badges">
+        {% if user.is_subscribed %}
+          <span class="profile-badge badge-league">
+            {{ '📷' if user.subscription_track == 'camera' else '📱' }}
+            {{ 'Camera League' if user.subscription_track == 'camera' else 'Mobile League' }}
+          </span>
+        {% endif %}
+        {% if top_tier %}
+          <span class="profile-badge badge-tier-{{ top_tier | lower }}">{{ top_tier }}</span>
+        {% endif %}
+      </div>
+      {% if user.city or user.country %}
+      <div class="profile-location">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        {{ [user.city, user.state, user.country] | select | join(', ') }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="profile-stats">
+    <div class="pstat">
+      <div class="pstat-val">{{ total_images }}</div>
+      <div class="pstat-lbl">Images</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-val">{{ avg_score }}</div>
+      <div class="pstat-lbl">Avg Score</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-val">{{ best_score }}</div>
+      <div class="pstat-lbl">Best Score</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-val">{{ genres_count }}</div>
+      <div class="pstat-lbl">Genres</div>
+    </div>
+  </div>
+
+  <!-- ── Best score spotlight ── -->
+  {% if best_image %}
+  <div class="best-score-card">
+    <div class="best-score-num">{{ best_image.score }}</div>
+    <div class="best-score-meta">
+      <div class="best-score-label">Personal Best</div>
+      <div class="best-score-title">{{ best_image.asset_name or 'Untitled' }}</div>
+      <div class="best-score-genre">{{ best_image.genre }} &nbsp;·&nbsp; {{ best_image.tier }}</div>
+    </div>
+    {% if best_image.thumb_url %}
+    <img src="{{ best_image.thumb_url }}" alt="{{ best_image.asset_name }}"
+         style="width:80px; height:60px; object-fit:cover; border-radius:var(--radius-sm); flex-shrink:0;">
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── Genres ── -->
+  {% if genre_list %}
+  <div class="genre-section">
+    <div class="section-title">
+      <span>Genres</span>
+    </div>
+    <div class="genre-pills">
+      {% for g in genre_list %}
+      <span class="genre-pill {% if loop.first %}top{% endif %}">{{ g }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Images grid ── -->
+  <div class="images-section">
+    <div class="section-title">
+      <span>Portfolio</span>
+      <span>{{ total_images }} scored image{{ 's' if total_images != 1 else '' }}</span>
+    </div>
+
+    {% if images %}
+    <div class="images-grid">
+      {% for img in images %}
+      <div class="img-card">
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre }}" loading="lazy">
+        {% else %}
+        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:24px;">🖼</div>
+        {% endif %}
+        <div class="img-overlay">
+          <span class="img-genre">{{ img.genre }}</span>
+          <span class="img-tier-badge {{ (img.tier or 'Apprentice') | lower }}">{{ img.tier or 'Apprentice' }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">No public images yet.</div>
+    {% endif %}
+  </div>
+
+  <!-- ── CTA ── -->
+  <div class="profile-cta">
+    <p>Want your own ranked portfolio?<br>
+    Upload your work and get a scientific score, a city rank, and a public profile.</p>
+    <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-right:10px;">Join Free →</a>
+    <a href="{{ url_for('leaderboard') }}" class="btn">View Leaderboard</a>
+  </div>
+
+</div>
+{% endblock %}
