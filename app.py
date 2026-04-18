@@ -2771,6 +2771,8 @@ def submit_rating():
             time_spent = time_spent,
         )
         flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} · +1 credit earned.', 'success')
+        if (current_user.lifetime_ratings_given or 0) % 5 == 0:
+            flash('🎉 You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[submit_rating] {e}')
