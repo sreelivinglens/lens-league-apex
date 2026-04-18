@@ -138,16 +138,6 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
-                # v29 — rating_assignments score columns (ALTER in case table existed without them)
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS dod FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS disruption FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS dm FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS wonder FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS aq FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS peer_ll_score FLOAT",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS started_at TIMESTAMP",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP",
-                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS time_spent_seconds INTEGER",
             ]
             for sql in _migrations:
                 try:
@@ -2347,6 +2337,47 @@ def debug_images():
 # ---------------------------------------------------------------------------
 # Static pages
 # ---------------------------------------------------------------------------
+
+@app.route('/u/<username>')
+def public_profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+
+    images = (Image.query
+              .filter_by(user_id=user.id, status='scored', is_public=True)
+              .filter(Image.score != None)
+              .filter(db.or_(Image.is_flagged == False, Image.is_flagged == None))
+              .filter(db.or_(Image.needs_review == False, Image.needs_review == None))
+              .order_by(Image.score.desc())
+              .limit(24).all())
+
+    total_images = len(images)
+    avg_score    = round(sum(i.score for i in images) / total_images, 1) if total_images else 0
+    best_score   = images[0].score if images else 0
+    best_image   = images[0] if images else None
+
+    # Top tier across all scored images
+    tier_order = ['Legend', 'Grandmaster', 'Master', 'Practitioner', 'Apprentice']
+    all_tiers  = [i.tier for i in images if i.tier]
+    top_tier   = next((t for t in tier_order if t in all_tiers), None)
+
+    # Genre list sorted by frequency
+    from collections import Counter
+    genre_counts = Counter(i.genre for i in images if i.genre)
+    genre_list   = [g for g, _ in genre_counts.most_common()]
+    genres_count = len(genre_list)
+
+    return render_template('profile_public.html',
+        user         = user,
+        images       = images,
+        total_images = total_images,
+        avg_score    = avg_score,
+        best_score   = best_score,
+        best_image   = best_image,
+        top_tier     = top_tier,
+        genre_list   = genre_list,
+        genres_count = genres_count,
+    )
+
 
 @app.route('/how-it-works')
 def how_it_works():
