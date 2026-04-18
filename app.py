@@ -1537,7 +1537,7 @@ def admin_toggle_subscription(user_id):
     user.is_subscribed = not getattr(user, 'is_subscribed', False)
     if user.is_subscribed:
         user.subscription_track = request.form.get('track', 'camera')
-        user.subscription_plan  = 'beta'
+        user.subscription_plan  = request.form.get('plan', 'monthly')
         user.subscribed_at      = datetime.utcnow()
     else:
         user.subscription_track = None
@@ -1546,6 +1546,19 @@ def admin_toggle_subscription(user_id):
     status = 'activated' if user.is_subscribed else 'deactivated'
     flash(f'Subscription {status} for {user.full_name or user.username}.', 'success')
     return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/fix-beta-plans', methods=['POST'])
+@login_required
+@admin_required
+def admin_fix_beta_plans():
+    """One-time fix: update all beta plan users to monthly."""
+    users = User.query.filter_by(is_subscribed=True, subscription_plan='beta').all()
+    for u in users:
+        u.subscription_plan = 'monthly'
+    db.session.commit()
+    flash(f'Updated {len(users)} beta users to monthly plan.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 
 @app.route('/admin/backfill-hashes', methods=['POST'])
