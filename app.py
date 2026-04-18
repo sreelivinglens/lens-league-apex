@@ -138,6 +138,16 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
+                # v29 — rating_assignments score columns (ALTER in case table existed without them)
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS dod FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS disruption FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS dm FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS wonder FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS aq FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS peer_ll_score FLOAT",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS started_at TIMESTAMP",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP",
+                "ALTER TABLE rating_assignments ADD COLUMN IF NOT EXISTS time_spent_seconds INTEGER",
             ]
             for sql in _migrations:
                 try:
