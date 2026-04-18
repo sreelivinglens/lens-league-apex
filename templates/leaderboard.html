@@ -117,7 +117,7 @@
     <div class="lb-filter-group">
       <label>Track</label>
       <div class="lb-pills">
-        {% for val, label in [('all','All tracks'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
+        {% for val, label in [('all','All Leagues'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}"
            class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
@@ -304,7 +304,7 @@
 
   {% if not current_user.is_authenticated %}
   <div class="lb-cta">
-    <p>See where your photography stands. 3 free scored images — no credit card required.</p>
+    <p>See where your photography stands. 6 free scored images in your first month — no credit card required.</p>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Score →</a>
       <a href="{{ url_for('login') }}" class="btn">Log In</a>
