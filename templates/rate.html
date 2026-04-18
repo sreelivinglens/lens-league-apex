@@ -219,7 +219,7 @@
   <div class="credit-bar">
     <div>
       <div class="credit-count"><span>{{ credits }}</span> rating credits</div>
-      <div class="credit-note">Resets 1st of each month · +1 credit per rating given · max 40</div>
+      <div class="credit-note">+1 credit per rating given · every 5 credits = 1 pool entry unlock</div>
     </div>
     <div class="credit-bar-fill-wrap">
       <div class="credit-bar-fill" style="width:{{ [(credits / 40 * 100)|int, 100]|min }}%"></div>
@@ -238,17 +238,6 @@
       Peer rating is available to Camera and Mobile subscribers. Your images also enter the rating pool.
     </p>
     <a href="{{ url_for('pricing') }}" class="btn btn-solid">View Pricing →</a>
-  </div>
-
-  {% elif credits <= 0 %}
-  <!-- No credits -->
-  <div class="no-credits">
-    <div style="font-size:40px; margin-bottom:16px;">⏳</div>
-    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">No Credits Remaining</div>
-    <p style="font-size:15px; color:var(--text-secondary); margin-bottom:8px; line-height:1.7;">
-      You have no rating credits yet. Rate other photographers' images to earn credits — every rating gives you +1 credit.
-    </p>
-    <p style="font-size:13px; color:var(--text-muted);">Every 5 credits earns you a peer pool entry for one of your own images.</p>
   </div>
 
   {% elif not assignment %}
