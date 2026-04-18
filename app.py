@@ -14,6 +14,7 @@ from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
 from werkzeug.middleware.proxy_fix import ProxyFix
+from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
                     RatingAssignment, PeerRating, PeerPoolEntry,
                     get_or_assign_next_image, submit_peer_rating)
@@ -54,6 +55,15 @@ if uri and uri.startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = uri.replace('postgres://', 'postgresql://', 1)
 
 db.init_app(app)
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -138,6 +148,8 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
             ]
             for sql in _migrations:
                 try:
@@ -379,55 +391,106 @@ def index():
                            now=datetime.utcnow())
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register')
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        if not request.form.get('agreed') and not request.form.get('user_agreed'):
-            flash('You must accept the Member Agreement to register.', 'error')
-            return redirect(url_for('register'))
-        email    = request.form.get('email', '').strip().lower()
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-        fullname = request.form.get('full_name', '').strip()
-        sq       = request.form.get('security_question', '').strip()
-        sa       = request.form.get('security_answer', '').strip().lower()
-        # Location — mandatory
-        country = request.form.get('country', '').strip()
-        state   = request.form.get('state', '').strip()
-        city    = request.form.get('city', '').strip()
-        if not sq or not sa:
-            flash('Please select a security question and provide an answer.', 'error')
-            return redirect(url_for('register'))
-        if not country or not state or not city:
-            flash('Please select your country, state/province, and city.', 'error')
-            return redirect(url_for('register'))
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered.', 'error')
-            return redirect(url_for('register'))
-        if User.query.filter_by(username=username).first():
-            flash('Username already taken.', 'error')
-            return redirect(url_for('register'))
+    return redirect(url_for('login'))
+
+
+@app.route('/auth/google')
+def auth_google():
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    token = google.authorize_access_token()
+    userinfo = token.get('userinfo') or google.userinfo()
+    google_id = userinfo.get('sub')
+    email     = userinfo.get('email', '').lower().strip()
+    name      = userinfo.get('name', '')
+
+    if not google_id or not email:
+        flash('Google sign-in failed — no email returned. Please try again.', 'error')
+        return redirect(url_for('login'))
+
+    # Find existing user by google_id or email
+    user = User.query.filter_by(google_id=google_id).first()
+    if not user:
+        user = User.query.filter_by(email=email).first()
+
+    if user:
+        # Existing user — update google_id if not set
+        if not user.google_id:
+            user.google_id = google_id
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        login_user(user)
+        if not getattr(user, 'onboarding_complete', True):
+            return redirect(url_for('onboarding'))
+        return redirect(url_for('dashboard'))
+    else:
+        # New user — create account, send to onboarding
+        import re
+        base_username = re.sub(r'[^a-zA-Z0-9_]', '', name.replace(' ', '_').lower()) or 'photographer'
+        username = base_username
+        suffix = 1
+        while User.query.filter_by(username=username).first():
+            username = f'{base_username}{suffix}'
+            suffix += 1
+
         user = User(
-            email=email, username=username,
-            password_hash=generate_password_hash(password),
-            full_name=fullname, security_question=sq,
-            security_answer=sa, agreed_at=datetime.utcnow(),
-            country=country, state=state, city=city,
+            email=email,
+            username=username,
+            full_name=name,
+            google_id=google_id,
+            onboarding_complete=False,
+            agreed_at=datetime.utcnow(),
+            is_active=True,
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash('Welcome to Lens League!', 'success')
+        return redirect(url_for('onboarding'))
+
+
+@app.route('/onboarding', methods=['GET', 'POST'])
+@login_required
+def onboarding():
+    if getattr(current_user, 'onboarding_complete', True):
         return redirect(url_for('dashboard'))
-    # Build location data for cascading JS dropdowns
+
+    if request.method == 'POST':
+        country = request.form.get('country', '').strip()
+        state   = request.form.get('state', '').strip()
+        city    = request.form.get('city', '').strip()
+        agreed  = request.form.get('agreed')
+
+        if not country or not state or not city:
+            flash('Please select your country, state/province, and city.', 'error')
+            return redirect(url_for('onboarding'))
+        if not agreed:
+            flash('Please accept the Member Agreement to continue.', 'error')
+            return redirect(url_for('onboarding'))
+
+        current_user.country             = country
+        current_user.state               = state
+        current_user.city                = city
+        current_user.agreed_at           = datetime.utcnow()
+        current_user.onboarding_complete = True
+        db.session.commit()
+        flash('Welcome to Lens League! Your account is ready.', 'success')
+        return redirect(url_for('dashboard'))
+
     _loc = {}
     for _s, _c in INDIA_STATES_CITIES.items():
         _loc.setdefault('India', {})[_s] = _c
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
-    return render_template('register.html',
+
+    return render_template('onboarding.html',
         countries          = get_countries(),
         location_data_json = json.dumps(_loc),
     )
@@ -437,50 +500,6 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        email    = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        user     = User.query.filter_by(email=email).first()
-        if user and check_password_hash(user.password_hash, password):
-            # Check for images flagged as AI-generated since last login
-            last_seen = user.last_login or datetime(2000, 1, 1)
-            flagged_since = Image.query.filter(
-                Image.user_id == user.id,
-                Image.is_flagged == True,
-                Image.flagged_at != None,
-                Image.flagged_at > last_seen
-            ).count()
-            # Check for images held under review (amber zone or Grandmaster)
-            review_pending = Image.query.filter(
-                Image.user_id == user.id,
-                Image.needs_review == True,
-                Image.is_flagged == False
-            ).count()
-            user.last_login = datetime.utcnow()
-            db.session.commit()
-            login_user(user)
-            if flagged_since:
-                flash(
-                    f'⚠️ {flagged_since} of your image{"s" if flagged_since > 1 else ""} '
-                    f'{"were" if flagged_since > 1 else "was"} flagged as potentially AI-generated '
-                    f'and removed from public view. Visit your dashboard to review.',
-                    'warning'
-                )
-            if review_pending:
-                flash(
-                    f'🔍 {review_pending} of your image{"s" if review_pending > 1 else ""} '
-                    f'{"are" if review_pending > 1 else "is"} currently under admin review '
-                    f'and not yet visible to the public.',
-                    'info'
-                )
-            if getattr(user, 'league_suspended', False):
-                flash(
-                    '🚫 Your contest access is suspended due to repeated league mismatches. '
-                    'Contact verify@lensleague.com to resolve.',
-                    'error'
-                )
-            return redirect(url_for('dashboard'))
-        flash('Invalid email or password.', 'error')
     return render_template('login.html')
 
 
@@ -780,7 +799,7 @@ def upload():
             if month_count >= free_limit:
                 msg = (
                     f'You have used all {free_limit} free scored images for this month. '
-                    'Upgrade to Camera or Mobile League for unlimited uploads and contest entry.'
+                    'Upgrade to Camera or Mobile track for unlimited uploads and contest entry.'
                 )
                 flash(msg, 'error')
                 return redirect(url_for('pricing'))
@@ -2695,7 +2714,7 @@ def contest_enter_monthly(genre):
             )
             db.session.add(entry)
             db.session.commit()
-            flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)} — {track.title()} League · {now.strftime("%B %Y")}.', 'success')
+            flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)} — {track.title()} Track · {now.strftime("%B %Y")}.', 'success')
 
         return redirect(url_for('contests'))
 
@@ -2893,7 +2912,7 @@ def subscribe(track):
             current_user.razorpay_sub_id     = subscription_id
             db.session.commit()
 
-            flash(f'🎉 Welcome to the {track.title()} League! Your subscription is active.', 'success')
+            flash(f'🎉 Welcome to the {track.title()} Track! Your subscription is active.', 'success')
             return redirect(url_for('dashboard'))
         except Exception as e:
             app.logger.error(f'[subscribe] verification failed: {e}')
@@ -3005,7 +3024,7 @@ def bulk_upload():
             if month_count >= free_limit:
                 flash(
                     f'You have used all {free_limit} free scored images for this month. '
-                    'Upgrade to Camera or Mobile League for unlimited uploads.',
+                    'Upgrade to Camera or Mobile track for unlimited uploads.',
                     'error'
                 )
                 return redirect(url_for('pricing'))
