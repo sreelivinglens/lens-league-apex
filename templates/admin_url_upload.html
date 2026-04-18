@@ -154,6 +154,7 @@
     <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px;">
       Results — {{ results|length }} URL{{ 's' if results|length != 1 }} processed
     </div>
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <table class="results-table">
       <thead>
         <tr>

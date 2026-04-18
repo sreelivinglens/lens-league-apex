@@ -198,7 +198,7 @@
   <!-- Contest meta pills -->
   <div class="contest-meta">
     <span class="contest-meta-pill gold">{{ month_name }}</span>
-    <span class="contest-meta-pill">{{ track | title }} Track</span>
+    <span class="contest-meta-pill">{{ track | title }} League</span>
     <span class="contest-meta-pill">{{ genre_label }}</span>
     <span class="contest-meta-pill">One entry per genre</span>
     <span class="contest-meta-pill">Peer-rated blind</span>
@@ -225,7 +225,7 @@
   <form method="POST" id="entryForm">
     {% if eligible %}
     <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px;">
-      Select your best image for this genre. Only your scored {{ track | title }} images are shown.
+      Select your best image for this genre. Only your scored {{ track | title }} League images are shown.
       <strong style="color:var(--text-primary);">{{ eligible|length }} image{{ 's' if eligible|length != 1 else '' }} eligible.</strong>
     </p>
 
@@ -265,7 +265,7 @@
 
     {% else %}
     <div class="empty-eligible">
-      <p>You have no scored {{ track | title }} images in <strong>{{ genre_label }}</strong> yet.</p>
+      <p>You have no scored {{ track | title }} League images in <strong>{{ genre_label }}</strong> yet.</p>
       <p style="margin-bottom:24px;">Upload and score an image in this genre first, then come back to enter.</p>
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
     </div>
