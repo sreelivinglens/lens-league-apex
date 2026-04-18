@@ -622,9 +622,62 @@ def dashboard():
             'in_month1': in_month1,
         }
 
+    # ── POTY top-6 tracker ──────────────────────────────────────────────────
+    # Live top-6 average per genre for the current user.
+    # Deleted images intentionally not excluded — per contest rules, deletions
+    # do not improve POTY standing. Calculated from all scored images.
+    poty_tracker = None
+    if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
+        scored_images = (Image.query
+            .filter_by(user_id=current_user.id, status='scored')
+            .filter(Image.score != None)
+            .order_by(Image.genre, Image.score.desc())
+            .all())
+
+        # Group by normalised genre
+        from engine.scoring import normalise_genre
+        genre_data = {}
+        for img in scored_images:
+            g = normalise_genre(img.genre) if img.genre else 'Other'
+            if g not in genre_data:
+                genre_data[g] = []
+            genre_data[g].append(img)
+
+        # Build per-genre summary: top-6 avg, count, top-6 images
+        POTY_MIN_IMAGES = 24
+        genre_rows = []
+        for genre, imgs in sorted(genre_data.items()):
+            imgs_desc = sorted(imgs, key=lambda x: x.score or 0, reverse=True)
+            top6      = imgs_desc[:6]
+            top6_avg  = round(sum(i.score for i in top6) / len(top6), 1) if top6 else 0
+            genre_rows.append({
+                'genre':       genre,
+                'count':       len(imgs),
+                'top6_avg':    top6_avg,
+                'top6_images': top6,
+                'qualifies':   len(imgs) >= POTY_MIN_IMAGES,
+                'bar_pct':     min(100, int((top6_avg / 100) * 100)) if top6_avg else 0,
+            })
+
+        # Sort by top6_avg desc
+        genre_rows.sort(key=lambda x: x['top6_avg'], reverse=True)
+
+        best_avg    = genre_rows[0]['top6_avg'] if genre_rows else 0
+        active_genres = len([r for r in genre_rows if r['count'] > 0])
+        total_scored  = sum(r['count'] for r in genre_rows)
+
+        poty_tracker = {
+            'genre_rows':     genre_rows,
+            'best_avg':       best_avg,
+            'active_genres':  active_genres,
+            'total_scored':   total_scored,
+            'min_images':     POTY_MIN_IMAGES,
+        }
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
-                           rating_widget=rating_widget, free_tier=free_tier)
+                           rating_widget=rating_widget, free_tier=free_tier,
+                           poty_tracker=poty_tracker)
 
 
 # ---------------------------------------------------------------------------
