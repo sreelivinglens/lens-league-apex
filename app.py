@@ -1372,10 +1372,23 @@ def admin_dashboard():
     all_users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
 
     open_reports_count = ImageReport.query.filter_by(status='open').count()
+
+    # Subscription stats for export panel
+    stats_sub = {
+        'subscribers':  User.query.filter_by(is_subscribed=True).count(),
+        'camera_subs':  User.query.filter_by(is_subscribed=True, subscription_track='camera').count(),
+        'mobile_subs':  User.query.filter_by(is_subscribed=True, subscription_track='mobile').count(),
+        'free_users':   User.query.filter(
+                            User.role != 'admin',
+                            db.or_(User.is_subscribed == False, User.is_subscribed == None)
+                        ).count(),
+    }
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
-                           all_users=all_users, open_reports_count=open_reports_count)
+                           all_users=all_users, open_reports_count=open_reports_count,
+                           stats=stats_sub)
 
 
 @app.route('/admin/calibrate', methods=['POST'])
@@ -3021,6 +3034,301 @@ def admin_export_ratings_csv():
         headers={'Content-Disposition': f'attachment; filename="{filename}"'},
     )
 
+
+
+
+# ---------------------------------------------------------------------------
+# Admin — Subscription view
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/subscriptions')
+@login_required
+@admin_required
+def admin_subscriptions():
+    """Subscription status overview for all users."""
+    subscribers = User.query.filter_by(is_subscribed=True).order_by(User.subscribed_at.desc()).all()
+    free_users  = User.query.filter(
+        User.role != 'admin',
+        db.or_(User.is_subscribed == False, User.is_subscribed == None)
+    ).order_by(User.created_at.desc()).all()
+    total_mrr = sum(
+        (299 if u.subscription_track == 'mobile' else 599)
+        for u in subscribers if u.subscription_plan == 'monthly'
+    )
+    total_arr = sum(
+        (2499 if u.subscription_track == 'mobile' else 4999)
+        for u in subscribers if u.subscription_plan == 'annual'
+    )
+    return render_template('admin_subscriptions.html',
+        subscribers=subscribers, free_users=free_users,
+        total_mrr=total_mrr, total_arr=total_arr,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Admin CSV Exports
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/export/users')
+@login_required
+@admin_required
+def admin_export_users():
+    """Export full user base as CSV."""
+    import io, csv
+    from flask import Response
+    from datetime import date as _date
+
+    users  = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'user_id', 'username', 'full_name', 'email',
+        'joined_date', 'is_subscribed', 'subscription_track', 'subscription_plan',
+        'subscribed_at', 'razorpay_sub_id',
+        'total_images', 'scored_images',
+        'rating_credits', 'lifetime_ratings_given', 'peer_pool_unlocks',
+        'rating_bias_flag', 'is_active',
+    ])
+    for u in users:
+        total_imgs  = Image.query.filter_by(user_id=u.id).count()
+        scored_imgs = Image.query.filter_by(user_id=u.id, status='scored').count()
+        writer.writerow([
+            u.id, u.username, u.full_name or '', u.email,
+            u.created_at.strftime('%Y-%m-%d') if u.created_at else '',
+            '1' if u.is_subscribed else '0',
+            u.subscription_track or '',
+            u.subscription_plan  or '',
+            u.subscribed_at.strftime('%Y-%m-%d %H:%M:%S') if u.subscribed_at else '',
+            u.razorpay_sub_id or '',
+            total_imgs, scored_imgs,
+            u.rating_credits or 0,
+            u.lifetime_ratings_given or 0,
+            u.peer_pool_unlocks or 0,
+            '1' if u.rating_bias_flag else '0',
+            '1' if u.is_active else '0',
+        ])
+    filename = f'lens_league_users_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
+@app.route('/admin/export/subscriptions')
+@login_required
+@admin_required
+def admin_export_subscriptions():
+    """Export subscribers only as CSV."""
+    import io, csv
+    from flask import Response
+
+    subs   = User.query.filter_by(is_subscribed=True).order_by(User.subscribed_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'user_id', 'username', 'full_name', 'email',
+        'subscription_track', 'subscription_plan',
+        'monthly_value_inr', 'subscribed_at', 'razorpay_sub_id',
+    ])
+    price_map = {
+        ('mobile', 'monthly'): 299,  ('mobile', 'annual'): 2499,
+        ('camera', 'monthly'): 599,  ('camera', 'annual'): 4999,
+    }
+    for u in subs:
+        price = price_map.get((u.subscription_track, u.subscription_plan), 0)
+        writer.writerow([
+            u.id, u.username, u.full_name or '', u.email,
+            u.subscription_track or '', u.subscription_plan or '',
+            price,
+            u.subscribed_at.strftime('%Y-%m-%d %H:%M:%S') if u.subscribed_at else '',
+            u.razorpay_sub_id or '',
+        ])
+    filename = f'lens_league_subscriptions_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
+@app.route('/admin/export/images')
+@login_required
+@admin_required
+def admin_export_images():
+    """Export all scored images with EXIF, scores, and lens data as CSV."""
+    import io, csv
+    from flask import Response
+
+    images = Image.query.filter_by(status='scored').order_by(Image.scored_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'image_id', 'asset_name', 'genre', 'track',
+        'photographer', 'user_id',
+        'score', 'tier', 'archetype',
+        'dod', 'disruption', 'dm', 'wonder', 'aq',
+        'soul_bonus', 'blended_score', 'peer_rating_count',
+        'exif_camera', 'exif_date_taken', 'exif_settings',
+        'exif_status', 'needs_review', 'is_flagged',
+        'scored_at', 'created_at',
+    ])
+    for img in images:
+        writer.writerow([
+            img.id, img.asset_name or '', img.genre or '', img.camera_track or '',
+            img.photographer_name or '', img.user_id,
+            img.score or '', img.tier or '', img.archetype or '',
+            img.dod_score or '', img.disruption_score or '', img.dm_score or '',
+            img.wonder_score or '', img.aq_score or '',
+            '1' if img.soul_bonus else '0',
+            img.blended_score or '', img.peer_rating_count or 0,
+            img.exif_camera or '', img.exif_date_taken or '', img.exif_settings or '',
+            img.exif_status or '', '1' if img.needs_review else '0',
+            '1' if img.is_flagged else '0',
+            img.scored_at.strftime('%Y-%m-%d %H:%M:%S') if img.scored_at else '',
+            img.created_at.strftime('%Y-%m-%d %H:%M:%S') if img.created_at else '',
+        ])
+    filename = f'lens_league_images_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
+@app.route('/admin/export/camera-rankings')
+@login_required
+@admin_required
+def admin_export_camera_rankings():
+    """Export camera and phone model rankings by avg score as CSV."""
+    import io, csv
+    from flask import Response
+    from collections import defaultdict
+
+    images = Image.query.filter(
+        Image.status == 'scored',
+        Image.score != None,
+        Image.exif_camera != None,
+        Image.exif_camera != '',
+    ).all()
+
+    camera_data  = defaultdict(list)
+    mobile_data  = defaultdict(list)
+
+    for img in images:
+        cam = (img.exif_camera or '').strip()
+        if not cam:
+            continue
+        if img.camera_track == 'camera':
+            camera_data[cam].append(img.score)
+        elif img.camera_track == 'mobile':
+            mobile_data[cam].append(img.score)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['track', 'camera_model', 'image_count', 'avg_score', 'min_score', 'max_score'])
+
+    for model, scores in sorted(camera_data.items(), key=lambda x: -sum(x[1])/len(x[1])):
+        if len(scores) >= 2:
+            writer.writerow([
+                'camera', model, len(scores),
+                round(sum(scores)/len(scores), 2),
+                round(min(scores), 2), round(max(scores), 2),
+            ])
+    for model, scores in sorted(mobile_data.items(), key=lambda x: -sum(x[1])/len(x[1])):
+        if len(scores) >= 2:
+            writer.writerow([
+                'mobile', model, len(scores),
+                round(sum(scores)/len(scores), 2),
+                round(min(scores), 2), round(max(scores), 2),
+            ])
+
+    filename = f'lens_league_camera_rankings_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
+@app.route('/admin/export/lens-rankings')
+@login_required
+@admin_required
+def admin_export_lens_rankings():
+    """Export lens model rankings by avg score as CSV (camera track only)."""
+    import io, csv
+    from flask import Response
+    from collections import defaultdict
+
+    # Extract lens from exif_settings — format: focal · aperture · iso · shutter
+    # Lens model lives in exif_camera field for many cameras; use exif_settings for focal context
+    images = Image.query.filter(
+        Image.status == 'scored',
+        Image.score != None,
+        Image.camera_track == 'camera',
+        Image.exif_camera != None,
+        Image.exif_camera != '',
+    ).all()
+
+    lens_data = defaultdict(list)
+    for img in images:
+        # Use exif_camera as the lens/camera identifier for now
+        # When dedicated lens EXIF field is added this can be updated
+        cam = (img.exif_camera or '').strip()
+        if cam:
+            lens_data[cam].append(img.score)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['camera_lens_model', 'image_count', 'avg_score', 'min_score', 'max_score'])
+    for model, scores in sorted(lens_data.items(), key=lambda x: -sum(x[1])/len(x[1])):
+        if len(scores) >= 2:
+            writer.writerow([
+                model, len(scores),
+                round(sum(scores)/len(scores), 2),
+                round(min(scores), 2), round(max(scores), 2),
+            ])
+
+    filename = f'lens_league_lens_rankings_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
+
+
+@app.route('/admin/export/peer-ratings')
+@login_required
+@admin_required
+def admin_export_peer_ratings_full():
+    """Export full peer-to-peer rating audit with bias data as CSV."""
+    import io, csv
+    from flask import Response
+
+    ratings = (PeerRating.query
+               .order_by(PeerRating.rated_at.desc()).all())
+    output  = io.StringIO()
+    writer  = csv.writer(output)
+    writer.writerow([
+        'rated_at', 'rater_id', 'rater_username', 'rater_name',
+        'rater_bias_flag', 'rater_lifetime_given',
+        'image_id', 'image_title', 'photographer', 'genre', 'track',
+        'ddi_score', 'peer_dod', 'peer_disruption', 'peer_dm', 'peer_wonder', 'peer_aq',
+        'peer_ll_score', 'delta_from_ddi', 'time_spent_seconds',
+        'image_peer_rating_count', 'image_blended_score',
+    ])
+    for r in ratings:
+        img   = r.image
+        rater = r.rater
+        writer.writerow([
+            r.rated_at.strftime('%Y-%m-%d %H:%M:%S') if r.rated_at else '',
+            rater.id            if rater else '',
+            rater.username      if rater else '',
+            rater.full_name     if rater else '',
+            '1' if (rater and rater.rating_bias_flag) else '0',
+            rater.lifetime_ratings_given if rater else '',
+            r.image_id,
+            img.asset_name        if img else '',
+            img.photographer_name if img else '',
+            r.genre,
+            img.camera_track      if img else '',
+            img.score             if img else '',
+            r.dod, r.disruption, r.dm, r.wonder, r.aq,
+            r.peer_ll_score,
+            r.delta_from_ddi if r.delta_from_ddi is not None else '',
+            r.time_spent_seconds or '',
+            img.peer_rating_count if img else '',
+            img.blended_score     if img else '',
+        ])
+
+    filename = f'lens_league_peer_ratings_full_{date.today().strftime("%Y%m%d")}.csv'
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
 @app.route('/admin/user/<int:user_id>/clear-bias-flag', methods=['POST'])
 @login_required
