@@ -362,25 +362,21 @@ def auto_title(filename, genre=None, archetype=None, location=None, subject=None
 @app.route('/')
 def index():
     try:
-        stats = {
-            'total_images': Image.query.filter_by(status='scored').count(),
-            'total_members': User.query.filter(User.role != 'admin').count(),
-            'avg_score': db.session.query(db.func.avg(Image.score))
-                           .filter(Image.score != None).scalar() or 0,
-        }
-        top_images = (Image.query
-                      .filter(Image.status=='scored', Image.score != None)
-                      .order_by(Image.score.desc())
-                      .limit(6).all())
-        example_image = (Image.query
-                         .filter(Image.status=='scored', Image.score != None)
-                         .order_by(db.func.random())
-                         .first())
+        # Recent 4 public scored images for proof-of-activity strip
+        recent_images = (Image.query
+                         .filter(Image.status=='scored', Image.score!=None,
+                                 Image.is_public==True, Image.is_flagged==False)
+                         .order_by(Image.scored_at.desc())
+                         .limit(4).all())
+        # Current contest month label e.g. "April 2026 Monthly Contest"
+        contest_month_label = datetime.utcnow().strftime('%B %Y') + ' Monthly Contest'
     except Exception:
-        stats = {'total_images': 0, 'total_members': 0, 'avg_score': 0}
-        top_images = []
-        example_image = None
-    return render_template('index.html', stats=stats, top_images=top_images, example_image=example_image, now=datetime.utcnow())
+        recent_images = []
+        contest_month_label = 'Monthly Contest'
+    return render_template('index.html',
+                           recent_images=recent_images,
+                           contest_month_label=contest_month_label,
+                           now=datetime.utcnow())
 
 
 @app.route('/register', methods=['GET', 'POST'])
