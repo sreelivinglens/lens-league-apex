@@ -660,11 +660,11 @@ function dismissFlash(btn) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.flash.success').forEach(function(el) {
+  document.querySelectorAll('.flash').forEach(function(el) {
     setTimeout(function() {
       el.classList.add('hiding');
       setTimeout(() => el.remove(), 300);
-    }, 6000);
+    }, 8000);
   });
 });
 
