@@ -309,23 +309,23 @@
 
   {# SPRINT 1: Science tagline — pulled from footer to screen 1 #}
   <div class="hero-science-tag">
-    ★&nbsp; Rated by Science. Not Opinion. &nbsp;★
+    ★&nbsp; Your Score. Your Rank. Your Portfolio. &nbsp;★
   </div>
 
   <div class="hero-eyebrow">
-    <span></span>Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index<span></span>
+    <span></span>India's First Scientific Photography Rankings<span></span>
   </div>
 
   <h1 class="hero-headline">
-    Find out what your<br>photography is <em>really</em> worth.
+    Get ranked. Get noticed.<br>Get <em>hired.</em>
   </h1>
 
   {# SPRINT 1: Sub-line now includes ranking hook + mobile callout #}
   <p class="hero-sub">
-    No social media likes. No follower count. Five scientific dimensions —
-    honest, consistent feedback, every time.
+    Upload your photo. Get a scientific score, a city rank, and a public portfolio —
+    so brands, clients, and agencies can find you.
     <br><br>
-    <span style="font-size:0.95em; color:rgba(255,255,255,0.5);">Shot on Mobile? You compete in your own track.</span>
+    <span style="font-size:0.95em; color:rgba(255,255,255,0.5);">Shot on mobile? You compete in your own league — same prizes, same science.</span>
   </p>
 
   {# SPRINT 1: CTA group — Upload Free + Enter the Contest #}
@@ -370,9 +370,9 @@
     {% if top_images %}
     <div class="live-feed-strip reveal">
       <div class="live-feed-heading">
-        <strong>{{ top_images|length }} images</strong> scored recently by the Apex DDI Engine
+        Photographers ranked this week across <strong>12 genres</strong>
       </div>
-      <div class="live-feed-label">Engine active &nbsp;·&nbsp; latest scores &nbsp;·&nbsp; no names shown</div>
+      <div class="live-feed-label">Live rankings &nbsp;·&nbsp; Camera &amp; Mobile leagues &nbsp;·&nbsp; City · Genre · Tier</div>
       <div class="live-feed-row">
         {% for img in top_images[:6] %}
         <div class="live-feed-item">
@@ -402,12 +402,31 @@
     <div class="dtabs">
       <a href="/how-it-works" class="dtab reveal d1">How It Works →</a>
       <a href="/example-score" class="dtab reveal d2">Example Score →</a>
-      <a href="/stats" class="dtab reveal d3">Live Stats →</a>
+      <a href="/leaderboard" class="dtab reveal d3">City Rankings →</a>
+    </div>
+
+    {# Three-pillar value strip — photographer · brand · investor #}
+    <div class="reveal" style="width:100%; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; text-align:center;">
+      <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px;">
+        <div style="font-size:1.4rem; margin-bottom:0.5rem;">📷</div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--white); margin-bottom:0.35rem;">Photographers</div>
+        <div style="font-size:0.75rem; color:var(--muted); line-height:1.6;">Score · Rank · Portfolio<br>Compete for ₹65L in prizes</div>
+      </div>
+      <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px;">
+        <div style="font-size:1.4rem; margin-bottom:0.5rem;">🏢</div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--white); margin-bottom:0.35rem;">Brands &amp; Clients</div>
+        <div style="font-size:0.75rem; color:var(--muted); line-height:1.6;">Find verified photographers<br>by city, genre &amp; tier</div>
+      </div>
+      <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px;">
+        <div style="font-size:1.4rem; margin-bottom:0.5rem;">🏆</div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--white); margin-bottom:0.35rem;">Stock Agencies</div>
+        <div style="font-size:0.75rem; color:var(--muted); line-height:1.6;">Getty · Adobe · Shutterstock<br>discover high-ranked work</div>
+      </div>
     </div>
 
     <div class="reveal d4" style="text-align:center;">
-      <div class="closing-headline">Your photography deserves <em>honest</em> feedback.</div>
-      <div class="closing-sub">A mentor that never sleeps. A score that never flatters.</div>
+      <div class="closing-headline">Clients search by city, genre &amp; tier.</div>
+      <div class="closing-sub">Build your ranked portfolio. Let the work speak for itself.</div>
       <a href="/upload" class="btn-primary">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload Free Now
