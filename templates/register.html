@@ -3,28 +3,7 @@
 
 {% block extra_css %}
 <style>
-  .league-option { position: relative; }
-  .league-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
-  .league-tile {
-    display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px;
-    background: var(--surface-3); border: 2px solid var(--border);
-    border-radius: var(--radius-md); cursor: pointer;
-    transition: border-color 0.2s, background 0.2s; user-select: none;
-  }
-  .league-tile:hover { border-color: var(--border-strong); }
-  .league-option input[type="radio"]:checked + .league-tile {
-    border-color: var(--gold); background: var(--gold-subtle);
-  }
-  .league-icon { font-size: 28px; line-height: 1; flex-shrink: 0; margin-top: 2px;
-    font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
-  .league-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
-  .league-option input[type="radio"]:checked + .league-tile .league-name { color: var(--gold); }
-  .league-sub { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-  .league-prize { font-family: var(--font-mono); font-size: 11px; color: var(--gold); margin-top: 5px; letter-spacing: 0.5px; }
-
   .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .camera-section { margin-top: 6px; }
-  .camera-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
   .section-divider {
     font-family: var(--font-mono); font-size: 10px; font-weight: 600;
@@ -35,7 +14,6 @@
 
   @media (max-width: 640px) {
     .location-row { grid-template-columns: 1fr; }
-    .camera-row { grid-template-columns: 1fr; }
   }
 </style>
 {% endblock %}
@@ -123,75 +101,6 @@
         </div>
       </div>
 
-      <!-- ── League selection ── -->
-      <span class="section-divider">Choose Your League</span>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; margin-top:-10px; line-height:1.6;">
-        Camera and Mobile compete separately — same genres, same science, same prize structure. You can upgrade later.
-      </p>
-
-      <div class="grid-2" style="gap:14px; margin-bottom:20px;">
-        <label class="league-option">
-          <input type="radio" name="subscription_league" value="camera"
-                 {% if request.form.get('subscription_league') == 'camera' %}checked{% endif %}>
-          <div class="league-tile">
-            <span class="league-icon">📷</span>
-            <div>
-              <div class="league-name">Camera League</div>
-              <div class="league-sub">DSLR · Mirrorless · Film · Compact</div>
-              <div class="league-prize">₹599/month · ₹50L prize pool</div>
-            </div>
-          </div>
-        </label>
-        <label class="league-option">
-          <input type="radio" name="subscription_league" value="mobile"
-                 {% if request.form.get('subscription_league') == 'mobile' %}checked{% endif %}>
-          <div class="league-tile">
-            <span class="league-icon">📱</span>
-            <div>
-              <div class="league-name">Mobile League</div>
-              <div class="league-sub">iPhone · Android · Any smartphone</div>
-              <div class="league-prize">₹299/month · Dedicated prize pool</div>
-            </div>
-          </div>
-        </label>
-      </div>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:0; line-height:1.6;">
-        Not subscribing yet? You still get 6 free scored images in your first month.
-        Your league selection activates when you subscribe.
-      </p>
-
-      <!-- ── Camera / Phone ── -->
-      <span class="section-divider">What Do You Shoot On?</span>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
-        This helps brands and clients find you — e.g. "Sony photographers in Mumbai". Your EXIF data
-        is also extracted automatically from each image and used for rankings.
-      </p>
-
-      <div class="camera-row camera-section">
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="camera_brand">Brand</label>
-          <select id="camera_brand" name="camera_brand" onchange="updateModels()">
-            <option value="" selected>Select brand… (optional)</option>
-            <optgroup label="── Cameras ──">
-              {% for brand in camera_brands %}
-              <option value="{{ brand }}" {% if request.form.get('camera_brand') == brand %}selected{% endif %}>{{ brand }}</option>
-              {% endfor %}
-            </optgroup>
-            <optgroup label="── Phones ──">
-              {% for brand in phone_brands %}
-              <option value="{{ brand }}" {% if request.form.get('camera_brand') == brand %}selected{% endif %}>{{ brand }}</option>
-              {% endfor %}
-            </optgroup>
-          </select>
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="declared_camera">Model</label>
-          <select id="declared_camera" name="declared_camera" disabled>
-            <option value="" selected>Select model… (optional)</option>
-          </select>
-        </div>
-      </div>
-
       <!-- ── Security question ── -->
       <span class="section-divider">Account Recovery</span>
       <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px; margin-top:-10px;">Used to recover your account if you forget your password.</p>
@@ -266,7 +175,7 @@
       <p style="margin-bottom:16px;">By registering, you agree to:</p>
       <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
         <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
-        <li>You are in the correct league for your device. Camera League = DSLR/mirrorless/film. Mobile League = smartphone. EXIF data is checked on every upload.</li>
+        <li>You shoot in the correct league for your device — Camera League for DSLR/mirrorless/film, Mobile League for smartphones. Your league is chosen at subscription. EXIF data is verified on every upload.</li>
         <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
         <li>Fraud = all images removed, account permanently deleted, all prizes forfeited.</li>
         <li>You retain full copyright on all images. Lens League gets a non-exclusive licence to display them on the platform.</li>
@@ -324,26 +233,6 @@ function updateCities() {
   cityEl.disabled = false;
 }
 
-// ── Camera / phone model cascade ─────────────────────────────────────────
-const CAMERA_DATA = {{ camera_data_json | safe }};
-
-function updateModels() {
-  const brand   = document.getElementById('camera_brand').value;
-  const modelEl = document.getElementById('declared_camera');
-
-  modelEl.innerHTML = '<option value="">Select model… (optional)</option>';
-  modelEl.disabled = true;
-
-  if (!brand || !CAMERA_DATA[brand]) return;
-
-  CAMERA_DATA[brand].forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m; opt.textContent = m;
-    modelEl.appendChild(opt);
-  });
-  modelEl.disabled = false;
-}
-
 // ── Form validation ──────────────────────────────────────────────────────
 document.querySelector('form').addEventListener('submit', function(e) {
   const pw  = document.getElementById('password').value;
@@ -373,13 +262,6 @@ updateCities();
 {% if request.form.get('city') %}
 document.getElementById('city').value = {{ request.form.get('city') | tojson }};
 {% endif %}
-{% endif %}
-{% endif %}
-{% if request.form.get('camera_brand') %}
-document.getElementById('camera_brand').value = {{ request.form.get('camera_brand') | tojson }};
-updateModels();
-{% if request.form.get('declared_camera') %}
-document.getElementById('declared_camera').value = {{ request.form.get('declared_camera') | tojson }};
 {% endif %}
 {% endif %}
 </script>
