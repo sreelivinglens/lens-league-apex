@@ -6,27 +6,27 @@
 .lb-wrap { max-width: 1000px; }
 .lb-header { margin-bottom: 1.5rem; padding-left: 20px; border-left: 3px solid var(--gold); }
 .lb-header h1 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-.lb-sub { color: var(--text-muted); font-size: 14px; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
+.lb-sub { color: var(--text-muted); font-size: 16px; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
 .lb-filters { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
 .lb-filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
 .lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
-.lb-filter-group label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+.lb-filter-group label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
 .lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
-.lb-pill { padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-family: var(--font-mono); text-decoration: none; color: var(--text-secondary); background: transparent; transition: all .15s; letter-spacing: .5px; }
+.lb-pill { padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border); font-size: 15px; font-family: var(--font-mono); text-decoration: none; color: var(--text-secondary); background: transparent; transition: all .15s; letter-spacing: .5px; }
 .lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
 .lb-pill.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 700; }
-.lb-filter-group select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; background: var(--surface-3); color: var(--text-primary); cursor: pointer; font-family: var(--font-body); outline: none; transition: border-color .2s; }
+.lb-filter-group select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 15px; background: #F5F0E8; color: var(--text-primary); cursor: pointer; font-family: var(--font-body); outline: none; transition: border-color .2s; }
 .lb-filter-group select:focus { border-color: var(--gold); }
-.lb-filter-group select option { background: var(--surface-3); }
+.lb-filter-group select option { background: #F5F0E8; }
 .lb-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
-.lb-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; font-family: var(--font-mono); letter-spacing: 1px; text-decoration: none; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; text-transform: uppercase; }
+.lb-tab { padding: 10px 20px; font-size: 15px; font-weight: 600; font-family: var(--font-mono); letter-spacing: 1px; text-decoration: none; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; text-transform: uppercase; }
 .lb-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 .lb-tab:hover:not(.active) { color: var(--text-secondary); }
 .lb-table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
-.lb-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 480px; }
+.lb-table { width: 100%; border-collapse: collapse; font-size: 16px; min-width: 480px; }
 .col-thumb a { display: block; line-height: 0; width: 44px; height: 44px; overflow: hidden; }
-.lb-table thead tr { background: var(--surface-3); }
-.lb-table thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.lb-table thead tr { background: #F5F0E8; }
+.lb-table thead th { text-align: left; font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .lb-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background .1s; }
 .lb-table tbody tr:last-child { border-bottom: none; }
 .lb-table tbody tr:hover { background: rgba(200,168,75,0.04); }
@@ -36,37 +36,37 @@
 .col-rank { width: 48px; text-align: center; }
 .col-thumb { width: 56px; }
 .col-genre, .col-tier, .col-track { white-space: nowrap; }
-.medal { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+.medal { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: 700; }
 .medal.gold   { background: #C8A84B; color: #3a2a00; }
 .medal.silver { background: #8a8a8a; color: #1a1a1a; }
 .medal.bronze { background: #8B5E3C; color: #fff; }
-.rank-num { font-size: 13px; color: var(--text-disabled); font-family: var(--font-mono); }
+.rank-num { font-size: 15px; color: var(--text-disabled); font-family: var(--font-mono); }
 .lb-thumb { width: 44px; height: 44px; min-width: 44px; min-height: 44px; max-width: 44px; object-fit: cover; border-radius: var(--radius-sm); display: block; border: 1px solid var(--border); flex-shrink: 0; }
-.lb-thumb-placeholder { width: 44px; height: 44px; min-width: 44px; max-width: 44px; min-height: 44px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border); display: block; flex-shrink: 0; }
+.lb-thumb-placeholder { width: 44px; height: 44px; min-width: 44px; max-width: 44px; min-height: 44px; border-radius: var(--radius-sm); background: #F5F0E8; border: 1px solid var(--border); display: block; flex-shrink: 0; }
 .col-thumb { width: 56px; min-width: 56px; }
-.lb-title-link { font-weight: 600; color: var(--text-primary); text-decoration: none; font-size: 14px; display: block; }
+.lb-title-link { font-weight: 600; color: var(--text-primary); text-decoration: none; font-size: 16px; display: block; }
 .lb-title-link:hover { color: var(--gold); }
-.lb-byline { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; display: block; }
-.lb-badge { font-size: 11px; background: var(--surface-3); color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); font-family: var(--font-mono); letter-spacing: .5px; }
-.lb-tier { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
+.lb-byline { font-size: 15px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; display: block; }
+.lb-badge { font-size: 14px; background: #F5F0E8; color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); font-family: var(--font-mono); letter-spacing: .5px; }
+.lb-tier { font-size: 14px; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
 .tier-legend       { background: rgba(200,168,75,0.15); color: var(--gold-light); border: 1px solid var(--gold-dark); }
 .tier-grandmaster  { background: rgba(138,97,175,0.20); color: #c49eff; border: 1px solid #7a4aaa; }
 .tier-master       { background: rgba(59,130,200,0.20); color: #7abfff; border: 1px solid #2a5a99; }
 .tier-practitioner { background: rgba(76,175,115,0.20); color: #7adfa8; border: 1px solid #2a7a55; }
-.tier-apprentice   { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
-.lb-track-pill { font-size: 10px; font-family: var(--font-mono); letter-spacing: .5px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
+.tier-apprentice   { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
+.lb-track-pill { font-size: 14px; font-family: var(--font-mono); letter-spacing: .5px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
 .lb-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
-.lb-photographer-name { font-weight: 600; color: var(--text-primary); font-size: 14px; }
-.lb-photographer-handle { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.lb-count { color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; }
-.lb-empty { padding: 48px; text-align: center; color: var(--text-muted); font-size: 14px; font-family: var(--font-mono); letter-spacing: 1px; }
+.lb-photographer-name { font-weight: 600; color: var(--text-primary); font-size: 16px; }
+.lb-photographer-handle { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+.lb-count { color: var(--text-muted); font-family: var(--font-mono); font-size: 15px; }
+.lb-empty { padding: 48px; text-align: center; color: var(--text-muted); font-size: 16px; font-family: var(--font-mono); letter-spacing: 1px; }
 .score-notice {
   display: flex; align-items: center; gap: 10px;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: #FFFFFF; border: 1px solid var(--border);
   border-left: 3px solid var(--gold-dark);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 10px 16px; margin-bottom: 20px;
-  font-family: var(--font-mono); font-size: 11px;
+  font-family: var(--font-mono); font-size: 14px;
   letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;
 }
 .lb-cta {
@@ -76,13 +76,13 @@
   display: flex; align-items: center; justify-content: space-between;
   gap: 20px; flex-wrap: wrap;
 }
-.lb-cta p { font-size: 14px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; }
+.lb-cta p { font-size: 16px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; }
 .peer-dot {
   display: inline-block; width: 7px; height: 7px; border-radius: 50%;
   background: var(--green); margin-right: 4px; vertical-align: middle;
 }
 @media (max-width: 600px) {
-  .lb-table { min-width: 0; font-size: 13px; }
+  .lb-table { min-width: 0; font-size: 15px; }
   .col-genre, .col-track { display: none; }
   .lb-thumb { width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; }
   .lb-byline { max-width: 140px; }
@@ -215,11 +215,11 @@
           <td>{{ image.photographer_name or '—' }}</td>
           <td>
             {% if image.peer_rating_count and image.peer_rating_count > 0 %}
-            <span style="font-family:var(--font-mono); font-size:12px; color:var(--green);">
+            <span style="font-family:var(--font-mono); font-size:15px; color:var(--green);">
               <span class="peer-dot"></span>{{ image.peer_rating_count }}
             </span>
             {% else %}
-            <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">—</span>
+            <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">—</span>
             {% endif %}
           </td>
         </tr>
@@ -264,12 +264,12 @@
             {% endif %}
           </td>
           <td>
-            <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--gold);">
+            <span style="font-family:var(--font-mono); font-size:17px; font-weight:700; color:var(--gold);">
               {{ '%.2f'|format(p.avg_score) }}
             </span>
           </td>
           <td>
-            <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-secondary);">
+            <span style="font-family:var(--font-mono); font-size:16px; color:var(--text-secondary);">
               {{ p.best_score }}
             </span>
           </td>
@@ -285,7 +285,7 @@
           <td><span class="lb-count">{{ p.image_count }}</span></td>
           <td>
             {% if p.total_peer_ratings %}
-            <span style="font-family:var(--font-mono); font-size:12px; color:var(--green);">
+            <span style="font-family:var(--font-mono); font-size:15px; color:var(--green);">
               <span class="peer-dot"></span>{{ p.total_peer_ratings }}
             </span>
             {% else %}

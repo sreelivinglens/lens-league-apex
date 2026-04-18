@@ -4,17 +4,17 @@
 {% block extra_css %}
 <style>
   .sub-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px; margin-bottom:32px; }
-  .sub-stat { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; }
+  .sub-stat { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; }
   .sub-stat-val { font-size:28px; font-weight:700; color:var(--gold); line-height:1; margin-bottom:4px; }
-  .sub-stat-lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; }
-  .sub-table { width:100%; border-collapse:collapse; font-size:14px; }
-  .sub-table th { font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+  .sub-stat-lbl { font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; }
+  .sub-table { width:100%; border-collapse:collapse; font-size:16px; }
+  .sub-table th { font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
   .sub-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:middle; }
-  .sub-table tr:hover td { background:var(--surface-3); }
-  .track-pill { display:inline-flex; align-items:center; gap:4px; font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:3px 10px; border-radius:99px; }
+  .sub-table tr:hover td { background:#F5F0E8; }
+  .track-pill { display:inline-flex; align-items:center; gap:4px; font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:3px 10px; border-radius:99px; }
   .track-pill.camera { background:rgba(200,168,75,.1); border:1px solid var(--gold-dark); color:var(--gold); }
-  .track-pill.mobile { background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--text-muted); }
-  .plan-pill { font-family:var(--font-mono); font-size:10px; color:var(--text-muted); }
+  .track-pill.mobile { background:#F5F0E8; border:1px solid var(--border); color:var(--text-secondary); }
+  .plan-pill { font-family:var(--font-mono); font-size:14px; color:var(--text-muted); }
   .export-bar { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
 </style>
 {% endblock %}
@@ -25,7 +25,7 @@
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
     <div>
       <div class="page-header" style="margin-bottom:4px;"><h1>Subscriptions</h1></div>
-      <p style="color:var(--text-muted); font-size:14px;">Active subscribers and revenue overview</p>
+      <p style="color:var(--text-muted); font-size:16px;">Active subscribers and revenue overview</p>
     </div>
     <div class="export-bar">
       <a href="{{ url_for('admin_export_subscriptions') }}" class="btn btn-solid" style="padding:10px 18px;">⬇ Export CSV</a>
@@ -72,10 +72,10 @@
 
   <!-- Subscribers table -->
   {% if subscribers %}
-  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
     Active Subscribers ({{ subscribers | length }})
   </div>
-  <div style="overflow-x:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:40px;">
+  <div style="overflow-x:auto; background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:40px;">
     <table class="sub-table">
       <thead>
         <tr>
@@ -99,7 +99,7 @@
         <tr>
           <td>
             <div style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</div>
-            <div style="font-size:12px; color:var(--text-muted);">{{ u.email }}</div>
+            <div style="font-size:15px; color:var(--text-muted);">{{ u.email }}</div>
           </td>
           <td>
             <span class="track-pill {{ u.subscription_track or '' }}">
@@ -109,16 +109,16 @@
           </td>
           <td><span class="plan-pill">{{ u.subscription_plan | title if u.subscription_plan else '—' }}</span></td>
           <td style="font-family:var(--font-mono); color:var(--gold);">₹{{ "{:,}".format(price) }}</td>
-          <td style="font-size:13px;">{{ u.subscribed_at.strftime('%d %b %Y') if u.subscribed_at else '—' }}</td>
+          <td style="font-size:15px;">{{ u.subscribed_at.strftime('%d %b %Y') if u.subscribed_at else '—' }}</td>
           <td style="font-family:var(--font-mono);">{{ img_count }}</td>
-          <td style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          <td style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">
             {{ u.razorpay_sub_id or '—' }}
           </td>
           <td>
             <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=u.id) }}"
                   onsubmit="return confirm('Deactivate subscription for {{ u.username }}?');"
                   style="display:inline;">
-              <button type="submit" class="btn" style="padding:5px 12px; font-size:12px; color:var(--red); border-color:var(--red);">
+              <button type="submit" class="btn" style="padding:5px 12px; font-size:15px; color:var(--red); border-color:var(--red);">
                 Deactivate
               </button>
             </form>
@@ -134,10 +134,10 @@
 
   <!-- Free users table -->
   {% if free_users %}
-  <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
+  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
     Free Users ({{ free_users | length }})
   </div>
-  <div style="overflow-x:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);">
+  <div style="overflow-x:auto; background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md);">
     <table class="sub-table">
       <thead>
         <tr>
@@ -153,16 +153,16 @@
         <tr>
           <td>
             <div style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</div>
-            <div style="font-size:12px; color:var(--text-muted);">{{ u.email }}</div>
+            <div style="font-size:15px; color:var(--text-muted);">{{ u.email }}</div>
           </td>
-          <td style="font-size:13px;">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
+          <td style="font-size:15px;">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
           <td style="font-family:var(--font-mono);">{{ u.images | length }}</td>
           <td style="font-family:var(--font-mono);">{{ u.lifetime_ratings_given or 0 }}</td>
           <td>
             <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=u.id) }}"
                   onsubmit="return confirm('Manually activate subscription for {{ u.username }}?');"
                   style="display:inline;">
-              <button type="submit" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">
+              <button type="submit" class="btn btn-solid" style="padding:5px 12px; font-size:15px;">
                 Activate
               </button>
             </form>

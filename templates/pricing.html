@@ -8,41 +8,41 @@
   .pricing-hero h1 em { font-style:normal; color:var(--gold); }
   .pricing-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-secondary); max-width:580px; margin:0 auto 32px; line-height:1.8; }
   .pricing-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:48px; }
-  .toggle-label { font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; cursor:pointer; }
+  .toggle-label { font-family:var(--font-mono); font-size:15px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; cursor:pointer; }
   .toggle-label.active { color:var(--gold); }
   .toggle-switch { position:relative; width:52px; height:28px; cursor:pointer; }
   .toggle-switch input { opacity:0; width:0; height:0; }
-  .toggle-slider { position:absolute; inset:0; background:var(--surface-3); border:1px solid var(--border); border-radius:99px; transition:.3s; }
+  .toggle-slider { position:absolute; inset:0; background:#F5F0E8; border:1px solid var(--border); border-radius:99px; transition:.3s; }
   .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:var(--gold); border-radius:50%; transition:.3s; }
   input:checked + .toggle-slider:before { transform:translateX(24px); }
-  .save-badge { font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:1px; color:#0D0D0B; background:var(--gold); padding:3px 8px; border-radius:4px; text-transform:uppercase; }
+  .save-badge { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#0D0D0B; background:var(--gold); padding:3px 8px; border-radius:4px; text-transform:uppercase; }
   .plans-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; max-width:1000px; margin:0 auto 64px; }
-  .plan-card { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; }
+  .plan-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; }
   .plan-card:hover { border-color:var(--gold-dark); }
   .plan-card.featured { border-color:var(--gold); }
-  .featured-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--gold); color:#0D0D0B; font-family:var(--font-mono); font-size:10px; font-weight:700; letter-spacing:2px; padding:4px 16px; border-radius:99px; text-transform:uppercase; white-space:nowrap; }
+  .featured-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--gold); color:#0D0D0B; font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; padding:4px 16px; border-radius:99px; text-transform:uppercase; white-space:nowrap; }
   .plan-icon { font-size:36px; margin-bottom:16px; display:block; }
   .plan-name { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .plan-track { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; }
+  .plan-track { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; }
   .plan-price { margin-bottom:24px; }
   .plan-amount { font-size:42px; font-weight:700; color:var(--text-primary); line-height:1; }
-  .plan-period { font-size:14px; color:var(--text-muted); margin-left:4px; }
-  .plan-billed { font-size:12px; color:var(--text-muted); font-family:var(--font-mono); margin-top:4px; }
+  .plan-period { font-size:16px; color:var(--text-muted); margin-left:4px; }
+  .plan-billed { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:4px; }
   .plan-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:12px; }
-  .plan-features li { font-size:14px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
+  .plan-features li { font-size:16px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
   .plan-features .check { color:var(--gold); font-weight:700; flex-shrink:0; }
   .plan-features .muted { color:var(--text-muted); }
-  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; }
+  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; }
   .plan-cta.primary { background:var(--gold); color:#0D0D0B; }
   .plan-cta.primary:hover { opacity:.85; }
   .plan-cta.secondary { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
   .plan-cta.secondary:hover { border-color:var(--gold-dark); color:var(--gold); }
   .extras-section { max-width:720px; margin:0 auto 64px; }
-  .extras-title { font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:4px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; text-align:center; }
+  .extras-title { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:4px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; text-align:center; }
   .extras-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .extra-card { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
-  .extra-name { font-size:15px; font-weight:600; color:var(--text-primary); }
-  .extra-desc { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .extra-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .extra-name { font-size:17px; font-weight:600; color:var(--text-primary); }
+  .extra-desc { font-size:15px; color:var(--text-muted); margin-top:2px; }
   .extra-price { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
 
   /* Open Competition entry section */
@@ -53,23 +53,23 @@
   }
   .open-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:24px; }
   .open-card-title { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .open-card-sub { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
-  .open-card-desc { font-size:14px; color:var(--text-secondary); line-height:1.8; max-width:480px; }
+  .open-card-sub { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
+  .open-card-desc { font-size:16px; color:var(--text-secondary); line-height:1.8; max-width:480px; }
   .open-price-box { text-align:center; flex-shrink:0; }
   .open-price-amount { font-size:42px; font-weight:700; color:var(--gold); line-height:1; }
-  .open-price-per { font-size:13px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
+  .open-price-per { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
   .open-prizes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px; }
-  .open-prize-item { background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; text-align:center; }
-  .open-prize-label { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
+  .open-prize-item { background:#F5F0E8; border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; text-align:center; }
+  .open-prize-label { font-family:var(--font-mono); font-size: 15px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
   .open-prize-amount { font-size:18px; font-weight:700; color:var(--gold); line-height:1; }
-  .open-prize-sub { font-size:11px; color:var(--text-muted); margin-top:3px; }
+  .open-prize-sub { font-size:14px; color:var(--text-muted); margin-top:3px; }
   .open-rules { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
-  .open-rule-pill { font-family:var(--font-mono); font-size:10px; font-weight:600; letter-spacing:1px; color:var(--text-muted); background:var(--surface-3); border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
+  .open-rule-pill { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; color:var(--text-muted); background:#F5F0E8; border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
 
   .faq-section { max-width:720px; margin:0 auto 64px; }
   .faq-item { border-bottom:1px solid var(--border); padding:20px 0; }
-  .faq-q { font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
-  .faq-a { font-size:14px; color:var(--text-secondary); line-height:1.8; }
+  .faq-q { font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
+  .faq-a { font-size:16px; color:var(--text-secondary); line-height:1.8; }
   @media(max-width:768px) {
     .plans-grid { grid-template-columns:1fr; }
     .extras-grid { grid-template-columns:1fr; }
@@ -83,7 +83,7 @@
 <div style="max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad);">
 
   <div class="pricing-hero">
-    <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Simple, Honest Pricing</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Simple, Honest Pricing</div>
     <h1>Two Tracks.<br><em>One Scientific Standard.</em></h1>
     <p>Get 6 free scored images in your first month, then 3 free per month ongoing. No credit card. When you're ready to compete and win, pick your track.</p>
 
@@ -111,7 +111,7 @@
       <ul class="plan-features">
         <li><span class="check">✓</span> 6 free scored images — first month</li>
         <li><span class="check">✓</span> 3 free scored images — every month after</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Apex Byline improvement tip</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> View leaderboard</li>
@@ -143,7 +143,7 @@
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Unlimited scored images</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Monthly genre contests</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
         <li><span class="check">✓</span> Annual Grand Prix — POTY ₹50L</li>
@@ -172,7 +172,7 @@
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Unlimited scored images</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Monthly mobile contests</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
         <li><span class="check">✓</span> Annual Mobile POTY ₹12L pool</li>
@@ -262,7 +262,7 @@
 
   <!-- FAQ -->
   <div class="faq-section">
-    <div style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
     <div class="faq-item">
       <div class="faq-q">What counts as a scored image?</div>
       <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 6 scored images in their first month and 3 per month thereafter. Subscribers get unlimited scored images.</div>
