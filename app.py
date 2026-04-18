@@ -500,6 +500,16 @@ def onboarding():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        email    = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        user = User.query.filter_by(email=email).first()
+        if user and user.password_hash and check_password_hash(user.password_hash, password):
+            user.last_login = datetime.utcnow()
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        flash('Invalid email or password.', 'error')
     return render_template('login.html')
 
 
