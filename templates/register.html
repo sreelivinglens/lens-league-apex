@@ -6,7 +6,7 @@
   .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
   .section-divider {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
     letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase;
     margin: 28px 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
     display: block;
@@ -22,9 +22,9 @@
 <div style="max-width:600px; margin:48px auto;">
 
   <div style="text-align:center; margin-bottom:36px;">
-    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">JOIN THE LEAGUE</div>
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">JOIN THE LEAGUE</div>
     <h1 style="font-size:clamp(24px,4vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">Create Your Account</h1>
-    <p style="font-size:15px; color:var(--text-secondary);">Get your photography scientifically scored and ranked.</p>
+    <p style="font-size:16px; color:var(--text-secondary);">Get your photography scientifically scored and ranked.</p>
   </div>
 
   <div class="card">
@@ -38,7 +38,7 @@
         <input type="text" id="username" name="username" placeholder="Your display name"
                maxlength="50" value="{{ request.form.get('username', '') }}"
                required autocomplete="username">
-        <div style="margin-top:5px; font-size:13px; color:var(--text-muted);">Visible on leaderboards and your public profile.</div>
+        <div style="margin-top:5px; font-size:15px; color:var(--text-muted);">Visible on leaderboards and your public profile.</div>
       </div>
 
       <div class="form-group">
@@ -68,7 +68,7 @@
 
       <!-- ── Location ── -->
       <span class="section-divider">Your Location</span>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
+      <p style="font-size:15px; color:var(--text-muted); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
         Used for city rankings — "Master · 📷 · Bengaluru". Helps brands and clients find local photographers.
       </p>
 
@@ -103,7 +103,7 @@
 
       <!-- ── Security question ── -->
       <span class="section-divider">Account Recovery</span>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px; margin-top:-10px;">Used to recover your account if you forget your password.</p>
+      <p style="font-size:15px; color:var(--text-muted); margin-bottom:18px; margin-top:-10px;">Used to recover your account if you forget your password.</p>
 
       <div class="form-group">
         <label for="security_question">Security Question</label>
@@ -138,11 +138,11 @@
         <input type="checkbox" id="agreed" name="agreed" value="1"
                {% if request.form.get('agreed') %}checked{% endif %}
                required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
-        <label for="agreed" style="font-size:14px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
+        <label for="agreed" style="font-size:16px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
           I confirm all images I submit are my original photographs — not AI-generated, not belonging to another photographer.
           I accept the
           <button type="button" onclick="openAgreement()"
-                  style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:14px; padding:0;">
+                  style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:16px; padding:0;">
             Member Agreement
           </button>
           and understand that submitting false work results in permanent account deletion and prize forfeiture.
@@ -150,13 +150,13 @@
       </div>
 
       <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; font-size:13px; letter-spacing:2px; margin-top:24px;">
+              style="width:100%; padding:14px; font-size:15px; letter-spacing:2px; margin-top:24px;">
         Create My Account
       </button>
     </form>
 
     <div style="border-top:1px solid var(--border-subtle); margin-top:24px; padding-top:20px; text-align:center;">
-      <p style="font-size:15px; color:var(--text-secondary);">
+      <p style="font-size:16px; color:var(--text-secondary);">
         Already have an account?
         <a href="{{ url_for('login') }}" style="color:var(--gold); font-weight:600; text-decoration:none; margin-left:4px;">Sign in →</a>
       </p>
@@ -168,10 +168,10 @@
 <div id="agreementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:16px;">
   <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); max-width:580px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
     <div style="padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="font-size:17px; font-weight:700; color:var(--gold); margin:0;">Lens League Member Agreement</h2>
+      <h2 style="font-size:18px; font-weight:700; color:var(--gold); margin:0;">Lens League Member Agreement</h2>
       <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
     </div>
-    <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:14px; color:var(--text-secondary); line-height:1.7;">
+    <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:16px; color:var(--text-secondary); line-height:1.7;">
       <p style="margin-bottom:16px;">By registering, you agree to:</p>
       <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
         <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>

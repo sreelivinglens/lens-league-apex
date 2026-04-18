@@ -6,24 +6,24 @@
   .users-wrap { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--page-pad); }
   .page-header { padding: clamp(32px,5vw,56px) 0 32px; }
   .page-header h1 { font-size: clamp(22px,4vw,36px); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
-  .page-header p { font-size: 15px; color: var(--text-secondary); }
+  .page-header p { font-size: 16px; color: var(--text-secondary); }
   .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 32px; }
   .stat-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; }
   .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .stat-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-  .users-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .users-table th { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .stat-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .users-table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .users-table th { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
   .users-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); }
   .users-table tr:last-child td { border-bottom: none; }
   .users-table tr:hover td { background: var(--surface-2); }
   .user-name { font-weight: 600; color: var(--text-primary); }
-  .user-handle { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-  .badge { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+  .user-handle { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .badge { display: inline-block; font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
   .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
   .badge-sub  { background: var(--surface-3); color: var(--text-secondary); border: 1px solid var(--border); }
   .badge-free { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
-  .track-select { font-family: var(--font-mono); font-size: 11px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; color: var(--text-secondary); }
-  .btn-action { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
+  .track-select { font-family: var(--font-mono); font-size: 14px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; color: var(--text-secondary); }
+  .btn-action { font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
   .btn-action.activate { background: var(--gold); color: #0D0D0B; }
   .btn-action.revoke   { background: var(--surface-3); color: var(--text-secondary); border: 1px solid var(--border); }
   .uat-explainer {
@@ -31,14 +31,14 @@
     border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
     padding: 28px 32px; margin-bottom: 32px;
   }
-  .uat-explainer h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+  .uat-explainer h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
   .uat-explainer ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
-  .uat-explainer li { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+  .uat-explainer li { font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
   .uat-explainer li strong { color: var(--text-primary); }
-  .empty-state { text-align: center; padding: 48px; color: var(--text-muted); font-size: 14px; }
+  .empty-state { text-align: center; padding: 48px; color: var(--text-muted); font-size: 16px; }
   @media(max-width: 768px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
-    .users-table { font-size: 12px; }
+    .users-table { font-size: 14px; }
   }
 </style>
 {% endblock %}
