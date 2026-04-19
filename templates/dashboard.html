@@ -354,13 +354,18 @@
     .genre-table-row    { grid-template-columns: 1fr 60px 80px !important; }
     .genre-table-bar    { display: none !important; }
     .genre-table-avg    { display: none !important; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
   }
   @media (max-width: 480px) {
     .img-grid { grid-template-columns: 1fr; }
     .img-thumb { aspect-ratio: 16/9; min-height: 180px; }
     .img-card-title { font-size: 16px; }
     .peer-stats { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
   }
+  /* Prevent any element from causing horizontal scroll */
+  body { overflow-x: hidden; }
+  * { max-width: 100%; box-sizing: border-box; }
 </style>
 {% endblock %}
 
@@ -402,7 +407,7 @@
     <div style="font-size:15px; color:var(--text-muted);">Share this link with clients, brands, or agencies.</div>
   </div>
   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-    <code id="profile-url" style="font-family:var(--font-mono); font-size:15px; color:var(--text-secondary); background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 12px; white-space:nowrap;">{{ request.host_url }}u/{{ current_user.username }}</code>
+    <code id="profile-url" style="font-family:var(--font-mono); font-size:15px; color:var(--text-secondary); background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(280px, 50vw); display:inline-block;">{{ request.host_url }}u/{{ current_user.username }}</code>
     <button onclick="copyProfileUrl()" id="copy-btn"
             style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 14px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:color 0.2s, border-color 0.2s;">
       Copy Link
