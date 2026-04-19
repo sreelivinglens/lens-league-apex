@@ -337,6 +337,10 @@
     .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .peer-stats { grid-template-columns: repeat(3, 1fr); }
     .exchange-row { gap: 6px; }
+    .genre-table-header { grid-template-columns: 1fr 60px 80px !important; }
+    .genre-table-row    { grid-template-columns: 1fr 60px 80px !important; }
+    .genre-table-bar    { display: none !important; }
+    .genre-table-avg    { display: none !important; }
   }
   @media (max-width: 480px) {
     .img-grid { grid-template-columns: 1fr; }
@@ -491,12 +495,12 @@
   </div>
 
   {# Genre table header #}
-  <div style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:4px;">
-    <div style="font-family:var(--font-mono); font-size:18px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Genre</div>
-    <div style="font-family:var(--font-mono); font-size:18px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Images</div>
-    <div style="font-family:var(--font-mono); font-size:18px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Top-6 average</div>
-    <div style="font-family:var(--font-mono); font-size:18px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Avg</div>
-    <div style="font-family:var(--font-mono); font-size:18px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Status</div>
+  <div class="genre-table-header" style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:4px;">
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Genre</div>
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Images</div>
+    <div class="genre-table-bar" style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Top-6 average</div>
+    <div class="genre-table-avg" style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Avg</div>
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Status</div>
   </div>
 
   {# Genre rows #}
@@ -506,20 +510,20 @@
   {% else %}
     {% set bar_color = '#9A9890' %}
   {% endif %}
-  <div style="display:grid; grid-template-columns:110px 70px 1fr 56px 120px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
-    <div style="font-size:18px; font-weight:600; color:var(--text-primary);">{{ row.genre }}</div>
-    <div style="font-size:18px; color:var(--text-muted);">{{ row.count }} img{{ 's' if row.count != 1 }}</div>
-    <div style="height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
+  <div class="genre-table-row" style="display:grid; grid-template-columns:110px 70px 1fr 56px 120px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+    <div style="font-size:16px; font-weight:600; color:var(--text-primary);">{{ row.genre }}</div>
+    <div style="font-size:16px; color:var(--text-muted);">{{ row.count }} img{{ 's' if row.count != 1 }}</div>
+    <div class="genre-table-bar" style="height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
       <div style="height:100%; width:{{ row.bar_pct }}%; background:{{ bar_color }}; border-radius:4px;"></div>
     </div>
-    <div style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--text-primary); text-align:right;">
+    <div class="genre-table-avg" style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary); text-align:right;">
       {% if row.top6_avg is not none %}{{ row.top6_avg }}{% else %}—{% endif %}
     </div>
-    <div style="font-family:var(--font-mono); font-size:18px; text-align:right;">
+    <div style="font-family:var(--font-mono); font-size:14px; text-align:right;">
       {% if not row.has_enough %}
-        <span style="color:var(--text-muted);">+{{ row.images_needed }} more for avg</span>
+        <span style="color:var(--text-muted);">+{{ row.images_needed }} more</span>
       {% elif not row.qualifies %}
-        <span style="color:var(--text-muted);">Need {{ pt.min_images }} for POTY</span>
+        <span style="color:var(--text-muted);">Need {{ pt.min_images }}</span>
       {% elif row.top6_avg >= 78 %}
         <span style="color:#3B6D11;">Strong</span>
       {% elif row.top6_avg >= 65 %}
