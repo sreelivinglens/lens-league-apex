@@ -79,15 +79,7 @@
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
 
-  /* Full score badge — logged in */
-  .score-badge {
-    position: absolute; top: 16px; right: 16px;
-    background: rgba(13,13,11,0.92); border: 2px solid var(--gold);
-    border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 80px;
-    backdrop-filter: blur(8px);
-  }
-  .score-num { font-family: var(--font-mono); font-size: 48px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .score-tier-line { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--gold); margin-top: 5px; text-transform: uppercase; }
+  /* Tier-only badge */
 
   /* Tier-only badge — logged out */
   .tier-badge {
@@ -289,22 +281,11 @@
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
 
-    {% if show_score %}
-      <div class="score-badge">
-        <div class="score-num">{{ image.score }}</div>
-        <div class="score-tier-line">{{ image.tier }}</div>
-        <div style="font-family:var(--font-mono); font-size: 15px; letter-spacing:1.5px; color:rgba(200,168,75,0.55); text-transform:uppercase; margin-top:4px;">DDI Score</div>
-      </div>
-      {% if image.judge_referral %}
-      <div class="judge-badge">⚖️ JUDGE REVIEW</div>
-      {% endif %}
-    {% else %}
       <div class="tier-badge">
         <div class="tier-word">{{ image.tier }}</div>
         <div class="tier-sub">DDI Tier</div>
         <div style="font-family:var(--font-mono); font-size: 15px; letter-spacing:1px; color:rgba(122,120,112,0.6); text-transform:uppercase; margin-top:2px;">Dimensional Diagnostic Index</div>
       </div>
-    {% endif %}
   </div>
 
   <!-- Image info — always visible -->
@@ -332,20 +313,7 @@
   {% set valid_scores = mods | selectattr('1') | list %}
   {% set max_val = valid_scores | map(attribute=1) | max if valid_scores else 0 %}
 
-  {% if show_score %}
-  <!-- Owner: full numbers + bars -->
-  <div class="modules">
-    {% for name, val in mods %}{% if val %}
-    <div class="mod-cell">
-      <div class="mod-label">{{ name }}</div>
-      <div class="mod-value {{ 'highest' if val == max_val }}">{{ val }}</div>
-      <div class="mod-bar"><div class="mod-bar-fill" style="width:{{ (val/10*100)|int }}%"></div></div>
-    </div>
-    {% endif %}{% endfor %}
-  </div>
-
-  {% else %}
-  <!-- Everyone else (including logged-in non-owners): bars visible, numbers hidden -->
+  <!-- Module bars only — no numbers ever shown publicly -->
   <div class="modules-bars-only">
     {% for name, val in mods %}{% if val %}
     <div class="mod-bar-cell">
@@ -355,11 +323,6 @@
     </div>
     {% endif %}{% endfor %}
   </div>
-  <div class="score-nudge">
-    <span>🔒 &nbsp;Module scores visible after sign in</span>
-    <a href="{{ url_for('login') }}">Log in to see your numbers →</a>
-  </div>
-  {% endif %}
 
   <!-- Analysis rows — visible to EVERYONE -->
   {% if audit and audit.get('rows') %}
@@ -437,10 +400,7 @@
       {% if image.archetype %}<div class="archetype-label">{{ image.archetype }}</div>{% endif %}
       <div class="photographer-label">{{ image.photographer_name }}</div>
     </div>
-    <div class="score-stamp">
-      {% if show_score %}LL · {{ image.score }} · {{ image.tier.upper() if image.tier else '' }}
-      {% else %}{{ image.tier.upper() if image.tier else '' }}{% endif %}
-    </div>
+    <div class="score-stamp">{{ image.tier.upper() if image.tier else '' }}</div>
   </div>
 
 </div>
