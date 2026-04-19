@@ -120,14 +120,13 @@
   .mod-bar { height: 3px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
   .mod-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
 
-  /* Bars only, no numbers (logged out) */
+  /* Bars only, no numbers (public view) */
   .modules-bars-only { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); }
-  .mod-bar-cell { padding: 16px 14px; border-right: 1px solid var(--border); }
+  .mod-bar-cell { padding: 16px 14px 14px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
   .mod-bar-cell:last-child { border-right: none; }
-  .mod-bar-label { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; }
-  .mod-num-hidden { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--border-md); line-height: 1; }
-  .mod-bar-only { height: 3px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
-  .mod-bar-only-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
+  .mod-bar-label { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-3); text-transform: uppercase; }
+  .mod-bar-only { height: 48px; background: var(--surface-3); border-radius: 3px; overflow: hidden; display: flex; align-items: flex-end; }
+  .mod-bar-only-fill { width: 100%; background: linear-gradient(180deg, var(--gold), var(--gold-dark)); border-radius: 3px; transition: height .3s; }
 
   /* Nudge strip under locked bars */
   .score-nudge {
@@ -304,24 +303,27 @@
 
   <!-- Module scores -->
   {% set mods = [
-    ('DoD',        image.dod_score),
-    ('Disruption', image.disruption_score),
-    ('DM',         image.dm_score),
-    ('Wonder',     image.wonder_score),
-    ('AQ',         image.aq_score),
+    ('D·I',   image.dod_score),
+    ('D·II',  image.disruption_score),
+    ('D·III', image.dm_score),
+    ('D·IV',  image.wonder_score),
+    ('D·V',   image.aq_score),
   ] %}
   {% set valid_scores = mods | selectattr('1') | list %}
   {% set max_val = valid_scores | map(attribute=1) | max if valid_scores else 0 %}
 
-  <!-- Module bars only — no numbers ever shown publicly -->
+  <!-- Module bars only — names and numbers hidden publicly -->
   <div class="modules-bars-only">
     {% for name, val in mods %}{% if val %}
     <div class="mod-bar-cell">
       <div class="mod-bar-label">{{ name }}</div>
-      <div class="mod-num-hidden">—</div>
       <div class="mod-bar-only"><div class="mod-bar-only-fill" style="width:{{ (val/10*100)|int }}%"></div></div>
     </div>
     {% endif %}{% endfor %}
+  </div>
+  <div class="score-nudge">
+    <span>🔒 &nbsp;Full breakdown visible to owner</span>
+    <a href="{{ url_for('login') }}">Log in →</a>
   </div>
 
   <!-- Analysis rows — visible to EVERYONE -->
