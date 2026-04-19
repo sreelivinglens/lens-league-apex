@@ -1504,9 +1504,94 @@ def leaderboard():
 
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
 
+    # ── Camera rankings (lazy — only computed for Cameras tab) ───────────────
+    camera_rankings = []
+    if tab == 'cameras':
+        from collections import defaultdict
+        _cam_q = Image.query.filter(
+            Image.status == 'scored',
+            Image.score != None,
+            Image.score > 0,
+            Image.is_public == True,
+            db.or_(Image.is_flagged == False, Image.is_flagged == None),
+            db.or_(Image.needs_review == False, Image.needs_review == None),
+            Image.exif_camera != None,
+            Image.exif_camera != '',
+        )
+        if since:
+            _cam_q = _cam_q.filter(Image.created_at >= since)
+        if track == 'camera':
+            _cam_q = _cam_q.filter(db.or_(
+                db.text("camera_track = 'camera'"),
+                db.text("camera_track IS NULL"),
+            ))
+        elif track == 'mobile':
+            _cam_q = _cam_q.filter(db.text("camera_track = 'mobile'"))
+
+        _cam_buckets = defaultdict(list)
+        for img in _cam_q.all():
+            cam = (img.exif_camera or '').strip()
+            if cam:
+                _cam_buckets[cam].append({
+                    'score': img.score,
+                    'track': img.camera_track or 'camera',
+                })
+        for model, entries in _cam_buckets.items():
+            scores = [e['score'] for e in entries]
+            tracks = [e['track'] for e in entries]
+            dominant = 'mobile' if tracks.count('mobile') > tracks.count('camera') else 'camera'
+            camera_rankings.append({
+                'model':      model,
+                'track':      dominant,
+                'count':      len(scores),
+                'avg_score':  round(sum(scores) / len(scores), 2),
+                'best_score': round(max(scores), 2),
+            })
+        camera_rankings.sort(key=lambda x: x['avg_score'], reverse=True)
+        camera_rankings = camera_rankings[:30]
+
+    # ── Lens rankings (lazy — only computed for Lenses tab) ──────────────────
+    # Uses exif_camera as proxy until dedicated exif_lens column is added (task 4)
+    lens_rankings = []
+    if tab == 'lenses':
+        from collections import defaultdict
+        _lens_q = Image.query.filter(
+            Image.status == 'scored',
+            Image.score != None,
+            Image.score > 0,
+            Image.is_public == True,
+            db.or_(Image.is_flagged == False, Image.is_flagged == None),
+            db.or_(Image.needs_review == False, Image.needs_review == None),
+            Image.exif_camera != None,
+            Image.exif_camera != '',
+            db.or_(
+                db.text("camera_track = 'camera'"),
+                db.text("camera_track IS NULL"),
+            ),
+        )
+        if since:
+            _lens_q = _lens_q.filter(Image.created_at >= since)
+
+        _lens_buckets = defaultdict(list)
+        for img in _lens_q.all():
+            cam = (img.exif_camera or '').strip()
+            if cam:
+                _lens_buckets[cam].append(img.score)
+        for model, scores in _lens_buckets.items():
+            lens_rankings.append({
+                'model':      model,
+                'count':      len(scores),
+                'avg_score':  round(sum(scores) / len(scores), 2),
+                'best_score': round(max(scores), 2),
+            })
+        lens_rankings.sort(key=lambda x: x['avg_score'], reverse=True)
+        lens_rankings = lens_rankings[:30]
+
     return render_template('leaderboard.html',
         top_images         = top_images,
         photographer_stats = photographer_stats,
+        camera_rankings    = camera_rankings,
+        lens_rankings      = lens_rankings,
         all_genres         = GENRE_IDS,
         all_tiers          = all_tiers,
         cities             = cities,
