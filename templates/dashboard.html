@@ -451,28 +451,28 @@
 <div class="card" style="margin-bottom:24px;">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
     <div>
-      <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">POTY Standing</div>
+      <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">POTY Standing</div>
       <div style="font-size:18px; font-weight:700; color:var(--text-primary);">Your top-6 average per genre</div>
-      <div style="font-size:18px; color:var(--text-muted); margin-top:2px;">Updates with every scored image · Deletions do not improve your average</div>
+      <div style="font-size:15px; color:var(--text-muted); margin-top:2px;">Updates with every scored image · Deletions do not improve your average</div>
     </div>
-    <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; background:var(--surface-3); color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-sm); padding:5px 12px; text-transform:uppercase; white-space:nowrap;">
-      Cutoff announced Month 9
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; background:var(--surface-3); color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-sm); padding:5px 12px; text-transform:uppercase; white-space:nowrap;">
+      Cutoff: Month 9
     </div>
   </div>
 
   {# Summary row #}
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px;">
-    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
-      <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Best genre avg</div>
-      <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{% if pt.best_avg is not none %}{{ pt.best_avg }}{% else %}—{% endif %}</div>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;">
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Best Avg</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--gold);">{% if pt.best_avg is not none %}{{ pt.best_avg }}{% else %}—{% endif %}</div>
     </div>
-    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
-      <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Genres active</div>
-      <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--text-primary);">{{ pt.active_genres }} / 8</div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Genres</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--text-primary);">{{ pt.active_genres }}<span style="font-size:16px; color:var(--text-muted);">/8</span></div>
     </div>
-    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:14px 16px;">
-      <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Scored images</div>
-      <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--text-primary);">{{ pt.total_scored }}</div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Scored</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--text-primary);">{{ pt.total_scored }}</div>
     </div>
   </div>
 
