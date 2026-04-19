@@ -167,6 +167,7 @@ class Image(db.Model):
 
     exif_status         = db.Column(db.String(20),  default='unverified')
     exif_camera         = db.Column(db.String(120), nullable=True)
+    exif_lens           = db.Column(db.String(180), nullable=True)
     exif_date_taken     = db.Column(db.String(60),  nullable=True)
     exif_settings       = db.Column(db.String(180), nullable=True)
     exif_warning        = db.Column(db.Text,         nullable=True)
