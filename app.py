@@ -2537,6 +2537,14 @@ def terms():
 def contest_rules():
     return render_template('contest_rules.html')
 
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html', open_contest_active=is_open_contest_active())
