@@ -3,63 +3,15 @@
 
 {% block extra_css %}
 <style>
-.lb-wrap { max-width: 1000px; }
+/* ── Wrapper ── */
+.lb-wrap { max-width: 1100px; }
+
+/* ── Header ── */
 .lb-header { margin-bottom: 1.5rem; padding-left: 20px; border-left: 3px solid var(--gold); }
 .lb-header h1 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
 .lb-sub { color: var(--text-muted); font-size: 16px; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
-.lb-filters { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
-.lb-filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
-.lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
-.lb-filter-group label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
-.lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
-.lb-pill { padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border); font-size: 15px; font-family: var(--font-mono); text-decoration: none; color: var(--text-secondary); background: transparent; transition: all .15s; letter-spacing: .5px; }
-.lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
-.lb-pill.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 700; }
-.lb-filter-group select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 15px; background: #F5F0E8; color: var(--text-primary); cursor: pointer; font-family: var(--font-body); outline: none; transition: border-color .2s; }
-.lb-filter-group select:focus { border-color: var(--gold); }
-.lb-filter-group select option { background: #F5F0E8; }
-.lb-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
-.lb-tab { padding: 10px 20px; font-size: 15px; font-weight: 600; font-family: var(--font-mono); letter-spacing: 1px; text-decoration: none; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; text-transform: uppercase; }
-.lb-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-.lb-tab:hover:not(.active) { color: var(--text-secondary); }
-.lb-table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
-.lb-table { width: 100%; border-collapse: collapse; font-size: 16px; min-width: 480px; }
-.col-thumb a { display: block; line-height: 0; width: 44px; height: 44px; overflow: hidden; }
-.lb-table thead tr { background: #F5F0E8; }
-.lb-table thead th { text-align: left; font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.lb-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background .1s; }
-.lb-table tbody tr:last-child { border-bottom: none; }
-.lb-table tbody tr:hover { background: rgba(200,168,75,0.04); }
-.lb-row--podium { background: rgba(200,168,75,0.06); }
-.lb-row--podium:hover { background: rgba(200,168,75,0.09); }
-.lb-table td { padding: 11px 14px; vertical-align: middle; color: var(--text-primary); }
-.col-rank { width: 48px; text-align: center; }
-.col-thumb { width: 56px; }
-.col-genre, .col-tier, .col-track { white-space: nowrap; }
-.medal { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: 700; }
-.medal.gold   { background: #C8A84B; color: #3a2a00; }
-.medal.silver { background: #8a8a8a; color: #1a1a1a; }
-.medal.bronze { background: #8B5E3C; color: #fff; }
-.rank-num { font-size: 15px; color: var(--text-disabled); font-family: var(--font-mono); }
-.lb-thumb { width: 44px; height: 44px; min-width: 44px; min-height: 44px; max-width: 44px; object-fit: cover; border-radius: var(--radius-sm); display: block; border: 1px solid var(--border); flex-shrink: 0; }
-.lb-thumb-placeholder { width: 44px; height: 44px; min-width: 44px; max-width: 44px; min-height: 44px; border-radius: var(--radius-sm); background: #F5F0E8; border: 1px solid var(--border); display: block; flex-shrink: 0; }
-.col-thumb { width: 56px; min-width: 56px; }
-.lb-title-link { font-weight: 600; color: var(--text-primary); text-decoration: none; font-size: 16px; display: block; }
-.lb-title-link:hover { color: var(--gold); }
-.lb-byline { font-size: 15px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; display: block; }
-.lb-badge { font-size: 14px; background: #F5F0E8; color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); font-family: var(--font-mono); letter-spacing: .5px; }
-.lb-tier { font-size: 14px; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
-.tier-legend       { background: rgba(200,168,75,0.15); color: var(--gold-light); border: 1px solid var(--gold-dark); }
-.tier-grandmaster  { background: rgba(138,97,175,0.20); color: #c49eff; border: 1px solid #7a4aaa; }
-.tier-master       { background: rgba(59,130,200,0.20); color: #7abfff; border: 1px solid #2a5a99; }
-.tier-practitioner { background: rgba(76,175,115,0.20); color: #7adfa8; border: 1px solid #2a7a55; }
-.tier-apprentice   { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
-.lb-track-pill { font-size: 14px; font-family: var(--font-mono); letter-spacing: .5px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
-.lb-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
-.lb-photographer-name { font-weight: 600; color: var(--text-primary); font-size: 16px; }
-.lb-photographer-handle { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); margin-top: 2px; }
-.lb-count { color: var(--text-muted); font-family: var(--font-mono); font-size: 15px; }
-.lb-empty { padding: 48px; text-align: center; color: var(--text-muted); font-size: 16px; font-family: var(--font-mono); letter-spacing: 1px; }
+
+/* ── Score notice ── */
 .score-notice {
   display: flex; align-items: center; gap: 10px;
   background: #FFFFFF; border: 1px solid var(--border);
@@ -69,6 +21,215 @@
   font-family: var(--font-mono); font-size: 14px;
   letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;
 }
+
+/* ── Filters ── */
+.lb-filters { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .65rem; }
+.lb-filter-row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+.lb-filter-group { display: flex; flex-direction: column; gap: .3rem; }
+.lb-filter-group label {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+}
+.lb-pills { display: flex; gap: .375rem; flex-wrap: wrap; }
+.lb-pill {
+  padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border);
+  font-size: 14px; font-family: var(--font-mono); text-decoration: none;
+  color: var(--text-secondary); background: transparent; transition: all .15s;
+  letter-spacing: .5px; white-space: nowrap;
+}
+.lb-pill:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+.lb-pill.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 700; }
+.lb-filter-group select {
+  padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  font-size: 15px; background: #F5F0E8; color: var(--text-primary); cursor: pointer;
+  font-family: var(--font-body); outline: none; transition: border-color .2s;
+}
+.lb-filter-group select:focus { border-color: var(--gold); }
+.lb-filter-group select option { background: #F5F0E8; }
+
+/* ── Tabs ── */
+.lb-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+.lb-tab {
+  padding: 10px 20px; font-size: 15px; font-weight: 600; font-family: var(--font-mono);
+  letter-spacing: 1px; text-decoration: none; color: var(--text-muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; text-transform: uppercase;
+}
+.lb-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.lb-tab:hover:not(.active) { color: var(--text-secondary); }
+
+/* ════════════════════════════════════
+   IMAGE TILES
+════════════════════════════════════ */
+.lb-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.lb-tile {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .2s, transform .18s, box-shadow .18s;
+}
+.lb-tile:hover {
+  border-color: var(--gold-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.09);
+}
+.lb-tile.podium-1 { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.lb-tile.podium-2 { border-color: #8a8a8a; }
+.lb-tile.podium-3 { border-color: #8B5E3C; }
+
+/* Rank badge — top left over image */
+.tile-rank {
+  position: absolute; top: 10px; left: 10px; z-index: 3;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  line-height: 1;
+}
+.tile-rank.gold   { background: #C8A84B; color: #3a2a00; }
+.tile-rank.silver { background: #8a8a8a; color: #fff; }
+.tile-rank.bronze { background: #8B5E3C; color: #fff; }
+.tile-rank.other  {
+  background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.75);
+  border: 1px solid rgba(255,255,255,0.18); font-size: 12px;
+}
+
+/* League badge — top right over image */
+.tile-track {
+  position: absolute; top: 10px; right: 10px; z-index: 3;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  letter-spacing: .5px; padding: 3px 9px; border-radius: 99px;
+}
+.tile-track.camera { background: rgba(200,168,75,0.88); color: #1a1200; }
+.tile-track.mobile {
+  background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* Thumbnail */
+.tile-img-wrap { position: relative; overflow: hidden; }
+.tile-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-3);
+  transition: transform .3s ease;
+}
+.lb-tile:hover .tile-img { transform: scale(1.03); }
+.tile-img-placeholder {
+  width: 100%; aspect-ratio: 4/3;
+  background: var(--surface-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--text-muted);
+}
+
+/* Tier ribbon — bottom of image */
+.tile-tier-ribbon {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+  padding: 8px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(transparent, rgba(13,13,11,0.82));
+}
+.tile-tier-pill {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 99px;
+}
+.tier-legend       { background: rgba(200,168,75,0.22); color: #f0d87a; border: 1px solid rgba(200,168,75,0.5); }
+.tier-grandmaster  { background: rgba(138,97,175,0.25); color: #c49eff; border: 1px solid rgba(138,97,175,0.45); }
+.tier-master       { background: rgba(59,130,200,0.25); color: #7abfff; border: 1px solid rgba(59,130,200,0.45); }
+.tier-practitioner { background: rgba(76,175,115,0.25); color: #7adfa8; border: 1px solid rgba(76,175,115,0.45); }
+.tier-apprentice   { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.18); }
+
+.tile-peer-count {
+  font-family: var(--font-mono); font-size: 12px; color: var(--green);
+  display: flex; align-items: center; gap: 3px;
+}
+.peer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+/* Tile body */
+.tile-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.tile-title {
+  font-size: 15px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+}
+.tile-genre { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); letter-spacing: .5px; }
+.tile-archetype { font-size: 13px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile-photographer { font-family: var(--font-mono); font-size: 13px; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+/* ════════════════════════════════════
+   PHOTOGRAPHER CARDS
+════════════════════════════════════ */
+.lb-pg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.lb-pg-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color .2s, transform .18s, box-shadow .18s;
+  position: relative;
+}
+.lb-pg-card:hover {
+  border-color: var(--gold-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+}
+.lb-pg-card.podium-1 { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.lb-pg-card.podium-2 { border-color: #8a8a8a; }
+.lb-pg-card.podium-3 { border-color: #8B5E3C; }
+
+.pg-rank-badge {
+  position: absolute; top: 16px; right: 16px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+}
+.pg-rank-badge.gold   { background: #C8A84B; color: #3a2a00; }
+.pg-rank-badge.silver { background: #8a8a8a; color: #fff; }
+.pg-rank-badge.bronze { background: #8B5E3C; color: #fff; }
+.pg-rank-badge.other  { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; }
+
+.pg-name { font-size: 17px; font-weight: 700; color: var(--text-primary); line-height: 1.2; padding-right: 36px; }
+.pg-handle { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.pg-location { font-size: 13px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+
+.pg-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px; border-top: 1px solid var(--border-subtle); padding-top: 12px;
+}
+.pg-stat-item { text-align: center; }
+.pg-stat-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 3px; }
+.pg-stat-val.dim { color: var(--text-secondary); font-size: 18px; }
+.pg-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+
+.pg-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pg-tier-pill { font-size: 13px; padding: 3px 10px; border-radius: 999px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .5px; }
+.pg-peer { font-family: var(--font-mono); font-size: 13px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+
+/* ── Empty state ── */
+.lb-empty {
+  padding: 56px 24px; text-align: center; color: var(--text-muted);
+  font-size: 16px; font-family: var(--font-mono); letter-spacing: 1px;
+  background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+
+/* ── CTA ── */
 .lb-cta {
   margin-top: 32px; padding: 28px 32px;
   background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
@@ -77,16 +238,20 @@
   gap: 20px; flex-wrap: wrap;
 }
 .lb-cta p { font-size: 16px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; }
-.peer-dot {
-  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--green); margin-right: 4px; vertical-align: middle;
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .lb-tile-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .lb-pg-grid   { grid-template-columns: 1fr; gap: 12px; }
+  .lb-filter-row { flex-direction: column; align-items: stretch; }
+  .lb-filter-group select { width: 100%; }
 }
-@media (max-width: 600px) {
-  .lb-table { min-width: 0; font-size: 15px; }
-  .col-genre, .col-track { display: none; }
-  .lb-thumb { width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; }
-  .lb-byline { max-width: 140px; }
-  .lb-filter-row { flex-direction: column; }
+@media (max-width: 420px) {
+  .lb-tile-grid { grid-template-columns: 1fr; gap: 10px; }
+  .tile-img { aspect-ratio: 16/9; }
+  .lb-cta { flex-direction: column; }
+  .lb-pills { gap: 6px; }
+  .lb-pill { font-size: 13px; padding: 5px 11px; }
 }
 </style>
 {% endblock %}
@@ -115,7 +280,7 @@
       </div>
     </div>
     <div class="lb-filter-group">
-      <label>Track</label>
+      <label>League</label>
       <div class="lb-pills">
         {% for val, label in [('all','All Leagues'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}&city={{ city }}"
@@ -164,153 +329,128 @@
        class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
   </div>
 
-  <!-- TAB: TOP IMAGES -->
+  <!-- ════════════════════════════
+       TOP IMAGES — TILE GRID
+  ════════════════════════════ -->
   {% if tab == 'images' %}
-  <div class="lb-table-wrap">
-    {% if top_images %}
-    <table class="lb-table">
-      <thead>
-        <tr>
-          <th class="col-rank">#</th>
-          <th class="col-thumb"></th>
-          <th>Image</th>
-          <th class="col-genre">Genre</th>
-          <th class="col-tier">Tier</th>
-          <th class="col-track">Track</th>
-          <th>Photographer</th>
-          <th>Peer</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for image in top_images %}
-        <tr class="lb-row {% if loop.index <= 3 %}lb-row--podium{% endif %}">
-          <td class="col-rank">
-            {% if loop.index == 1 %}<span class="medal gold">1</span>
-            {% elif loop.index == 2 %}<span class="medal silver">2</span>
-            {% elif loop.index == 3 %}<span class="medal bronze">3</span>
-            {% else %}<span class="rank-num">{{ loop.index }}</span>
-            {% endif %}
-          </td>
-          <td class="col-thumb">
-            <a href="{{ url_for('share_image', image_id=image.id) }}" target="_blank">
-              {% if image.thumb_url %}
-                <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="lb-thumb">
-              {% else %}
-                <div class="lb-thumb-placeholder"></div>
-              {% endif %}
-            </a>
-          </td>
-          <td>
-            <a href="{{ url_for('share_image', image_id=image.id) }}" class="lb-title-link" target="_blank">
-              {{ image.asset_name or image.original_filename or 'Untitled' }}
-            </a>
-            {% if image.archetype %}
-            <span class="lb-byline">{{ image.archetype }}</span>
-            {% endif %}
-          </td>
-          <td class="col-genre"><span class="lb-badge">{{ image.genre or '—' }}</span></td>
-          <td class="col-tier">
-            <span class="lb-tier tier-{{ (image.tier or 'apprentice') | lower | replace(' ', '-') }}">
-              {{ image.tier or '—' }}
-            </span>
-          </td>
-          <td class="col-track">
-            {% if image.camera_track %}
-            <span class="lb-track-pill {{ image.camera_track }}">
-              {{ '📷' if image.camera_track == 'camera' else '📱' }} {{ image.camera_track }}
-            </span>
-            {% else %}
-            <span class="lb-track-pill">—</span>
-            {% endif %}
-          </td>
-          <td>{{ image.photographer_name or '—' }}</td>
-          <td>
-            {% if image.peer_rating_count and image.peer_rating_count > 0 %}
-            <span style="font-family:var(--font-mono); font-size:15px; color:var(--green);">
-              <span class="peer-dot"></span>{{ image.peer_rating_count }}
-            </span>
-            {% else %}
-            <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">—</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="lb-empty">No scored images match these filters.</div>
-    {% endif %}
+
+  {% if top_images %}
+  <div class="lb-tile-grid">
+    {% for image in top_images %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
+    {%- set tk = (image.tier or 'apprentice') | lower | replace(' ', '-') -%}
+
+    <a href="{{ url_for('share_image', image_id=image.id) }}"
+       class="lb-tile {{ pc }}" target="_blank">
+
+      <!-- Rank -->
+      <div class="tile-rank {{ rc }}">{{ rank }}</div>
+
+      <!-- League -->
+      {% if image.camera_track %}
+      <div class="tile-track {{ image.camera_track }}">
+        {{ '📷' if image.camera_track == 'camera' else '📱' }}
+      </div>
+      {% endif %}
+
+      <!-- Photo -->
+      <div class="tile-img-wrap">
+        {% if image.thumb_url %}
+        <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy">
+        {% else %}
+        <div class="tile-img-placeholder">🖼️</div>
+        {% endif %}
+
+        <!-- Tier + peer ratings ribbon -->
+        <div class="tile-tier-ribbon">
+          <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '—' }}</span>
+          {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+          <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="tile-body">
+        <div class="tile-title">{{ image.asset_name or image.original_filename or 'Untitled' }}</div>
+        <div class="tile-genre">{{ image.genre or '—' }}</div>
+        {% if image.archetype %}<div class="tile-archetype">{{ image.archetype }}</div>{% endif %}
+        <div class="tile-photographer">{{ image.photographer_name or '—' }}</div>
+      </div>
+
+    </a>
+    {% endfor %}
   </div>
 
-  <!-- TAB: TOP PHOTOGRAPHERS -->
   {% else %}
-  <div class="lb-table-wrap">
-    {% if photographer_stats %}
-    <table class="lb-table">
-      <thead>
-        <tr>
-          <th class="col-rank">#</th>
-          <th>Photographer</th>
-          <th>Avg Score</th>
-          <th>Best Score</th>
-          <th>Best Tier</th>
-          <th>Images</th>
-          <th>Peer Ratings</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in photographer_stats %}
-        <tr class="lb-row {% if loop.index <= 3 %}lb-row--podium{% endif %}">
-          <td class="col-rank">
-            {% if loop.index == 1 %}<span class="medal gold">1</span>
-            {% elif loop.index == 2 %}<span class="medal silver">2</span>
-            {% elif loop.index == 3 %}<span class="medal bronze">3</span>
-            {% else %}<span class="rank-num">{{ loop.index }}</span>
-            {% endif %}
-          </td>
-          <td>
-            <div class="lb-photographer-name">{{ p.display_name }}</div>
-            {% if p.username %}
-            <div class="lb-photographer-handle">@{{ p.username }}</div>
-            {% endif %}
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:17px; font-weight:700; color:var(--gold);">
-              {{ '%.2f'|format(p.avg_score) }}
-            </span>
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono); font-size:16px; color:var(--text-secondary);">
-              {{ p.best_score }}
-            </span>
-          </td>
-          <td>
-            {% set best_score = p.best_score %}
-            {% if best_score >= 9.7 %}<span class="lb-tier tier-legend">Legend</span>
-            {% elif best_score >= 9.0 %}<span class="lb-tier tier-grandmaster">Grandmaster</span>
-            {% elif best_score >= 7.6 %}<span class="lb-tier tier-master">Master</span>
-            {% elif best_score >= 5.1 %}<span class="lb-tier tier-practitioner">Practitioner</span>
-            {% else %}<span class="lb-tier tier-apprentice">Apprentice</span>
-            {% endif %}
-          </td>
-          <td><span class="lb-count">{{ p.image_count }}</span></td>
-          <td>
-            {% if p.total_peer_ratings %}
-            <span style="font-family:var(--font-mono); font-size:15px; color:var(--green);">
-              <span class="peer-dot"></span>{{ p.total_peer_ratings }}
-            </span>
-            {% else %}
-            <span class="lb-count">—</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="lb-empty">No photographers match these filters.</div>
-    {% endif %}
+  <div class="lb-empty">No scored images match these filters.</div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       TOP PHOTOGRAPHERS — CARD GRID
+  ════════════════════════════════════ -->
+  {% else %}
+
+  {% if photographer_stats %}
+  <div class="lb-pg-grid">
+    {% for p in photographer_stats %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    {%- set pc = 'podium-'~rank if rank<=3 else '' -%}
+    {%- set best = p.best_score -%}
+
+    <div class="lb-pg-card {{ pc }}">
+
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+
+      <div>
+        <div class="pg-name">{{ p.display_name }}</div>
+        {% if p.username %}<div class="pg-handle">@{{ p.username }}</div>{% endif %}
+        {% if p.city %}
+        <div class="pg-location">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          {{ p.city }}{% if p.state %}, {{ p.state }}{% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(p.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Score</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ p.best_score }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ p.image_count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+
+      <div class="pg-footer">
+        {% if best >= 9.7 %}<span class="pg-tier-pill tier-legend">Legend</span>
+        {% elif best >= 9.0 %}<span class="pg-tier-pill tier-grandmaster">Grandmaster</span>
+        {% elif best >= 7.6 %}<span class="pg-tier-pill tier-master">Master</span>
+        {% elif best >= 5.1 %}<span class="pg-tier-pill tier-practitioner">Practitioner</span>
+        {% else %}<span class="pg-tier-pill tier-apprentice">Apprentice</span>
+        {% endif %}
+        {% if p.total_peer_ratings %}
+        <span class="pg-peer"><span class="peer-dot"></span>{{ p.total_peer_ratings }} peer</span>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
   </div>
+
+  {% else %}
+  <div class="lb-empty">No photographers match these filters.</div>
+  {% endif %}
+
   {% endif %}
 
   {% if not current_user.is_authenticated %}
