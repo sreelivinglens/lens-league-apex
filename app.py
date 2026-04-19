@@ -1553,6 +1553,7 @@ def leaderboard():
         camera_rankings = camera_rankings[:30]
 
     # ── Lens rankings (lazy — only computed for Lenses tab) ──────────────────
+    # Uses exif_lens where available, falls back to exif_camera for existing images
     lens_rankings = []
     if tab == 'lenses':
         try:
@@ -1564,8 +1565,10 @@ def leaderboard():
                 Image.is_public == True,
                 db.or_(Image.is_flagged == False, Image.is_flagged == None),
                 db.or_(Image.needs_review == False, Image.needs_review == None),
-                Image.exif_lens != None,
-                Image.exif_lens != '',
+                db.or_(
+                    db.and_(Image.exif_lens != None, Image.exif_lens != ''),
+                    db.and_(Image.exif_camera != None, Image.exif_camera != ''),
+                ),
                 db.or_(
                     db.text("camera_track = 'camera'"),
                     db.text("camera_track IS NULL"),
@@ -1576,7 +1579,7 @@ def leaderboard():
 
             _lens_buckets = defaultdict(list)
             for img in _lens_q.all():
-                lens = (img.exif_lens or '').strip()
+                lens = (img.exif_lens or '').strip() or (img.exif_camera or '').strip()
                 if lens:
                     _lens_buckets[lens].append(img.score)
             for model, scores in _lens_buckets.items():
