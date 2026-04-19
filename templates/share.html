@@ -462,7 +462,7 @@
   {% if current_user.is_authenticated %}
   <a href="{{ url_for('download_card', image_id=image.id) }}"
      class="action-btn action-primary"
-     download="LensLeague_RatingCards.zip">↓ Save Rating Cards (ZIP)</a>
+     target="_blank">↓ Save Rating Card (PDF)</a>
   {% else %}
   <a href="{{ url_for('register') }}" class="action-btn action-primary">Get My Images Rated Free →</a>
   {% endif %}

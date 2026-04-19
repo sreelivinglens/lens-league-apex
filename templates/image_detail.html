@@ -205,6 +205,48 @@
     transition: width 0.6s ease;
   }
 
+  /* Module tooltip styles */
+  .module-abbr-tag {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .module-info-btn {
+    display: inline-block;
+    font-size: 14px;
+    color: var(--gold-dark);
+    cursor: pointer;
+    margin-left: 4px;
+    position: relative;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  .module-info-btn:hover::after,
+  .module-info-btn:focus::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 6px;
+    width: 260px;
+    background: #1a1a18;
+    color: #F0EFE8;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.6;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gold-dark);
+    z-index: 100;
+    white-space: normal;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
   .archetype-panel {
     padding: 16px 24px;
     display: flex;
@@ -321,7 +363,7 @@
     {% if (image.status == 'scored' or image.score) and not image.is_flagged %}
     <a href="{{ url_for('download_card', image_id=image.id) }}"
        class="btn btn-solid"
-       download="LensLeague_RatingCards.zip">↓ Save Rating Cards</a>
+       download="LensLeague_RatingCard.pdf">↓ Save Rating Card (PDF)</a>
     {% endif %}
     {% if current_user.role == 'admin' %}
     <form method="POST" action="{{ url_for('admin_delete_image', image_id=image.id) }}"
@@ -492,17 +534,21 @@
         <!-- Module bars -->
         <div class="modules-panel">
           {% set mods = [
-            ('DoD', image.dod_score),
-            ('Disruption', image.disruption_score),
-            ('DM', image.dm_score),
-            ('Wonder', image.wonder_score),
-            ('AQ', image.aq_score)
+            ('DoD',        'Depth of Difficulty',  'How hard was this image to capture? Considers physical access, timing precision, environmental challenge and technical difficulty.',     image.dod_score),
+            ('Disruption', 'Visual Disruption',     'How strongly does this break from convention? Rewards bold, original composition and unexpected creative choices.',                    image.disruption_score),
+            ('DM',         'Decisive Moment',       'Was the shutter released at the exact instant all elements aligned? Rewards irreversible, peak-action timing.',                        image.dm_score),
+            ('Wonder',     'Wonder Factor',         'Does this reveal something rare or unseen? Rewards perspectives and behaviour the audience has never encountered.',                    image.wonder_score),
+            ('AQ',         'Affective Quotient',    'What emotional truth does this image carry? Measures human resonance and felt experience — the soul of the score.',                    image.aq_score),
           ] %}
-          {% for name, score in mods %}
+          {% for abbr, fullname, tooltip, score in mods %}
           {% if score %}
           <div class="module-row">
             <div class="module-row-header">
-              <span class="module-name">{{ name }}</span>
+              <span class="module-name">
+                {{ fullname }}
+                <span class="module-abbr-tag">({{ abbr }})</span>
+                <span class="module-info-btn" tabindex="0" data-tip="{{ tooltip }}">ⓘ</span>
+              </span>
               <span class="module-score">{{ score }}</span>
             </div>
             <div class="module-bar">
@@ -672,15 +718,18 @@
 
   </div>
 
-  <!-- RIGHT COLUMN — Scoring form -->
+  <!-- RIGHT COLUMN — Analysis (read-only for users) / Admin scoring form -->
   <div>
-    {% if not image.is_flagged or current_user.role == 'admin' %}
+
+    {% if current_user.role == 'admin' %}
+    {# ── ADMIN: full scoring form + calibration feedback ── #}
+    {% if not image.is_flagged %}
     <div class="form-section-label">
       {% if image.status == 'scored' %}Rescore Image{% else %}Score This Image{% endif %}
     </div>
 
     <form method="POST" action="{{ url_for('score_image', image_id=image.id) }}">
-
+      {% set audit = image.get_audit() %}
       <div class="grid-2" style="gap:12px;">
         {% for field, label, val in [
           ('dod',        'DoD',        image.dod_score),
@@ -705,8 +754,6 @@
         </div>
       </div>
 
-      {% set audit = image.get_audit() %}
-
       {% for field_name, label, rows_idx in [
         ('row_technical', 'Technical Integrity',  0),
         ('row_geometric', 'Geometric Harmony',    1),
@@ -724,7 +771,6 @@
         <label>Apex Byline — Gap Analysis</label>
         <textarea name="byline_1" style="min-height:90px;">{{ audit.get('byline_1','') }}</textarea>
       </div>
-
       <div class="form-group">
         <label>The One Improvement</label>
         <textarea name="byline_2" style="min-height:90px;">{{ audit.get('byline_2_body','') }}</textarea>
@@ -743,8 +789,7 @@
 
       <div class="form-group">
         <label>IUCN Tag <span style="font-weight:400; color:var(--text-muted);">(optional)</span></label>
-        <input type="text" name="iucn_tag"
-               value="{{ audit.get('iucn_tag','') }}"
+        <input type="text" name="iucn_tag" value="{{ audit.get('iucn_tag','') }}"
                placeholder="e.g. ⚠ IUCN Vulnerable Species">
       </div>
 
@@ -754,25 +799,18 @@
       </button>
     </form>
     {% else %}
+    {# Flagged image — admin sees flagged notice #}
     <div style="background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:28px 24px;">
       <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:2px;
-                  color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">What Happens Next</div>
-      <p style="font-size:17px; color:var(--text-secondary); line-height:1.8; margin-bottom:16px;">
-        This image has been removed from public view because it was identified as potentially AI-generated.
-        It remains in your account and will not be deleted.
+                  color:var(--red); text-transform:uppercase; margin-bottom:12px;">🚫 Flagged Image</div>
+      <p style="font-size:17px; color:var(--text-secondary); line-height:1.8;">
+        This image is flagged. Use the Unflag button above to restore it, or delete it.
       </p>
-      <p style="font-size:17px; color:var(--text-secondary); line-height:1.8; margin-bottom:20px;">
-        If this is a genuine photograph that was incorrectly flagged, please email your original RAW or
-        full-resolution file to <strong style="color:var(--text-primary);">verify@lensleague.com</strong> for manual review.
-      </p>
-      <a href="mailto:verify@lensleague.com" class="btn btn-solid" style="padding:12px 24px;">
-        Contact Verification Team
-      </a>
     </div>
     {% endif %}
 
-    <!-- Admin Calibration Feedback -->
-    {% if current_user.role == 'admin' and image.status == 'scored' %}
+    {# Admin calibration feedback #}
+    {% if image.status == 'scored' %}
     <div style="margin-top:32px; border-top:1px solid var(--border); padding-top:24px;">
       <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:3px;
                   color:var(--gold); text-transform:uppercase; margin-bottom:16px;">
@@ -784,7 +822,6 @@
         Corrections submitted here are injected into future scoring prompts for
         <strong style="color:var(--gold);">{{ image.genre }}</strong> images.
       </div>
-
       <form method="POST" action="{{ url_for('admin_feedback', image_id=image.id) }}">
         <div class="grid-2" style="gap:12px;">
           <div class="form-group" style="margin-bottom:14px;">
@@ -804,25 +841,21 @@
                    value="{{ image.score or '' }}" placeholder="Original AI score">
           </div>
         </div>
-
         <div class="form-group" style="margin-bottom:14px;">
           <label>Corrected Score <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
           <input type="number" name="corrected_score" step="0.1" min="0" max="10"
                  placeholder="What should the score be?">
         </div>
-
         <div class="form-group" style="margin-bottom:14px;">
           <label>Reason <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(required)</span></label>
           <textarea name="reason" style="min-height:100px;"
                     placeholder="e.g. Engine penalised blur as technical failure but this is controlled ICM technique..."></textarea>
         </div>
-
         <button type="submit" class="btn" style="width:100%; padding:13px; font-size:16px;
                 border-color:var(--gold-dark); color:var(--gold);">
           Submit Calibration Correction →
         </button>
       </form>
-
       {% if image.calibration_notes %}
       <div style="margin-top:20px;">
         <div style="font-family:var(--font-mono); font-size:16px; letter-spacing:2px;
@@ -854,6 +887,100 @@
       {% endif %}
     </div>
     {% endif %}
+
+    {% else %}
+    {# ── REGULAR USER: read-only analysis panel ── #}
+    {% if image.is_flagged %}
+    <div style="background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:28px 24px;">
+      <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:2px;
+                  color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">What Happens Next</div>
+      <p style="font-size:17px; color:var(--text-secondary); line-height:1.8; margin-bottom:16px;">
+        This image has been removed from public view because it was identified as potentially AI-generated.
+        It remains in your account and will not be deleted.
+      </p>
+      <p style="font-size:17px; color:var(--text-secondary); line-height:1.8; margin-bottom:20px;">
+        If this is a genuine photograph that was incorrectly flagged, please email your original RAW or
+        full-resolution file to <strong style="color:var(--text-primary);">verify@lensleague.com</strong> for manual review.
+      </p>
+      <a href="mailto:verify@lensleague.com" class="btn btn-solid" style="padding:12px 24px;">
+        Contact Verification Team
+      </a>
+    </div>
+
+    {% elif image.status == 'scored' %}
+    {# Show the full AI analysis read-only #}
+    {% set audit = image.get_audit() %}
+
+    {# Analysis rows #}
+    {% if audit and audit.get('rows') %}
+    <div style="margin-bottom:24px;">
+      {% for label, body in audit.get('rows', []) %}
+      {% if body %}
+      <div style="margin-bottom:20px;">
+        <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px;
+                    text-transform:uppercase; color:var(--gold); margin-bottom:8px;">{{ label.replace('\n',' ') }}</div>
+        <div style="font-size:16px; color:var(--text-secondary); line-height:1.8;">{{ body }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Apex Byline #}
+    {% if audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
+    <div style="background:#F5F0E8; border:1px solid var(--border); border-left:3px solid var(--gold);
+                border-radius:0 var(--radius-md) var(--radius-md) 0; padding:18px 20px; margin-bottom:20px;">
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px;
+                  text-transform:uppercase; color:var(--gold); margin-bottom:10px;">Apex Byline</div>
+      {% if audit.get('byline_1') %}
+      <div style="font-size:16px; color:var(--text-secondary); line-height:1.8; margin-bottom:14px;">{{ audit.byline_1 }}</div>
+      {% endif %}
+      {% if audit.get('byline_2_body') %}
+      <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1.5px;
+                  text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;">The One Improvement</div>
+      <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.7;">{{ audit.byline_2_body }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Strength & gap badges #}
+    {% if audit %}
+    {% set bg = audit.get('badges_g', []) | select | list %}
+    {% set bw = audit.get('badges_w', []) | select | list %}
+    {% if bg or bw %}
+    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+      {% if bg %}
+      <div style="flex:1; min-width:140px;">
+        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1.5px;
+                    text-transform:uppercase; color:var(--green); margin-bottom:8px;">Strengths</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          {% for b in bg %}
+          <span style="padding:3px 10px; border-radius:99px; font-size:14px;
+                        background:rgba(76,175,115,0.12); border:1px solid rgba(76,175,115,0.35);
+                        color:var(--green);">{{ b }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if bw %}
+      <div style="flex:1; min-width:140px;">
+        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1.5px;
+                    text-transform:uppercase; color:var(--red); margin-bottom:8px;">Areas to Develop</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          {% for b in bw %}
+          <span style="padding:3px 10px; border-radius:99px; font-size:14px;
+                        background:rgba(192,57,43,0.10); border:1px solid rgba(192,57,43,0.30);
+                        color:var(--red);">{{ b }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% endif %}{# end scored #}
+    {% endif %}{# end admin/user branch #}
 
   </div>
 </div>
