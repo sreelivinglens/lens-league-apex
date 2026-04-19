@@ -1555,38 +1555,41 @@ def leaderboard():
     # ── Lens rankings (lazy — only computed for Lenses tab) ──────────────────
     lens_rankings = []
     if tab == 'lenses':
-        from collections import defaultdict
-        _lens_q = Image.query.filter(
-            Image.status == 'scored',
-            Image.score != None,
-            Image.score > 0,
-            Image.is_public == True,
-            db.or_(Image.is_flagged == False, Image.is_flagged == None),
-            db.or_(Image.needs_review == False, Image.needs_review == None),
-            Image.exif_lens != None,
-            Image.exif_lens != '',
-            db.or_(
-                db.text("camera_track = 'camera'"),
-                db.text("camera_track IS NULL"),
-            ),
-        )
-        if since:
-            _lens_q = _lens_q.filter(Image.created_at >= since)
+        try:
+            from collections import defaultdict
+            _lens_q = Image.query.filter(
+                Image.status == 'scored',
+                Image.score != None,
+                Image.score > 0,
+                Image.is_public == True,
+                db.or_(Image.is_flagged == False, Image.is_flagged == None),
+                db.or_(Image.needs_review == False, Image.needs_review == None),
+                Image.exif_lens != None,
+                Image.exif_lens != '',
+                db.or_(
+                    db.text("camera_track = 'camera'"),
+                    db.text("camera_track IS NULL"),
+                ),
+            )
+            if since:
+                _lens_q = _lens_q.filter(Image.created_at >= since)
 
-        _lens_buckets = defaultdict(list)
-        for img in _lens_q.all():
-            lens = (img.exif_lens or '').strip()
-            if lens:
-                _lens_buckets[lens].append(img.score)
-        for model, scores in _lens_buckets.items():
-            lens_rankings.append({
-                'model':      model,
-                'count':      len(scores),
-                'avg_score':  round(sum(scores) / len(scores), 2),
-                'best_score': round(max(scores), 2),
-            })
-        lens_rankings.sort(key=lambda x: x['avg_score'], reverse=True)
-        lens_rankings = lens_rankings[:30]
+            _lens_buckets = defaultdict(list)
+            for img in _lens_q.all():
+                lens = (img.exif_lens or '').strip()
+                if lens:
+                    _lens_buckets[lens].append(img.score)
+            for model, scores in _lens_buckets.items():
+                lens_rankings.append({
+                    'model':      model,
+                    'count':      len(scores),
+                    'avg_score':  round(sum(scores) / len(scores), 2),
+                    'best_score': round(max(scores), 2),
+                })
+            lens_rankings.sort(key=lambda x: x['avg_score'], reverse=True)
+            lens_rankings = lens_rankings[:30]
+        except Exception:
+            lens_rankings = []
 
     return render_template('leaderboard.html',
         top_images         = top_images,
