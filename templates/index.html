@@ -7,20 +7,22 @@
 body:has(.hp) main { max-width:none !important; padding:0 !important; margin:0 !important; }
 .hp { width:100%; }
 body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:blur(14px) !important; border-bottom:1px solid rgba(200,168,75,0.18) !important; }
+body { overflow-x:hidden; }
+*, *::before, *::after { box-sizing:border-box; }
 
 .hp h1,.hp h2,.hp h3 { font-family:'Playfair Display',Georgia,serif; }
 
 /* HERO */
 .hero { background:linear-gradient(150deg,#FEFCF8 0%,#F6F1E8 45%,#EDE4D0 100%); padding:72px clamp(24px,5vw,80px) 64px; display:grid; grid-template-columns:1fr 380px; gap:56px; align-items:center; border-bottom:1px solid #E8E0D0; }
-.hero-eye { font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:#B8892A; margin-bottom:16px; font-family:'JetBrains Mono',monospace; }
+.hero-eye { font-size:14px; letter-spacing:0.18em; text-transform:uppercase; color:#B8892A; margin-bottom:16px; font-family:'JetBrains Mono',monospace; }
 .hero-h1 { font-size:clamp(36px,4.5vw,54px); font-weight:700; line-height:1.12; color:#1a1a18; margin-bottom:14px; }
 .hero-h1 .gi { display:block; font-style:italic; color:#B8892A; }
-.hero-ddi { font-size:16px; font-weight:700; color:#B8892A; font-style:italic; margin-bottom:14px; }
-.hero-sub { font-size:17px; color:#555; line-height:1.8; margin-bottom:28px; max-width:480px; }
+.hero-ddi { font-size:17px; font-weight:700; color:#B8892A; font-style:italic; margin-bottom:14px; }
+.hero-sub { font-size:18px; color:#444; line-height:1.8; margin-bottom:28px; max-width:480px; }
 .hero-btns { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
-.btn-d { background:#1a1a18; color:#fff; padding:14px 28px; border-radius:5px; font-size:15px; font-weight:700; text-decoration:none; display:inline-block; }
-.btn-o { background:transparent; color:#1a1a18; padding:13px 28px; border-radius:5px; font-size:15px; border:1.5px solid #1a1a18; text-decoration:none; display:inline-block; }
-.hero-note { font-size:14px; color:#999; font-style:italic; }
+.btn-d { background:#1a1a18; color:#fff; padding:14px 28px; border-radius:5px; font-size:16px; font-weight:700; text-decoration:none; display:inline-block; }
+.btn-o { background:transparent; color:#1a1a18; padding:13px 28px; border-radius:5px; font-size:16px; border:1.5px solid #1a1a18; text-decoration:none; display:inline-block; }
+.hero-note { font-size:15px; color:#777; font-style:italic; }
 
 /* DDI CARD */
 .ddi-card { background:#fff; border:1px solid #E0D8C8; border-radius:14px; padding:24px; box-shadow:0 4px 24px rgba(0,0,0,0.07); }
@@ -33,23 +35,23 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 /* CONTEST BANNER */
 .cb { background:linear-gradient(135deg,#FDF8EE 0%,#F5EDD4 100%); border-bottom:1px solid #E8D9A8; padding:26px clamp(24px,5vw,80px); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .cb-inner { display:flex; align-items:center; gap:18px; }
-.cb-badge { background:#B8892A; color:#fff; font-size:11px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; padding:6px 14px; border-radius:3px; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
+.cb-badge { background:#B8892A; color:#fff; font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:6px 14px; border-radius:3px; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
 .cb h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:3px; font-family:Georgia,serif; }
-.cb p  { font-size:14px; color:#8A7040; }
+.cb p  { font-size:15px; color:#8A7040; }
 .cb-prizes { display:flex; gap:28px; }
 .cb-amt { font-size:22px; font-weight:700; color:#B8892A; line-height:1; }
-.cb-lbl { font-size:12px; color:#9A8050; margin-top:2px; text-align:center; }
-.btn-g { background:#B8892A; color:#fff; padding:13px 24px; border-radius:5px; font-size:14px; font-weight:700; white-space:nowrap; text-decoration:none; display:inline-block; }
+.cb-lbl { font-size:14px; color:#9A8050; margin-top:2px; text-align:center; }
+.btn-g { background:#B8892A; color:#fff; padding:13px 24px; border-radius:5px; font-size:15px; font-weight:700; white-space:nowrap; text-decoration:none; display:inline-block; }
 
 /* SECTIONS */
 .sec { padding:60px clamp(24px,5vw,80px); }
 .sec.cream { background:linear-gradient(180deg,#F8F4EE 0%,#FAFAF8 100%); }
 .sec.sky   { background:linear-gradient(180deg,#EEF5FA 0%,#F5FAFB 100%); }
 .sec.warm  { background:linear-gradient(160deg,#FDF9F2 0%,#F5EDD8 50%,#EDE4C8 100%); border-top:1px solid #E8D9A0; border-bottom:1px solid #E8D9A0; }
-.sec-eye { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
-.sec-h2 { font-size:clamp(24px,3vw,32px); font-weight:700; text-align:center; color:#1a1a18; margin-bottom:10px; line-height:1.25; }
+.sec-eye { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
+.sec-h2 { font-size:clamp(26px,3vw,34px); font-weight:700; text-align:center; color:#1a1a18; margin-bottom:10px; line-height:1.25; }
 .sec-h2 em { font-style:italic; color:#B8892A; }
-.sec-p { font-size:16px; color:#777; text-align:center; margin-bottom:40px; line-height:1.8; max-width:580px; margin-left:auto; margin-right:auto; }
+.sec-p { font-size:17px; color:#555; text-align:center; margin-bottom:40px; line-height:1.8; max-width:580px; margin-left:auto; margin-right:auto; }
 
 /* TRACKS */
 .tracks { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:28px; }
@@ -58,34 +60,36 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 .tc.mob { background:linear-gradient(135deg,#EEF5FA,#D8EBF4); }
 .tc-icon { font-size:30px; margin-bottom:14px; display:block; }
 .tc-h3 { font-size:20px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
-.tc-sub { font-size:14px; color:#999; font-style:italic; margin-bottom:18px; }
+.tc-sub { font-size:15px; color:#777; font-style:italic; margin-bottom:18px; }
 .tc-pts { display:flex; flex-direction:column; gap:10px; }
-.tc-pt { font-size:15px; color:#444; display:flex; gap:12px; line-height:1.6; }
+.tc-pt { font-size:16px; color:#333; display:flex; gap:12px; line-height:1.6; }
 .tc-pt::before { content:'→'; color:#B8892A; flex-shrink:0; font-weight:700; margin-top:2px; }
 
 /* MENTOR */
 .mentor { background:linear-gradient(135deg,#EEF6FB 0%,#D8EDF5 100%); border:1px solid #B8D8EC; border-radius:14px; padding:30px 36px; display:grid; grid-template-columns:1fr 220px; gap:32px; align-items:center; }
-.mentor-eye { font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#2A7A9A; margin-bottom:8px; font-family:'JetBrains Mono',monospace; }
+.mentor-eye { font-size:13px; letter-spacing:0.15em; text-transform:uppercase; color:#2A7A9A; margin-bottom:8px; font-family:'JetBrains Mono',monospace; }
 .mentor-h3  { font-size:22px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
-.mentor-desc{ font-size:15px; color:#446070; line-height:1.8; }
+.mentor-desc{ font-size:16px; color:#446070; line-height:1.8; }
 .mentor-mods{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-.mentor-mod { background:rgba(255,255,255,0.65); border:1px solid #B8D8EC; border-radius:5px; padding:8px 10px; font-size:13px; color:#334455; display:flex; justify-content:space-between; }
+.mentor-mod { background:rgba(255,255,255,0.65); border:1px solid #B8D8EC; border-radius:5px; padding:8px 10px; font-size:14px; color:#334455; display:flex; justify-content:space-between; align-items:center; gap:6px; }
 .mentor-mod b { color:#2A7A9A; }
+.mentor-bar { flex:1; height:4px; background:#C8DDE8; border-radius:99px; overflow:hidden; max-width:50px; }
+.mentor-bar span { display:block; height:100%; background:#2A7A9A; border-radius:99px; }
 
 /* J-CURVE */
 .ms-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:24px; }
 .ms { background:rgba(255,255,255,0.72); border:1px solid #DDD0A8; border-radius:10px; padding:18px 16px; text-align:center; }
 .ms.hl { border-color:#B8892A; }
-.ms-num  { font-size:12px; letter-spacing:0.14em; color:#8A6A1A; margin-bottom:7px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.ms-num  { font-size:13px; letter-spacing:0.12em; color:#8A6A1A; margin-bottom:7px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
 .ms-num.gd { color:#6A4A0A; font-weight:700; }
-.ms-title{ font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:5px; }
-.ms-desc { font-size:13px; color:#7A6840; line-height:1.6; }
-.ms-note { font-size:12px; color:#B8892A; font-style:italic; margin-top:7px; }
+.ms-title{ font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:5px; }
+.ms-desc { font-size:15px; color:#6A5830; line-height:1.6; }
+.ms-note { font-size:14px; color:#B8892A; font-style:italic; margin-top:7px; }
 
 /* PROOF */
 .proof-sec { padding:44px clamp(24px,5vw,80px); background:#fff; border-top:1px solid #E8E0D0; border-bottom:1px solid #E8E0D0; }
-.proof-eye  { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
-.proof-note { font-size:14px; color:#999; text-align:center; font-style:italic; margin-bottom:26px; }
+.proof-eye  { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
+.proof-note { font-size:16px; color:#777; text-align:center; font-style:italic; margin-bottom:26px; }
 .proof-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .pc { background:#F8F5F0; border-radius:10px; border:1px solid #E8E4DC; overflow:hidden; }
 .pc-img    { width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,#d4cfc4,#b8b0a0); display:flex; align-items:flex-end; padding:10px; position:relative; overflow:hidden; }
@@ -93,25 +97,25 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 .pc-img.c3 { background:linear-gradient(135deg,#d4c4bc,#b8a090); }
 .pc-img.c4 { background:linear-gradient(135deg,#c4d4c4,#a0b8a0); }
 .pc-img img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.pc-tier   { font-size:11px; font-weight:700; letter-spacing:0.1em; background:rgba(184,137,42,0.92); color:#fff; padding:3px 9px; border-radius:3px; position:relative; z-index:1; font-family:'JetBrains Mono',monospace; }
+.pc-tier   { font-size:13px; font-weight:700; letter-spacing:0.1em; background:rgba(184,137,42,0.92); color:#fff; padding:3px 9px; border-radius:3px; position:relative; z-index:1; font-family:'JetBrains Mono',monospace; }
 .pc-meta   { padding:12px 14px; }
-.pc-name   { font-size:15px; font-weight:700; color:#1a1a18; }
-.pc-detail { font-size:13px; color:#888; margin-top:3px; }
+.pc-name   { font-size:16px; font-weight:700; color:#1a1a18; }
+.pc-detail { font-size:14px; color:#666; margin-top:3px; }
 
 /* PRIZES */
 .prize-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .pi { text-align:center; padding:24px 16px; background:#fff; border-radius:12px; border:1px solid #E0D8C8; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
 .pi-amt  { font-size:28px; font-weight:700; color:#B8892A; margin-bottom:5px; }
-.pi-name { font-size:15px; color:#888; }
+.pi-name { font-size:16px; color:#666; }
 
 /* FOOTER CTA */
 .fcta { padding:64px clamp(24px,5vw,80px); background:linear-gradient(150deg,#1a1a18,#2a2820); text-align:center; }
 .fcta h2 { font-size:clamp(28px,3.5vw,40px); font-weight:700; color:#F0EFE8; margin-bottom:12px; line-height:1.2; }
 .fcta h2 em { font-style:italic; color:#C8A84B; }
-.fcta p  { font-size:16px; color:#888; margin-bottom:32px; }
+.fcta p  { font-size:17px; color:#999; margin-bottom:32px; }
 .fcta-btns { display:flex; gap:16px; justify-content:center; }
-.btn-fcta-g  { background:#C8A84B; color:#1a1a18; padding:16px 32px; border-radius:5px; font-size:16px; font-weight:700; text-decoration:none; display:inline-block; }
-.btn-fcta-lt { background:transparent; color:#ccc; padding:15px 28px; border-radius:5px; font-size:15px; border:1.5px solid #555; text-decoration:none; display:inline-block; }
+.btn-fcta-g  { background:#C8A84B; color:#1a1a18; padding:16px 32px; border-radius:5px; font-size:17px; font-weight:700; text-decoration:none; display:inline-block; }
+.btn-fcta-lt { background:transparent; color:#ccc; padding:15px 28px; border-radius:5px; font-size:16px; border:1.5px solid #555; text-decoration:none; display:inline-block; }
 
 /* RESPONSIVE */
 @media (max-width:900px) {
@@ -123,35 +127,24 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
   .prize-grid { grid-template-columns:1fr 1fr; }
   .ms-row     { grid-template-columns:1fr 1fr; }
   .cb-prizes  { display:none; }
-  /* Contest banner — stack vertically on tablet/mobile */
-  .cb {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 22px 24px;
-  }
-  .cb-inner {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-  }
-  .btn-g { align-self: flex-start; }
+  .cb { flex-direction:column; align-items:flex-start; gap:16px; padding:22px 24px; }
+  .cb-inner { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
+  .btn-g { align-self:flex-start; }
 }
 @media (max-width:600px) {
   .proof-grid  { grid-template-columns:1fr 1fr; }
   .fcta-btns   { flex-direction:column; align-items:center; }
   .prize-grid  { grid-template-columns:1fr 1fr; }
   .ms-row      { grid-template-columns:1fr; }
-  /* Hero font shrink on small screens */
-  .hero { padding: 40px 20px 36px; }
-  .hero-h1 { font-size: 32px; }
-  .hero-ddi { font-size: 15px; }
-  .hero-sub { font-size: 16px; }
-  /* Sections tighten */
-  .sec { padding: 40px 20px; }
-  .sec.warm { padding: 40px 20px; }
-  .proof-sec { padding: 32px 20px; }
-  .fcta { padding: 44px 20px; }
+  .hero { padding:40px 20px 36px; }
+  .hero-h1 { font-size:32px; }
+  .hero-sub { font-size:17px; }
+  .sec { padding:40px 20px; }
+  .sec.warm { padding:40px 20px; }
+  .proof-sec { padding:32px 20px; }
+  .fcta { padding:44px 20px; }
+  .mentor { padding:22px 20px; }
+  .tracks .tc { padding:22px 18px; }
 }
 </style>
 {% endblock %}
@@ -253,7 +246,7 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
         <div class="tc-sub">iPhone · Android · Any smartphone</div>
         <div class="tc-pts">
           <div class="tc-pt">Compete on vision alone — not the camera you own</div>
-          <div class="tc-pt">Dedicated mobile-only rankings, prizes and POTY path</div>
+          <div class="tc-pt">Dedicated mobile-only rankings, prizes and Photographer of the Year (POTY) path</div>
           <div class="tc-pt">Understand exactly what makes a great mobile shot — and fix it</div>
           <div class="tc-pt">Share a verified portfolio link that proves your skill</div>
           <div class="tc-pt">Win real prizes against a global standard</div>
@@ -267,11 +260,11 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
         <div class="mentor-desc">Every image returns a full DDI breakdown across 5 modules. You don't just get a number — you see exactly where you're strong, where you're weak, and what to focus on next. Upload at midnight. Get feedback instantly. No waiting for a judge's opinion.</div>
       </div>
       <div class="mentor-mods">
-        <div class="mentor-mod">Depth of Detail <b>84</b></div>
-        <div class="mentor-mod">Wonder <b>88</b></div>
-        <div class="mentor-mod">Disruption <b>71</b></div>
-        <div class="mentor-mod">Dim. Mastery <b>79</b></div>
-        <div class="mentor-mod">Aesthetic Q. <b>76</b></div>
+        <div class="mentor-mod">Depth of Detail <span class="mentor-bar"><span style="width:84%"></span></span></div>
+        <div class="mentor-mod">Wonder <span class="mentor-bar"><span style="width:88%"></span></span></div>
+        <div class="mentor-mod">Disruption <span class="mentor-bar"><span style="width:71%"></span></span></div>
+        <div class="mentor-mod">Dim. Mastery <span class="mentor-bar"><span style="width:79%"></span></span></div>
+        <div class="mentor-mod">Aesthetic Q. <span class="mentor-bar"><span style="width:76%"></span></span></div>
         <div class="mentor-mod" style="grid-column:span 2;justify-content:center;gap:10px;">Overall <b style="color:#1a1a18;font-size:16px;">79.6</b></div>
       </div>
     </div>
@@ -280,8 +273,8 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
   <!-- J-CURVE JOURNEY -->
   <section class="sec warm">
     <div class="sec-eye">The annual path</div>
-    <h2 class="sec-h2">Month 1 to <em>POTY Gala</em></h2>
-    <p class="sec-p" style="color:#8A7040;">Every upload builds your standing. Consistency wins — not a single lucky shot.</p>
+    <h2 class="sec-h2">Month 1 to <em>Photographer of the Year Gala</em></h2>
+    <p class="sec-p" style="color:#8A7040;">Every upload builds your standing. Consistency wins — not a single lucky shot. The top photographers by genre average qualify for the annual POTY (Photographer of the Year) Gala.</p>
     <svg width="100%" viewBox="0 0 640 220" preserveAspectRatio="xMidYMid meet" style="display:block;">
       <defs>
         <linearGradient id="jf" x1="0" y1="0" x2="0" y2="1">
@@ -313,13 +306,13 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
       <text x="54"  y="182" font-size="12" fill="#1A4A6A" font-family="Georgia,serif" font-weight="bold">Upload &amp; score</text>
       <text x="188" y="164" font-size="12" fill="#1A4A6A" font-family="Georgia,serif" font-weight="bold">Monthly wins</text>
       <text x="232" y="82"  font-size="12" fill="#6A4A0A" font-family="Georgia,serif" font-weight="bold">Top-6 avg clears cutoff</text>
-      <text x="378" y="18"  font-size="13" fill="#6A4A0A" font-family="Georgia,serif" font-weight="bold">POTY Gala — ₹65L</text>
+      <text x="378" y="18"  font-size="13" fill="#6A4A0A" font-family="Georgia,serif" font-weight="bold">Photographer of the Year Gala — ₹65L</text>
     </svg>
     <div class="ms-row">
       <div class="ms"><div class="ms-num">Month 1–3</div><div class="ms-title">Upload &amp; score</div><div class="ms-desc">DDI feedback every upload. Auto-entered into monthly contest.</div></div>
       <div class="ms"><div class="ms-num">Month 4–6</div><div class="ms-title">Climb the board</div><div class="ms-desc">Monthly wins stack. City rank updates. Tier badges earned.</div></div>
-      <div class="ms hl"><div class="ms-num gd">Month 7–9</div><div class="ms-title">POTY cutoff</div><div class="ms-desc">Best 6 per genre averaged. Top-6 must clear the Month 9 threshold to qualify.</div><div class="ms-note">Cutoff announced end of Month 9</div></div>
-      <div class="ms"><div class="ms-num gd">Month 10–12</div><div class="ms-title">Final push</div><div class="ms-desc">Keep uploading. Clear the cutoff by year-end to qualify for POTY.</div></div>
+      <div class="ms hl"><div class="ms-num gd">Month 7–9</div><div class="ms-title">POTY cutoff</div><div class="ms-desc">Best 6 per genre averaged. Top-6 must clear the Month 9 threshold to qualify for Photographer of the Year.</div><div class="ms-note">Cutoff announced end of Month 9</div></div>
+      <div class="ms"><div class="ms-num gd">Month 10–12</div><div class="ms-title">Final push</div><div class="ms-desc">Keep uploading. Clear the cutoff by year-end to qualify for the POTY (Photographer of the Year) Gala.</div></div>
     </div>
   </section>
 
