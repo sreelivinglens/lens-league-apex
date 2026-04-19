@@ -401,7 +401,7 @@ def register():
 @app.route('/auth/google')
 def auth_google():
     redirect_uri = url_for('auth_google_callback', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    return google.authorize_redirect(redirect_uri, prompt='select_account')
 
 
 @app.route('/auth/google/callback')
