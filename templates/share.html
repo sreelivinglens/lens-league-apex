@@ -175,7 +175,7 @@
   .badge-gap      { background: rgba(224,85,85,0.12);   border: 1px solid rgba(224,85,85,0.35);  color: var(--red); }
 
   /* Authenticity bar — visible to ALL */
-  .auth-bar { padding: 14px 28px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 17px; color: var(--text-3); }
+
 
   /* Register CTA — logged-out only */
   .register-cta {
@@ -243,7 +243,7 @@
     .mod-label, .mod-bar-label { font-size: 15px; }
     .analysis, .byline-section { padding: 18px; }
     .analysis-body, .byline-text, .improvement-text { font-size: 16px; }
-    .badges-section, .auth-bar, .card-footer { padding: 14px 18px; }
+    .badges-section, .card-footer { padding: 14px 18px; }
     .actions { flex-direction: column; }
     .score-num { font-size: 30px; }
   }
@@ -415,18 +415,7 @@
   {% endif %}
   {% endif %}
 
-  <!-- Authenticity — visible to EVERYONE -->
-  <div class="auth-bar">
-    {% if image.exif_status == 'verified' %}
-      <span style="color:var(--green);">✅ Camera Verified</span>
-    {% elif image.exif_status == 'suspicious' %}
-      <span style="color:var(--red);">⚠️ Suspicious Metadata</span>
-    {% else %}
-      <span>❓ Unverified</span>
-    {% endif %}
-    {% if image.legal_declaration %}<span>· Legally Declared</span>{% endif %}
-    {% if image.exif_camera %}<span>· {{ image.exif_camera }}</span>{% endif %}
-  </div>
+
 
   <!-- Register CTA — logged-out only -->
   {% if not current_user.is_authenticated %}
