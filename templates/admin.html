@@ -213,11 +213,18 @@
   @media (max-width: 900px) {
     .admin-stats-bar { grid-template-columns: 1fr 1fr !important; }
     .admin-export-grid { grid-template-columns: 1fr 1fr !important; }
+    .admin-tile-grid { grid-template-columns: repeat(2, 1fr) !important; }
   }
   @media (max-width: 600px) {
     .admin-stats-bar { grid-template-columns: 1fr 1fr !important; }
     .admin-export-grid { grid-template-columns: 1fr !important; }
+    .admin-tile-grid { grid-template-columns: repeat(2, 1fr) !important; }
   }
+  @media (max-width: 420px) {
+    .admin-tile-grid { grid-template-columns: 1fr !important; }
+  }
+  body { overflow-x: hidden; }
+  *, *::before, *::after { box-sizing: border-box; }
 </style>
 {% endblock %}
 
