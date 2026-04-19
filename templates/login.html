@@ -38,49 +38,13 @@
         <a href="{{ url_for('contest_rules') }}" style="color:var(--gold); text-decoration:none;">Contest Rules</a>.
       </div>
 
-      <!-- Admin sign in toggle -->
-      <div style="margin-top:24px; text-align:center;">
-        <button onclick="toggleAdminForm()" id="adminToggleBtn"
-                style="background:none; border:none; font-size:13px; color:var(--text-muted);
-                       cursor:pointer; text-decoration:none; padding:0;
-                       transition:color 0.2s;"
-                onmouseover="this.style.color='var(--text-secondary)'"
-                onmouseout="this.style.color='var(--text-muted)'">
-          Admin sign in
-        </button>
-      </div>
-
-      <!-- Admin password form — hidden by default -->
-      <div id="adminForm" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
-        <form method="POST" action="{{ url_for('login') }}">
-          <div class="form-group" style="margin-bottom:14px;">
-            <label for="admin_email" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Email</label>
-            <input type="email" id="admin_email" name="email"
-                   placeholder="admin@lenslague.com"
-                   style="width:100%; background:#FFFFFF; border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;"
-                   onfocus="this.style.borderColor='var(--gold)'"
-                   onblur="this.style.borderColor='var(--border)'"
-                   required>
-          </div>
-          <div class="form-group" style="margin-bottom:18px;">
-            <label for="admin_password" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Password</label>
-            <input type="password" id="admin_password" name="password"
-                   placeholder="••••••••"
-                   style="width:100%; background:#FFFFFF; border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;"
-                   onfocus="this.style.borderColor='var(--gold)'"
-                   onblur="this.style.borderColor='var(--border)'"
-                   required>
-          </div>
-          <button type="submit"
-                  style="width:100%; padding:12px; background:var(--gold); color:#0D0D0B;
-                         border:none; border-radius:var(--radius-sm); font-family:var(--font-mono);
-                         font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
-                         cursor:pointer; transition:opacity 0.2s;"
-                  onmouseover="this.style.opacity='0.85'"
-                  onmouseout="this.style.opacity='1'">
-            Sign In
-          </button>
-        </form>
+      <!-- Data usage notice -->
+      <div style="margin-top:14px; padding:12px 16px; background:var(--surface-3);
+                  border:1px solid var(--border); border-radius:var(--radius-sm);
+                  font-size:13px; color:var(--text-muted); text-align:center; line-height:1.65;">
+        🔒 We collect only your email and name via Google.
+        We never sell your data or share it with advertisers.
+        &nbsp;<a href="/privacy" style="color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy →</a>
       </div>
 
     </div>
@@ -105,18 +69,5 @@
   </div>
 </div>
 
-<script>
-function toggleAdminForm() {
-  const form = document.getElementById('adminForm');
-  const btn  = document.getElementById('adminToggleBtn');
-  if (form.style.display === 'none') {
-    form.style.display = 'block';
-    btn.textContent = 'Cancel';
-    document.getElementById('admin_email').focus();
-  } else {
-    form.style.display = 'none';
-    btn.textContent = 'Admin sign in';
-  }
-}
-</script>
+
 {% endblock %}

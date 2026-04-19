@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Sign In — Lens League Apex{% endblock %}
+
+{% block content %}
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
+  <div style="width:100%; max-width:400px;">
+
+    <div class="card" style="padding:32px;">
+      <div style="text-align:center; margin-bottom:28px;">
+        <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--gold); margin-bottom:10px;">LENS LEAGUE APEX</div>
+        <h1 style="font-size:22px; font-weight:700; color:var(--text-primary);">Admin Access</h1>
+      </div>
+
+      <form method="POST" action="{{ url_for('sree_admin_login') }}">
+        <div class="form-group" style="margin-bottom:16px;">
+          <label for="email" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Email</label>
+          <input type="email" id="email" name="email"
+                 placeholder="admin@lenslague.com"
+                 style="width:100%; background:#FFFFFF; border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;"
+                 onfocus="this.style.borderColor='var(--gold)'"
+                 onblur="this.style.borderColor='var(--border)'"
+                 required autofocus>
+        </div>
+        <div class="form-group" style="margin-bottom:24px;">
+          <label for="password" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:6px;">Password</label>
+          <input type="password" id="password" name="password"
+                 placeholder="••••••••"
+                 style="width:100%; background:#FFFFFF; border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:15px; border-radius:var(--radius-sm); outline:none;"
+                 onfocus="this.style.borderColor='var(--gold)'"
+                 onblur="this.style.borderColor='var(--border)'"
+                 required>
+        </div>
+        <button type="submit"
+                style="width:100%; padding:13px; background:var(--gold); color:#0D0D0B;
+                       border:none; border-radius:var(--radius-sm); font-family:var(--font-mono);
+                       font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+                       cursor:pointer; transition:opacity 0.2s;"
+                onmouseover="this.style.opacity='0.85'"
+                onmouseout="this.style.opacity='1'">
+          Sign In
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
