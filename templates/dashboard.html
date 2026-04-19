@@ -71,6 +71,19 @@
     max-width: 520px;
   }
   .peer-widget-body { padding: 20px 22px; }
+  @media (max-width: 600px) {
+    .peer-widget-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .peer-widget-header .btn {
+      width: 100%;
+      text-align: center;
+    }
+    .peer-widget-headline { font-size: 16px; }
+    .peer-widget-subline  { font-size: 14px; }
+  }
 
   /* Exchange chain */
   .exchange-row {
