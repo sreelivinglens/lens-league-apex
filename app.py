@@ -96,6 +96,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_lens VARCHAR(180)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_settings VARCHAR(180)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_warning TEXT",
@@ -906,6 +907,7 @@ def upload():
             legal_declaration = bool(request.form.get('legal_declaration')),
             is_public         = (request.form.get('is_public', '1') == '1'),
             exif_status=exif_status, exif_camera=exif_data.get('camera', ''),
+            exif_lens=exif_data.get('lens', ''),
             exif_date_taken=exif_data.get('date_taken', ''),
             exif_settings=exif_settings, exif_warning=exif_warning,
         )
@@ -1551,7 +1553,6 @@ def leaderboard():
         camera_rankings = camera_rankings[:30]
 
     # ── Lens rankings (lazy — only computed for Lenses tab) ──────────────────
-    # Uses exif_camera as proxy until dedicated exif_lens column is added (task 4)
     lens_rankings = []
     if tab == 'lenses':
         from collections import defaultdict
@@ -1562,8 +1563,8 @@ def leaderboard():
             Image.is_public == True,
             db.or_(Image.is_flagged == False, Image.is_flagged == None),
             db.or_(Image.needs_review == False, Image.needs_review == None),
-            Image.exif_camera != None,
-            Image.exif_camera != '',
+            Image.exif_lens != None,
+            Image.exif_lens != '',
             db.or_(
                 db.text("camera_track = 'camera'"),
                 db.text("camera_track IS NULL"),
@@ -1574,9 +1575,9 @@ def leaderboard():
 
         _lens_buckets = defaultdict(list)
         for img in _lens_q.all():
-            cam = (img.exif_camera or '').strip()
-            if cam:
-                _lens_buckets[cam].append(img.score)
+            lens = (img.exif_lens or '').strip()
+            if lens:
+                _lens_buckets[lens].append(img.score)
         for model, scores in _lens_buckets.items():
             lens_rankings.append({
                 'model':      model,
