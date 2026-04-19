@@ -1299,7 +1299,7 @@ def download_card(image_id):
     if not img.score:
         return "This image has not been scored yet.", 404
 
-    import io, tempfile, zipfile, os as _os
+    import io, tempfile, os as _os
     from engine.compositor import build_card1, build_card2
 
     audit = img.get_audit() or {}
@@ -1354,11 +1354,13 @@ def download_card(image_id):
         clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
         clean = clean[:40].replace(' ','_')
 
-        zip_buf = io.BytesIO()
-        with zipfile.ZipFile(zip_buf,'w',zipfile.ZIP_DEFLATED) as zf:
-            zf.write(t1.name, f'LensLeague_{clean}_ScoreCard.jpg')
-            zf.write(t2.name, f'LensLeague_{clean}_Analysis.jpg')
-        zip_bytes = zip_buf.getvalue()
+        # Build 2-page PDF (page 1 = score card, page 2 = analysis)
+        from PIL import Image as _PILImg
+        pg1 = _PILImg.open(t1.name).convert('RGB')
+        pg2 = _PILImg.open(t2.name).convert('RGB')
+        pdf_buf = io.BytesIO()
+        pg1.save(pdf_buf, format='PDF', save_all=True, append_images=[pg2], resolution=150)
+        pdf_bytes = pdf_buf.getvalue()
 
     finally:
         for p in [t1.name if t1 else None, t2.name if t2 else None, photo_tmp]:
@@ -1368,15 +1370,14 @@ def download_card(image_id):
 
     from flask import Response
     return Response(
-        zip_bytes,
+        pdf_bytes,
         headers={
-            'Content-Type':              'application/zip',
-            'Content-Disposition':       f'attachment; filename="LensLeague_{clean}_RatingCards.zip"',
-            'Content-Length':            str(len(zip_bytes)),
-            'Cache-Control':             'no-store, no-cache, must-revalidate',
-            'Pragma':                    'no-cache',
-            'X-Content-Type-Options':    'nosniff',
-            'Content-Transfer-Encoding': 'binary',
+            'Content-Type':        'application/pdf',
+            'Content-Disposition': f'inline; filename="LensLeague_{clean}_RatingCard.pdf"',
+            'Content-Length':      str(len(pdf_bytes)),
+            'Cache-Control':       'no-store, no-cache, must-revalidate',
+            'Pragma':              'no-cache',
+            'X-Content-Type-Options': 'nosniff',
         }
     )
 
