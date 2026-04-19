@@ -79,17 +79,24 @@
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
 
-  /* Tier-only badge */
-
-  /* Tier-only badge — logged out */
-  .tier-badge {
-    position: absolute; top: 16px; right: 16px;
-    background: rgba(13,13,11,0.92); border: 2px solid var(--gold);
-    border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 80px;
-    backdrop-filter: blur(8px);
+  /* Tier strip — below image */
+  .tier-strip {
+    background: #0d0d0b; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(200,168,75,0.3);
   }
-  .tier-badge .tier-word { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; line-height: 1.2; }
-  .tier-badge .tier-sub  { font-family: var(--font-mono); font-size: 15px; color: var(--text-3); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+  .tier-strip .tier-word {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    color: var(--gold); letter-spacing: 3px; text-transform: uppercase; line-height: 1;
+  }
+  .tier-strip .tier-sub {
+    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.3);
+    letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
+  }
+  .tier-engine {
+    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.2);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
 
   .judge-badge {
     position: absolute; top: 16px; left: 16px;
@@ -102,44 +109,6 @@
   .img-info { padding: 22px 28px; border-bottom: 1px solid var(--border); }
   .img-title { font-size: 26px; font-weight: 700; color: var(--text-1); margin-bottom: 8px; line-height: 1.2; }
   .img-meta  { font-family: var(--font-mono); font-size: 15px; color: var(--text-3); letter-spacing: 1px; }
-
-  .soul-bonus {
-    margin: 16px 28px 0; padding: 10px 16px;
-    background: var(--gold-subtle); border: 1px solid var(--gold-dark); border-radius: 4px;
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 2px; color: var(--gold); text-align: center;
-  }
-
-  /* Full modules with numbers (logged in) */
-  .modules { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); }
-  .mod-cell { padding: 16px 14px; border-right: 1px solid var(--border); }
-  .mod-cell:last-child { border-right: none; }
-  .mod-label { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; }
-  .mod-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--text-1); line-height: 1; }
-  .mod-value.highest { color: var(--gold); }
-  .mod-bar { height: 3px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
-  .mod-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
-
-  /* Bars only, no numbers (public view) */
-  .modules-bars-only { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); }
-  .mod-bar-cell { padding: 16px 14px 14px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-  .mod-bar-cell:last-child { border-right: none; }
-  .mod-bar-label { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-3); text-transform: uppercase; }
-  .mod-bar-only { height: 48px; background: var(--surface-3); border-radius: 3px; overflow: hidden; display: flex; align-items: flex-end; }
-  .mod-bar-only-fill { width: 100%; background: linear-gradient(180deg, var(--gold), var(--gold-dark)); border-radius: 3px; transition: height .3s; }
-
-  /* Nudge strip under locked bars */
-  .score-nudge {
-    padding: 10px 28px; background: rgba(200,168,75,0.05); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  }
-  .score-nudge span { font-family: var(--font-mono); font-size: 14px; color: var(--text-3); letter-spacing: 1px; }
-  .score-nudge a {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--gold);
-    text-decoration: none; letter-spacing: 1px; white-space: nowrap;
-    border-bottom: 1px solid var(--gold-dark); padding-bottom: 1px;
-  }
-  .score-nudge a:hover { border-color: var(--gold); }
 
   /* Analysis rows — visible to ALL */
   .analysis { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
@@ -279,12 +248,18 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
+    {% if current_user.is_authenticated and image.user_id == current_user.id %}
+    <div class="judge-badge">MY IMAGE</div>
+    {% endif %}
+  </div>
 
-      <div class="tier-badge">
-        <div class="tier-word">{{ image.tier }}</div>
-        <div class="tier-sub">DDI Tier</div>
-        <div style="font-family:var(--font-mono); font-size: 15px; letter-spacing:1px; color:rgba(122,120,112,0.6); text-transform:uppercase; margin-top:2px;">Dimensional Diagnostic Index</div>
-      </div>
+  <!-- Tier strip — below image, unobstructed -->
+  <div class="tier-strip">
+    <div>
+      <div class="tier-word">{{ image.tier }}</div>
+      <div class="tier-sub">Dimensional Diagnostic Index</div>
+    </div>
+    <div class="tier-engine">APEX DDI ENGINE</div>
   </div>
 
   <!-- Image info — always visible -->
@@ -295,35 +270,6 @@
       {% if image.subject %}&nbsp;·&nbsp;{{ image.subject }}{% endif %}
       {% if image.location %}&nbsp;·&nbsp;{{ image.location }}{% endif %}
     </div>
-  </div>
-
-  {% if image.soul_bonus %}
-  <div class="soul-bonus">★ SOUL BONUS ACTIVE — AQ ≥ 8.0</div>
-  {% endif %}
-
-  <!-- Module scores -->
-  {% set mods = [
-    ('D·I',   image.dod_score),
-    ('D·II',  image.disruption_score),
-    ('D·III', image.dm_score),
-    ('D·IV',  image.wonder_score),
-    ('D·V',   image.aq_score),
-  ] %}
-  {% set valid_scores = mods | selectattr('1') | list %}
-  {% set max_val = valid_scores | map(attribute=1) | max if valid_scores else 0 %}
-
-  <!-- Module bars only — names and numbers hidden publicly -->
-  <div class="modules-bars-only">
-    {% for name, val in mods %}{% if val %}
-    <div class="mod-bar-cell">
-      <div class="mod-bar-label">{{ name }}</div>
-      <div class="mod-bar-only"><div class="mod-bar-only-fill" style="width:{{ (val/10*100)|int }}%"></div></div>
-    </div>
-    {% endif %}{% endfor %}
-  </div>
-  <div class="score-nudge">
-    <span>🔒 &nbsp;Full breakdown visible to owner</span>
-    <a href="{{ url_for('login') }}">Log in →</a>
   </div>
 
   <!-- Analysis rows — visible to EVERYONE -->
