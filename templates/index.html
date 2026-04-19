@@ -25,8 +25,10 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
 /* DDI CARD */
 .ddi-card { background:#fff; border:1px solid #E0D8C8; border-radius:14px; padding:24px; box-shadow:0 4px 24px rgba(0,0,0,0.07); }
 .ddi-mods { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:14px; }
-.ddi-mod { background:#F8F5EE; border-radius:5px; padding:8px 12px; font-size:14px; color:#555; display:flex; justify-content:space-between; }
+.ddi-mod { background:#F8F5EE; border-radius:5px; padding:8px 12px; font-size:14px; color:#555; display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .ddi-mod b { color:#B8892A; font-size:15px; }
+.ddi-bar { flex:1; height:4px; background:#E8E3D8; border-radius:99px; overflow:hidden; max-width:60px; }
+.ddi-bar span { display:block; height:100%; background:#B8892A; border-radius:99px; }
 
 /* CONTEST BANNER */
 .cb { background:linear-gradient(135deg,#FDF8EE 0%,#F5EDD4 100%); border-bottom:1px solid #E8D9A8; padding:26px clamp(24px,5vw,80px); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
@@ -202,9 +204,9 @@ body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:b
         </g>
       </svg>
       <div class="ddi-mods">
-        <div class="ddi-mod">Depth of Detail <b>84</b></div>
-        <div class="ddi-mod">Wonder <b>88</b></div>
-        <div class="ddi-mod">Disruption <b>71</b></div>
+        <div class="ddi-mod">Depth of Detail <span class="ddi-bar"><span style="width:84%"></span></span></div>
+        <div class="ddi-mod">Wonder <span class="ddi-bar"><span style="width:88%"></span></span></div>
+        <div class="ddi-mod">Disruption <span class="ddi-bar"><span style="width:71%"></span></span></div>
         <div class="ddi-mod">Overall <b style="color:#1a1a18;font-size:16px;">79.6</b></div>
       </div>
     </div>
