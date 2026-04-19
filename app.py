@@ -849,6 +849,14 @@ def upload():
             flash(f'Image processing failed: {e}', 'error')
             if os.path.exists(raw_path): os.remove(raw_path)
             return redirect(request.url)
+        # Extract EXIF from original file BEFORE deletion — raw_path still has full metadata
+        from engine.exif_check import extract_exif
+        exif_status, exif_data, exif_warning = extract_exif(raw_path)
+        exif_settings = '  ·  '.join(filter(None, [
+            exif_data.get('focal_length',''), exif_data.get('aperture',''),
+            exif_data.get('iso',''), exif_data.get('shutter',''),
+        ]))
+
         if os.path.exists(raw_path): os.remove(raw_path)
 
         from engine.processor import hash_similarity_pct
@@ -872,13 +880,6 @@ def upload():
         if not thumb_url:
             flash('Storage upload failed. Please try again.', 'error')
             return redirect(request.url)
-
-        from engine.exif_check import extract_exif
-        exif_status, exif_data, exif_warning = extract_exif(thumb_path)
-        exif_settings = '  ·  '.join(filter(None, [
-            exif_data.get('focal_length',''), exif_data.get('aperture',''),
-            exif_data.get('iso',''), exif_data.get('shutter',''),
-        ]))
 
         raw_genre = request.form.get('genre', 'Wildlife')
         genre     = normalise_genre(raw_genre)
