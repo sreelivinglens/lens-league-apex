@@ -79,6 +79,7 @@ def ingest_image(file_path, upload_folder):
     thumb_path = os.path.join(upload_folder, 'thumbs', thumb_name)
     os.makedirs(os.path.dirname(thumb_path), exist_ok=True)
 
+    exif_bytes = b''
     if ext in RAW_EXTENSIONS:
         try:
             import rawpy
@@ -94,8 +95,10 @@ def ingest_image(file_path, upload_folder):
         except Exception as e:
             raise ValueError(f"RAW processing failed: {e}")
     else:
-        img = Image.open(file_path).convert('RGB')
+        img = Image.open(file_path)
+        exif_bytes = img.info.get('exif', b'')   # capture before convert strips it
         fmt = img.format or 'JPEG'
+        img = img.convert('RGB')
 
     # Reject rating card images (tall aspect ratio)
     w, h = img.size
@@ -114,7 +117,7 @@ def ingest_image(file_path, upload_folder):
         img   = img.resize((THUMB_W, int(h * ratio)), Image.LANCZOS)
         w, h  = img.size
 
-    img.save(thumb_path, 'JPEG', quality=JPEG_Q, optimize=True)
+    img.save(thumb_path, 'JPEG', quality=JPEG_Q, optimize=True, exif=exif_bytes)
     return thumb_path, w, h, fmt, phash
 
 
