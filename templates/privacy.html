@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .privacy-wrap { max-width: 760px; margin: 0 auto; }
+
+  .privacy-section { margin-bottom: 44px; }
+  .privacy-section h2 {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .privacy-section h2 span {
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--gold); margin-right: 10px; font-weight: 600;
+  }
+  .privacy-section h3 {
+    font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
+  }
+  .privacy-section p {
+    font-size: 16px; color: var(--text-secondary); line-height: 1.85; margin-bottom: 12px;
+  }
+  .privacy-section ul, .privacy-section ol {
+    padding-left: 22px; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .privacy-section li { font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
+  .privacy-section strong { color: var(--text-primary); }
+  .privacy-section a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dark); }
+  .privacy-section a:hover { border-color: var(--gold); }
+
+  .privacy-highlight {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 16px 20px; margin: 16px 0;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.75;
+  }
+  .privacy-highlight strong { color: var(--gold); }
+  .privacy-highlight.good  { border-left-color: var(--green); background: rgba(46,125,79,0.05); }
+  .privacy-highlight.warn  { border-left-color: var(--amber); background: rgba(184,112,10,0.06); }
+
+  /* Data table */
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 15px;
+    margin: 16px 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
+  }
+  .data-table th {
+    background: var(--surface-3); padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase;
+    text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 11px 14px; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle); vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+
+  /* Providers grid */
+  .providers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .provider-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 16px;
+  }
+  .provider-name { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+  .provider-role { font-family: var(--font-mono); font-size: 12px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .provider-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Rights checklist */
+  .rights-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+  .rights-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 13px 16px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .rights-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .rights-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .rights-desc  { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Doc meta */
+  .doc-meta {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 36px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;
+  }
+  .doc-meta-item { font-family: var(--font-mono); font-size: 14px; }
+  .doc-meta-label { color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; font-size: 11px; }
+  .doc-meta-value { color: var(--text-primary); font-weight: 600; word-break: break-word; }
+
+  @media(max-width: 600px) {
+    .providers-grid { grid-template-columns: 1fr; }
+    .data-table { font-size: 14px; }
+    .data-table td, .data-table th { padding: 9px 10px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="privacy-wrap">
+
+  <div class="page-header">
+    <h1>Privacy Policy</h1>
+    <p>How Lens League Apex collects, uses, and protects your data</p>
+  </div>
+
+  <div class="doc-meta">
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Version</div>
+      <div class="doc-meta-value">1.0 — April 2026</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Jurisdiction</div>
+      <div class="doc-meta-value">Republic of India</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Operator</div>
+      <div class="doc-meta-value">Lens League Apex</div>
+    </div>
+    <div class="doc-meta-item">
+      <div class="doc-meta-label">Contact</div>
+      <div class="doc-meta-value">verify@lensleague.com</div>
+    </div>
+  </div>
+
+  <div class="privacy-highlight good">
+    <strong>The short version:</strong> We collect the minimum data needed to run the platform. We do not sell your data. We do not share it with advertisers. You can delete your account and all associated data at any time by emailing us. Your images belong to you.
+  </div>
+
+  <!-- 1 -->
+  <div class="privacy-section" id="who-we-are">
+    <h2><span>01</span> Who We Are</h2>
+    <p>Lens League Apex is a photography scoring and competition platform operated from Bengaluru, Karnataka, India. We operate the website at <strong>lens-league-apex-production.up.railway.app</strong> and any associated domains. When this policy says "we", "us", or "Lens League Apex", it refers to the operator of this platform.</p>
+    <p>For any privacy-related questions, corrections, or deletion requests, contact us at <a href="mailto:verify@lensleague.com">verify@lensleague.com</a>. We aim to respond within 2 business days.</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="privacy-section" id="what-we-collect">
+    <h2><span>02</span> What Data We Collect &amp; Why</h2>
+
+    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table class="data-table">
+      <thead>
+        <tr><th>Data</th><th>How collected</th><th>Why we need it</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Email address</td>
+          <td>Google OAuth sign-in</td>
+          <td>Account identity, login, and transactional emails (prize notifications, verification requests)</td>
+        </tr>
+        <tr>
+          <td>Display name / full name</td>
+          <td>Google profile + optional manual entry</td>
+          <td>Shown on your profile, leaderboard, and rating cards</td>
+        </tr>
+        <tr>
+          <td>Country, state, city</td>
+          <td>Onboarding form — you choose from a list</td>
+          <td>City-based leaderboard rankings. Never used for targeting or advertising.</td>
+        </tr>
+        <tr>
+          <td>Image files</td>
+          <td>You upload them</td>
+          <td>Scoring by the Apex DDI Engine, display on leaderboard and share pages</td>
+        </tr>
+        <tr>
+          <td>EXIF metadata</td>
+          <td>Embedded in your image files</td>
+          <td>Camera verification, League integrity checks, POTY and contest eligibility</td>
+        </tr>
+        <tr>
+          <td>Subscription plan &amp; status</td>
+          <td>Razorpay payment gateway</td>
+          <td>Determining contest eligibility and upload limits. We never see card numbers.</td>
+        </tr>
+        <tr>
+          <td>Razorpay subscription ID</td>
+          <td>Razorpay, on successful payment</td>
+          <td>Linking your subscription to your account for renewals and cancellations</td>
+        </tr>
+        <tr>
+          <td>Peer rating history</td>
+          <td>Generated by your actions on the platform</td>
+          <td>Credit tracking, bias detection, leaderboard blended scores</td>
+        </tr>
+        <tr>
+          <td>Login timestamps</td>
+          <td>Generated automatically</td>
+          <td>Account security — detecting unusual access patterns</td>
+        </tr>
+        <tr>
+          <td>IP address</td>
+          <td>Server logs</td>
+          <td>Security, abuse prevention, fraud detection. Not linked to your profile for tracking purposes.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="privacy-highlight">
+      <strong>What we do not collect:</strong> GPS location from your device, phone number, date of birth, government ID, biometric data, browsing history outside the platform, or any data from your contacts or other apps.
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="privacy-section" id="how-we-use">
+    <h2><span>03</span> How We Use Your Data</h2>
+    <p>We use your data only for the purposes described above. More specifically:</p>
+    <ul>
+      <li><strong>Running the platform</strong> — scoring your images, displaying leaderboards, managing subscriptions, processing contest entries.</li>
+      <li><strong>Communicating with you</strong> — prize notifications, RAW verification requests, account security alerts, and responses to your support enquiries. We do not send unsolicited marketing emails.</li>
+      <li><strong>Integrity checks</strong> — EXIF analysis, perceptual hash duplicate detection, AI-generation detection, and League mismatch monitoring to keep the platform fair.</li>
+      <li><strong>Improving the engine</strong> — admin-reviewed calibration notes and REF example images are used to calibrate the Apex DDI Engine. No personally identifiable data is used for AI model training.</li>
+      <li><strong>Legal compliance</strong> — retaining records for tax purposes (prize disbursements) and responding to valid legal requests.</li>
+    </ul>
+    <p><strong>We do not use your data for advertising, profiling, or any automated decision-making that has legal or similarly significant effects on you.</strong></p>
+  </div>
+
+  <!-- 4 -->
+  <div class="privacy-section" id="third-parties">
+    <h2><span>04</span> Third-Party Services</h2>
+    <p>We use the following third-party services to operate the platform. Each handles only the minimum data necessary for its function.</p>
+
+    <div class="providers-grid">
+      <div class="provider-card">
+        <div class="provider-name">Google OAuth</div>
+        <div class="provider-role">Authentication</div>
+        <div class="provider-desc">Handles your sign-in. We receive your email address and display name from Google. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</div>
+      </div>
+      <div class="provider-card">
+        <div class="provider-name">Razorpay</div>
+        <div class="provider-role">Payment Processing</div>
+        <div class="provider-desc">Processes all subscription payments. We never see or store your card details. Governed by <a href="https://razorpay.com/privacy/" target="_blank" rel="noopener">Razorpay's Privacy Policy</a>.</div>
+      </div>
+      <div class="provider-card">
+        <div class="provider-name">Cloudflare R2</div>
+        <div class="provider-role">Image Storage</div>
+        <div class="provider-desc">Stores your uploaded images and generated rating cards. Files are stored in object storage and served via CDN. Governed by <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare's Privacy Policy</a>.</div>
+      </div>
+      <div class="provider-card">
+        <div class="provider-name">Railway</div>
+        <div class="provider-role">Hosting &amp; Infrastructure</div>
+        <div class="provider-desc">Hosts the platform application and database. Your data resides on Railway's infrastructure. Governed by <a href="https://railway.app/legal/privacy" target="_blank" rel="noopener">Railway's Privacy Policy</a>.</div>
+      </div>
+      <div class="provider-card">
+        <div class="provider-name">Anthropic (Claude API)</div>
+        <div class="provider-role">AI Scoring Engine</div>
+        <div class="provider-desc">Your uploaded images are sent to Anthropic's API for DDI scoring analysis. Image data is processed for scoring only and is not retained for model training. Governed by <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic's Privacy Policy</a>.</div>
+      </div>
+      <div class="provider-card">
+        <div class="provider-name">PostgreSQL (Railway)</div>
+        <div class="provider-role">Database</div>
+        <div class="provider-desc">Stores all platform data — accounts, scores, contest entries, ratings. Hosted within Railway's infrastructure. Access is restricted to the application only.</div>
+      </div>
+    </div>
+
+    <p>We do not use analytics trackers, advertising pixels, social media SDKs, or any other third-party scripts beyond those listed above.</p>
+  </div>
+
+  <!-- 5 -->
+  <div class="privacy-section" id="image-data">
+    <h2><span>05</span> Your Images</h2>
+    <p>You retain full copyright in every image you upload. By uploading, you grant Lens League Apex a non-exclusive licence to display, score, and use winning or shortlisted images for platform promotion — always with attribution. See the <a href="{{ url_for('terms') }}#ip">Terms &amp; Conditions — Section 09</a> for the full IP clause.</p>
+
+    <h3>Where your images are stored</h3>
+    <p>Uploaded images are processed (resized to 960px on the longer side for AI scoring) and stored on <strong>Cloudflare R2</strong>. The processing thumbnail is what the scoring engine sees; your original file is not retained on our servers — we resize at upload time. We strongly recommend you retain your original files for RAW verification purposes.</p>
+
+    <h3>Who can see your images</h3>
+    <ul>
+      <li><strong>Public images</strong> — appear on the leaderboard, your public profile, and share pages. You control this setting per image at upload time.</li>
+      <li><strong>Hidden images</strong> — scored privately, visible only to you. Not shown anywhere publicly.</li>
+      <li><strong>Peer rating pool images</strong> — shown to other subscribers for blind rating. Only the image is shown; your name and score are hidden during the rating process.</li>
+      <li><strong>Flagged or under-review images</strong> — hidden from all public views until admin review is complete.</li>
+    </ul>
+
+    <h3>AI processing</h3>
+    <p>Your image is sent to Anthropic's Claude API for DDI scoring. The image is transmitted securely over HTTPS. Anthropic processes the image to generate the score and analysis, and does not use submitted images to train its models under its standard API terms. We do not store the AI's intermediate processing data — only the final score, module breakdown, and analysis text.</p>
+  </div>
+
+  <!-- 6 -->
+  <div class="privacy-section" id="data-security">
+    <h2><span>06</span> Data Security</h2>
+    <p>We take reasonable and appropriate measures to protect your data:</p>
+    <ul>
+      <li><strong>HTTPS everywhere</strong> — all traffic between your browser and our servers is encrypted using TLS.</li>
+      <li><strong>Secure cookies</strong> — session cookies are set with <code>Secure</code>, <code>HttpOnly</code>, and <code>SameSite=Lax</code> flags.</li>
+      <li><strong>Password hashing</strong> — admin passwords are stored as bcrypt hashes. We never store plaintext passwords.</li>
+      <li><strong>Database access control</strong> — the database is not publicly accessible; only the application server can connect.</li>
+      <li><strong>No card data stored</strong> — all payment processing is delegated entirely to Razorpay. We store only the Razorpay subscription ID.</li>
+    </ul>
+    <div class="privacy-highlight warn">
+      <strong>No system is perfectly secure.</strong> In the event of a data breach that poses a risk to your rights and freedoms, we will notify affected users by email as promptly as practicable and take immediate steps to contain the breach. We will also notify the relevant authority as required under applicable Indian data protection law.
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="privacy-section" id="retention">
+    <h2><span>07</span> How Long We Keep Your Data</h2>
+    <ul>
+      <li><strong>Active accounts</strong> — data is retained for as long as your account exists.</li>
+      <li><strong>Deleted accounts</strong> — all personally identifiable data is permanently deleted within 30 days of a deletion request. Anonymised aggregate statistics (e.g. genre average scores) that contain no personal identifiers may be retained indefinitely.</li>
+      <li><strong>Prize records</strong> — winner details and payment records are retained for 7 years as required for tax compliance under Indian law.</li>
+      <li><strong>Server logs</strong> — IP address logs are retained for up to 90 days for security purposes, then automatically deleted.</li>
+    </ul>
+  </div>
+
+  <!-- 8 -->
+  <div class="privacy-section" id="your-rights">
+    <h2><span>08</span> Your Rights</h2>
+    <p>You have the following rights with respect to your personal data. To exercise any of them, email <a href="mailto:verify@lensleague.com">verify@lensleague.com</a> from your registered address.</p>
+
+    <div class="rights-list">
+      <div class="rights-item">
+        <span class="rights-icon">👁️</span>
+        <div>
+          <div class="rights-title">Right to Access</div>
+          <div class="rights-desc">Request a copy of all personal data we hold about you. We will provide it within 30 days.</div>
+        </div>
+      </div>
+      <div class="rights-item">
+        <span class="rights-icon">✏️</span>
+        <div>
+          <div class="rights-title">Right to Correction</div>
+          <div class="rights-desc">Ask us to correct inaccurate personal data. You can update your name and username directly from your profile page.</div>
+        </div>
+      </div>
+      <div class="rights-item">
+        <span class="rights-icon">🗑️</span>
+        <div>
+          <div class="rights-title">Right to Deletion</div>
+          <div class="rights-desc">Request permanent deletion of your account and all associated personal data. Processed within 30 days. Note: prize payment records required by tax law cannot be deleted during the 7-year retention period.</div>
+        </div>
+      </div>
+      <div class="rights-item">
+        <span class="rights-icon">📦</span>
+        <div>
+          <div class="rights-title">Right to Portability</div>
+          <div class="rights-desc">Request your data in a machine-readable format. We can provide your image scores, metadata, and account details as a CSV export.</div>
+        </div>
+      </div>
+      <div class="rights-item">
+        <span class="rights-icon">🚫</span>
+        <div>
+          <div class="rights-title">Right to Object</div>
+          <div class="rights-desc">Object to any specific processing of your data. If you object to your public images being displayed on the leaderboard, you can mark them hidden at any time from your dashboard.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="privacy-section" id="cookies">
+    <h2><span>09</span> Cookies &amp; Tracking</h2>
+    <p>We use <strong>only one cookie</strong>: a session cookie that keeps you logged in. It contains no personal data — only a secure session identifier. It is set as <code>HttpOnly</code> (not accessible to JavaScript), <code>Secure</code> (HTTPS only), and expires when you log out or after an inactivity period.</p>
+    <p>We do not use:</p>
+    <ul>
+      <li>Analytics cookies (no Google Analytics, Mixpanel, or similar)</li>
+      <li>Advertising or retargeting cookies</li>
+      <li>Social media tracking pixels</li>
+      <li>Third-party cookies of any kind</li>
+    </ul>
+    <p>Because we use only a functional session cookie, we do not display a cookie consent banner. If this changes, we will update this policy and implement appropriate consent mechanisms.</p>
+  </div>
+
+  <!-- 10 -->
+  <div class="privacy-section" id="children">
+    <h2><span>10</span> Children's Privacy</h2>
+    <p>Lens League Apex is not directed at children. Our platform and all competitions are open to users <strong>18 years of age or older only</strong>. We do not knowingly collect personal data from anyone under 18. If you believe a minor has registered, please contact us immediately at <a href="mailto:verify@lensleague.com">verify@lensleague.com</a> and we will delete the account promptly.</p>
+  </div>
+
+  <!-- 11 -->
+  <div class="privacy-section" id="changes">
+    <h2><span>11</span> Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. When we make material changes — changes that affect how we collect, use, or share your data — we will notify registered users by email at least <strong>14 days before</strong> the changes take effect. Continued use of the platform after that date constitutes acceptance of the revised policy.</p>
+    <p>Minor changes (e.g. clarifications, updated third-party links) will be reflected here without separate notification. The version date at the top of this document always reflects the last update.</p>
+  </div>
+
+  <!-- 12 -->
+  <div class="privacy-section" id="governing-law">
+    <h2><span>12</span> Governing Law</h2>
+    <p>This Privacy Policy is governed by the laws of the Republic of India, including the <strong>Information Technology Act, 2000</strong> and the <strong>Digital Personal Data Protection Act, 2023 (DPDPA)</strong> as applicable. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts at Bengaluru, Karnataka.</p>
+  </div>
+
+  <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
+    <p style="font-size:15px; color:var(--text-secondary); margin-bottom:16px; line-height:1.7;">
+      Questions about your data or this policy?<br>
+      <a href="mailto:verify@lensleague.com" style="color:var(--gold); font-weight:600; text-decoration:none; border-bottom: 1px solid var(--gold-dark);">verify@lensleague.com</a> &nbsp;·&nbsp; Response within 2 business days.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('terms') }}"        class="btn btn-solid">Terms &amp; Conditions →</a>
+      <a href="{{ url_for('contest_rules') }}" class="btn">Contest Rules</a>
+      <a href="{{ url_for('index') }}"         class="btn">← Home</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
