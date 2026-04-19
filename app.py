@@ -2529,6 +2529,42 @@ def stats_page():
 def science():
     return render_template('science.html')
 
+@app.route('/sree-admin', methods=['GET', 'POST'])
+def sree_admin_login():
+    if current_user.is_authenticated:
+        if current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        email    = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+
+        if not email or not password:
+            flash('Please enter your email and password.', 'error')
+            return render_template('sree_admin_login.html')
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user or not user.password_hash or user.role != 'admin':
+            flash('Invalid credentials.', 'error')
+            return render_template('sree_admin_login.html')
+
+        if not check_password_hash(user.password_hash, password):
+            flash('Invalid credentials.', 'error')
+            return render_template('sree_admin_login.html')
+
+        if not user.is_active:
+            flash('Account deactivated.', 'error')
+            return render_template('sree_admin_login.html')
+
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('sree_admin_login.html')
+
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
@@ -2536,14 +2572,6 @@ def terms():
 @app.route('/contest-rules')
 def contest_rules():
     return render_template('contest_rules.html')
-
-@app.route('/faq')
-def faq():
-    return render_template('faq.html')
-
-@app.route('/privacy')
-def privacy():
-    return render_template('privacy.html')
 
 @app.route('/pricing')
 def pricing():
