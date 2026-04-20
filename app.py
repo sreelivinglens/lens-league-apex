@@ -32,6 +32,269 @@ from location_data import (
 load_dotenv()
 
 # ---------------------------------------------------------------------------
+# Scheduled jobs
+# ---------------------------------------------------------------------------
+
+def _init_scheduler(flask_app):
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.triggers.cron import CronTrigger
+        import pytz
+
+        scheduler = BackgroundScheduler(timezone=pytz.utc)
+
+        scheduler.add_job(func=_job_closing_reminder,
+            trigger=CronTrigger(day_of_week='sat', hour=18, minute=0),
+            id='closing_reminder', replace_existing=True, misfire_grace_time=3600)
+
+        scheduler.add_job(func=_job_winners_announcement,
+            trigger=CronTrigger(day_of_week='mon', hour=13, minute=30),
+            id='winners_announcement', replace_existing=True, misfire_grace_time=3600)
+
+        scheduler.add_job(func=_job_admin_reminder,
+            trigger=CronTrigger(day_of_week='sun', hour=10, minute=0),
+            id='admin_reminder', replace_existing=True, misfire_grace_time=3600)
+
+        scheduler.start()
+        flask_app.logger.info('[scheduler] started - 3 jobs registered')
+        return scheduler
+    except ImportError:
+        flask_app.logger.warning('[scheduler] APScheduler not installed - scheduled emails disabled')
+        return None
+    except Exception as e:
+        flask_app.logger.error(f'[scheduler] failed to start: {e}')
+        return None
+
+
+def _job_closing_reminder():
+    """Saturday 18:00 UTC - remind users challenge closes tomorrow."""
+    with app.app_context():
+        try:
+            now = datetime.utcnow()
+            ch = WeeklyChallenge.query.filter(
+                WeeklyChallenge.is_active == True,
+                WeeklyChallenge.closes_at > now,
+                WeeklyChallenge.closes_at < now + timedelta(hours=36),
+            ).first()
+            if not ch:
+                app.logger.info('[scheduler] closing reminder: no challenge closing soon')
+                return
+
+            users = User.query.filter_by(is_active=True).filter(User.email != None, User.email != '').all()
+            site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
+            sent = 0
+
+            for user in users:
+                submitted = WeeklySubmission.query.filter_by(challenge_id=ch.id, user_id=user.id).count()
+                is_sub = getattr(user, 'is_subscribed', False)
+                slot_limit = 3 if is_sub else 1
+                remaining = max(0, slot_limit - submitted)
+
+                if submitted > 0 and remaining == 0:
+                    status_line = f'You have submitted {submitted} image{"s" if submitted > 1 else ""} - well done! Winners announced Monday evening.'
+                    cta = 'View the challenge ->'
+                elif submitted > 0:
+                    status_line = f'You have submitted {submitted} image{"s" if submitted > 1 else ""}. You still have {remaining} submission{"s" if remaining > 1 else ""} left!'
+                    cta = 'Submit another image ->'
+                else:
+                    status_line = 'You have not submitted yet - there is still time!'
+                    cta = 'Submit your image now ->'
+
+                html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+<tr><td style="background:#1a1a18;padding:20px 32px 24px;">
+  <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Challenge closing tomorrow - {ch.week_ref}</p>
+  <h1 style="margin:0;font-size:28px;font-style:italic;color:#C8A84B;">{ch.prompt_title}</h1>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="margin:0 0 16px;font-size:17px;font-weight:700;color:#1a1a18;">The challenge closes Sunday at midnight.</p>
+  <p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">{status_line}</p>
+  <p style="margin:0 0 24px;font-size:15px;color:#8a8070;">Winners announced <strong style="color:#1a1a18;">Monday evening</strong>. Get your photo rated to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong>.</p>
+  <a href="{site_url}/challenge" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta}</a>
+</td></tr>
+<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
+  <p style="margin:0;font-size:13px;color:#8a8070;">Lens League Apex - <a href="{site_url}" style="color:#C8A84B;">lensleagueapex.com</a></p>
+</td></tr>
+</table></td></tr></table></body></html>"""
+
+                text = (
+                    f"LENS LEAGUE APEX - Challenge closing tomorrow\n\n"
+                    f"{ch.prompt_title} - {ch.week_ref}\n\n"
+                    f"{status_line}\n\n"
+                    f"Winners announced Monday evening.\n\n"
+                    f"Enter: {site_url}/challenge"
+                )
+
+                if send_email(user.email, f"Last chance: {ch.prompt_title} closes tomorrow", html, text):
+                    sent += 1
+
+            app.logger.info(f'[scheduler] closing reminder sent to {sent} users')
+        except Exception as e:
+            app.logger.error(f'[scheduler] closing reminder failed: {e}')
+
+
+def _job_winners_announcement():
+    """Monday 13:30 UTC (7pm IST) - announce winners. Auto-fires with DDI top 3."""
+    with app.app_context():
+        try:
+            now = datetime.utcnow()
+            ch = WeeklyChallenge.query.filter(
+                WeeklyChallenge.is_active == True,
+                WeeklyChallenge.closes_at < now,
+                WeeklyChallenge.closes_at > now - timedelta(hours=48),
+            ).order_by(WeeklyChallenge.closes_at.desc()).first()
+
+            if not ch:
+                app.logger.info('[scheduler] winners: no recently closed challenge')
+                return
+
+            # Auto-select winners if none set yet
+            winners = WeeklySubmission.query.filter_by(
+                challenge_id=ch.id).filter(WeeklySubmission.result_rank != None).all()
+            if not winners:
+                app.logger.info(f'[scheduler] winners: no ranks set for {ch.week_ref} - auto-selecting top 3 by DDI')
+                _auto_select_winners(ch)
+                winners = WeeklySubmission.query.filter_by(
+                    challenge_id=ch.id).filter(WeeklySubmission.result_rank != None).all()
+
+            if not winners:
+                app.logger.info(f'[scheduler] winners: no submissions found for {ch.week_ref} - skipping')
+                return
+
+            winners = sorted(winners, key=lambda w: w.result_rank)
+            site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
+            results_url = f"{site_url}/challenge/results/{ch.week_ref}"
+
+            rank_labels = {1: '1st place', 2: '2nd place', 3: '3rd place'}
+            winners_html = ''
+            winners_text = ''
+            for w in winners:
+                label = rank_labels.get(w.result_rank, f'#{w.result_rank}')
+                score = f'{w.image.score:.1f}' if w.image.score else ''
+                note = f'<p style="margin:4px 0 0;font-size:14px;color:#6a6458;font-style:italic;">{w.result_note}</p>' if w.result_note else ''
+                winners_html += f"""<tr><td style="padding:14px 0;border-bottom:1px solid #F0EAD8;">
+  <p style="margin:0 0 3px;font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:1px;color:#C8A84B;text-transform:uppercase;">{label}</p>
+  <p style="margin:0;font-size:18px;font-weight:700;color:#1a1a18;">{w.user.username}</p>
+  {'<p style="margin:2px 0 0;font-size:15px;color:#C8A84B;font-family:Courier New,monospace;">DDI Score: ' + score + '</p>' if score else ''}
+  {note}
+</td></tr>"""
+                winners_text += f"{label}: {w.user.username}"
+                if score: winners_text += f" (DDI {score})"
+                if w.result_note: winners_text += f"\n   {w.result_note}"
+                winners_text += "\n"
+
+            users = User.query.filter_by(is_active=True).filter(User.email != None, User.email != '').all()
+            sent = 0
+
+            for user in users:
+                html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+<tr><td style="background:#1a1a18;padding:20px 32px 24px;">
+  <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge Results - {ch.week_ref}</p>
+  <h1 style="margin:0;font-size:28px;font-style:italic;color:#C8A84B;">This week's winning images</h1>
+  <p style="margin:6px 0 0;font-size:16px;color:#a8a090;font-style:italic;">{ch.prompt_title}</p>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0">{winners_html}</table>
+  <div style="margin-top:24px;">
+    <a href="{results_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">See the winning images -></a>
+  </div>
+  <p style="margin:24px 0 0;font-size:15px;color:#8a8070;line-height:1.6;">A new challenge drops this Monday. Keep shooting.</p>
+</td></tr>
+<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
+  <p style="margin:0;font-size:13px;color:#8a8070;">Lens League Apex - <a href="{site_url}" style="color:#C8A84B;">lensleagueapex.com</a></p>
+</td></tr>
+</table></td></tr></table></body></html>"""
+
+                text = (
+                    "LENS LEAGUE APEX - Weekly Challenge Results\n\n"
+                    f"This week's winning images - {ch.prompt_title}\n\n"
+                    f"{winners_text}\n"
+                    f"See results: {results_url}\n\n"
+                    "A new challenge drops this Monday. Keep shooting."
+                )
+
+                if send_email(user.email, f"This week's winners: {ch.prompt_title}", html, text):
+                    sent += 1
+
+            app.logger.info(f'[scheduler] winners announcement sent to {sent} users for {ch.week_ref}')
+        except Exception as e:
+            app.logger.error(f'[scheduler] winners announcement failed: {e}')
+
+
+def _job_admin_reminder():
+    """Sunday 10:00 UTC - remind admin to create next challenge and review auto-selected winners."""
+    with app.app_context():
+        try:
+            now = datetime.utcnow()
+            monday = now + timedelta(days=1)
+            next_week_ref = f"{monday.isocalendar()[0]}-W{monday.isocalendar()[1]:02d}"
+            site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
+            admin_email = os.getenv('MAIL_USERNAME', 'sreeks@gmail.com')
+
+            # Check if next week challenge exists
+            next_exists = WeeklyChallenge.query.filter_by(week_ref=next_week_ref).first()
+
+            # Check current week winners
+            ch = WeeklyChallenge.query.filter(
+                WeeklyChallenge.is_active == True,
+                WeeklyChallenge.closes_at > now,
+                WeeklyChallenge.closes_at < now + timedelta(hours=36),
+            ).first()
+
+            auto_winners_section = ''
+            if ch:
+                top3 = (WeeklySubmission.query
+                    .filter_by(challenge_id=ch.id)
+                    .join(Image, WeeklySubmission.image_id == Image.id)
+                    .filter(Image.score != None)
+                    .order_by(Image.score.desc()).limit(3).all())
+                if top3:
+                    winner_lines = ''.join([
+                        f'<tr><td style="padding:8px 0;border-bottom:1px solid #F0EAD8;font-size:15px;color:#1a1a18;">#{i+1} - {w.user.username} - DDI {w.image.score:.1f}</td></tr>'
+                        for i, w in enumerate(top3)
+                    ])
+                    auto_winners_section = f"""
+<p style="margin:20px 0 8px;font-size:16px;font-weight:700;color:#1a1a18;">Auto-selected winners for {ch.week_ref} ({ch.prompt_title}):</p>
+<table width="100%" cellpadding="0" cellspacing="0">{winner_lines}</table>
+<p style="margin:8px 0 0;font-size:14px;color:#8a8070;">These will be announced Monday at 7pm IST unless you change them at <a href="{site_url}/admin/weekly-challenge" style="color:#C8A84B;">/admin/weekly-challenge</a></p>"""
+
+            challenge_section = '' if next_exists else f"""
+<p style="margin:20px 0 8px;font-size:16px;font-weight:700;color:#C8A84B;">Action needed: Create {next_week_ref} challenge</p>
+<p style="margin:0 0 16px;font-size:15px;color:#4A4840;">Next week's challenge hasn't been created yet. Create it so the email goes out Monday morning.</p>
+<a href="{site_url}/admin/weekly-challenge" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">Go to admin -></a>"""
+
+            html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+<tr><td style="background:#1a1a18;padding:20px 32px;">
+  <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX - ADMIN</p>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <h2 style="margin:0 0 8px;font-size:20px;color:#1a1a18;">Weekly challenge - Sunday summary</h2>
+  {auto_winners_section}
+  {challenge_section}
+</td></tr>
+<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
+  <p style="margin:0;font-size:13px;color:#8a8070;">Automated reminder - Lens League Apex</p>
+</td></tr>
+</table></td></tr></table></body></html>"""
+
+            send_email(admin_email, f'[Admin] Weekly challenge Sunday summary - {next_week_ref}', html)
+            app.logger.info('[scheduler] admin reminder sent')
+        except Exception as e:
+            app.logger.error(f'[scheduler] admin reminder failed: {e}')
+
+
+# ---------------------------------------------------------------------------
 # Email utility  -  Gmail SMTP
 # Env vars: MAIL_USERNAME, MAIL_PASSWORD
 # Falls back silently if not configured  -  never crashes the app
@@ -309,6 +572,7 @@ with app.app_context():
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
                 "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
+                "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_published BOOLEAN DEFAULT FALSE",
             ]
             for sql in _migrations:
                 try:
@@ -316,6 +580,9 @@ with app.app_context():
                 except Exception as _e:
                     print(f'[migration] {_e}')
             conn.commit()
+
+        # Start background scheduler for automated emails
+        _init_scheduler(app)
 
         # Fix calibration_logs  -  force correct schema on every startup
         try:
@@ -1191,7 +1458,7 @@ def upload():
                     img.set_audit(audit)
 
                     # TIER 2  -  Needs human review:
-                    # (a) AI suspicion in amber zone 0.40.69, OR
+                    # (a) AI suspicion in amber zone 0.4-0.69, OR
                     # (b) Grandmaster score (9.0+)  -  always requires RAW verification
                     if ai_suspicion >= 0.4 or img.score >= 9.0:
                         img.needs_review    = True
@@ -1230,7 +1497,7 @@ def upload():
                         else:
                             flash(
                                 f' Your image has been flagged for human review before going public. '
-                                f'This is usually resolved within 2448 hours. '
+                                f'This is usually resolved within 24-48 hours. '
                                 f'Contact sreeks@gmail.com if you have questions.',
                                 'warning'
                             )
@@ -1241,7 +1508,7 @@ def upload():
                 if '529' in err_str or 'overloaded' in err_str.lower():
                     flash('Image uploaded   -  AI servers are currently busy (peak hours). '
                           'Your image has been saved. Please score it from the dashboard '
-                          'during off-peak hours: 6am11am IST or 11pm5am IST.', 'warning')
+                          'during off-peak hours: 6am-11am IST or 11pm-5am IST.', 'warning')
                 else:
                     flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
         else:
@@ -1263,7 +1530,7 @@ def upload():
                            f'Email your original RAW file to sreeks@gmail.com within 7 days.')
                 else:
                     msg = (' Your image has been held for human review before going public. '
-                           'Usually resolved within 2448 hours.')
+                           'Usually resolved within 24-48 hours.')
                 return jsonify({
                     'status': 'needs_review',
                     'image_id': img.id,
@@ -1273,18 +1540,31 @@ def upload():
                     'redirect': url_for('image_detail', image_id=img.id)
                 })
             _next = request.args.get('next', '')
-            _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
+            if _next == 'challenge':
+                # Auto-submit to active challenge
+                _auto_msg = _auto_submit_to_challenge(img, current_user)
+                return jsonify({
+                    'status': 'ok',
+                    'image_id': img.id,
+                    'score': img.score,
+                    'tier': img.tier,
+                    'redirect': url_for('weekly_challenge'),
+                    'challenge_submitted': True,
+                    'challenge_msg': _auto_msg,
+                })
             return jsonify({
                 'status': 'ok',
                 'image_id': img.id,
                 'score': img.score,
                 'tier': img.tier,
-                'redirect': _redir
+                'redirect': url_for('image_detail', image_id=img.id)
             })
-        # If user came from challenge submit page, send them back there
+        # If user came from challenge submit page, auto-submit and redirect to challenge
         next_page = request.args.get('next', '')
         if next_page == 'challenge':
-            return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
+            _auto_submit_to_challenge(img, current_user)
+            flash('Image uploaded, scored and submitted to this week\'s challenge!', 'success')
+            return redirect(url_for('weekly_challenge'))
         return redirect(url_for('image_detail', image_id=img.id))
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
@@ -1380,7 +1660,7 @@ def retry_score(image_id):
         app.logger.error(f'[retry_score] {traceback.format_exc()}')
         err = str(e)
         if '529' in err or 'overloaded' in err.lower():
-            flash('AI engine is busy right now. Try again during off-peak hours: 6am11am IST or 11pm5am IST.', 'warning')
+            flash('AI engine is busy right now. Try again during off-peak hours: 6am-11am IST or 11pm-5am IST.', 'warning')
         else:
             flash(f'Scoring failed: {err[:120]}', 'error')
 
@@ -3199,6 +3479,76 @@ def open_contest_enter():
 # Weekly Challenge
 # ===========================================================================
 
+def _auto_select_winners(challenge):
+    """
+    Auto-select top 3 submissions by DDI score as winners.
+    Called when challenge closes. Admin can override before 9pm Monday.
+    Returns number of winners set.
+    """
+    try:
+        top3 = (WeeklySubmission.query
+                .filter_by(challenge_id=challenge.id)
+                .join(Image, WeeklySubmission.image_id == Image.id)
+                .filter(Image.score != None)
+                .order_by(Image.score.desc())
+                .limit(3).all())
+
+        for i, sub in enumerate(top3):
+            sub.result_rank = i + 1
+
+        db.session.commit()
+        app.logger.info(f'[challenge] auto-selected {len(top3)} winners for {challenge.week_ref}')
+        return len(top3)
+    except Exception as e:
+        app.logger.error(f'[challenge] auto-select winners failed: {e}')
+        return 0
+
+
+def _auto_submit_to_challenge(img, user):
+    """
+    Automatically submit a freshly uploaded image to the active challenge.
+    Called after upload when ?next=challenge is in the URL.
+    Returns a message string describing what happened.
+    """
+    try:
+        challenge = _get_active_challenge()
+        if not challenge or not challenge.is_open:
+            return 'No active challenge right now.'
+
+        is_sub = getattr(user, 'is_subscribed', False) or user.role == 'admin'
+        slot_limit = 3 if is_sub else 1
+        slots_used = WeeklySubmission.query.filter_by(
+            challenge_id=challenge.id, user_id=user.id).count()
+
+        if slots_used >= slot_limit:
+            return f'You have used all {slot_limit} submissions for this week.'
+
+        # Check not already submitted this image
+        exists = WeeklySubmission.query.filter_by(
+            challenge_id=challenge.id, image_id=img.id).first()
+        if exists:
+            return 'This image was already submitted to the challenge.'
+
+        # Image must be scored
+        if img.status != 'scored' or img.score is None:
+            return 'Image uploaded but not yet scored - submit manually from the challenge page.'
+
+        sub = WeeklySubmission(
+            challenge_id=challenge.id,
+            user_id=user.id,
+            image_id=img.id,
+            is_subscriber=getattr(user, 'is_subscribed', False),
+        )
+        db.session.add(sub)
+        db.session.commit()
+        remaining = slot_limit - slots_used - 1
+        return f'Submitted to {challenge.prompt_title}! {remaining} submission{"s" if remaining != 1 else ""} remaining this week.'
+    except Exception as e:
+        app.logger.error(f'[challenge] auto-submit failed: {e}')
+        return 'Uploaded and scored. Please submit manually from the challenge page.'
+
+
+
 def _current_week_ref():
     """Returns ISO week string e.g. '2026-W17' for the current week."""
     now = datetime.utcnow()
@@ -3227,13 +3577,13 @@ def weekly_challenge():
                                submissions=[], user_subs=[], slots_used=0,
                                slot_limit=0, can_submit=False)
 
-    # Top submissions for display  -  all submissions ranked by score
-    # is_subscriber flag controls whether they compete for prizes, not visibility
+    # All submissions in random order - blind gallery until results published
+    # Scores and rankings only shown on results page after challenge closes
+    from sqlalchemy.sql.expression import func as _sqlfunc
     top_subs = (WeeklySubmission.query
                 .filter_by(challenge_id=challenge.id)
                 .join(Image, WeeklySubmission.image_id == Image.id)
-                .filter(Image.score != None)
-                .order_by(Image.score.desc())
+                .order_by(_sqlfunc.random())
                 .limit(20).all())
 
     user_subs = []
@@ -3465,8 +3815,9 @@ def admin_weekly_challenge():
                     sub = WeeklySubmission.query.get(sub_id)
                     if sub and sub.challenge_id == challenge_id:
                         sub.result_note = value.strip() or None
+            ch.results_published = True
             db.session.commit()
-            flash(f'Results published for {ch.week_ref}.', 'success')
+            flash(f'Results published for {ch.week_ref}. Challenge board cleared.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
         elif action == 'deactivate':
@@ -3546,6 +3897,30 @@ def admin_weekly_challenge():
         default_open=default_open.strftime('%Y-%m-%dT%H:%M'),
         default_close=default_close.strftime('%Y-%m-%dT%H:%M'),
     )
+
+
+# ---------------------------------------------------------------------------
+# Admin - manual email triggers
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/send-reminder', methods=['POST'])
+@login_required
+@admin_required
+def admin_send_reminder():
+    import threading
+    threading.Thread(target=lambda: [app.app_context().__enter__(), _job_closing_reminder()], daemon=True).start()
+    flash('Closing reminder sending in background. Check Railway logs.', 'success')
+    return redirect(url_for('admin_weekly_challenge'))
+
+
+@app.route('/admin/send-winners', methods=['POST'])
+@login_required
+@admin_required
+def admin_send_winners():
+    import threading
+    threading.Thread(target=lambda: [app.app_context().__enter__(), _job_winners_announcement()], daemon=True).start()
+    flash('Winners announcement sending in background. Check Railway logs.', 'success')
+    return redirect(url_for('admin_weekly_challenge'))
 
 
 # ---------------------------------------------------------------------------
