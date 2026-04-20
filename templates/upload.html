@@ -560,7 +560,7 @@
     startOverlay();
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload');
+    xhr.open('POST', '/upload' + window.location.search);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.withCredentials = true;
     xhr.timeout = 180000; // 3 min — larger files need more transfer time
