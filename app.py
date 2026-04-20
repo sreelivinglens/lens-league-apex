@@ -3443,6 +3443,39 @@ def admin_weekly_challenge():
             flash(f'Notification resent to {sent} user{"s" if sent != 1 else ""}.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
+        elif action == 'edit':
+            challenge_id  = request.form.get('challenge_id', type=int)
+            ch = WeeklyChallenge.query.get_or_404(challenge_id)
+            ch.prompt_title  = request.form.get('prompt_title', ch.prompt_title).strip()
+            ch.prompt_body   = request.form.get('prompt_body', '').strip() or None
+            ch.sponsor_name  = request.form.get('sponsor_name', '').strip() or None
+            ch.sponsor_prize = request.form.get('sponsor_prize', '').strip() or None
+            opens_str  = request.form.get('opens_at', '').strip()
+            closes_str = request.form.get('closes_at', '').strip()
+            try:
+                if opens_str:
+                    ch.opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M')
+                if closes_str:
+                    ch.closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M')
+                    ch.results_at = ch.closes_at + timedelta(days=1)
+            except ValueError:
+                flash('Invalid date format.', 'error')
+                return redirect(url_for('admin_weekly_challenge'))
+            db.session.commit()
+            flash(f'Challenge {ch.week_ref} updated.', 'success')
+            return redirect(url_for('admin_weekly_challenge'))
+
+        elif action == 'delete':
+            challenge_id = request.form.get('challenge_id', type=int)
+            ch = WeeklyChallenge.query.get_or_404(challenge_id)
+            if ch.submission_count > 0:
+                flash(f'Cannot delete {ch.week_ref} — it has {ch.submission_count} submission(s). Deactivate it instead.', 'error')
+                return redirect(url_for('admin_weekly_challenge'))
+            db.session.delete(ch)
+            db.session.commit()
+            flash(f'Challenge {ch.week_ref} deleted.', 'info')
+            return redirect(url_for('admin_weekly_challenge'))
+
     # GET
     challenges = WeeklyChallenge.query.order_by(WeeklyChallenge.opens_at.desc()).all()
     # Default week_ref for new challenge form
