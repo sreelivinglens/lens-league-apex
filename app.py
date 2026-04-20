@@ -3415,16 +3415,18 @@ def admin_weekly_challenge():
                 flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
 
             if notify:
-                # Fire email in background thread — never blocks the HTTP response
+                # Fire email in background thread — pass ID only, re-query inside thread
                 import threading
-                def _notify(app_ctx, challenge_obj):
-                    with app_ctx:
+                def _notify(challenge_id):
+                    with app.app_context():
                         try:
-                            sent = send_challenge_notification(challenge_obj)
-                            app.logger.info(f'[challenge] Notifications sent to {sent} users')
+                            ch_fresh = WeeklyChallenge.query.get(challenge_id)
+                            if ch_fresh:
+                                sent = send_challenge_notification(ch_fresh)
+                                app.logger.info(f'[challenge] Notifications sent to {sent} users')
                         except Exception as _e:
                             app.logger.error(f'[challenge] Notification failed: {_e}')
-                t = threading.Thread(target=_notify, args=(app.app_context(), ch), daemon=True)
+                t = threading.Thread(target=_notify, args=(ch.id,), daemon=True)
                 t.start()
 
             return redirect(url_for('admin_weekly_challenge'))
@@ -3463,14 +3465,16 @@ def admin_weekly_challenge():
             challenge_id = request.form.get('challenge_id', type=int)
             ch = WeeklyChallenge.query.get_or_404(challenge_id)
             import threading
-            def _resend(app_ctx, challenge_obj):
-                with app_ctx:
+            def _resend(challenge_id):
+                with app.app_context():
                     try:
-                        sent = send_challenge_notification(challenge_obj)
-                        app.logger.info(f'[challenge] Resend complete — {sent} users notified')
+                        ch_fresh = WeeklyChallenge.query.get(challenge_id)
+                        if ch_fresh:
+                            sent = send_challenge_notification(ch_fresh)
+                            app.logger.info(f'[challenge] Resend complete — {sent} users notified')
                     except Exception as _e:
                         app.logger.error(f'[challenge] Resend failed: {_e}')
-            t = threading.Thread(target=_resend, args=(app.app_context(), ch), daemon=True)
+            t = threading.Thread(target=_resend, args=(ch.id,), daemon=True)
             t.start()
             flash(f'Notification sending in background for {ch.week_ref}. Check Railway logs for delivery count.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
