@@ -447,9 +447,9 @@
       {{ active_challenge.submission_count }} submission{{ 's' if active_challenge.submission_count != 1 else '' }} so far
       &nbsp;·&nbsp;
       {% if current_user.is_subscribed %}
-        3 slots available
+        You can submit up to 3 images this week
       {% else %}
-        1 free slot &nbsp;·&nbsp;
+        1 image submission this week &nbsp;·&nbsp;
         <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 →</a>
       {% endif %}
     </div>

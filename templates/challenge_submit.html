@@ -81,8 +81,11 @@
       <div class="ch-banner-title">{{ challenge.prompt_title }}</div>
     </div>
     <div class="slots-info">
-      <strong>{{ slots_remaining }}</strong> slot{{ 's' if slots_remaining != 1 else '' }} remaining
-      &nbsp;·&nbsp; {{ slots_used }}/{{ slot_limit }} used
+      {% if slots_used == 0 %}
+        You can submit up to <strong>{{ slot_limit }}</strong> image{{ 's' if slot_limit > 1 else '' }} this week
+      {% else %}
+        <strong>{{ slots_remaining }}</strong> submission{{ 's' if slots_remaining != 1 else '' }} remaining this week &nbsp;·&nbsp; {{ slots_used }}/{{ slot_limit }} used
+      {% endif %}
     </div>
   </div>
 

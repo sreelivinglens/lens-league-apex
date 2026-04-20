@@ -136,9 +136,15 @@
           <div class="slot {% if i < slots_used %}used{% endif %}"></div>
         {% endfor %}
         <span class="slot-label">
-          {{ slots_used }}/{{ slot_limit }} slot{{ 's' if slot_limit > 1 else '' }} used this week
+          {% if slots_used == 0 %}
+            You can submit up to {{ slot_limit }} image{{ 's' if slot_limit > 1 else '' }} this week
+          {% elif slots_used < slot_limit %}
+            {{ slots_used }} of {{ slot_limit }} submissions used this week
+          {% else %}
+            You've used all {{ slot_limit }} submission{{ 's' if slot_limit > 1 else '' }} this week
+          {% endif %}
           {% if not current_user.is_subscribed %}
-            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 slots →</a>
+            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 →</a>
           {% endif %}
         </span>
       </div>
@@ -147,9 +153,9 @@
         {% if can_submit %}
           <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit an image →</a>
         {% elif slots_used >= slot_limit and challenge.is_open %}
-          <span class="btn" style="opacity:0.4; cursor:not-allowed;">All slots used this week</span>
+          <span class="btn" style="opacity:0.4; cursor:not-allowed;">All submissions used this week</span>
           {% if not current_user.is_subscribed %}
-            <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe for more slots →</a>
+            <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe for more submissions →</a>
           {% endif %}
         {% endif %}
         {% if not challenge.is_open and not challenge.is_closed %}
