@@ -17,7 +17,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
                     RatingAssignment, PeerRating, PeerPoolEntry,
-                    WeeklyChallenge, WeeklySubmission,
+                    WeeklyChallenge, WeeklySubmission, ChallengeTopup,
                     get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
@@ -573,6 +573,7 @@ with app.app_context():
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
                 "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
                 "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_published BOOLEAN DEFAULT FALSE",
+                "CREATE TABLE IF NOT EXISTS challenge_topups (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, quantity INTEGER NOT NULL, amount_paise INTEGER NOT NULL, razorpay_order_id VARCHAR(64), razorpay_payment_id VARCHAR(64), status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())",
             ]
             for sql in _migrations:
                 try:
@@ -3600,6 +3601,11 @@ def weekly_challenge():
         slot_limit = 3 if is_sub_or_admin else 1
         can_submit = challenge.is_open and slots_used < slot_limit
 
+    # Topup context for authenticated users
+    topup_ctx = None
+    if current_user.is_authenticated and challenge.is_open:
+        topup_ctx = _topup_context(challenge, current_user)
+
     return render_template('challenge.html',
         challenge=challenge,
         top_subs=top_subs,
@@ -3607,6 +3613,7 @@ def weekly_challenge():
         slots_used=slots_used,
         slot_limit=slot_limit,
         can_submit=can_submit,
+        topup_ctx=topup_ctx,
     )
 
 
@@ -3619,13 +3626,14 @@ def challenge_submit():
         flash('No active challenge at the moment. Check back Monday.', 'info')
         return redirect(url_for('weekly_challenge'))
 
-    is_sub     = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
-    slot_limit = 3 if is_sub else 1
-    slots_used = WeeklySubmission.query.filter_by(
-        challenge_id=challenge.id, user_id=current_user.id).count()
+    ctx = _topup_context(challenge, current_user)
+    total_allowed = ctx['total_allowed']
+    slots_used    = ctx['submissions_used']
 
-    if slots_used >= slot_limit:
-        flash(f'You have used all {slot_limit} challenge slot{"s" if slot_limit > 1 else ""} for this week.', 'error')
+    if slots_used >= total_allowed:
+        if ctx['can_buy_more']:
+            return redirect(url_for('challenge_topup'))
+        flash(f'You have reached the maximum of {ctx["max_total"]} images for this week.', 'error')
         return redirect(url_for('weekly_challenge'))
 
     if request.method == 'POST':
@@ -3655,7 +3663,8 @@ def challenge_submit():
         db.session.add(sub)
         db.session.commit()
 
-        flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
+        remaining = ctx['total_allowed'] - slots_used - 1
+        flash(f'Image submitted! {remaining} image{"s" if remaining != 1 else ""} remaining this week.', 'success')
         return redirect(url_for('weekly_challenge'))
 
     # GET  -  show image picker
@@ -3675,8 +3684,8 @@ def challenge_submit():
         challenge=challenge,
         eligible_images=eligible_images,
         slots_used=slots_used,
-        slot_limit=slot_limit,
-        slots_remaining=slot_limit - slots_used,
+        slot_limit=ctx['total_allowed'],
+        slots_remaining=ctx['total_allowed'] - slots_used,
     )
 
 
@@ -3897,6 +3906,182 @@ def admin_weekly_challenge():
         default_open=default_open.strftime('%Y-%m-%dT%H:%M'),
         default_close=default_close.strftime('%Y-%m-%dT%H:%M'),
     )
+
+
+
+# ---------------------------------------------------------------------------
+# Challenge image top-up  -  Rs.49 per extra image
+# ---------------------------------------------------------------------------
+
+CHALLENGE_TOPUP_PRICE_PAISE = 4900   # Rs.49
+CHALLENGE_MAX_TOTAL_SUBSCRIBED = 6   # base 3 + up to 3 extra
+CHALLENGE_MAX_TOTAL_FREE       = 4   # base 1 + up to 3 extra
+
+
+def _topup_context(challenge, user):
+    """
+    Return topup context dict for a user on a given challenge.
+    Used by both the challenge page and the topup page.
+    """
+    is_sub     = getattr(user, 'is_subscribed', False) or user.role == 'admin'
+    base_limit = 3 if is_sub else 1
+    max_total  = CHALLENGE_MAX_TOTAL_SUBSCRIBED if is_sub else CHALLENGE_MAX_TOTAL_FREE
+
+    # Count base submissions
+    submissions_used = WeeklySubmission.query.filter_by(
+        challenge_id=challenge.id, user_id=user.id).count()
+
+    # Count paid topups (confirmed)
+    paid_topups = db.session.query(
+        db.func.coalesce(db.func.sum(ChallengeTopup.quantity), 0)
+    ).filter_by(
+        challenge_id=challenge.id,
+        user_id=user.id,
+        status='paid',
+    ).scalar() or 0
+
+    total_allowed  = min(base_limit + paid_topups, max_total)
+    can_buy_more   = challenge.is_open and submissions_used < max_total
+    max_can_buy    = max(0, max_total - base_limit - paid_topups)
+
+    return {
+        'is_sub':           is_sub,
+        'base_limit':       base_limit,
+        'max_total':        max_total,
+        'submissions_used': submissions_used,
+        'paid_topups':      paid_topups,
+        'total_allowed':    total_allowed,
+        'can_buy_more':     can_buy_more,
+        'max_can_buy':      max_can_buy,
+        'price_per_image':  49,
+        'price_paise':      CHALLENGE_TOPUP_PRICE_PAISE,
+    }
+
+
+@app.route('/challenge/topup', methods=['GET', 'POST'])
+@login_required
+def challenge_topup():
+    """
+    GET  - show topup page with personalised message and quantity selector
+    POST - create Razorpay order and return order_id to JS
+    """
+    challenge = _get_active_challenge()
+    if not challenge or not challenge.is_open:
+        flash('No active challenge right now.', 'info')
+        return redirect(url_for('weekly_challenge'))
+
+    ctx = _topup_context(challenge, current_user)
+
+    if not ctx['can_buy_more']:
+        flash(f'You have reached the maximum of {ctx["max_total"]} images for this week.', 'info')
+        return redirect(url_for('weekly_challenge'))
+
+    if request.method == 'POST':
+        quantity = request.form.get('quantity', type=int, default=1)
+        quantity = max(1, min(quantity, ctx['max_can_buy']))
+
+        amount_paise = quantity * CHALLENGE_TOPUP_PRICE_PAISE
+
+        razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
+        razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+
+        if not razorpay_key:
+            flash('Payment system not configured. Contact support.', 'error')
+            return redirect(url_for('challenge_topup'))
+
+        try:
+            import razorpay as _rz
+            client = _rz.Client(auth=(razorpay_key, razorpay_secret))
+            order = client.order.create({
+                'amount':   amount_paise,
+                'currency': 'INR',
+                'receipt':  f'topup-{current_user.id}-{challenge.id}-{quantity}',
+                'notes': {
+                    'user_id':      str(current_user.id),
+                    'challenge_id': str(challenge.id),
+                    'quantity':     str(quantity),
+                },
+            })
+
+            # Save pending topup record
+            topup = ChallengeTopup(
+                challenge_id        = challenge.id,
+                user_id             = current_user.id,
+                quantity            = quantity,
+                amount_paise        = amount_paise,
+                razorpay_order_id   = order['id'],
+                status              = 'pending',
+            )
+            db.session.add(topup)
+            db.session.commit()
+
+            return render_template('challenge_topup.html',
+                challenge=challenge,
+                ctx=ctx,
+                quantity=quantity,
+                amount=quantity * 49,
+                order=order,
+                razorpay_key=razorpay_key,
+                topup_id=topup.id,
+            )
+
+        except Exception as e:
+            app.logger.error(f'[topup] order create failed: {e}')
+            flash('Could not initialise payment. Please try again.', 'error')
+            return redirect(url_for('challenge_topup'))
+
+    return render_template('challenge_topup.html',
+        challenge=challenge,
+        ctx=ctx,
+        quantity=1,
+        amount=49,
+        order=None,
+        razorpay_key='',
+        topup_id=None,
+    )
+
+
+@app.route('/challenge/topup/confirm', methods=['POST'])
+@login_required
+def challenge_topup_confirm():
+    """Verify Razorpay payment and activate the extra images."""
+    import hmac as _hmac, hashlib as _hashlib
+
+    topup_id   = request.form.get('topup_id', type=int)
+    payment_id = request.form.get('razorpay_payment_id', '')
+    order_id   = request.form.get('razorpay_order_id', '')
+    signature  = request.form.get('razorpay_signature', '')
+
+    topup = ChallengeTopup.query.filter_by(
+        id=topup_id, user_id=current_user.id, status='pending').first_or_404()
+
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+
+    try:
+        expected = _hmac.new(
+            razorpay_secret.encode(),
+            f'{order_id}|{payment_id}'.encode(),
+            _hashlib.sha256,
+        ).hexdigest()
+
+        if not _hmac.compare_digest(expected, signature):
+            raise ValueError('Signature mismatch')
+
+        topup.status              = 'paid'
+        topup.razorpay_payment_id = payment_id
+        db.session.commit()
+
+        qty = topup.quantity
+        img_word = 'images' if qty > 1 else 'image'
+        flash(f'Payment confirmed! You can now submit {qty} more {img_word} this week.', 'success')
+        return redirect(url_for('challenge_submit'))
+
+    except Exception as e:
+        app.logger.error(f'[topup] confirm failed: {e}')
+        topup.status = 'failed'
+        db.session.commit()
+        flash('Payment verification failed. Contact sreeks@gmail.com if you were charged.', 'error')
+        return redirect(url_for('challenge_topup'))
 
 
 # ---------------------------------------------------------------------------

@@ -530,27 +530,23 @@ def _check_rater_bias(rater_id):
 # ── Weekly Challenge ──────────────────────────────────────────────────────────
 
 class WeeklyChallenge(db.Model):
-    """
-    One row per challenge week.
-    week_ref format: 'YYYY-WNN' e.g. '2026-W17' — ISO week number.
-    Admin creates via /admin/weekly-challenge.
-    """
     __tablename__ = 'weekly_challenges'
 
-    id           = db.Column(db.Integer, primary_key=True)
-    week_ref     = db.Column(db.String(10), unique=True, nullable=False, index=True)
-    prompt_title = db.Column(db.String(120), nullable=False)
-    prompt_body  = db.Column(db.Text, nullable=True)
-    opens_at     = db.Column(db.DateTime, nullable=False)
-    closes_at    = db.Column(db.DateTime, nullable=False)
-    results_at   = db.Column(db.DateTime, nullable=True)
-    sponsor_name = db.Column(db.String(120), nullable=True)
-    sponsor_prize= db.Column(db.Text, nullable=True)
-    is_active    = db.Column(db.Boolean, default=True)
-    created_by   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    id                = db.Column(db.Integer, primary_key=True)
+    week_ref          = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    prompt_title      = db.Column(db.String(120), nullable=False)
+    prompt_body       = db.Column(db.Text, nullable=True)
+    opens_at          = db.Column(db.DateTime, nullable=False)
+    closes_at         = db.Column(db.DateTime, nullable=False)
+    results_at        = db.Column(db.DateTime, nullable=True)
+    sponsor_name      = db.Column(db.String(120), nullable=True)
+    sponsor_prize     = db.Column(db.Text, nullable=True)
+    is_active         = db.Column(db.Boolean, default=True)
+    results_published = db.Column(db.Boolean, default=False)
+    created_by        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at        = db.Column(db.DateTime, default=datetime.utcnow)
 
-    submissions  = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic')
+    submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic')
 
     @property
     def is_open(self):
@@ -570,11 +566,6 @@ class WeeklyChallenge(db.Model):
 
 
 class WeeklySubmission(db.Model):
-    """
-    One row per image submitted to a weekly challenge.
-    Free users: max 1 per week. Subscribers: max 3 per week.
-    Challenge slots are separate from regular upload quota.
-    """
     __tablename__ = 'weekly_submissions'
 
     id           = db.Column(db.Integer, primary_key=True)
@@ -592,3 +583,25 @@ class WeeklySubmission(db.Model):
     __table_args__ = (
         db.UniqueConstraint('challenge_id', 'image_id', name='uq_weekly_sub_image'),
     )
+
+
+class ChallengeTopup(db.Model):
+    """
+    One row per extra image purchase for weekly challenge.
+    Allows users who have used their base images to buy more at Rs.49 each.
+    Max total: 6 for subscribed, 4 for free.
+    """
+    __tablename__ = 'challenge_topups'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    challenge_id = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id'), nullable=False)
+    user_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    quantity     = db.Column(db.Integer, nullable=False)          # images purchased
+    amount_paise = db.Column(db.Integer, nullable=False)          # 4900 per image
+    razorpay_order_id   = db.Column(db.String(64), nullable=True)
+    razorpay_payment_id = db.Column(db.String(64), nullable=True)
+    status       = db.Column(db.String(20), default='pending')    # pending | paid | failed
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user      = db.relationship('User',            foreign_keys=[user_id],      backref='challenge_topups', lazy=True)
+    challenge = db.relationship('WeeklyChallenge', foreign_keys=[challenge_id], backref='topups',           lazy=True)
