@@ -63,12 +63,37 @@
 {% block content %}
 <div class="admin-wrap">
 
-  <div class="page-header">
-    <h1>Weekly Challenge — Admin</h1>
-    <p>Create challenge prompts · Set open/close dates · Publish results</p>
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Weekly Challenge — Admin</h1>
+      <p>Create challenge prompts · Set open/close dates · Publish results</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <form method="POST" action="{{ url_for('admin_send_reminder') }}" style="display:inline;">
+        <button type="submit" class="btn" style="font-size:12px;padding:7px 14px;"
+                onclick="return confirm('Send closing reminder email to all users now?')">
+          📧 Send reminder now
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('admin_send_winners') }}" style="display:inline;">
+        <button type="submit" class="btn btn-solid" style="font-size:12px;padding:7px 14px;"
+                onclick="return confirm('Send winners announcement to all users now? Make sure you have published results first.')">
+          🏆 Send winners email
+        </button>
+      </form>
+    </div>
   </div>
 
   {# ── Create new challenge ── #}
+  <div style="background:var(--surface-3); border:1px solid var(--border);
+              border-left:3px solid var(--gold-dark); border-radius:var(--radius-sm);
+              padding:12px 18px; margin-bottom:20px; font-size:14px; color:var(--text-muted);">
+    <strong style="color:var(--text-primary);">Automated emails:</strong>
+    Saturday 6pm UTC — closing reminder &nbsp;·&nbsp;
+    Monday 7pm IST — winners announcement &nbsp;·&nbsp;
+    Sunday 10am UTC — admin prompt to create next challenge
+  </div>
+
   <div class="form-card">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:600;
                 letter-spacing:2px; color:var(--gold); text-transform:uppercase;
