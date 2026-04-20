@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .contact-wrap { max-width: 680px; margin: 0 auto; }
+  .contact-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 32px 36px; margin-bottom: 24px;
+  }
+  .contact-label {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .contact-title {
+    font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;
+  }
+  .contact-body {
+    font-size: 16px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;
+  }
+  .contact-email {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+    color: var(--gold); text-decoration: none; padding: 12px 20px;
+    border: 1px solid var(--gold-dark); border-radius: var(--radius-sm);
+    transition: background 0.2s;
+  }
+  .contact-email:hover { background: var(--gold-subtle); }
+  .contact-response {
+    font-size: 14px; color: var(--text-muted); margin-top: 12px;
+  }
+  .contact-divider {
+    border: none; border-top: 1px solid var(--border); margin: 32px 0;
+  }
+  .faq-item { margin-bottom: 24px; }
+  .faq-q {
+    font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;
+  }
+  .faq-a {
+    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .faq-a a { color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contact-wrap">
+
+  <div class="page-header">
+    <h1>Contact Us</h1>
+    <p>Lens League Apex &nbsp;·&nbsp; We're a small team. We read every email.</p>
+  </div>
+
+  <!-- Primary contact -->
+  <div class="contact-card">
+    <div class="contact-label">General enquiries &amp; support</div>
+    <div class="contact-title">Get in touch</div>
+    <div class="contact-body">
+      Billing questions, subscription issues, technical problems, competition queries,
+      or anything else — write to us directly.
+    </div>
+    <a href="mailto:sreeks@gmail.com" class="contact-email">
+      sreeks@gmail.com →
+    </a>
+    <div class="contact-response">We respond within 2 working days.</div>
+  </div>
+
+  <!-- Specific contact reasons -->
+  <div class="contact-card">
+    <div class="contact-label">What to include in your email</div>
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+          Billing or refund request
+        </div>
+        <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
+          Subject: <strong>Refund Request — [your email] — [plan name]</strong><br>
+          Include your registered email address and the date of charge.
+          See our <a href="/refund-policy" style="color:var(--gold);">Refund Policy</a> for full details.
+        </div>
+      </div>
+
+      <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+          Image integrity appeal
+        </div>
+        <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
+          Subject: <strong>Appeal — [your username] — [image ID]</strong><br>
+          If you believe a flag or strike was applied in error, include your RAW file
+          or original image. We review within 14 days.
+        </div>
+      </div>
+
+      <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+          Technical issue or bug
+        </div>
+        <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
+          Subject: <strong>Bug — [brief description]</strong><br>
+          Include your browser, device, and a screenshot if possible.
+          We take platform issues seriously and respond fast.
+        </div>
+      </div>
+
+      <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+          Brand sponsorship enquiry
+        </div>
+        <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
+          Subject: <strong>Sponsorship — [brand name]</strong><br>
+          Tell us about your brand and the kind of challenge or competition
+          you'd like to sponsor. We'll respond with our media pack.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="contact-divider">
+
+  <!-- Quick FAQs -->
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">
+    Common questions
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">How do I cancel my subscription?</div>
+    <div class="faq-a">
+      Log in, go to your Dashboard, and click "Cancel subscription" in the subscription panel.
+      No email needed. Access continues until the end of your billing period.
+      See our <a href="/refund-policy">Refund Policy</a> for details.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">I was charged but my subscription isn't active.</div>
+    <div class="faq-a">
+      Email us at <a href="mailto:sreeks@gmail.com">sreeks@gmail.com</a> with your registered
+      email and payment reference. We'll resolve it within 2 working days.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">My image was flagged as AI-generated but it isn't.</div>
+    <div class="faq-a">
+      Email us your original RAW file or camera roll metadata within 7 days of the flag.
+      Subject: <strong>Appeal — [username] — [image ID]</strong>. We review all appeals.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">How do I delete my account?</div>
+    <div class="faq-a">
+      Email us at <a href="mailto:sreeks@gmail.com">sreeks@gmail.com</a> with subject
+      <strong>Delete Account — [your email]</strong>. We'll confirm deletion within
+      5 working days. Note that submitted competition images may be retained
+      for integrity record-keeping per our <a href="/terms">Terms &amp; Conditions</a>.
+    </div>
+  </div>
+
+</div>
+{% endblock %}

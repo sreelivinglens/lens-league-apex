@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Refund & Cancellation Policy — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .terms-wrap { max-width: 760px; margin: 0 auto; }
+  .terms-section { margin-bottom: 40px; }
+  .terms-section h2 {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .terms-section h2 span {
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--gold); margin-right: 10px; font-weight: 600;
+  }
+  .terms-section h3 {
+    font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
+  }
+  .terms-section p {
+    font-size: 16px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px;
+  }
+  .terms-section ul, .terms-section ol {
+    padding-left: 22px; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .terms-section li { font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
+  .terms-section strong { color: var(--text-primary); }
+  .terms-highlight {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 16px 20px; margin: 16px 0;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .terms-highlight strong { color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terms-wrap">
+
+  <div class="page-header">
+    <h1>Refund &amp; Cancellation Policy</h1>
+    <p>Last updated: April 2026 &nbsp;·&nbsp; Lens League Apex</p>
+  </div>
+
+  <div class="terms-highlight">
+    <strong>Summary:</strong> You can cancel your subscription at any time from your dashboard.
+    No questions asked. Access continues until the end of your current billing period.
+    Competition entry fees are non-refundable once the submission window opens.
+    For any billing issue, email <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a>.
+  </div>
+
+  <div class="terms-section">
+    <h2><span>01</span> Monthly &amp; Annual Subscriptions</h2>
+    <p>All subscription plans — Camera League, Mobile League, and any Mentor on Demand tiers — are billed on a recurring basis.</p>
+    <p>You may cancel your subscription at any time from your account dashboard without contacting support. Cancellation takes effect at the end of your current billing period. You retain full access to your subscribed features until that date.</p>
+    <p><strong>No partial refunds are issued for unused days within a billing period.</strong></p>
+    <h3>Annual plans</h3>
+    <p>If you purchase an annual subscription, you may request a full refund within <strong>7 days of payment</strong> provided you have not scored more than 4 images under the plan. After 7 days or after 4 images have been scored, no refund is available for annual plans.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>02</span> Competition Entry Fees</h2>
+    <p>Entry fees paid for the Photographer of the Year (POTY), Body of Work (BOW), and Open Competition are <strong>non-refundable</strong> once the submission window for that competition cycle has opened.</p>
+    <p>If a competition is cancelled by Lens League Apex before the submission window opens, a full refund will be issued within 7 working days to your original payment method.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>03</span> Image Top-up Credits</h2>
+    <p>Image top-up credits are non-refundable once purchased. Credits are valid for <strong>90 days</strong> from the date of purchase and will expire after that period.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>04</span> Mentor on Demand</h2>
+    <p>If you have subscribed to a Mentor on Demand tier and your assigned juror has <strong>not yet reviewed any of your images</strong> in the current billing month, you may request a cancellation and full refund for that month by writing to us within 5 days of your billing date.</p>
+    <p>Once any image review has been delivered, that month's Mentor fee is non-refundable.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>05</span> Duplicate or Erroneous Charges</h2>
+    <p>If you believe you have been charged in error or charged twice for the same plan, write to us within <strong>14 days</strong> of the charge. We will investigate and issue a refund within 7 working days if the error is confirmed.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>06</span> Platform-Initiated Cancellations</h2>
+    <p>If your account is suspended or banned under our three-strike integrity policy, no refund is issued for the remaining subscription period. This is stated in our <a href="/terms" style="color:var(--gold);">Terms &amp; Conditions</a> which you agreed to at registration.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>07</span> How to Request a Refund</h2>
+    <p>Email us at <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a></p>
+    <ul>
+      <li>Subject line: <strong>Refund Request — [your registered email] — [plan name]</strong></li>
+      <li>We respond within 2 working days</li>
+      <li>Approved refunds are processed within 7 working days to your original payment method</li>
+    </ul>
+  </div>
+
+  <div class="terms-highlight">
+    Questions about your subscription or billing?
+    &nbsp;<a href="/contact" style="color:var(--gold);">Contact us →</a>
+  </div>
+
+</div>
+{% endblock %}
