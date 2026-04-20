@@ -32,327 +32,14 @@ from location_data import (
 load_dotenv()
 
 # ---------------------------------------------------------------------------
-# Scheduled jobs — APScheduler
-# Three jobs:
-#   1. Saturday 18:00 UTC — reminder email (challenge closes tomorrow)
-#   2. Monday 13:30 UTC — winners announcement email
-#   3. Sunday 10:00 UTC — admin prompt to set next week's challenge
-# ---------------------------------------------------------------------------
-
-def _init_scheduler(app):
-    """
-    Initialise APScheduler with three weekly jobs.
-    Called once at app startup. Safe to call multiple times — checks if already running.
-    """
-    try:
-        from apscheduler.schedulers.background import BackgroundScheduler
-        from apscheduler.triggers.cron import CronTrigger
-        import pytz
-
-        scheduler = BackgroundScheduler(timezone=pytz.utc)
-
-        # Job 1 — Saturday 18:00 UTC — challenge closing reminder
-        scheduler.add_job(
-            func=_job_challenge_reminder,
-            trigger=CronTrigger(day_of_week='sat', hour=18, minute=0),
-            id='challenge_reminder',
-            replace_existing=True,
-            misfire_grace_time=3600,
-        )
-
-        # Job 2 — Monday 13:30 UTC (7pm IST) — winners announcement
-        scheduler.add_job(
-            func=_job_winners_announcement,
-            trigger=CronTrigger(day_of_week='mon', hour=13, minute=30),
-            id='winners_announcement',
-            replace_existing=True,
-            misfire_grace_time=3600,
-        )
-
-        # Job 3 — Sunday 10:00 UTC — admin reminder to set next challenge
-        scheduler.add_job(
-            func=_job_admin_challenge_reminder,
-            trigger=CronTrigger(day_of_week='sun', hour=10, minute=0),
-            id='admin_challenge_reminder',
-            replace_existing=True,
-            misfire_grace_time=3600,
-        )
-
-        scheduler.start()
-        app.logger.info('[scheduler] Started — 3 weekly jobs registered')
-        return scheduler
-    except ImportError:
-        app.logger.warning('[scheduler] APScheduler not installed — scheduled emails disabled')
-        return None
-    except Exception as e:
-        app.logger.error(f'[scheduler] Failed to start: {e}')
-        return None
-
-
-def _job_challenge_reminder():
-    """Saturday 18:00 UTC — send reminder to all users that challenge closes tomorrow."""
-    with app.app_context():
-        try:
-            now = datetime.utcnow()
-            # Find challenge closing within next 36 hours
-            ch = WeeklyChallenge.query.filter(
-                WeeklyChallenge.is_active == True,
-                WeeklyChallenge.closes_at > now,
-                WeeklyChallenge.closes_at < now + timedelta(hours=36),
-            ).first()
-
-            if not ch:
-                app.logger.info('[scheduler] reminder: no challenge closing within 36h — skipping')
-                return
-
-            users = User.query.filter_by(is_active=True).filter(
-                User.email != None, User.email != ''
-            ).all()
-
-            site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
-            sent = 0
-
-            for user in users:
-                already_submitted = WeeklySubmission.query.filter_by(
-                    challenge_id=ch.id, user_id=user.id).count()
-                is_sub = getattr(user, 'is_subscribed', False)
-                slot_limit = 3 if is_sub else 1
-                remaining = max(0, slot_limit - already_submitted)
-
-                if already_submitted > 0 and remaining == 0:
-                    submitted_line = f'You've submitted {already_submitted} image{"s" if already_submitted > 1 else ""} — well done! Winners announced Monday evening.'
-                    cta_text = 'View the challenge →'
-                elif already_submitted > 0:
-                    submitted_line = f'You've submitted {already_submitted} image{"s" if already_submitted > 1 else ""}. You have {remaining} submission{"s" if remaining > 1 else ""} left — use them!'
-                    cta_text = 'Submit another image →'
-                else:
-                    submitted_line = 'You haven't submitted yet — there's still time!'
-                    cta_text = 'Submit your image now →'
-
-                html_body = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
-  <tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-      <tr><td style="background:#1a1a18;padding:20px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX</p>
-      </td></tr>
-      <tr><td style="background:#1a1a18;padding:0 32px 24px;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Challenge closing tomorrow · {ch.week_ref}</p>
-        <h1 style="margin:0;font-size:32px;font-style:italic;color:#C8A84B;line-height:1.1;">{ch.prompt_title}</h1>
-      </td></tr>
-      <tr><td style="padding:28px 32px;">
-        <p style="margin:0 0 16px;font-size:17px;color:#1a1a18;font-weight:700;">The challenge closes Sunday at midnight.</p>
-        <p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">{submitted_line}</p>
-        <p style="margin:0 0 24px;font-size:15px;color:#8a8070;line-height:1.6;">Winners will be announced <strong style="color:#1a1a18;">Monday evening</strong>. Get your photo rated for it to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong>.</p>
-        <a href="{site_url}/challenge" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
-      </td></tr>
-      <tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
-        <p style="margin:0;font-size:13px;color:#8a8070;">Lens League Apex &nbsp;·&nbsp; <a href="{site_url}" style="color:#C8A84B;">{site_url.replace("https://","")}</a></p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body></html>"""
-
-                text_body = f"""LENS LEAGUE APEX — Challenge closing tomorrow
-
-{ch.prompt_title} · {ch.week_ref}
-
-{submitted_line}
-
-Winners announced Monday evening.
-
-Enter here: {site_url}/challenge
-
-— Lens League Apex"""
-
-                if send_email(user.email,
-                              f"Last chance: {ch.prompt_title} closes tomorrow",
-                              html_body, text_body):
-                    sent += 1
-
-            app.logger.info(f'[scheduler] reminder sent to {sent} users for {ch.week_ref}')
-
-        except Exception as e:
-            app.logger.error(f'[scheduler] reminder job failed: {e}')
-
-
-def _job_winners_announcement():
-    """Monday 13:30 UTC (7pm IST) — send winners announcement to all users."""
-    with app.app_context():
-        try:
-            now = datetime.utcnow()
-            # Find challenge that closed in the last 48 hours
-            ch = WeeklyChallenge.query.filter(
-                WeeklyChallenge.is_active == True,
-                WeeklyChallenge.closes_at < now,
-                WeeklyChallenge.closes_at > now - timedelta(hours=48),
-            ).order_by(WeeklyChallenge.closes_at.desc()).first()
-
-            if not ch:
-                app.logger.info('[scheduler] winners: no recently closed challenge — skipping')
-                return
-
-            # Get ranked winners
-            winners = (WeeklySubmission.query
-                       .filter_by(challenge_id=ch.id)
-                       .filter(WeeklySubmission.result_rank != None)
-                       .order_by(WeeklySubmission.result_rank.asc())
-                       .limit(3).all())
-
-            if not winners:
-                app.logger.info(f'[scheduler] winners: no ranked winners set for {ch.week_ref} — skipping. Set ranks in admin first.')
-                return
-
-            site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
-            results_url = f"{site_url}/challenge/results/{ch.week_ref}"
-
-            # Build winners HTML block
-            rank_labels = {1: '🥇 First place', 2: '🥈 Second place', 3: '🥉 Third place'}
-            winners_html = ''
-            winners_text = ''
-            for w in winners:
-                rank_label = rank_labels.get(w.result_rank, f'#{w.result_rank}')
-                score_line = f'{w.image.score:.1f}' if w.image.score else ''
-                note_line = f'<p style="margin:6px 0 0;font-size:14px;color:#6a6458;font-style:italic;">{w.result_note}</p>' if w.result_note else ''
-                winners_html += f"""
-                <tr>
-                  <td style="padding:16px 0;border-bottom:1px solid #F0EAD8;vertical-align:top;">
-                    <p style="margin:0 0 4px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1px;color:#C8A84B;text-transform:uppercase;">{rank_label}</p>
-                    <p style="margin:0;font-size:18px;font-weight:700;color:#1a1a18;">{w.user.username}</p>
-                    {'<p style="margin:2px 0 0;font-size:15px;color:#C8A84B;font-family:Courier New,monospace;">DDI Score: ' + score_line + '</p>' if score_line else ''}
-                    {note_line}
-                  </td>
-                </tr>"""
-                winners_text += f"{rank_label}: {w.user.username}"
-                if score_line:
-                    winners_text += f" · Score: {score_line}"
-                if w.result_note:
-                    winners_text += f"\n   {w.result_note}"
-                winners_text += "\n"
-
-            users = User.query.filter_by(is_active=True).filter(
-                User.email != None, User.email != ''
-            ).all()
-
-            sent = 0
-            for user in users:
-                html_body = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
-  <tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-      <tr><td style="background:#1a1a18;padding:20px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX</p>
-      </td></tr>
-      <tr><td style="background:#1a1a18;padding:0 32px 24px;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge Results · {ch.week_ref}</p>
-        <h1 style="margin:0;font-size:30px;font-style:italic;color:#C8A84B;line-height:1.1;">This week's winning images</h1>
-        <p style="margin:8px 0 0;font-size:16px;color:#a8a090;font-style:italic;">{ch.prompt_title}</p>
-      </td></tr>
-      <tr><td style="padding:28px 32px;">
-        <table width="100%" cellpadding="0" cellspacing="0">
-          {winners_html}
-        </table>
-        <div style="margin-top:24px;">
-          <a href="{results_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">See the winning images →</a>
-        </div>
-        <p style="margin:24px 0 0;font-size:15px;color:#8a8070;line-height:1.6;">A new challenge drops this Monday. Keep shooting.</p>
-      </td></tr>
-      <tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
-        <p style="margin:0;font-size:13px;color:#8a8070;">Lens League Apex &nbsp;·&nbsp; <a href="{site_url}" style="color:#C8A84B;">{site_url.replace("https://","")}</a></p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body></html>"""
-
-                text_body = f"""LENS LEAGUE APEX — Weekly Challenge Results
-
-This week's winning images — {ch.prompt_title}
-
-{winners_text}
-
-See the full results: {results_url}
-
-A new challenge drops this Monday. Keep shooting.
-
-— Lens League Apex"""
-
-                if send_email(user.email,
-                              f"This week's winners: {ch.prompt_title}",
-                              html_body, text_body):
-                    sent += 1
-
-            app.logger.info(f'[scheduler] winners announcement sent to {sent} users for {ch.week_ref}')
-
-        except Exception as e:
-            app.logger.error(f'[scheduler] winners job failed: {e}')
-
-
-def _job_admin_challenge_reminder():
-    """Sunday 10:00 UTC — remind admin to create next week's challenge."""
-    with app.app_context():
-        try:
-            now = datetime.utcnow()
-            # Check if next week's challenge already exists
-            next_week_iso = now + timedelta(days=1)  # Monday
-            next_week_ref = f"{next_week_iso.isocalendar()[0]}-W{next_week_iso.isocalendar()[1]:02d}"
-
-            existing = WeeklyChallenge.query.filter_by(week_ref=next_week_ref).first()
-            if existing:
-                app.logger.info(f'[scheduler] admin reminder: {next_week_ref} already exists — skipping')
-                return
-
-            admin_email = os.getenv('MAIL_USERNAME', 'sreeks@gmail.com')
-            site_url    = os.getenv('SITE_URL', 'https://lensleagueapex.com')
-            admin_url   = f"{site_url}/admin/weekly-challenge"
-
-            html_body = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
-  <tr><td align="center">
-    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-      <tr><td style="background:#1a1a18;padding:20px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX — ADMIN</p>
-      </td></tr>
-      <tr><td style="padding:28px 32px;">
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Action required</p>
-        <h2 style="margin:0 0 16px;font-size:22px;color:#1a1a18;">Set next week's challenge prompt</h2>
-        <p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">Next week's challenge (<strong>{next_week_ref}</strong>) hasn't been created yet.</p>
-        <p style="margin:0 0 24px;font-size:15px;color:#8a8070;">Create it now so the email goes out Monday morning and users know what to shoot this week.</p>
-        <a href="{admin_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Create {next_week_ref} challenge →</a>
-      </td></tr>
-      <tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">
-        <p style="margin:0;font-size:13px;color:#8a8070;">This is an automated reminder from Lens League Apex.</p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body></html>"""
-
-            send_email(admin_email,
-                      f'[Action needed] Create {next_week_ref} challenge prompt',
-                      html_body)
-            app.logger.info(f'[scheduler] admin reminder sent for {next_week_ref}')
-
-        except Exception as e:
-            app.logger.error(f'[scheduler] admin reminder job failed: {e}')
-
-
-# ---------------------------------------------------------------------------
-# Email utility — Gmail SMTP
+# Email utility  -  Gmail SMTP
 # Env vars: MAIL_USERNAME, MAIL_PASSWORD
-# Falls back silently if not configured — never crashes the app
+# Falls back silently if not configured  -  never crashes the app
 # ---------------------------------------------------------------------------
 
 def send_email(to_addresses, subject, html_body, text_body=None):
     """
-    Send email via Brevo (HTTP API) — works on Railway (no SMTP port restrictions).
+    Send email via Brevo (HTTP API)  -  works on Railway (no SMTP port restrictions).
     Env var: BREVO_API_KEY
     to_addresses: str (single) or list of str.
     Returns True on success, False on failure.
@@ -362,7 +49,7 @@ def send_email(to_addresses, subject, html_body, text_body=None):
 
     api_key = os.getenv('BREVO_API_KEY', '')
     if not api_key:
-        app.logger.warning('[email] BREVO_API_KEY not set — skipping send')
+        app.logger.warning('[email] BREVO_API_KEY not set  -  skipping send')
         return False
 
     if isinstance(to_addresses, str):
@@ -422,14 +109,14 @@ def send_challenge_notification(challenge):
 
     sponsor_line = ''
     if challenge.sponsor_name:
-        prize_text = f' — Prize: {challenge.sponsor_prize}' if challenge.sponsor_prize else ''
+        prize_text = f'  -  Prize: {challenge.sponsor_prize}' if challenge.sponsor_prize else ''
         sponsor_line = f'<p style="margin:0 0 16px; color:#8a8070; font-size:15px;">Sponsored by <strong style="color:#C8A84B;">{challenge.sponsor_name}</strong>{prize_text}</p>'
 
     sent = 0
     for user in users:
         is_sub = getattr(user, 'is_subscribed', False)
         slot_text = '3 images this week' if is_sub else '1 image this week (subscribe for 3)'
-        cta_text  = 'Submit your image →' if is_sub else 'Enter the challenge →'
+        cta_text  = 'Submit your image ->' if is_sub else 'Enter the challenge ->'
 
         html_body = f"""<!DOCTYPE html>
 <html>
@@ -446,7 +133,7 @@ def send_challenge_notification(challenge):
 
       <!-- Challenge banner -->
       <tr><td style="background:#1a1a18;padding:0 32px 28px;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge · {challenge.week_ref}</p>
+        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge . {challenge.week_ref}</p>
         <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.1;">{challenge.prompt_title}</h1>
       </td></tr>
 
@@ -477,7 +164,7 @@ def send_challenge_notification(challenge):
 </table>
 </body></html>"""
 
-        text_body = f"""LENS LEAGUE APEX — Weekly Challenge
+        text_body = f"""LENS LEAGUE APEX  -  Weekly Challenge
 
 This week: {challenge.prompt_title}
 {challenge.week_ref}
@@ -489,7 +176,7 @@ Closes: {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
 
 Enter here: {challenge_url}
 
-— Lens League Apex"""
+ -  Lens League Apex"""
 
         if send_email(user.email, f"This week's challenge: {challenge.prompt_title}", html_body, text_body):
             sent += 1
@@ -508,7 +195,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER']       = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
 
-# Session cookie settings — required for mobile Safari (iOS ITP)
+# Session cookie settings  -  required for mobile Safari (iOS ITP)
 # SameSite=Lax allows cookies to be sent with same-site XHR requests
 # Secure=True ensures cookie is sent over HTTPS (Railway is always HTTPS)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -589,7 +276,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
                 "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
-                # v27 peer rating columns — updated
+                # v27 peer rating columns  -  updated
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_ratings_given INTEGER DEFAULT 0",
@@ -607,7 +294,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_sub_id VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS pool_entry_chosen_at TIMESTAMP",
-                # v28 — location + league integrity
+                # v28  -  location + league integrity
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(80)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(80)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(80)",
@@ -618,7 +305,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
-                # v29 — weekly challenge
+                # v29  -  weekly challenge
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
                 "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
@@ -630,7 +317,7 @@ with app.app_context():
                     print(f'[migration] {_e}')
             conn.commit()
 
-        # Fix calibration_logs — force correct schema on every startup
+        # Fix calibration_logs  -  force correct schema on every startup
         try:
             with db.engine.connect() as conn2:
                 conn2.execute(db.text("""
@@ -708,7 +395,7 @@ with app.app_context():
         except Exception as ce:
             print(f'open_contest_entries migration warning: {ce}')
 
-        # v27 — peer rating tables
+        # v27  -  peer rating tables
         try:
             with db.engine.connect() as conn5:
                 conn5.execute(db.text('''
@@ -787,7 +474,7 @@ def admin_required(f):
 
 
 # ---------------------------------------------------------------------------
-# Helper — open contest active flag
+# Helper  -  open contest active flag
 # ---------------------------------------------------------------------------
 
 def is_open_contest_active() -> bool:
@@ -799,7 +486,7 @@ def is_bow_active() -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Helper — upload both thumb and card to R2, return public URLs
+# Helper  -  upload both thumb and card to R2, return public URLs
 # ---------------------------------------------------------------------------
 
 def _r2_upload_thumb(local_path: str, uid: str) -> str | None:
@@ -885,7 +572,7 @@ def auth_google_callback():
     name      = userinfo.get('name', '')
 
     if not google_id or not email:
-        flash('Google sign-in failed — no email returned. Please try again.', 'error')
+        flash('Google sign-in failed  -  no email returned. Please try again.', 'error')
         return redirect(url_for('login'))
 
     # Find existing user by google_id or email
@@ -894,7 +581,7 @@ def auth_google_callback():
         user = User.query.filter_by(email=email).first()
 
     if user:
-        # Existing user — update google_id if not set
+        # Existing user  -  update google_id if not set
         if not user.google_id:
             user.google_id = google_id
         user.last_login = datetime.utcnow()
@@ -904,7 +591,7 @@ def auth_google_callback():
             return redirect(url_for('onboarding'))
         return redirect(url_for('dashboard'))
     else:
-        # New user — create account, send to onboarding
+        # New user  -  create account, send to onboarding
         import re
         base_username = re.sub(r'[^a-zA-Z0-9_]', '', name.replace(' ', '_').lower()) or 'photographer'
         username = base_username
@@ -1143,9 +830,9 @@ def dashboard():
             'in_month1': in_month1,
         }
 
-    # ── POTY top-6 tracker ──────────────────────────────────────────────────
+    # -- POTY top-6 tracker --------------------------------------------------
     # Live top-6 average per genre for the current user.
-    # Deleted images intentionally not excluded — per contest rules, deletions
+    # Deleted images intentionally not excluded  -  per contest rules, deletions
     # do not improve POTY standing. Calculated from all scored images.
     poty_tracker = None
     if current_user.role != 'admin' and getattr(current_user, 'is_subscribed', False):
@@ -1226,7 +913,7 @@ def dashboard():
 
 
 # ---------------------------------------------------------------------------
-# Profile — edit name/username + change password (combined page)
+# Profile  -  edit name/username + change password (combined page)
 # ---------------------------------------------------------------------------
 
 @app.route('/profile', methods=['GET', 'POST'])
@@ -1237,7 +924,7 @@ def profile():
     if request.method == 'POST':
         action = request.form.get('action')
 
-        # ── Update profile details ────────────────────────────────────────
+        # -- Update profile details ----------------------------------------
         if action == 'update_profile':
             new_username  = request.form.get('username', '').strip()
             new_full_name = request.form.get('full_name', '').strip()
@@ -1257,7 +944,7 @@ def profile():
             flash('Profile updated successfully.', 'success')
             return redirect(url_for('profile'))
 
-        # ── Change password ───────────────────────────────────────────────
+        # -- Change password -----------------------------------------------
         elif action == 'change_password':
             current_pw = request.form.get('current_password', '')
             new_pw     = request.form.get('new_password', '')
@@ -1294,7 +981,7 @@ def upload():
             flash('File type not supported.', 'error')
             return redirect(request.url)
 
-        # ── Free quota check (6 in month 1, 3/month thereafter) ──────────
+        # -- Free quota check (6 in month 1, 3/month thereafter) ----------
         if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
             from datetime import date as _date
             today      = _date.today()
@@ -1325,10 +1012,10 @@ def upload():
             flash(f'Image processing failed: {e}', 'error')
             if os.path.exists(raw_path): os.remove(raw_path)
             return redirect(request.url)
-        # Extract EXIF from original file BEFORE deletion — raw_path still has full metadata
+        # Extract EXIF from original file BEFORE deletion  -  raw_path still has full metadata
         from engine.exif_check import extract_exif
         exif_status, exif_data, exif_warning = extract_exif(raw_path)
-        exif_settings = '  ·  '.join(filter(None, [
+        exif_settings = '  .  '.join(filter(None, [
             exif_data.get('focal_length',''), exif_data.get('aperture',''),
             exif_data.get('iso',''), exif_data.get('shutter',''),
         ]))
@@ -1343,11 +1030,11 @@ def upload():
                 if os.path.exists(thumb_path): os.remove(thumb_path)
                 if ex.user_id == current_user.id:
                     return jsonify({'error': True, 'message':
-                        f'⚠️ This image appears identical to one you already uploaded (\"{ ex.asset_name or ex.original_filename }\"). Please upload a different photograph.'
+                        f' This image appears identical to one you already uploaded (\"{ ex.asset_name or ex.original_filename }\"). Please upload a different photograph.'
                     }), 409
                 else:
                     return jsonify({'error': True, 'message':
-                        '🚫 This image has already been submitted to Lens League by another member. ' +
+                        ' This image has already been submitted to Lens League by another member. ' +
                         'Submitting images that belong to another photographer violates our Member Agreement ' +
                         'and may have legal implications. Only submit your own original photographs.'
                     }), 409
@@ -1389,7 +1076,7 @@ def upload():
         db.session.add(img)
         db.session.commit()
 
-        # ── League integrity check (three-strike system) ──────────────────
+        # -- League integrity check (three-strike system) ------------------
         # Mobile League users uploading camera EXIF images get graduated penalties.
         # Only flags images uploaded AFTER subscription date (protects legacy images).
         _CAMERA_BRANDS_EXIF = ('canon', 'nikon', 'sony', 'fuji', 'fujifilm', 'olympus',
@@ -1409,7 +1096,7 @@ def upload():
             img.needs_review = True
             img.exif_warning = (img.exif_warning or '') + (
                 f' [LEAGUE MISMATCH: Camera EXIF "{exif_data.get("camera","")}" '
-                f'detected on Mobile League subscription — strike {strike}/3]'
+                f'detected on Mobile League subscription  -  strike {strike}/3]'
             )
             db.session.commit()
             app.logger.warning(
@@ -1419,7 +1106,7 @@ def upload():
 
             if strike == 1:
                 flash(
-                    '⚠️ League check: this image appears to have been taken on a dedicated camera, '
+                    ' League check: this image appears to have been taken on a dedicated camera, '
                     'but you are in the Mobile League. The image has been held for review. '
                     'If you shoot on a camera, please switch to the Camera League. '
                     'Contact sreeks@gmail.com with questions.',
@@ -1427,7 +1114,7 @@ def upload():
                 )
             elif strike == 2:
                 flash(
-                    '⚠️ Second league mismatch. This image has been held for review and '
+                    ' Second league mismatch. This image has been held for review and '
                     'your contest entries for this month have been removed pending admin review. '
                     'One more mismatch will suspend your contest access.',
                     'warning'
@@ -1437,7 +1124,7 @@ def upload():
                 db.session.commit()
             elif strike >= 3:
                 flash(
-                    '🚫 Three league mismatches detected. Your contest access has been suspended '
+                    ' Three league mismatches detected. Your contest access has been suspended '
                     'and this month\'s contest entries have been removed. '
                     'Contact sreeks@gmail.com to resolve.',
                     'error'
@@ -1456,14 +1143,14 @@ def upload():
                                     title=img.asset_name, photographer=img.photographer_name,
                                     subject=img.subject, location=img.location)
 
-                # ── AI suspicion check ────────────────────────────────────
+                # -- AI suspicion check ------------------------------------
                 ai_suspicion = float(result.get('ai_suspicion', 0.0))
                 img.ai_suspicion        = ai_suspicion
                 img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
                 img.needs_review        = bool(result.get('needs_review', False))
 
                 if ai_suspicion >= 0.7:
-                    # TIER 3 — Auto-flagged: almost certainly AI-generated
+                    # TIER 3  -  Auto-flagged: almost certainly AI-generated
                     img.score            = 0.0
                     img.tier             = 'Apprentice'
                     img.dod_score        = 0.0
@@ -1482,7 +1169,7 @@ def upload():
                     img.flagged_at       = datetime.utcnow()
                     db.session.commit()
                     flash(
-                        '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. '
+                        ' This image has been flagged as potentially AI-generated and cannot be submitted. '
                         'Only original photographs taken by you are accepted. '
                         'If you believe this is an error, contact sreeks@gmail.com.',
                         'error'
@@ -1503,9 +1190,9 @@ def upload():
                     audit = build_audit_data(result, img)
                     img.set_audit(audit)
 
-                    # TIER 2 — Needs human review:
-                    # (a) AI suspicion in amber zone 0.4–0.69, OR
-                    # (b) Grandmaster score (9.0+) — always requires RAW verification
+                    # TIER 2  -  Needs human review:
+                    # (a) AI suspicion in amber zone 0.40.69, OR
+                    # (b) Grandmaster score (9.0+)  -  always requires RAW verification
                     if ai_suspicion >= 0.4 or img.score >= 9.0:
                         img.needs_review    = True
                         img.is_public       = False   # held from public until admin clears
@@ -1514,7 +1201,7 @@ def upload():
                             review_reason_parts.append(f'AI suspicion score {ai_suspicion:.2f} (amber zone)')
                         if img.score >= 9.0:
                             review_reason_parts.append(f'Grandmaster score {img.score} requires RAW verification')
-                        img.flagged_reason  = ' · '.join(review_reason_parts)
+                        img.flagged_reason  = ' . '.join(review_reason_parts)
 
                     db.session.commit()
 
@@ -1532,18 +1219,18 @@ def upload():
                     except Exception as card_err:
                         app.logger.error(f'[upload card build error] {traceback.format_exc()}')
 
-                    flash(f'Auto-scored! LL-Score: {img.score} — {img.tier}', 'success')
+                    flash(f'Auto-scored! LL-Score: {img.score}  -  {img.tier}', 'success')
                     if getattr(img, 'needs_review', False):
                         if img.score >= 9.0 and ai_suspicion < 0.4:
                             flash(
-                                f'🏆 Grandmaster score! Your image has been submitted for RAW verification. '
+                                f' Grandmaster score! Your image has been submitted for RAW verification. '
                                 f'Email your original RAW file to sreeks@gmail.com within 7 days.',
                                 'warning'
                             )
                         else:
                             flash(
-                                f'⚠️ Your image has been flagged for human review before going public. '
-                                f'This is usually resolved within 24–48 hours. '
+                                f' Your image has been flagged for human review before going public. '
+                                f'This is usually resolved within 2448 hours. '
                                 f'Contact sreeks@gmail.com if you have questions.',
                                 'warning'
                             )
@@ -1552,9 +1239,9 @@ def upload():
                 db.session.commit()
                 err_str = str(e)
                 if '529' in err_str or 'overloaded' in err_str.lower():
-                    flash('Image uploaded ✅ — AI servers are currently busy (peak hours). '
+                    flash('Image uploaded   -  AI servers are currently busy (peak hours). '
                           'Your image has been saved. Please score it from the dashboard '
-                          'during off-peak hours: 6am–11am IST or 11pm–5am IST.', 'warning')
+                          'during off-peak hours: 6am11am IST or 11pm5am IST.', 'warning')
                 else:
                     flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
         else:
@@ -1567,16 +1254,16 @@ def upload():
                 return jsonify({
                     'status': 'flagged',
                     'image_id': img.id,
-                    'message': '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact sreeks@gmail.com.',
+                    'message': ' This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact sreeks@gmail.com.',
                     'redirect': url_for('dashboard')
                 })
             if getattr(img, 'needs_review', False):
                 if img.score >= 9.0:
-                    msg = (f'🏆 Grandmaster score ({img.score})! Your image has been held for RAW verification. '
+                    msg = (f' Grandmaster score ({img.score})! Your image has been held for RAW verification. '
                            f'Email your original RAW file to sreeks@gmail.com within 7 days.')
                 else:
-                    msg = ('⚠️ Your image has been held for human review before going public. '
-                           'Usually resolved within 24–48 hours.')
+                    msg = (' Your image has been held for human review before going public. '
+                           'Usually resolved within 2448 hours.')
                 return jsonify({
                     'status': 'needs_review',
                     'image_id': img.id,
@@ -1585,16 +1272,23 @@ def upload():
                     'message': msg,
                     'redirect': url_for('image_detail', image_id=img.id)
                 })
+            _next = request.args.get('next', '')
+            _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
             return jsonify({
                 'status': 'ok',
                 'image_id': img.id,
                 'score': img.score,
                 'tier': img.tier,
-                'redirect': url_for('image_detail', image_id=img.id)
+                'redirect': _redir
             })
+        # If user came from challenge submit page, send them back there
+        next_page = request.args.get('next', '')
+        if next_page == 'challenge':
+            return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
         return redirect(url_for('image_detail', image_id=img.id))
 
-    return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
+    return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
+                           next_page=request.args.get('next', ''))
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
@@ -1679,14 +1373,14 @@ def retry_score(image_id):
             try: os.unlink(temp_file)
             except: pass
 
-        flash(f'Scored! LL-Score: {img.score} — {img.tier}', 'success')
+        flash(f'Scored! LL-Score: {img.score}  -  {img.tier}', 'success')
 
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[retry_score] {traceback.format_exc()}')
         err = str(e)
         if '529' in err or 'overloaded' in err.lower():
-            flash('AI engine is busy right now. Try again during off-peak hours: 6am–11am IST or 11pm–5am IST.', 'warning')
+            flash('AI engine is busy right now. Try again during off-peak hours: 6am11am IST or 11pm5am IST.', 'warning')
         else:
             flash(f'Scoring failed: {err[:120]}', 'error')
 
@@ -1732,10 +1426,10 @@ def score_image(image_id):
         img.status='scored'; img.scored_at=datetime.utcnow()
         audit = {
             'asset': img.asset_name,
-            'meta': f"{img.genre}  ·  {img.format}  ·  {img.subject}  ·  {img.location}",
+            'meta': f"{img.genre}  .  {img.format}  .  {img.subject}  .  {img.location}",
             'score': str(final_score), 'tier': tier, 'dec': archetype,
             'credit': img.photographer_name,
-            'genre_tag': f"{img.genre.upper()}  ·  {img.format}",
+            'genre_tag': f"{img.genre.upper()}  .  {img.format}",
             'soul_bonus': soul_bonus, 'iucn_tag': iucn_tag or None,
             'modules': [('DoD',dod),('Disruption',disruption),('DM',dm),('Wonder',wonder),('AQ',aq)],
             'rows': [
@@ -1743,7 +1437,7 @@ def score_image(image_id):
                 ('Geometric\nHarmony',   request.form.get('row_geometric','')),
                 ('Decisive\nMoment',     request.form.get('row_dm','')),
                 ('Wonder\nFactor',       request.form.get('row_wonder','')),
-                ('AQ — Soul',            request.form.get('row_aq','')),
+                ('AQ  -  Soul',            request.form.get('row_aq','')),
             ],
             'byline_1': byline_1, 'byline_2_body': byline_2,
             'badges_g': request.form.get('badges_g','').splitlines(),
@@ -1765,7 +1459,7 @@ def score_image(image_id):
             img.card_url = card_url
 
         db.session.commit()
-        flash(f'Scored! LL-Score: {final_score} — {tier}', 'success')
+        flash(f'Scored! LL-Score: {final_score}  -  {tier}', 'success')
     except Exception as e:
         flash(f'Scoring error: {e}', 'error')
     return redirect(url_for('image_detail', image_id=image_id))
@@ -1794,7 +1488,7 @@ def download_card(image_id):
         'score':         img.score,
         'tier':          img.tier or '',
         'asset':         img.asset_name or img.original_filename or 'Untitled',
-        'meta':          '  ·  '.join(filter(None,[img.genre,img.format,img.location])),
+        'meta':          '  .  '.join(filter(None,[img.genre,img.format,img.location])),
         'dec':           img.archetype or '',
         'credit':        img.photographer_name or '',
         'soul_bonus':    bool(img.soul_bonus),
@@ -1934,7 +1628,7 @@ def leaderboard():
                   .limit(20)
                   .all())
 
-    # Top Photographers — grouped by user_id, sorted by avg_score DESC
+    # Top Photographers  -  grouped by user_id, sorted by avg_score DESC
     pg_base = (
         db.session.query(
             Image.user_id,
@@ -1981,7 +1675,7 @@ def leaderboard():
 
     all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
 
-    # ── Camera rankings (lazy — only computed for Cameras tab) ───────────────
+    # -- Camera rankings (lazy  -  only computed for Cameras tab) ---------------
     camera_rankings = []
     if tab == 'cameras':
         from collections import defaultdict
@@ -2027,7 +1721,7 @@ def leaderboard():
         camera_rankings.sort(key=lambda x: x['avg_score'], reverse=True)
         camera_rankings = camera_rankings[:30]
 
-    # ── Lens rankings (lazy — only computed for Lenses tab) ──────────────────
+    # -- Lens rankings (lazy  -  only computed for Lenses tab) ------------------
     # Uses exif_lens where available, falls back to exif_camera for existing images
     lens_rankings = []
     if tab == 'lenses':
@@ -2146,13 +1840,13 @@ def admin_dashboard():
     drift_alerts = []
     for genre_key, s in cal_stats.items():
         if s['avg_score'] < 5.0:
-            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg score {s["avg_score"]} — possible under-scoring'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg score {s["avg_score"]}  -  possible under-scoring'})
         elif s['avg_score'] > 8.5:
-            drift_alerts.append({'genre': genre_key, 'type': 'high', 'msg': f'Avg score {s["avg_score"]} — possible over-scoring'})
+            drift_alerts.append({'genre': genre_key, 'type': 'high', 'msg': f'Avg score {s["avg_score"]}  -  possible over-scoring'})
         if s['avg_dod'] < 3.0:
-            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]} — engine may be under-valuing difficulty'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]}  -  engine may be under-valuing difficulty'})
         if s['avg_aq'] < 4.0:
-            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]} — low emotional resonance scores across genre'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]}  -  low emotional resonance scores across genre'})
 
     all_users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
 
@@ -2624,7 +2318,7 @@ def score_single_image():
                     return jsonify({
                         'status': 'saved',
                         'filename': filename,
-                        'message': 'API busy — saved for later scoring'
+                        'message': 'API busy  -  saved for later scoring'
                     })
                 raise
         else:
@@ -2765,14 +2459,14 @@ def admin_transfer_images():
     ).all()
 
     if not images:
-        flash(f'No images to transfer — all images credited to "{photographer}" already belong to their account.', 'info')
+        flash(f'No images to transfer  -  all images credited to "{photographer}" already belong to their account.', 'info')
         return redirect(url_for('admin_dashboard'))
 
     for img in images:
         img.user_id = target_user.id
     db.session.commit()
 
-    flash(f'✅ Transferred {len(images)} image{"s" if len(images)>1 else ""} to {target_user.full_name or target_user.username}.', 'success')
+    flash(f' Transferred {len(images)} image{"s" if len(images)>1 else ""} to {target_user.full_name or target_user.username}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -2780,7 +2474,7 @@ def admin_transfer_images():
 @login_required
 @admin_required
 def admin_flag_image(image_id):
-    """Flag an image as AI-generated — hides from public, keeps in DB for ML."""
+    """Flag an image as AI-generated  -  hides from public, keeps in DB for ML."""
     img    = Image.query.get_or_404(image_id)
     reason = request.form.get('reason', 'Manually flagged as AI-generated by admin').strip()
     img.is_flagged     = True
@@ -2799,7 +2493,7 @@ def admin_flag_image(image_id):
 @login_required
 @admin_required
 def admin_unflag_image(image_id):
-    """Unflag an image — returns it to normal visibility."""
+    """Unflag an image  -  returns it to normal visibility."""
     img = Image.query.get_or_404(image_id)
     img.is_flagged     = False
     img.needs_review   = False
@@ -2815,18 +2509,18 @@ def admin_unflag_image(image_id):
 @login_required
 @admin_required
 def admin_approve_review(image_id):
-    """Clear the needs_review flag — approves image for public display."""
+    """Clear the needs_review flag  -  approves image for public display."""
     img = Image.query.get_or_404(image_id)
     img.needs_review   = False
     img.is_public      = True
     img.flagged_reason = None
     db.session.commit()
-    flash(f'Image "{img.asset_name}" approved — now visible to public.', 'success')
+    flash(f'Image "{img.asset_name}" approved  -  now visible to public.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
 
-# ── Community Report Routes ───────────────────────────────────────────────────
+# -- Community Report Routes ---------------------------------------------------
 
 @app.route('/image/<int:image_id>/report', methods=['POST'])
 @login_required
@@ -2834,7 +2528,7 @@ def report_image(image_id):
     """Submit a community report on a scored image."""
     img = Image.query.get_or_404(image_id)
 
-    # Determine safe redirect — reporter may not own the image so image_detail would 403
+    # Determine safe redirect  -  reporter may not own the image so image_detail would 403
     back_url = url_for('share_image', image_id=image_id)
 
     # Anti-abuse: reporter must have at least 3 scored images
@@ -2905,7 +2599,7 @@ def admin_report_request_raw(report_id):
     img.needs_review   = True
     rpt.status         = 'actioned'
     db.session.commit()
-    flash(f'RAW requested for "{img.asset_name}" — image held for review.', 'success')
+    flash(f'RAW requested for "{img.asset_name}"  -  image held for review.', 'success')
     return redirect(url_for('admin_reports'))
 
 
@@ -3282,7 +2976,7 @@ def bow_submit():
         db.session.add(sub)
         db.session.commit()
 
-        flash(f'✅ Your Body of Work "{series_title}" has been submitted successfully — {len(selected_ids)} images. Jury evaluation will begin after Month 11 submissions close.', 'success')
+        flash(f' Your Body of Work "{series_title}" has been submitted successfully  -  {len(selected_ids)} images. Jury evaluation will begin after Month 11 submissions close.', 'success')
         return redirect(url_for('bow_submit'))
 
     return render_template('bow_submit.html',
@@ -3310,7 +3004,7 @@ def contest_enter_monthly(genre):
         return redirect(url_for('pricing'))
 
     if getattr(current_user, 'league_suspended', False):
-        flash('🚫 Your contest access is suspended due to league mismatches. Contact sreeks@gmail.com to resolve.', 'error')
+        flash(' Your contest access is suspended due to league mismatches. Contact sreeks@gmail.com to resolve.', 'error')
         return redirect(url_for('contests'))
 
     genre = normalise_genre(genre)
@@ -3363,7 +3057,7 @@ def contest_enter_monthly(genre):
             )
             db.session.add(entry)
             db.session.commit()
-            flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)} — {track.title()} Track · {now.strftime("%B %Y")}.', 'success')
+            flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)}  -  {track.title()} Track . {now.strftime("%B %Y")}.', 'success')
 
         return redirect(url_for('contests'))
 
@@ -3409,9 +3103,9 @@ def open_contest_enter():
 
     platform_year = datetime.utcnow().year
 
-    # Step 1 — GET: show genre + image selector
-    # Step 2 — POST confirm=0: show summary (genre + image + ₹50)
-    # Step 3 — POST confirm=1: write to DB (dummy payment gate)
+    # Step 1  -  GET: show genre + image selector
+    # Step 2  -  POST confirm=0: show summary (genre + image + 50)
+    # Step 3  -  POST confirm=1: write to DB (dummy payment gate)
 
     # Fetch user's scored images for the selector
     user_images = (Image.query
@@ -3465,7 +3159,7 @@ def open_contest_enter():
                 step=1, platform_year=platform_year)
 
         if confirm == '1':
-            # Step 3 — write to DB (dummy payment confirmed)
+            # Step 3  -  write to DB (dummy payment confirmed)
             try:
                 entry = OpenContestEntry(
                     user_id=current_user.id,
@@ -3478,21 +3172,21 @@ def open_contest_enter():
                 )
                 db.session.add(entry)
                 db.session.commit()
-                flash(f'🎯 Entry confirmed! "{img.asset_name}" is entered in {GENRE_LABELS.get(genre, genre)} — Open Competition {platform_year}.', 'success')
+                flash(f' Entry confirmed! "{img.asset_name}" is entered in {GENRE_LABELS.get(genre, genre)}  -  Open Competition {platform_year}.', 'success')
                 return redirect(url_for('contests'))
             except Exception:
                 db.session.rollback()
                 flash('Entry already exists for this genre, or a database error occurred.', 'error')
                 return redirect(url_for('contests'))
         else:
-            # Step 2 — show summary for confirmation
+            # Step 2  -  show summary for confirmation
             return render_template('open_contest_enter.html',
                 user_images=user_images, genres=GENRE_IDS,
                 genre_labels=GENRE_LABELS, entered_genres=entered_genres,
                 step=2, selected_genre=genre, selected_image=img,
                 platform_year=platform_year)
 
-    # GET — Step 1
+    # GET  -  Step 1
     return render_template('open_contest_enter.html',
         user_images=user_images, genres=GENRE_IDS,
         genre_labels=GENRE_LABELS, entered_genres=entered_genres,
@@ -3526,14 +3220,15 @@ def _get_active_challenge():
 
 @app.route('/challenge')
 def weekly_challenge():
-    """Public challenge page — visible to all, submit requires login."""
+    """Public challenge page  -  visible to all, submit requires login."""
     challenge = _get_active_challenge()
     if not challenge:
         return render_template('challenge.html', challenge=None,
                                submissions=[], user_subs=[], slots_used=0,
                                slot_limit=0, can_submit=False)
 
-    # Top submissions — all users, ranked by DDI score
+    # Top submissions for display  -  all submissions ranked by score
+    # is_subscriber flag controls whether they compete for prizes, not visibility
     top_subs = (WeeklySubmission.query
                 .filter_by(challenge_id=challenge.id)
                 .join(Image, WeeklySubmission.image_id == Image.id)
@@ -3547,9 +3242,10 @@ def weekly_challenge():
     can_submit = False
 
     if current_user.is_authenticated:
-        user_subs = WeeklySubmission.query.filter_by(
+        user_subs  = WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, user_id=current_user.id).all()
         slots_used = len(user_subs)
+        # Admin treated as subscribed for challenge slot purposes
         is_sub_or_admin = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
         slot_limit = 3 if is_sub_or_admin else 1
         can_submit = challenge.is_open and slots_used < slot_limit
@@ -3604,7 +3300,7 @@ def challenge_submit():
             challenge_id=challenge.id,
             user_id=current_user.id,
             image_id=image_id,
-            is_subscriber=is_sub,
+            is_subscriber=getattr(current_user, 'is_subscribed', False),
         )
         db.session.add(sub)
         db.session.commit()
@@ -3612,7 +3308,7 @@ def challenge_submit():
         flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
         return redirect(url_for('weekly_challenge'))
 
-    # GET — show image picker
+    # GET  -  show image picker
     # Only scored images, owned by user, not already submitted this week
     already_submitted_ids = [
         s.image_id for s in WeeklySubmission.query.filter_by(
@@ -3637,10 +3333,10 @@ def challenge_submit():
 @app.route('/challenge/withdraw/<int:sub_id>', methods=['POST'])
 @login_required
 def challenge_withdraw(sub_id):
-    """Withdraw a submission — only allowed while challenge is still open."""
+    """Withdraw a submission  -  only allowed while challenge is still open."""
     sub = WeeklySubmission.query.filter_by(id=sub_id, user_id=current_user.id).first_or_404()
     if sub.challenge.is_closed:
-        flash('Challenge is closed — submissions cannot be withdrawn.', 'error')
+        flash('Challenge is closed  -  submissions cannot be withdrawn.', 'error')
         return redirect(url_for('weekly_challenge'))
     db.session.delete(sub)
     db.session.commit()
@@ -3674,7 +3370,7 @@ def challenge_results(week_ref):
 
 
 # ---------------------------------------------------------------------------
-# Admin — Weekly Challenge management
+# Admin  -  Weekly Challenge management
 # ---------------------------------------------------------------------------
 
 @app.route('/admin/weekly-challenge', methods=['GET', 'POST'])
@@ -3683,8 +3379,8 @@ def challenge_results(week_ref):
 def admin_weekly_challenge():
     """
     Admin page to create and manage weekly challenges.
-    GET  — list all challenges + form to create new one.
-    POST — create a new challenge week.
+    GET   -  list all challenges + form to create new one.
+    POST  -  create a new challenge week.
     """
     if request.method == 'POST':
         action = request.form.get('action', 'create')
@@ -3735,7 +3431,7 @@ def admin_weekly_challenge():
                 flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
 
             if notify:
-                # Fire email in background thread — pass ID only, re-query inside thread
+                # Fire email in background thread  -  pass ID only, re-query inside thread
                 import threading
                 def _notify(challenge_id):
                     with app.app_context():
@@ -3754,7 +3450,7 @@ def admin_weekly_challenge():
         elif action == 'publish_results':
             challenge_id = request.form.get('challenge_id', type=int)
             ch = WeeklyChallenge.query.get_or_404(challenge_id)
-            # Read winner rankings from form — rank_<sub_id> = 1|2|3
+            # Read winner rankings from form  -  rank_<sub_id> = 1|2|3
             for key, value in request.form.items():
                 if key.startswith('rank_'):
                     sub_id = int(key.split('_')[1])
@@ -3791,7 +3487,7 @@ def admin_weekly_challenge():
                         ch_fresh = WeeklyChallenge.query.get(challenge_id)
                         if ch_fresh:
                             sent = send_challenge_notification(ch_fresh)
-                            app.logger.info(f'[challenge] Resend complete — {sent} users notified')
+                            app.logger.info(f'[challenge] Resend complete  -  {sent} users notified')
                     except Exception as _e:
                         app.logger.error(f'[challenge] Resend failed: {_e}')
             t = threading.Thread(target=_resend, args=(ch.id,), daemon=True)
@@ -3825,7 +3521,7 @@ def admin_weekly_challenge():
             challenge_id = request.form.get('challenge_id', type=int)
             ch = WeeklyChallenge.query.get_or_404(challenge_id)
             if ch.submission_count > 0:
-                flash(f'Cannot delete {ch.week_ref} — it has {ch.submission_count} submission(s). Deactivate it instead.', 'error')
+                flash(f'Cannot delete {ch.week_ref}  -  it has {ch.submission_count} submission(s). Deactivate it instead.', 'error')
                 return redirect(url_for('admin_weekly_challenge'))
             db.session.delete(ch)
             db.session.commit()
@@ -3850,38 +3546,6 @@ def admin_weekly_challenge():
         default_open=default_open.strftime('%Y-%m-%dT%H:%M'),
         default_close=default_close.strftime('%Y-%m-%dT%H:%M'),
     )
-
-
-# ---------------------------------------------------------------------------
-# Admin — manual email job triggers (for testing)
-# ---------------------------------------------------------------------------
-
-@app.route('/admin/send-reminder', methods=['POST'])
-@login_required
-@admin_required
-def admin_send_reminder():
-    """Manually trigger the challenge closing reminder email."""
-    import threading
-    def _run():
-        with app.app_context():
-            _job_challenge_reminder()
-    threading.Thread(target=_run, daemon=True).start()
-    flash('Challenge reminder email sending in background. Check Railway logs.', 'success')
-    return redirect(url_for('admin_weekly_challenge'))
-
-
-@app.route('/admin/send-winners', methods=['POST'])
-@login_required
-@admin_required
-def admin_send_winners():
-    """Manually trigger the winners announcement email."""
-    import threading
-    def _run():
-        with app.app_context():
-            _job_winners_announcement()
-    threading.Thread(target=_run, daemon=True).start()
-    flash('Winners announcement sending in background. Check Railway logs.', 'success')
-    return redirect(url_for('admin_weekly_challenge'))
 
 
 # ---------------------------------------------------------------------------
@@ -3946,14 +3610,14 @@ def subscribe(track):
             current_user.razorpay_sub_id     = subscription_id
             db.session.commit()
 
-            flash(f'🎉 Welcome to the {track.title()} Track! Your subscription is active.', 'success')
+            flash(f' Welcome to the {track.title()} Track! Your subscription is active.', 'success')
             return redirect(url_for('dashboard'))
         except Exception as e:
             app.logger.error(f'[subscribe] verification failed: {e}')
             flash('Payment verification failed. Please contact support if you were charged.', 'error')
             return redirect(url_for('subscribe', track=track, plan=plan))
 
-    # GET — create Razorpay subscription
+    # GET  -  create Razorpay subscription
     subscription = None
     if razorpay_key and plan_id:
         try:
@@ -4022,14 +3686,14 @@ def razorpay_webhook():
 @login_required
 def cancel_subscription():
     """
-    GET  — confirmation page (user must confirm before cancelling)
-    POST — actually cancel: call Razorpay API, clear DB fields, redirect to dashboard
+    GET   -  confirmation page (user must confirm before cancelling)
+    POST  -  actually cancel: call Razorpay API, clear DB fields, redirect to dashboard
     RBI / Razorpay compliance: user must be able to self-cancel without contacting support.
     """
     if request.method == 'GET':
         return render_template('cancel_subscription.html')
 
-    # POST — confirmed cancellation
+    # POST  -  confirmed cancellation
     razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
     sub_id          = current_user.razorpay_sub_id
@@ -4044,7 +3708,7 @@ def cancel_subscription():
             app.logger.info(f'[cancel] Razorpay subscription {sub_id} cancelled for user {current_user.id}')
         except Exception as e:
             app.logger.error(f'[cancel] Razorpay cancel failed for {sub_id}: {e}')
-            # Still cancel locally — don't leave user stuck
+            # Still cancel locally  -  don't leave user stuck
             flash('Your subscription has been cancelled. If you continue to be charged, contact sreeks@gmail.com.', 'warning')
 
     # Clear subscription fields in DB
@@ -4298,7 +3962,7 @@ def submit_rating():
 
     current_user.reset_credits_if_needed()
 
-    # Server-side time check — must be ≥13s (2s tolerance for network)
+    # Server-side time check  -  must be 13s (2s tolerance for network)
     client_start = request.form.get('client_start_ts', type=int)
     time_spent   = request.form.get('time_spent', type=int) or 0
     if client_start:
@@ -4335,9 +3999,9 @@ def submit_rating():
             aq         = aq,
             time_spent = time_spent,
         )
-        flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} · +1 credit earned.', 'success')
+        flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} . +1 credit earned.', 'success')
         if (current_user.lifetime_ratings_given or 0) % 5 == 0:
-            flash('🎉 You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
+            flash(' You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[submit_rating] {e}')
@@ -4349,7 +4013,7 @@ def submit_rating():
 @app.route('/rate/skip', methods=['POST'])
 @login_required
 def skip_rating():
-    """Skip a rating assignment — expires it, no credit cost."""
+    """Skip a rating assignment  -  expires it, no credit cost."""
     assignment_id = request.form.get('assignment_id', type=int)
     if assignment_id:
         a = RatingAssignment.query.get(assignment_id)
@@ -4466,7 +4130,7 @@ def admin_export_ratings_csv():
 
 
 # ---------------------------------------------------------------------------
-# Admin — Subscription view
+# Admin  -  Subscription view
 # ---------------------------------------------------------------------------
 
 @app.route('/admin/subscriptions')
@@ -4676,7 +4340,7 @@ def admin_export_lens_rankings():
     from flask import Response
     from collections import defaultdict
 
-    # Extract lens from exif_settings — format: focal · aperture · iso · shutter
+    # Extract lens from exif_settings  -  format: focal . aperture . iso . shutter
     # Lens model lives in exif_camera field for many cameras; use exif_settings for focal context
     images = Image.query.filter(
         Image.status == 'scored',
@@ -4772,7 +4436,7 @@ def admin_clear_bias_flag(user_id):
 
 
 # ---------------------------------------------------------------------------
-# Peer Pool Entry — user chooses which image to submit for peer rating
+# Peer Pool Entry  -  user chooses which image to submit for peer rating
 # ---------------------------------------------------------------------------
 
 @app.route('/rate/enter-pool', methods=['POST'])
@@ -4816,7 +4480,7 @@ def enter_peer_pool():
     current_user.peer_pool_unlocks = unlocks_used + 1
     db.session.commit()
 
-    flash(f'✅ "{img.asset_name}" is now in the peer rating pool. Other photographers will start rating it soon.', 'success')
+    flash(f' "{img.asset_name}" is now in the peer rating pool. Other photographers will start rating it soon.', 'success')
     return redirect(url_for('dashboard'))
 
 
@@ -4869,9 +4533,9 @@ def not_found(e):
 @app.errorhandler(413)
 def file_too_large(e):
     msg = (
-        '⚠️ File too large. Maximum file size is 20 MB. '
+        ' File too large. Maximum file size is 20 MB. '
         'On iPhone: share your photo and choose "Medium" size. '
-        'On Samsung/Android: use Gallery → resize before sharing.'
+        'On Samsung/Android: use Gallery -> resize before sharing.'
     )
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'error': True, 'message': msg}), 413
@@ -4890,7 +4554,7 @@ def health():
 @app.route('/upload-debug', methods=['POST'])
 @login_required
 def upload_debug():
-    """Temporary debug route — remove after mobile upload is confirmed working."""
+    """Temporary debug route  -  remove after mobile upload is confirmed working."""
     files_info = {}
     for key, f in request.files.items():
         data = f.read()
