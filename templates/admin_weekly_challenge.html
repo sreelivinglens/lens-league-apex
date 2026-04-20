@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Admin — Weekly Challenge — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-wrap    { max-width: 1000px; margin: 0 auto; }
+  .form-card     { background: var(--surface-2); border: 1px solid var(--border);
+                   border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 32px; }
+  .form-grid     { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .form-group    { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label          { font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+                   letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+  input[type=text], input[type=datetime-local], textarea, input[type=week] {
+    padding: 10px 14px; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-size: 16px; font-family: inherit; width: 100%;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--gold); }
+  textarea       { min-height: 80px; resize: vertical; }
+  .hint          { font-size: 13px; color: var(--text-muted); }
+
+  .ch-table      { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .ch-table th   { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px;
+                   color: var(--text-muted); text-transform: uppercase; padding: 10px 14px;
+                   text-align: left; border-bottom: 1px solid var(--border); }
+  .ch-table td   { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle);
+                   vertical-align: middle; }
+  .ch-table tr:hover td { background: var(--surface-3); }
+  .status-open   { color: var(--green); font-weight: 600; font-family: var(--font-mono); font-size: 13px; }
+  .status-closed { color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; }
+  .status-future { color: var(--amber); font-family: var(--font-mono); font-size: 13px; }
+
+  .results-form  { background: var(--surface-3); border: 1px solid var(--border);
+                   border-radius: var(--radius-md); padding: 20px 24px; margin-top: 16px; }
+  .result-row    { display: flex; align-items: center; gap: 12px; padding: 8px 0;
+                   border-bottom: 1px solid var(--border-subtle); }
+  .result-row:last-child { border-bottom: none; }
+  .result-thumb  { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+  .result-name   { flex: 1; font-size: 14px; }
+  .result-score  { font-family: var(--font-mono); font-size: 14px; color: var(--gold); min-width: 40px; }
+  .result-rank-input { width: 60px; padding: 6px 8px; border: 1px solid var(--border);
+                       border-radius: var(--radius-sm); font-size: 14px; text-align: center;
+                       background: var(--surface-1); color: var(--text-primary); }
+  .result-note-input { flex: 1; padding: 6px 10px; border: 1px solid var(--border);
+                       border-radius: var(--radius-sm); font-size: 14px;
+                       background: var(--surface-1); color: var(--text-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+
+  <div class="page-header">
+    <h1>Weekly Challenge — Admin</h1>
+    <p>Create challenge prompts · Set open/close dates · Publish results</p>
+  </div>
+
+  {# ── Create new challenge ── #}
+  <div class="form-card">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600;
+                letter-spacing:2px; color:var(--gold); text-transform:uppercase;
+                margin-bottom:20px;">Create new challenge</div>
+
+    <form method="POST" action="{{ url_for('admin_weekly_challenge') }}">
+      <input type="hidden" name="action" value="create">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Week ref <span style="color:var(--text-muted);">(e.g. 2026-W18)</span></label>
+          <input type="text" name="week_ref" value="{{ default_week }}" required
+                 placeholder="2026-W18" pattern="\d{4}-W\d{2}">
+          <span class="hint">ISO year-week format</span>
+        </div>
+
+        <div class="form-group">
+          <label>Prompt title <span style="color:var(--text-muted);">(shown big on page)</span></label>
+          <input type="text" name="prompt_title" required placeholder="Portrait" maxlength="120">
+        </div>
+
+        <div class="form-group">
+          <label>Opens at (UTC)</label>
+          <input type="datetime-local" name="opens_at" value="{{ default_open }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Closes at (UTC)</label>
+          <input type="datetime-local" name="closes_at" value="{{ default_close }}" required>
+        </div>
+
+        <div class="form-group full">
+          <label>Prompt brief <span style="color:var(--text-muted);">(optional expanded description)</span></label>
+          <textarea name="prompt_body" placeholder="No flash. No fill. Just you, the light, and what it does to your subject."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Sponsor name <span style="color:var(--text-muted);">(optional)</span></label>
+          <input type="text" name="sponsor_name" placeholder="Sigma India" maxlength="120">
+        </div>
+
+        <div class="form-group">
+          <label>Prize description <span style="color:var(--text-muted);">(optional)</span></label>
+          <input type="text" name="sponsor_prize" placeholder="Sigma 56mm f/1.4 lens" maxlength="200">
+        </div>
+
+      </div>
+
+      <div style="margin-top:20px;">
+        <button type="submit" class="btn btn-solid">Create challenge →</button>
+      </div>
+    </form>
+  </div>
+
+  {# ── Existing challenges ── #}
+  {% if challenges %}
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600;
+              letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;
+              margin-bottom:16px;">All challenges ({{ challenges|length }})</div>
+
+  <table class="ch-table">
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Prompt</th>
+        <th>Status</th>
+        <th>Opens</th>
+        <th>Closes</th>
+        <th>Submissions</th>
+        <th>Sponsor</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ch in challenges %}
+      <tr>
+        <td><strong style="font-family:var(--font-mono); color:var(--gold);">{{ ch.week_ref }}</strong></td>
+        <td>{{ ch.prompt_title }}</td>
+        <td>
+          {% if not ch.is_active %}
+            <span style="color:var(--text-disabled); font-size:13px;">Inactive</span>
+          {% elif ch.is_open %}
+            <span class="status-open">● Open</span>
+          {% elif ch.is_closed %}
+            <span class="status-closed">Closed</span>
+          {% else %}
+            <span class="status-future">Upcoming</span>
+          {% endif %}
+        </td>
+        <td style="font-size:14px;">{{ ch.opens_at.strftime('%d %b %H:%M') }}</td>
+        <td style="font-size:14px;">{{ ch.closes_at.strftime('%d %b %H:%M') }}</td>
+        <td style="font-family:var(--font-mono); font-size:14px; text-align:center;">
+          {{ ch.submission_count }}
+        </td>
+        <td style="font-size:14px;">{{ ch.sponsor_name or '—' }}</td>
+        <td>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <a href="{{ url_for('weekly_challenge') }}" class="btn" style="padding:5px 10px; font-size:12px;">View</a>
+            {% if ch.is_closed %}
+            <a href="{{ url_for('challenge_results', week_ref=ch.week_ref) }}"
+               class="btn" style="padding:5px 10px; font-size:12px;">Results</a>
+            {% endif %}
+            {% if ch.is_active %}
+            <form method="POST" style="display:inline;">
+              <input type="hidden" name="action" value="deactivate">
+              <input type="hidden" name="challenge_id" value="{{ ch.id }}">
+              <button type="submit" class="btn btn-danger"
+                      style="padding:5px 10px; font-size:12px;"
+                      onclick="return confirm('Deactivate this challenge?')">Deactivate</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+
+      {# ── Results publisher — closed challenges only ── #}
+      {% if ch.is_closed %}
+      {% set subs = ch.submissions.join('image').order_by('image.score desc').limit(10).all() if false else
+                   ch.submissions.all()|sort(attribute='image.score', reverse=True) %}
+      {% if subs %}
+      <tr>
+        <td colspan="8" style="padding:0;">
+          <div class="results-form">
+            <div style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+                        letter-spacing:1.5px; color:var(--gold); text-transform:uppercase;
+                        margin-bottom:14px;">
+              Publish results for {{ ch.week_ref }}
+              — assign ranks 1/2/3 and optional notes
+            </div>
+            <form method="POST">
+              <input type="hidden" name="action" value="publish_results">
+              <input type="hidden" name="challenge_id" value="{{ ch.id }}">
+              {% for sub in subs %}
+              <div class="result-row">
+                {% if sub.image.thumb_url %}
+                  <img src="{{ sub.image.thumb_url }}" alt="" class="result-thumb">
+                {% else %}
+                  <div class="result-thumb" style="background:var(--surface-4);"></div>
+                {% endif %}
+                <div class="result-name">
+                  <strong>{{ sub.user.username }}</strong>
+                  <span style="color:var(--text-muted); font-size:13px;"> · {{ sub.image.asset_name or 'Untitled' }}</span>
+                </div>
+                <div class="result-score">
+                  {% if sub.image.score %}{{ "%.1f"|format(sub.image.score) }}{% endif %}
+                </div>
+                <input type="number" name="rank_{{ sub.id }}" class="result-rank-input"
+                       placeholder="Rank" min="1" max="3"
+                       value="{{ sub.result_rank or '' }}"
+                       title="Enter 1, 2, or 3 for podium position">
+                <input type="text" name="note_{{ sub.id }}" class="result-note-input"
+                       placeholder="Optional judge note..."
+                       value="{{ sub.result_note or '' }}">
+              </div>
+              {% endfor %}
+              <div style="margin-top:14px;">
+                <button type="submit" class="btn btn-solid"
+                        style="font-size:13px; padding:8px 18px;">
+                  Save results →
+                </button>
+              </div>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endif %}
+      {% endif %}
+
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <div style="padding:32px; text-align:center; background:var(--surface-2);
+              border:1px solid var(--border); border-radius:var(--radius-md);
+              color:var(--text-muted);">
+    No challenges yet. Create the first one above.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

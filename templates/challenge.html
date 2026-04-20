@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Weekly Challenge{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .challenge-wrap   { max-width: 960px; margin: 0 auto; }
+  .ch-hero          { background: var(--surface-2); border: 1px solid var(--border);
+                      border-left: 3px solid var(--gold); border-radius: var(--radius-md);
+                      padding: 32px 36px; margin-bottom: 28px; }
+  .ch-week-label    { font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+                      letter-spacing: 2px; color: var(--gold); text-transform: uppercase;
+                      margin-bottom: 10px; }
+  .ch-title         { font-size: 36px; font-weight: 700; color: var(--text-primary);
+                      font-family: Georgia, serif; font-style: italic; margin-bottom: 12px; }
+  .ch-body          { font-size: 17px; color: var(--text-secondary); line-height: 1.7;
+                      margin-bottom: 20px; max-width: 640px; }
+  .ch-meta          { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+  .ch-meta-item     { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .ch-meta-item strong { color: var(--text-primary); }
+  .sponsor-badge    { display: inline-flex; align-items: center; gap: 8px;
+                      background: var(--gold-subtle); border: 1px solid var(--gold-dark);
+                      border-radius: var(--radius-sm); padding: 8px 14px;
+                      font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+  .sponsor-badge strong { color: var(--gold); }
+
+  .slot-bar         { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+  .slot             { width: 32px; height: 10px; border-radius: 3px;
+                      background: var(--surface-4); border: 1px solid var(--border); }
+  .slot.used        { background: var(--gold); border-color: var(--gold-dark); }
+  .slot-label       { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
+
+  .ch-ctas          { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .leaderboard-wrap { margin-bottom: 32px; }
+  .lb-header        { display: flex; justify-content: space-between; align-items: center;
+                      margin-bottom: 16px; }
+  .lb-title         { font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+                      letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+  .lb-note          { font-size: 14px; color: var(--text-muted); }
+
+  .sub-grid         { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                      gap: 16px; }
+  .sub-card         { background: var(--surface-2); border: 1px solid var(--border);
+                      border-radius: var(--radius-md); overflow: hidden; }
+  .sub-card:hover   { border-color: var(--gold-dark); }
+  .sub-img          { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .sub-img-placeholder { width: 100%; aspect-ratio: 4/3; background: var(--surface-4);
+                          display: flex; align-items: center; justify-content: center;
+                          color: var(--text-disabled); font-size: 14px; }
+  .sub-info         { padding: 10px 12px; }
+  .sub-rank         { font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+                      color: var(--gold); letter-spacing: 1px; margin-bottom: 3px; }
+  .sub-name         { font-size: 14px; font-weight: 600; color: var(--text-primary);
+                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub-score        { font-family: var(--font-mono); font-size: 13px; color: var(--gold);
+                      margin-top: 2px; }
+  .sub-tier         { font-size: 12px; color: var(--text-muted); }
+
+  .user-subs-wrap   { margin-top: 28px; }
+  .user-sub-row     { display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+                      background: var(--surface-2); border: 1px solid var(--border);
+                      border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .user-sub-img     { width: 52px; height: 52px; object-fit: cover; border-radius: 4px;
+                      flex-shrink: 0; }
+  .user-sub-name    { flex: 1; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .user-sub-score   { font-family: var(--font-mono); font-size: 15px; color: var(--gold); }
+  .user-sub-withdraw{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+                      text-decoration: none; padding: 4px 10px; border: 1px solid var(--border);
+                      border-radius: var(--radius-sm); white-space: nowrap; }
+  .user-sub-withdraw:hover { color: var(--red); border-color: var(--red); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="challenge-wrap">
+
+{% if not challenge %}
+  <div class="page-header">
+    <h1>Weekly Challenge</h1>
+    <p>No active challenge right now. A new prompt goes up every Monday.</p>
+  </div>
+  {% if current_user.is_authenticated %}
+  <div style="margin-top:24px;">
+    <a href="{{ url_for('dashboard') }}" class="btn">← Back to Dashboard</a>
+  </div>
+  {% endif %}
+
+{% else %}
+
+  {# ── Challenge hero ── #}
+  <div class="ch-hero">
+    <div class="ch-week-label">Weekly Challenge · {{ challenge.week_ref }}</div>
+    <div class="ch-title">{{ challenge.prompt_title }}</div>
+
+    {% if challenge.prompt_body %}
+    <div class="ch-body">{{ challenge.prompt_body }}</div>
+    {% endif %}
+
+    <div class="ch-meta">
+      <div class="ch-meta-item">
+        Opens &nbsp;<strong>{{ challenge.opens_at.strftime('%a %d %b, %H:%M') }} UTC</strong>
+      </div>
+      <div class="ch-meta-item">
+        Closes &nbsp;<strong>{{ challenge.closes_at.strftime('%a %d %b, %H:%M') }} UTC</strong>
+      </div>
+      <div class="ch-meta-item">
+        Submissions &nbsp;<strong>{{ challenge.submission_count }}</strong>
+      </div>
+      {% if challenge.is_open %}
+      <div class="ch-meta-item" style="color:var(--green); font-weight:600;">● Open now</div>
+      {% elif challenge.is_closed %}
+      <div class="ch-meta-item" style="color:var(--text-muted);">● Closed</div>
+      {% else %}
+      <div class="ch-meta-item" style="color:var(--amber);">● Opens soon</div>
+      {% endif %}
+    </div>
+
+    {% if challenge.sponsor_name %}
+    <div class="sponsor-badge">
+      <strong>Sponsored by {{ challenge.sponsor_name }}</strong>
+      {% if challenge.sponsor_prize %}
+        &nbsp;·&nbsp; Prize: {{ challenge.sponsor_prize }}
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Slot indicator + CTAs ── #}
+    {% if current_user.is_authenticated %}
+      <div class="slot-bar">
+        {% for i in range(slot_limit) %}
+          <div class="slot {% if i < slots_used %}used{% endif %}"></div>
+        {% endfor %}
+        <span class="slot-label">
+          {{ slots_used }}/{{ slot_limit }} slot{{ 's' if slot_limit > 1 else '' }} used this week
+          {% if not current_user.is_subscribed %}
+            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 slots →</a>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="ch-ctas">
+        {% if can_submit %}
+          <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit an image →</a>
+        {% elif slots_used >= slot_limit and challenge.is_open %}
+          <span class="btn" style="opacity:0.4; cursor:not-allowed;">All slots used this week</span>
+          {% if not current_user.is_subscribed %}
+            <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe for more slots →</a>
+          {% endif %}
+        {% endif %}
+        {% if not challenge.is_open and not challenge.is_closed %}
+          <span class="btn" style="opacity:0.5; cursor:not-allowed;">Opens Monday</span>
+        {% endif %}
+      </div>
+
+    {% else %}
+      <div class="ch-ctas">
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Join free to enter →</a>
+        <a href="{{ url_for('login') }}" class="btn">Sign in</a>
+      </div>
+      <div style="font-size:14px; color:var(--text-muted); margin-top:10px;">
+        Free members: 1 image/week &nbsp;·&nbsp; Subscribers: 3 images/week + leaderboard ranking
+      </div>
+    {% endif %}
+  </div>
+
+  {# ── User's own submissions ── #}
+  {% if current_user.is_authenticated and user_subs %}
+  <div class="user-subs-wrap">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px;
+                color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
+      Your submissions this week
+    </div>
+    {% for sub in user_subs %}
+    <div class="user-sub-row">
+      {% if sub.image.thumb_url %}
+        <img src="{{ sub.image.thumb_url }}" alt="" class="user-sub-img">
+      {% else %}
+        <div class="user-sub-img" style="background:var(--surface-4);"></div>
+      {% endif %}
+      <div class="user-sub-name">{{ sub.image.asset_name or sub.image.original_filename or 'Untitled' }}</div>
+      {% if sub.image.score %}
+        <div class="user-sub-score">{{ "%.1f"|format(sub.image.score) }}</div>
+      {% endif %}
+      {% if challenge.is_open %}
+      <form action="{{ url_for('challenge_withdraw', sub_id=sub.id) }}" method="POST" style="display:inline;">
+        <button type="submit" class="user-sub-withdraw"
+                onclick="return confirm('Withdraw this submission?')">Withdraw</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ── Leaderboard — subscribers only ── #}
+  <div class="leaderboard-wrap">
+    <div class="lb-header">
+      <div class="lb-title">This week's leaderboard</div>
+      <div class="lb-note">Ranked by DDI score · Subscribers only</div>
+    </div>
+
+    {% if top_subs %}
+    <div class="sub-grid">
+      {% for sub in top_subs %}
+      <div class="sub-card">
+        {% if sub.image.thumb_url %}
+          <img src="{{ sub.image.thumb_url }}" alt="" class="sub-img">
+        {% else %}
+          <div class="sub-img-placeholder">No preview</div>
+        {% endif %}
+        <div class="sub-info">
+          <div class="sub-rank">#{{ loop.index }}</div>
+          <div class="sub-name">{{ sub.user.username }}</div>
+          {% if sub.image.score %}
+          <div class="sub-score">{{ "%.1f"|format(sub.image.score) }}</div>
+          {% endif %}
+          <div class="sub-tier">{{ sub.image.tier or '' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding:32px; text-align:center; background:var(--surface-2);
+                border:1px solid var(--border); border-radius:var(--radius-md);
+                color:var(--text-muted); font-size:16px;">
+      No submissions yet. Be the first.
+    </div>
+    {% endif %}
+  </div>
+
+{% endif %}
+</div>
+{% endblock %}

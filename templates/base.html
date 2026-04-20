@@ -562,6 +562,7 @@ img {
       <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
       <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
       <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}" style="color:var(--gold-light);">Challenge</a>
       <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
       <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
@@ -571,6 +572,7 @@ img {
       {% endif %}
       {% if current_user.role == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="nav-admin">Admin</a>
+        <a href="{{ url_for('admin_weekly_challenge') }}" class="nav-admin" style="font-size:13px;">⚡ Challenge</a>
       {% endif %}
       <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
     {% else %}
@@ -594,6 +596,7 @@ img {
     <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
     <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
     <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
+    <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()" style="color:var(--gold-light);">Challenge</a>
     <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>

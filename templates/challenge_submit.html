@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Submit to Challenge — {{ challenge.prompt_title }} — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .submit-wrap   { max-width: 840px; margin: 0 auto; }
+  .ch-banner     { background: var(--surface-2); border: 1px solid var(--border);
+                   border-left: 3px solid var(--gold); border-radius: var(--radius-md);
+                   padding: 20px 24px; margin-bottom: 28px;
+                   display: flex; justify-content: space-between; align-items: center;
+                   flex-wrap: wrap; gap: 12px; }
+  .ch-banner-title { font-size: 20px; font-weight: 700; color: var(--text-primary);
+                     font-family: Georgia, serif; font-style: italic; }
+  .ch-banner-week  { font-family: var(--font-mono); font-size: 12px; color: var(--gold);
+                     letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .slots-info    { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .slots-info strong { color: var(--gold); }
+
+  .image-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                   gap: 14px; margin-bottom: 28px; }
+  .image-option  { position: relative; cursor: pointer; }
+  .image-option input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .image-option label { display: block; cursor: pointer; }
+  .img-card      { background: var(--surface-2); border: 2px solid var(--border);
+                   border-radius: var(--radius-md); overflow: hidden;
+                   transition: border-color 0.2s, box-shadow 0.2s; }
+  .image-option input[type=radio]:checked + label .img-card {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+  }
+  .img-card:hover { border-color: var(--gold-dark); }
+  .img-thumb     { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .img-placeholder { width: 100%; aspect-ratio: 4/3; background: var(--surface-4);
+                     display: flex; align-items: center; justify-content: center;
+                     color: var(--text-disabled); font-size: 14px; }
+  .img-meta      { padding: 8px 10px; }
+  .img-name      { font-size: 13px; font-weight: 600; color: var(--text-primary);
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .img-score     { font-family: var(--font-mono); font-size: 12px; color: var(--gold);
+                   margin-top: 2px; }
+  .img-tier      { font-size: 11px; color: var(--text-muted); }
+  .selected-check{ position: absolute; top: 8px; right: 8px; width: 22px; height: 22px;
+                   background: var(--gold); border-radius: 50%;
+                   display: none; align-items: center; justify-content: center;
+                   font-size: 12px; color: #0D0D0B; font-weight: 700; }
+  .image-option input[type=radio]:checked ~ .selected-check { display: flex; }
+
+  .submit-actions { display: flex; gap: 12px; align-items: center; }
+  .no-images      { padding: 40px; text-align: center; background: var(--surface-2);
+                    border: 1px solid var(--border); border-radius: var(--radius-md);
+                    color: var(--text-muted); font-size: 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="submit-wrap">
+
+  <div class="page-header">
+    <h1>Submit to this week's challenge</h1>
+    <p>Select a scored image from your portfolio.</p>
+  </div>
+
+  <div class="ch-banner">
+    <div>
+      <div class="ch-banner-week">{{ challenge.week_ref }}</div>
+      <div class="ch-banner-title">{{ challenge.prompt_title }}</div>
+    </div>
+    <div class="slots-info">
+      <strong>{{ slots_remaining }}</strong> slot{{ 's' if slots_remaining != 1 else '' }} remaining
+      &nbsp;·&nbsp; {{ slots_used }}/{{ slot_limit }} used
+    </div>
+  </div>
+
+  {% if eligible_images %}
+  <form method="POST" action="{{ url_for('challenge_submit') }}" id="submitForm">
+    <div class="image-grid">
+      {% for img in eligible_images %}
+      <div class="image-option">
+        <input type="radio" name="image_id" id="img_{{ img.id }}" value="{{ img.id }}"
+               onchange="updateSubmitBtn()">
+        <label for="img_{{ img.id }}">
+          <div class="img-card">
+            {% if img.thumb_url %}
+              <img src="{{ img.thumb_url }}" alt="" class="img-thumb">
+            {% else %}
+              <div class="img-placeholder">No preview</div>
+            {% endif %}
+            <div class="img-meta">
+              <div class="img-name">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
+              {% if img.score %}
+              <div class="img-score">{{ "%.1f"|format(img.score) }}</div>
+              <div class="img-tier">{{ img.tier or '' }} · {{ img.genre or '' }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </label>
+        <div class="selected-check">✓</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="submit-actions">
+      <button type="submit" class="btn btn-solid" id="submitBtn" disabled>
+        Submit selected image →
+      </button>
+      <a href="{{ url_for('weekly_challenge') }}" class="btn">Cancel</a>
+      <span style="font-size:14px; color:var(--text-muted);">
+        Select an image above to continue.
+      </span>
+    </div>
+  </form>
+
+  {% else %}
+  <div class="no-images">
+    <div style="font-size:18px; margin-bottom:12px;">No eligible images found.</div>
+    <div style="margin-bottom:20px;">
+      You need at least one scored image to enter the challenge.<br>
+      Upload and score an image first, then come back.
+    </div>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an image →</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="btn">Back to challenge</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateSubmitBtn() {
+  const selected = document.querySelector('input[name="image_id"]:checked');
+  document.getElementById('submitBtn').disabled = !selected;
+  if (selected) {
+    document.getElementById('submitBtn').textContent = 'Submit selected image →';
+  }
+}
+</script>
+{% endblock %}
