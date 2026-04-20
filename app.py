@@ -67,9 +67,19 @@ def send_email(to_addresses, subject, html_body, text_body=None):
     msg.attach(MIMEText(html_body, 'html'))
 
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(mail_user, mail_pass)
-            server.sendmail(mail_user, to_addresses, msg.as_string())
+        # Try port 587 (STARTTLS) first — Railway often blocks 465 (SSL)
+        try:
+            with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(mail_user, mail_pass)
+                server.sendmail(mail_user, to_addresses, msg.as_string())
+        except OSError:
+            # Fallback to SSL on 465
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as server:
+                server.login(mail_user, mail_pass)
+                server.sendmail(mail_user, to_addresses, msg.as_string())
         app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
         return True
     except Exception as e:
@@ -3400,10 +3410,23 @@ def admin_weekly_challenge():
             # Send email notification to all users
             notify = request.form.get('notify_users') == '1'
             if notify:
-                sent = send_challenge_notification(ch)
-                flash(f'Challenge "{prompt_title}" ({week_ref}) created. Notification sent to {sent} user{"s" if sent != 1 else ""}.', 'success')
+                flash(f'Challenge "{prompt_title}" ({week_ref}) created. Sending notifications...', 'success')
             else:
-                flash(f'Challenge "{prompt_title}" ({week_ref}) created. No emails sent.', 'success')
+                flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
+
+            if notify:
+                # Fire email in background thread — never blocks the HTTP response
+                import threading
+                def _notify(app_ctx, challenge_obj):
+                    with app_ctx:
+                        try:
+                            sent = send_challenge_notification(challenge_obj)
+                            app.logger.info(f'[challenge] Notifications sent to {sent} users')
+                        except Exception as _e:
+                            app.logger.error(f'[challenge] Notification failed: {_e}')
+                t = threading.Thread(target=_notify, args=(app.app_context(), ch), daemon=True)
+                t.start()
+
             return redirect(url_for('admin_weekly_challenge'))
 
         elif action == 'publish_results':
@@ -3439,8 +3462,17 @@ def admin_weekly_challenge():
         elif action == 'resend_notification':
             challenge_id = request.form.get('challenge_id', type=int)
             ch = WeeklyChallenge.query.get_or_404(challenge_id)
-            sent = send_challenge_notification(ch)
-            flash(f'Notification resent to {sent} user{"s" if sent != 1 else ""}.', 'success')
+            import threading
+            def _resend(app_ctx, challenge_obj):
+                with app_ctx:
+                    try:
+                        sent = send_challenge_notification(challenge_obj)
+                        app.logger.info(f'[challenge] Resend complete — {sent} users notified')
+                    except Exception as _e:
+                        app.logger.error(f'[challenge] Resend failed: {_e}')
+            t = threading.Thread(target=_resend, args=(app.app_context(), ch), daemon=True)
+            t.start()
+            flash(f'Notification sending in background for {ch.week_ref}. Check Railway logs for delivery count.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
         elif action == 'edit':
