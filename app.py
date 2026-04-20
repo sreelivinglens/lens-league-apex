@@ -31,6 +31,143 @@ from location_data import (
 
 load_dotenv()
 
+# ---------------------------------------------------------------------------
+# Email utility — Gmail SMTP
+# Env vars: MAIL_USERNAME, MAIL_PASSWORD
+# Falls back silently if not configured — never crashes the app
+# ---------------------------------------------------------------------------
+
+def send_email(to_addresses, subject, html_body, text_body=None):
+    """
+    Send an email via Gmail SMTP.
+    to_addresses: str (single) or list of str.
+    Returns True on success, False on failure.
+    """
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    mail_user = os.getenv('MAIL_USERNAME', '')
+    mail_pass = os.getenv('MAIL_PASSWORD', '')
+
+    if not mail_user or not mail_pass:
+        app.logger.warning('[email] MAIL_USERNAME or MAIL_PASSWORD not set — skipping send')
+        return False
+
+    if isinstance(to_addresses, str):
+        to_addresses = [to_addresses]
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = f'Lens League Apex <{mail_user}>'
+    msg['To']      = ', '.join(to_addresses)
+
+    if text_body:
+        msg.attach(MIMEText(text_body, 'plain'))
+    msg.attach(MIMEText(html_body, 'html'))
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(mail_user, mail_pass)
+            server.sendmail(mail_user, to_addresses, msg.as_string())
+        app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
+        return True
+    except Exception as e:
+        app.logger.error(f'[email] Failed to send "{subject}": {e}')
+        return False
+
+
+def send_challenge_notification(challenge):
+    """
+    Send weekly challenge notification to all active users.
+    Called from admin when a new challenge is created.
+    """
+    users = User.query.filter_by(is_active=True).filter(
+        User.email != None, User.email != ''
+    ).all()
+
+    if not users:
+        return 0
+
+    site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
+    challenge_url = f"{site_url}/challenge"
+
+    sponsor_line = ''
+    if challenge.sponsor_name:
+        prize_text = f' — Prize: {challenge.sponsor_prize}' if challenge.sponsor_prize else ''
+        sponsor_line = f'<p style="margin:0 0 16px; color:#8a8070; font-size:15px;">Sponsored by <strong style="color:#C8A84B;">{challenge.sponsor_name}</strong>{prize_text}</p>'
+
+    sent = 0
+    for user in users:
+        is_sub = getattr(user, 'is_subscribed', False)
+        slot_text = '3 images this week' if is_sub else '1 image this week (subscribe for 3)'
+        cta_text  = 'Submit your image →' if is_sub else 'Enter the challenge →'
+
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+
+      <!-- Header -->
+      <tr><td style="background:#1a1a18;padding:24px 32px;">
+        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX</p>
+      </td></tr>
+
+      <!-- Challenge banner -->
+      <tr><td style="background:#1a1a18;padding:0 32px 28px;">
+        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge · {challenge.week_ref}</p>
+        <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.1;">{challenge.prompt_title}</h1>
+      </td></tr>
+
+      <!-- Body -->
+      <tr><td style="padding:28px 32px;">
+        {'<p style="margin:0 0 20px;font-size:17px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+        {sponsor_line}
+        <p style="margin:0 0 8px;font-size:15px;color:#8a8070;">
+          <strong style="color:#1a1a18;">You have:</strong> {slot_text}
+        </p>
+        <p style="margin:0 0 24px;font-size:14px;color:#8a8070;">
+          Closes {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
+        </p>
+        <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">
+        <p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">
+          You're receiving this because you have an account on Lens League Apex.<br>
+          <a href="{site_url}" style="color:#C8A84B;">lensleagueapex.com</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>"""
+
+        text_body = f"""LENS LEAGUE APEX — Weekly Challenge
+
+This week: {challenge.prompt_title}
+{challenge.week_ref}
+
+{'Brief: ' + challenge.prompt_body if challenge.prompt_body else ''}
+
+You have: {slot_text}
+Closes: {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
+
+Enter here: {challenge_url}
+
+— Lens League Apex"""
+
+        if send_email(user.email, f"This week's challenge: {challenge.prompt_title}", html_body, text_body):
+            sent += 1
+
+    return sent
+
+
 FREE_IMAGE_LIMIT_MONTH1 = 6  # Free images in first calendar month after registration
 FREE_IMAGE_LIMIT_DEFAULT = 3  # Free images per month from month 2 onwards
 
@@ -749,10 +886,14 @@ def dashboard():
             'min_images':     POTY_MIN_IMAGES,
         }
 
+    # Weekly challenge banner
+    active_challenge = _get_active_challenge()
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
-                           poty_tracker=poty_tracker)
+                           poty_tracker=poty_tracker,
+                           active_challenge=active_challenge)
 
 
 # ---------------------------------------------------------------------------
@@ -3255,7 +3396,14 @@ def admin_weekly_challenge():
             )
             db.session.add(ch)
             db.session.commit()
-            flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
+
+            # Send email notification to all users
+            notify = request.form.get('notify_users') == '1'
+            if notify:
+                sent = send_challenge_notification(ch)
+                flash(f'Challenge "{prompt_title}" ({week_ref}) created. Notification sent to {sent} user{"s" if sent != 1 else ""}.', 'success')
+            else:
+                flash(f'Challenge "{prompt_title}" ({week_ref}) created. No emails sent.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
         elif action == 'publish_results':
@@ -3286,6 +3434,13 @@ def admin_weekly_challenge():
             ch.is_active = False
             db.session.commit()
             flash(f'Challenge {ch.week_ref} deactivated.', 'info')
+            return redirect(url_for('admin_weekly_challenge'))
+
+        elif action == 'resend_notification':
+            challenge_id = request.form.get('challenge_id', type=int)
+            ch = WeeklyChallenge.query.get_or_404(challenge_id)
+            sent = send_challenge_notification(ch)
+            flash(f'Notification resent to {sent} user{"s" if sent != 1 else ""}.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
     # GET
