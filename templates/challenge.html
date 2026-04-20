@@ -153,9 +153,12 @@
         {% if can_submit %}
           <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit an image →</a>
         {% elif slots_used >= slot_limit and challenge.is_open %}
-          <span class="btn" style="opacity:0.4; cursor:not-allowed;">All submissions used this week</span>
-          {% if not current_user.is_subscribed %}
-            <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe for more submissions →</a>
+          {% if topup_ctx and topup_ctx.can_buy_more %}
+            <a href="{{ url_for('challenge_topup') }}" class="btn btn-solid">
+              Buy more images &mdash; Rs.49 each ->
+            </a>
+          {% else %}
+            <span class="btn" style="opacity:0.4; cursor:not-allowed;">Maximum images reached for this week</span>
           {% endif %}
         {% endif %}
         {% if not challenge.is_open and not challenge.is_closed %}

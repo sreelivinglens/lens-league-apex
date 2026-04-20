@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Buy more images — {{ challenge.prompt_title }} — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .topup-wrap  { max-width: 560px; margin: 0 auto; }
+  .topup-card  { background: var(--surface-2); border: 1px solid var(--border);
+                 border-radius: var(--radius-md); padding: 32px 36px; margin-bottom: 24px; }
+  .topup-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+                 letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .qty-row     { display: flex; align-items: center; gap: 16px; margin: 24px 0; }
+  .qty-btn     { width: 40px; height: 40px; border: 1px solid var(--border);
+                 border-radius: var(--radius-sm); background: var(--surface-3);
+                 color: var(--text-primary); font-size: 20px; font-weight: 700;
+                 cursor: pointer; display: flex; align-items: center; justify-content: center;
+                 transition: border-color 0.2s, background 0.2s; }
+  .qty-btn:hover { border-color: var(--gold); background: var(--gold-subtle); }
+  .qty-val     { font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+                 color: var(--text-primary); min-width: 32px; text-align: center; }
+  .total-line  { font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+                 color: var(--gold); margin-bottom: 24px; }
+  .allowance-box { background: var(--surface-3); border: 1px solid var(--border);
+                   border-left: 3px solid var(--gold-dark); border-radius: var(--radius-sm);
+                   padding: 14px 18px; margin-bottom: 24px; font-size: 15px;
+                   color: var(--text-secondary); line-height: 1.7; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topup-wrap">
+
+  <div class="page-header">
+    <h1>Buy more images</h1>
+    <p>{{ challenge.prompt_title }} &nbsp;·&nbsp; {{ challenge.week_ref }}</p>
+  </div>
+
+  <div class="topup-card">
+
+    <div class="topup-label">Your allowance this week</div>
+
+    <div class="allowance-box">
+      {% if ctx.is_sub %}
+        You are a <strong style="color:var(--text-primary);">subscriber</strong>
+        — your plan includes <strong style="color:var(--text-primary);">3 images</strong> per week.
+        You can submit up to <strong style="color:var(--text-primary);">{{ ctx.max_total }} images total</strong> this week.
+        You have used {{ ctx.submissions_used }} so far.
+        You can buy up to <strong style="color:var(--text-primary);">{{ ctx.max_can_buy }} more</strong>
+        at Rs.49 each — choose carefully, this is your maximum for the week.
+      {% else %}
+        You are on the <strong style="color:var(--text-primary);">free plan</strong>
+        — your plan includes <strong style="color:var(--text-primary);">1 image</strong> per week.
+        You can submit up to <strong style="color:var(--text-primary);">{{ ctx.max_total }} images total</strong> this week.
+        You have used {{ ctx.submissions_used }} so far.
+        You can buy up to <strong style="color:var(--text-primary);">{{ ctx.max_can_buy }} more</strong>
+        at Rs.49 each — choose carefully, this is your maximum for the week.
+      {% endif %}
+    </div>
+
+    {% if not order %}
+    {# ── Step 1: Select quantity ── #}
+    <form method="POST" action="{{ url_for('challenge_topup') }}" id="topupForm">
+      <div class="topup-label">How many extra images?</div>
+
+      <div class="qty-row">
+        <button type="button" class="qty-btn" onclick="changeQty(-1)">-</button>
+        <div class="qty-val" id="qtyVal">1</div>
+        <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+        <span style="font-size:15px; color:var(--text-muted);">
+          max {{ ctx.max_can_buy }} this week
+        </span>
+      </div>
+
+      <div class="total-line" id="totalLine">1 image &times; Rs.49 = Rs.49</div>
+
+      <input type="hidden" name="quantity" id="qtyInput" value="1">
+
+      <button type="submit" class="btn btn-solid" style="padding:14px 32px; font-size:15px;">
+        Pay Rs.<span id="btnAmount">49</span> ->
+      </button>
+      <a href="{{ url_for('weekly_challenge') }}" class="btn" style="margin-left:10px;">Cancel</a>
+    </form>
+
+    {% else %}
+    {# ── Step 2: Razorpay payment ── #}
+    <div class="topup-label">Confirm payment</div>
+    <div class="total-line">{{ quantity }} image{{ 's' if quantity > 1 else '' }} &times; Rs.49 = Rs.{{ amount }}</div>
+
+    <form id="paymentForm" method="POST" action="{{ url_for('challenge_topup_confirm') }}">
+      <input type="hidden" name="topup_id" value="{{ topup_id }}">
+      <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+      <input type="hidden" name="razorpay_order_id"   id="rzp_order_id">
+      <input type="hidden" name="razorpay_signature"  id="rzp_signature">
+    </form>
+
+    <button id="rzpBtn" class="btn btn-solid" style="padding:14px 32px; font-size:15px;">
+      Pay Rs.{{ amount }} with Razorpay ->
+    </button>
+    <a href="{{ url_for('challenge_topup') }}" class="btn" style="margin-left:10px;">Change quantity</a>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+    document.getElementById('rzpBtn').addEventListener('click', function() {
+      var options = {
+        key:         '{{ razorpay_key }}',
+        amount:      {{ order.amount }},
+        currency:    'INR',
+        name:        'Lens League Apex',
+        description: '{{ quantity }} extra image{{ "s" if quantity > 1 else "" }} — {{ challenge.prompt_title }}',
+        order_id:    '{{ order.id }}',
+        prefill: {
+          name:  '{{ current_user.full_name or current_user.username }}',
+          email: '{{ current_user.email }}',
+        },
+        theme: { color: '#C8A84B' },
+        handler: function(response) {
+          document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+          document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
+          document.getElementById('rzp_signature').value  = response.razorpay_signature;
+          document.getElementById('paymentForm').submit();
+        },
+      };
+      var rzp = new Razorpay(options);
+      rzp.open();
+    });
+    // Auto-open on page load
+    window.onload = function() {
+      document.getElementById('rzpBtn').click();
+    };
+    </script>
+    {% endif %}
+
+  </div>
+
+  <div style="font-size:14px; color:var(--text-muted); text-align:center;">
+    Extra images are for this week's challenge only and do not roll over.
+    <br>Questions? <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MAX_QTY = {{ ctx.max_can_buy }};
+
+function changeQty(delta) {
+  var input = document.getElementById('qtyInput');
+  var val   = parseInt(input.value) + delta;
+  val = Math.max(1, Math.min(val, MAX_QTY));
+  input.value = val;
+  document.getElementById('qtyVal').textContent    = val;
+  document.getElementById('totalLine').textContent = val + ' image' + (val > 1 ? 's' : '') + ' x Rs.49 = Rs.' + (val * 49);
+  document.getElementById('btnAmount').textContent = val * 49;
+}
+</script>
+{% endblock %}
