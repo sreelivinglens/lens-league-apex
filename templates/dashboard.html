@@ -447,6 +447,28 @@
 </div>
 {% endif %}
 
+{# ── Subscription management — subscribers only ──────────────────── #}
+{% if current_user.is_subscribed and current_user.subscription_track %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">
+      {% if current_user.subscription_track == 'camera' %}📷{% else %}📱{% endif %}
+      {{ current_user.subscription_track | title }} League · {{ current_user.subscription_plan | title }} Plan
+    </div>
+    <div style="font-size:15px; color:var(--text-muted); margin-top:2px;">
+      Active subscription · Unlimited uploads · Contest entry included
+    </div>
+    <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">
+      To cancel, click the button. Access continues until the end of your current billing period.
+    </div>
+  </div>
+  <a href="{{ url_for('cancel_subscription') }}"
+     style="flex-shrink:0; padding:10px 20px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; text-decoration:none; white-space:nowrap;">
+    Cancel subscription
+  </a>
+</div>
+{% endif %}
+
 {# ══════════════════════════════════════════
    POTY TRACKER — subscribers only
    Shows live top-6 average per genre

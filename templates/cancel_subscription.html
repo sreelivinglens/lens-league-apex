@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Cancel Subscription — Lens League Apex{% endblock %}
+
+{% block content %}
+<div style="max-width:540px; margin:60px auto; padding:0 20px;">
+
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:36px 40px;">
+
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">
+      Subscription
+    </div>
+
+    <h1 style="font-size:24px; font-weight:700; color:var(--text-primary); margin-bottom:12px;">
+      Cancel your subscription?
+    </h1>
+
+    <p style="font-size:16px; color:var(--text-muted); line-height:1.6; margin-bottom:8px;">
+      If you cancel, you will keep full access to your
+      <strong style="color:var(--text-primary);">
+        {% if current_user.subscription_track == 'camera' %}📷 Camera{% else %}📱 Mobile{% endif %}
+        League
+      </strong>
+      subscription until the end of your current billing period.
+    </p>
+
+    <p style="font-size:15px; color:var(--text-muted); line-height:1.6; margin-bottom:28px;">
+      After that, your account moves to the free plan — 4 scored images per month, no contest entry. Your images, scores, and history are never deleted.
+    </p>
+
+    <div style="background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 18px; margin-bottom:28px; font-size:14px; color:var(--text-muted); line-height:1.7;">
+      <strong style="color:var(--text-primary);">What you will lose after the billing period ends:</strong><br>
+      · Unlimited image uploads<br>
+      · Contest entry (POTY · BOW · Open)<br>
+      · Leaderboard ranking<br>
+      · Weekly challenge (reduced to 1 image/week)
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <form action="{{ url_for('cancel_subscription') }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button type="submit"
+          style="padding:12px 24px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; white-space:nowrap;">
+          Yes, cancel my subscription
+        </button>
+      </form>
+      <a href="{{ url_for('dashboard') }}"
+        style="padding:12px 24px; background:var(--gold); color:#0D0D0B; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; white-space:nowrap;">
+        Keep my subscription →
+      </a>
+    </div>
+
+    <p style="font-size:13px; color:var(--text-muted); margin-top:20px;">
+      Changed your mind or have a question?
+      <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
