@@ -209,8 +209,6 @@
         </td>
       </tr>
 
-      {# ── Results publisher — closed challenges only ── #}
-      {% if ch.is_closed %}
       {% set subs = ch.submissions.all()|sort(attribute='submitted_at', reverse=True) %}
       {% if subs %}
       <tr>
@@ -258,7 +256,6 @@
           </div>
         </td>
       </tr>
-      {% endif %}
       {% endif %}
 
       {# ── Inline edit form ── #}
