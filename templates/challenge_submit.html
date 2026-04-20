@@ -90,6 +90,14 @@
   </div>
 
   {% if eligible_images %}
+  <div style="background:var(--surface-2); border:1px solid var(--border);
+              border-left:3px solid var(--gold); border-radius:var(--radius-sm);
+              padding:12px 18px; margin-bottom:20px; font-size:15px; color:var(--text-secondary); line-height:1.6;">
+    Click any image below to select it, tick the confirmation, then hit <strong style="color:var(--text-primary);">Submit</strong>.
+    <br>To shoot fresh — click <strong style="color:var(--text-primary);">+ Upload New Image</strong> above.
+    After uploading, your new image will appear highlighted below — tick the confirmation and submit.
+  </div>
+
   <form method="POST" action="{{ url_for('challenge_submit') }}" id="submitForm">
     <div class="image-grid">
       {% for img in eligible_images %}

@@ -189,9 +189,7 @@
         <div class="user-sub-img" style="background:var(--surface-4);"></div>
       {% endif %}
       <div class="user-sub-name">{{ sub.image.asset_name or sub.image.original_filename or 'Untitled' }}</div>
-      {% if sub.image.score %}
-        <div class="user-sub-score">{{ "%.1f"|format(sub.image.score) }}</div>
-      {% endif %}
+
       {% if challenge.is_open %}
       <form action="{{ url_for('challenge_withdraw', sub_id=sub.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="user-sub-withdraw"
@@ -206,8 +204,8 @@
   {# ── Leaderboard — subscribers only ── #}
   <div class="leaderboard-wrap">
     <div class="lb-header">
-      <div class="lb-title">This week's leaderboard</div>
-      <div class="lb-note">Ranked by DDI score · Subscribers only</div>
+      <div class="lb-title">This week's entries</div>
+      <div class="lb-note">Scores and rankings revealed on Monday</div>
     </div>
 
     {% if top_subs %}
@@ -220,12 +218,7 @@
           <div class="sub-img-placeholder">No preview</div>
         {% endif %}
         <div class="sub-info">
-          <div class="sub-rank">#{{ loop.index }}</div>
           <div class="sub-name">{{ sub.user.username }}</div>
-          {% if sub.image.score %}
-          <div class="sub-score">{{ "%.1f"|format(sub.image.score) }}</div>
-          {% endif %}
-          <div class="sub-tier">{{ sub.image.tier or '' }}</div>
         </div>
       </div>
       {% endfor %}

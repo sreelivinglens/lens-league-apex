@@ -63,9 +63,31 @@
 {% block content %}
 <div class="admin-wrap">
 
-  <div class="page-header">
-    <h1>Weekly Challenge — Admin</h1>
-    <p>Create challenge prompts · Set open/close dates · Publish results</p>
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+    <div>
+      <h1>Weekly Challenge - Admin</h1>
+      {% set live_ch = challenges|selectattr('is_open')|first if challenges else none %}
+      {% if live_ch %}
+      <p style="font-size:17px;color:var(--text-primary);margin-top:4px;">
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;">Live now</span>
+        &nbsp; <strong style="font-style:italic;">{{ live_ch.prompt_title }}</strong>
+        &nbsp; <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">{{ live_ch.week_ref }}</span>
+        &nbsp; <span style="font-family:var(--font-mono);font-size:13px;color:var(--green);">{{ live_ch.submission_count }} submission{{ 's' if live_ch.submission_count != 1 else '' }}</span>
+      </p>
+      {% else %}
+      <p>Create prompts - set dates - publish results</p>
+      {% endif %}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <form method="POST" action="{{ url_for('admin_send_reminder') }}" style="display:inline;">
+        <button type="submit" class="btn" style="font-size:12px;padding:7px 14px;"
+                onclick="return confirm('Send closing reminder to all users now?')">Send reminder</button>
+      </form>
+      <form method="POST" action="{{ url_for('admin_send_winners') }}" style="display:inline;">
+        <button type="submit" class="btn btn-solid" style="font-size:12px;padding:7px 14px;"
+                onclick="return confirm('Send winners email now?')">Send winners email</button>
+      </form>
+    </div>
   </div>
 
   {# ── Create new challenge ── #}
@@ -210,7 +232,7 @@
       </tr>
 
       {% set subs = ch.submissions.all()|sort(attribute='submitted_at', reverse=True) %}
-      {% if subs %}
+      {% if subs and not ch.results_published %}
       <tr>
         <td colspan="8" style="padding:0;">
           <div class="results-form">
