@@ -420,6 +420,46 @@
 </div>
 {% endif %}
 
+{# ── Weekly Challenge banner — shows to ALL users when challenge is live ── #}
+{% if active_challenge and active_challenge.is_open %}
+<div style="background:var(--surface-2); border:1px solid var(--border);
+            border-left:3px solid var(--gold); border-radius:var(--radius-md);
+            padding:18px 22px; margin-bottom:28px;
+            display:flex; align-items:center; justify-content:space-between;
+            gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+                letter-spacing:2px; color:var(--gold); text-transform:uppercase;
+                margin-bottom:6px;">
+      ● This week's challenge is live
+    </div>
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary);
+                font-family:Georgia,serif; font-style:italic; margin-bottom:4px;">
+      {{ active_challenge.prompt_title }}
+    </div>
+    <div style="font-size:14px; color:var(--text-muted);">
+      Closes {{ active_challenge.closes_at.strftime('%A %d %B') }}
+      &nbsp;·&nbsp;
+      {{ active_challenge.submission_count }} submission{{ 's' if active_challenge.submission_count != 1 else '' }} so far
+      &nbsp;·&nbsp;
+      {% if current_user.is_subscribed %}
+        3 slots available
+      {% else %}
+        1 free slot &nbsp;·&nbsp;
+        <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 →</a>
+      {% endif %}
+    </div>
+  </div>
+  <a href="{{ url_for('weekly_challenge') }}"
+     style="flex-shrink:0; padding:12px 24px; background:var(--gold); color:#0D0D0B;
+            border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px;
+            font-weight:700; letter-spacing:2px; text-transform:uppercase;
+            text-decoration:none; white-space:nowrap;">
+    Enter challenge →
+  </a>
+</div>
+{% endif %}
+
 {# ── Free tier upgrade nudge ─────────────────────────────────────── #}
 {% if free_tier %}
 <div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">

@@ -106,8 +106,15 @@
 
       </div>
 
-      <div style="margin-top:20px;">
+      <div style="margin-top:20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
         <button type="submit" class="btn btn-solid">Create challenge →</button>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;
+                      font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                      text-transform:none; letter-spacing:0;">
+          <input type="checkbox" name="notify_users" value="1" checked
+                 style="width:16px; height:16px; accent-color:var(--gold); cursor:pointer;">
+          Email all users when created
+        </label>
       </div>
     </form>
   </div>
@@ -161,6 +168,13 @@
                class="btn" style="padding:5px 10px; font-size:12px;">Results</a>
             {% endif %}
             {% if ch.is_active %}
+            <form method="POST" style="display:inline;">
+              <input type="hidden" name="action" value="resend_notification">
+              <input type="hidden" name="challenge_id" value="{{ ch.id }}">
+              <button type="submit" class="btn"
+                      style="padding:5px 10px; font-size:12px; color:var(--gold);"
+                      onclick="return confirm('Resend challenge email to all users?')">📧 Resend</button>
+            </form>
             <form method="POST" style="display:inline;">
               <input type="hidden" name="action" value="deactivate">
               <input type="hidden" name="challenge_id" value="{{ ch.id }}">
