@@ -947,7 +947,7 @@ def upload():
                     '⚠️ League check: this image appears to have been taken on a dedicated camera, '
                     'but you are in the Mobile League. The image has been held for review. '
                     'If you shoot on a camera, please switch to the Camera League. '
-                    'Contact verify@lensleague.com with questions.',
+                    'Contact sreeks@gmail.com with questions.',
                     'warning'
                 )
             elif strike == 2:
@@ -964,7 +964,7 @@ def upload():
                 flash(
                     '🚫 Three league mismatches detected. Your contest access has been suspended '
                     'and this month\'s contest entries have been removed. '
-                    'Contact verify@lensleague.com to resolve.',
+                    'Contact sreeks@gmail.com to resolve.',
                     'error'
                 )
                 _month = datetime.utcnow().strftime('%Y-%m')
@@ -1009,7 +1009,7 @@ def upload():
                     flash(
                         '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. '
                         'Only original photographs taken by you are accepted. '
-                        'If you believe this is an error, contact verify@lensleague.com.',
+                        'If you believe this is an error, contact sreeks@gmail.com.',
                         'error'
                     )
                 else:
@@ -1062,14 +1062,14 @@ def upload():
                         if img.score >= 9.0 and ai_suspicion < 0.4:
                             flash(
                                 f'🏆 Grandmaster score! Your image has been submitted for RAW verification. '
-                                f'Email your original RAW file to verify@lensleague.com within 7 days.',
+                                f'Email your original RAW file to sreeks@gmail.com within 7 days.',
                                 'warning'
                             )
                         else:
                             flash(
                                 f'⚠️ Your image has been flagged for human review before going public. '
                                 f'This is usually resolved within 24–48 hours. '
-                                f'Contact verify@lensleague.com if you have questions.',
+                                f'Contact sreeks@gmail.com if you have questions.',
                                 'warning'
                             )
             except Exception as e:
@@ -1092,13 +1092,13 @@ def upload():
                 return jsonify({
                     'status': 'flagged',
                     'image_id': img.id,
-                    'message': '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact verify@lensleague.com.',
+                    'message': '🚫 This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact sreeks@gmail.com.',
                     'redirect': url_for('dashboard')
                 })
             if getattr(img, 'needs_review', False):
                 if img.score >= 9.0:
                     msg = (f'🏆 Grandmaster score ({img.score})! Your image has been held for RAW verification. '
-                           f'Email your original RAW file to verify@lensleague.com within 7 days.')
+                           f'Email your original RAW file to sreeks@gmail.com within 7 days.')
                 else:
                     msg = ('⚠️ Your image has been held for human review before going public. '
                            'Usually resolved within 24–48 hours.')
@@ -2827,7 +2827,7 @@ def contest_enter_monthly(genre):
         return redirect(url_for('pricing'))
 
     if getattr(current_user, 'league_suspended', False):
-        flash('🚫 Your contest access is suspended due to league mismatches. Contact verify@lensleague.com to resolve.', 'error')
+        flash('🚫 Your contest access is suspended due to league mismatches. Contact sreeks@gmail.com to resolve.', 'error')
         return redirect(url_for('contests'))
 
     genre = normalise_genre(genre)
@@ -3150,14 +3150,43 @@ def razorpay_webhook():
     return jsonify({'status': 'ok'}), 200
 
 
-@app.route('/subscription/cancel', methods=['POST'])
+@app.route('/subscription/cancel', methods=['GET', 'POST'])
 @login_required
 def cancel_subscription():
-    current_user.is_subscribed       = False
-    current_user.subscription_track  = None
-    current_user.subscription_plan   = None
+    """
+    GET  — confirmation page (user must confirm before cancelling)
+    POST — actually cancel: call Razorpay API, clear DB fields, redirect to dashboard
+    RBI / Razorpay compliance: user must be able to self-cancel without contacting support.
+    """
+    if request.method == 'GET':
+        return render_template('cancel_subscription.html')
+
+    # POST — confirmed cancellation
+    razorpay_key    = os.getenv('RAZORPAY_KEY_ID', '')
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
+    sub_id          = current_user.razorpay_sub_id
+
+    # Cancel on Razorpay's end if we have a live subscription ID
+    if sub_id and razorpay_key:
+        try:
+            import razorpay as _rz
+            client = _rz.Client(auth=(razorpay_key, razorpay_secret))
+            # cancel_at_cycle_end=1 means access continues until end of paid period
+            client.subscription.cancel(sub_id, {'cancel_at_cycle_end': 1})
+            app.logger.info(f'[cancel] Razorpay subscription {sub_id} cancelled for user {current_user.id}')
+        except Exception as e:
+            app.logger.error(f'[cancel] Razorpay cancel failed for {sub_id}: {e}')
+            # Still cancel locally — don't leave user stuck
+            flash('Your subscription has been cancelled. If you continue to be charged, contact sreeks@gmail.com.', 'warning')
+
+    # Clear subscription fields in DB
+    current_user.is_subscribed      = False
+    current_user.subscription_track = None
+    current_user.subscription_plan  = None
+    current_user.razorpay_sub_id    = None
     db.session.commit()
-    flash('Your subscription has been cancelled. You can continue on the free plan.', 'info')
+
+    flash('Your subscription has been cancelled. You will retain access until the end of your current billing period.', 'info')
     return redirect(url_for('dashboard'))
 
 

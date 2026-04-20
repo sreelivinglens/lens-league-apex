@@ -111,7 +111,7 @@ class User(db.Model, UserMixin):
                 f'Three or more images uploaded with EXIF camera data '
                 f'inconsistent with your declared league. '
                 f'Latest: image #{image_id}, camera: {exif_camera}. '
-                f'Contact verify@lensleague.com to resolve.'
+                f'Contact sreeks@gmail.com to resolve.'
             )
 
         db_session.commit()
