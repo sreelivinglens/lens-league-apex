@@ -211,8 +211,7 @@
 
       {# ── Results publisher — closed challenges only ── #}
       {% if ch.is_closed %}
-      {% set subs = ch.submissions.join('image').order_by('image.score desc').limit(10).all() if false else
-                   ch.submissions.all()|sort(attribute='image.score', reverse=True) %}
+      {% set subs = ch.submissions.all()|sort(attribute='submitted_at', reverse=True) %}
       {% if subs %}
       <tr>
         <td colspan="8" style="padding:0;">
