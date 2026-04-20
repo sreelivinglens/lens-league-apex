@@ -17,6 +17,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
                     RatingAssignment, PeerRating, PeerPoolEntry,
+                    WeeklyChallenge, WeeklySubmission,
                     get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
@@ -151,6 +152,10 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
+                # v29 — weekly challenge
+                "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
+                "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
             ]
             for sql in _migrations:
                 try:
@@ -3022,6 +3027,285 @@ def open_contest_enter():
         user_images=user_images, genres=GENRE_IDS,
         genre_labels=GENRE_LABELS, entered_genres=entered_genres,
         step=1, platform_year=platform_year)
+
+
+
+
+# ===========================================================================
+# Weekly Challenge
+# ===========================================================================
+
+def _current_week_ref():
+    """Returns ISO week string e.g. '2026-W17' for the current week."""
+    now = datetime.utcnow()
+    return f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
+
+
+def _get_active_challenge():
+    """Return the currently open challenge, or the most recent one."""
+    now = datetime.utcnow()
+    ch = WeeklyChallenge.query.filter(
+        WeeklyChallenge.opens_at <= now,
+        WeeklyChallenge.closes_at >= now,
+        WeeklyChallenge.is_active == True,
+    ).first()
+    if not ch:
+        ch = WeeklyChallenge.query.filter_by(is_active=True)               .order_by(WeeklyChallenge.opens_at.desc()).first()
+    return ch
+
+
+@app.route('/challenge')
+def weekly_challenge():
+    """Public challenge page — visible to all, submit requires login."""
+    challenge = _get_active_challenge()
+    if not challenge:
+        return render_template('challenge.html', challenge=None,
+                               submissions=[], user_subs=[], slots_used=0,
+                               slot_limit=0, can_submit=False)
+
+    # Top submissions for display (subscribers only on leaderboard)
+    top_subs = (WeeklySubmission.query
+                .filter_by(challenge_id=challenge.id, is_subscriber=True)
+                .join(Image, WeeklySubmission.image_id == Image.id)
+                .filter(Image.score != None)
+                .order_by(Image.score.desc())
+                .limit(20).all())
+
+    user_subs = []
+    slots_used = 0
+    slot_limit = 0
+    can_submit = False
+
+    if current_user.is_authenticated:
+        user_subs  = WeeklySubmission.query.filter_by(
+            challenge_id=challenge.id, user_id=current_user.id).all()
+        slots_used = len(user_subs)
+        slot_limit = 3 if getattr(current_user, 'is_subscribed', False) else 1
+        can_submit = challenge.is_open and slots_used < slot_limit
+
+    return render_template('challenge.html',
+        challenge=challenge,
+        top_subs=top_subs,
+        user_subs=user_subs,
+        slots_used=slots_used,
+        slot_limit=slot_limit,
+        can_submit=can_submit,
+    )
+
+
+@app.route('/challenge/submit', methods=['GET', 'POST'])
+@login_required
+def challenge_submit():
+    """Submit an existing scored image to the current challenge."""
+    challenge = _get_active_challenge()
+    if not challenge or not challenge.is_open:
+        flash('No active challenge at the moment. Check back Monday.', 'info')
+        return redirect(url_for('weekly_challenge'))
+
+    is_sub     = getattr(current_user, 'is_subscribed', False)
+    slot_limit = 3 if is_sub else 1
+    slots_used = WeeklySubmission.query.filter_by(
+        challenge_id=challenge.id, user_id=current_user.id).count()
+
+    if slots_used >= slot_limit:
+        flash(f'You have used all {slot_limit} challenge slot{"s" if slot_limit > 1 else ""} for this week.', 'error')
+        return redirect(url_for('weekly_challenge'))
+
+    if request.method == 'POST':
+        image_id = request.form.get('image_id', type=int)
+        if not image_id:
+            flash('Please select an image.', 'error')
+            return redirect(url_for('challenge_submit'))
+
+        image = Image.query.filter_by(id=image_id, user_id=current_user.id, status='scored').first()
+        if not image:
+            flash('Image not found or not yet scored.', 'error')
+            return redirect(url_for('challenge_submit'))
+
+        # Check not already submitted this image to this challenge
+        exists = WeeklySubmission.query.filter_by(
+            challenge_id=challenge.id, image_id=image_id).first()
+        if exists:
+            flash('This image has already been submitted to this challenge.', 'error')
+            return redirect(url_for('challenge_submit'))
+
+        sub = WeeklySubmission(
+            challenge_id=challenge.id,
+            user_id=current_user.id,
+            image_id=image_id,
+            is_subscriber=is_sub,
+        )
+        db.session.add(sub)
+        db.session.commit()
+
+        flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
+        return redirect(url_for('weekly_challenge'))
+
+    # GET — show image picker
+    # Only scored images, owned by user, not already submitted this week
+    already_submitted_ids = [
+        s.image_id for s in WeeklySubmission.query.filter_by(
+            challenge_id=challenge.id, user_id=current_user.id).all()
+    ]
+    eligible_images = (Image.query
+        .filter_by(user_id=current_user.id, status='scored')
+        .filter(Image.score != None, Image.is_flagged == False)
+        .filter(Image.id.notin_(already_submitted_ids) if already_submitted_ids else db.true())
+        .order_by(Image.score.desc())
+        .all())
+
+    return render_template('challenge_submit.html',
+        challenge=challenge,
+        eligible_images=eligible_images,
+        slots_used=slots_used,
+        slot_limit=slot_limit,
+        slots_remaining=slot_limit - slots_used,
+    )
+
+
+@app.route('/challenge/withdraw/<int:sub_id>', methods=['POST'])
+@login_required
+def challenge_withdraw(sub_id):
+    """Withdraw a submission — only allowed while challenge is still open."""
+    sub = WeeklySubmission.query.filter_by(id=sub_id, user_id=current_user.id).first_or_404()
+    if sub.challenge.is_closed:
+        flash('Challenge is closed — submissions cannot be withdrawn.', 'error')
+        return redirect(url_for('weekly_challenge'))
+    db.session.delete(sub)
+    db.session.commit()
+    flash('Submission withdrawn.', 'info')
+    return redirect(url_for('weekly_challenge'))
+
+
+@app.route('/challenge/results/<week_ref>')
+def challenge_results(week_ref):
+    """Results page for a past challenge."""
+    challenge = WeeklyChallenge.query.filter_by(week_ref=week_ref).first_or_404()
+    if not challenge.is_closed:
+        return redirect(url_for('weekly_challenge'))
+
+    all_subs = (WeeklySubmission.query
+                .filter_by(challenge_id=challenge.id)
+                .join(Image, WeeklySubmission.image_id == Image.id)
+                .filter(Image.score != None)
+                .order_by(Image.score.desc())
+                .all())
+
+    winners  = [s for s in all_subs if s.result_rank and s.result_rank <= 3]
+    rest     = [s for s in all_subs if not s.result_rank or s.result_rank > 3]
+
+    return render_template('challenge_results.html',
+        challenge=challenge,
+        winners=winners,
+        rest=rest,
+        total=len(all_subs),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Admin — Weekly Challenge management
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/weekly-challenge', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_weekly_challenge():
+    """
+    Admin page to create and manage weekly challenges.
+    GET  — list all challenges + form to create new one.
+    POST — create a new challenge week.
+    """
+    if request.method == 'POST':
+        action = request.form.get('action', 'create')
+
+        if action == 'create':
+            week_ref     = request.form.get('week_ref', '').strip()
+            prompt_title = request.form.get('prompt_title', '').strip()
+            prompt_body  = request.form.get('prompt_body', '').strip()
+            opens_str    = request.form.get('opens_at', '').strip()
+            closes_str   = request.form.get('closes_at', '').strip()
+            sponsor_name = request.form.get('sponsor_name', '').strip() or None
+            sponsor_prize= request.form.get('sponsor_prize', '').strip() or None
+
+            if not all([week_ref, prompt_title, opens_str, closes_str]):
+                flash('Week ref, prompt title, opens and closes dates are required.', 'error')
+                return redirect(url_for('admin_weekly_challenge'))
+
+            if WeeklyChallenge.query.filter_by(week_ref=week_ref).first():
+                flash(f'A challenge for {week_ref} already exists.', 'error')
+                return redirect(url_for('admin_weekly_challenge'))
+
+            try:
+                opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M')
+                closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Invalid date format.', 'error')
+                return redirect(url_for('admin_weekly_challenge'))
+
+            ch = WeeklyChallenge(
+                week_ref=week_ref,
+                prompt_title=prompt_title,
+                prompt_body=prompt_body or None,
+                opens_at=opens_at,
+                closes_at=closes_at,
+                results_at=closes_at + timedelta(days=1),
+                sponsor_name=sponsor_name,
+                sponsor_prize=sponsor_prize,
+                created_by=current_user.id,
+            )
+            db.session.add(ch)
+            db.session.commit()
+            flash(f'Challenge "{prompt_title}" ({week_ref}) created.', 'success')
+            return redirect(url_for('admin_weekly_challenge'))
+
+        elif action == 'publish_results':
+            challenge_id = request.form.get('challenge_id', type=int)
+            ch = WeeklyChallenge.query.get_or_404(challenge_id)
+            # Read winner rankings from form — rank_<sub_id> = 1|2|3
+            for key, value in request.form.items():
+                if key.startswith('rank_'):
+                    sub_id = int(key.split('_')[1])
+                    sub = WeeklySubmission.query.get(sub_id)
+                    if sub and sub.challenge_id == challenge_id:
+                        try:
+                            sub.result_rank = int(value) if value else None
+                        except ValueError:
+                            sub.result_rank = None
+                if key.startswith('note_'):
+                    sub_id = int(key.split('_')[1])
+                    sub = WeeklySubmission.query.get(sub_id)
+                    if sub and sub.challenge_id == challenge_id:
+                        sub.result_note = value.strip() or None
+            db.session.commit()
+            flash(f'Results published for {ch.week_ref}.', 'success')
+            return redirect(url_for('admin_weekly_challenge'))
+
+        elif action == 'deactivate':
+            challenge_id = request.form.get('challenge_id', type=int)
+            ch = WeeklyChallenge.query.get_or_404(challenge_id)
+            ch.is_active = False
+            db.session.commit()
+            flash(f'Challenge {ch.week_ref} deactivated.', 'info')
+            return redirect(url_for('admin_weekly_challenge'))
+
+    # GET
+    challenges = WeeklyChallenge.query.order_by(WeeklyChallenge.opens_at.desc()).all()
+    # Default week_ref for new challenge form
+    now = datetime.utcnow()
+    default_week = f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
+    # Default opens Monday 00:00, closes Sunday 23:59
+    today        = now.date()
+    monday       = today - timedelta(days=today.weekday())
+    sunday       = monday + timedelta(days=6)
+    default_open = datetime(monday.year, monday.month, monday.day, 0, 0)
+    default_close= datetime(sunday.year, sunday.month, sunday.day, 23, 59)
+
+    return render_template('admin_weekly_challenge.html',
+        challenges=challenges,
+        default_week=default_week,
+        default_open=default_open.strftime('%Y-%m-%dT%H:%M'),
+        default_close=default_close.strftime('%Y-%m-%dT%H:%M'),
+    )
 
 
 # ---------------------------------------------------------------------------

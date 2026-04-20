@@ -111,7 +111,7 @@ class User(db.Model, UserMixin):
                 f'Three or more images uploaded with EXIF camera data '
                 f'inconsistent with your declared league. '
                 f'Latest: image #{image_id}, camera: {exif_camera}. '
-                f'Contact sreeks@gmail.com to resolve.'
+                f'Contact verify@lensleague.com to resolve.'
             )
 
         db_session.commit()
@@ -525,3 +525,70 @@ def _check_rater_bias(rater_id):
         rater.rating_bias_flag = True
         rater.rating_bias_note = 'Auto-detected: ' + ', '.join(bias_modules)
         db.session.commit()
+
+
+# ── Weekly Challenge ──────────────────────────────────────────────────────────
+
+class WeeklyChallenge(db.Model):
+    """
+    One row per challenge week.
+    week_ref format: 'YYYY-WNN' e.g. '2026-W17' — ISO week number.
+    Admin creates via /admin/weekly-challenge.
+    """
+    __tablename__ = 'weekly_challenges'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    week_ref     = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    prompt_title = db.Column(db.String(120), nullable=False)
+    prompt_body  = db.Column(db.Text, nullable=True)
+    opens_at     = db.Column(db.DateTime, nullable=False)
+    closes_at    = db.Column(db.DateTime, nullable=False)
+    results_at   = db.Column(db.DateTime, nullable=True)
+    sponsor_name = db.Column(db.String(120), nullable=True)
+    sponsor_prize= db.Column(db.Text, nullable=True)
+    is_active    = db.Column(db.Boolean, default=True)
+    created_by   = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    submissions  = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic')
+
+    @property
+    def is_open(self):
+        now = datetime.utcnow()
+        return self.opens_at <= now <= self.closes_at
+
+    @property
+    def is_closed(self):
+        return datetime.utcnow() > self.closes_at
+
+    @property
+    def submission_count(self):
+        return self.submissions.count()
+
+    def user_submission_count(self, user_id):
+        return self.submissions.filter_by(user_id=user_id).count()
+
+
+class WeeklySubmission(db.Model):
+    """
+    One row per image submitted to a weekly challenge.
+    Free users: max 1 per week. Subscribers: max 3 per week.
+    Challenge slots are separate from regular upload quota.
+    """
+    __tablename__ = 'weekly_submissions'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    challenge_id = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id'), nullable=False)
+    user_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id     = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    is_subscriber= db.Column(db.Boolean, default=False)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    result_rank  = db.Column(db.Integer, nullable=True)
+    result_note  = db.Column(db.Text, nullable=True)
+
+    user  = db.relationship('User',  foreign_keys=[user_id],  backref='weekly_submissions', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='weekly_submissions', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('challenge_id', 'image_id', name='uq_weekly_sub_image'),
+    )
