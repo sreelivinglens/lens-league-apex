@@ -39,12 +39,11 @@ load_dotenv()
 
 def send_email(to_addresses, subject, html_body, text_body=None):
     """
-    Send email via Brevo (HTTP API) — works on Railway (no SMTP port restrictions).
+    Send email via Brevo (HTTP API).
     Env var: BREVO_API_KEY
     to_addresses: str (single) or list of str.
     Returns True on success, False on failure.
     """
-    import urllib.request
     import json as _json
 
     api_key = os.getenv('BREVO_API_KEY', '')
@@ -66,29 +65,50 @@ def send_email(to_addresses, subject, html_body, text_body=None):
     if text_body:
         payload['textContent'] = text_body
 
-    data = _json.dumps(payload).encode('utf-8')
-    req  = urllib.request.Request(
-        'https://api.brevo.com/v3/smtp/email',
-        data=data,
-        headers={
-            'accept':       'application/json',
-            'content-type': 'application/json',
-            'api-key':      api_key,
-        },
-        method='POST',
-    )
-
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            if resp.status in (200, 201):
-                app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
-                return True
-            else:
-                body = resp.read().decode()
-                app.logger.error(f'[email] Brevo returned {resp.status}: {body}')
+        import requests as _req
+        resp = _req.post(
+            'https://api.brevo.com/v3/smtp/email',
+            json=payload,
+            headers={
+                'accept':   'application/json',
+                'api-key':  api_key,
+            },
+            timeout=15,
+        )
+        if resp.status_code in (200, 201):
+            app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
+            return True
+        else:
+            app.logger.error(f'[email] Brevo returned {resp.status_code}: {resp.text}')
+            return False
+    except ImportError:
+        # requests not installed — fall back to urllib
+        import urllib.request, urllib.error, ssl
+        data = _json.dumps(payload).encode('utf-8')
+        req  = urllib.request.Request(
+            'https://api.brevo.com/v3/smtp/email',
+            data=data,
+            headers={
+                'accept':        'application/json',
+                'content-type':  'application/json',
+                'api-key':       api_key,
+            },
+            method='POST',
+        )
+        try:
+            ctx = ssl.create_default_context()
+            with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                if r.status in (200, 201):
+                    app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
+                    return True
+                app.logger.error(f'[email] Brevo returned {r.status}')
                 return False
+        except Exception as e2:
+            app.logger.error(f'[email] Failed (urllib): {type(e2).__name__}: {e2}')
+            return False
     except Exception as e:
-        app.logger.error(f'[email] Failed to send "{subject}": {e}')
+        app.logger.error(f'[email] Failed to send "{subject}": {type(e).__name__}: {e}')
         return False
 
 
