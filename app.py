@@ -39,49 +39,54 @@ load_dotenv()
 
 def send_email(to_addresses, subject, html_body, text_body=None):
     """
-    Send an email via Gmail SMTP.
+    Send email via Brevo (HTTP API) — works on Railway (no SMTP port restrictions).
+    Env var: BREVO_API_KEY
     to_addresses: str (single) or list of str.
     Returns True on success, False on failure.
     """
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
+    import urllib.request
+    import json as _json
 
-    mail_user = os.getenv('MAIL_USERNAME', '')
-    mail_pass = os.getenv('MAIL_PASSWORD', '')
-
-    if not mail_user or not mail_pass:
-        app.logger.warning('[email] MAIL_USERNAME or MAIL_PASSWORD not set — skipping send')
+    api_key = os.getenv('BREVO_API_KEY', '')
+    if not api_key:
+        app.logger.warning('[email] BREVO_API_KEY not set — skipping send')
         return False
 
     if isinstance(to_addresses, str):
         to_addresses = [to_addresses]
 
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From']    = f'Lens League Apex <{mail_user}>'
-    msg['To']      = ', '.join(to_addresses)
+    sender_email = os.getenv('MAIL_USERNAME', 'sreeks@gmail.com')
 
+    payload = {
+        'sender':     {'name': 'Lens League Apex', 'email': sender_email},
+        'to':         [{'email': addr} for addr in to_addresses],
+        'subject':    subject,
+        'htmlContent': html_body,
+    }
     if text_body:
-        msg.attach(MIMEText(text_body, 'plain'))
-    msg.attach(MIMEText(html_body, 'html'))
+        payload['textContent'] = text_body
+
+    data = _json.dumps(payload).encode('utf-8')
+    req  = urllib.request.Request(
+        'https://api.brevo.com/v3/smtp/email',
+        data=data,
+        headers={
+            'accept':       'application/json',
+            'content-type': 'application/json',
+            'api-key':      api_key,
+        },
+        method='POST',
+    )
 
     try:
-        # Try port 587 (STARTTLS) first — Railway often blocks 465 (SSL)
-        try:
-            with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(mail_user, mail_pass)
-                server.sendmail(mail_user, to_addresses, msg.as_string())
-        except OSError:
-            # Fallback to SSL on 465
-            with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as server:
-                server.login(mail_user, mail_pass)
-                server.sendmail(mail_user, to_addresses, msg.as_string())
-        app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
-        return True
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.status in (200, 201):
+                app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
+                return True
+            else:
+                body = resp.read().decode()
+                app.logger.error(f'[email] Brevo returned {resp.status}: {body}')
+                return False
     except Exception as e:
         app.logger.error(f'[email] Failed to send "{subject}": {e}')
         return False
@@ -134,7 +139,8 @@ def send_challenge_notification(challenge):
 
       <!-- Body -->
       <tr><td style="padding:28px 32px;">
-        {'<p style="margin:0 0 20px;font-size:17px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+        <p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.6;">Get your photo rated for it to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong></p>
+        {'<p style="margin:0 0 20px;font-size:16px;color:#6a6458;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
         {sponsor_line}
         <p style="margin:0 0 8px;font-size:15px;color:#8a8070;">
           <strong style="color:#1a1a18;">You have:</strong> {slot_text}
