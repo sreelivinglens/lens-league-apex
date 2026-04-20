@@ -2663,6 +2663,14 @@ def sree_admin_login():
 def terms():
     return render_template('terms.html')
 
+@app.route('/refund-policy')
+def refund_policy():
+    return render_template('refund_policy.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
 @app.route('/contest-rules')
 def contest_rules():
     return render_template('contest_rules.html')
