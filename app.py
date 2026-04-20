@@ -39,11 +39,12 @@ load_dotenv()
 
 def send_email(to_addresses, subject, html_body, text_body=None):
     """
-    Send email via Brevo (HTTP API).
+    Send email via Brevo (HTTP API) — works on Railway (no SMTP port restrictions).
     Env var: BREVO_API_KEY
     to_addresses: str (single) or list of str.
     Returns True on success, False on failure.
     """
+    import urllib.request
     import json as _json
 
     api_key = os.getenv('BREVO_API_KEY', '')
@@ -65,50 +66,29 @@ def send_email(to_addresses, subject, html_body, text_body=None):
     if text_body:
         payload['textContent'] = text_body
 
+    data = _json.dumps(payload).encode('utf-8')
+    req  = urllib.request.Request(
+        'https://api.brevo.com/v3/smtp/email',
+        data=data,
+        headers={
+            'accept':       'application/json',
+            'content-type': 'application/json',
+            'api-key':      api_key,
+        },
+        method='POST',
+    )
+
     try:
-        import requests as _req
-        resp = _req.post(
-            'https://api.brevo.com/v3/smtp/email',
-            json=payload,
-            headers={
-                'accept':   'application/json',
-                'api-key':  api_key,
-            },
-            timeout=15,
-        )
-        if resp.status_code in (200, 201):
-            app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
-            return True
-        else:
-            app.logger.error(f'[email] Brevo returned {resp.status_code}: {resp.text}')
-            return False
-    except ImportError:
-        # requests not installed — fall back to urllib
-        import urllib.request, urllib.error, ssl
-        data = _json.dumps(payload).encode('utf-8')
-        req  = urllib.request.Request(
-            'https://api.brevo.com/v3/smtp/email',
-            data=data,
-            headers={
-                'accept':        'application/json',
-                'content-type':  'application/json',
-                'api-key':       api_key,
-            },
-            method='POST',
-        )
-        try:
-            ctx = ssl.create_default_context()
-            with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
-                if r.status in (200, 201):
-                    app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
-                    return True
-                app.logger.error(f'[email] Brevo returned {r.status}')
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.status in (200, 201):
+                app.logger.info(f'[email] Sent "{subject}" to {to_addresses}')
+                return True
+            else:
+                body = resp.read().decode()
+                app.logger.error(f'[email] Brevo returned {resp.status}: {body}')
                 return False
-        except Exception as e2:
-            app.logger.error(f'[email] Failed (urllib): {type(e2).__name__}: {e2}')
-            return False
     except Exception as e:
-        app.logger.error(f'[email] Failed to send "{subject}": {type(e).__name__}: {e}')
+        app.logger.error(f'[email] Failed to send "{subject}": {e}')
         return False
 
 
@@ -1292,16 +1272,23 @@ def upload():
                     'message': msg,
                     'redirect': url_for('image_detail', image_id=img.id)
                 })
+            _next = request.args.get('next', '')
+            _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
             return jsonify({
                 'status': 'ok',
                 'image_id': img.id,
                 'score': img.score,
                 'tier': img.tier,
-                'redirect': url_for('image_detail', image_id=img.id)
+                'redirect': _redir
             })
+        # If user came from challenge submit page, send them back there
+        next_page = request.args.get('next', '')
+        if next_page == 'challenge':
+            return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
         return redirect(url_for('image_detail', image_id=img.id))
 
-    return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES)
+    return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
+                           next_page=request.args.get('next', ''))
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
@@ -3240,9 +3227,10 @@ def weekly_challenge():
                                submissions=[], user_subs=[], slots_used=0,
                                slot_limit=0, can_submit=False)
 
-    # Top submissions for display (subscribers only on leaderboard)
+    # Top submissions for display — all submissions ranked by score
+    # is_subscriber flag controls whether they compete for prizes, not visibility
     top_subs = (WeeklySubmission.query
-                .filter_by(challenge_id=challenge.id, is_subscriber=True)
+                .filter_by(challenge_id=challenge.id)
                 .join(Image, WeeklySubmission.image_id == Image.id)
                 .filter(Image.score != None)
                 .order_by(Image.score.desc())
@@ -3257,7 +3245,9 @@ def weekly_challenge():
         user_subs  = WeeklySubmission.query.filter_by(
             challenge_id=challenge.id, user_id=current_user.id).all()
         slots_used = len(user_subs)
-        slot_limit = 3 if getattr(current_user, 'is_subscribed', False) else 1
+        # Admin treated as subscribed for challenge slot purposes
+        is_sub_or_admin = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
+        slot_limit = 3 if is_sub_or_admin else 1
         can_submit = challenge.is_open and slots_used < slot_limit
 
     return render_template('challenge.html',
@@ -3279,7 +3269,7 @@ def challenge_submit():
         flash('No active challenge at the moment. Check back Monday.', 'info')
         return redirect(url_for('weekly_challenge'))
 
-    is_sub     = getattr(current_user, 'is_subscribed', False)
+    is_sub     = getattr(current_user, 'is_subscribed', False) or current_user.role == 'admin'
     slot_limit = 3 if is_sub else 1
     slots_used = WeeklySubmission.query.filter_by(
         challenge_id=challenge.id, user_id=current_user.id).count()
@@ -3310,7 +3300,7 @@ def challenge_submit():
             challenge_id=challenge.id,
             user_id=current_user.id,
             image_id=image_id,
-            is_subscriber=is_sub,
+            is_subscriber=getattr(current_user, 'is_subscribed', False),
         )
         db.session.add(sub)
         db.session.commit()
