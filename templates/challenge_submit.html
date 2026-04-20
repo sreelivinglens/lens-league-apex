@@ -29,6 +29,7 @@
     box-shadow: 0 0 0 2px var(--gold-glow);
   }
   .img-card:hover { border-color: var(--gold-dark); }
+  .img-card.new-image { border-color: var(--gold); background: rgba(184,137,42,0.04); }
   .img-thumb     { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
   .img-placeholder { width: 100%; aspect-ratio: 4/3; background: var(--surface-4);
                      display: flex; align-items: center; justify-content: center;
@@ -55,10 +56,24 @@
 {% block content %}
 <div class="submit-wrap">
 
-  <div class="page-header">
-    <h1>Submit to this week's challenge</h1>
-    <p>Select a scored image from your portfolio.</p>
+  <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+      <h1>Submit to this week's challenge</h1>
+      <p>Select a scored image from your portfolio — or upload a new one.</p>
+    </div>
+    <a href="{{ url_for('upload') }}?next=challenge"
+       class="btn btn-solid" style="white-space:nowrap; flex-shrink:0;">
+      + Upload new image
+    </a>
   </div>
+
+  {% if request.args.get('highlight') %}
+  <div style="background:var(--surface-2); border:1px solid var(--gold-dark);
+              border-left:3px solid var(--gold); border-radius:var(--radius-md);
+              padding:14px 18px; margin-bottom:20px; font-size:15px; color:var(--text-secondary);">
+    ✓ Your new image has been scored and is highlighted below. Select it to submit.
+  </div>
+  {% endif %}
 
   <div class="ch-banner">
     <div>
@@ -77,9 +92,10 @@
       {% for img in eligible_images %}
       <div class="image-option">
         <input type="radio" name="image_id" id="img_{{ img.id }}" value="{{ img.id }}"
-               onchange="updateSubmitBtn()">
+               onchange="updateSubmitBtn()"
+               {% if request.args.get('highlight')|int == img.id %}checked{% endif %}>
         <label for="img_{{ img.id }}">
-          <div class="img-card">
+          <div class="img-card {% if request.args.get('highlight')|int == img.id %}new-image{% endif %}">
             {% if img.thumb_url %}
               <img src="{{ img.thumb_url }}" alt="" class="img-thumb">
             {% else %}
@@ -99,13 +115,26 @@
       {% endfor %}
     </div>
 
+    <div style="margin-bottom:16px;">
+      <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+                    font-size:15px; color:var(--text-secondary); line-height:1.6;">
+        <input type="checkbox" id="declareCheck" required
+               style="margin-top:3px; width:16px; height:16px;
+                      accent-color:var(--gold); flex-shrink:0; cursor:pointer;"
+               onchange="updateSubmitBtn()">
+        I confirm this image is relevant to the challenge brief —
+        <strong style="color:var(--text-primary);">{{ challenge.prompt_title }}</strong>.
+        Submitting an unrelated image may result in disqualification.
+      </label>
+    </div>
+
     <div class="submit-actions">
       <button type="submit" class="btn btn-solid" id="submitBtn" disabled>
         Submit selected image →
       </button>
       <a href="{{ url_for('weekly_challenge') }}" class="btn">Cancel</a>
-      <span style="font-size:14px; color:var(--text-muted);">
-        Select an image above to continue.
+      <span style="font-size:14px; color:var(--text-muted);" id="submitHint">
+        Select an image and confirm above to continue.
       </span>
     </div>
   </form>
@@ -131,10 +160,27 @@
 <script>
 function updateSubmitBtn() {
   const selected = document.querySelector('input[name="image_id"]:checked');
-  document.getElementById('submitBtn').disabled = !selected;
-  if (selected) {
+  const declared = document.getElementById('declareCheck') && document.getElementById('declareCheck').checked;
+  const ready = selected && declared;
+  document.getElementById('submitBtn').disabled = !ready;
+  const hint = document.getElementById('submitHint');
+  if (!selected) {
+    hint.textContent = 'Select an image above to continue.';
+  } else if (!declared) {
+    hint.textContent = 'Please confirm the image is relevant to the brief.';
+  } else {
+    hint.textContent = '';
     document.getElementById('submitBtn').textContent = 'Submit selected image →';
   }
 }
+// Auto-enable if image pre-selected via highlight param
+document.addEventListener('DOMContentLoaded', function() {
+  const preSelected = document.querySelector('input[name="image_id"]:checked');
+  if (preSelected) {
+    // Don't enable submit yet — still need declaration checkbox
+    preSelected.closest('.image-option').scrollIntoView({behavior:'smooth', block:'center'});
+    updateSubmitBtn();
+  }
+});
 </script>
 {% endblock %}
