@@ -2,396 +2,172 @@
 {% block title %}FAQ — Lens League Apex{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-  .faq-wrap { max-width: 720px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
-
-  .faq-eyebrow {
-    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
-    letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  .terms-wrap    { max-width: 760px; margin: 0 auto; }
+  .faq-section   { margin-bottom: 40px; }
+  .faq-section h2 {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
   }
-  .faq-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
-
-  .faq-headline {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
-    color: var(--text-primary); margin-bottom: 0.75rem;
+  .faq-section h2 span {
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--gold); margin-right: 10px; font-weight: 600;
   }
-  .faq-headline em { font-style: italic; color: var(--gold); }
-
-  .faq-intro {
-    font-size: 1rem; color: var(--text-secondary); line-height: 1.85;
-    margin-bottom: 3rem; max-width: 580px;
+  .faq-item      { margin-bottom: 24px; }
+  .faq-q         { font-size: 17px; font-weight: 700; color: var(--text-primary);
+                   margin-bottom: 8px; }
+  .faq-a         { font-size: 16px; color: var(--text-secondary); line-height: 1.8; }
+  .faq-a a       { color: var(--gold); }
+  .faq-a strong  { color: var(--text-primary); }
+  .terms-highlight {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold-dark);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 16px 20px; margin: 16px 0;
+    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
   }
-
-  /* Category label */
-  .faq-category {
-    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted);
-    margin: 2.5rem 0 0.75rem; padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .faq-category:first-of-type { margin-top: 0; }
-
-  /* Accordion item */
-  .faq-item {
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .faq-question {
-    width: 100%; background: none; border: none; padding: 1.1rem 0;
-    display: flex; align-items: flex-start; justify-content: space-between;
-    gap: 1rem; cursor: pointer; text-align: left;
-    transition: color 0.2s;
-  }
-  .faq-question:hover .faq-q-text { color: var(--gold); }
-
-  .faq-q-text {
-    font-size: 1.05rem; font-weight: 600; color: var(--text-primary);
-    line-height: 1.45; transition: color 0.2s; flex: 1;
-  }
-
-  .faq-icon {
-    flex-shrink: 0; width: 22px; height: 22px;
-    border: 1.5px solid var(--border-strong); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin-top: 2px; transition: all 0.25s ease;
-    color: var(--text-muted);
-  }
-  .faq-icon svg { width: 10px; height: 10px; transition: transform 0.25s ease; }
-
-  .faq-item.open .faq-icon {
-    border-color: var(--gold-dark);
-    background: var(--gold-subtle);
-    color: var(--gold);
-  }
-  .faq-item.open .faq-icon svg { transform: rotate(45deg); }
-  .faq-item.open .faq-q-text { color: var(--gold); }
-
-  .faq-answer {
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.35s ease, padding 0.25s ease;
-  }
-  .faq-item.open .faq-answer { max-height: 600px; }
-
-  .faq-answer-inner {
-    padding: 0 0 1.25rem;
-    font-size: 1rem; color: var(--text-secondary); line-height: 1.85;
-  }
-  .faq-answer-inner strong { color: var(--text-primary); }
-  .faq-answer-inner a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dark); padding-bottom: 1px; }
-  .faq-answer-inner a:hover { border-color: var(--gold); }
-
-  /* highlight pill inside answers */
-  .faq-pill {
-    display: inline-block; padding: 1px 8px; border-radius: 3px;
-    font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
-    letter-spacing: 0.5px; background: var(--gold-subtle);
-    border: 1px solid var(--gold-dark); color: var(--gold);
-    vertical-align: baseline; margin: 0 1px;
-  }
-
-  /* still have questions strip */
-  .faq-contact {
-    margin-top: 3rem; padding: 1.75rem 2rem;
-    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
-    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 1.5rem; flex-wrap: wrap;
-  }
-  .faq-contact-text {}
-  .faq-contact-eyebrow {
-    font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 0.3rem;
-  }
-  .faq-contact-body { font-size: 1rem; color: var(--text-secondary); line-height: 1.65; }
-  .faq-contact-body a { color: var(--gold); text-decoration: none; font-weight: 600; }
-
-  @media (max-width: 600px) {
-    .faq-contact { flex-direction: column; align-items: flex-start; }
-  }
+  .terms-highlight strong { color: var(--gold); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="faq-wrap">
+<div class="terms-wrap">
 
-  <div class="faq-eyebrow">Help &amp; Answers</div>
-  <h1 class="faq-headline">Frequently asked<br><em>questions.</em></h1>
-  <p class="faq-intro">
-    Everything you need to know about how Lens League Apex works — scoring, subscriptions, contests, and your privacy.
-  </p>
+  <div class="page-header">
+    <h1>Frequently Asked Questions</h1>
+    <p>Lens League Apex &nbsp;·&nbsp; Everything you need to know</p>
+  </div>
 
-  <!-- ── SCORING ─────────────────────────────────────────── -->
-  <div class="faq-category">📐 &nbsp; Scoring &amp; the DDI Engine</div>
+  <!-- Scoring -->
+  <div class="faq-section">
+    <h2><span>01</span> Scoring &amp; the DDI Engine</h2>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What is the DDI Score?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        The <strong>Dimensional Diagnostic Index</strong> is a science-based score across five independent modules:
-        <span class="faq-pill">DoD</span> Depth of Difficulty,
-        <span class="faq-pill">DIS</span> Visual Disruption,
-        <span class="faq-pill">DM</span> Decisive Moment,
-        <span class="faq-pill">WON</span> Wonder Factor, and
-        <span class="faq-pill">AQ</span> Affective Quotient.
-        Each image is scored 0–9.9. Module weights are calibrated per genre, so a Wildlife image is measured differently from a Wedding or Macro image. The final score is a weighted sum with safeguards applied.
+    <div class="faq-item">
+      <div class="faq-q">What is the APEX DDI Engine?</div>
+      <div class="faq-a">DDI stands for Depth, Disruption, and Intent — the three core dimensions the engine evaluates. It analyses your photograph across five modules and produces a score from 0 to 100. Unlike human judging, the score is consistent, bias-free, and based on photographic craft rather than personal taste.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What do the tiers mean?</div>
+      <div class="faq-a">
+        Your score maps to a tier that describes the level of craft in the image:
+        <strong>Apprentice</strong> (developing), <strong>Practitioner</strong> (solid craft),
+        <strong>Master</strong> (exceptional), <strong>Grandmaster</strong> (rare, requires RAW verification).
+        Tiers are shown publicly. Raw scores are visible only to you.
       </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Why can't I see the exact score breakdown?</div>
+      <div class="faq-a">The individual module scores (the five DDI dimensions) are not shown publicly to protect the integrity of the scoring system and prevent photographers from optimising for the algorithm rather than making better photographs. Your overall score and tier are always visible.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How long does scoring take?</div>
+      <div class="faq-a">Most images score within 30–60 seconds. Complex images or peak usage periods can take up to 2 minutes. Keep the tab open during scoring. If scoring fails, you can retry from your dashboard.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Does editing or post-processing affect my score?</div>
+      <div class="faq-a">Yes — the engine evaluates the final image as submitted. Thoughtful editing that enhances the photograph's intent scores well. Heavy-handed or inconsistent processing scores lower. The engine rewards craft at every stage, including post-processing.</div>
     </div>
   </div>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What do the tiers mean?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        Five tiers map to fixed score bands:
-        <span class="faq-pill">Apprentice</span> 0–5.0 &nbsp;·&nbsp;
-        <span class="faq-pill">Practitioner</span> 5.1–7.5 &nbsp;·&nbsp;
-        <span class="faq-pill">Master</span> 7.6–8.9 &nbsp;·&nbsp;
-        <span class="faq-pill">Grandmaster</span> 9.0–9.6 &nbsp;·&nbsp;
-        <span class="faq-pill">Legend</span> 9.7–9.9.
-        Tier boundaries are fixed — they don't shift with the platform population. A Master-tier image today means the same thing it will mean in five years.
-      </div>
+  <!-- Subscription -->
+  <div class="faq-section">
+    <h2><span>02</span> Plans &amp; Subscription</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">What's included in the free plan?</div>
+      <div class="faq-a">Free members get <strong>4 scored images per month</strong> and <strong>1 weekly challenge submission per week</strong>. You can view the leaderboard and browse the platform freely. Competition entry (POTY, BOW, Open) requires a subscription.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What does the Member plan include?</div>
+      <div class="faq-a">At Rs.199/month, Members get unlimited image scoring, 3 weekly challenge submissions per week, leaderboard ranking, and entry to all competitions (POTY, Body of Work, Open).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How do I cancel my subscription?</div>
+      <div class="faq-a">Log in, go to your Dashboard, and click <strong>Cancel subscription</strong> in the subscription panel. No email needed. Access continues until the end of your current billing period. See our <a href="/refund-policy">Refund Policy</a> for details.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What is Camera League vs Mobile League?</div>
+      <div class="faq-a">Camera League is for images taken on dedicated cameras (DSLR, mirrorless, film). Mobile League is for images taken on smartphones. You declare your league when subscribing. The EXIF metadata in your images is used to verify this. Competing in the wrong league results in a warning and, after three mismatches, a suspension of contest access.</div>
     </div>
   </div>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">Are my scores visible to other photographers?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        <strong>No.</strong> Your numerical DDI score is private — only you can see it on your dashboard and image detail pages. The public leaderboard and share pages display <strong>tier classification only</strong> (e.g. "Master" or "Grandmaster"), never the raw number. This is a core platform policy and will not change.
-      </div>
+  <!-- Weekly Challenge -->
+  <div class="faq-section">
+    <h2><span>03</span> Weekly Challenge</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">How does the weekly challenge work?</div>
+      <div class="faq-a">Every Monday a new prompt is announced. You have until Sunday 23:59 UTC to submit. Free members can submit 1 image, subscribers can submit 3. Winners are announced the following Monday evening (7pm IST) by DDI score. The gallery is blind while the challenge is open — no scores or rankings are shown until results are published.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I submit more than my weekly limit?</div>
+      <div class="faq-a">Yes — you can buy extra submissions at <strong>Rs.49 per image</strong>. Free members can submit up to 4 total, subscribers up to 6 total per week. Click "Buy more images" on the challenge page when your base submissions are used.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How are winners selected?</div>
+      <div class="faq-a">The top 3 submissions by DDI score are automatically selected as winners when the challenge closes. The admin reviews these before the announcement and may adjust if an image is off-topic or violates the brief. DDI score is the primary criterion.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Do weekly challenge scores count toward POTY?</div>
+      <div class="faq-a">Yes — any image submitted to the weekly challenge is scored by the DDI engine. That score counts toward your Photographer of the Year standing in its genre. This is the most direct way to build your POTY score week by week.</div>
     </div>
   </div>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What is the Affective Quotient (AQ)?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        AQ measures the emotional truth and human resonance of an image — the feeling it creates in the viewer, not its technical attributes. It is the soul of the score. Images with <strong>AQ ≥ 8.0</strong> receive the <span class="faq-pill">★ Soul Bonus</span>, which removes all technical penalties from the final calculation. A technically imperfect image that genuinely moves people will always outscore a technically perfect but emotionally empty one.
-      </div>
+  <!-- Competitions -->
+  <div class="faq-section">
+    <h2><span>04</span> Competitions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">What is Photographer of the Year (POTY)?</div>
+      <div class="faq-a">POTY is Lens League Apex's annual competition. Your top 6 DDI scores in each genre are averaged to produce your POTY standing. A minimum of 24 scored images in a genre is required to qualify for prizes. Entry fee is Rs.199 per genre.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What is Body of Work (BOW)?</div>
+      <div class="faq-a">BOW is an annual series competition. You submit a cohesive set of images with a thematic statement. Entry fee is Rs.299. One submission per platform year.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What is the Open Competition?</div>
+      <div class="faq-a">The Open is a pay-per-image competition with no subscription required. Entry fee is Rs.39 per image. Any registered user can enter.</div>
     </div>
   </div>
 
-  <!-- ── FREE & SUBSCRIPTIONS ────────────────────────────── -->
-  <div class="faq-category">💳 &nbsp; Free Plan &amp; Subscriptions</div>
+  <!-- Images & Copyright -->
+  <div class="faq-section">
+    <h2><span>05</span> Images &amp; Copyright</h2>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">How many free images do I get?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        <strong>6 free scored images in your first month</strong> of registration. After that, <strong>3 free scored images per calendar month</strong> — resetting on the 1st of each month with no rollover. No credit card required at any point on the free plan.
-      </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I keep copyright over my images?</div>
+      <div class="faq-a">Yes. You retain full copyright. By uploading, you grant Lens League Apex a limited licence to display your images on the platform and in promotional materials referencing the platform (e.g. showcasing winning entries on social media). We do not sell or license your images to third parties.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What happens if my image is flagged as AI-generated?</div>
+      <div class="faq-a">The platform checks for AI-generated images as part of the upload process. If your image is flagged, you can appeal by emailing <a href="mailto:sreeks@gmail.com">sreeks@gmail.com</a> with subject <strong>Appeal — [username] — [image ID]</strong> and attaching your original RAW file within 7 days. All appeals are reviewed.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I delete my images?</div>
+      <div class="faq-a">Yes — from your dashboard at any time. Note that per contest rules, deleting an image does not improve your POTY average. Images submitted to competitions may be retained in competition records for integrity purposes.</div>
     </div>
   </div>
 
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What's the difference between Camera League and Mobile League?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        <span class="faq-pill">📷 Camera League</span> is for DSLR, mirrorless, and film cameras (₹599/month or ₹4,999/year).
-        <span class="faq-pill">📱 Mobile League</span> is for smartphones — iPhone, Android, any mobile device (₹299/month or ₹2,499/year).
-        Each League has its own scoring calibration, contests, leaderboard, and POTY prize pool. EXIF metadata is used to verify submissions are in the correct League.
-      </div>
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">Can I switch between Camera and Mobile League?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        Yes — cancel your current subscription and subscribe to the other League. Your scored images and full history remain intact. Note that contest entries from your previous League are not carried forward; you'll start building contest history fresh in the new League.
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CONTESTS ─────────────────────────────────────────── -->
-  <div class="faq-category">🏆 &nbsp; Contests &amp; Prizes</div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">Can I enter competitions on the free plan?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        <strong>No.</strong> Contest entry — including Monthly Contests, POTY, Body of Work, and the Open Competition — requires an active Camera or Mobile League subscription. Free-plan users can upload images, receive full DDI scores and analysis, and view the leaderboard, but contest participation is a subscriber benefit.
-      </div>
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">How are contest winners decided?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        A three-tier system: <strong>Tier 1 — DDI Engine</strong> (automatic score), <strong>Tier 2 — Blind Peer Rating</strong> (5 independent raters; photographer identity and scores are hidden), <strong>Tier 3 — Jury</strong> (appointed Jury Legends, triggered on score divergence, formal dispute, or mandatory for Body of Work and Grand Open). Jury decisions are final.
-      </div>
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What is RAW verification?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        The top 3 finalists in every competition category must submit their <strong>original RAW or full-resolution source file</strong> to <a href="mailto:verify@lensleague.com">verify@lensleague.com</a> within 7 days of notification. This confirms the image is genuinely yours, unaltered, and at native capture resolution. Random spot-check requests may also be made at any time for any image on the platform. Failure to submit forfeits the placement.
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PRIVACY & DATA ───────────────────────────────────── -->
-  <div class="faq-category">🔒 &nbsp; Privacy &amp; Your Data</div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">What personal data does Lens League Apex collect?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        We collect only what's needed to run the platform: your <strong>email address</strong> (via Google OAuth), <strong>display name</strong>, <strong>country / state / city</strong> (for leaderboard ranking), and <strong>EXIF metadata</strong> embedded in your uploaded images (camera model, date taken, exposure settings). We do not collect your GPS location, phone number, government ID, or financial card details. Payment processing is handled entirely by Razorpay — we never see or store your card data. Full details are in the <a href="{{ url_for('privacy') }}">Privacy Policy</a>.
-      </div>
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">Is my data sold or shared with third parties?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        <strong>No. We do not sell, rent, or share your personal data with any third party for marketing or commercial purposes.</strong> The only external services that handle your data are Google (authentication), Razorpay (payment processing), Cloudflare R2 (image storage), and the hosting infrastructure. Each is bound by its own privacy terms and handles only the minimum data necessary. We never share your email address or personal details with advertisers or data brokers.
-      </div>
-    </div>
-  </div>
-
-  <div class="faq-item">
-    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-      <span class="faq-q-text">Can I delete my account and all my data?</span>
-      <span class="faq-icon" aria-hidden="true">
-        <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
-        </svg>
-      </span>
-    </button>
-    <div class="faq-answer" role="region">
-      <div class="faq-answer-inner">
-        Yes. Email <a href="mailto:verify@lensleague.com">verify@lensleague.com</a> with your registered email and a deletion request. We will permanently delete your account, all uploaded images, all scores, all contest entries, and all associated personal data within <strong>30 days</strong>. Anonymised aggregate statistics (e.g. platform average scores) that contain no personally identifiable information may be retained. If you have an active subscription, cancel it before requesting deletion to avoid further charges.
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CONTACT ──────────────────────────────────────────── -->
-  <div class="faq-contact">
-    <div class="faq-contact-text">
-      <div class="faq-contact-eyebrow">Still have a question?</div>
-      <div class="faq-contact-body">
-        Write to us at <a href="mailto:verify@lensleague.com">verify@lensleague.com</a> — we respond within 2 business days.<br>
-        For contest disputes, verification requests, or data enquiries, please use the same address.
-      </div>
-    </div>
-    <a href="{{ url_for('index') }}" class="btn btn-solid" style="padding:11px 28px; white-space:nowrap; flex-shrink:0;">
-      Back to Home →
-    </a>
+  <div class="terms-highlight">
+    Still have a question?
+    &nbsp;<a href="/contact" style="color:var(--gold);">Contact us</a>
+    &nbsp;or email <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a>
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function toggleFaq(btn) {
-  const item = btn.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-
-  // Close all
-  document.querySelectorAll('.faq-item.open').forEach(el => {
-    el.classList.remove('open');
-    el.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-  });
-
-  // Open clicked if it was closed
-  if (!isOpen) {
-    item.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-  }
-}
-</script>
 {% endblock %}
