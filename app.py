@@ -2885,6 +2885,14 @@ def sree_admin_login():
 def terms():
     return render_template('terms.html')
 
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
 @app.route('/refund-policy')
 def refund_policy():
     return render_template('refund_policy.html')
