@@ -9,7 +9,6 @@ body:has(.hp) main { max-width:none !important; padding:0 !important; margin:0 !
 body:has(.hp) nav { background:rgba(26,24,20,0.96) !important; backdrop-filter:blur(14px) !important; border-bottom:1px solid rgba(200,168,75,0.18) !important; }
 body { overflow-x:hidden; }
 *, *::before, *::after { box-sizing:border-box; }
-
 .hp h1,.hp h2,.hp h3 { font-family:'Playfair Display',Georgia,serif; }
 
 /* HERO */
@@ -22,91 +21,111 @@ body { overflow-x:hidden; }
 .hero-btns { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
 .btn-d { background:#1a1a18; color:#fff; padding:14px 28px; border-radius:5px; font-size:16px; font-weight:700; text-decoration:none; display:inline-block; }
 .btn-o { background:transparent; color:#1a1a18; padding:13px 28px; border-radius:5px; font-size:16px; border:1.5px solid #1a1a18; text-decoration:none; display:inline-block; }
-.hero-note { font-size:15px; color:#777; font-style:italic; }
+.hero-note { font-size:15px; color:#666; font-style:italic; }
 
 /* DDI CARD */
 .ddi-card { background:#fff; border:1px solid #E0D8C8; border-radius:14px; padding:24px; box-shadow:0 4px 24px rgba(0,0,0,0.07); }
 .ddi-mods { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:14px; }
-.ddi-mod { background:#F8F5EE; border-radius:5px; padding:8px 12px; font-size:14px; color:#555; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.ddi-mod { background:#F8F5EE; border-radius:5px; padding:8px 12px; font-size:15px; color:#555; display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .ddi-mod b { color:#B8892A; font-size:15px; }
 .ddi-bar { flex:1; height:4px; background:#E8E3D8; border-radius:99px; overflow:hidden; max-width:60px; }
 .ddi-bar span { display:block; height:100%; background:#B8892A; border-radius:99px; }
+.ddi-example { margin-top:10px; text-align:center; font-size:13px; color:#B8892A; font-style:italic; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace; }
 
-/* CONTEST BANNER */
+/* TRUST STRIP */
+@keyframes goldSweep { 0% { left:-100%; } 100% { left:120%; } }
+.trust-strip { background:linear-gradient(135deg,#FDF8EE,#F5EDD4); border-top:1px solid #E8D9A8; border-bottom:1px solid #E8D9A8; padding:16px clamp(24px,5vw,80px); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; position:relative; overflow:hidden; }
+.trust-strip::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent 0%,rgba(200,168,75,0.08) 30%,rgba(200,168,75,0.22) 50%,rgba(200,168,75,0.08) 70%,transparent 100%); animation:goldSweep 3s ease-in-out infinite; pointer-events:none; }
+.trust-items { display:flex; align-items:center; flex-wrap:wrap; gap:16px 22px; position:relative; z-index:1; }
+.trust-item { display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#7A6020; line-height:1; }
+.trust-dot { width:5px; height:5px; border-radius:50%; background:#B8892A; flex-shrink:0; }
+.trust-link { font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:#B8892A; text-decoration:none; border-bottom:1px solid rgba(184,137,42,0.5); padding-bottom:1px; white-space:nowrap; flex-shrink:0; font-weight:700; position:relative; z-index:1; }
+.trust-link:hover { color:#8A6010; }
+
+/* WEEKLY CHALLENGE BANNER */
 .cb { background:linear-gradient(135deg,#FDF8EE 0%,#F5EDD4 100%); border-bottom:1px solid #E8D9A8; padding:26px clamp(24px,5vw,80px); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
 .cb-inner { display:flex; align-items:center; gap:18px; }
 .cb-badge { background:#B8892A; color:#fff; font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:6px 14px; border-radius:3px; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
 .cb h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:3px; font-family:Georgia,serif; }
 .cb p  { font-size:15px; color:#8A7040; }
-.cb-prizes { display:flex; gap:28px; }
-.cb-amt { font-size:22px; font-weight:700; color:#B8892A; line-height:1; }
-.cb-lbl { font-size:14px; color:#9A8050; margin-top:2px; text-align:center; }
 .btn-g { background:#B8892A; color:#fff; padding:13px 24px; border-radius:5px; font-size:15px; font-weight:700; white-space:nowrap; text-decoration:none; display:inline-block; }
 
 /* SECTIONS */
 .sec { padding:60px clamp(24px,5vw,80px); }
 .sec.cream { background:linear-gradient(180deg,#F8F4EE 0%,#FAFAF8 100%); }
 .sec.sky   { background:linear-gradient(180deg,#EEF5FA 0%,#F5FAFB 100%); }
-.sec.warm  { background:linear-gradient(160deg,#FDF9F2 0%,#F5EDD8 50%,#EDE4C8 100%); border-top:1px solid #E8D9A0; border-bottom:1px solid #E8D9A0; }
 .sec-eye { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
 .sec-h2 { font-size:clamp(26px,3vw,34px); font-weight:700; text-align:center; color:#1a1a18; margin-bottom:14px; line-height:1.4; padding-top:4px; }
 .sec-h2 em { font-style:italic; color:#B8892A; }
-.sec-p { font-size:17px; color:#555; text-align:center; margin-bottom:40px; line-height:1.8; max-width:580px; margin-left:auto; margin-right:auto; }
+.sec-p { font-size:18px; color:#555; text-align:center; margin-bottom:40px; line-height:1.8; max-width:580px; margin-left:auto; margin-right:auto; }
 
-/* TRACKS */
-.tracks { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:28px; }
-.tc { border-radius:14px; padding:30px; border:1px solid #E0D8C8; }
-.tc.cam { background:linear-gradient(135deg,#F9F5ED,#EDE4D2); }
-.tc.mob { background:linear-gradient(135deg,#EEF5FA,#D8EBF4); }
-.tc-icon { font-size:30px; margin-bottom:14px; display:block; }
-.tc-h3 { font-size:20px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
-.tc-sub { font-size:15px; color:#777; font-style:italic; margin-bottom:18px; }
-.tc-pts { display:flex; flex-direction:column; gap:10px; }
-.tc-pt { font-size:16px; color:#333; display:flex; gap:12px; line-height:1.6; }
-.tc-pt::before { content:'→'; color:#B8892A; flex-shrink:0; font-weight:700; margin-top:2px; }
+/* COMPARISON TABLE */
+.cmp-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.cmp-table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; font-size:17px; border:1px solid #E0D8C8; min-width:560px; }
+.cmp-table thead tr { background:#1a1a18; }
+.cmp-table th { padding:16px 20px; font-weight:700; text-align:left; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:1px; }
+.cmp-table th:first-child { color:#8A7840; width:18%; }
+.cmp-table th.cam { color:#D4A840; }
+.cmp-table th.mob { color:#7BBDE8; }
+.cmp-table td { padding:14px 20px; border-bottom:1px solid #F0EAE0; color:#333; line-height:1.6; vertical-align:top; }
+.cmp-table td:first-child { font-weight:700; color:#1a1a18; font-size:13px; background:#FAF7F2; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+.cmp-table td.cam-cell { background:#FFFDF6; }
+.cmp-table td.mob-cell { background:#F4FAFF; }
+.cmp-table .core-row td.core-span { background:#F5F0E6; color:#5A4820; font-style:italic; text-align:center; font-size:17px; }
+.cmp-table .core-row td:first-child { background:#EDE8DC; }
+.cmp-table tr:last-child td { border-bottom:none; }
 
-/* MENTOR */
-.mentor { background:linear-gradient(135deg,#EEF6FB 0%,#D8EDF5 100%); border:1px solid #B8D8EC; border-radius:14px; padding:30px 36px; display:grid; grid-template-columns:1fr 220px; gap:32px; align-items:center; }
-.mentor-eye { font-size:13px; letter-spacing:0.15em; text-transform:uppercase; color:#2A7A9A; margin-bottom:8px; font-family:'JetBrains Mono',monospace; }
-.mentor-h3  { font-size:22px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
-.mentor-desc{ font-size:16px; color:#446070; line-height:1.8; }
-.mentor-mods{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-.mentor-mod { background:rgba(255,255,255,0.65); border:1px solid #B8D8EC; border-radius:5px; padding:8px 10px; font-size:14px; color:#334455; display:flex; justify-content:space-between; align-items:center; gap:6px; }
-.mentor-mod b { color:#2A7A9A; }
-.mentor-bar { flex:1; height:4px; background:#C8DDE8; border-radius:99px; overflow:hidden; max-width:50px; }
-.mentor-bar span { display:block; height:100%; background:#2A7A9A; border-radius:99px; }
-
-/* J-CURVE */
-.ms-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:24px; }
-.ms { background:rgba(255,255,255,0.72); border:1px solid #DDD0A8; border-radius:10px; padding:18px 16px; text-align:center; }
-.ms.hl { border-color:#B8892A; }
-.ms-num  { font-size:15px; letter-spacing:0.12em; color:#8A6A1A; margin-bottom:7px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
-.ms-num.gd { color:#6A4A0A; font-weight:700; }
-.ms-title{ font-size:20px; font-weight:700; color:#1a1a18; margin-bottom:8px; }
-.ms-desc { font-size:17px; color:#6A5830; line-height:1.65; }
-.ms-note { font-size:15px; color:#B8892A; font-style:italic; margin-top:7px; }
+/* POTY */
+.poty-sec { background:#1a1a18; }
+.poty-inner { padding:64px clamp(24px,5vw,80px) 56px; }
+.poty-eye { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:12px; font-family:'JetBrains Mono',monospace; }
+.poty-h2 { font-size:clamp(28px,3.5vw,40px); font-weight:700; text-align:center; color:#F0EFE8; margin-bottom:10px; line-height:1.2; }
+.poty-h2 em { font-style:italic; color:#C8A84B; }
+.poty-tagline { text-align:center; font-size:18px; color:#7A7060; font-style:italic; margin-bottom:40px; line-height:1.6; }
+.poty-diff { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid rgba(200,168,75,0.2); border-radius:12px; overflow:hidden; margin-bottom:32px; }
+.poty-col { padding:28px 32px; }
+.poty-col.others { background:rgba(255,255,255,0.03); }
+.poty-col.us { background:#1A3A5C; }
+.poty-col-label { font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.poty-col.others .poty-col-label { color:#5A5040; }
+.poty-col.us .poty-col-label { color:#7BBDE8; }
+.poty-row { display:flex; gap:12px; margin-bottom:14px; align-items:flex-start; font-size:17px; line-height:1.6; }
+.poty-row:last-child { margin-bottom:0; }
+.poty-col.others .poty-row { color:#6A6050; }
+.poty-col.us .poty-row { color:#B8D0E8; }
+.icon-no { color:#4A4030; flex-shrink:0; margin-top:2px; }
+.icon-yes { color:#C8A84B; flex-shrink:0; margin-top:2px; }
+.poty-rules { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:36px; }
+.poty-rule { background:rgba(255,255,255,0.04); border:1px solid rgba(200,168,75,0.18); border-radius:10px; padding:20px 22px; }
+.poty-rule-label { font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#B8892A; margin-bottom:10px; }
+.poty-rule-val { font-size:22px; font-weight:700; color:#F0EFE8; margin-bottom:7px; }
+.poty-rule-desc { font-size:15px; color:#7A7060; line-height:1.6; }
+.poty-cta { text-align:center; }
+.poty-cta-link { font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:2px; text-transform:uppercase; color:#C8A84B; text-decoration:none; border-bottom:1px solid rgba(200,168,75,0.35); padding-bottom:2px; }
+.poty-cta-link:hover { color:#D4B85A; }
 
 /* PROOF */
-.proof-sec { padding:44px clamp(24px,5vw,80px); background:#fff; border-top:1px solid #E8E0D0; border-bottom:1px solid #E8E0D0; }
-.proof-eye  { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
-.proof-note { font-size:16px; color:#777; text-align:center; font-style:italic; margin-bottom:26px; }
+.proof-sec { padding:52px clamp(24px,5vw,80px); background:#fff; border-top:1px solid #E8E0D0; border-bottom:1px solid #E8E0D0; }
+.proof-eye { font-size:14px; letter-spacing:0.16em; text-transform:uppercase; color:#B8892A; text-align:center; margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
+.proof-note { font-size:17px; color:#666; text-align:center; font-style:italic; margin-bottom:28px; }
 .proof-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .pc { background:#F8F5F0; border-radius:10px; border:1px solid #E8E4DC; overflow:hidden; }
-.pc-img    { width:100%; aspect-ratio:4/3; background:linear-gradient(135deg,#d4cfc4,#b8b0a0); display:flex; align-items:flex-end; padding:10px; position:relative; overflow:hidden; }
-.pc-img.c2 { background:linear-gradient(135deg,#c4cfd4,#a0b4b8); }
-.pc-img.c3 { background:linear-gradient(135deg,#d4c4bc,#b8a090); }
-.pc-img.c4 { background:linear-gradient(135deg,#c4d4c4,#a0b8a0); }
+.pc-img { width:100%; aspect-ratio:3/4; display:flex; flex-direction:column; justify-content:space-between; padding:12px; background:linear-gradient(160deg,#2a2018,#4a3820); position:relative; overflow:hidden; }
 .pc-img img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.pc-tier   { font-size:13px; font-weight:700; letter-spacing:0.1em; background:rgba(184,137,42,0.92); color:#fff; padding:3px 9px; border-radius:3px; position:relative; z-index:1; font-family:'JetBrains Mono',monospace; }
-.pc-meta   { padding:12px 14px; }
-.pc-name   { font-size:16px; font-weight:700; color:#1a1a18; }
-.pc-detail { font-size:14px; color:#666; margin-top:3px; }
+.pc-img.c2 { background:linear-gradient(160deg,#182028,#284858); }
+.pc-img.c3 { background:linear-gradient(160deg,#281820,#503040); }
+.pc-img.c4 { background:linear-gradient(160deg,#182818,#305040); }
+.pc-score-overlay { font-size:36px; font-weight:700; color:rgba(210,178,85,0.92); text-align:right; line-height:1; position:relative; z-index:1; }
+.pc-tier { font-size:12px; font-weight:700; letter-spacing:1.5px; background:rgba(184,137,42,0.9); color:#fff; padding:4px 9px; border-radius:3px; position:relative; z-index:1; font-family:'JetBrains Mono',monospace; align-self:flex-start; }
+.pc-meta { padding:14px 16px; }
+.pc-name { font-size:16px; font-weight:700; color:#1a1a18; }
+.pc-detail { font-size:14px; color:#666; margin-top:4px; }
 
 /* PRIZES */
 .prize-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.pi { text-align:center; padding:24px 16px; background:#fff; border-radius:12px; border:1px solid #E0D8C8; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
-.pi-amt  { font-size:28px; font-weight:700; color:#B8892A; margin-bottom:5px; }
-.pi-name { font-size:16px; color:#666; }
+.pi { text-align:center; padding:28px 16px; background:#fff; border-radius:12px; border:1px solid #E0D8C8; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+.pi-amt { font-size:28px; font-weight:700; color:#B8892A; margin-bottom:6px; }
+.pi-name { font-size:16px; color:#666; line-height:1.4; }
 
 /* FOOTER CTA */
 .fcta { padding:64px clamp(24px,5vw,80px); background:linear-gradient(150deg,#1a1a18,#2a2820); text-align:center; }
@@ -114,37 +133,36 @@ body { overflow-x:hidden; }
 .fcta h2 em { font-style:italic; color:#C8A84B; }
 .fcta p  { font-size:17px; color:#999; margin-bottom:32px; }
 .fcta-btns { display:flex; gap:16px; justify-content:center; }
-.btn-fcta-g  { background:#C8A84B; color:#1a1a18; padding:16px 32px; border-radius:5px; font-size:17px; font-weight:700; text-decoration:none; display:inline-block; }
+.btn-fcta-g { background:#C8A84B; color:#1a1a18; padding:16px 32px; border-radius:5px; font-size:17px; font-weight:700; text-decoration:none; display:inline-block; }
 .btn-fcta-lt { background:transparent; color:#ccc; padding:15px 28px; border-radius:5px; font-size:16px; border:1.5px solid #555; text-decoration:none; display:inline-block; }
 
 /* RESPONSIVE */
 @media (max-width:900px) {
-  .hero    { grid-template-columns:1fr; }
-  .ddi-card{ display:none; }
-  .tracks  { grid-template-columns:1fr; }
-  .mentor  { grid-template-columns:1fr; }
+  .hero { grid-template-columns:1fr; }
+  .ddi-card { display:none; }
   .proof-grid { grid-template-columns:1fr 1fr; }
   .prize-grid { grid-template-columns:1fr 1fr; }
-  .ms-row     { grid-template-columns:1fr 1fr; }
-  .cb-prizes  { display:none; }
+  .poty-rules { grid-template-columns:1fr 1fr; }
+  .poty-diff { grid-template-columns:1fr; }
   .cb { flex-direction:column; align-items:flex-start; gap:16px; padding:22px 24px; }
   .cb-inner { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
   .btn-g { align-self:flex-start; }
+  .trust-items { gap:12px 16px; }
+  .trust-item { font-size:12px; }
 }
 @media (max-width:600px) {
-  .proof-grid  { grid-template-columns:1fr 1fr; }
-  .fcta-btns   { flex-direction:column; align-items:center; }
-  .prize-grid  { grid-template-columns:1fr 1fr; }
-  .ms-row      { grid-template-columns:1fr; }
   .hero { padding:40px 20px 36px; }
   .hero-h1 { font-size:32px; }
   .hero-sub { font-size:17px; }
   .sec { padding:40px 20px; }
-  .sec.warm { padding:40px 20px; }
-  .proof-sec { padding:32px 20px; }
+  .proof-sec { padding:36px 20px; }
   .fcta { padding:44px 20px; }
-  .mentor { padding:22px 20px; }
-  .tracks .tc { padding:22px 18px; }
+  .fcta-btns { flex-direction:column; align-items:center; }
+  .proof-grid { grid-template-columns:1fr 1fr; }
+  .prize-grid { grid-template-columns:1fr 1fr; }
+  .poty-rules { grid-template-columns:1fr; }
+  .poty-col { padding:20px 18px; }
+  .poty-inner { padding:40px 20px 36px; }
 }
 </style>
 {% endblock %}
@@ -160,8 +178,8 @@ body { overflow-x:hidden; }
         Find out what your photography
         <span class="gi">is really worth.</span>
       </h1>
-      <div class="hero-ddi">The world's first Dimensional Diagnostic Index for photography.</div>
-      <p class="hero-sub">Get a scientific score, a city rank, a verified portfolio — and a 24×7 mentor that never sleeps. No bias. Honest, consistent feedback, every time.</p>
+      <div class="hero-ddi">The world's first DDI — Dimensional Diagnostic Index — for photography.</div>
+      <p class="hero-sub">Get a scientific score, a badge, a verified portfolio and a recommendation to improve upon for each of your images. No bias, honest, consistent feedback every time.</p>
       <div class="hero-btns">
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('dashboard') }}" class="btn-d">Go to my dashboard →</a>
@@ -202,124 +220,125 @@ body { overflow-x:hidden; }
         <div class="ddi-mod">Disruption <span class="ddi-bar"><span style="width:71%"></span></span></div>
         <div class="ddi-mod">Overall <b style="color:#1a1a18;font-size:16px;">79.6</b></div>
       </div>
-      <div style="margin-top:10px; text-align:center; font-size:11px; color:#B8892A; font-style:italic; letter-spacing:1px; font-family:'JetBrains Mono',monospace;">
-        ↑ example of your score breakdown
-      </div>
+      <div class="ddi-example">↑ example of your score breakdown</div>
     </div>
   </section>
 
-  <!-- CONTEST BANNER -->
+  <!-- TRUST STRIP -->
+  <div class="trust-strip">
+    <div class="trust-items">
+      <div class="trust-item"><span class="trust-dot"></span>5 independently weighted dimensions</div>
+      <div class="trust-item"><span class="trust-dot"></span>Genre-specific scoring weights</div>
+      <div class="trust-item"><span class="trust-dot"></span>AI suspicion checks on every upload</div>
+      <div class="trust-item"><span class="trust-dot"></span>RAW verification for all winners</div>
+      <div class="trust-item"><span class="trust-dot"></span>Same engine for every image. No human bias.</div>
+    </div>
+    <a href="{{ url_for('how_it_works') }}" class="trust-link">The Science →</a>
+  </div>
+
+  <!-- WEEKLY CHALLENGE BANNER -->
   <div class="cb">
     <div class="cb-inner">
       <div class="cb-badge">Live now</div>
       <div>
-        <h3>{{ contest_month_label|default('Monthly Contest') }} — enter free with every upload</h3>
-        <p>Automatic entry for all subscribers · Camera &amp; Mobile judged separately · No extra steps</p>
+        {% if active_challenge is defined and active_challenge %}
+          <h3>Weekly Challenge: {{ active_challenge.prompt_title }}</h3>
+          <p>Submit by Sunday 23:59 UTC · Winners announced Monday 7pm IST</p>
+        {% else %}
+          <h3>Weekly Challenge — new prompt every Monday</h3>
+          <p>Submit your best image · Winners scored by the DDI engine · Free to enter</p>
+        {% endif %}
       </div>
     </div>
-    <div class="cb-prizes">
-      <div><div class="cb-amt">₹10K</div><div class="cb-lbl">Gold</div></div>
-      <div><div class="cb-amt">₹5K</div><div class="cb-lbl">Silver</div></div>
-      <div><div class="cb-amt">₹3K</div><div class="cb-lbl">Bronze</div></div>
-    </div>
-    <a href="{{ url_for('contests') }}" class="btn-g">View contest →</a>
+    <a href="{{ url_for('weekly_challenge') }}" class="btn-g">View challenge →</a>
   </div>
 
-  <!-- TWO TRACKS + MENTOR -->
+  <!-- WHO IS IT FOR -->
   <section class="sec cream">
     <div class="sec-eye">Two leagues. One standard.</div>
     <h2 class="sec-h2">Who is Lens League <em>Apex</em> for?</h2>
-    <p class="sec-p">Camera and Mobile photographers compete in dedicated Leagues — same science, same prize pool, no gear bias. Every submission returns a full scientific breakdown to help you grow.</p>
-    <div class="tracks">
-      <div class="tc cam">
-        <span class="tc-icon">📷</span>
-        <div class="tc-h3">Professional Photographers</div>
-        <div class="tc-sub">DSLR · Mirrorless · Film · Compact</div>
-        <div class="tc-pts">
-          <div class="tc-pt">Scientific breakdown every upload — not a vague opinion</div>
-          <div class="tc-pt">Learn exactly what to improve: composition, light, execution</div>
-          <div class="tc-pt">Rank by city — "Master · Bengaluru Wildlife" on your profile</div>
-          <div class="tc-pt">Command higher fees with a verified Apex tier clients can see</div>
-          <div class="tc-pt">Get found by brands searching for local talent</div>
-        </div>
-      </div>
-      <div class="tc mob">
-        <span class="tc-icon">📱</span>
-        <div class="tc-h3">Mobile Creators</div>
-        <div class="tc-sub">iPhone · Android · Any smartphone</div>
-        <div class="tc-pts">
-          <div class="tc-pt">Compete on vision alone — not the camera you own</div>
-          <div class="tc-pt">Dedicated mobile-only rankings, prizes and Photographer of the Year (POTY) path</div>
-          <div class="tc-pt">Understand exactly what makes a great mobile shot — and fix it</div>
-          <div class="tc-pt">Share a verified portfolio link that proves your skill</div>
-          <div class="tc-pt">Win real prizes against a global standard</div>
-        </div>
-      </div>
-    </div>
-    <div class="mentor">
-      <div>
-        <div class="mentor-eye">The learning engine</div>
-        <div class="mentor-h3">Your 24×7 digital mentor</div>
-        <div class="mentor-desc">Every image returns a full DDI breakdown across 5 modules. You don't just get a number — you see exactly where you're strong, where you're weak, and what to focus on next. Upload at midnight. Get feedback instantly. No waiting for a judge's opinion.</div>
-      </div>
-      <div class="mentor-mods">
-        <div class="mentor-mod">Depth of Detail <span class="mentor-bar"><span style="width:84%"></span></span></div>
-        <div class="mentor-mod">Wonder <span class="mentor-bar"><span style="width:88%"></span></span></div>
-        <div class="mentor-mod">Disruption <span class="mentor-bar"><span style="width:71%"></span></span></div>
-        <div class="mentor-mod">Dim. Mastery <span class="mentor-bar"><span style="width:79%"></span></span></div>
-        <div class="mentor-mod">Aesthetic Q. <span class="mentor-bar"><span style="width:76%"></span></span></div>
-        <div class="mentor-mod" style="grid-column:span 2;justify-content:center;gap:10px;">Overall <b style="color:#1a1a18;font-size:16px;">79.6</b></div>
-      </div>
+    <p class="sec-p">Camera and Mobile photographers compete in dedicated Leagues — same science, same prize pool, no gear bias.</p>
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="cam">📷 Professional — DSLR / Mirrorless / Film</th>
+            <th class="mob">📱 Mobile — iPhone / Android / Smartphone</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="core-row">
+            <td>The core</td>
+            <td colspan="2" class="core-span">Scientific DDI breakdown of every upload — 5 dimensions, instant feedback, no waiting for a judge.</td>
+          </tr>
+          <tr>
+            <td>Education</td>
+            <td class="cam-cell">Precise technical targets — know exactly what to fix next.</td>
+            <td class="mob-cell">Learn the anatomy of a great mobile shot.</td>
+          </tr>
+          <tr>
+            <td>Recognition</td>
+            <td class="cam-cell">Earn elite tier badges on your profile. Rank by city.</td>
+            <td class="mob-cell">Dedicated Mobile POTY (Photographer of the Year) rankings, path and prizes.</td>
+          </tr>
+          <tr>
+            <td>Value</td>
+            <td class="cam-cell">Command higher fees — share your verified Apex score with clients.</td>
+            <td class="mob-cell">Win real prizes against a global standard.</td>
+          </tr>
+          <tr>
+            <td>Discovery</td>
+            <td class="cam-cell">Get scouted by brands looking for local talent.</td>
+            <td class="mob-cell">Share a verified, skill-based portfolio link that proves your vision.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
-  <!-- J-CURVE JOURNEY -->
-  <section class="sec warm">
-    <div class="sec-eye">The annual path</div>
-    <h2 class="sec-h2">Month 1 to <em>Photographer of the Year Gala</em></h2>
-    <p class="sec-p" style="color:#8A7040;">Every upload builds your standing. Consistency wins — not a single lucky shot. The top photographers by genre average qualify for the annual POTY (Photographer of the Year) Gala.</p>
-    <svg width="100%" viewBox="0 0 640 260" preserveAspectRatio="xMidYMid meet" style="display:block;">
-      <defs>
-        <linearGradient id="jf" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#C8A84B" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="#C8A84B" stop-opacity="0.02"/>
-        </linearGradient>
-        <linearGradient id="jl" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stop-color="#3A7CA5"/>
-          <stop offset="55%"  stop-color="#C8A84B"/>
-          <stop offset="100%" stop-color="#8A6010"/>
-        </linearGradient>
-      </defs>
-      <!-- All y-coords shifted down 35px from original to give top label room -->
-      <line x1="48" y1="47"  x2="48"  y2="229" stroke="#E8D9A0" stroke-width="1"/>
-      <line x1="48" y1="229" x2="610" y2="229" stroke="#E8D9A0" stroke-width="1"/>
-      <line x1="48" y1="125" x2="610" y2="125" stroke="#B8892A" stroke-width="1.2" stroke-dasharray="5,4"/>
-      <path d="M 48,221 C 100,219 140,213 182,203 C 224,192 256,174 292,145 C 328,115 358,89 398,69 C 428,53 468,47 580,45 L 580,239 L 48,239 Z" fill="url(#jf)"/>
-      <path d="M 48,221 C 100,219 140,213 182,203 C 224,192 256,174 292,145 C 328,115 358,89 398,69 C 428,53 468,47 580,45" fill="none" stroke="url(#jl)" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="302" cy="125" r="5"  fill="#B8892A" stroke="#fff" stroke-width="2"/>
-      <circle cx="48"  cy="221" r="6"  fill="#3A7CA5" stroke="#fff" stroke-width="2"/>
-      <circle cx="182" cy="203" r="6"  fill="#3A7CA5" stroke="#fff" stroke-width="2"/>
-      <circle cx="468" cy="57"  r="9"  fill="#8A6010" stroke="#fff" stroke-width="2.5"/>
-      <circle cx="580" cy="45"  r="8"  fill="#fff"    stroke="#8A6010" stroke-width="2.5"/>
-      <!-- Top label — well above the curve -->
-      <text x="500" y="30" text-anchor="middle" font-size="13" fill="#6A4A0A" font-family="Georgia,serif" font-weight="bold">POTY Gala — ₹65L</text>
-      <!-- Cutoff label — above dashed line -->
-      <text x="232" y="110" font-size="13" fill="#6A4A0A" font-family="Georgia,serif" font-weight="bold">Top-6 avg clears cutoff</text>
-      <!-- Lower curve labels -->
-      <text x="54"  y="210" font-size="13" fill="#1A4A6A" font-family="Georgia,serif" font-weight="bold">Upload &amp; score</text>
-      <text x="188" y="191" font-size="13" fill="#1A4A6A" font-family="Georgia,serif" font-weight="bold">Monthly wins</text>
-      <!-- X-axis labels -->
-      <text x="48"  y="248" text-anchor="middle" font-size="14" fill="#8A7040" font-family="Georgia,serif">Month 1</text>
-      <text x="182" y="248" text-anchor="middle" font-size="14" fill="#8A7040" font-family="Georgia,serif">Month 3</text>
-      <text x="322" y="248" text-anchor="middle" font-size="14" fill="#8A7040" font-family="Georgia,serif">Month 6</text>
-      <text x="468" y="248" text-anchor="middle" font-size="14" fill="#8A6010" font-family="Georgia,serif" font-weight="bold">Month 9</text>
-      <text x="580" y="248" text-anchor="middle" font-size="14" fill="#8A6010" font-family="Georgia,serif" font-weight="bold">POTY</text>
-    </svg>
-    <div class="ms-row">
-      <div class="ms"><div class="ms-num">Month 1–3</div><div class="ms-title">Upload &amp; score</div><div class="ms-desc">DDI feedback every upload. Auto-entered into monthly contest.</div></div>
-      <div class="ms"><div class="ms-num">Month 4–6</div><div class="ms-title">Climb the board</div><div class="ms-desc">Monthly wins stack. City rank updates. Tier badges earned.</div></div>
-      <div class="ms hl"><div class="ms-num gd">Month 7–9</div><div class="ms-title">POTY cutoff</div><div class="ms-desc">Best 6 per genre averaged. Top-6 must clear the Month 9 threshold to qualify for Photographer of the Year.</div><div class="ms-note">Cutoff announced end of Month 9</div></div>
-      <div class="ms"><div class="ms-num gd">Month 10–12</div><div class="ms-title">Final push</div><div class="ms-desc">Keep uploading. Clear the cutoff by year-end to qualify for the POTY (Photographer of the Year) Gala.</div></div>
+  <!-- POTY -->
+  <section class="poty-sec">
+    <div class="poty-inner">
+      <div class="poty-eye">Photographer of the Year (POTY)</div>
+      <h2 class="poty-h2">Not a lucky shot.<br><em>A full season.</em></h2>
+      <p class="poty-tagline">Every other competition asks for your best image.<br>We ask who you are as a photographer across an entire year.</p>
+      <div class="poty-diff">
+        <div class="poty-col others">
+          <div class="poty-col-label">Every other competition</div>
+          <div class="poty-row"><span class="icon-no">—</span><span>Submit your best image once</span></div>
+          <div class="poty-row"><span class="icon-no">—</span><span>A jury picks a moment in time</span></div>
+          <div class="poty-row"><span class="icon-no">—</span><span>Anyone can get lucky on one shot</span></div>
+          <div class="poty-row"><span class="icon-no">—</span><span>No feedback on why you didn't win</span></div>
+        </div>
+        <div class="poty-col us">
+          <div class="poty-col-label">Lens League POTY</div>
+          <div class="poty-row"><span class="icon-yes">✓</span><span>Rated across every upload, all year</span></div>
+          <div class="poty-row"><span class="icon-yes">✓</span><span>DDI engine measures your consistency</span></div>
+          <div class="poty-row"><span class="icon-yes">✓</span><span>Only sustained excellence qualifies</span></div>
+          <div class="poty-row"><span class="icon-yes">✓</span><span>Full dimension breakdown on every image</span></div>
+        </div>
+      </div>
+      <div class="poty-rules">
+        <div class="poty-rule">
+          <div class="poty-rule-label">Minimum activity</div>
+          <div class="poty-rule-val">6 months</div>
+          <div class="poty-rule-desc">Must be active across at least 6 months of the platform year</div>
+        </div>
+        <div class="poty-rule">
+          <div class="poty-rule-label">How it's scored</div>
+          <div class="poty-rule-val">Top-6 avg</div>
+          <div class="poty-rule-desc">Your best 6 DDI scores per genre, averaged — quality over volume</div>
+        </div>
+        <div class="poty-rule">
+          <div class="poty-rule-label">Prize pool</div>
+          <div class="poty-rule-val">₹50,00,000</div>
+          <div class="poty-rule-desc">Camera and Mobile Leagues compete separately — 16 prize categories</div>
+        </div>
+      </div>
+      <div class="poty-cta">
+        <a href="{{ url_for('contests') }}" class="poty-cta-link">How POTY qualification works →</a>
+      </div>
     </div>
   </section>
 
@@ -333,13 +352,11 @@ body { overflow-x:hidden; }
         <div class="pc">
           <div class="pc-img {% if loop.index == 2 %}c2{% elif loop.index == 3 %}c3{% elif loop.index == 4 %}c4{% endif %}">
             {% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="{{ img.genre }}">{% endif %}
+            <div class="pc-score-overlay">{{ img.score }}</div>
             <span class="pc-tier">{{ img.tier or 'Scored' }}</span>
           </div>
           <div class="pc-meta">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;">
-              <div class="pc-name">@{{ img.author.username }}</div>
-              <div style="font-size:22px;font-weight:700;color:#B8892A;">{{ img.score }}</div>
-            </div>
+            <div class="pc-name">@{{ img.author.username }}</div>
             <div class="pc-detail">{{ img.genre }} · {{ img.author.city or 'India' }} · {{ '📷' if img.camera_track == 'camera' else '📱' }}</div>
           </div>
         </div>
@@ -347,12 +364,12 @@ body { overflow-x:hidden; }
       {% else %}
         {% for i in range(4) %}
         <div class="pc">
-          <div class="pc-img {% if i==1 %}c2{% elif i==2 %}c3{% elif i==3 %}c4{% endif %}"><span class="pc-tier">Join to score</span></div>
+          <div class="pc-img {% if i==1 %}c2{% elif i==2 %}c3{% elif i==3 %}c4{% endif %}">
+            <div class="pc-score-overlay">—</div>
+            <span class="pc-tier">Join to score</span>
+          </div>
           <div class="pc-meta">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;">
-              <div class="pc-name">Your image here</div>
-              <div style="font-size:22px;font-weight:700;color:#B8892A;">—</div>
-            </div>
+            <div class="pc-name">Your image here</div>
             <div class="pc-detail">Upload to get scored</div>
           </div>
         </div>
@@ -365,12 +382,15 @@ body { overflow-x:hidden; }
   <section class="sec sky">
     <div class="sec-eye">Annual prize pool</div>
     <h2 class="sec-h2">₹65 lakhs. Real money. <em>Real stakes.</em></h2>
-    <p class="sec-p">Fixed structure — published and guaranteed before the year begins. Camera and Mobile Leagues have their own winners.</p>
+    <p class="sec-p">Everybody deserves recognition and a prize too :)</p>
     <div class="prize-grid">
       <div class="pi"><div class="pi-amt">₹50L</div><div class="pi-name">POTY total pool</div></div>
       <div class="pi"><div class="pi-amt">₹8L</div><div class="pi-name">Open competition</div></div>
       <div class="pi"><div class="pi-amt">₹5.25L</div><div class="pi-name">Body of Work</div></div>
-      <div class="pi"><div class="pi-amt">₹2.16L</div><div class="pi-name">Monthly contests</div></div>
+      <div class="pi">
+        <div class="pi-amt" style="font-size:20px;padding-top:4px;line-height:1.3;">Weekly<br>Challenge</div>
+        <div class="pi-name" style="margin-top:8px;">Winners qualify for POTY</div>
+      </div>
     </div>
   </section>
 
