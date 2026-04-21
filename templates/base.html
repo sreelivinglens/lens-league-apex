@@ -506,14 +506,41 @@ tbody tr:hover { background: rgba(184,137,42,0.05); }
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 footer {
   border-top: 1px solid var(--border);
-  padding: 24px var(--page-pad);
+  padding: 28px var(--page-pad) 24px;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 2px;
   color: var(--text-disabled);
   margin-top: 80px;
 }
+.footer-brand {
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  line-height: 1.7;
+}
+.footer-brand strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.footer-links a {
+  color: var(--text-disabled);
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.footer-links a:hover { color: var(--gold); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -642,39 +669,19 @@ img {
 </main>
 
 <footer>
-  &copy; 2026 Lens League Apex. All rights reserved.
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  APEX DDI ENGINE &nbsp;·&nbsp; Rated by Science. Not Opinion.
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/terms" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    Terms &amp; Conditions
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/privacy" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    Privacy Policy
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/refund-policy" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    Refund Policy
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/contact" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    Contact Us
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/faq" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    FAQ
-  </a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="/contest-rules" style="color:var(--text-disabled); text-decoration:none; transition:color 0.2s;"
-     onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-disabled)'">
-    Contest Rules
-  </a>
+  <div class="footer-brand">
+    <strong>&copy; 2026 Lens League Apex.</strong> &nbsp;All rights reserved.
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    APEX DDI ENGINE &nbsp;·&nbsp; Rated by Science. Not Opinion.
+  </div>
+  <div class="footer-links">
+    <a href="/terms">Terms &amp; Conditions</a>
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="/contact">Contact Us</a>
+    <a href="/faq">FAQ</a>
+    <a href="/contest-rules">Contest Rules</a>
+  </div>
 </footer>
 
 <script>
