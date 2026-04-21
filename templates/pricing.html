@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Pricing — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pricing-hero { text-align:center; padding: clamp(48px,8vw,80px) 0 40px; }
+  .pricing-hero h1 { font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
+  .pricing-hero h1 em { font-style:normal; color:var(--gold); }
+  .pricing-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-secondary); max-width:580px; margin:0 auto 32px; line-height:1.8; }
+  .pricing-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:48px; }
+  .toggle-label { font-family:var(--font-mono); font-size:15px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; cursor:pointer; }
+  .toggle-label.active { color:var(--gold); }
+  .toggle-switch { position:relative; width:52px; height:28px; cursor:pointer; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:#F5F0E8; border:1px solid var(--border); border-radius:99px; transition:.3s; }
+  .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:var(--gold); border-radius:50%; transition:.3s; }
+  input:checked + .toggle-slider:before { transform:translateX(24px); }
+  .save-badge { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#0D0D0B; background:var(--gold); padding:3px 8px; border-radius:4px; text-transform:uppercase; }
+  .plans-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; max-width:1000px; margin:0 auto 64px; }
+  .plan-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; }
+  .plan-card:hover { border-color:var(--gold-dark); }
+  .plan-card.featured { border-color:var(--gold); }
+  .featured-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--gold); color:#0D0D0B; font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; padding:4px 16px; border-radius:99px; text-transform:uppercase; white-space:nowrap; }
+  .plan-icon { font-size:36px; margin-bottom:16px; display:block; }
+  .plan-name { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .plan-track { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; }
+  .plan-price { margin-bottom:24px; }
+  .plan-amount { font-size:42px; font-weight:700; color:var(--text-primary); line-height:1; }
+  .plan-period { font-size:16px; color:var(--text-muted); margin-left:4px; }
+  .plan-billed { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:4px; }
+  .plan-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:12px; }
+  .plan-features li { font-size:16px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
+  .plan-features .check { color:var(--gold); font-weight:700; flex-shrink:0; }
+  .plan-features .muted { color:var(--text-muted); }
+  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; }
+  .plan-cta.primary { background:var(--gold); color:#0D0D0B; }
+  .plan-cta.primary:hover { opacity:.85; }
+  .plan-cta.secondary { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
+  .plan-cta.secondary:hover { border-color:var(--gold-dark); color:var(--gold); }
+  .extras-section { max-width:720px; margin:0 auto 64px; }
+  .extras-title { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:4px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; text-align:center; }
+  .extras-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .extra-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .extra-name { font-size:17px; font-weight:600; color:var(--text-primary); }
+  .extra-desc { font-size:15px; color:var(--text-muted); margin-top:2px; }
+  .extra-price { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
+
+  /* Open Competition entry section */
+  .open-section { max-width:720px; margin:0 auto 64px; }
+  .open-card {
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
+    border:1px solid var(--gold-dark); border-radius:var(--radius-lg); padding:36px 32px;
+  }
+  .open-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:24px; }
+  .open-card-title { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .open-card-sub { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
+  .open-card-desc { font-size:16px; color:var(--text-secondary); line-height:1.8; max-width:480px; }
+  .open-price-box { text-align:center; flex-shrink:0; }
+  .open-price-amount { font-size:42px; font-weight:700; color:var(--gold); line-height:1; }
+  .open-price-per { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
+  .open-prizes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px; }
+  .open-prize-item { background:#F5F0E8; border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; text-align:center; }
+  .open-prize-label { font-family:var(--font-mono); font-size: 15px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
+  .open-prize-amount { font-size:18px; font-weight:700; color:var(--gold); line-height:1; }
+  .open-prize-sub { font-size:14px; color:var(--text-muted); margin-top:3px; }
+  .open-rules { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+  .open-rule-pill { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; color:var(--text-muted); background:#F5F0E8; border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
+
+  .faq-section { max-width:720px; margin:0 auto 64px; }
+  .faq-item { border-bottom:1px solid var(--border); padding:20px 0; }
+  .faq-q { font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
+  .faq-a { font-size:16px; color:var(--text-secondary); line-height:1.8; }
+  @media(max-width:768px) {
+    .plans-grid { grid-template-columns:1fr; }
+    .extras-grid { grid-template-columns:1fr; }
+    .open-card-header { flex-direction:column; }
+    .open-prizes { grid-template-columns:1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad);">
+
+  <div class="pricing-hero">
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Simple, Honest Pricing</div>
+    <h1>Two Tracks.<br><em>One Scientific Standard.</em></h1>
+    <p>Get 6 free scored images in your first month, then 3 free per month ongoing. No credit card. When you're ready to compete and win, pick your League.</p>
+
+    <div class="pricing-toggle">
+      <span class="toggle-label active" id="lbl-monthly">Monthly</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label" id="lbl-annual">Annual <span class="save-badge">Save 30%</span></span>
+    </div>
+  </div>
+
+  <div class="plans-grid">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <span class="plan-icon">🎯</span>
+      <div class="plan-name">Free</div>
+      <div class="plan-track">Always Free</div>
+      <div class="plan-price">
+        <span class="plan-amount">₹0</span>
+        <span class="plan-period">forever</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> 6 free scored images — first month</li>
+        <li><span class="check">✓</span> 3 free scored images — every month after</li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Apex Byline improvement tip</li>
+        <li><span class="check">✓</span> Shareable rating card</li>
+        <li><span class="check">✓</span> View leaderboard</li>
+        <li><span class="muted">—</span> <span style="color:var(--text-muted)">Weekly Challenge &amp; POTY</span></li>
+        <li><span class="muted">—</span> <span style="color:var(--text-muted)">Ongoing uploads</span></li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="plan-cta secondary">Go to Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="plan-cta secondary">Start Free</a>
+      {% endif %}
+    </div>
+
+    <!-- Camera -->
+    <div class="plan-card featured">
+      <div class="featured-badge">📷 Camera Track</div>
+      <span class="plan-icon" style="margin-top:14px;">📷</span>
+      <div class="plan-name">Camera</div>
+      <div class="plan-track">DSLR · Mirrorless · Film</div>
+      <div class="plan-price">
+        <div class="monthly-price">
+          <span class="plan-amount">₹599</span><span class="plan-period">/month</span>
+          <div class="plan-billed">Billed monthly</div>
+        </div>
+        <div class="annual-price" style="display:none">
+          <span class="plan-amount">₹417</span><span class="plan-period">/month</span>
+          <div class="plan-billed">₹4,999 billed annually</div>
+        </div>
+      </div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Unlimited scored images</li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
+        <li><span class="check">✓</span> Peer-to-peer blind rating</li>
+        <li><span class="check">✓</span> Annual Grand Prix — POTY ₹50L</li>
+        <li><span class="check">✓</span> Open Competition eligible</li>
+        <li><span class="check">✓</span> Shareable rating card</li>
+        <li><span class="check">✓</span> Leaderboard ranking</li>
+      </ul>
+      <a href="{{ url_for('subscribe', track='camera') }}?plan=monthly" class="plan-cta primary monthly-cta">Subscribe — Camera</a>
+      <a href="{{ url_for('subscribe', track='camera') }}?plan=annual" class="plan-cta primary annual-cta" style="display:none">Subscribe — Camera</a>
+    </div>
+
+    <!-- Mobile -->
+    <div class="plan-card">
+      <span class="plan-icon">📱</span>
+      <div class="plan-name">Mobile</div>
+      <div class="plan-track">iPhone · Android · Smartphone</div>
+      <div class="plan-price">
+        <div class="monthly-price">
+          <span class="plan-amount">₹299</span><span class="plan-period">/month</span>
+          <div class="plan-billed">Billed monthly</div>
+        </div>
+        <div class="annual-price" style="display:none">
+          <span class="plan-amount">₹208</span><span class="plan-period">/month</span>
+          <div class="plan-billed">₹2,499 billed annually</div>
+        </div>
+      </div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Unlimited scored images</li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
+        <li><span class="check">✓</span> Peer-to-peer blind rating</li>
+        <li><span class="check">✓</span> Annual Mobile POTY ₹12L pool</li>
+        <li><span class="check">✓</span> Open Competition eligible</li>
+        <li><span class="check">✓</span> Shareable rating card</li>
+        <li><span class="check">✓</span> Leaderboard ranking</li>
+      </ul>
+      <a href="{{ url_for('subscribe', track='mobile') }}?plan=monthly" class="plan-cta primary monthly-cta">Subscribe — Mobile</a>
+      <a href="{{ url_for('subscribe', track='mobile') }}?plan=annual" class="plan-cta primary annual-cta" style="display:none">Subscribe — Mobile</a>
+    </div>
+  </div>
+
+  <!-- Extra images -->
+  <div class="extras-section">
+    <div class="extras-title">Need More Images?</div>
+    <div class="extras-grid">
+      <div class="extra-card">
+        <div>
+          <div class="extra-name">📷 Camera Extra</div>
+          <div class="extra-desc">One additional scored image</div>
+        </div>
+        <div class="extra-price">₹50</div>
+      </div>
+      <div class="extra-card">
+        <div>
+          <div class="extra-name">📱 Mobile Extra</div>
+          <div class="extra-desc">One additional scored image</div>
+        </div>
+        <div class="extra-price">₹25</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open Competition entry pricing -->
+  <div class="open-section" id="open">
+    <div class="extras-title">Open Competition</div>
+    <div class="open-card">
+      <div class="open-card-header">
+        <div>
+          <div class="open-card-sub">Annual · No Track Split</div>
+          <div class="open-card-title">Enter the Open</div>
+          <div class="open-card-desc">Camera and Mobile compete together. One winner per genre, one Grand Open Winner selected by jury from the 8 category winners. <strong>Opens 1 Oct 2026.</strong></div>
+        </div>
+        <div class="open-price-box">
+          <div class="open-price-amount">₹50</div>
+          <div class="open-price-per">per image entry</div>
+        </div>
+      </div>
+
+      <div class="open-prizes">
+        <div class="open-prize-item">
+          <div class="open-prize-label">Category Winner</div>
+          <div class="open-prize-amount">₹75,000</div>
+          <div class="open-prize-sub">× 8 genres</div>
+        </div>
+        <div class="open-prize-item" style="border-color:var(--gold-dark);">
+          <div class="open-prize-label">Grand Open Winner</div>
+          <div class="open-prize-amount">₹2,00,000</div>
+          <div class="open-prize-sub">Jury · from 8 finalists</div>
+        </div>
+        <div class="open-prize-item">
+          <div class="open-prize-label">Total Pool</div>
+          <div class="open-prize-amount">₹8,00,000</div>
+          <div class="open-prize-sub">Annual</div>
+        </div>
+      </div>
+
+      <div class="open-rules">
+        <span class="open-rule-pill">🎯 No League split</span>
+        <span class="open-rule-pill">🏅 One winner per genre</span>
+        <span class="open-rule-pill">👑 Grand Open — jury selected</span>
+        <span class="open-rule-pill">📅 Opens 1 Oct 2026</span>
+        <span class="open-rule-pill">🌍 8 genres</span>
+      </div>
+
+      {% if open_contest_active %}
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('open_contest_enter') }}" class="plan-cta primary">Enter Open Competition &rarr;</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="plan-cta primary">Join &amp; Enter &rarr;</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('pricing') }}#open" class="plan-cta secondary">View Open Rules &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
+    <div class="faq-item">
+      <div class="faq-q">What counts as a scored image?</div>
+      <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 6 scored images in their first month and 3 per month thereafter. Subscribers get unlimited scored images.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do unused images roll over?</div>
+      <div class="faq-a">Free users get 6 images in their first month and 3 per month thereafter — these reset on the 1st of each month and do not carry forward. Subscribers have no monthly limit.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I switch from Mobile to Camera League?</div>
+      <div class="faq-a">Yes — cancel your current subscription and subscribe to the other League. Your scored images and history remain.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is there a refund policy?</div>
+      <div class="faq-a">We offer a full refund within 7 days of subscription if you have not used any scored images in that billing period.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I enter the Open Competition on a free plan?</div>
+      <div class="faq-a">No — Open Competition entry requires an active Camera or Mobile subscription. The image you enter must have been previously scored on your account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Does the Open Competition have a League split?</div>
+      <div class="faq-a">No — Camera and Mobile photographers compete in the same pool for each genre. One winner per genre regardless of device.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleBilling() {
+  const annual = document.getElementById('billing-toggle').checked;
+  document.querySelectorAll('.monthly-price,.monthly-cta').forEach(el => el.style.display = annual ? 'none' : '');
+  document.querySelectorAll('.annual-price,.annual-cta').forEach(el => el.style.display = annual ? '' : 'none');
+  document.getElementById('lbl-monthly').classList.toggle('active', !annual);
+  document.getElementById('lbl-annual').classList.toggle('active', annual);
+}
+</script>
+{% endblock %}
