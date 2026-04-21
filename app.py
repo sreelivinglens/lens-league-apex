@@ -2882,6 +2882,15 @@ def sree_admin_login():
     return render_template('sree_admin_login.html')
 
 @app.route('/terms')
+
+@app.route('/poty')
+def poty():
+    return render_template('poty.html')
+
+
+
+
+
 def terms():
     return render_template('terms.html')
 
