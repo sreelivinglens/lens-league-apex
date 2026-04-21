@@ -120,7 +120,12 @@ nav {
 .nav-links a:hover { color: #F0EFE8; background: rgba(255,255,255,0.08); }
 .nav-links a.nav-admin { color: var(--gold); }
 .nav-links a.nav-admin:hover { background: var(--gold-subtle); }
-.nav-links a.nav-active { color: var(--gold); }
+.nav-links a.nav-active {
+  color: var(--gold) !important;
+  background: rgba(184,137,42,0.15);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 4px;
+}
 
 /* Hamburger */
 .nav-toggle {
@@ -166,6 +171,7 @@ nav {
 }
 .nav-mobile a:hover { color: #F0EFE8; background: rgba(255,255,255,0.08); }
 .nav-mobile a.nav-admin { color: var(--gold); }
+.nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(184,137,42,0.12); }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
