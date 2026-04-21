@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{% block title %}Lens League Apex{% endblock %}</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230D0D0B'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' font-weight='700' fill='%23C8A84B' text-anchor='middle'%3ELL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* ── Light theme — warm cream gradient surfaces ── */
+  --bg:          #F8F4EE;
+  --black:       #1a1a18;
+  --surface-1:   #FFFFFF;
+  --surface-2:   #FFFFFF;
+  --surface-3:   #F5F0E8;
+  --surface-4:   #EDE8DC;
+
+  --border-subtle: #EDE8DC;
+  --border:        #E0D8C8;
+  --border-strong: #C8C0B0;
+
+  --text-primary:   #1a1a18;
+  --text-secondary: #4A4840;
+  --text-muted:     #8A8478;
+  --text-disabled:  #C0B8A8;
+
+  --gold:        #B8892A;
+  --gold-light:  #D4A840;
+  --gold-dark:   #8A6010;
+  --gold-subtle: rgba(184, 137, 42, 0.10);
+  --gold-glow:   rgba(184, 137, 42, 0.18);
+
+  --green:       #2E7D4F;
+  --green-dim:   rgba(46, 125, 79, 0.12);
+  --red:         #C0392B;
+  --red-dim:     rgba(192, 57, 43, 0.10);
+  --amber:       #B8700A;
+  --amber-dim:   rgba(184, 112, 10, 0.12);
+  --dim:         #8A8478;
+
+  --font-body:  Georgia, 'Times New Roman', serif;
+  --font-mono:  'JetBrains Mono', 'Courier New', monospace;
+
+  --nav-height: 64px;
+  --page-pad:   clamp(16px, 4vw, 48px);
+  --max-width:  1200px;
+
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: linear-gradient(160deg, #FEFCF8 0%, #F6F1E8 40%, #F0EAD8 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+
+/* ── Global mobile safety ───────────────────────────────────────────────── */
+/* Prevents any element from causing horizontal scroll on mobile */
+* { max-width: 100%; }
+/* Allow tables to scroll horizontally rather than breaking layout */
+table { max-width: none; }
+
+/* ── Navigation ─────────────────────────────────────────────────────────── */
+nav {
+  background: rgba(26, 24, 20, 0.94);
+  border-bottom: 1px solid rgba(200,168,75,0.15);
+  backdrop-filter: blur(12px);
+  height: var(--nav-height);
+  padding: 0 var(--page-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-links a {
+  color: rgba(240,235,220,0.70);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.nav-links a:hover { color: #F0EFE8; background: rgba(255,255,255,0.08); }
+.nav-links a.nav-admin { color: var(--gold); }
+.nav-links a.nav-admin:hover { background: var(--gold-subtle); }
+.nav-links a.nav-active {
+  color: var(--gold) !important;
+  background: rgba(184,137,42,0.15);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 4px;
+}
+
+/* Hamburger */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text-secondary);
+  flex-direction: column;
+  gap: 5px;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+.nav-mobile {
+  display: none;
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  background: rgba(26,24,20,0.96);
+  border-bottom: 1px solid var(--border);
+  padding: 16px var(--page-pad);
+  flex-direction: column;
+  gap: 4px;
+  z-index: 199;
+}
+.nav-mobile.open { display: flex; }
+.nav-mobile a {
+  color: rgba(240,235,220,0.70);
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+.nav-mobile a:hover { color: #F0EFE8; background: rgba(255,255,255,0.08); }
+.nav-mobile a.nav-admin { color: var(--gold); }
+.nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(184,137,42,0.12); }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-subtle);
+}
+.btn-solid {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0D0D0B !important;
+  font-weight: 700;
+}
+.btn-solid:hover {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  color: #0D0D0B !important;
+}
+.btn-danger {
+  border-color: #7a2222;
+  color: var(--red);
+}
+.btn-danger:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+.btn:disabled, .btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Flash Messages ──────────────────────────────────────────────────────── */
+.flash-container { padding: 0 var(--page-pad); }
+.flash {
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  margin: 8px 0;
+  border-left: 3px solid;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  animation: flashIn .3s ease;
+  transition: opacity .3s ease, transform .3s ease;
+}
+@keyframes flashIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.flash.success { background: #EAF5EE;  border-color: var(--green); color: #1A5C34; }
+.flash.error   { background: #FAEAEA;  border-color: var(--red);   color: #8B2020; }
+.flash.warning { background: #FDF5E8;  border-color: var(--amber); color: #7A5010; }
+.flash.info    { background: var(--gold-subtle);border-color: var(--gold);  color: var(--gold-dark); }
+.flash-msg     { flex: 1; line-height: 1.5; }
+.flash-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 0 2px;
+  opacity: .4; transition: opacity .2s; flex-shrink: 0;
+}
+.flash-close:hover { opacity: 1; }
+.flash.success .flash-close { color: #A8DFB8; }
+.flash.error   .flash-close { color: #F0A0A0; }
+.flash.warning .flash-close { color: #F0C888; }
+.flash.info    .flash-close { color: var(--gold-light); }
+.flash.hiding  { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+/* ── Main Layout ─────────────────────────────────────────────────────────── */
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 40px var(--page-pad);
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card-sm {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card-gold {
+  border-color: var(--gold-dark);
+  background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));
+}
+
+/* ── Grid System ─────────────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 22px; }
+.form-group label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  background: #FFFDF8;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--text-muted); }
+.form-group select option { background: #FFFFFF; color: var(--text-primary); }
+.form-group textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+
+/* ── Stat Boxes ──────────────────────────────────────────────────────────── */
+.stat-box {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+.stat-val {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-lbl {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Image Thumbnails ────────────────────────────────────────────────────── */
+.img-thumb {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: var(--surface-3);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.img-thumb:hover img { transform: scale(1.05); }
+.score-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255,255,255,0.92);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+}
+.status-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+}
+.status-badge.scored  { background: rgba(76,175,115,0.20); border: 1px solid var(--green); color: var(--green); }
+.status-badge.pending { background: rgba(90,90,88,0.50);   border: 1px solid var(--border-strong); color: var(--text-muted); }
+
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.page-header {
+  margin-bottom: 36px;
+  padding-left: 20px;
+  border-left: 3px solid var(--gold);
+}
+.page-header h1 {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 17px;
+  margin-top: 6px;
+}
+
+/* ── Section Label ───────────────────────────────────────────────────────── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+hr.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 48px 0;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 32px;
+}
+.pagination a, .pagination span {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.pagination a:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+.pagination .active { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+
+/* ── Info Box ────────────────────────────────────────────────────────────── */
+.info-box {
+  background: #F8F4EE;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 18px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+/* ALL tables globally wrapped in scrollable container on mobile */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  /* min-width removed — let overflow-x handle it */
+}
+thead tr { background: #F5F0E8; }
+th {
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(184,137,42,0.05); }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px var(--page-pad) 24px;
+  text-align: center;
+  font-family: var(--font-mono);
+  color: var(--text-disabled);
+  margin-top: 80px;
+}
+.footer-brand {
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  line-height: 1.7;
+}
+.footer-brand strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.footer-links a {
+  color: var(--text-disabled);
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.footer-links a:hover { color: var(--gold); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: flex; }
+
+  main { padding: 24px var(--page-pad); }
+
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  .card { padding: 20px 16px; }
+  .card-sm { padding: 16px; }
+
+  .stat-val { font-size: 32px; }
+  .page-header h1 { font-size: 22px; }
+
+  .btn { padding: 10px 18px; font-size: 14px; }
+  footer { font-size: 14px; letter-spacing: 1px; }
+}
+
+@media (max-width: 480px) {
+  .nav-brand { font-size: 14px; letter-spacing: 2px; }
+  .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-val { font-size: 28px; }
+}
+
+/* ── Image right-click protection — sitewide ─────────────────────────────── */
+/* Protection is handled by JS below — CSS only adds user-select */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* iOS Safari long-press save */
+}
+
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a href="{{ url_for('index') }}" class="nav-brand">LENS LEAGUE APEX</a>
+
+  <!-- Desktop nav -->
+  <div class="nav-links">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}" style="color:var(--gold-light);">Challenge</a>
+      <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+      <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
+      <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
+      {% if current_user.is_subscribed %}
+      <a href="{{ url_for('rate') }}" class="{% if request.endpoint == 'rate' %}nav-active{% endif %}" style="color:var(--green);">★ Rate</a>
+      {% endif %}
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-admin">Admin</a>
+        <a href="{{ url_for('admin_weekly_challenge') }}" class="nav-admin" style="font-size:13px;">⚡ Challenge</a>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
+    {% else %}
+      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+      <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Join Free</a>
+    {% endif %}
+  </div>
+
+  <!-- Mobile hamburger -->
+  <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav-mobile" id="navMobile">
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
+    <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
+    <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()" style="color:var(--gold-light);">Challenge</a>
+    <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
+    <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
+    <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
+    {% if current_user.is_subscribed %}
+    <a href="{{ url_for('rate') }}" onclick="toggleNav()" style="color:var(--green);">★ Rate</a>
+    {% endif %}
+    {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-admin" onclick="toggleNav()">Admin</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
+  {% else %}
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
+    <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
+  {% endif %}
+</div>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer" style="max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}" role="alert">
+        <span class="flash-msg">{{ message }}</span>
+        <button class="flash-close" onclick="dismissFlash(this)" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <div class="footer-brand">
+    <strong>&copy; 2026 Lens League Apex.</strong> &nbsp;All rights reserved.
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    APEX DDI ENGINE &nbsp;·&nbsp; Rated by Science. Not Opinion.
+  </div>
+  <div class="footer-links">
+    <a href="/terms">Terms &amp; Conditions</a>
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="/contact">Contact Us</a>
+    <a href="/faq">FAQ</a>
+    <a href="/contest-rules">Contest Rules</a>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navMobile').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const nav = document.getElementById('navMobile');
+  const toggle = document.querySelector('.nav-toggle');
+  if (nav.classList.contains('open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+    nav.classList.remove('open');
+  }
+});
+
+function dismissFlash(btn) {
+  const flash = btn.closest('.flash');
+  flash.classList.add('hiding');
+  setTimeout(() => flash.remove(), 300);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.flash').forEach(function(el) {
+    setTimeout(function() {
+      el.classList.add('hiding');
+      setTimeout(() => el.remove(), 300);
+    }, 8000);
+  });
+});
+
+// ── Right-click protection on images ────────────────────────────────────────
+// Blocks right-click > Save Image and long-press save on mobile
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG' || e.target.closest('img')) {
+    e.preventDefault();
+    return false;
+  }
+  // Also block right-click on anchor tags that contain images
+  if (e.target.tagName === 'A' && e.target.querySelector('img')) {
+    e.preventDefault();
+    return false;
+  }
+});
+// Block drag-to-desktop on desktop browsers
+document.addEventListener('dragstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
+  }
+});
+// Block long-press save on iOS/Android
+document.addEventListener('touchstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.target.style.webkitUserSelect = 'none';
+    e.target.style.webkitTouchCallout = 'none';
+  }
+}, { passive: true });
+// Apply -webkit-touch-callout to all images on load (Safari iOS)
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('img').forEach(function(img) {
+    img.style.webkitTouchCallout = 'none';
+    img.style.webkitUserSelect   = 'none';
+    // Prevent the anchor wrapping the image from being right-clicked
+    var parent = img.parentElement;
+    if (parent && parent.tagName === 'A') {
+      parent.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+  });
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+<button id="backToTop" aria-label="Back to top">&#8593;</button>
+<style>
+#backToTop {
+  position:fixed; bottom:28px; right:28px; z-index:999;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--gold); color:#1a1a18;
+  border:none; cursor:pointer;
+  font-size:18px; font-weight:700; line-height:44px; text-align:center;
+  opacity:0; visibility:hidden;
+  transition:opacity 0.3s, visibility 0.3s, transform 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+#backToTop.btt-visible { opacity:1; visibility:visible; }
+#backToTop:hover { transform:translateY(-3px); }
+</style>
+<script>
+(function(){
+  var btt = document.getElementById('backToTop');
+  window.addEventListener('scroll', function(){
+    btt.classList.toggle('btt-visible', window.scrollY > 400);
+  }, { passive: true });
+  btt.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
