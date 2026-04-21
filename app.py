@@ -3075,7 +3075,7 @@ def contest_enter_monthly(genre):
 
     if getattr(current_user, 'league_suspended', False):
         flash(' Your contest access is suspended due to league mismatches. Contact sreeks@gmail.com to resolve.', 'error')
-        return redirect(url_for('contests'))
+        return redirect(url_for('poty'))
 
     genre = normalise_genre(genre)
     now   = datetime.utcnow()
