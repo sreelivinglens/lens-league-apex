@@ -1184,6 +1184,59 @@ def dashboard():
 # Profile  -  edit name/username + change password (combined page)
 # ---------------------------------------------------------------------------
 
+def _build_progress_data(user):
+    """Returns progress dict for profile dashboard, or None if < 5 scored images."""
+    scored = (Image.query
+              .filter_by(user_id=user.id, status='scored')
+              .filter(Image.score.isnot(None),
+                      Image.is_flagged.isnot(True),
+                      Image.needs_review.isnot(True))
+              .order_by(Image.scored_at.asc())
+              .all())
+
+    if len(scored) < 5:
+        return None
+
+    dim_labels = {
+        'dod': 'Detail', 'disruption': 'Disruption',
+        'dm': 'Moment', 'wonder': 'Wonder', 'aq': 'Authenticity'
+    }
+    dim_fields = {
+        'dod': 'dod_score', 'disruption': 'disruption_score',
+        'dm': 'dm_score', 'wonder': 'wonder_score', 'aq': 'aq_score'
+    }
+
+    avgs = {}
+    for d in dim_fields:
+        vals = [getattr(img, dim_fields[d]) for img in scored
+                if getattr(img, dim_fields[d]) is not None]
+        avgs[d] = round(sum(vals) / len(vals), 2) if vals else 0.0
+
+    trend_imgs = scored[-10:]
+    trend = [{'label': f'#{i+1}', 'tier': img.tier or get_tier(img.score), 'score': img.score}
+             for i, img in enumerate(trend_imgs)]
+
+    strongest = max(avgs, key=avgs.get)
+    weakest   = min(avgs, key=avgs.get)
+
+    from collections import Counter
+    genre_counts = Counter(img.genre for img in scored if img.genre)
+    top_genre = genre_counts.most_common(1)[0][0] if genre_counts else None
+
+    avg_score = round(sum(img.score for img in scored) / len(scored), 2)
+
+    return {
+        'count':      len(scored),
+        'avg_tier':   get_tier(avg_score),
+        'dim_avgs':   avgs,
+        'dim_labels': dim_labels,
+        'trend':      trend,
+        'strongest':  strongest,
+        'weakest':    weakest,
+        'top_genre':  top_genre,
+    }
+
+
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -1234,7 +1287,8 @@ def profile():
             logout_user()
             return redirect(url_for('login'))
 
-    return render_template('profile.html', images_used=images_used)
+    progress_data = _build_progress_data(current_user)
+    return render_template('profile.html', images_used=images_used, progress_data=progress_data)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
