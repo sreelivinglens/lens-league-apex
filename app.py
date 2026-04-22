@@ -6331,8 +6331,9 @@ def admin_notify_winners():
         notified += 1
 
     db.session.commit()
+    genre_count = len(genres_found) if not manual_ids else 'manual'
     flash(
-        f'{notified} image(s) across {len(genres_found) if not manual_ids else "manual"} genre(s) notified privately. '
+        f'{notified} image(s) across {genre_count} genre(s) notified privately. '
         f'RAW window: {raw_hours} hours.',
         'success'
     )
