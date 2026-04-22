@@ -763,7 +763,7 @@ def index():
 @app.route('/register')
 def register():
     if current_user.is_authenticated:
-        # Judge already logged in — send to jury dashboard
+        # Judge already logged in -- send to jury dashboard
         _jc = db.session.execute(
             db.text("SELECT id FROM judges WHERE user_id = :uid AND status = 'approved'"),
             {'uid': current_user.id}
@@ -806,7 +806,7 @@ def auth_google_callback():
         login_user(user)
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
-        # Check if this user is an approved judge — send to jury dashboard
+        # Check if this user is an approved judge -- send to jury dashboard
         judge_check = db.session.execute(
             db.text("SELECT id FROM judges WHERE user_id = :uid AND status = 'approved'"),
             {'uid': user.id}
@@ -882,7 +882,7 @@ def onboarding():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        # Judge already logged in — send to jury dashboard
+        # Judge already logged in -- send to jury dashboard
         _jc = db.session.execute(
             db.text("SELECT id FROM judges WHERE user_id = :uid AND status = 'approved'"),
             {'uid': current_user.id}
@@ -922,7 +922,7 @@ def login():
             return redirect(next_url)
         if user.role == 'admin':
             return redirect(url_for('admin_dashboard'))
-        # Check if this user is an approved judge — send to jury dashboard
+        # Check if this user is an approved judge -- send to jury dashboard
         judge_check = db.session.execute(
             db.text("SELECT id FROM judges WHERE user_id = :uid AND status = 'approved'"),
             {'uid': user.id}
@@ -1151,7 +1151,7 @@ def dashboard():
     # Weekly challenge banner
     active_challenge = _get_active_challenge()
 
-    # Zone notification data — all pages, not just current
+    # Zone notification data -- all pages, not just current
     zone3_flagged = Image.query.filter(
         Image.user_id == current_user.id,
         Image.needs_review == True,
@@ -1164,7 +1164,7 @@ def dashboard():
         user_id=current_user.id, peer_review_pending=True, needs_review=False, is_flagged=False
     ).all() if not current_user.role == 'admin' else []
 
-    # Contest wins — images with published results
+    # Contest wins -- images with published results
     contest_wins = []
     if current_user.role != 'admin':
         contest_wins = Image.query.filter_by(
@@ -5178,7 +5178,7 @@ def judge_register(token):
         if admin_emails:
             send_email(
                 admin_emails,
-                f'[Jury] New judge application — {name}',
+                f'[Jury] New judge application -- {name}',
                 (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-weight:700;color:#C8A84B;">NEW JUDGE APPLICATION</p>'
                  f'<p>Name: <strong>{name}</strong><br>Email: {judge.email}<br>'
@@ -5278,7 +5278,7 @@ def judge_score_image(assignment_id):
             if admin_emails:
                 send_email(
                     admin_emails,
-                    f'[Jury Flag] Image #{assignment.image_id} — {flag_type}',
+                    f'[Jury Flag] Image #{assignment.image_id} -- {flag_type}',
                     (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
                      f'<p style="color:#C0392B;font-weight:700;">JURY FLAG RAISED</p>'
                      f'<p>Image: {assignment.asset_name} (ID: {assignment.image_id})<br>'
@@ -5338,20 +5338,14 @@ def judge_score_image(assignment_id):
         return redirect(url_for('judge_dashboard'))
 
     ddi_descriptions = {
-        'DoD':        'Depth of Detail — technical precision, sharpness, compositional complexity',
-        'Disruption': 'Disruption — visual surprise, unconventional perspective, breaks convention',
-        'DM':         'Decisive Moment — the unrepeatable instant, timing, narrative peak',
-        'Wonder':     'Wonder — emotional impact, transcendence, the feeling it leaves',
-        'AQ':         "Authenticity Quotient — soul, honesty, the photographer's unique voice",
+        'DoD':        'Depth of Detail -- technical precision, sharpness, compositional complexity',
+        'Disruption': 'Disruption -- visual surprise, unconventional perspective, breaks convention',
+        'DM':         'Decisive Moment -- the unrepeatable instant, timing, narrative peak',
+        'Wonder':     'Wonder -- emotional impact, transcendence, the feeling it leaves',
+        'AQ':         "Authenticity Quotient -- soul, honesty, the photographer's unique voice",
     }
-    # Pass raw_verified so template can disable the AI-generated flag for already-verified images
-    _raw_verified = db.session.execute(
-        db.text("SELECT raw_verified FROM images WHERE id = :iid"),
-        {'iid': assignment.image_id}
-    ).scalar() or False
     return render_template('judge_score.html',
-        assignment=assignment, judge=judge, ddi_descriptions=ddi_descriptions,
-        raw_verified=_raw_verified)
+        assignment=assignment, judge=judge, ddi_descriptions=ddi_descriptions)
 
 
 @app.route('/judge/score/<int:assignment_id>/skip', methods=['POST'])
@@ -5621,10 +5615,10 @@ def admin_populate_judge_pool():
                 judge.email,
                 f'[Lens League Jury] {pending_count} image(s) assigned for {contest_ref}',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  —  Jury</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  --  Jury</p>'
                  f'<h2 style="font-size:20px;">New images assigned</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pending_count} image(s)</strong> for <strong>{contest_ref}</strong>.<br>'
-                 f'Deadline: <strong>{deadline.strftime("%d %B %Y, %H:%M UTC")}</strong> — <strong style="color:#C8A84B;">{deadline_hours} hours from now</strong></p>'
+                 f'Deadline: <strong>{deadline.strftime("%d %B %Y, %H:%M UTC")}</strong> -- <strong style="color:#C8A84B;">{deadline_hours} hours from now</strong></p>'
                  f'<p style="font-size:15px;color:#C0392B;line-height:1.6;">Please complete all assigned images before the deadline. Late submissions cannot be accepted.</p>'
                  f'<a href="{site_url}/judge/dashboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">Open Dashboard</a>'
                  f'</div>')
@@ -5705,7 +5699,7 @@ def admin_contest_go_live():
     ), {'cr': contest_ref, 'ct': contest_type})
     db.session.commit()
 
-    # Email winners — top 3 by judge_final_score for this contest
+    # Email winners -- top 3 by judge_final_score for this contest
     site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
     winners = db.session.execute(db.text(
         "SELECT i.id, i.asset_name, i.genre, i.judge_final_score, i.user_id "
@@ -5724,7 +5718,7 @@ def admin_contest_go_live():
             continue
         send_email(
             photographer.email,
-            f'🏆 You placed {ordinals[rank]} in {contest_ref} — Lens League Apex',
+            f'🏆 You placed {ordinals[rank]} in {contest_ref} -- Lens League Apex',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex</p>'
              f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
@@ -5805,7 +5799,7 @@ def raw_submit(contest_type, image_id):
         if admin_emails:
             send_email(
                 admin_emails,
-                f'[RAW Received] Image #{image_id} — {img.asset_name}',
+                f'[RAW Received] Image #{image_id} -- {img.asset_name}',
                 (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
                  f'<p style="color:#C8A84B;font-weight:700;">RAW SUBMISSION RECEIVED</p>'
                  f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
@@ -5889,7 +5883,7 @@ def admin_raw_detail(image_id):
 @login_required
 @admin_required
 def admin_mark_raw_verified(image_id):
-    """Admin shortcut — mark image as RAW verified without a formal submission.
+    """Admin shortcut -- mark image as RAW verified without a formal submission.
     Used for testing and manual override when contestant has verified by other means."""
     img = Image.query.get_or_404(image_id)
     img.raw_verified      = True
@@ -5924,7 +5918,7 @@ def admin_raw_decide(image_id):
         if photographer:
             send_email(
                 photographer.email,
-                'RAW verification approved — Lens League Apex',
+                'RAW verification approved -- Lens League Apex',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
                  f'<h2>RAW Verification Approved</h2>'
@@ -5944,7 +5938,7 @@ def admin_raw_decide(image_id):
         if photographer:
             send_email(
                 photographer.email,
-                'RAW verification failed — Lens League Apex',
+                'RAW verification failed -- Lens League Apex',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
                  f'<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
@@ -5953,14 +5947,14 @@ def admin_raw_decide(image_id):
                  f'<p style="font-size:14px;color:#8a8070;">Contact sreelivinglens@gmail.com to contest within 48 hours.</p>'
                  f'</div>')
             )
-        flash(f'RAW rejected — "{img.asset_name}" disqualified.', 'warning')
+        flash(f'RAW rejected -- "{img.asset_name}" disqualified.', 'warning')
 
     elif decision == 'resubmit_requested':
         site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
         if photographer:
             send_email(
                 photographer.email,
-                'RAW resubmission required — Lens League Apex',
+                'RAW resubmission required -- Lens League Apex',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
                  f'<h2>RAW Resubmission Required</h2>'
@@ -6008,11 +6002,11 @@ def admin_resolve_flag(assignment_id):
         ), {'iid': assignment.image_id})
         action_label = 'disqualified from the contest'
     else:
-        # Override — clear the flag, treat as pending for scoring
+        # Override -- clear the flag, treat as pending for scoring
         db.session.execute(db.text(
             "UPDATE judge_assignments SET status='pending' WHERE id=:aid"
         ), {'aid': assignment_id})
-        action_label = 'kept in the contest pool — flag overridden'
+        action_label = 'kept in the contest pool -- flag overridden'
 
     db.session.commit()
 
@@ -6021,9 +6015,9 @@ def admin_resolve_flag(assignment_id):
     if assignment.judge_email:
         send_email(
             assignment.judge_email,
-            f'Your flag has been reviewed — {assignment.asset_name}',
+            f'Your flag has been reviewed -- {assignment.asset_name}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex — Jury</p>'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex -- Jury</p>'
              f'<h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Flag Reviewed</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for flagging <strong>"{assignment.asset_name}"</strong> ({assignment.genre}).</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Admin decision: <strong style="color:#C8A84B;">{action_label.title()}</strong>.</p>'
@@ -6089,7 +6083,7 @@ def admin_raw_trigger_analysis(image_id):
             'iid': image_id,
         })
         db.session.commit()
-        flash(f'Analysis complete. {"Flags raised — review required." if flags else "No flags."}',
+        flash(f'Analysis complete. {"Flags raised -- review required." if flags else "No flags."}',
               'warning' if flags else 'success')
     except Exception as e:
         db.session.execute(db.text(
@@ -6254,7 +6248,7 @@ def admin_notify_winners():
     winner_image_ids = []
 
     if manual_ids:
-        # Manual override — admin supplied IDs directly
+        # Manual override -- admin supplied IDs directly
         for part in manual_ids.split(','):
             part = part.strip()
             if part.isdigit():
@@ -6324,7 +6318,7 @@ def admin_notify_winners():
 
         send_email(
             photographer.email,
-            f'Congratulations — provisional winner in {contest_ref}',
+            f'Congratulations -- provisional winner in {contest_ref}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
@@ -6373,7 +6367,7 @@ def cron_judge_reminders():
                 row.email,
                 f'[{"Reminder" if hours==48 else "Final Reminder"}] {row.cnt} image(s) due in {label}',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  —  Jury</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  --  Jury</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">'
                  f'{"Reminder" if hours==48 else "Final reminder"}: {row.cnt} image(s) to review</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Deadline: <strong>{row.dl.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
@@ -6449,12 +6443,17 @@ def cron_raw_reminders():
         ), {'iid': row.image_id})
         send_email(
             row.email,
-            f'Contest disqualification — RAW not received for "{row.asset_name}"',
+            f'Your image was not considered for this competition -- RAW file not received',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
-             f'<h2 style="color:#C0392B;">Disqualification Notice</h2>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">The RAW submission deadline passed for <strong>"{row.asset_name}"</strong>. This image has been disqualified.</p>'
-             f'<p style="font-size:14px;color:#8a8070;">To contest, contact sreelivinglens@gmail.com within 48 hours.</p>'
+             f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">We are sorry -- your image could not be considered</h2>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>"{row.asset_name}"</strong> was not considered for this competition because the RAW file was not received within the required deadline.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional winners to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
+             f'<div style="background:#F5F0E8;border-left:3px solid #C8A84B;padding:16px 20px;margin:20px 0;font-size:16px;color:#4A4840;line-height:1.7;">'
+             f'<strong style="color:#1a1a18;">You are welcome to continue competing.</strong> The same image may be entered again in future contests. If your image achieves a provisional winning position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
+             f'</div>'
+             f'<p style="font-size:15px;color:#8A8478;line-height:1.7;">If you believe this notice was sent in error, please write to <a href="mailto:sreeks@gmail.com" style="color:#C8A84B;">sreeks@gmail.com</a> within 48 hours.</p>'
+             f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Your account remains active and your DDI scores are unaffected.</p>'
              f'</div>')
         )
         disq += 1
