@@ -5344,8 +5344,14 @@ def judge_score_image(assignment_id):
         'Wonder':     'Wonder — emotional impact, transcendence, the feeling it leaves',
         'AQ':         "Authenticity Quotient — soul, honesty, the photographer's unique voice",
     }
+    # Pass raw_verified so template can disable the AI-generated flag for already-verified images
+    _raw_verified = db.session.execute(
+        db.text("SELECT raw_verified FROM images WHERE id = :iid"),
+        {'iid': assignment.image_id}
+    ).scalar() or False
     return render_template('judge_score.html',
-        assignment=assignment, judge=judge, ddi_descriptions=ddi_descriptions)
+        assignment=assignment, judge=judge, ddi_descriptions=ddi_descriptions,
+        raw_verified=_raw_verified)
 
 
 @app.route('/judge/score/<int:assignment_id>/skip', methods=['POST'])
@@ -6306,45 +6312,28 @@ def admin_notify_winners():
         if not img or not photographer:
             continue
 
-        img.contest_result_status = 'provisional'
+        img.raw_verification_required = True
+        img.contest_result_status     = 'provisional'
 
-        if img.raw_verified:
-            # Already verified in a previous contest — skip RAW window, go straight to jury
-            send_email(
-                photographer.email,
-                f'Congratulations — provisional winner in {contest_ref}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
-                 f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your RAW file has already been verified for this image — no further submission is required. Your image will proceed directly to jury evaluation.</p>'
-                 f'<p style="font-size:14px;color:#8a8070;">Results will be published once jury evaluation is complete. Questions: <a href="mailto:sreeks@gmail.com" style="color:#C8A84B;">sreeks@gmail.com</a></p>'
-                 f'</div>')
-            )
-        else:
-            # RAW not yet verified — open the verification window as normal
-            img.raw_verification_required = True
+        db.session.execute(db.text(
+            "INSERT INTO raw_submissions "
+            "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+            "VALUES (:iid, :uid, :cr, :ct, :dl, 'awaiting') "
+            "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+        ), {'iid': image_id, 'uid': img.user_id, 'cr': contest_ref, 'ct': contest_type, 'dl': deadline})
 
-            db.session.execute(db.text(
-                "INSERT INTO raw_submissions "
-                "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
-                "VALUES (:iid, :uid, :cr, :ct, :dl, 'awaiting') "
-                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
-            ), {'iid': image_id, 'uid': img.user_id, 'cr': contest_ref, 'ct': contest_type, 'dl': deadline})
-
-            send_email(
-                photographer.email,
-                f'Congratulations — provisional winner in {contest_ref}',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
-                 f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, please upload your original RAW file within <strong>{raw_hours} hours</strong> using the link below.</p>'
-                 f'<a href="{site_url}/raw/submit/{contest_type}/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Upload RAW File</a>'
-                 f'<p style="font-size:14px;color:#8a8070;">Deadline: {deadline.strftime("%d %B %Y, %H:%M UTC")} ({raw_hours} hours from now). Results will not be published until RAW verification is complete.</p>'
-                 f'</div>')
-            )
-
+        send_email(
+            photographer.email,
+            f'Congratulations — provisional winner in {contest_ref}',
+            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+             f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, submit the original RAW file within <strong>{raw_hours} hours</strong>.</p>'
+             f'<a href="{site_url}/raw/submit/{contest_type}/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Submit RAW File</a>'
+             f'<p style="font-size:14px;color:#8a8070;">Deadline: {deadline.strftime("%d %B %Y, %H:%M UTC")} ({raw_hours} hours from now). Results will not be published until RAW verification is complete.</p>'
+             f'</div>')
+        )
         notified += 1
 
     db.session.commit()
