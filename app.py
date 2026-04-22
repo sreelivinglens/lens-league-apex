@@ -323,6 +323,10 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_width INTEGER",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_height INTEGER",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_capture_datetime VARCHAR(40)",
+                # v31 - jury flag resolution
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decision VARCHAR(20)",
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_note TEXT",
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decided_at TIMESTAMP",
             ]
             for sql in _migrations:
                 try:
@@ -1160,13 +1164,24 @@ def dashboard():
         user_id=current_user.id, peer_review_pending=True, needs_review=False, is_flagged=False
     ).all() if not current_user.role == 'admin' else []
 
+    # Contest wins — images with published results
+    contest_wins = []
+    if current_user.role != 'admin':
+        contest_wins = Image.query.filter_by(
+            user_id=current_user.id,
+            contest_result_status='published'
+        ).filter(Image.judge_final_score != None).order_by(
+            Image.judge_final_score.desc()
+        ).all()
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
                            poty_tracker=poty_tracker,
                            active_challenge=active_challenge,
                            zone3_flagged=zone3_flagged,
-                           zone2_pending=zone2_pending)
+                           zone2_pending=zone2_pending,
+                           contest_wins=contest_wins)
 
 
 # ---------------------------------------------------------------------------
@@ -5204,9 +5219,18 @@ def judge_dashboard():
     flagged_count = db.session.execute(db.text(
         "SELECT COUNT(*) FROM judge_assignments WHERE judge_id=:jid AND status='flagged'"
     ), {'jid': judge.id}).scalar()
+    # Flags this judge raised that admin has actioned
+    resolved_flags = db.session.execute(db.text(
+        "SELECT ja.id, ja.admin_flag_decision, ja.admin_flag_note, ja.admin_flag_decided_at, "
+        "i.asset_name, i.genre "
+        "FROM judge_assignments ja JOIN images i ON i.id = ja.image_id "
+        "WHERE ja.judge_id=:jid AND ja.status='flagged' AND ja.admin_flag_decision IS NOT NULL "
+        "ORDER BY ja.admin_flag_decided_at DESC LIMIT 10"
+    ), {'jid': judge.id}).fetchall()
+
     return render_template('judge_dashboard.html',
         judge=judge, pending=pending, scored_count=scored_count,
-        flagged_count=flagged_count, now=now)
+        flagged_count=flagged_count, resolved_flags=resolved_flags, now=now)
 
 
 @app.route('/judge/score/<int:assignment_id>', methods=['GET', 'POST'])
@@ -5603,6 +5627,20 @@ def admin_populate_judge_pool():
 def admin_publish_results():
     contest_ref  = request.form.get('contest_ref', '').strip()
     contest_type = request.form.get('contest_type', 'weekly')
+
+    # Block compute if unreviewed flags exist for this contest
+    unreviewed_flags = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM judge_assignments "
+        "WHERE contest_ref=:cr AND contest_type=:ct AND status='flagged' AND admin_flag_decision IS NULL"
+    ), {'cr': contest_ref, 'ct': contest_type}).scalar() or 0
+    if unreviewed_flags:
+        flash(
+            f'{unreviewed_flags} flagged image(s) in this contest have not been reviewed by admin. '
+            f'Go to the Judge Queue, resolve all flags (Disqualify or Override), then compute results.',
+            'error'
+        )
+        return redirect(url_for('admin_judge_config'))
+
     config = db.session.execute(db.text(
         "SELECT * FROM contest_judge_configs WHERE contest_ref=:cr AND contest_type=:ct"
     ), {'cr': contest_ref, 'ct': contest_type}).fetchone()
@@ -5654,7 +5692,37 @@ def admin_contest_go_live():
         "UPDATE contest_judge_configs SET leaderboard_published_at=NOW() WHERE contest_ref=:cr AND contest_type=:ct"
     ), {'cr': contest_ref, 'ct': contest_type})
     db.session.commit()
-    flash(f'Leaderboard published for {contest_ref}. Results are now live.', 'success')
+
+    # Email winners — top 3 by judge_final_score for this contest
+    site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+    winners = db.session.execute(db.text(
+        "SELECT i.id, i.asset_name, i.genre, i.judge_final_score, i.user_id "
+        "FROM images i "
+        "JOIN judge_assignments ja ON ja.image_id = i.id "
+        "WHERE ja.contest_ref=:cr AND ja.contest_type=:ct "
+        "AND i.contest_result_status='published' AND i.judge_final_score IS NOT NULL "
+        "GROUP BY i.id, i.asset_name, i.genre, i.judge_final_score, i.user_id "
+        "ORDER BY i.judge_final_score DESC LIMIT 3"
+    ), {'cr': contest_ref, 'ct': contest_type}).fetchall()
+
+    ordinals = {1: '1st', 2: '2nd', 3: '3rd'}
+    for rank, row in enumerate(winners, 1):
+        photographer = User.query.get(row.user_id)
+        if not photographer:
+            continue
+        send_email(
+            photographer.email,
+            f'🏆 You placed {ordinals[rank]} in {contest_ref} — Lens League Apex',
+            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex</p>'
+             f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
+             f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>"{row.asset_name}"</strong> ({row.genre}) has placed <strong style="color:#C8A84B;">{ordinals[rank]}</strong> in <strong>{contest_ref}</strong>.</p>'
+             f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">The results are now live on the leaderboard.</p>'
+             f'<a href="{site_url}/leaderboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Leaderboard →</a>'
+             f'</div>')
+        )
+
+    flash(f'Leaderboard published for {contest_ref}. Results are now live. {len(winners)} winner(s) notified by email.', 'success')
     return redirect(url_for('admin_judge_config'))
 
 
@@ -5893,6 +5961,67 @@ def admin_raw_decide(image_id):
 
     db.session.commit()
     return redirect(url_for('admin_raw_verification'))
+
+
+@app.route('/admin/judge-assignment/<int:assignment_id>/resolve-flag', methods=['POST'])
+@login_required
+@admin_required
+def admin_resolve_flag(assignment_id):
+    """Admin resolves a judge-raised flag: disqualify or override (keep in pool)."""
+    decision = request.form.get('decision', '').strip()
+    note     = request.form.get('note', '').strip()
+    if decision not in ('disqualify', 'override'):
+        flash('Invalid decision.', 'error')
+        return redirect(url_for('admin_judge_queue'))
+
+    assignment = db.session.execute(db.text(
+        "SELECT ja.*, i.asset_name, i.genre, j.email AS judge_email, j.name AS judge_name "
+        "FROM judge_assignments ja "
+        "JOIN images i ON i.id = ja.image_id "
+        "JOIN judges j ON j.id = ja.judge_id "
+        "WHERE ja.id = :aid"
+    ), {'aid': assignment_id}).fetchone()
+    if not assignment:
+        abort(404)
+
+    db.session.execute(db.text(
+        "UPDATE judge_assignments SET admin_flag_decision=:dec, admin_flag_note=:note, "
+        "admin_flag_decided_at=NOW() WHERE id=:aid"
+    ), {'dec': decision, 'note': note or None, 'aid': assignment_id})
+
+    if decision == 'disqualify':
+        # Remove image from contest pool
+        db.session.execute(db.text(
+            "UPDATE images SET in_judge_pool=FALSE, contest_result_status='disqualified' WHERE id=:iid"
+        ), {'iid': assignment.image_id})
+        action_label = 'disqualified from the contest'
+    else:
+        # Override — clear the flag, treat as pending for scoring
+        db.session.execute(db.text(
+            "UPDATE judge_assignments SET status='pending' WHERE id=:aid"
+        ), {'aid': assignment_id})
+        action_label = 'kept in the contest pool — flag overridden'
+
+    db.session.commit()
+
+    # Email the judge who raised the flag
+    site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+    if assignment.judge_email:
+        send_email(
+            assignment.judge_email,
+            f'Your flag has been reviewed — {assignment.asset_name}',
+            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex — Jury</p>'
+             f'<h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Flag Reviewed</h2>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for flagging <strong>"{assignment.asset_name}"</strong> ({assignment.genre}).</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Admin decision: <strong style="color:#C8A84B;">{action_label.title()}</strong>.</p>'
+             f'{"<p style=\"font-size:15px;color:#8A8478;\">Note: " + note + "</p>" if note else ""}'
+             f'<a href="{site_url}/judge/dashboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Dashboard</a>'
+             f'</div>')
+        )
+
+    flash(f'Flag resolved: "{assignment.asset_name}" {action_label}.', 'success')
+    return redirect(url_for('admin_judge_queue'))
 
 
 @app.route('/admin/raw-verification/trigger-analysis/<int:image_id>', methods=['POST'])
