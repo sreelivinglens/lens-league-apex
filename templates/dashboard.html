@@ -903,10 +903,9 @@
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
         <form method="POST" action="{{ url_for('delete_image', image_id=img.id) }}" style="display:inline;" onsubmit="return confirm('Delete this image? This cannot be undone.');">
           <button type="submit" onclick="event.stopPropagation();"
-                  style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--text-muted); padding:2px 6px; border-radius:3px; transition:color 0.2s;"
+                  style="background:none; border:none; cursor:pointer; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); padding:2px 6px; border-radius:3px; transition:color 0.2s;"
                   onmouseover="this.style.color='var(--red)'"
-                  onmouseout="this.style.color='var(--text-muted)'"
-                  title="Delete image">✕</button>
+                  onmouseout="this.style.color='var(--text-muted)'">Delete</button>
         </form>
         <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
           {% if img.is_flagged %}
