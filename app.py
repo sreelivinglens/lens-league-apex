@@ -5618,7 +5618,8 @@ def admin_populate_judge_pool():
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  —  Jury</p>'
                  f'<h2 style="font-size:20px;">New images assigned</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pending_count} image(s)</strong> for <strong>{contest_ref}</strong>.<br>'
-                 f'Deadline: <strong>{deadline.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
+                 f'Deadline: <strong>{deadline.strftime("%d %B %Y, %H:%M UTC")}</strong> — <strong style="color:#C8A84B;">{deadline_hours} hours from now</strong></p>'
+                 f'<p style="font-size:15px;color:#C0392B;line-height:1.6;">Please complete all assigned images before the deadline. Late submissions cannot be accepted.</p>'
                  f'<a href="{site_url}/judge/dashboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">Open Dashboard</a>'
                  f'</div>')
             )
@@ -6224,18 +6225,82 @@ def _run_raw_analysis(submission, img):
 @login_required
 @admin_required
 def admin_notify_winners():
-    contest_ref  = request.form.get('contest_ref', '').strip()
-    contest_type = request.form.get('contest_type', 'weekly')
-    winner_ids   = request.form.getlist('winner_image_ids', type=int)
-    if not winner_ids:
-        flash('No winner image IDs provided.', 'error')
+    """
+    Notify contest winners and open RAW verification window.
+    Two modes:
+    - auto: system fetches top N images per genre from contest entries / judge scores
+    - manual: admin supplies comma-separated image IDs (fallback / override)
+    """
+    contest_ref   = request.form.get('contest_ref', '').strip()
+    contest_type  = request.form.get('contest_type', 'weekly')
+    top_n         = request.form.get('top_n', 3, type=int)   # top N per genre to notify
+    manual_ids    = request.form.get('winner_image_ids', '').strip()
+    raw_hours     = request.form.get('raw_hours', 48, type=int)
+
+    if not contest_ref:
+        flash('Contest reference is required.', 'error')
         return redirect(url_for('admin_judge_config'))
 
     site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
-    deadline = datetime.utcnow() + timedelta(hours=48)
-    notified = 0
+    deadline = datetime.utcnow() + timedelta(hours=raw_hours)
 
-    for image_id in winner_ids:
+    # -- Determine winner image IDs ----------------------------------------
+    winner_image_ids = []
+
+    if manual_ids:
+        # Manual override — admin supplied IDs directly
+        for part in manual_ids.split(','):
+            part = part.strip()
+            if part.isdigit():
+                winner_image_ids.append(int(part))
+    else:
+        # Auto-detect: top N per genre
+        # Priority 1: judge_final_score (if jury contest has been computed)
+        # Priority 2: DDI score (for monthly/community contests)
+        # For each genre, pick top N unique images by best available score
+        genres_found = db.session.execute(db.text(
+            "SELECT DISTINCT genre FROM images "
+            "WHERE status='scored' AND score IS NOT NULL "
+            "AND is_flagged=FALSE AND needs_review=FALSE"
+        )).fetchall()
+
+        for genre_row in genres_found:
+            genre = genre_row.genre
+            if not genre:
+                continue
+
+            # Try jury-scored images for this contest first
+            jury_top = db.session.execute(db.text(
+                "SELECT DISTINCT i.id, i.judge_final_score AS best_score "
+                "FROM images i "
+                "JOIN judge_assignments ja ON ja.image_id = i.id "
+                "WHERE ja.contest_ref=:cr AND ja.contest_type=:ct "
+                "AND i.genre=:genre AND i.judge_final_score IS NOT NULL "
+                "AND i.is_flagged=FALSE "
+                "ORDER BY i.judge_final_score DESC LIMIT :n"
+            ), {'cr': contest_ref, 'ct': contest_type, 'genre': genre, 'n': top_n}).fetchall()
+
+            if jury_top:
+                winner_image_ids.extend([r.id for r in jury_top])
+            else:
+                # Fall back to DDI score for this genre
+                ddi_top = db.session.execute(db.text(
+                    "SELECT id FROM images "
+                    "WHERE status='scored' AND genre=:genre "
+                    "AND score IS NOT NULL AND is_flagged=FALSE AND needs_review=FALSE "
+                    "ORDER BY score DESC LIMIT :n"
+                ), {'genre': genre, 'n': top_n}).fetchall()
+                winner_image_ids.extend([r.id for r in ddi_top])
+
+    if not winner_image_ids:
+        flash('No eligible images found for this contest. Check contest ref or use manual IDs.', 'warning')
+        return redirect(url_for('admin_judge_config'))
+
+    # Deduplicate
+    winner_image_ids = list(dict.fromkeys(winner_image_ids))
+
+    notified = 0
+    for image_id in winner_image_ids:
         img          = Image.query.get(image_id)
         photographer = User.query.get(img.user_id) if img else None
         if not img or not photographer:
@@ -6258,15 +6323,19 @@ def admin_notify_winners():
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, submit the original RAW file within <strong>48 hours</strong>.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, submit the original RAW file within <strong>{raw_hours} hours</strong>.</p>'
              f'<a href="{site_url}/raw/submit/{contest_type}/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Submit RAW File</a>'
-             f'<p style="font-size:14px;color:#8a8070;">Deadline: {deadline.strftime("%d %B %Y, %H:%M UTC")}. Results will not be published until RAW verification is complete.</p>'
+             f'<p style="font-size:14px;color:#8a8070;">Deadline: {deadline.strftime("%d %B %Y, %H:%M UTC")} ({raw_hours} hours from now). Results will not be published until RAW verification is complete.</p>'
              f'</div>')
         )
         notified += 1
 
     db.session.commit()
-    flash(f'{notified} winner(s) notified privately. RAW window: 48 hours.', 'success')
+    flash(
+        f'{notified} image(s) across {len(genres_found) if not manual_ids else "manual"} genre(s) notified privately. '
+        f'RAW window: {raw_hours} hours.',
+        'success'
+    )
     return redirect(url_for('admin_judge_config'))
 
 
