@@ -152,4 +152,44 @@
 </div>
 {% endif %}
 
+<!-- Resolved flags — admin decisions on flags you raised -->
+{% if resolved_flags %}
+<div style="margin-top:8px; margin-bottom:40px;">
+  <div class="section-label" style="margin-bottom:16px;">
+    Flags You Raised — Admin Decisions
+  </div>
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    {% for rf in resolved_flags %}
+    <div style="display:flex; align-items:center; gap:16px; padding:16px 20px;
+                background:var(--surface-2); border:1px solid var(--border);
+                border-left:3px solid {{ 'var(--red)' if rf.admin_flag_decision == 'disqualify' else 'var(--green)' }};
+                border-radius:var(--radius-md); flex-wrap:wrap;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:3px;">
+          {{ rf.asset_name or 'Untitled' }}
+        </div>
+        <div style="font-family:var(--font-mono); font-size:14px; color:var(--gold); margin-bottom:4px;">
+          {{ rf.genre or '—' }}
+        </div>
+        {% if rf.admin_flag_note %}
+        <div style="font-size:15px; color:var(--text-muted);">Admin note: {{ rf.admin_flag_note }}</div>
+        {% endif %}
+      </div>
+      <div style="text-align:right; flex-shrink:0;">
+        <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px;
+                    color:{{ 'var(--red)' if rf.admin_flag_decision == 'disqualify' else 'var(--green)' }};">
+          {{ '🚫 Disqualified' if rf.admin_flag_decision == 'disqualify' else '✓ Override — Kept in Pool' }}
+        </div>
+        {% if rf.admin_flag_decided_at %}
+        <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); margin-top:3px;">
+          {{ rf.admin_flag_decided_at.strftime('%d %b %H:%M UTC') }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
