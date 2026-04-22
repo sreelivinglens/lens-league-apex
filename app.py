@@ -1962,6 +1962,53 @@ def run_calibration():
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/image/<int:image_id>/delete', methods=['POST'])
+@login_required
+def delete_image(image_id):
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+    for url_attr in ['thumb_url', 'card_url']:
+        url = getattr(img, url_attr, None)
+        if url:
+            try:
+                key = url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                r2.delete_file(key)
+            except Exception:
+                pass
+    try:
+        from models import CalibrationNote
+        CalibrationNote.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    try:
+        ContestEntry.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    try:
+        OpenContestEntry.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    try:
+        ImageReport.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    try:
+        RatingAssignment.query.filter_by(image_id=image_id).delete()
+        PeerRating.query.filter_by(image_id=image_id).delete()
+        PeerPoolEntry.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    try:
+        WeeklySubmission.query.filter_by(image_id=image_id).delete()
+    except Exception:
+        pass
+    db.session.delete(img)
+    db.session.commit()
+    flash('Image deleted. Your scores and contest standings have been updated accordingly.', 'warning')
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/admin/image/<int:image_id>/delete', methods=['POST'])
 @login_required
 @admin_required
