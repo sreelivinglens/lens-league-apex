@@ -78,16 +78,6 @@
       <p>Create prompts - set dates - publish results</p>
       {% endif %}
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <form method="POST" action="{{ url_for('admin_send_reminder') }}" style="display:inline;">
-        <button type="submit" class="btn" style="font-size:12px;padding:7px 14px;"
-                onclick="return confirm('Send closing reminder to all users now?')">Send reminder</button>
-      </form>
-      <form method="POST" action="{{ url_for('admin_send_winners') }}" style="display:inline;">
-        <button type="submit" class="btn btn-solid" style="font-size:12px;padding:7px 14px;"
-                onclick="return confirm('Send winners email now?')">Send winners email</button>
-      </form>
-    </div>
   </div>
 
   {# ── Create new challenge ── #}
