@@ -290,6 +290,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dm FLOAT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_wonder FLOAT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_aq FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_review_pending BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_pool_unlocks INTEGER DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_sub_id VARCHAR(64)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
@@ -904,11 +905,26 @@ def dashboard():
     # Weekly challenge banner
     active_challenge = _get_active_challenge()
 
+    # Zone notification data — all pages, not just current
+    zone3_flagged = Image.query.filter(
+        Image.user_id == current_user.id,
+        Image.needs_review == True,
+        Image.judge_referral == True,
+        Image.is_flagged == False,
+        Image.peer_avg_score != None,
+        Image.peer_rating_count >= 5
+    ).all() if current_user.role != 'admin' else []
+    zone2_pending = Image.query.filter_by(
+        user_id=current_user.id, peer_review_pending=True, needs_review=False, is_flagged=False
+    ).all() if not current_user.role == 'admin' else []
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
                            poty_tracker=poty_tracker,
-                           active_challenge=active_challenge)
+                           active_challenge=active_challenge,
+                           zone3_flagged=zone3_flagged,
+                           zone2_pending=zone2_pending)
 
 
 # ---------------------------------------------------------------------------
@@ -4114,6 +4130,68 @@ def submit_rating():
         flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} . +1 credit earned.', 'success')
         if (current_user.lifetime_ratings_given or 0) % 5 == 0:
             flash(' You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
+
+        # Zone notifications
+        img = assignment.image
+        photographer = User.query.get(img.user_id) if img else None
+        if img and photographer:
+            if img.needs_review and img.judge_referral and img.peer_avg_score is not None:
+                delta = abs((img.peer_avg_score or 0) - (img.score or 0))
+                # Zone 3 - notify photographer
+                try:
+                    send_email(
+                        photographer.email,
+                        'Your image is under peer review - Lens League Apex',
+                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Lens League Apex</p>'
+                        f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review Triggered</h2>'
+                        f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> has received peer ratings that diverge significantly from its DDI score. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> is protected and unchanged.</p>'
+                        f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This image has been referred to our jury for review. You will be notified once the review is complete. No action is required from you.</p>'
+                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#B8892A;">sreelivinglens@gmail.com</a></p>'
+                        f'</div>'
+                    )
+                except Exception as mail_err:
+                    app.logger.error(f'[zone3 photographer email] {mail_err}')
+                # Zone 3 - notify admin
+                try:
+                    admin_users = User.query.filter_by(role='admin').all()
+                    admin_emails = [u.email for u in admin_users if u.email]
+                    if admin_emails:
+                        send_email(
+                            admin_emails,
+                            f'[Zone 3] Peer divergence on image #{img.id} - {img.asset_name}',
+                            f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                            f'<p style="font-size:14px;font-weight:700;color:#C0392B;">ZONE 3 - PEER DIVERGENCE ALERT</p>'
+                            f'<p style="font-size:14px;line-height:1.7;">Image: <strong>{img.asset_name or "Untitled"}</strong> (ID: {img.id})<br>'
+                            f'Photographer: {photographer.username} ({photographer.email})<br>'
+                            f'DDI Score: {img.score}<br>'
+                            f'Peer Average: {img.peer_avg_score}<br>'
+                            f'Delta: {round(delta, 2)}<br>'
+                            f'Peer Rating Count: {img.peer_rating_count}<br>'
+                            f'Status: needs_review=True, judge_referral=True</p>'
+                            f'<p style="font-size:13px;color:#8A8478;">DDI score is protected. Blended score not applied to POTY. Jury review triggered automatically.</p>'
+                            f'</div>'
+                        )
+                except Exception as mail_err:
+                    app.logger.error(f'[zone3 admin email] {mail_err}')
+
+            elif getattr(img, 'peer_review_pending', False) and not img.needs_review:
+                # Zone 2 - notify photographer only
+                try:
+                    send_email(
+                        photographer.email,
+                        'Peer review in progress on your image - Lens League Apex',
+                        f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Lens League Apex</p>'
+                        f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review In Progress</h2>'
+                        f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> is receiving peer ratings that are being reviewed for consistency. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> stands and is unaffected.</p>'
+                        f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This is an automated notice. No action is required from you. The peer review process will complete automatically.</p>'
+                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#B8892A;">sreelivinglens@gmail.com</a></p>'
+                        f'</div>'
+                    )
+                except Exception as mail_err:
+                    app.logger.error(f'[zone2 photographer email] {mail_err}')
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[submit_rating] {e}')

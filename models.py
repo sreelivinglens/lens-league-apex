@@ -196,6 +196,7 @@ class Image(db.Model):
 
     is_calibration_example = db.Column(db.Boolean, default=False, nullable=False)
     judge_referral         = db.Column(db.Boolean, default=False, nullable=False)
+    peer_review_pending    = db.Column(db.Boolean, default=False, nullable=False)
 
     ai_suspicion           = db.Column(db.Float,   default=0.0,   nullable=True)
     ai_suspicion_reason    = db.Column(db.Text,                    nullable=True)
@@ -222,8 +223,26 @@ class Image(db.Model):
         return {}
 
     def update_blended_score(self):
-        if self.peer_rating_count and self.peer_rating_count >= 5 and self.peer_avg_score and self.score:
-            self.blended_score = round(self.score * 0.80 + self.peer_avg_score * 0.20, 2)
+        """
+        Zone 1 — delta within ±1.5   : blend applies (80% DDI + 20% peer) → used for POTY
+        Zone 2 — delta ±1.5 to ±3.0  : blend applies + peer_review_flag set → admin visibility
+        Zone 3 — delta > ±3.0        : DDI score protected → needs_review + judge_referral triggered
+        Fewer than 5 peer ratings     : DDI score used unchanged
+        """
+        if self.peer_rating_count and self.peer_rating_count >= 5                 and self.peer_avg_score is not None and self.score is not None:
+            delta = abs(self.peer_avg_score - self.score)
+            if delta <= 1.5:
+                # Zone 1 — peers agree, blend applies
+                self.blended_score = round(self.score * 0.80 + self.peer_avg_score * 0.20, 2)
+            elif delta <= 3.0:
+                # Zone 2 — moderate divergence, blend applies but flag for admin visibility
+                self.blended_score = round(self.score * 0.80 + self.peer_avg_score * 0.20, 2)
+                self.peer_review_pending = True
+            else:
+                # Zone 3 — large divergence, DDI protected, trigger jury + admin review
+                self.blended_score = self.score
+                self.needs_review   = True
+                self.judge_referral = True
         else:
             self.blended_score = self.score
 
@@ -499,32 +518,55 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
 
 
 def _check_rater_bias(rater_id):
-    MIN_RATINGS = 20; THRESHOLD = 2.5
+    """
+    Runs after every rating submission.
+    1. Checks rater pattern bias (needs 20+ ratings, threshold 2.5 avg delta per dimension)
+    2. Checks if this specific rating pushed any image into Zone 3 (delta > 3.0)
+       — if so, sets needs_review + judge_referral on the image automatically
+    """
+    MIN_RATINGS = 20; THRESHOLD = 2.5; ZONE3_DELTA = 3.0
+
     ratings = PeerRating.query.filter_by(rater_id=rater_id).all()
-    if len(ratings) < MIN_RATINGS:
-        return
     rater = User.query.get(rater_id)
     if not rater:
         return
-    module_deltas = {'dod': [], 'disruption': [], 'dm': [], 'wonder': [], 'aq': []}
+
+    # ── Rater pattern bias check (requires 20+ ratings) ──────────────────────
+    if len(ratings) >= MIN_RATINGS:
+        module_deltas = {'dod': [], 'disruption': [], 'dm': [], 'wonder': [], 'aq': []}
+        for r in ratings:
+            img = r.image
+            if img and img.dod_score:        module_deltas['dod'].append(r.dod - img.dod_score)
+            if img and img.disruption_score: module_deltas['disruption'].append(r.disruption - img.disruption_score)
+            if img and img.dm_score:         module_deltas['dm'].append(r.dm - img.dm_score)
+            if img and img.wonder_score:     module_deltas['wonder'].append(r.wonder - img.wonder_score)
+            if img and img.aq_score:         module_deltas['aq'].append(r.aq - img.aq_score)
+        bias_modules = []
+        for mod, deltas in module_deltas.items():
+            if deltas:
+                avg_delta = sum(deltas) / len(deltas)
+                if abs(avg_delta) > THRESHOLD:
+                    direction = 'over' if avg_delta > 0 else 'under'
+                    bias_modules.append(f'{mod.upper()} ({direction}-scores by avg {abs(avg_delta):.1f})')
+        if bias_modules:
+            rater.rating_bias_flag = True
+            rater.rating_bias_note = 'Auto-detected: ' + ', '.join(bias_modules)
+
+    # ── Per-image Zone 3 check — runs on every rating regardless of count ─────
+    # For each image this rater has rated, check if the current peer avg
+    # has crossed Zone 3 threshold and trigger review if so
     for r in ratings:
         img = r.image
-        if img.dod_score:        module_deltas['dod'].append(r.dod - img.dod_score)
-        if img.disruption_score: module_deltas['disruption'].append(r.disruption - img.disruption_score)
-        if img.dm_score:         module_deltas['dm'].append(r.dm - img.dm_score)
-        if img.wonder_score:     module_deltas['wonder'].append(r.wonder - img.wonder_score)
-        if img.aq_score:         module_deltas['aq'].append(r.aq - img.aq_score)
-    bias_modules = []
-    for mod, deltas in module_deltas.items():
-        if deltas:
-            avg_delta = sum(deltas) / len(deltas)
-            if abs(avg_delta) > THRESHOLD:
-                direction = 'over' if avg_delta > 0 else 'under'
-                bias_modules.append(f'{mod.upper()} ({direction}-scores by avg {abs(avg_delta):.1f})')
-    if bias_modules:
-        rater.rating_bias_flag = True
-        rater.rating_bias_note = 'Auto-detected: ' + ', '.join(bias_modules)
-        db.session.commit()
+        if not img or not img.score or img.peer_rating_count < 5:
+            continue
+        if img.peer_avg_score is None:
+            continue
+        delta = abs(img.peer_avg_score - img.score)
+        if delta > ZONE3_DELTA and not img.needs_review:
+            img.needs_review   = True
+            img.judge_referral = True
+
+    db.session.commit()
 
 
 # ── Weekly Challenge ──────────────────────────────────────────────────────────
