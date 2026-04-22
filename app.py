@@ -4396,8 +4396,7 @@ def submit_rating():
                     app.logger.error(f'[zone3 photographer email] {mail_err}')
                 # Zone 3 - notify admin
                 try:
-                    admin_users = User.query.filter_by(role='admin').all()
-                    admin_emails = [u.email for u in admin_users if u.email]
+                    admin_emails = _admin_notify_emails()
                     if admin_emails:
                         send_email(
                             admin_emails,
@@ -5030,6 +5029,17 @@ def _get_judge_by_id(judge_id):
     ).fetchone()
 
 
+def _admin_notify_emails():
+    """Return list of admin notification email addresses.
+    Prefers ADMIN_NOTIFY_EMAIL env var (comma-separated) over DB query,
+    since the DB admin account uses a placeholder address."""
+    env_emails = os.getenv('ADMIN_NOTIFY_EMAIL', '').strip()
+    if env_emails:
+        return [e.strip() for e in env_emails.split(',') if e.strip()]
+    # Fallback: query DB (only reliable if admin user has a real email)
+    return [u.email for u in User.query.filter_by(role='admin').all() if u.email]
+
+
 # ---------------------------------------------------------------------------
 # Judge invite + registration (token-gated)
 # ---------------------------------------------------------------------------
@@ -5149,8 +5159,7 @@ def judge_register(token):
             'pk': photo_key, 'ag': agreed, 'jid': judge.id})
         db.session.commit()
 
-        admin_users  = User.query.filter_by(role='admin').all()
-        admin_emails = [u.email for u in admin_users if u.email]
+        admin_emails = _admin_notify_emails()
         if admin_emails:
             send_email(
                 admin_emails,
@@ -5241,8 +5250,7 @@ def judge_score_image(assignment_id):
                 "UPDATE images SET judge_flagged=TRUE, judge_flag_type=:ft WHERE id=:iid"
             ), {'ft': flag_type, 'iid': assignment.image_id})
             db.session.commit()
-            admin_users  = User.query.filter_by(role='admin').all()
-            admin_emails = [u.email for u in admin_users if u.email]
+            admin_emails = _admin_notify_emails()
             if admin_emails:
                 send_email(
                     admin_emails,
@@ -5713,7 +5721,7 @@ def raw_submit(contest_type, image_id):
             'ct': contest_type, 'meth': method, 'fk': raw_file_key, 'lnk': raw_link})
         db.session.commit()
 
-        admin_emails = [u.email for u in User.query.filter_by(role='admin').all() if u.email]
+        admin_emails = _admin_notify_emails()
         if admin_emails:
             send_email(
                 admin_emails,
