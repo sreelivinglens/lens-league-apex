@@ -561,7 +561,7 @@
       </div>
       <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
         <span style="color:var(--gold); font-weight:700; flex-shrink:0;">3.</span>
-        <span>Every time you upload a stronger image, it <strong style="color:var(--text-primary);">automatically replaces</strong> the weakest in your top 6 — raising your average. You never need to delete old images.</span>
+        <span>Every time you upload a stronger image, it <strong style="color:var(--text-primary);">automatically replaces</strong> the weakest in your top 6 — raising your average. You can delete images you no longer want from your portfolio.</span>
       </div>
       <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
         <span style="color:var(--gold); font-weight:700; flex-shrink:0;">4.</span>
@@ -901,6 +901,13 @@
       {% endif %}
       <div class="img-card-footer">
         <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
+        <form method="POST" action="{{ url_for('delete_image', image_id=img.id) }}" style="display:inline;" onsubmit="return confirm('Delete this image? This cannot be undone.');">
+          <button type="submit" onclick="event.stopPropagation();"
+                  style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--text-muted); padding:2px 6px; border-radius:3px; transition:color 0.2s;"
+                  onmouseover="this.style.color='var(--red)'"
+                  onmouseout="this.style.color='var(--text-muted)'"
+                  title="Delete image">✕</button>
+        </form>
         <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
           {% if img.is_flagged %}
             <span class="flagged-badge">🚫 AI Flagged</span>
