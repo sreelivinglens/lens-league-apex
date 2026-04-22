@@ -5565,9 +5565,13 @@ def admin_populate_judge_pool():
     eligible = db.session.execute(db.text(
         "SELECT id, genre, score, asset_name FROM images "
         "WHERE status='scored' AND score>=:thresh "
-        "AND raw_verified=TRUE AND in_judge_pool=FALSE "
-        "AND is_flagged=FALSE AND needs_review=FALSE"
-    ), {'thresh': threshold}).fetchall()
+        "AND raw_verified=TRUE "
+        "AND is_flagged=FALSE AND needs_review=FALSE "
+        "AND id NOT IN ("
+        "  SELECT DISTINCT image_id FROM judge_assignments "
+        "  WHERE contest_ref=:cr AND contest_type=:ct"
+        ")"
+    ), {'thresh': threshold, 'cr': contest_ref, 'ct': contest_type}).fetchall()
 
     if not eligible:
         flash(f'No eligible RAW-verified images above threshold {threshold}.', 'warning')
@@ -5593,6 +5597,7 @@ def admin_populate_judge_pool():
                 "VALUES (:jid, :iid, :cr, :ct, NOW(), :dl, 'pending')"
             ), {'jid': judge.id, 'iid': img.id, 'cr': contest_ref, 'ct': contest_type, 'dl': deadline})
             assigned_count += 1
+        # in_judge_pool kept for reference but eligibility is now per-contest
         db.session.execute(db.text("UPDATE images SET in_judge_pool=TRUE WHERE id=:iid"), {'iid': img.id})
 
     db.session.execute(db.text(
