@@ -59,21 +59,22 @@ body { overflow-x:hidden; }
 .sec-h2 em { font-style:italic; color:#B8892A; }
 .sec-p { font-size:18px; color:#555; text-align:center; margin-bottom:40px; line-height:1.8; max-width:580px; margin-left:auto; margin-right:auto; }
 
-/* COMPARISON TABLE */
-.cmp-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.cmp-table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; font-size:17px; border:1px solid #E0D8C8; min-width:560px; }
-.cmp-table thead tr { background:#1a1a18; }
-.cmp-table th { padding:16px 20px; font-weight:700; text-align:left; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:1px; }
-.cmp-table th:first-child { color:#8A7840; width:18%; }
-.cmp-table th.cam { color:#D4A840; }
-.cmp-table th.mob { color:#7BBDE8; }
-.cmp-table td { padding:14px 20px; border-bottom:1px solid #F0EAE0; color:#333; line-height:1.6; vertical-align:top; }
-.cmp-table td:first-child { font-weight:700; color:#1a1a18; font-size:13px; background:#FAF7F2; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
-.cmp-table td.cam-cell { background:#FFFDF6; }
-.cmp-table td.mob-cell { background:#F4FAFF; }
-.cmp-table .core-row td.core-span { background:#F5F0E6; color:#5A4820; font-style:italic; text-align:center; font-size:17px; }
-.cmp-table .core-row td:first-child { background:#EDE8DC; }
-.cmp-table tr:last-child td { border-bottom:none; }
+/* COMPARISON CARDS */
+.cmp-wrap { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.cmp-card { border-radius:12px; overflow:hidden; border:1px solid #E0D8C8; }
+.cmp-card-head { padding:16px 20px; background:#1a1a18; font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; letter-spacing:1px; }
+.cmp-card-head.cam { color:#D4A840; }
+.cmp-card-head.mob { color:#7BBDE8; }
+.cmp-core { padding:14px 20px; font-style:italic; font-size:16px; color:#5A4820; background:#F5F0E6; border-bottom:1px solid #E8E0D0; line-height:1.6; }
+.cmp-row { display:flex; flex-direction:column; padding:14px 20px; border-bottom:1px solid #F0EAE0; }
+.cmp-row:last-child { border-bottom:none; }
+.cmp-row-label { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#B8892A; margin-bottom:5px; font-weight:700; }
+.cmp-row-val { font-size:16px; color:#333; line-height:1.6; }
+.cmp-card.cam .cmp-row { background:#FFFDF6; }
+.cmp-card.mob .cmp-row { background:#F4FAFF; }
+@media (max-width:600px) {
+  .cmp-wrap { grid-template-columns:1fr; }
+}
 
 /* POTY */
 .poty-sec { background:#1a1a18; }
@@ -259,41 +260,22 @@ body { overflow-x:hidden; }
     <h2 class="sec-h2">Who is Lens League <em>Apex</em> for?</h2>
     <p class="sec-p">Camera and Mobile photographers compete in dedicated Leagues — same science, same prize pool, no gear bias.</p>
     <div class="cmp-wrap">
-      <table class="cmp-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th class="cam">📷 Professional — DSLR / Mirrorless / Film</th>
-            <th class="mob">📱 Mobile — iPhone / Android / Smartphone</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="core-row">
-            <td>The core</td>
-            <td colspan="2" class="core-span">Scientific DDI breakdown of every upload — 5 dimensions, instant feedback, no waiting for a judge.</td>
-          </tr>
-          <tr>
-            <td>Education</td>
-            <td class="cam-cell">Precise technical targets — know exactly what to fix next.</td>
-            <td class="mob-cell">Learn the anatomy of a great mobile shot.</td>
-          </tr>
-          <tr>
-            <td>Recognition</td>
-            <td class="cam-cell">Earn elite tier badges on your profile. Rank by city.</td>
-            <td class="mob-cell">Dedicated Mobile POTY (Photographer of the Year) rankings, path and prizes.</td>
-          </tr>
-          <tr>
-            <td>Value</td>
-            <td class="cam-cell">Command higher fees — share your verified Apex score with clients.</td>
-            <td class="mob-cell">Win real prizes against a global standard.</td>
-          </tr>
-          <tr>
-            <td>Discovery</td>
-            <td class="cam-cell">Get scouted by brands looking for local talent.</td>
-            <td class="mob-cell">Share a verified, skill-based portfolio link that proves your vision.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="cmp-card cam">
+        <div class="cmp-card-head cam">📷 Professional — DSLR / Mirrorless / Film</div>
+        <div class="cmp-core">Scientific DDI breakdown of every upload — 5 dimensions, instant feedback, no waiting for a judge.</div>
+        <div class="cmp-row"><div class="cmp-row-label">Education</div><div class="cmp-row-val">Precise technical targets — know exactly what to fix next.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Recognition</div><div class="cmp-row-val">Earn elite tier badges on your profile. Rank by city.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Value</div><div class="cmp-row-val">Command higher fees — share your verified Apex score with clients.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Discovery</div><div class="cmp-row-val">Get scouted by brands looking for local talent.</div></div>
+      </div>
+      <div class="cmp-card mob">
+        <div class="cmp-card-head mob">📱 Mobile — iPhone / Android / Smartphone</div>
+        <div class="cmp-core">Scientific DDI breakdown of every upload — 5 dimensions, instant feedback, no waiting for a judge.</div>
+        <div class="cmp-row"><div class="cmp-row-label">Education</div><div class="cmp-row-val">Learn the anatomy of a great mobile shot.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Recognition</div><div class="cmp-row-val">Dedicated Mobile POTY rankings, path and prizes.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Value</div><div class="cmp-row-val">Win real prizes against a global standard.</div></div>
+        <div class="cmp-row"><div class="cmp-row-label">Discovery</div><div class="cmp-row-val">Share a verified, skill-based portfolio link that proves your vision.</div></div>
+      </div>
     </div>
   </section>
 
