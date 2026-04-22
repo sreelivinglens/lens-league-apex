@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}RAW Verification Queue — Lens League Apex{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>RAW Verification Queue</h1>
+    <p>Review submitted RAW files awaiting admin decision.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_raw_poty') }}" class="btn" style="padding:10px 20px;">
+      🏆 POTY Dashboard
+    </a>
+    <form method="POST" action="{{ url_for('cron_raw_reminders') }}"
+          onsubmit="return confirm('Send RAW deadline reminders to all pending contestants?')">
+      <button type="submit" class="btn" style="padding:10px 20px; border-color:var(--gold-dark); color:var(--gold);">
+        📧 Send Reminders
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if submissions %}
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        {% for col in ['Image', 'Photographer', 'Contest', 'Method', 'Submitted', 'Analysis', 'Action'] %}
+        <th style="padding:13px 16px; font-family:var(--font-mono); font-size:13px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in submissions %}
+      <tr style="border-bottom:1px solid var(--border-subtle);
+                 {{ 'background:rgba(192,57,43,0.04);' if s.overall_flag else '' }}">
+        <td style="padding:13px 16px; vertical-align:middle;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            {% if s.thumb_url %}
+            <img src="{{ s.thumb_url }}" style="width:56px; height:44px; object-fit:cover;
+                 border-radius:3px; border:1px solid var(--border); flex-shrink:0;">
+            {% endif %}
+            <div>
+              <div style="font-size:16px; font-weight:600; color:var(--text-primary);">{{ s.asset_name or 'Untitled' }}</div>
+              <div style="font-family:var(--font-mono); font-size:14px; color:var(--gold);">{{ s.genre or '—' }}</div>
+              <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">DDI: {{ '%.2f'|format(s.score) if s.score else '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:13px 16px; vertical-align:middle;">
+          <div style="font-size:16px; color:var(--text-primary);">{{ s.username }}</div>
+          <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">{{ s.photographer_email }}</div>
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:var(--text-muted); vertical-align:middle;">
+          {{ s.contest_ref or '—' }}<br>{{ s.contest_type | title if s.contest_type else '' }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; vertical-align:middle;
+                   color:{{ 'var(--text-primary)' if s.submission_method else 'var(--text-muted)' }};">
+          {{ s.submission_method | title if s.submission_method else '—' }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; vertical-align:middle;
+                   color:{{ 'var(--text-primary)' if s.submitted_at else 'var(--red)' }};">
+          {% if s.submitted_at %}
+            {{ s.submitted_at.strftime('%d %b %H:%M') }}
+          {% else %}
+            Not yet submitted
+          {% endif %}
+        </td>
+        <td style="padding:13px 16px; vertical-align:middle;">
+          {% if s.analysis_status == 'complete' %}
+            {% if s.overall_flag %}
+            <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--red);
+                         padding:3px 10px; border:1px solid var(--red); background:var(--red-dim); border-radius:var(--radius-sm);">
+              ⚠ FLAGS RAISED
+            </span>
+            {% else %}
+            <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--green);
+                         padding:3px 10px; border:1px solid var(--green); background:var(--green-dim); border-radius:var(--radius-sm);">
+              ✓ CLEAN
+            </span>
+            {% endif %}
+          {% elif s.analysis_status == 'pending' %}
+          <span style="font-family:var(--font-mono); font-size:14px; color:var(--amber);">Pending</span>
+          {% elif s.analysis_status == 'running' %}
+          <span style="font-family:var(--font-mono); font-size:14px; color:var(--gold);">Running…</span>
+          {% elif s.analysis_status == 'awaiting' %}
+          <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">Awaiting RAW</span>
+          {% else %}
+          <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">{{ s.analysis_status | title }}</span>
+          {% endif %}
+        </td>
+        <td style="padding:13px 16px; vertical-align:middle;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a href="{{ url_for('admin_raw_detail', image_id=s.image_id) }}"
+               class="btn" style="padding:7px 14px; font-size:15px;">Review →</a>
+            {% if s.submitted_at and s.analysis_status in ('pending', 'failed') %}
+            <form method="POST" action="{{ url_for('admin_raw_trigger_analysis', image_id=s.image_id) }}">
+              <button type="submit" class="btn"
+                      style="padding:7px 14px; font-size:15px; border-color:var(--gold-dark); color:var(--gold);">
+                Analyse
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div style="text-align:center; padding:64px 24px; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:var(--radius-md);">
+  <div style="font-size:48px; margin-bottom:16px;">✅</div>
+  <p style="font-size:20px; color:var(--text-secondary); line-height:1.6;">
+    No pending RAW submissions awaiting review.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

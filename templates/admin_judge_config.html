@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}Judge Pool Config — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .config-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 24px 28px; margin-bottom: 20px;
+  }
+  .config-card-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .form-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
+  .form-group { flex: 1; min-width: 160px; }
+  .form-label {
+    font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
+    color: var(--text-muted); display: block; margin-bottom: 7px; text-transform: uppercase;
+  }
+  .form-input {
+    width: 100%; background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 11px 14px; font-size: 18px;
+    border-radius: var(--radius-sm); outline: none; box-sizing: border-box;
+  }
+  .form-input:focus { border-color: var(--gold); }
+  select.form-input { cursor: pointer; }
+  .weight-row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+    background: var(--surface-3); border-radius: var(--radius-sm); margin-top: 8px;
+  }
+  .weight-label {
+    font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); min-width: 100px;
+  }
+  .weight-value {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--gold);
+    min-width: 50px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Judge Pool Configuration</h1>
+    <p>Set scoring thresholds, weights, and populate judging queues per contest.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_judges') }}" class="btn" style="padding:10px 20px;">👥 Judges</a>
+    <a href="{{ url_for('admin_judge_queue') }}" class="btn" style="padding:10px 20px;">📋 Queue</a>
+  </div>
+</div>
+
+<!-- 1. Notify winners + open RAW window -->
+<div class="config-card" style="border-color:var(--gold-dark);">
+  <div class="config-card-title">01 &nbsp;·&nbsp; Notify Winners &amp; Open RAW Verification Window</div>
+  <p style="font-size:17px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
+    Privately notifies winners by email and opens a 48-hour RAW file submission window. The leaderboard is <strong style="color:var(--text-primary);">not published</strong> at this step.
+  </p>
+  <form method="POST" action="{{ url_for('admin_notify_winners') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contest Reference</label>
+        <input type="text" name="contest_ref" class="form-input" placeholder="e.g. 2026-W17" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contest Type</label>
+        <select name="contest_type" class="form-input">
+          <option value="weekly">Weekly</option>
+          <option value="open">Open Competition</option>
+          <option value="poty">POTY</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label class="form-label">Winner Image IDs (comma-separated)</label>
+      <input type="text" name="winner_image_ids" class="form-input"
+             placeholder="e.g. 42, 87, 103" oninput="parseIds(this)">
+      <div style="font-size:15px; color:var(--text-muted); margin-top:6px;" id="idParseHint"></div>
+    </div>
+    <button type="submit" class="btn btn-solid" style="padding:13px 28px; font-size:17px;"
+            onclick="return confirm('Send private winner notifications? RAW window opens for 48hrs.')">
+      Notify Winners →
+    </button>
+  </form>
+</div>
+
+<!-- 2. Configure pool -->
+<div class="config-card">
+  <div class="config-card-title">02 &nbsp;·&nbsp; Configure Judge Pool</div>
+  <p style="font-size:17px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
+    Set the DDI score threshold, weighting mode, and cooling period for a contest. Save before populating.
+  </p>
+  <form method="POST" action="{{ url_for('admin_judge_config') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contest Reference</label>
+        <input type="text" name="contest_ref" class="form-input" placeholder="e.g. 2026-W17" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contest Type</label>
+        <select name="contest_type" class="form-input">
+          <option value="weekly">Weekly</option>
+          <option value="open">Open Competition</option>
+          <option value="poty">POTY</option>
+        </select>
+      </div>
+      <div class="form-group" style="min-width:140px; max-width:180px;">
+        <label class="form-label">Score Threshold</label>
+        <input type="number" name="score_threshold" class="form-input"
+               value="8.0" min="0" max="10" step="0.1">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Weighting Mode</label>
+        <select name="weighting_mode" class="form-input" onchange="toggleWeights(this.value)">
+          <option value="tiebreaker">Tiebreaker — DDI rank stands, judge breaks ties only</option>
+          <option value="weighted">Weighted — DDI % + Judge % blend</option>
+        </select>
+      </div>
+      <div class="form-group" style="min-width:130px; max-width:160px;">
+        <label class="form-label">Cooling Period (hrs)</label>
+        <input type="number" name="cooling_period_hours" class="form-input" value="48" min="1" max="720">
+      </div>
+    </div>
+    <div id="weightsRow" style="display:none; margin-bottom:16px;">
+      <div class="weight-row">
+        <div class="weight-label">DDI Weight</div>
+        <input type="range" name="ddi_weight" min="50" max="100" step="5" value="80"
+               style="-webkit-appearance:none; flex:1; height:6px; background:var(--surface-3); border-radius:99px; outline:none; cursor:pointer;"
+               oninput="syncWeights(this, 'ddi'); updateWeightDisplay()">
+        <div class="weight-value" id="ddiWeightVal">80%</div>
+      </div>
+      <div class="weight-row" style="margin-top:8px;">
+        <div class="weight-label">Judge Weight</div>
+        <input type="range" name="judge_weight" min="0" max="50" step="5" value="20"
+               style="-webkit-appearance:none; flex:1; height:6px; background:var(--surface-3); border-radius:99px; outline:none; cursor:pointer;"
+               oninput="syncWeights(this, 'judge'); updateWeightDisplay()" id="judgeWeightSlider">
+        <div class="weight-value" id="judgeWeightVal">20%</div>
+      </div>
+      <div style="font-size:15px; color:var(--text-muted); margin-top:8px;">DDI + Judge weights must sum to 100.</div>
+    </div>
+    <button type="submit" class="btn" style="padding:12px 28px; font-size:17px; border-color:var(--gold-dark); color:var(--gold);">
+      Save Config
+    </button>
+  </form>
+</div>
+
+<!-- 3. Populate pool -->
+<div class="config-card">
+  <div class="config-card-title">03 &nbsp;·&nbsp; Populate Judge Pool</div>
+  <p style="font-size:17px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
+    Assigns all RAW-verified images above the threshold to eligible judges. Assignment emails are sent automatically.
+  </p>
+  <form method="POST" action="{{ url_for('admin_populate_judge_pool') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Contest Reference</label>
+        <input type="text" name="contest_ref" class="form-input" placeholder="e.g. 2026-W17" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contest Type</label>
+        <select name="contest_type" class="form-input">
+          <option value="weekly">Weekly</option>
+          <option value="open">Open Competition</option>
+          <option value="poty">POTY</option>
+        </select>
+      </div>
+      <div class="form-group" style="min-width:140px; max-width:180px;">
+        <label class="form-label">Score Threshold</label>
+        <input type="number" name="score_threshold" class="form-input" value="8.0" min="0" max="10" step="0.1">
+      </div>
+      <div class="form-group" style="min-width:140px; max-width:180px;">
+        <label class="form-label">Judge Deadline (hrs)</label>
+        <input type="number" name="deadline_hours" class="form-input" value="72" min="12" max="720">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-solid" style="padding:13px 28px; font-size:17px;"
+            onclick="return confirm('Populate judge pool and send assignment emails?')">
+      Populate Pool &amp; Email Judges →
+    </button>
+  </form>
+</div>
+
+<!-- 4. Publish results -->
+<div class="config-card">
+  <div class="config-card-title">04 &nbsp;·&nbsp; Compute Results &amp; Start Cooling Period</div>
+  <form method="POST" action="{{ url_for('admin_publish_results') }}"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <div class="form-group">
+      <label class="form-label">Contest Reference</label>
+      <input type="text" name="contest_ref" class="form-input" placeholder="e.g. 2026-W17" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contest Type</label>
+      <select name="contest_type" class="form-input">
+        <option value="weekly">Weekly</option>
+        <option value="open">Open Competition</option>
+        <option value="poty">POTY</option>
+      </select>
+    </div>
+    <button type="submit" class="btn" style="padding:12px 24px; font-size:17px; border-color:var(--gold-dark); color:var(--gold);"
+            onclick="return confirm('Compute final scores and start cooling period?')">
+      Compute &amp; Start Cooling →
+    </button>
+  </form>
+</div>
+
+<!-- 5. Go live -->
+<div class="config-card" style="border-color:var(--green);">
+  <div class="config-card-title" style="color:var(--green);">05 &nbsp;·&nbsp; Publish Leaderboard (Go Live)</div>
+  <p style="font-size:17px; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
+    Makes results publicly visible. Use only after the cooling period has elapsed.
+  </p>
+  <form method="POST" action="{{ url_for('admin_contest_go_live') }}"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <div class="form-group">
+      <label class="form-label">Contest Reference</label>
+      <input type="text" name="contest_ref" class="form-input" placeholder="e.g. 2026-W17" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contest Type</label>
+      <select name="contest_type" class="form-input">
+        <option value="weekly">Weekly</option>
+        <option value="open">Open Competition</option>
+        <option value="poty">POTY</option>
+      </select>
+    </div>
+    <button type="submit" class="btn"
+            style="padding:12px 24px; font-size:17px; border-color:var(--green); color:var(--green);"
+            onclick="return confirm('Publish leaderboard now? This is visible to all users.')">
+      🟢 Go Live →
+    </button>
+  </form>
+</div>
+
+<!-- Saved configs table -->
+{% if configs %}
+<div class="section-label" style="margin-bottom:16px;">Saved Configurations</div>
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        {% for col in ['Contest', 'Type', 'Threshold', 'Mode', 'Cooling', 'Pool Populated', 'Published'] %}
+        <th style="padding:13px 16px; font-family:var(--font-mono); font-size:13px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in configs %}
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:17px; font-weight:700; color:var(--gold);">{{ c.contest_ref }}</td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:16px; color:var(--text-muted);">{{ c.contest_type | title }}</td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:17px; color:var(--text-primary);">{{ c.score_threshold }}</td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:var(--text-muted);">
+          {{ c.weighting_mode | title }}
+          {% if c.weighting_mode == 'weighted' %}<br><span style="font-size:14px;">DDI {{ c.ddi_weight }}% / Judge {{ c.judge_weight }}%</span>{% endif %}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:16px; color:var(--text-muted);">{{ c.cooling_period_hours }}h</td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:{{ 'var(--green)' if c.pool_populated_at else 'var(--text-muted)' }};">
+          {{ c.pool_populated_at.strftime('%d %b %H:%M') if c.pool_populated_at else '—' }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:{{ 'var(--green)' if c.leaderboard_published_at else 'var(--text-muted)' }};">
+          {{ c.leaderboard_published_at.strftime('%d %b %H:%M') if c.leaderboard_published_at else '—' }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleWeights(mode) {
+  document.getElementById('weightsRow').style.display = mode === 'weighted' ? 'block' : 'none';
+}
+function updateWeightDisplay() {
+  const ddi   = document.querySelector('[name="ddi_weight"]');
+  const judge = document.querySelector('[name="judge_weight"]');
+  if (ddi)   document.getElementById('ddiWeightVal').textContent   = ddi.value + '%';
+  if (judge) document.getElementById('judgeWeightVal').textContent = judge.value + '%';
+}
+function parseIds(input) {
+  const ids = input.value.split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s));
+  document.getElementById('idParseHint').textContent = ids.length + ' image ID' + (ids.length !== 1 ? 's' : '') + ' detected';
+}
+</script>
+{% endblock %}

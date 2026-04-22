@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}RAW Verification Status — Lens League Apex{% endblock %}
+
+{% block content %}
+<div style="max-width:640px; margin:0 auto;">
+
+  <div class="page-header">
+    <h1>RAW Verification Status</h1>
+    <p>{{ img.asset_name or 'Your image' }} &nbsp;·&nbsp; {{ img.genre or '—' }}</p>
+  </div>
+
+  <!-- Image -->
+  {% if img.thumb_url %}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+              overflow:hidden; margin-bottom:24px;">
+    <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}"
+         style="width:100%; max-height:320px; object-fit:contain; display:block; background:var(--surface-3);">
+    <div style="padding:14px 18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="font-size:18px; font-weight:700; color:var(--text-primary);">{{ img.asset_name or 'Untitled' }}</div>
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--gold);">{{ img.genre or '—' }}</div>
+      {% if img.score %}
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-muted);">
+        DDI: {{ '%.2f'|format(img.score) }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not submission %}
+  <!-- No submission yet -->
+  <div style="padding:28px; background:var(--surface-2); border:1px solid var(--border);
+              border-radius:var(--radius-md); text-align:center; margin-bottom:24px;">
+    <div style="font-size:40px; margin-bottom:14px;">📁</div>
+    <div style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">No RAW Submitted Yet</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
+      Your contest result is provisional. Please submit your original RAW file to confirm your standing.
+    </div>
+    <a href="{{ url_for('raw_submit', contest_type='contest', image_id=img.id) }}"
+       class="btn btn-solid" style="padding:15px 32px; font-size:18px;">
+      Submit RAW File →
+    </a>
+  </div>
+
+  {% else %}
+  <!-- Submission status -->
+  {% if submission.disqualified %}
+  <div style="padding:24px; background:var(--red-dim); border:1px solid var(--red);
+              border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:12px;">❌</div>
+    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:10px;">Disqualified</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      {% if submission.admin_decision == 'rejected' %}
+        Your RAW file did not pass verification. This image has been disqualified from the contest.
+        {% if submission.admin_notes %}<br><strong>Reason:</strong> {{ submission.admin_notes }}{% endif %}
+      {% else %}
+        The RAW file submission deadline passed without a valid submission.
+      {% endif %}
+      <br><br>
+      If you believe this decision is in error, contact
+      <a href="mailto:sreelivinglens@gmail.com" style="color:var(--gold);">sreelivinglens@gmail.com</a>
+      within 48 hours.
+    </div>
+  </div>
+
+  {% elif submission.admin_decision == 'approved' %}
+  <div style="padding:24px; background:var(--green-dim); border:1px solid var(--green);
+              border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:12px;">✅</div>
+    <div style="font-size:22px; font-weight:700; color:var(--green); margin-bottom:10px;">Verification Approved</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Your RAW file has passed verification. Your contest standing is confirmed.
+      Results will be published once the judging process is complete.
+    </div>
+  </div>
+
+  {% elif submission.admin_decision == 'resubmit_requested' %}
+  <div style="padding:24px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
+              border-radius:var(--radius-md); margin-bottom:24px;">
+    <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⚠ Resubmission Required</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">
+      There was an issue with your RAW file. Please resubmit within 24 hours.
+      {% if submission.admin_notes %}<br><strong>Reason:</strong> {{ submission.admin_notes }}{% endif %}
+    </div>
+    <a href="{{ url_for('raw_submit', contest_type=submission.contest_type or 'contest', image_id=img.id) }}"
+       class="btn btn-solid" style="padding:13px 28px; font-size:18px;">
+      Resubmit RAW →
+    </a>
+  </div>
+
+  {% elif submission.submitted_at %}
+  <div style="padding:24px; background:var(--surface-2); border:1px solid var(--gold-dark);
+              border-radius:var(--radius-md); margin-bottom:24px;">
+    <div style="font-size:22px; font-weight:700; color:var(--gold); margin-bottom:10px;">⏳ Under Review</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Your RAW file was received on {{ submission.submitted_at.strftime('%d %B %Y at %H:%M UTC') }}.
+      Our team will verify it within 48 hours. You will be notified by email once a decision is made.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Submission details -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px 26px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">Submission Details</div>
+    {% for label, value in [
+      ('Contest',   (submission.contest_ref or '—') + (' · ' + submission.contest_type | title if submission.contest_type else '')),
+      ('Method',    submission.submission_method | title if submission.submission_method else '—'),
+      ('Submitted', submission.submitted_at.strftime('%d %b %Y, %H:%M UTC') if submission.submitted_at else 'Not yet submitted'),
+      ('Deadline',  submission.deadline.strftime('%d %b %Y, %H:%M UTC') if submission.deadline else '—'),
+    ] %}
+    <div style="display:flex; gap:14px; margin-bottom:10px; align-items:flex-start;">
+      <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted); text-transform:uppercase;
+                  letter-spacing:1px; min-width:100px; flex-shrink:0;">{{ label }}</div>
+      <div style="font-size:17px; color:var(--text-primary);">{{ value }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="margin-top:20px; text-align:center;">
+    <a href="{{ url_for('dashboard') }}" style="color:var(--gold); font-size:17px;">← Back to Dashboard</a>
+  </div>
+
+</div>
+{% endblock %}

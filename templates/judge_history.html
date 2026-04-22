@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Scoring History — Lens League Apex{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Scoring History</h1>
+    <p>Images you have reviewed as a Lens League Apex jury member.</p>
+  </div>
+  <a href="{{ url_for('judge_dashboard') }}" class="btn" style="padding:10px 22px;">
+    ← Back to Dashboard
+  </a>
+</div>
+
+{% if scored %}
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">Image</th>
+        <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">Genre</th>
+        <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">Your Score</th>
+        <th style="padding:14px 18px; font-family:var(--font-mono); font-size:14px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in scored %}
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:14px 18px; vertical-align:middle;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            {% if row.thumb_url %}
+            <img src="{{ row.thumb_url }}" alt="{{ row.asset_name }}"
+                 style="width:60px; height:46px; object-fit:cover; border-radius:4px;
+                        border:1px solid var(--border); flex-shrink:0;">
+            {% else %}
+            <div style="width:60px; height:46px; background:var(--surface-3); border-radius:4px;
+                        border:1px solid var(--border); display:flex; align-items:center;
+                        justify-content:center; font-size:18px; flex-shrink:0;">🖼️</div>
+            {% endif %}
+            <div>
+              <div style="font-size:17px; font-weight:600; color:var(--text-primary);">
+                {{ row.asset_name or 'Untitled' }}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:14px 18px; font-family:var(--font-mono); font-size:16px;
+                   color:var(--gold); vertical-align:middle; white-space:nowrap;">
+          {{ row.genre or '—' }}
+        </td>
+        <td style="padding:14px 18px; vertical-align:middle;">
+          {% if row.flag_type %}
+          <span style="font-family:var(--font-mono); font-size:15px; font-weight:700;
+                       color:var(--red); letter-spacing:1px;">
+            🚩 FLAGGED
+          </span>
+          <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted); margin-top:3px;">
+            {{ row.flag_type | replace('_', ' ') | title }}
+          </div>
+          {% elif row.judge_total is not none %}
+          <span style="font-family:var(--font-mono); font-size:24px; font-weight:700; color:var(--gold);">
+            {{ '%.1f' | format(row.judge_total) }}
+          </span>
+          {% else %}
+          <span style="color:var(--text-muted);">—</span>
+          {% endif %}
+        </td>
+        <td style="padding:14px 18px; vertical-align:middle;">
+          {% if row.status == 'scored' %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px;
+                       padding:4px 12px; border-radius:var(--radius-sm); background:var(--green-dim);
+                       border:1px solid var(--green); color:var(--green);">Scored</span>
+          {% elif row.status == 'flagged' %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px;
+                       padding:4px 12px; border-radius:var(--radius-sm); background:var(--red-dim);
+                       border:1px solid var(--red); color:var(--red);">Flagged</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div style="text-align:center; padding:64px 24px; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:var(--radius-md);">
+  <div style="font-size:48px; margin-bottom:20px;">📋</div>
+  <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:3px;
+              text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">No History Yet</div>
+  <p style="font-size:20px; color:var(--text-secondary); line-height:1.6; margin-bottom:24px;">
+    Your completed scoring history will appear here once you begin reviewing images.
+  </p>
+  <a href="{{ url_for('judge_dashboard') }}" class="btn btn-solid" style="padding:14px 28px; font-size:18px;">
+    Go to Dashboard →
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

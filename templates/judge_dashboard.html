@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Jury Dashboard — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .queue-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
+    display: flex; align-items: stretch; gap: 0;
+    transition: border-color 0.2s;
+  }
+  .queue-card:hover { border-color: var(--gold-dark); }
+  .queue-card.overdue { border-color: var(--red); }
+  .queue-card.due-soon { border-color: var(--amber); }
+  .queue-thumb {
+    width: 120px; min-height: 90px; object-fit: cover;
+    flex-shrink: 0; display: block; background: var(--surface-3);
+  }
+  .queue-thumb-placeholder {
+    width: 120px; min-height: 90px; background: var(--surface-3);
+    display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0;
+  }
+  .queue-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .queue-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+  .queue-genre { font-family: var(--font-mono); font-size: 14px; color: var(--gold); letter-spacing: 1px; }
+  .queue-deadline { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .queue-deadline.overdue { color: var(--red); font-weight: 700; }
+  .queue-deadline.due-soon { color: var(--amber); font-weight: 700; }
+  .queue-action { padding: 16px 20px; display: flex; align-items: center; flex-shrink: 0; }
+  @media (max-width: 600px) {
+    .queue-card { flex-direction: column; }
+    .queue-thumb { width: 100%; height: 160px; min-height: unset; }
+    .queue-thumb-placeholder { width: 100%; height: 120px; min-height: unset; }
+    .queue-action { padding: 12px 16px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Jury Dashboard</h1>
+    <p>Welcome, {{ judge.name }}. Your assigned images are listed below.</p>
+  </div>
+  <a href="{{ url_for('judge_history') }}" class="btn" style="padding:10px 22px;">
+    View History →
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="grid-4" style="margin-bottom:36px;">
+  <div class="stat-box">
+    <div class="stat-val">{{ pending | length }}</div>
+    <div class="stat-lbl">Pending</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ scored_count }}</div>
+    <div class="stat-lbl">Scored</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ flagged_count }}</div>
+    <div class="stat-lbl">Flagged</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val">{{ scored_count + flagged_count }}</div>
+    <div class="stat-lbl">Completed</div>
+  </div>
+</div>
+
+<!-- How scoring works reminder -->
+<div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md);
+            padding:20px 24px; margin-bottom:32px;">
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+              text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Scoring Guidelines</div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+    {% for icon, label, desc in [
+      ('🔒', 'Blind Rating', 'No photographer name, no DDI score visible. Score on merit alone.'),
+      ('📐', '5 Dimensions', 'DoD · Disruption · DM · Wonder · AQ — same framework as the platform.'),
+      ('🚩', 'Flag Option', 'AI-generated, stolen, or technically impossible? Flag — do not score.'),
+      ('⏰', 'Deadline', 'Check deadlines below. Email reminders are sent 48hrs and 24hrs before.'),
+    ] %}
+    <div style="display:flex; gap:10px; align-items:flex-start;">
+      <span style="font-size:20px; flex-shrink:0;">{{ icon }}</span>
+      <div>
+        <div style="font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:3px;">{{ label }}</div>
+        <div style="font-size:16px; color:var(--text-secondary); line-height:1.5;">{{ desc }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Queue -->
+<div class="section-label" style="margin-bottom:16px;">
+  Pending Assignments &nbsp;·&nbsp;
+  <span style="font-family:var(--font-mono); font-size:16px; color:var(--text-muted);">{{ pending | length }} image{{ 's' if pending | length != 1 }}</span>
+</div>
+
+{% if pending %}
+<div style="display:flex; flex-direction:column; gap:12px; margin-bottom:40px;">
+  {% for a in pending %}
+  {% set hours_left = ((a.deadline - now).total_seconds() / 3600) | int if a.deadline else 999 %}
+  {% set is_overdue = a.deadline and a.deadline < now %}
+  {% set is_due_soon = not is_overdue and hours_left <= 24 %}
+  <div class="queue-card {{ 'overdue' if is_overdue else ('due-soon' if is_due_soon else '') }}">
+    {% if a.thumb_url %}
+    <img src="{{ a.thumb_url }}" class="queue-thumb" alt="{{ a.asset_name }}">
+    {% else %}
+    <div class="queue-thumb-placeholder">🖼️</div>
+    {% endif %}
+    <div class="queue-body">
+      <div class="queue-title">{{ a.asset_name or 'Untitled Image' }}</div>
+      <div class="queue-genre">{{ a.genre or '—' }}</div>
+      {% if a.deadline %}
+      <div class="queue-deadline {{ 'overdue' if is_overdue else ('due-soon' if is_due_soon else '') }}">
+        {% if is_overdue %}
+          ⚠ Overdue — {{ a.deadline.strftime('%d %b %Y, %H:%M UTC') }}
+        {% elif is_due_soon %}
+          ⏰ Due in {{ hours_left }} hour{{ 's' if hours_left != 1 }} — {{ a.deadline.strftime('%d %b, %H:%M UTC') }}
+        {% else %}
+          Due {{ a.deadline.strftime('%d %b %Y, %H:%M UTC') }}
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if a.contest_ref %}
+      <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">
+        {{ a.contest_ref }} &nbsp;·&nbsp; {{ a.contest_type | title if a.contest_type }}
+      </div>
+      {% endif %}
+    </div>
+    <div class="queue-action">
+      <a href="{{ url_for('judge_score_image', assignment_id=a.id) }}"
+         class="btn btn-solid" style="padding:12px 24px; font-size:17px; white-space:nowrap;">
+        Score →
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div style="text-align:center; padding:64px 24px; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:40px;">
+  <div style="font-size:48px; margin-bottom:20px;">✅</div>
+  <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:3px; text-transform:uppercase;
+              color:var(--text-muted); margin-bottom:12px;">All Clear</div>
+  <p style="font-size:20px; color:var(--text-secondary); line-height:1.6;">
+    No pending assignments at this time.<br>
+    You will receive an email when new images are assigned to you.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

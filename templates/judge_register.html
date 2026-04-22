@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Judge Registration — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .reg-wrap { max-width: 680px; margin: 0 auto; }
+  .reg-section {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 24px;
+  }
+  .reg-section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .field-group { margin-bottom: 22px; }
+  .field-label {
+    display: block; font-family: var(--font-mono); font-size: 14px;
+    font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 8px;
+  }
+  .field-input {
+    width: 100%; background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 12px 16px; font-size: 18px;
+    font-family: var(--font-body); border-radius: var(--radius-sm);
+    outline: none; transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .field-input:focus { border-color: var(--gold); }
+  .field-input::placeholder { color: var(--text-muted); }
+  textarea.field-input { resize: vertical; min-height: 140px; line-height: 1.6; }
+  .field-hint {
+    font-size: 15px; color: var(--text-muted); margin-top: 6px; line-height: 1.5;
+  }
+  .radio-group { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+  .radio-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 18px; color: var(--text-primary);
+    transition: border-color 0.2s;
+  }
+  .radio-option:has(input:checked) {
+    border-color: var(--gold-dark); background: var(--gold-subtle);
+  }
+  .radio-option input { accent-color: var(--gold); width: 18px; height: 18px; }
+  .photo-upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius-md);
+    padding: 32px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s; background: var(--surface-3);
+  }
+  .photo-upload-area:hover { border-color: var(--gold-dark); }
+  .photo-upload-area input[type="file"] { display: none; }
+  .photo-upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .photo-upload-text { font-size: 18px; color: var(--text-secondary); margin-bottom: 6px; }
+  .photo-upload-hint { font-size: 15px; color: var(--text-muted); }
+  .agree-box {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 20px; background: var(--surface-3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .agree-box input[type="checkbox"] {
+    accent-color: var(--gold); width: 22px; height: 22px; flex-shrink: 0; margin-top: 2px;
+  }
+  .agree-text { font-size: 18px; color: var(--text-secondary); line-height: 1.6; }
+  .word-count {
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+    text-align: right; margin-top: 6px;
+  }
+  .word-count.over { color: var(--red); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reg-wrap">
+
+  <div class="page-header">
+    <h1>Judge Profile</h1>
+    <p>Complete your profile to join the Lens League Apex jury.</p>
+  </div>
+
+  {% if already_submitted %}
+  <div style="padding:32px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
+    <div style="font-size:40px; margin-bottom:16px;">✅</div>
+    <div style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">Application Already Submitted</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Your profile has been received and is under review. You will be notified by email once a decision is made.
+    </div>
+  </div>
+
+  {% elif expired %}
+  <div style="padding:32px; background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.3); border-radius:var(--radius-md); text-align:center;">
+    <div style="font-size:40px; margin-bottom:16px;">⏰</div>
+    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:10px;">Invitation Expired</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      This invitation link has expired. Please contact <a href="mailto:sreelivinglens@gmail.com" style="color:var(--gold);">sreelivinglens@gmail.com</a> to request a new one.
+    </div>
+  </div>
+
+  {% else %}
+  <form method="POST" action="{{ url_for('judge_register', token=token) }}" enctype="multipart/form-data">
+
+    <!-- Personal Details -->
+    <div class="reg-section">
+      <div class="reg-section-title">01 &nbsp;·&nbsp; Personal Details</div>
+
+      <div class="field-group">
+        <label class="field-label">Full Name *</label>
+        <input type="text" name="name" class="field-input"
+               value="{{ form_data.name if form_data else (judge.name or '') }}"
+               placeholder="Your full name" required>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input type="email" class="field-input" value="{{ judge.email }}" disabled
+               style="opacity:0.6; cursor:not-allowed;">
+        <div class="field-hint">This is the email your invitation was sent to — it cannot be changed.</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="field-group">
+          <label class="field-label">Contact Number *</label>
+          <input type="tel" name="phone" class="field-input"
+                 value="{{ form_data.phone if form_data else '' }}"
+                 placeholder="+91 98765 43210" required>
+        </div>
+        <div class="field-group">
+          <label class="field-label">City *</label>
+          <input type="text" name="city" class="field-input"
+                 value="{{ form_data.city if form_data else '' }}"
+                 placeholder="Your city" required>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Country *</label>
+        <input type="text" name="country" class="field-input"
+               value="{{ form_data.country if form_data else '' }}"
+               placeholder="Your country" required>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Address *</label>
+        <input type="text" name="address" class="field-input"
+               value="{{ form_data.address if form_data else '' }}"
+               placeholder="Street address, city, state / province" required>
+        <div class="field-hint">Required for official jury documentation and prize coordination.</div>
+      </div>
+    </div>
+
+    <!-- Photo -->
+    <div class="reg-section">
+      <div class="reg-section-title">02 &nbsp;·&nbsp; Your Photograph</div>
+      <label class="photo-upload-area" for="photoInput">
+        <input type="file" name="photo" id="photoInput" accept="image/*"
+               onchange="showPhotoName(this)">
+        <div class="photo-upload-icon">🖼️</div>
+        <div class="photo-upload-text" id="photoLabel">Click to upload a photograph of yourself</div>
+        <div class="photo-upload-hint">JPG or PNG · Maximum 5 MB · Clear, recent photograph</div>
+      </label>
+    </div>
+
+    <!-- Photography Background -->
+    <div class="reg-section">
+      <div class="reg-section-title">03 &nbsp;·&nbsp; Photography Background</div>
+
+      <div class="field-group">
+        <label class="field-label">Years of Experience as a Photographer *</label>
+        <input type="number" name="years_experience" class="field-input"
+               value="{{ form_data.years_experience if form_data else '' }}"
+               min="1" max="60" placeholder="e.g. 15" required
+               style="max-width: 200px;">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Have you judged photography competitions before? *</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="judged_before" value="yes"
+                   {{ 'checked' if form_data and form_data.judged_before == 'yes' }}>
+            Yes, I have judged before
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="judged_before" value="no"
+                   {{ 'checked' if form_data and form_data.judged_before == 'no' }}>
+            No, this would be my first time
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Achievements &amp; Brief Bio *</label>
+        <textarea name="bio" class="field-input" id="bioField" maxlength="1800"
+                  placeholder="Describe your photography achievements, awards, exhibitions, publications, or any other relevant experience. Maximum 300 words."
+                  oninput="countWords(this)" required>{{ form_data.bio if form_data else '' }}</textarea>
+        <div class="word-count" id="wordCount">0 / 300 words</div>
+        <div class="field-hint">Maximum 300 words. Be specific about your area of expertise — genres, competitions judged, awards received.</div>
+      </div>
+    </div>
+
+    <!-- Agreement -->
+    <div class="reg-section">
+      <div class="reg-section-title">04 &nbsp;·&nbsp; Declaration</div>
+
+      <label class="agree-box">
+        <input type="checkbox" name="agreed_terms" value="1" required
+               {{ 'checked' if form_data and form_data.agreed_terms }}>
+        <div class="agree-text">
+          I confirm that the information provided is accurate and complete. I agree to conduct all judging impartially and in good faith, maintain confidentiality of all judging materials, and abide by the Lens League Apex Jury Code of Conduct. I understand that my participation as a judge is subject to approval by the platform administration.
+        </div>
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-solid"
+            style="width:100%; padding:18px; font-size:18px; letter-spacing:2px;">
+      Submit for Approval →
+    </button>
+    <div style="font-size:15px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
+      Your application will be reviewed by our admin team. You will be notified by email once a decision is made.
+    </div>
+
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showPhotoName(input) {
+  const label = document.getElementById('photoLabel');
+  if (input.files && input.files[0]) {
+    label.textContent = '✓ ' + input.files[0].name;
+    label.style.color = 'var(--green)';
+  }
+}
+function countWords(textarea) {
+  const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
+  const count = words.length;
+  const el = document.getElementById('wordCount');
+  el.textContent = count + ' / 300 words';
+  el.classList.toggle('over', count > 300);
+}
+// Init count on load
+const bioField = document.getElementById('bioField');
+if (bioField && bioField.value) countWords(bioField);
+</script>
+{% endblock %}

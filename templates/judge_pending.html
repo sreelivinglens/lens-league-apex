@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Application Submitted — Lens League Apex{% endblock %}
+
+{% block content %}
+<div style="max-width:600px; margin:80px auto; text-align:center; padding:0 20px;">
+
+  <div style="font-size:56px; margin-bottom:24px;">⚖️</div>
+
+  <h1 style="font-size:32px; font-weight:700; color:var(--text-primary); margin-bottom:16px;
+             font-family:Georgia,serif; font-style:italic;">
+    Application Received
+  </h1>
+
+  <p style="font-size:20px; color:var(--text-secondary); line-height:1.7; margin-bottom:32px;">
+    Thank you. Your judge profile has been submitted to the Lens League Apex administration team for review.
+  </p>
+
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+              padding:28px 32px; margin-bottom:32px; text-align:left;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                text-transform:uppercase; color:var(--gold); margin-bottom:16px;">What happens next</div>
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      {% for step, text in [
+        ('01', 'Our admin team reviews your application and credentials.'),
+        ('02', 'You will receive an email notification with the outcome.'),
+        ('03', 'If approved, your dashboard link will be included in the email.'),
+        ('04', 'Judging assignments will be sent to you when a contest pool is ready.'),
+      ] %}
+      <div style="display:flex; gap:14px; align-items:flex-start;">
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--gold);
+                     background:var(--gold-subtle); border:1px solid var(--gold-dark);
+                     border-radius:var(--radius-sm); padding:3px 10px; flex-shrink:0;">{{ step }}</span>
+        <span style="font-size:18px; color:var(--text-secondary); line-height:1.6;">{{ text }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <p style="font-size:17px; color:var(--text-muted); line-height:1.7;">
+    Questions? Contact us at
+    <a href="mailto:sreelivinglens@gmail.com" style="color:var(--gold);">sreelivinglens@gmail.com</a>
+  </p>
+
+</div>
+{% endblock %}

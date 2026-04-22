@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}POTY RAW Verification — Lens League Apex{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>POTY RAW Verification</h1>
+    <p>Qualifying pool RAW file submission status.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_raw_verification') }}" class="btn" style="padding:10px 20px;">← All RAW Queue</a>
+    <form method="POST" action="{{ url_for('cron_raw_reminders') }}"
+          onsubmit="return confirm('Send reminders to all pending contestants?')">
+      <button type="submit" class="btn" style="padding:10px 20px; border-color:var(--gold-dark); color:var(--gold);">
+        📧 Send Bulk Reminder
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Summary stats -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px;">
+  <div class="stat-box">
+    <div class="stat-val">{{ pool | length }}</div>
+    <div class="stat-lbl">Total Pool</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" style="color:var(--green);">{{ verified }}</div>
+    <div class="stat-lbl">Verified</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" style="color:var(--amber);">{{ submitted }}</div>
+    <div class="stat-lbl">Submitted</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" style="color:var(--text-muted);">{{ pending }}</div>
+    <div class="stat-lbl">Not Submitted</div>
+  </div>
+</div>
+
+{% if disqualified > 0 %}
+<div style="padding:14px 18px; background:var(--red-dim); border:1px solid var(--red);
+            border-radius:var(--radius-sm); margin-bottom:24px; font-size:17px; color:var(--red);">
+  ⚠ {{ disqualified }} contestant{{ 's' if disqualified != 1 }} disqualified for non-submission or failed verification.
+</div>
+{% endif %}
+
+<!-- Pool table -->
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        {% for col in ['Image', 'Genre', 'DDI Score', 'Photographer', 'Deadline', 'Status'] %}
+        <th style="padding:13px 16px; font-family:var(--font-mono); font-size:13px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in pool %}
+      {% set status_color = 'var(--green)' if row.admin_decision == 'approved' else ('var(--red)' if row.disqualified else ('var(--gold)' if row.submitted_at else 'var(--text-muted)')) %}
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:13px 16px; vertical-align:middle;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            {% if row.thumb_url %}
+            <img src="{{ row.thumb_url }}" style="width:52px; height:40px; object-fit:cover;
+                 border-radius:3px; border:1px solid var(--border); flex-shrink:0;">
+            {% endif %}
+            <div>
+              <div style="font-size:16px; font-weight:600; color:var(--text-primary);">{{ row.asset_name or 'Untitled' }}</div>
+              <a href="{{ url_for('admin_raw_detail', image_id=row.id) }}"
+                 style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">View →</a>
+            </div>
+          </div>
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:var(--gold);">{{ row.genre or '—' }}</td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--gold);">
+          {{ '%.2f'|format(row.score) if row.score else '—' }}
+        </td>
+        <td style="padding:13px 16px; font-size:16px; color:var(--text-primary);">
+          {{ row.username }}<br>
+          <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">{{ row.email }}</span>
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px;
+                   color:{{ 'var(--red)' if row.deadline and row.deadline < now() else 'var(--text-muted)' }};">
+          {{ row.deadline.strftime('%d %b %Y, %H:%M UTC') if row.deadline else '—' }}
+        </td>
+        <td style="padding:13px 16px;">
+          {% if row.admin_decision == 'approved' %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; padding:4px 12px;
+                       border:1px solid var(--green); background:var(--green-dim); color:var(--green); border-radius:var(--radius-sm);">
+            ✓ Verified
+          </span>
+          {% elif row.disqualified %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; padding:4px 12px;
+                       border:1px solid var(--red); background:var(--red-dim); color:var(--red); border-radius:var(--radius-sm);">
+            Disqualified
+          </span>
+          {% elif row.submitted_at %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; padding:4px 12px;
+                       border:1px solid var(--amber); background:rgba(184,112,10,0.12); color:var(--amber); border-radius:var(--radius-sm);">
+            Submitted — Pending Review
+          </span>
+          {% else %}
+          <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">
+            Not yet submitted
+          </span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

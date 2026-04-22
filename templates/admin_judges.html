@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Jury Management — Lens League Apex{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>Jury Management</h1>
+    <p>Invite, approve, and manage Lens League Apex judges.</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin_judge_queue') }}" class="btn" style="padding:10px 20px;">
+      📋 Assignment Queue
+    </a>
+    <a href="{{ url_for('admin_judge_config') }}" class="btn btn-solid" style="padding:10px 20px;">
+      ⚙️ Pool Config
+    </a>
+  </div>
+</div>
+
+<!-- Invite form -->
+<div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md);
+            padding:24px 28px; margin-bottom:36px;">
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+              text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Invite a New Judge</div>
+  <form method="POST" action="{{ url_for('admin_judge_invite') }}"
+        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+    <div style="flex:1; min-width:200px;">
+      <label style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px;
+                    color:var(--text-muted); display:block; margin-bottom:6px; text-transform:uppercase;">
+        Email Address *
+      </label>
+      <input type="email" name="email" required placeholder="judge@example.com"
+             style="width:100%; background:var(--surface-3); border:1px solid var(--border);
+                    color:var(--text-primary); padding:11px 16px; font-size:18px;
+                    border-radius:var(--radius-sm); outline:none; box-sizing:border-box;">
+    </div>
+    <div style="flex:1; min-width:160px;">
+      <label style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px;
+                    color:var(--text-muted); display:block; margin-bottom:6px; text-transform:uppercase;">
+        Name (optional)
+      </label>
+      <input type="text" name="name" placeholder="Full name"
+             style="width:100%; background:var(--surface-3); border:1px solid var(--border);
+                    color:var(--text-primary); padding:11px 16px; font-size:18px;
+                    border-radius:var(--radius-sm); outline:none; box-sizing:border-box;">
+    </div>
+    <button type="submit" class="btn btn-solid" style="padding:11px 24px; font-size:17px; white-space:nowrap;">
+      Send Invite →
+    </button>
+  </form>
+  <div style="font-size:15px; color:var(--text-muted); margin-top:10px;">
+    An invitation email with a 72-hour registration link will be sent to this address.
+  </div>
+</div>
+
+<!-- Judge list -->
+<div class="section-label" style="margin-bottom:16px;">All Judges</div>
+
+{% if judges %}
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        {% for col in ['Name', 'Email', 'Status', 'Categories', 'Pending', 'Scored', 'Actions'] %}
+        <th style="padding:13px 16px; font-family:var(--font-mono); font-size:13px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for j in judges %}
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:13px 16px; font-size:17px; font-weight:600; color:var(--text-primary);">
+          {{ j.name or '—' }}
+        </td>
+        <td style="padding:13px 16px; font-size:16px; color:var(--text-secondary); font-family:var(--font-mono);">
+          {{ j.email }}
+        </td>
+        <td style="padding:13px 16px;">
+          {% if j.status == 'approved' %}
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px;
+                       padding:3px 10px; border-radius:var(--radius-sm); background:var(--green-dim);
+                       border:1px solid var(--green); color:var(--green);">Approved</span>
+          {% elif j.status == 'pending_approval' %}
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px;
+                       padding:3px 10px; border-radius:var(--radius-sm); background:rgba(184,112,10,0.12);
+                       border:1px solid var(--amber); color:var(--amber);">Pending</span>
+          {% elif j.status == 'invited' %}
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px;
+                       padding:3px 10px; border-radius:var(--radius-sm); background:var(--surface-3);
+                       border:1px solid var(--border); color:var(--text-muted);">Invited</span>
+          {% elif j.status == 'suspended' %}
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px;
+                       padding:3px 10px; border-radius:var(--radius-sm); background:var(--red-dim);
+                       border:1px solid var(--red); color:var(--red);">Suspended</span>
+          {% endif %}
+        </td>
+        <td style="padding:13px 16px; font-size:15px; color:var(--text-muted);">
+          {{ j.categories | join(', ') if j.categories else '—' }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:17px; color:var(--text-primary);">
+          {{ j.pending_count or 0 }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:17px; color:var(--green);">
+          {{ j.scored_count or 0 }}
+        </td>
+        <td style="padding:13px 16px;">
+          <a href="{{ url_for('admin_judge_detail', judge_id=j.id) }}"
+             class="btn" style="padding:7px 16px; font-size:15px;">View →</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div style="text-align:center; padding:64px 24px; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:var(--radius-md);">
+  <div style="font-size:48px; margin-bottom:20px;">⚖️</div>
+  <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:3px;
+              text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;">No Judges Yet</div>
+  <p style="font-size:20px; color:var(--text-secondary); line-height:1.6;">
+    Use the form above to invite your first jury member.
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

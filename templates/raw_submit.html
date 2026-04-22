@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Submit RAW File — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .raw-wrap { max-width: 680px; margin: 0 auto; }
+  .method-option {
+    display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px;
+    background: var(--surface-2); border: 2px solid var(--border);
+    border-radius: var(--radius-md); cursor: pointer; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .method-option:has(input:checked) { border-color: var(--gold); background: rgba(200,168,75,0.04); }
+  .method-option input[type="radio"] { accent-color: var(--gold); width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+  .method-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .method-desc { font-size: 17px; color: var(--text-secondary); line-height: 1.5; }
+  .upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius-md);
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    background: var(--surface-3); transition: border-color 0.2s; margin-top: 10px;
+  }
+  .upload-area:hover { border-color: var(--gold-dark); }
+  .upload-area input[type="file"] { display: none; }
+  .upload-icon { font-size: 40px; margin-bottom: 14px; }
+  .upload-main-text { font-size: 20px; color: var(--text-secondary); margin-bottom: 6px; }
+  .upload-hint { font-size: 17px; color: var(--text-muted); }
+  .link-input {
+    width: 100%; background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 13px 16px; font-size: 18px;
+    font-family: var(--font-body); border-radius: var(--radius-sm);
+    outline: none; margin-top: 10px; box-sizing: border-box;
+  }
+  .link-input:focus { border-color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="raw-wrap">
+
+  <div class="page-header">
+    <h1>Submit RAW File</h1>
+    <p>Required to confirm your contest result for <strong>{{ img.asset_name or 'your image' }}</strong>.</p>
+  </div>
+
+  {% if already_submitted %}
+  <div style="padding:28px; background:var(--surface-2); border:1px solid var(--green);
+              border-radius:var(--radius-md); text-align:center; margin-bottom:28px;">
+    <div style="font-size:40px; margin-bottom:14px;">✅</div>
+    <div style="font-size:22px; font-weight:700; color:var(--green); margin-bottom:10px;">RAW File Submitted</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Your RAW file has been received. Our team will verify it within 48 hours.
+      You will be notified by email with the outcome.
+    </div>
+    {% if existing and existing.submitted_at %}
+    <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-muted); margin-top:12px;">
+      Submitted {{ existing.submitted_at.strftime('%d %b %Y, %H:%M UTC') }}
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+
+  <!-- Image being verified -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+              padding:20px 24px; margin-bottom:28px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    {% if img.thumb_url %}
+    <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}"
+         style="width:96px; height:72px; object-fit:cover; border-radius:var(--radius-sm);
+                border:1px solid var(--border); flex-shrink:0;">
+    {% endif %}
+    <div>
+      <div style="font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
+        {{ img.asset_name or 'Untitled' }}
+      </div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--gold);">{{ img.genre or '—' }}</div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-muted); margin-top:3px;">
+        DDI Score: {{ '%.2f'|format(img.score) if img.score else '—' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Deadline warning -->
+  {% if existing and existing.deadline %}
+  <div style="padding:16px 20px; background:rgba(184,112,10,0.06); border:1px solid rgba(184,112,10,0.4);
+              border-radius:var(--radius-md); margin-bottom:24px; font-size:18px; color:var(--amber);">
+    ⏰ <strong>Deadline:</strong> {{ existing.deadline.strftime('%d %B %Y, %H:%M UTC') }}
+    &nbsp;·&nbsp; Submit before this time to keep your contest standing.
+  </div>
+  {% endif %}
+
+  <!-- Instructions -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+              padding:20px 24px; margin-bottom:24px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                text-transform:uppercase; color:var(--gold); margin-bottom:14px;">What to submit</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      {% for point in [
+        'The original RAW file (.CR2, .CR3, .NEF, .ARW, .DNG, .RAF, .ORF or similar) from your camera.',
+        'The same file number or capture that matches your submitted JPEG — e.g. IMG_4472.CR3 for IMG_4472.JPG.',
+        'Do not retouch or alter the RAW file before submitting.',
+        'File size is typically 20–80 MB depending on your camera.',
+      ] %}
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">·</span>
+        <span>{{ point }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data"
+        action="{{ url_for('raw_submit', contest_type=contest_type, image_id=img.id) }}"
+        id="rawForm">
+    <input type="hidden" name="contest_ref" value="{{ existing.contest_ref if existing else '' }}">
+
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px;
+                text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">
+      Choose Submission Method
+    </div>
+
+    <!-- Upload -->
+    <label class="method-option" for="methodUpload">
+      <input type="radio" name="method" id="methodUpload" value="upload" checked
+             onchange="showMethod('upload')">
+      <div>
+        <div class="method-title">Upload RAW File</div>
+        <div class="method-desc">Upload directly from your device. Secure, encrypted storage on our servers.</div>
+        <div id="uploadArea" class="upload-area">
+          <label for="rawFileInput" style="cursor:pointer; display:block;">
+            <input type="file" name="raw_file" id="rawFileInput"
+                   accept=".cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f,.mrw"
+                   onchange="showFileName(this)">
+            <div class="upload-icon" id="uploadIcon">📁</div>
+            <div class="upload-main-text" id="uploadLabel">Click to select your RAW file</div>
+            <div class="upload-hint">CR2, CR3, NEF, ARW, DNG, RAF, ORF and others · Up to 200 MB</div>
+          </label>
+        </div>
+      </div>
+    </label>
+
+    <!-- Link -->
+    <label class="method-option" for="methodLink">
+      <input type="radio" name="method" id="methodLink" value="link"
+             onchange="showMethod('link')">
+      <div style="flex:1;">
+        <div class="method-title">Share a Link</div>
+        <div class="method-desc">Paste a Google Drive, Dropbox, or WeTransfer link to your RAW file. Make sure it is set to "Anyone with the link can view".</div>
+        <div id="linkArea" style="display:none; margin-top:10px;">
+          <input type="url" name="raw_link" class="link-input"
+                 placeholder="https://drive.google.com/file/d/…">
+          <div style="font-size:16px; color:var(--text-muted); margin-top:6px;">
+            Ensure the link is publicly accessible before submitting.
+          </div>
+        </div>
+      </div>
+    </label>
+
+    <button type="submit" class="btn btn-solid"
+            style="width:100%; padding:18px; font-size:19px; letter-spacing:2px; margin-top:8px;"
+            onclick="return confirmSubmit()">
+      Submit RAW File →
+    </button>
+
+    <div style="font-size:16px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
+      You will receive an email confirmation once submitted. Verification takes up to 48 hours.
+    </div>
+
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showMethod(method) {
+  document.getElementById('uploadArea').style.display = method === 'upload' ? 'block' : 'none';
+  document.getElementById('linkArea').style.display   = method === 'link'   ? 'block' : 'none';
+}
+
+function showFileName(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const mb   = (file.size / 1024 / 1024).toFixed(1);
+    document.getElementById('uploadIcon').textContent  = '✅';
+    document.getElementById('uploadLabel').textContent = file.name + ' · ' + mb + ' MB';
+    document.getElementById('uploadLabel').style.color = 'var(--green)';
+  }
+}
+
+function confirmSubmit() {
+  const method = document.querySelector('[name="method"]:checked').value;
+  if (method === 'upload') {
+    const file = document.getElementById('rawFileInput');
+    if (!file || !file.files || !file.files.length) {
+      alert('Please select a RAW file to upload.');
+      return false;
+    }
+  } else {
+    const link = document.querySelector('[name="raw_link"]');
+    if (!link || !link.value.trim()) {
+      alert('Please paste a shareable link to your RAW file.');
+      return false;
+    }
+  }
+  return confirm('Submit this RAW file for verification? This action cannot be undone.');
+}
+</script>
+{% endblock %}

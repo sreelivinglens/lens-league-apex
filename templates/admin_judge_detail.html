@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Judge Profile — Lens League Apex{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+  <div class="page-header" style="margin-bottom:0;">
+    <h1>{{ judge.name or judge.email }}</h1>
+    <p>Judge profile &amp; assignment history</p>
+  </div>
+  <a href="{{ url_for('admin_judges') }}" class="btn" style="padding:10px 20px;">← All Judges</a>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
+
+  <!-- Profile card -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Profile</div>
+
+    {% if photo_url %}
+    <img src="{{ photo_url }}" alt="{{ judge.name }}"
+         style="width:96px; height:96px; object-fit:cover; border-radius:var(--radius-md);
+                border:1px solid var(--border); margin-bottom:16px; display:block;">
+    {% endif %}
+
+    {% for label, value in [
+      ('Email', judge.email),
+      ('Phone', judge.phone or '—'),
+      ('City', judge.city or '—'),
+      ('Country', judge.country or '—'),
+      ('Years Experience', judge.years_experience | string + ' years' if judge.years_experience else '—'),
+      ('Judged Before', 'Yes' if judge.judged_before else 'No'),
+    ] %}
+    <div style="display:flex; gap:12px; margin-bottom:10px; align-items:flex-start;">
+      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                  text-transform:uppercase; letter-spacing:1px; min-width:110px; flex-shrink:0;">{{ label }}</div>
+      <div style="font-size:17px; color:var(--text-primary);">{{ value }}</div>
+    </div>
+    {% endfor %}
+
+    {% if judge.bio %}
+    <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                  text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Bio</div>
+      <div style="font-size:17px; color:var(--text-secondary); line-height:1.7;">{{ judge.bio }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Actions card -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- Status -->
+    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px;">
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                  text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Status</div>
+      <div style="font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:16px;">
+        {{ judge.status | replace('_', ' ') | title }}
+      </div>
+      {% if judge.status == 'pending_approval' %}
+      <form method="POST" action="{{ url_for('admin_judge_approve', judge_id=judge.id) }}">
+        <button type="submit" class="btn btn-solid" style="width:100%; padding:13px; font-size:17px;"
+                onclick="return confirm('Approve this judge? A welcome email will be sent.')">
+          ✓ Approve Judge
+        </button>
+      </form>
+      {% elif judge.status == 'approved' %}
+      <form method="POST" action="{{ url_for('admin_judge_suspend', judge_id=judge.id) }}">
+        <button type="submit" class="btn"
+                style="width:100%; padding:13px; font-size:17px; border-color:#5a1a1a; color:var(--red);"
+                onclick="return confirm('Suspend this judge? They will lose dashboard access.')">
+          Suspend Judge
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- Category assignment -->
+    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px;">
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+                  text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Category Assignment</div>
+
+      {% if categories %}
+      <div style="margin-bottom:12px;">
+        <div style="font-size:15px; color:var(--text-muted); margin-bottom:6px;">Currently assigned to:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          {% for cat in categories %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; padding:4px 12px;
+                       border:1px solid var(--gold-dark); background:var(--gold-subtle);
+                       color:var(--gold); border-radius:99px;">{{ cat.category }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('admin_judge_assign_categories', judge_id=judge.id) }}">
+        <div style="margin-bottom:10px;">
+          <label style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                        text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+            Contest Type
+          </label>
+          <select name="contest_type"
+                  style="width:100%; background:var(--surface-3); border:1px solid var(--border);
+                         color:var(--text-primary); padding:10px 14px; font-size:17px;
+                         border-radius:var(--radius-sm); outline:none;">
+            <option value="all">All Contests</option>
+            <option value="weekly">Weekly Only</option>
+            <option value="open">Open Competition Only</option>
+            <option value="poty">POTY Only</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                        text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">
+            Categories (select one or more)
+          </label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            {% for genre in genre_ids %}
+            <label style="display:flex; align-items:center; gap:8px; padding:9px 12px;
+                          background:var(--surface-3); border:1px solid var(--border);
+                          border-radius:var(--radius-sm); cursor:pointer; font-size:16px;
+                          color:var(--text-primary);">
+              <input type="checkbox" name="categories" value="{{ genre }}"
+                     {{ 'checked' if categories and genre in (categories | map(attribute='category') | list) }}
+                     style="accent-color:var(--gold); width:16px; height:16px;">
+              {{ genre }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="submit" class="btn" style="width:100%; padding:11px; font-size:16px;
+                border-color:var(--gold-dark); color:var(--gold);">
+          Update Categories
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- Assignment history -->
+{% if assignments %}
+<div class="section-label" style="margin-bottom:16px;">Recent Assignments</div>
+<div class="table-wrap">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        {% for col in ['Image', 'Genre', 'Contest', 'Status', 'Score / Flag'] %}
+        <th style="padding:13px 16px; font-family:var(--font-mono); font-size:13px; font-weight:600;
+                   letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
+                   border-bottom:1px solid var(--border); background:var(--surface-3);
+                   text-transform:uppercase; white-space:nowrap;">{{ col }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in assignments %}
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:13px 16px; vertical-align:middle;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            {% if a.thumb_url %}
+            <img src="{{ a.thumb_url }}" style="width:48px; height:38px; object-fit:cover;
+                 border-radius:3px; border:1px solid var(--border); flex-shrink:0;">
+            {% endif %}
+            <span style="font-size:16px; color:var(--text-primary);">{{ a.asset_name or 'Untitled' }}</span>
+          </div>
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:var(--gold);">
+          {{ a.genre or '—' }}
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:15px; color:var(--text-muted);">
+          {{ a.contest_ref or '—' }}
+        </td>
+        <td style="padding:13px 16px;">
+          {% set status_colors = {'pending':'var(--text-muted)', 'scored':'var(--green)', 'flagged':'var(--red)', 'skipped':'var(--text-muted)'} %}
+          <span style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px;
+                       color:{{ status_colors.get(a.status, 'var(--text-muted)') }};">
+            {{ a.status | title }}
+          </span>
+        </td>
+        <td style="padding:13px 16px; font-family:var(--font-mono); font-size:17px; font-weight:700;">
+          {% if a.flag_type %}
+          <span style="color:var(--red);">🚩 {{ a.flag_type | replace('_',' ') | title }}</span>
+          {% elif a.judge_total is not none %}
+          <span style="color:var(--gold);">{{ '%.1f' | format(a.judge_total) }}</span>
+          {% else %}
+          <span style="color:var(--text-muted);">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}
