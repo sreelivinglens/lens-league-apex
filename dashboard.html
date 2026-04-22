@@ -1,0 +1,1076 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Lens League Apex{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 36px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dash-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
+
+  .track-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    background: rgba(200,168,75,0.06);
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* ── Peer Rating Widget ── */
+  .peer-widget {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .peer-widget.state-active {
+    border-color: var(--gold-dark);
+    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));
+  }
+  .peer-widget.state-ready {
+    border-color: rgba(76,175,115,0.6);
+    background: linear-gradient(135deg, var(--surface-2), rgba(76,175,115,0.05));
+  }
+  .peer-widget-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .peer-widget-headline {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 5px;
+  }
+  .peer-widget-headline.green { color: var(--green); }
+  .peer-widget-subline {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 520px;
+  }
+  .peer-widget-body { padding: 20px 22px; }
+  @media (max-width: 600px) {
+    .peer-widget-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .peer-widget-header .btn {
+      width: 100%;
+      text-align: center;
+    }
+    .peer-widget-headline { font-size: 16px; }
+    .peer-widget-subline  { font-size: 14px; }
+  }
+
+  /* Exchange chain */
+  .exchange-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: var(--surface-3);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+  }
+  .exchange-step { font-size: 15px; color: var(--text-secondary); }
+  .exchange-step strong { color: var(--text-primary); }
+  .exchange-arrow { font-family: var(--font-mono); color: var(--gold); font-weight: 700; }
+
+  /* Stats */
+  .peer-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .peer-stat {
+    background: var(--surface-3);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .peer-stat-val {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .peer-stat-val.green { color: var(--green); }
+  .peer-stat-lbl {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* Progress bar */
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .progress-text { font-size: 15px; color: var(--text-secondary); }
+  .progress-text strong { color: var(--text-primary); }
+  .progress-count { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
+  .progress-track {
+    height: 8px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.5s ease;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+  }
+
+  /* Active pool strip */
+  .pool-active {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(76,175,115,0.07);
+    border: 1px solid rgba(76,175,115,0.25);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    font-size: 15px;
+    color: var(--green);
+  }
+
+  /* Pool prompt */
+  .pool-prompt {
+    background: rgba(76,175,115,0.08);
+    border: 1px solid rgba(76,175,115,0.35);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    margin-top: 4px;
+  }
+  .pool-prompt-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+  .pool-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    animation: pdot 1.5s ease-in-out infinite;
+  }
+  @keyframes pdot {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.4; transform:scale(1.4); }
+  }
+  .pool-candidate {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .pool-candidate img {
+    width: 52px; height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .pool-candidate-name {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pool-candidate-meta {
+    font-family: var(--font-mono); font-size: 14px; color: var(--gold); margin-top: 2px;
+  }
+  .pool-candidate-hint {
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+  }
+  .pool-select-row {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .pool-select-row select {
+    flex: 1; min-width: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 9px 14px;
+    font-size: 16px;
+    border-radius: var(--radius-sm);
+    outline: none;
+  }
+  .pool-select-row select:focus { border-color: var(--green); }
+
+  /* peer pill on card */
+  .peer-pill {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 99px;
+    border: 1px solid rgba(76,175,115,0.4);
+    color: var(--green); background: rgba(76,175,115,0.08);
+  }
+
+  /* Search bar */
+  .search-form {
+    display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap;
+  }
+  .search-form input {
+    flex: 1; min-width: 200px;
+    background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 11px 16px;
+    font-family: var(--font-body); font-size: 16px;
+    border-radius: var(--radius-sm); outline: none; transition: border-color 0.2s;
+  }
+  .search-form input:focus { border-color: var(--gold); }
+  .search-form input::placeholder { color: var(--text-muted); }
+  .search-locked {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px; padding: 12px 16px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .search-locked-text { font-family: var(--font-mono); font-size: 14px; letter-spacing: 2px; color: var(--text-muted); }
+  .search-progress { flex: 1; height: 4px; background: var(--surface-3); border-radius: 99px; overflow: hidden; max-width: 120px; }
+  .search-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
+
+  /* Image grid */
+  .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .img-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
+    text-decoration: none; color: inherit; display: block;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .img-card:hover { border-color: var(--gold-dark); transform: translateY(-2px); }
+  .img-card.flagged { border-color: var(--red); opacity: 0.85; }
+  .img-card.flagged:hover { border-color: var(--red); opacity: 1; }
+  .img-card.under-review { border-color: var(--gold-dark); opacity: 0.9; }
+  .img-card.in-pool { border-color: rgba(76,175,115,0.45); }
+  .img-card-info { padding: 14px 16px; }
+  .img-card-title {
+    font-size: 16px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;
+  }
+  .img-card-meta {
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+    letter-spacing: 1px; margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .img-card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 6px; flex-wrap: wrap; gap: 4px;
+  }
+  .img-card-date { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+  .img-track-pill {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px;
+    border-radius: 99px; border: 1px solid var(--border); color: var(--text-muted);
+  }
+  .img-track-pill.camera { border-color: var(--gold-dark); color: var(--gold); }
+  .flagged-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px;
+    border-radius: 99px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red);
+  }
+  .review-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px;
+    border-radius: 99px; background: rgba(180,130,0,0.12); border: 1px solid var(--gold-dark); color: var(--gold);
+  }
+  .judge-indicator {
+    display: inline-block; font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; color: var(--gold); border: 1px solid var(--gold-dark);
+    padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;
+  }
+  .ai-flag-overlay {
+    position: absolute; inset: 0; background: rgba(224,85,85,0.15);
+    display: flex; align-items: center; justify-content: center; pointer-events: none;
+  }
+  .ai-flag-overlay-text {
+    background: rgba(224,85,85,0.9); color: #fff;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; padding: 4px 10px; border-radius: var(--radius-sm); text-transform: uppercase;
+  }
+
+  /* ── Contest winner badge on thumbnails ── */
+  .contest-badge {
+    position: absolute; top: 8px; right: 8px; z-index: 4;
+    background: #C8A84B; color: #1a1a18;
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+  .empty-state-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.4; }
+  .empty-state-title {
+    font-family: var(--font-mono); font-size: 15px; letter-spacing: 3px;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .empty-state-text { font-size: 18px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .img-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .dash-header { flex-direction: column; align-items: stretch; }
+    .dash-header .btn { text-align: center; }
+    .img-thumb { aspect-ratio: 4/3; min-height: 120px; }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .peer-stats { grid-template-columns: repeat(3, 1fr); }
+    .exchange-row { gap: 6px; }
+    .genre-table-header { grid-template-columns: 1fr 60px 80px !important; }
+    .genre-table-row    { grid-template-columns: 1fr 60px 80px !important; }
+    .genre-table-bar    { display: none !important; }
+    .genre-table-avg    { display: none !important; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 480px) {
+    .img-grid { grid-template-columns: 1fr; }
+    .img-thumb { aspect-ratio: 16/9; min-height: 180px; }
+    .img-card-title { font-size: 16px; }
+    .peer-stats { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  /* Prevent any element from causing horizontal scroll */
+  body { overflow-x: hidden; }
+  * { max-width: 100%; box-sizing: border-box; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Zone notification banners — persistent, shown until resolved -->
+{% set zone3_images = zone3_flagged or [] %}
+{% set zone2_images = zone2_pending or [] %}
+
+{% if zone3_images %}
+<div style="margin-bottom:20px; padding:16px 20px;
+            background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.3);
+            border-left:4px solid var(--red); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:12px; font-weight:700;
+              letter-spacing:2px; text-transform:uppercase; color:var(--red); margin-bottom:8px;">
+    ⚠ Peer Review — Jury Referred
+  </div>
+  <div style="font-size:15px; color:var(--text-secondary); line-height:1.7;">
+    {% if zone3_images | length == 1 %}
+      Your image <strong style="color:var(--text-primary);">{{ zone3_images[0].asset_name or 'Untitled' }}</strong> has
+    {% else %}
+      {{ zone3_images | length }} of your images have
+    {% endif %}
+    received peer ratings that diverge significantly from their DDI scores and have been referred to our jury.
+    <strong>Your DDI score is protected and unchanged.</strong>
+    Our team will contact you once the review is complete.
+  </div>
+</div>
+{% endif %}
+
+{% if zone2_images %}
+<div style="margin-bottom:20px; padding:16px 20px;
+            background:rgba(184,112,10,0.06); border:1px solid rgba(184,112,10,0.3);
+            border-left:4px solid var(--amber); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:12px; font-weight:700;
+              letter-spacing:2px; text-transform:uppercase; color:var(--amber); margin-bottom:8px;">
+    ⏳ Peer Review In Progress
+  </div>
+  <div style="font-size:15px; color:var(--text-secondary); line-height:1.7;">
+    {% if zone2_images | length == 1 %}
+      Your image <strong style="color:var(--text-primary);">{{ zone2_images[0].asset_name or 'Untitled' }}</strong> is
+    {% else %}
+      {{ zone2_images | length }} of your images are
+    {% endif %}
+    receiving peer ratings that are being reviewed for consistency.
+    <strong>Your DDI score stands and is unaffected.</strong>
+    No action is required from you.
+  </div>
+</div>
+{% endif %}
+{# ── Contest winner announcement banner ─────────────────── #}
+{% if contest_wins %}
+<div style="margin-bottom:24px; padding:20px 24px;
+            background:linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.04));
+            border:1px solid var(--gold-dark); border-left:4px solid var(--gold);
+            border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:14px; font-weight:700;
+              letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">
+    🏆 Contest Result{{ 's' if contest_wins | length != 1 }}
+  </div>
+  {% for img in contest_wins %}
+  <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;">
+    {% if img.thumb_url %}
+    <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}"
+         style="width:56px; height:44px; object-fit:cover; border-radius:4px; border:1px solid var(--gold-dark); flex-shrink:0;">
+    {% endif %}
+    <div>
+      <div style="font-size:17px; font-weight:700; color:var(--text-primary);">{{ img.asset_name or 'Untitled' }}</div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--gold); margin-top:2px;">
+        {{ img.genre }} · Final Score {{ img.judge_final_score }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  <div style="font-size:15px; color:var(--text-secondary); margin-top:8px; line-height:1.6;">
+    Your result{{ 's are' if contest_wins | length != 1 else ' is' }} published on the leaderboard.
+    <a href="{{ url_for('leaderboard') }}" style="color:var(--gold); font-weight:600;">View leaderboard →</a>
+  </div>
+</div>
+{% endif %}
+<!-- Header -->
+<div class="dash-header">
+  <div class="page-header">
+    <h1>
+      {{ current_user.full_name or current_user.username }}
+      {% if current_user.is_subscribed and current_user.subscription_track %}
+        <span class="track-badge">
+          {% if current_user.subscription_track == 'camera' %}📷{% else %}📱{% endif %}
+          {{ current_user.subscription_track | title }} Track
+        </span>
+      {% endif %}
+    </h1>
+    <p>Your photography portfolio &amp; scores</p>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="grid-4" style="margin-bottom:36px;">
+  <div class="stat-box"><div class="stat-val">{{ stats.total }}</div><div class="stat-lbl">Images</div></div>
+  <div class="stat-box"><div class="stat-val">{{ stats.scored }}</div><div class="stat-lbl">Scored</div></div>
+  <div class="stat-box"><div class="stat-val">{{ "%.1f"|format(stats.avg_score) }}</div><div class="stat-lbl">Avg Score</div></div>
+  <div class="stat-box"><div class="stat-val">{{ stats.best_score }}</div><div class="stat-lbl">Best Score</div></div>
+</div>
+
+{# ── Public profile link ─────────────────────────────────────────── #}
+{% if stats.scored > 0 %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:5px;">Your Public Portfolio</div>
+    <div style="font-size:15px; color:var(--text-muted);">Share this link with clients, brands, or agencies.</div>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <code id="profile-url" style="font-family:var(--font-mono); font-size:15px; color:var(--text-secondary); background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:min(280px, 50vw); display:inline-block;">{{ request.host_url }}u/{{ current_user.username }}</code>
+    <button onclick="copyProfileUrl()" id="copy-btn"
+            style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 14px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); cursor:pointer; white-space:nowrap; transition:color 0.2s, border-color 0.2s;">
+      Copy Link
+    </button>
+    <a href="{{ url_for('public_profile', username=current_user.username) }}" target="_blank"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 14px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); text-decoration:none; white-space:nowrap;">
+      View →
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{# ── Weekly Challenge banner — shows to ALL users when challenge is live ── #}
+{% if active_challenge and active_challenge.is_open %}
+<div style="background:var(--surface-2); border:1px solid var(--border);
+            border-left:3px solid var(--gold); border-radius:var(--radius-md);
+            padding:18px 22px; margin-bottom:28px;
+            display:flex; align-items:center; justify-content:space-between;
+            gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+                letter-spacing:2px; color:var(--gold); text-transform:uppercase;
+                margin-bottom:6px;">
+      ● This week's challenge is live
+    </div>
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary);
+                font-family:Georgia,serif; font-style:italic; margin-bottom:6px;">
+      {{ active_challenge.prompt_title }}
+    </div>
+    <div style="font-size:15px; color:var(--text-secondary); margin-bottom:8px; line-height:1.5;">
+      Get your photo rated for it to be in the reckoning to qualify for
+      <strong style="color:var(--text-primary);">Photographer of the Year</strong>
+    </div>
+    <div style="font-size:14px; color:var(--text-muted);">
+      Closes {{ active_challenge.closes_at.strftime('%A %d %B') }}
+      &nbsp;·&nbsp;
+      {{ active_challenge.submission_count }} submission{{ 's' if active_challenge.submission_count != 1 else '' }} so far
+      &nbsp;·&nbsp;
+      {% if current_user.is_subscribed %}
+        You can submit up to 3 images this week
+      {% else %}
+        1 image submission this week &nbsp;·&nbsp;
+        <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 →</a>
+      {% endif %}
+    </div>
+  </div>
+  <a href="{{ url_for('weekly_challenge') }}"
+     style="flex-shrink:0; padding:12px 24px; background:var(--gold); color:#0D0D0B;
+            border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px;
+            font-weight:700; letter-spacing:2px; text-transform:uppercase;
+            text-decoration:none; white-space:nowrap;">
+    Enter challenge →
+  </a>
+</div>
+{% endif %}
+
+{# ── Free tier upgrade nudge ─────────────────────────────────────── #}
+{% if free_tier %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">
+      Free Plan
+      {% if free_tier.in_month1 %} · Welcome Month{% endif %}
+    </div>
+    <div style="font-size:16px; color:var(--text-primary); font-weight:600;">
+      {{ free_tier.remaining }} of {{ free_tier.limit }} free scored image{{ 's' if free_tier.limit != 1 }} remaining this month
+    </div>
+    <div style="font-size:15px; color:var(--text-muted); margin-top:4px;">
+      {% if free_tier.remaining == 0 %}
+        You've used all your free images for this month. Resets on the 1st.
+      {% elif free_tier.in_month1 %}
+        6 images this month to get you started. From next month, 3 free images per month.
+      {% else %}
+        3 free images per month. Upgrade for unlimited uploads and contest entry.
+      {% endif %}
+    </div>
+  </div>
+  <a href="{{ url_for('pricing') }}" style="flex-shrink:0; padding:10px 20px; background:var(--gold); color:#0D0D0B; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; white-space:nowrap;">
+    Upgrade →
+  </a>
+</div>
+{% endif %}
+
+{# ── Subscription management — subscribers only ──────────────────── #}
+{% if current_user.is_subscribed and current_user.subscription_track %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;">
+      {% if current_user.subscription_track == 'camera' %}📷{% else %}📱{% endif %}
+      {{ current_user.subscription_track | title }} League · {{ current_user.subscription_plan | title }} Plan
+    </div>
+    <div style="font-size:15px; color:var(--text-muted); margin-top:2px;">
+      Active subscription · Unlimited uploads · Contest entry included
+    </div>
+    <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">
+      To cancel, click the button. Access continues until the end of your current billing period.
+    </div>
+  </div>
+  <a href="{{ url_for('cancel_subscription') }}"
+     style="flex-shrink:0; padding:10px 20px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; text-decoration:none; white-space:nowrap;">
+    Cancel subscription
+  </a>
+</div>
+{% endif %}
+
+{# ══════════════════════════════════════════
+   POTY TRACKER — subscribers only
+   Shows live top-6 average per genre
+   ══════════════════════════════════════════ #}
+{% if poty_tracker %}
+{% set pt = poty_tracker %}
+<div class="card" style="margin-bottom:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+    <div>
+      <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">POTY Standing</div>
+      <div style="font-size:18px; font-weight:700; color:var(--text-primary);">Your top-6 average per genre</div>
+      <div style="font-size:15px; color:var(--text-muted); margin-top:2px;">Updates with every scored image · Deletions do not improve your average</div>
+    </div>
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; background:var(--surface-3); color:var(--text-muted); border:1px solid var(--border); border-radius:var(--radius-sm); padding:5px 12px; text-transform:uppercase; white-space:nowrap;">
+      Cutoff: Month 9
+    </div>
+  </div>
+
+  {# Summary row #}
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;">
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Best Avg</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--gold);">{% if pt.best_avg is not none %}{{ pt.best_avg }}{% else %}—{% endif %}</div>
+    </div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Genres</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--text-primary);">{{ pt.active_genres }}<span style="font-size:16px; color:var(--text-muted);">/8</span></div>
+    </div>
+    <div style="background:var(--surface-3); border-radius:var(--radius-md); padding:12px 10px;">
+      <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; line-height:1.3;">Scored</div>
+      <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--text-primary);">{{ pt.total_scored }}</div>
+    </div>
+  </div>
+
+  {# How POTY scoring works — guideline message #}
+  <div style="background:var(--surface-3); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:16px 18px; margin-bottom:20px;">
+    <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">How your POTY average is calculated</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">1.</span>
+        <span>Your <strong style="color:var(--text-primary);">best 6 scored images</strong> in each genre are automatically selected — you don't choose them. The system always picks your highest-scoring 6.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">2.</span>
+        <span>A <strong style="color:var(--text-primary);">minimum of 6 scored images</strong> in a genre is required before an average is shown. With fewer than 6, no average is calculated.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">3.</span>
+        <span>Every time you upload a stronger image, it <strong style="color:var(--text-primary);">automatically replaces</strong> the weakest in your top 6 — raising your average. You can delete images you no longer want from your portfolio.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">4.</span>
+        <span>Peer ratings can also <strong style="color:var(--text-primary);">improve existing scores</strong> — a better blended score on an image already in your top 6 pushes your average up without uploading anything new.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">5.</span>
+        <span>You need <strong style="color:var(--text-primary);">at least 24 scored images</strong> in a genre to qualify for POTY prizes in that genre. The qualifying threshold is announced at Month 9 — you can keep uploading until the year-end deadline.</span>
+      </div>
+      <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
+        <span style="color:var(--gold); font-weight:700; flex-shrink:0;">6.</span>
+        <span><strong style="color:var(--text-primary);">Deleting images does not improve your average.</strong> All scored images count toward your POTY record regardless of deletion.</span>
+      </div>
+    </div>
+  </div>
+
+  {# Genre table header #}
+  <div class="genre-table-header" style="display:grid; grid-template-columns:110px 70px 1fr 48px 100px; gap:0 10px; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:4px;">
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Genre</div>
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Images</div>
+    <div class="genre-table-bar" style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Top-6 average</div>
+    <div class="genre-table-avg" style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Avg</div>
+    <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:right;">Status</div>
+  </div>
+
+  {# Genre rows #}
+  {% for row in pt.genre_rows %}
+  {% if row.top6_avg is not none %}
+    {% set bar_color = '#3B6D11' if row.top6_avg >= 78 else ('#854F0B' if row.top6_avg >= 65 else '#9A9890') %}
+  {% else %}
+    {% set bar_color = '#9A9890' %}
+  {% endif %}
+  <div class="genre-table-row" style="display:grid; grid-template-columns:110px 70px 1fr 56px 120px; gap:0 10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-subtle);">
+    <div style="font-size:16px; font-weight:600; color:var(--text-primary);">{{ row.genre }}</div>
+    <div style="font-size:16px; color:var(--text-muted);">{{ row.count }} img{{ 's' if row.count != 1 }}</div>
+    <div class="genre-table-bar" style="height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
+      <div style="height:100%; width:{{ row.bar_pct }}%; background:{{ bar_color }}; border-radius:4px;"></div>
+    </div>
+    <div class="genre-table-avg" style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary); text-align:right;">
+      {% if row.top6_avg is not none %}{{ row.top6_avg }}{% else %}—{% endif %}
+    </div>
+    <div style="font-family:var(--font-mono); font-size:14px; text-align:right;">
+      {% if not row.has_enough %}
+        <span style="color:var(--text-muted);">+{{ row.images_needed }} more</span>
+      {% elif not row.qualifies %}
+        <span style="color:var(--text-muted);">Need {{ pt.min_images }}</span>
+      {% elif row.top6_avg >= 78 %}
+        <span style="color:#3B6D11;">Strong</span>
+      {% elif row.top6_avg >= 65 %}
+        <span style="color:#854F0B;">Building</span>
+      {% else %}
+        <span style="color:var(--text-muted);">Keep going</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if not pt.genre_rows %}
+  <div style="text-align:center; padding:32px; color:var(--text-muted); font-size:18px;">
+    Upload and score your first image to start building your POTY standing.
+  </div>
+  {% endif %}
+
+  {# Top-6 images for best genre #}
+  {% if pt.genre_rows and pt.genre_rows[0].top6_images %}
+  {% set best = pt.genre_rows[0] %}
+  <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+    <div style="font-family:var(--font-mono); font-size:18px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">
+      {{ best.genre }} — your top 6 images contributing to this average
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px;">
+      {% for img in best.top6_images %}
+      <div style="aspect-ratio:1; border-radius:var(--radius-sm); overflow:hidden; position:relative; background:var(--surface-3); border:1px solid var(--border);">
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+        {% endif %}
+        <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.65); padding:3px 5px; text-align:center;">
+          <span style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:#C8A84B;">{{ img.score }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="font-size:18px; color:var(--text-muted); margin-top:8px; font-style:italic;">
+      Upload stronger {{ best.genre }} images to replace weaker scores and raise your average.
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="margin-top:16px; padding:12px 16px; background:var(--surface-3); border-left:2px solid var(--gold-dark); font-size:18px; color:var(--text-muted); line-height:1.6;">
+    The qualifying threshold is announced at Month 9. You can keep uploading until the platform year deadline — if your top-6 average clears the threshold by then, you qualify for POTY consideration.
+  </div>
+</div>
+{% endif %}
+
+{# ══════════════════════════════════════════
+   PEER RATING WIDGET — subscribers only
+   Requires rating_widget dict from dashboard route
+   ══════════════════════════════════════════ #}
+{% if rating_widget %}
+{% set rw = rating_widget %}
+
+{# Determine state: fresh / active / ready #}
+{% if rw.unlocks_pending > 0 %}
+  {% set ws = 'ready' %}
+{% elif rw.lifetime_given > 0 %}
+  {% set ws = 'active' %}
+{% else %}
+  {% set ws = 'fresh' %}
+{% endif %}
+
+<div class="peer-widget state-{{ ws }}">
+
+  {# ── Header: state-specific headline + CTA ── #}
+  <div class="peer-widget-header">
+    <div style="flex:1; min-width:0;">
+
+      {% if ws == 'fresh' %}
+        <div class="peer-widget-headline">Get your images rated by real photographers</div>
+        <div class="peer-widget-subline">
+          Rate 5 images in ~2 minutes. In return, one of your images enters the peer rating pool — scored by other photographers across all 5 DDI modules. The more eyes on your work, the more credible your score.
+        </div>
+
+      {% elif ws == 'active' %}
+        {% set to_next = 5 - (rw.lifetime_given % 5) if rw.lifetime_given % 5 != 0 else 5 %}
+        <div class="peer-widget-headline">
+          Rate <strong style="color:var(--gold);">{{ to_next }} more image{{ 's' if to_next != 1 }}</strong> to unlock peer scoring for your work
+        </div>
+        <div class="peer-widget-subline">
+          You've rated {{ rw.lifetime_given }} image{{ 's' if rw.lifetime_given != 1 }} so far — good start. Keep going, every rating brings peer scoring for one of your images closer.
+        </div>
+
+      {% else %}{# ready #}
+        <div class="peer-widget-headline green">✅ You've earned peer scoring — choose your image now</div>
+        <div class="peer-widget-subline">
+          You've rated enough to submit {{ rw.unlocks_pending }} of your own image{{ 's' if rw.unlocks_pending != 1 }} for peer scoring. Choose below and other photographers will score it across all 5 DDI modules.
+        </div>
+      {% endif %}
+
+    </div>
+
+    {# CTA button — only on fresh / active states #}
+    {% if ws != 'ready' %}
+    <a href="{{ url_for('rate') }}" class="btn btn-solid"
+       style="padding:10px 22px; font-size:15px; white-space:nowrap; flex-shrink:0;
+              {% if ws == 'fresh' %}background:var(--green); border-color:var(--green);{% endif %}">
+      {% if ws == 'fresh' %}Start Rating →{% else %}Continue Rating →{% endif %}
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="peer-widget-body">
+
+    {# Exchange chain — fresh state only #}
+    {% if ws == 'fresh' %}
+    <div class="exchange-row">
+      <div class="exchange-step">Rate <strong>5 images</strong></div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step">Unlock <strong>peer scoring</strong> for 1 of your images</div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step">Get a <strong>Blended Score</strong> (DDI + peer)</div>
+      <div class="exchange-arrow">→</div>
+      <div class="exchange-step"><strong>More credible</strong> ranking</div>
+    </div>
+    {% endif %}
+
+    {# Stats row #}
+    <div class="peer-stats">
+      <div class="peer-stat">
+        <div class="peer-stat-val">{{ rw.lifetime_given }}</div>
+        <div class="peer-stat-lbl">Rated by You</div>
+      </div>
+      <div class="peer-stat">
+        <div class="peer-stat-val {{ 'green' if rw.unlocks_pending > 0 }}">{{ rw.unlocks_pending }}</div>
+        <div class="peer-stat-lbl">Unlocks Ready</div>
+      </div>
+      <div class="peer-stat">
+        <div class="peer-stat-val">{{ rw.images_in_pool }}</div>
+        <div class="peer-stat-lbl">In Peer Pool</div>
+      </div>
+    </div>
+
+    {# Progress bar — active state only #}
+    {% if ws == 'active' %}
+    {% set given_in_cycle = rw.lifetime_given % 5 %}
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <div class="progress-text"><strong>{{ given_in_cycle }}/5</strong> towards your next unlock</div>
+        <div class="progress-count">{{ rw.unlocks_earned }} unlock{{ 's' if rw.unlocks_earned != 1 }} earned total</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:{{ (given_in_cycle / 5 * 100)|int }}%"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Images in pool indicator #}
+    {% if rw.images_in_pool > 0 %}
+    <div class="pool-active">
+      <span>●</span>
+      {{ rw.images_in_pool }} of your image{{ 's' if rw.images_in_pool != 1 }} {{ 'are' if rw.images_in_pool != 1 else 'is' }} in the peer rating pool.
+      {% if rw.images_with_peer > 0 %}
+        {{ rw.images_with_peer }} {{ 'have' if rw.images_with_peer != 1 else 'has' }} received peer ratings.
+      {% else %}
+        Waiting for other photographers to rate.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# Pool entry form — ready state #}
+    {% if ws == 'ready' %}
+      {% if rw.pool_candidate %}
+      <div class="pool-prompt">
+        <div class="pool-prompt-title">
+          <div class="pool-dot"></div>
+          {{ rw.unlocks_pending }} Pool {{ 'Entry' if rw.unlocks_pending == 1 else 'Entries' }} Ready to Use
+        </div>
+        <div class="pool-candidate">
+          {% if rw.pool_candidate.thumb_url %}
+          <img src="{{ rw.pool_candidate.thumb_url }}" alt="{{ rw.pool_candidate.asset_name }}">
+          {% endif %}
+          <div style="flex:1; min-width:0;">
+            <div class="pool-candidate-name">{{ rw.pool_candidate.asset_name or 'Untitled' }}</div>
+            <div class="pool-candidate-meta">{{ rw.pool_candidate.score }} · {{ rw.pool_candidate.tier }}</div>
+            <div class="pool-candidate-hint">Recommended — highest scored image not yet in pool</div>
+          </div>
+        </div>
+        <form method="POST" action="{{ url_for('enter_peer_pool') }}">
+          <div class="pool-select-row">
+            <select name="image_id">
+              {% for img in images.items %}
+                {% if img.status == 'scored' and not img.is_in_peer_pool and img.score and not img.is_flagged and not img.needs_review %}
+                <option value="{{ img.id }}" {{ 'selected' if rw.pool_candidate and img.id == rw.pool_candidate.id }}>
+                  {{ img.asset_name or 'Untitled' }} — {{ img.score }} ({{ img.tier }})
+                </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-solid"
+                    style="padding:9px 22px; font-size:15px; white-space:nowrap; background:var(--green); border-color:var(--green);">
+              Submit for Peer Rating ✓
+            </button>
+          </div>
+          <div style="margin-top:8px; font-size:15px; color:var(--text-muted);">
+            Your highest scored image is pre-selected. Use the dropdown to choose a different one.
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div class="pool-prompt">
+        <div class="pool-prompt-title"><div class="pool-dot"></div>Pool Entry Ready</div>
+        <div style="font-size:15px; color:var(--text-secondary); margin-bottom:12px;">
+          All your scored images are already in the peer pool. Upload more to submit them for peer rating.
+        </div>
+        <a href="{{ url_for('upload') }}" class="btn btn-solid" style="padding:9px 20px; font-size:15px;">Upload an Image →</a>
+      </div>
+      {% endif %}
+    {% endif %}
+
+    {# Fresh state footer nudge #}
+    {% if ws == 'fresh' %}
+    <div style="text-align:center; padding:4px 0; font-size:15px; color:var(--text-muted); line-height:1.7;">
+      Takes about 2 minutes to rate 5 images. Each image requires a minimum 15 seconds of viewing.
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endif %}
+{# ══ END PEER RATING WIDGET ══ #}
+
+<!-- Search -->
+{% if search_enabled %}
+<form method="GET" class="search-form">
+  <input type="text" name="q" value="{{ query }}" placeholder="Search by title, genre, location…">
+  <button type="submit" class="btn" style="padding:11px 24px;">Search</button>
+  {% if query %}
+  <a href="{{ url_for('dashboard') }}" class="btn" style="padding:11px 20px;">✕ Clear</a>
+  {% endif %}
+</form>
+{% else %}
+<div class="search-locked">
+  <span class="search-locked-text">SEARCH UNLOCKS AT 20 IMAGES</span>
+  <div class="search-progress">
+    <div class="search-progress-fill" style="width:{{ [stats.total / 20 * 100, 100]|min|int }}%"></div>
+  </div>
+  <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted);">{{ stats.total }}/20</span>
+</div>
+{% endif %}
+
+<!-- Image Grid -->
+{% if images.items %}
+<div class="img-grid">
+  {% for img in images.items %}
+  <a href="{{ url_for('image_detail', image_id=img.id) }}"
+     class="img-card{% if img.is_flagged %} flagged{% elif img.needs_review %} under-review{% elif img.is_in_peer_pool %} in-pool{% endif %}">
+    <div class="img-thumb" style="position:relative;">
+      <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
+           alt="{{ img.asset_name }}" loading="lazy">
+
+      {% if img.contest_result_status == 'published' and img.judge_final_score and not img.is_flagged and not img.needs_review %}
+      <div class="contest-badge">🏆</div>
+      {% endif %}
+
+      {% if img.is_flagged %}
+        <div class="ai-flag-overlay"><div class="ai-flag-overlay-text">🚫 Flagged</div></div>
+      {% elif img.needs_review %}
+        <div class="ai-flag-overlay" style="background:rgba(120,80,0,0.72);">
+          <div class="ai-flag-overlay-text">🔍 In Review</div>
+        </div>
+        {% if img.score %}<div class="score-overlay">{{ img.score }}</div>{% endif %}
+      {% elif img.score %}
+        <div class="score-overlay">{{ img.blended_score if (img.blended_score and img.peer_rating_count and img.peer_rating_count >= 5) else img.score }}</div>
+        <div class="status-badge scored">{{ img.tier }}</div>
+      {% else %}
+        <div class="status-badge pending">Pending</div>
+      {% endif %}
+    </div>
+
+    <div class="img-card-info">
+      <div class="img-card-title">
+        {{ img.asset_name or img.original_filename or 'Untitled' }}
+        {% if img.judge_referral and not img.is_flagged and not img.needs_review %}
+        <span class="judge-indicator">⚖️ REVIEW</span>
+        {% endif %}
+      </div>
+      <div class="img-card-meta">
+        {{ img.genre or '—' }}
+        {% if img.archetype and not img.is_flagged and not img.needs_review %}&nbsp;·&nbsp;{{ img.archetype }}{% endif %}
+        {% if img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--red);">Hidden from public</span>{% endif %}
+        {% if img.needs_review and not img.is_flagged %}&nbsp;·&nbsp;<span style="color:var(--gold);">Pending review</span>{% endif %}
+      </div>
+      {% if img.judge_referral and img.needs_review %}
+      <div style="margin-top:8px; padding:8px 10px; background:rgba(180,130,0,0.08);
+                  border:1px solid var(--gold-dark); border-radius:6px;
+                  font-size:14px; line-height:1.5; color:var(--gold);">
+        📂 <strong>RAW file requested.</strong> Score held pending verification.<br>
+        <a href="mailto:sreeks@gmail.com?subject=RAW File — {{ img.asset_name | urlencode }}&body=Hi%2C%0A%0APlease find attached the RAW file for my image '{{ img.asset_name | urlencode }}'%20(Image%20ID%3A%20{{ img.id }}).%0A%0AThank%20you."
+           style="color:var(--gold); text-decoration:underline; font-weight:600;"
+           onclick="event.stopPropagation();">Click here to submit RAW →</a>
+      </div>
+      {% endif %}
+      <div class="img-card-footer">
+        <span class="img-card-date">{{ img.created_at.strftime('%d %b %Y') }}</span>
+        <button type="button"
+                onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Delete this image permanently?\n\nWarning: Your scores, ratings and contest standings will be affected. This cannot be undone.')) { document.getElementById('del-{{ img.id }}').submit(); }"
+                style="background:none; border:none; cursor:pointer; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); padding:2px 6px; border-radius:3px; transition:color 0.2s;"
+                onmouseover="this.style.color='var(--red)'"
+                onmouseout="this.style.color='var(--text-muted)'">Delete</button>
+        <form id="del-{{ img.id }}" method="POST" action="{{ url_for('delete_image', image_id=img.id) }}" style="display:none;"></form>
+        <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+          {% if img.is_flagged %}
+            <span class="flagged-badge">🚫 AI Flagged</span>
+          {% elif img.judge_referral and img.needs_review %}
+            <span class="review-badge">📂 RAW Requested</span>
+          {% elif img.needs_review %}
+            <span class="review-badge">🔍 Under Review</span>
+          {% elif img.peer_review_pending and not img.needs_review %}
+            <span class="peer-pill" style="background:rgba(184,112,10,0.12); border-color:var(--amber); color:var(--amber);">⏳ Peer Review</span>
+          {% elif img.is_in_peer_pool %}
+            <span class="peer-pill">● Peer Pool</span>
+            {% if img.peer_rating_count and img.peer_rating_count > 0 %}
+            <span class="peer-pill">{{ img.peer_rating_count }} rated</span>
+            {% endif %}
+          {% elif img.camera_track %}
+            <span class="img-track-pill {{ img.camera_track }}">
+              {{ '📷' if img.camera_track == 'camera' else '📱' }} {{ img.camera_track }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+{% if images.pages > 1 %}
+<div class="pagination">
+  {% if images.has_prev %}
+    <a href="{{ url_for('dashboard', page=images.prev_num, q=query) }}">← Prev</a>
+  {% endif %}
+  {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}
+      <a href="{{ url_for('dashboard', page=p, q=query) }}"
+         class="{{ 'active' if p == images.page }}">{{ p }}</a>
+    {% else %}
+      <span style="padding:8px 4px; color:var(--text-muted);">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if images.has_next %}
+    <a href="{{ url_for('dashboard', page=images.next_num, q=query) }}">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">📷</div>
+  <div class="empty-state-title">No Images Yet</div>
+  <p class="empty-state-text">Upload your first photograph to receive<br>an Apex DDI score and full analysis.</p>
+  <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Single Image</a>
+    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyProfileUrl() {
+  const url = document.getElementById('profile-url').textContent.trim();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'Copy Link';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}
