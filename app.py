@@ -5797,6 +5797,20 @@ def admin_raw_detail(image_id):
         img=img, submission=submission, raw_file_url=raw_file_url)
 
 
+@app.route('/admin/image/<int:image_id>/mark-raw-verified', methods=['POST'])
+@login_required
+@admin_required
+def admin_mark_raw_verified(image_id):
+    """Admin shortcut — mark image as RAW verified without a formal submission.
+    Used for testing and manual override when contestant has verified by other means."""
+    img = Image.query.get_or_404(image_id)
+    img.raw_verified      = True
+    img.raw_disqualified  = False
+    db.session.commit()
+    flash(f'"{img.asset_name}" marked as RAW verified. It will now appear in the judge pool.', 'success')
+    return redirect(url_for('image_detail', image_id=image_id))
+
+
 @app.route('/admin/raw-verification/<int:image_id>/decide', methods=['POST'])
 @login_required
 @admin_required
