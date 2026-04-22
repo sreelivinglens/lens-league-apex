@@ -333,6 +333,52 @@
     .detail-actions .btn { flex: 1; text-align: center; }
     .score-number { font-size: 44px; }
   }
+
+/* ── Strength / Weakness badges ─────────────────────────────── */
+.badges-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.badges-col {
+  flex: 1;
+  min-width: 140px;
+}
+.badges-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.badges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.badge-item {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+}
+.badge-green {
+  background: rgba(76,175,115,0.10);
+  border: 1px solid rgba(76,175,115,0.30);
+  color: var(--green);
+}
+.badge-red {
+  background: rgba(192,57,43,0.08);
+  border: 1px solid rgba(192,57,43,0.25);
+  color: var(--red);
+}
+@media (max-width: 600px) {
+  .badges-row { flex-direction: column; gap: 16px; }
+  .badges-col { min-width: 0; }
+  .badge-item { font-size: 14px; padding: 8px 12px; }
+}
 </style>
 {% endblock %}
 
@@ -948,29 +994,23 @@
     {% set bg = audit.get('badges_g', []) | select | list %}
     {% set bw = audit.get('badges_w', []) | select | list %}
     {% if bg or bw %}
-    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+    <div class="badges-row">
       {% if bg %}
-      <div style="flex:1; min-width:140px;">
-        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1.5px;
-                    text-transform:uppercase; color:var(--green); margin-bottom:8px;">Strengths</div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+      <div class="badges-col">
+        <div class="badges-label" style="color:var(--green);">Strengths</div>
+        <div class="badges-list">
           {% for b in bg %}
-          <span style="padding:3px 10px; border-radius:99px; font-size:14px;
-                        background:rgba(76,175,115,0.12); border:1px solid rgba(76,175,115,0.35);
-                        color:var(--green);">{{ b }}</span>
+          <div class="badge-item badge-green">{{ b }}</div>
           {% endfor %}
         </div>
       </div>
       {% endif %}
       {% if bw %}
-      <div style="flex:1; min-width:140px;">
-        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1.5px;
-                    text-transform:uppercase; color:var(--red); margin-bottom:8px;">Areas to Develop</div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+      <div class="badges-col">
+        <div class="badges-label" style="color:var(--red);">Areas to Develop</div>
+        <div class="badges-list">
           {% for b in bw %}
-          <span style="padding:3px 10px; border-radius:99px; font-size:14px;
-                        background:rgba(192,57,43,0.10); border:1px solid rgba(192,57,43,0.30);
-                        color:var(--red);">{{ b }}</span>
+          <div class="badge-item badge-red">{{ b }}</div>
           {% endfor %}
         </div>
       </div>
