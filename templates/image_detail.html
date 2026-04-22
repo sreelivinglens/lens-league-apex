@@ -465,6 +465,22 @@
   </div>
 </div>
 
+<!-- Peer review in progress banner — Zone 2 -->
+{% if image.peer_review_pending and not image.needs_review and not image.is_flagged %}
+<div style="margin-bottom:20px; padding:16px 20px;
+            background:rgba(184,112,10,0.08); border:1px solid var(--amber);
+            border-left:4px solid var(--amber); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:700;
+              letter-spacing:1.5px; text-transform:uppercase; color:var(--amber); margin-bottom:6px;">
+    ⏳ Peer Review In Progress
+  </div>
+  <div style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
+    This image is receiving peer ratings that are being reviewed for consistency.
+    Your DDI score stands and is unaffected. This notice will clear once the review is complete.
+  </div>
+</div>
+{% endif %}
+
 <!-- RAW request banner -->
 {% if image.judge_referral and image.needs_review and not image.is_flagged %}
 <div style="margin-bottom:20px; padding:18px 22px;

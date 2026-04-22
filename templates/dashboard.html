@@ -371,6 +371,52 @@
 
 {% block content %}
 
+<!-- Zone notification banners — persistent, shown until resolved -->
+{% set zone3_images = zone3_flagged or [] %}
+{% set zone2_images = zone2_pending or [] %}
+
+{% if zone3_images %}
+<div style="margin-bottom:20px; padding:16px 20px;
+            background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.3);
+            border-left:4px solid var(--red); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:12px; font-weight:700;
+              letter-spacing:2px; text-transform:uppercase; color:var(--red); margin-bottom:8px;">
+    ⚠ Peer Review — Jury Referred
+  </div>
+  <div style="font-size:15px; color:var(--text-secondary); line-height:1.7;">
+    {% if zone3_images | length == 1 %}
+      Your image <strong style="color:var(--text-primary);">{{ zone3_images[0].asset_name or 'Untitled' }}</strong> has
+    {% else %}
+      {{ zone3_images | length }} of your images have
+    {% endif %}
+    received peer ratings that diverge significantly from their DDI scores and have been referred to our jury.
+    <strong>Your DDI score is protected and unchanged.</strong>
+    Our team will contact you once the review is complete.
+  </div>
+</div>
+{% endif %}
+
+{% if zone2_images %}
+<div style="margin-bottom:20px; padding:16px 20px;
+            background:rgba(184,112,10,0.06); border:1px solid rgba(184,112,10,0.3);
+            border-left:4px solid var(--amber); border-radius:var(--radius-md);">
+  <div style="font-family:var(--font-mono); font-size:12px; font-weight:700;
+              letter-spacing:2px; text-transform:uppercase; color:var(--amber); margin-bottom:8px;">
+    ⏳ Peer Review In Progress
+  </div>
+  <div style="font-size:15px; color:var(--text-secondary); line-height:1.7;">
+    {% if zone2_images | length == 1 %}
+      Your image <strong style="color:var(--text-primary);">{{ zone2_images[0].asset_name or 'Untitled' }}</strong> is
+    {% else %}
+      {{ zone2_images | length }} of your images are
+    {% endif %}
+    receiving peer ratings that are being reviewed for consistency.
+    <strong>Your DDI score stands and is unaffected.</strong>
+    No action is required from you.
+  </div>
+</div>
+{% endif %}
+
 <!-- Header -->
 <div class="dash-header">
   <div class="page-header">
@@ -914,6 +960,8 @@
             <span class="review-badge">📂 RAW Requested</span>
           {% elif img.needs_review %}
             <span class="review-badge">🔍 Under Review</span>
+          {% elif img.peer_review_pending and not img.needs_review %}
+            <span class="peer-pill" style="background:rgba(184,112,10,0.12); border-color:var(--amber); color:var(--amber);">⏳ Peer Review</span>
           {% elif img.is_in_peer_pool %}
             <span class="peer-pill">● Peer Pool</span>
             {% if img.peer_rating_count and img.peer_rating_count > 0 %}
