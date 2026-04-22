@@ -334,6 +334,17 @@
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 2px; padding: 4px 10px; border-radius: var(--radius-sm); text-transform: uppercase;
   }
+
+  /* ── Contest winner badge on thumbnails ── */
+  .contest-badge {
+    position: absolute; top: 8px; right: 8px; z-index: 4;
+    background: #C8A84B; color: #1a1a18;
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
   .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); }
   .empty-state-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.4; }
   .empty-state-title {
@@ -932,9 +943,13 @@
   {% for img in images.items %}
   <a href="{{ url_for('image_detail', image_id=img.id) }}"
      class="img-card{% if img.is_flagged %} flagged{% elif img.needs_review %} under-review{% elif img.is_in_peer_pool %} in-pool{% endif %}">
-    <div class="img-thumb">
+    <div class="img-thumb" style="position:relative;">
       <img src="{{ img.thumb_url or url_for('serve_thumb', image_id=img.id) }}"
            alt="{{ img.asset_name }}" loading="lazy">
+
+      {% if img.contest_result_status == 'published' and img.judge_final_score and not img.is_flagged and not img.needs_review %}
+      <div class="contest-badge">🏆</div>
+      {% endif %}
 
       {% if img.is_flagged %}
         <div class="ai-flag-overlay"><div class="ai-flag-overlay-text">🚫 Flagged</div></div>

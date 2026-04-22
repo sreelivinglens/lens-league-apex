@@ -98,6 +98,15 @@
     letter-spacing: 2px; text-transform: uppercase;
   }
 
+  /* ── Contest winner badge ── */
+  .contest-badge {
+    position: absolute; top: 16px; right: 16px; z-index: 4;
+    background: #C8A84B; color: #1a1a18;
+    padding: 5px 10px; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; pointer-events: none;
+  }
+
   .judge-badge {
     position: absolute; top: 16px; left: 16px;
     background: rgba(200,168,75,0.15); border: 1px solid var(--gold);
@@ -133,9 +142,6 @@
   .badge { padding: 4px 12px; border-radius: 99px; font-size: 15px; font-weight: 500; }
   .badge-strength { background: rgba(76,175,115,0.15); border: 1px solid rgba(76,175,115,0.40); color: var(--green); }
   .badge-gap      { background: rgba(224,85,85,0.12);   border: 1px solid rgba(224,85,85,0.35);  color: var(--red); }
-
-  /* Authenticity bar — visible to ALL */
-
 
   /* Register CTA — logged-out only */
   .register-cta {
@@ -250,6 +256,9 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
+    {% if image.contest_result_status == 'published' and image.judge_final_score %}
+    <div class="contest-badge">🏆</div>
+    {% endif %}
     {% if current_user.is_authenticated and image.user_id == current_user.id %}
     <div class="judge-badge">MY IMAGE</div>
     {% endif %}
@@ -327,8 +336,6 @@
   </div>
   {% endif %}
   {% endif %}
-
-
 
   <!-- Register CTA — logged-out only -->
   {% if not current_user.is_authenticated %}

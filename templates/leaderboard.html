@@ -372,6 +372,16 @@ body { overflow-x: hidden; }
         <div class="tile-img-placeholder">🖼️</div>
         {% endif %}
 
+        <!-- Contest winner badge -->
+        {% if image.contest_result_status == 'published' and image.judge_final_score %}
+        <div style="position:absolute; top:8px; right:8px; z-index:4;
+                    background:#C8A84B; color:#1a1a18;
+                    padding:4px 8px; border-radius:4px;
+                    font-size:13px; font-weight:700;
+                    font-family:var(--font-mono); letter-spacing:0.5px;
+                    pointer-events:none;">🏆</div>
+        {% endif %}
+
         <!-- Tier + peer ratings ribbon -->
         <div class="tile-tier-ribbon">
           <span class="tile-tier-pill tier-{{ tk }}">{{ image.tier or '—' }}</span>

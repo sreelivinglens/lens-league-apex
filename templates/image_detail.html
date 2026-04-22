@@ -64,6 +64,16 @@
     opacity: 0.7;
   }
 
+  /* ── Contest winner badge ── */
+  .contest-badge {
+    position: absolute; top: 8px; right: 8px; z-index: 4;
+    background: #C8A84B; color: #1a1a18;
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
   .exif-block {
     margin-top: 16px;
     padding: 16px;
@@ -524,9 +534,14 @@
 
   <!-- LEFT COLUMN -->
   <div>
-    <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
-         alt="{{ image.asset_name }}"
-         class="detail-image{% if image.is_flagged %} flagged-img{% endif %}">
+    <div style="position:relative;">
+      <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
+           alt="{{ image.asset_name }}"
+           class="detail-image{% if image.is_flagged %} flagged-img{% endif %}">
+      {% if image.contest_result_status == 'published' and image.judge_final_score and not image.is_flagged and not image.needs_review %}
+      <div class="contest-badge">🏆</div>
+      {% endif %}
+    </div>
 
     <!-- EXIF -->
     {% if image.exif_status %}
