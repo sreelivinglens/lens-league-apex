@@ -3584,12 +3584,6 @@ def open_contest_enter():
 # Weekly Challenge
 # ===========================================================================
 
-def _current_week_ref():
-    """Returns ISO week string e.g. '2026-W17' for the current week."""
-    now = datetime.utcnow()
-    return f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
-
-
 def _get_active_challenge():
     """Return the currently open challenge, or the most recent one."""
     now = datetime.utcnow()
@@ -4995,28 +4989,6 @@ def server_error(e):
 @app.route('/health')
 def health():
     return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
-
-
-@app.route('/upload-debug', methods=['POST'])
-@login_required
-def upload_debug():
-    """Temporary debug route  -  remove after mobile upload is confirmed working."""
-    files_info = {}
-    for key, f in request.files.items():
-        data = f.read()
-        files_info[key] = {
-            'filename': f.filename,
-            'content_type': f.content_type,
-            'size_bytes': len(data),
-        }
-    return jsonify({
-        'xhr_header': request.headers.get('X-Requested-With', 'NOT SET'),
-        'content_type': request.content_type,
-        'form_keys': list(request.form.keys()),
-        'form_camera_track': request.form.get('camera_track', 'NOT SET'),
-        'files': files_info,
-        'user_agent': request.headers.get('User-Agent', ''),
-    })
 
 
 # ===========================================================================
