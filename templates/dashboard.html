@@ -438,24 +438,18 @@
     🏆 Contest Result{{ 's' if contest_wins | length != 1 }}
   </div>
   {% for img in contest_wins %}
-  <a href="{{ url_for('share_image', image_id=img.id) }}" target="_blank"
-     style="display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;
-            text-decoration:none; padding:10px 12px; margin-left:-12px; margin-right:-12px;
-            border-radius:var(--radius-sm); transition:background 0.15s;"
-     onmouseover="this.style.background='rgba(200,168,75,0.08)'"
-     onmouseout="this.style.background='transparent'">
+  <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;">
     {% if img.thumb_url %}
     <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}"
          style="width:56px; height:44px; object-fit:cover; border-radius:4px; border:1px solid var(--gold-dark); flex-shrink:0;">
     {% endif %}
-    <div style="flex:1; min-width:0;">
+    <div>
       <div style="font-size:17px; font-weight:700; color:var(--text-primary);">{{ img.asset_name or 'Untitled' }}</div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--gold); margin-top:2px;">
         {{ img.genre }} · Final Score {{ img.judge_final_score }}
       </div>
     </div>
-    <div style="font-family:var(--font-mono); font-size:13px; color:var(--gold-dark); flex-shrink:0;">View →</div>
-  </a>
+  </div>
   {% endfor %}
   <div style="font-size:15px; color:var(--text-secondary); margin-top:8px; line-height:1.6;">
     Your result{{ 's are' if contest_wins | length != 1 else ' is' }} published on the leaderboard.

@@ -124,14 +124,14 @@
           <div style="display:flex; flex-direction:column; gap:8px; min-width:200px;">
             <form method="POST" action="{{ url_for('admin_resolve_flag', assignment_id=a.id) }}">
               <input type="hidden" name="decision" value="disqualify">
-              <input type="text" name="note" placeholder="Admin note (optional)"
+              <input type="text" name="note" placeholder="Reason for photographer (required for disqualify)"
                      style="width:100%; padding:6px 10px; font-size:15px; background:var(--surface-3);
                             border:1px solid var(--border); border-radius:var(--radius-sm);
                             color:var(--text-primary); margin-bottom:6px; outline:none;">
               <button type="submit" class="btn btn-danger"
                       style="width:100%; padding:7px 12px; font-size:14px;"
-                      onclick="return confirm('Disqualify this image from the contest?');">
-                🚫 Disqualify
+                      onclick="return confirm('Disqualify this image? A notification email will be sent to the photographer.');">
+                🚫 Disqualify + Email Photographer
               </button>
             </form>
             <form method="POST" action="{{ url_for('admin_resolve_flag', assignment_id=a.id) }}">
@@ -144,10 +144,22 @@
             </form>
           </div>
           {% elif a.status == 'flagged' and a.admin_flag_decision %}
-          <span style="font-family:var(--font-mono); font-size:13px;
-                       color:{{ 'var(--red)' if a.admin_flag_decision == 'disqualify' else 'var(--green)' }};">
-            ✓ {{ 'Disqualified' if a.admin_flag_decision == 'disqualify' else 'Override Applied' }}
-          </span>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <span style="font-family:var(--font-mono); font-size:13px;
+                         color:{{ 'var(--red)' if a.admin_flag_decision == 'disqualify' else 'var(--green)' }};">
+              ✓ {{ 'Disqualified' if a.admin_flag_decision == 'disqualify' else 'Override Applied' }}
+            </span>
+            {% if a.admin_flag_decision == 'disqualify' %}
+            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted);">
+              📧 Photographer notified
+            </span>
+            {% endif %}
+            {% if a.admin_flag_decided_at %}
+            <span style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted);">
+              {{ a.admin_flag_decided_at.strftime('%d %b %H:%M') }}
+            </span>
+            {% endif %}
+          </div>
           {% else %}
           <span style="color:var(--text-muted); font-size:15px;">—</span>
           {% endif %}

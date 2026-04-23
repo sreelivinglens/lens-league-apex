@@ -116,6 +116,11 @@
   }
   .flag-option:has(input:checked) { border-color: var(--red); background: rgba(192,57,43,0.06); }
   .flag-option input { accent-color: var(--red); width: 18px; height: 18px; flex-shrink: 0; }
+  .flag-option.disabled {
+    opacity: 0.45; cursor: not-allowed;
+    background: var(--surface-3); border-color: var(--border);
+  }
+  .flag-option.disabled input { cursor: not-allowed; }
   .flag-notes-field {
     width: 100%; background: var(--surface-3); border: 1px solid var(--border);
     color: var(--text-primary); padding: 12px 16px; font-size: 18px;
@@ -143,6 +148,19 @@
     <div class="blind-dot"></div>
     <div class="blind-text">Blind Rating — Photographer identity and DDI score are hidden</div>
   </div>
+
+  <!-- RAW verified indicator -->
+  {% if raw_verified %}
+  <div style="display:flex; align-items:center; gap:10px; padding:12px 18px; margin-bottom:20px;
+              background:rgba(46,125,79,0.06); border:1px solid rgba(46,125,79,0.35);
+              border-radius:var(--radius-md);">
+    <span style="font-size:18px;">✅</span>
+    <span style="font-family:var(--font-mono); font-size:14px; font-weight:600;
+                 letter-spacing:1px; text-transform:uppercase; color:var(--green);">
+      RAW Verified — Authenticity confirmed by admin
+    </span>
+  </div>
+  {% endif %}
 
   <!-- Image -->
   <div class="image-frame">
@@ -226,6 +244,23 @@
     <form method="POST" action="{{ url_for('judge_score_image', assignment_id=assignment.id) }}" id="flagForm">
       <input type="hidden" name="action" value="flag">
 
+      {# AI-generated flag — disabled if image has passed RAW verification #}
+      {% if raw_verified %}
+      <div class="flag-option disabled" title="RAW verification passed — AI-generated flag is not available for this image">
+        <input type="radio" name="flag_type" value="ai_generated" disabled>
+        <div>
+          <div style="font-weight:700;">AI-Generated
+            <span style="font-family:var(--font-mono); font-size:12px; font-weight:600;
+                         letter-spacing:1px; text-transform:uppercase; color:var(--green);
+                         margin-left:10px; padding:2px 8px; border:1px solid var(--green);
+                         border-radius:3px;">✓ RAW Verified</span>
+          </div>
+          <div style="font-size:15px; color:var(--text-muted); margin-top:4px;">
+            This image has passed RAW verification. The AI-generated flag is not available. If you have a different concern, use <strong>Other</strong> below.
+          </div>
+        </div>
+      </div>
+      {% else %}
       <label class="flag-option">
         <input type="radio" name="flag_type" value="ai_generated" onchange="showFlagNotes(false)">
         <div>
@@ -233,6 +268,8 @@
           <div style="font-size:16px; color:var(--text-muted); margin-top:2px;">This image appears to have been created by an AI tool, not captured by a camera.</div>
         </div>
       </label>
+      {% endif %}
+
       <label class="flag-option">
         <input type="radio" name="flag_type" value="stolen" onchange="showFlagNotes(false)">
         <div>
