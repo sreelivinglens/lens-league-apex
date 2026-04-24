@@ -477,8 +477,9 @@
       return;
     }
 
-    // Show soft advisory for files over 5 MB (if size is known — iOS may report 0)
-    if (file.size > 0 && file.size > WARN_MB * 1024 * 1024) {
+    // Show soft advisory ONLY for files between 5 MB and 20 MB
+    // Files over 20 MB get the hard error on submit — don't show both
+    if (file.size > 0 && file.size > WARN_MB * 1024 * 1024 && file.size <= MAX_MB * 1024 * 1024) {
       fileSizeWarn.style.display = 'block';
     }
 
@@ -587,7 +588,6 @@
       }
 
       if (resp && resp.status === 'flagged') {
-        // AI-generated image detected — show error and redirect to dashboard
         document.getElementById('scoringOverlay').classList.remove('active');
         showError(resp.message || '🚫 This image was flagged as potentially AI-generated.');
         setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 4000);
@@ -660,7 +660,6 @@
         status.textContent = p.s;
         sub.textContent    = p.ss;
       } else {
-        // Server still processing — keep overlay alive with extended wait message
         phase.textContent  = 'PROCESSING';
         status.textContent = 'Apex DDI Engine still analysing…';
         sub.textContent    = 'Complex images can take up to 2 minutes. Keep this tab open.';
@@ -671,7 +670,6 @@
     overlay._tick = tick;
   }
 
-  // Clear overlay timers when error shown
   const obs = new MutationObserver(() => {
     const overlay = document.getElementById('scoringOverlay');
     if (!overlay.classList.contains('active')) {
