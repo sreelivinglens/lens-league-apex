@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}FAQ — Lens League Apex{% endblock %}
+{% block title %}FAQ — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,8 +14,7 @@
     color: var(--gold); margin-right: 10px; font-weight: 600;
   }
   .faq-item      { margin-bottom: 24px; }
-  .faq-q         { font-size: 17px; font-weight: 700; color: var(--text-primary);
-                   margin-bottom: 8px; }
+  .faq-q         { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .faq-a         { font-size: 16px; color: var(--text-secondary); line-height: 1.8; }
   .faq-a a       { color: var(--gold); }
   .faq-a strong  { color: var(--text-primary); }
@@ -34,18 +33,139 @@
 <div class="terms-wrap">
   <div class="page-header">
     <h1>Frequently Asked Questions</h1>
-    <p>Lens League Apex — Everything you need to know</p>
+    <p>{{ platform_name }} — Everything you need to know</p>
   </div>
+
+  <div class="faq-section">
+    <h2><span>01</span> Getting Started</h2>
+    <div class="faq-item">
+      <div class="faq-q">What is Lens League Apex?</div>
+      <div class="faq-a">Lens League Apex is a photography scoring and competition platform. Every image you upload is scored by the Apex DDI Engine — a scientific, AI-powered system that evaluates your photography across 5 dimensions. No human judges, no bias, consistent feedback every time.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is the DDI score?</div>
+      <div class="faq-a">DDI stands for Dimensional Diagnostic Index. It's a composite score from 0–10 based on five dimensions: Depth of Detail, Wonder, Disruption, Depth of Mood, and Aesthetic Quality. Each dimension is weighted differently per genre.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How many free images do I get?</div>
+      <div class="faq-a"><strong>3 free scored images</strong> — no credit card required. After that, subscribe to the Camera or Mobile track to continue uploading and competing.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I need to use a camera? Can I use my phone?</div>
+      <div class="faq-a">Both are welcome. Camera and Mobile photographers compete in separate leagues with their own leaderboards, POTY tracks, and prize pools — same DDI engine, no gear bias.</div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2><span>02</span> Scoring</h2>
+    <div class="faq-item">
+      <div class="faq-q">How long does scoring take?</div>
+      <div class="faq-a">Most images are scored within 30–60 seconds of upload. During peak periods it may take a few minutes. You'll see your score appear on your dashboard automatically.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I rescore an image?</div>
+      <div class="faq-a">No. Each image is scored once. This protects the integrity of the leaderboard and competition results. If you upload a better version of an image, it is treated as a new upload and uses one of your monthly scored image credits.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Why did my image score lower than I expected?</div>
+      <div class="faq-a">The DDI Engine scores against genre-specific criteria. The score breakdown on your image detail page shows exactly which dimensions scored lower and includes an Apex Byline — a specific improvement recommendation. Use that as your guide.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What are the score tiers?</div>
+      <div class="faq-a">
+        <strong>Apprentice</strong> — 0.0 to 5.0 &nbsp;|&nbsp;
+        <strong>Practitioner</strong> — 5.1 to 7.5 &nbsp;|&nbsp;
+        <strong>Master</strong> — 7.6 to 8.9 &nbsp;|&nbsp;
+        <strong>Grandmaster</strong> — 9.0 to 9.6 &nbsp;|&nbsp;
+        <strong>Legend</strong> — 9.7 and above
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2><span>03</span> Subscriptions &amp; Billing</h2>
+    <div class="faq-item">
+      <div class="faq-q">What plans are available?</div>
+      <div class="faq-a">
+        <strong>Free</strong> — 3 lifetime scored images, full DDI analysis, shareable rating card.<br>
+        <strong>Camera Track</strong> — ₹599/month or ₹4,999/year. 4 scored images per month, full contest access, peer rating, POTY eligibility.<br>
+        <strong>Mobile Track</strong> — ₹299/month or ₹2,499/year. Same features as Camera, dedicated Mobile league.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do unused monthly images roll over?</div>
+      <div class="faq-a">No. Your 4 monthly images reset at the start of each calendar month. Unused images do not carry forward.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How do I cancel my subscription?</div>
+      <div class="faq-a">Go to your Dashboard and select <strong>Manage Subscription</strong>, or visit the <a href="/subscription/cancel">cancellation page</a> directly. Cancellation takes effect at the end of your current billing period. No cancellation fee.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I switch from Mobile to Camera track?</div>
+      <div class="faq-a">Yes — cancel your current subscription and subscribe to the other track. Your scored images, scores, and history are retained.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is the refund policy?</div>
+      <div class="faq-a">See our full <a href="/refund-policy">Refund &amp; Cancellation Policy</a>. In brief: refunds are considered for technical failures, duplicate charges, or unauthorised charges. Requests must be submitted within 14 days.</div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h2><span>04</span> Competitions &amp; POTY</h2>
+    <div class="faq-item">
+      <div class="faq-q">How do monthly contests work?</div>
+      <div class="faq-a">Every scored image automatically enters the monthly contest for its genre and track. No separate submission needed. Winners are determined by DDI score at the end of each month.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is POTY?</div>
+      <div class="faq-a">Photographer of the Year. Your POTY score is the average of your top-6 DDI scores per genre, tracked across the full platform year. You must be active across at least 6 months to qualify. Camera and Mobile compete separately. Total prize pool: ₹50,00,000.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is the Open Competition?</div>
+      <div class="faq-a">An annual competition where Camera and Mobile photographers compete together in the same pool. One winner per genre, plus a Grand Open Winner selected by jury. Entry fee: ₹50 per image per genre. Requires an active subscription.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What are Weekly Challenges?</div>
+      <div class="faq-a">A new photography prompt is released every Monday. Submit your best image by Sunday 23:59 UTC. Free to enter. Challenge winners qualify for POTY tracking.</div>
+    </div>
+  </div>
+
   <div class="faq-section">
     <h2><span>05</span> Images &amp; Copyright</h2>
     <div class="faq-item">
+      <div class="faq-q">Who owns my images?</div>
+      <div class="faq-a">You do. Uploading to Lens League Apex does not transfer copyright. We store your images to provide the scoring and portfolio service. See our <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms &amp; Conditions</a> for full details.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I download my images back?</div>
+      <div class="faq-a">Your original uploaded images are stored on our platform. Contact us at <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> if you need access to your original files.</div>
+    </div>
+    <div class="faq-item">
       <div class="faq-q">What happens if my image is flagged as AI-generated?</div>
-      <div class="faq-a">The platform checks for AI-generated images as part of the upload process. If your image is flagged, you can appeal via the platform. All appeals are reviewed.</div>
+      <div class="faq-a">The platform checks for AI-generated images as part of the upload process. If your image is flagged, it will not appear on the public leaderboard and your score will be held. You can appeal via the platform — all appeals are reviewed by the admin team.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is RAW verification?</div>
+      <div class="faq-a">For high-scoring images and competition winners, we may request your original RAW file to verify authenticity. This protects the integrity of the leaderboard. Failure to submit a RAW file within the verification window will result in the score being withheld.</div>
     </div>
   </div>
+
+  <div class="faq-section">
+    <h2><span>06</span> Peer Rating</h2>
+    <div class="faq-item">
+      <div class="faq-q">What is peer rating?</div>
+      <div class="faq-a">Subscribers can rate other photographers' images anonymously. Rating others earns credits, which can be used to enter your own images into the peer rating pool. Peer ratings are shown alongside your DDI score but do not change it.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can peer ratings affect my DDI score?</div>
+      <div class="faq-a">No. Your DDI score is set by the Apex DDI Engine and is protected. If peer ratings diverge significantly from your DDI score, a jury review is triggered automatically. Your DDI score is never reduced by peer ratings.</div>
+    </div>
+  </div>
+
   <div class="terms-highlight">
-    Still have a question? &nbsp;<a href="/contact" style="color:var(--gold);">Contact us</a>
+    Still have a question? &nbsp;<a href="/contact">Contact us</a>
     &nbsp;or email <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span>
   </div>
+
 </div>
 {% endblock %}
