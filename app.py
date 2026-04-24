@@ -672,15 +672,20 @@ with app.app_context():
 
     try:
         with db.engine.connect() as conn:
+            new_hash = generate_password_hash('LensAdmin2026!')
             exists = conn.execute(db.text("SELECT id FROM users WHERE email='admin@shutterleague.com'")).fetchone()
             if not exists:
-                new_hash = generate_password_hash('LensAdmin2026!')
                 conn.execute(db.text(
                     "INSERT INTO users (email, username, password_hash, full_name, role, is_active, created_at) "
                     "VALUES ('admin@shutterleague.com','admin',:h,'Admin','admin',true,NOW())"
                 ), {'h': new_hash})
-                conn.commit()
                 print('Admin account created.')
+            else:
+                conn.execute(db.text(
+                    "UPDATE users SET password_hash=:h, role='admin', is_active=true WHERE email='admin@shutterleague.com'"
+                ), {'h': new_hash})
+                print('Admin account updated.')
+            conn.commit()
         print('Database ready.')
     except Exception as e:
         print(f'Admin init warning: {e}')
