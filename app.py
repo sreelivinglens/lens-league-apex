@@ -5736,13 +5736,7 @@ def raw_submit(contest_type, image_id):
             uid      = str(uuid.uuid4())
             filename = secure_filename(raw_file.filename)
             key      = f'raw_submissions/{uid}_{filename}'
-            tmp_path = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f'{uid}_{filename}')
-            raw_file.save(tmp_path)
-            uploaded = r2.upload_file(tmp_path, key, content_type='application/octet-stream')
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
+            uploaded = r2.upload_fileobj(raw_file.stream, key, content_type='application/octet-stream')
             if not uploaded:
                 flash('Upload failed. Please try again or use a shareable link.', 'error')
                 return redirect(request.url)

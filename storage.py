@@ -8,6 +8,7 @@ import os
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from boto3.s3.transfer import TransferConfig
 
 # ---------------------------------------------------------------------------
 # R2 client — initialised once at import time
@@ -69,16 +70,25 @@ def upload_file(local_path: str, object_key: str, content_type: str = 'image/jpe
 
 
 def upload_fileobj(fileobj, object_key: str, content_type: str = 'image/jpeg') -> str | None:
-    """Upload a file-like object directly (no temp file needed)."""
+    """Upload a file-like object directly (no temp file needed).
+    Uses multipart transfer for files > 10 MB (e.g. RAW files).
+    """
     client = get_client()
     if client is None:
         return None
     try:
+        config = TransferConfig(
+            multipart_threshold = 10 * 1024 * 1024,   # 10 MB — RAW files go multipart
+            multipart_chunksize = 10 * 1024 * 1024,   # 10 MB chunks
+            max_concurrency     = 2,                   # conservative for Railway
+            use_threads         = True,
+        )
         client.upload_fileobj(
             fileobj,
             BUCKET,
             object_key,
             ExtraArgs={'ContentType': content_type},
+            Config=config,
         )
         return f'{R2_PUBLIC_URL}/{object_key}'
     except ClientError as e:
