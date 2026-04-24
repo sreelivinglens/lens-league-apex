@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Contact Us — Lens League Apex{% endblock %}
+{% block title %}Contact Us — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -48,7 +48,7 @@
 
   <div class="page-header">
     <h1>Contact Us</h1>
-    <p>Lens League Apex &nbsp;·&nbsp; We're a small team. We read every email.</p>
+    <p>{{ platform_name }} &nbsp;·&nbsp; We're a small team. We read every email.</p>
   </div>
 
   <!-- Primary contact -->
@@ -59,8 +59,8 @@
       Billing questions, subscription issues, technical problems, competition queries,
       or anything else — write to us directly.
     </div>
-    <a href="mailto:sreeks@gmail.com" class="contact-email">
-      sreeks@gmail.com →
+    <a href="mailto:{{ contact_email }}" class="contact-email">
+      {{ contact_email }} →
     </a>
     <div class="contact-response">We respond within 2 working days.</div>
   </div>
@@ -136,7 +136,7 @@
   <div class="faq-item">
     <div class="faq-q">I was charged but my subscription isn't active.</div>
     <div class="faq-a">
-      Email us at <a href="mailto:sreeks@gmail.com">sreeks@gmail.com</a> with your registered
+      Email us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with your registered
       email and payment reference. We'll resolve it within 2 working days.
     </div>
   </div>
@@ -152,7 +152,7 @@
   <div class="faq-item">
     <div class="faq-q">How do I delete my account?</div>
     <div class="faq-a">
-      Email us at <a href="mailto:sreeks@gmail.com">sreeks@gmail.com</a> with subject
+      Email us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with subject
       <strong>Delete Account — [your email]</strong>. We'll confirm deletion within
       5 working days. Note that submitted competition images may be retained
       for integrity record-keeping per our <a href="/terms">Terms &amp; Conditions</a>.
