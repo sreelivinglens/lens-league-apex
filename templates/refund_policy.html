@@ -50,3 +50,67 @@
     Competition entry fees are non-refundable once the submission window opens.
     For any billing issue, email <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a>.
   </div>
+
+  <div class="terms-section">
+    <h2><span>01</span> Subscription Cancellation</h2>
+    <p>You may cancel your {{ platform_name }} subscription at any time, without giving a reason, directly from your account dashboard. No cancellation fee applies.</p>
+    <ul>
+      <li>Cancellation takes effect at the end of your current paid billing period. You retain full access to all subscription features until that date.</li>
+      <li>No partial refunds are issued for unused days within a billing period.</li>
+      <li>Once cancelled, your account reverts to the free tier. Your uploaded images and scores are retained unless you choose to delete them.</li>
+      <li>To cancel, go to your <a href="{{ url_for('dashboard') }}" style="color:var(--gold);">Dashboard</a> and select Manage Subscription, or visit the <a href="{{ url_for('cancel_subscription') }}" style="color:var(--gold);">cancellation page</a> directly.</li>
+    </ul>
+    <p>Cancellation is processed immediately on {{ platform_name }}. Your payment provider (Razorpay) will not charge you for the next billing cycle.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>02</span> Subscription Refunds</h2>
+    <p>{{ platform_name }} subscriptions are billed in advance. As a general rule, subscription fees are non-refundable once a billing period has commenced. However, refunds may be considered in the following circumstances:</p>
+    <ul>
+      <li><strong>Technical failure:</strong> If a platform outage lasting more than 72 consecutive hours prevented you from accessing core features during your billing period, you may request a pro-rata credit or refund for the affected period.</li>
+      <li><strong>Duplicate charge:</strong> If you were charged more than once for the same billing period due to a payment processing error, the duplicate charge will be refunded in full.</li>
+      <li><strong>Unauthorised charge:</strong> If you believe your payment details were used without your authorisation, contact us immediately at <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a>.</li>
+    </ul>
+    <p>Refund requests must be submitted within 14 days of the charge in question. Requests submitted after this period will not be considered.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>03</span> Competition Entry Fees</h2>
+    <p>Paid competition entry fees (e.g. Open Competition entries at ₹50 per image per genre) are <strong>non-refundable</strong> once the submission window for that competition has opened.</p>
+    <ul>
+      <li>If a competition is cancelled by {{ platform_name }} before the submission window opens, entry fees will be refunded in full.</li>
+      <li>Disqualification due to violation of contest rules does not entitle the entrant to a refund of entry fees.</li>
+      <li>Failure to submit a required RAW file within the verification window does not entitle the entrant to a refund.</li>
+    </ul>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>04</span> How to Request a Refund</h2>
+    <p>To request a refund, email <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a> with the subject line <strong>Refund Request</strong> and include:</p>
+    <ul>
+      <li>Your registered email address</li>
+      <li>The date and amount of the charge</li>
+      <li>Your Razorpay payment ID (if available)</li>
+      <li>A brief description of the reason for your request</li>
+    </ul>
+    <p>We will acknowledge your request within 2 business days and aim to resolve it within 7 business days. Approved refunds are processed via the original payment method.</p>
+  </div>
+
+  <div class="terms-section">
+    <h2><span>05</span> Governing Law</h2>
+    <p>This Refund &amp; Cancellation Policy is governed by the laws of the Republic of India and is consistent with applicable consumer protection regulations. Nothing in this policy limits any statutory rights you may have under applicable law.</p>
+  </div>
+
+  <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
+    <p style="font-size:16px; color:var(--text-muted); margin-bottom:16px;">
+      Questions about billing? Email <a href="mailto:{{ contact_email }}" style="color:var(--gold); text-decoration:none;">{{ contact_email }}</a>
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('cancel_subscription') }}" class="btn btn-solid">Cancel Subscription &rarr;</a>
+      <a href="{{ url_for('terms') }}" class="btn">Terms &amp; Conditions</a>
+      <a href="{{ url_for('index') }}" class="btn">&larr; Back to Home</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
