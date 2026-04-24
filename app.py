@@ -5714,9 +5714,12 @@ def raw_submit(contest_type, image_id):
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id:
         abort(403)
+    # Allow RAW submission if: admin flagged it required, OR user arrived via contest RAW link
+    # Do NOT block — if user has the link, they were directed here intentionally
     if not getattr(img, 'raw_verification_required', False):
-        flash('This image does not require RAW verification.', 'info')
-        return redirect(url_for('image_detail', image_id=image_id))
+        # Mark it required now so the submission proceeds correctly
+        img.raw_verification_required = True
+        db.session.commit()
     existing = db.session.execute(db.text(
         "SELECT * FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct LIMIT 1"
     ), {'iid': image_id, 'ct': contest_type}).fetchone()
@@ -5761,19 +5764,40 @@ def raw_submit(contest_type, image_id):
             'ct': contest_type, 'meth': method, 'fk': raw_file_key, 'lnk': raw_link})
         db.session.commit()
 
+        site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+
+        # Email admin -- use env var, fallback to sreelivinglens@gmail.com
         admin_emails = _admin_notify_emails()
-        if admin_emails:
-            send_email(
-                admin_emails,
-                f'[RAW Received] Image #{image_id} -- {img.asset_name}',
-                (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                 f'<p style="color:#C8A84B;font-weight:700;">RAW SUBMISSION RECEIVED</p>'
-                 f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
-                 f'Photographer: {current_user.username} ({current_user.email})<br>Method: {method}</p>'
-                 f'<p><a href="{os.getenv("SITE_URL","")}/admin/raw-verification/{image_id}" style="color:#C8A84B;">Review submission</a></p>'
-                 f'</div>')
-            )
-        flash('RAW file submitted. Our team will verify it within 48 hours.', 'success')
+        if not admin_emails:
+            admin_emails = ['sreelivinglens@gmail.com']
+        send_email(
+            admin_emails,
+            f'[RAW Received] Image #{image_id} -- {img.asset_name}',
+            (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+             f'<p style="color:#C8A84B;font-weight:700;">RAW SUBMISSION RECEIVED</p>'
+             f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
+             f'Photographer: {current_user.username} ({current_user.email})<br>'
+             f'Method: {method}</p>'
+             f'<p><a href="{site_url}/admin/raw-verification/{image_id}" style="color:#C8A84B;">Review submission</a></p>'
+             f'</div>')
+        )
+
+        # Email photographer -- confirmation
+        send_email(
+            current_user.email,
+            f'RAW file received -- {img.asset_name}',
+            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+             f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, {current_user.full_name or current_user.username}.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"{img.asset_name}"</strong>. '
+             f'Our team will verify it within 48 hours and notify you of the outcome.</p>'
+             f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">'
+             f'Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#C8A84B;">sreelivinglens@gmail.com</a></p>'
+             f'</div>')
+        )
+
+        flash('RAW file submitted successfully. You will receive a confirmation email shortly. Our team will verify within 48 hours.', 'success')
         return redirect(url_for('raw_status', image_id=image_id))
 
     return render_template('raw_submit.html', img=img, existing=existing,
