@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}RAW Verification Status — Lens League Apex{% endblock %}
+{% block title %}RAW Verification Status — Shutter League{% endblock %}
 
 {% block content %}
 <div style="max-width:640px; margin:0 auto;">
@@ -43,30 +43,84 @@
   </div>
 
   {% else %}
-  <!-- Submission status -->
-  {% if submission.disqualified %}
-  <div style="padding:24px; background:var(--red-dim); border:1px solid var(--red);
-              border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
-    <div style="font-size:36px; margin-bottom:12px;">❌</div>
-    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:10px;">Disqualified</div>
-    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
-      {% if submission.admin_decision == 'rejected' %}
-        Your RAW file did not pass verification. This image has been disqualified from the contest.
-        {% if submission.admin_notes %}<br><strong>Reason:</strong> {{ submission.admin_notes }}{% endif %}
-      {% else %}
-        The RAW file submission deadline passed without a valid submission.
-      {% endif %}
-      <br><br>
-      If you believe this decision is in error, contact
-      <a href="mailto:sreelivinglens@gmail.com" style="color:var(--gold);">sreelivinglens@gmail.com</a>
-      within 48 hours.
-    </div>
-  </div>
 
-  {% elif submission.admin_decision == 'approved' %}
+  {# ─── Determine display state ─── #}
+  {# Priority order: appeal_decision > auto_decision > admin_decision > submitted #}
+
+  {% if submission.appeal_decision == 'overturn' %}
+  {# Appeal overturned — reinstated #}
   <div style="padding:24px; background:var(--green-dim); border:1px solid var(--green);
               border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
     <div style="font-size:36px; margin-bottom:12px;">✅</div>
+    <div style="font-size:22px; font-weight:700; color:var(--green); margin-bottom:10px;">Appeal Successful — Image Reinstated</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Our admin team reviewed your RAW file and found the automated flag was incorrect.
+      Your image is reinstated and your DDI score of
+      <strong style="color:var(--gold);">{{ '%.2f'|format(img.score) if img.score }}</strong> stands confirmed.
+    </div>
+  </div>
+
+  {% elif submission.appeal_decision == 'uphold' %}
+  {# Appeal upheld — disqualification confirmed #}
+  <div style="padding:24px; background:var(--red-dim); border:1px solid var(--red);
+              border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:12px;">❌</div>
+    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:10px;">Disqualification Confirmed</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Our admin team reviewed your RAW file. The disqualification stands.
+      {% if submission.appeal_admin_note %}
+      <br><br><strong>Reason:</strong> {{ submission.appeal_admin_note }}
+      {% endif %}
+      <br><br>Your account remains active and all your other scores are unaffected.
+    </div>
+  </div>
+
+  {% elif submission.appeal_submitted_at and not submission.appeal_decision %}
+  {# Appeal submitted — pending admin review #}
+  <div style="padding:24px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
+              border-radius:var(--radius-md); margin-bottom:24px;">
+    <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⏳ Appeal Under Review</div>
+    <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
+      Your appeal has been received. Our admin team will download and manually review your
+      RAW file. You will be notified by email once a decision has been made.
+    </div>
+  </div>
+
+  {% elif submission.auto_decision == 'disqualified' and not submission.appeal_submitted_at %}
+  {# Auto-disqualified — show appeal button if within 48hrs #}
+  <div style="padding:24px; background:var(--red-dim); border:1px solid var(--red);
+              border-radius:var(--radius-md); margin-bottom:20px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:12px;">⚠️</div>
+    <div style="font-size:22px; font-weight:700; color:var(--red); margin-bottom:10px;">Provisionally Disqualified</div>
+    <div style="font-size:17px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">
+      Our automated system flagged your RAW file. If you believe this is incorrect,
+      you may appeal within <strong>48 hours</strong>.
+    </div>
+    {% if submission.auto_flag_reasons %}
+    <div style="background:rgba(0,0,0,0.15); border-radius:var(--radius-sm); padding:12px 16px;
+                font-size:15px; color:#F0A0A0; text-align:left; margin-bottom:16px; line-height:1.8;">
+      {% for reason in submission.auto_flag_reasons.split(' | ') %}
+      • {{ reason }}<br>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {# Check 48hr window #}
+    {% if submission.auto_decided_at %}
+      <a href="{{ url_for('raw_appeal', image_id=img.id) }}"
+         class="btn btn-solid" style="padding:13px 28px; font-size:17px;">
+        Appeal This Decision →
+      </a>
+      <div style="font-size:14px; color:var(--text-muted); margin-top:12px;">
+        Appeal window closes 48 hours after the automated decision.
+      </div>
+    {% endif %}
+  </div>
+
+  {% elif submission.auto_decision == 'approved' or submission.admin_decision == 'approved' %}
+  {# Approved #}
+  <div style="padding:24px; background:var(--green-dim); border:1px solid var(--green);
+              border-radius:var(--radius-md); margin-bottom:24px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:12px;">✓</div>
     <div style="font-size:22px; font-weight:700; color:var(--green); margin-bottom:10px;">Verification Approved</div>
     <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
       Your RAW file has passed verification. Your contest standing is confirmed.
@@ -75,6 +129,7 @@
   </div>
 
   {% elif submission.admin_decision == 'resubmit_requested' %}
+  {# Resubmit requested #}
   <div style="padding:24px; background:rgba(184,112,10,0.06); border:1px solid var(--amber);
               border-radius:var(--radius-md); margin-bottom:24px;">
     <div style="font-size:22px; font-weight:700; color:var(--amber); margin-bottom:10px;">⚠ Resubmission Required</div>
@@ -89,12 +144,13 @@
   </div>
 
   {% elif submission.submitted_at %}
+  {# Submitted — AI analysis running or pending #}
   <div style="padding:24px; background:var(--surface-2); border:1px solid var(--gold-dark);
               border-radius:var(--radius-md); margin-bottom:24px;">
-    <div style="font-size:22px; font-weight:700; color:var(--gold); margin-bottom:10px;">⏳ Under Review</div>
+    <div style="font-size:22px; font-weight:700; color:var(--gold); margin-bottom:10px;">⏱ Under Review</div>
     <div style="font-size:18px; color:var(--text-secondary); line-height:1.7;">
       Your RAW file was received on {{ submission.submitted_at.strftime('%d %B %Y at %H:%M UTC') }}.
-      Our team will verify it within 48 hours. You will be notified by email once a decision is made.
+      Our automated system is verifying it. You will receive an email with the result shortly.
     </div>
   </div>
   {% endif %}
@@ -108,10 +164,11 @@
       ('Method',    submission.submission_method | title if submission.submission_method else '—'),
       ('Submitted', submission.submitted_at.strftime('%d %b %Y, %H:%M UTC') if submission.submitted_at else 'Not yet submitted'),
       ('Deadline',  submission.deadline.strftime('%d %b %Y, %H:%M UTC') if submission.deadline else '—'),
+      ('AI Decision', submission.auto_decision | title if submission.auto_decision else 'Pending'),
     ] %}
     <div style="display:flex; gap:14px; margin-bottom:10px; align-items:flex-start;">
       <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted); text-transform:uppercase;
-                  letter-spacing:1px; min-width:100px; flex-shrink:0;">{{ label }}</div>
+                  letter-spacing:1px; min-width:120px; flex-shrink:0;">{{ label }}</div>
       <div style="font-size:17px; color:var(--text-primary);">{{ value }}</div>
     </div>
     {% endfor %}

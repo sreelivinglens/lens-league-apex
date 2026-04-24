@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Appeal RAW Decision — {{ img.asset_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:32px;">
+  <h1>Appeal RAW Disqualification</h1>
+  <p>{{ img.asset_name }} &middot; {{ img.genre }}</p>
+</div>
+
+<!-- Image card -->
+<div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);
+            overflow:hidden;max-width:680px;margin-bottom:32px;">
+  {% if img.thumb_url %}
+  <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}"
+       style="width:100%;max-height:360px;object-fit:cover;display:block;">
+  {% endif %}
+  <div style="padding:20px 24px;">
+    <div style="font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
+      {{ img.asset_name }}
+    </div>
+    <div style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);display:flex;gap:16px;">
+      <span>{{ img.genre }}</span>
+      {% if img.score %}<span style="color:var(--gold);">DDI: {{ img.score }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Disqualification notice -->
+<div style="background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-md);
+            padding:20px 24px;max-width:680px;margin-bottom:24px;">
+  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;
+              color:var(--red);text-transform:uppercase;margin-bottom:10px;">
+    ⚠ Provisionally Disqualified
+  </div>
+  <p style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin:0 0 12px;">
+    Our automated system flagged your RAW file for the following reason(s):
+  </p>
+  <ul style="margin:0;padding-left:20px;">
+    {% for reason in submission.auto_flag_reasons.split(' | ') if submission.auto_flag_reasons %}
+    <li style="font-size:16px;color:#F0A0A0;line-height:1.8;">{{ reason }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- Appeal form -->
+<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);
+            padding:24px;max-width:680px;margin-bottom:32px;">
+  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:2px;
+              color:var(--gold);text-transform:uppercase;margin-bottom:12px;">
+    Submit an Appeal
+  </div>
+  <p style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">
+    If you believe this automated decision is incorrect, you may appeal within
+    <strong style="color:var(--text-primary);">48 hours</strong> of the disqualification.
+    Our admin team will personally download your RAW file and compare it with your submitted image.
+  </p>
+  <p style="font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;">
+    By submitting this appeal you confirm that your RAW file is the original, unaltered capture
+    corresponding to the submitted image.
+  </p>
+
+  <form method="POST" action="{{ url_for('raw_appeal', image_id=img.id) }}">
+    <button type="submit" class="btn btn-solid"
+            style="padding:14px 32px;font-size:16px;"
+            onclick="return confirm('Submit appeal? Our admin team will review your RAW file manually.');">
+      Submit Appeal →
+    </button>
+    <a href="{{ url_for('raw_status', image_id=img.id) }}"
+       style="margin-left:16px;font-size:15px;color:var(--text-muted);text-decoration:none;">
+      Cancel
+    </a>
+  </form>
+</div>
+
+<div style="max-width:680px;">
+  <p style="font-size:14px;color:var(--text-muted);line-height:1.7;">
+    Appeal window closes 48 hours after the automated decision.
+    If your appeal is successful, your image will be reinstated and your result confirmed.
+    If your appeal is unsuccessful, the disqualification stands and the matter is closed.
+  </p>
+</div>
+{% endblock %}

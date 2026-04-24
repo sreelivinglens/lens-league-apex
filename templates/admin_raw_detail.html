@@ -1,5 +1,65 @@
 {% extends "base.html" %}
-{% block title %}RAW Review — Lens League Apex{% endblock %}
+{% block title %}RAW Review — Lens League Apex
+{% if appeal_pending %}
+<!-- ⚠️ APPEAL PENDING — Human Review Required -->
+<div style="background:rgba(200,168,75,0.08); border:2px solid var(--gold); border-radius:var(--radius-md);
+            padding:24px 28px; margin-bottom:28px;">
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px;
+              text-transform:uppercase; color:var(--gold); margin-bottom:12px;">
+    ⚠️ Appeal Pending — Human Review Required
+  </div>
+  <p style="font-size:17px; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
+    The photographer has appealed the automated disqualification.
+    Please download the RAW file above, compare it manually with the submitted JPEG, then make your final decision.
+  </p>
+  {% if submission.auto_flag_reasons %}
+  <div style="background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm);
+              padding:12px 16px; font-size:15px; color:var(--red); line-height:1.8; margin-bottom:20px;">
+    <strong>AI flagged:</strong><br>
+    {{ submission.auto_flag_reasons | replace(' | ', '<br>') | safe }}
+  </div>
+  {% endif %}
+  <form method="POST" action="{{ url_for('admin_raw_appeal_decide', image_id=img.id) }}">
+    <div style="margin-bottom:16px;">
+      <label style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+                    text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">
+        Admin Note (will be sent to photographer)
+      </label>
+      <textarea name="admin_note" rows="3"
+                style="width:100%; background:var(--surface-3); border:1px solid var(--border);
+                       color:var(--text-primary); padding:12px 16px; font-size:17px;
+                       font-family:var(--font-body); border-radius:var(--radius-sm); outline:none;
+                       resize:vertical; box-sizing:border-box;"
+                placeholder="Explain your decision clearly — this goes directly to the photographer…"></textarea>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <button type="submit" name="decision" value="overturn"
+              class="btn" style="padding:13px 28px; font-size:17px; border-color:var(--green); color:var(--green);"
+              onclick="return confirm('Overturn disqualification and reinstate this image? Photographer will be notified.')">
+        ✓ Overturn — Reinstate Image
+      </button>
+      <button type="submit" name="decision" value="uphold"
+              class="btn" style="padding:13px 28px; font-size:17px; border-color:var(--red); color:var(--red);"
+              onclick="return confirm('Uphold disqualification? This is final — photographer will be notified.')">
+        ✗ Uphold — Disqualification Stands
+      </button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if submission and submission.appeal_decision %}
+<!-- Appeal decision recorded -->
+<div style="padding:18px 22px; background:var(--surface-2); border:1px solid var(--border);
+            border-radius:var(--radius-md); font-size:17px; color:var(--text-secondary); margin-bottom:20px;">
+  <strong style="color:var(--text-primary);">Appeal decision:</strong>
+  {{ submission.appeal_decision | title }}
+  {% if submission.appeal_decided_at %} on {{ submission.appeal_decided_at.strftime('%d %b %Y') }}{% endif %}
+  {% if submission.appeal_admin_note %}<br><em>{{ submission.appeal_admin_note }}</em>{% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
 
 {% block content %}
 
