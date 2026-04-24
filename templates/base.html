@@ -656,3 +656,132 @@ img {
     <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
   {% endif %}
 </div>
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer" style="max-width:var(--max-width); margin:12px auto; padding:0 var(--page-pad);">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}" role="alert">
+        <span class="flash-msg">{{ message }}</span>
+        <button class="flash-close" onclick="dismissFlash(this)" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <div class="footer-brand">
+    <strong>&copy; 2026 Lens League Apex.</strong> &nbsp;All rights reserved.
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    APEX DDI ENGINE &nbsp;·&nbsp; Rated by Science. Not Opinion.
+  </div>
+  <div class="footer-links">
+    <a href="/terms">Terms &amp; Conditions</a>
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/refund-policy">Refund Policy</a>
+    <a href="/contact">Contact Us</a>
+    <a href="/faq">FAQ</a>
+    <a href="/contest-rules">Contest Rules</a>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navMobile').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const nav = document.getElementById('navMobile');
+  const toggle = document.querySelector('.nav-toggle');
+  if (nav.classList.contains('open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+    nav.classList.remove('open');
+  }
+});
+
+function dismissFlash(btn) {
+  const flash = btn.closest('.flash');
+  flash.classList.add('hiding');
+  setTimeout(() => flash.remove(), 300);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.flash').forEach(function(el) {
+    setTimeout(function() {
+      el.classList.add('hiding');
+      setTimeout(() => el.remove(), 300);
+    }, 8000);
+  });
+});
+
+// ── Right-click protection on images — sitewide ────────────────────────────
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG' || e.target.closest('img')) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.target.tagName === 'A' && e.target.querySelector('img')) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('dragstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('touchstart', function(e) {
+  if (e.target.tagName === 'IMG') {
+    e.target.style.webkitUserSelect = 'none';
+    e.target.style.webkitTouchCallout = 'none';
+  }
+}, { passive: true });
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('img').forEach(function(img) {
+    img.style.webkitTouchCallout = 'none';
+    img.style.webkitUserSelect   = 'none';
+    var parent = img.parentElement;
+    if (parent && parent.tagName === 'A') {
+      parent.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+  });
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+<button id="backToTop" aria-label="Back to top">&#8593;</button>
+<style>
+#backToTop {
+  position:fixed; bottom:28px; right:28px; z-index:999;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--gold); color:#1a1a18;
+  border:none; cursor:pointer;
+  font-size:18px; font-weight:700; line-height:44px; text-align:center;
+  opacity:0; visibility:hidden;
+  transition:opacity 0.3s, visibility 0.3s, transform 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+#backToTop.btt-visible { opacity:1; visibility:visible; }
+#backToTop:hover { transform:translateY(-3px); }
+</style>
+<script>
+(function(){
+  var btt = document.getElementById('backToTop');
+  window.addEventListener('scroll', function(){
+    btt.classList.toggle('btt-visible', window.scrollY > 400);
+  }, { passive: true });
+  btt.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
