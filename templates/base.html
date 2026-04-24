@@ -610,7 +610,7 @@ img {
     {% else %}
       <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-      <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
+      <a href="/how-it-works" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
       <a href="{{ url_for('login') }}">Login</a>
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Join Free</a>
@@ -650,7 +650,7 @@ img {
   {% else %}
     <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
-    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="/how-it-works" onclick="toggleNav()">How It Works</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
     <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
     <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
