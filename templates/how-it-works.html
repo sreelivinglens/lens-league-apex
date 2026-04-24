@@ -1,188 +1,477 @@
 {% extends "base.html" %}
-{% block title %}How It Works — Lens League Apex{% endblock %}
+{% block title %}How It Works — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  .hiw-wrap { max-width: 720px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 0; }
+  .hiw-wrap { max-width: 880px; margin: 0 auto; }
 
-  .hiw-eyebrow {
-    font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  /* Section spacing */
+  .hiw-section { margin-bottom: 72px; }
+  .hiw-section-label {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 10px;
   }
-  .hiw-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
-
-  .hiw-headline {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2;
-    color: var(--text-primary); margin-bottom: 1rem;
+  .hiw-section-title {
+    font-size: clamp(22px, 3vw, 30px); font-weight: 700;
+    color: var(--text-primary); margin-bottom: 12px; line-height: 1.2;
   }
-  .hiw-headline em { font-style: italic; color: var(--gold); }
-
-  .hiw-intro {
-    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8;
-    margin-bottom: 3rem; max-width: 580px;
+  .hiw-section-sub {
+    font-size: 17px; color: var(--text-secondary); line-height: 1.7;
+    max-width: 600px; margin-bottom: 32px;
   }
 
-  /* 5 modules */
-  .modules-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 3rem; }
-
-  .module-item {
+  /* ── Section 1: Upload & Score ── */
+  .steps-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  @media (max-width: 640px) { .steps-row { grid-template-columns: 1fr; gap: 16px; } }
+  .step-card {
     background: var(--surface-2); border: 1px solid var(--border);
-    border-left: 3px solid var(--gold-dark);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 20px 24px;
-    display: flex; gap: 20px; align-items: flex-start;
+    border-radius: var(--radius-md); padding: 28px 24px; position: relative;
+  }
+  .step-num {
+    font-family: var(--font-mono); font-size: 40px; font-weight: 700;
+    color: var(--gold); opacity: 0.25; line-height: 1; margin-bottom: 12px;
+  }
+  .step-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .step-body { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+  .step-connector {
+    display: none;
+  }
+  @media (min-width: 641px) {
+    .steps-row { position: relative; }
   }
 
-  .module-abbr {
-    font-family: var(--font-mono); font-size: 1rem; font-weight: 700;
-    color: var(--gold); min-width: 80px; flex-shrink: 0;
-    padding-top: 2px;
-  }
-
-  .module-content {}
-  .module-name {
-    font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 5px;
-  }
-  .module-desc {
-    font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7;
-  }
-
-  /* Tier table */
-  .tier-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
-    margin-bottom: 3rem;
-  }
-  .tier-cell {
+  /* ── Section 2: Score Card ── */
+  .ddi-showcase {
     background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 14px 10px; text-align: center;
+    border-radius: var(--radius-md); padding: 32px;
   }
-  .tier-cell.legend { border-color: var(--gold-dark); }
-  .tier-name { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .tier-range { font-family: var(--font-mono); font-size: 0.7rem; color: var(--gold); }
+  .ddi-score-big {
+    font-family: var(--font-mono); font-size: 72px; font-weight: 700;
+    color: var(--gold); line-height: 1; margin-bottom: 4px;
+  }
+  .ddi-tier-label {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .ddi-dims { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
+  @media (max-width: 600px) { .ddi-dims { grid-template-columns: repeat(3,1fr); } }
+  .ddi-dim-card {
+    text-align: center; padding: 16px 8px;
+    background: var(--surface-3); border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .ddi-dim-val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .ddi-dim-bar { height: 4px; border-radius: 2px; background: var(--border); margin: 6px auto 8px; max-width: 48px; }
+  .ddi-dim-fill { height: 4px; border-radius: 2px; }
+  .ddi-dim-name { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
 
-  /* Safeguards */
-  .safeguards-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 3rem; }
-  .safeguard-row {
-    display: flex; gap: 14px; align-items: flex-start; padding: 14px 18px;
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md);
-  }
-  .safeguard-name { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--gold); min-width: 140px; flex-shrink: 0; padding-top: 1px; }
-  .safeguard-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+  /* dim colours */
+  .dod-col   { color: #4A90D9; } .dod-bar   { background: #4A90D9; }
+  .dis-col   { color: #E84393; } .dis-bar   { background: #E84393; }
+  .dm-col    { color: #F5A623; } .dm-bar    { background: #F5A623; }
+  .won-col   { color: #7ED321; } .won-bar   { background: #7ED321; }
+  .aq-col    { color: var(--gold); } .aq-bar { background: var(--gold); }
 
-  .hiw-cta {
-    text-align: center; padding: 32px;
-    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
-    border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
-  }
-  .hiw-cta p { font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem; }
+  /* ── Section 3: Tiers ── */
+  .tiers-strip { display: flex; gap: 0; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+  @media (max-width: 640px) { .tiers-strip { flex-direction: column; } }
+  .tier-block { flex: 1; padding: 22px 16px; text-align: center; border-right: 1px solid var(--border); }
+  .tier-block:last-child { border-right: none; }
+  @media (max-width: 640px) { .tier-block { border-right: none; border-bottom: 1px solid var(--border); } }
+  .tier-block:last-child { border-bottom: none; }
+  .tier-name { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .tier-range { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .tier-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
-  @media (max-width: 640px) {
-    .tier-grid { grid-template-columns: repeat(2, 1fr); }
-    .module-item { flex-direction: column; gap: 8px; }
-    .module-abbr { min-width: auto; }
+  /* ── Section 4: Challenges ── */
+  .challenge-card {
+    background: var(--surface-2); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md); padding: 28px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; flex-wrap: wrap;
   }
+  .challenge-card-left { flex: 1; min-width: 260px; }
+  .challenge-week { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; }
+  .challenge-title { font-size: 26px; font-weight: 700; font-style: italic; color: var(--text-primary); margin-bottom: 16px; line-height: 1.2; }
+  .slot-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .slot-pill {
+    padding: 8px 16px; border-radius: 20px; font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+  }
+  .slot-free     { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
+  .slot-sub      { background: rgba(200,168,75,0.12); border: 1px solid var(--gold-dark); color: var(--gold); }
+
+  /* ── Section 5: Pricing ── */
+  .pricing-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+  @media (max-width: 600px) { .pricing-cards { grid-template-columns: 1fr; } }
+  .pricing-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 28px 24px;
+    display: flex; flex-direction: column;
+  }
+  .pricing-card.featured { border-color: var(--gold-dark); background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04)); }
+  .pricing-track { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .pricing-price { font-family: var(--font-mono); font-size: 38px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .pricing-period { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+  .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .pricing-features li { font-size: 15px; color: var(--text-secondary); padding-left: 20px; position: relative; line-height: 1.5; }
+  .pricing-features li::before { content: '✓'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+
+  /* ── Section 6: POTY ── */
+  .poty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .poty-grid { grid-template-columns: repeat(2,1fr); } }
+  .poty-genre-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
+  }
+  .poty-genre-name { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .poty-genre-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 6px; }
+  .poty-genre-fill { height: 4px; background: var(--gold); border-radius: 2px; }
+  .poty-genre-score { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gold); }
+
+  .poty-rule-box {
+    background: rgba(200,168,75,0.06); border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-md); padding: 20px 24px;
+    display: flex; gap: 24px; flex-wrap: wrap; align-items: center;
+  }
+  .poty-rule-stat { text-align: center; }
+  .poty-rule-val { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .poty-rule-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .poty-rule-text { flex: 1; min-width: 200px; font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* ── Section 7: RAW ── */
+  .raw-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  @media (max-width: 640px) { .raw-steps { grid-template-columns: 1fr; } }
+  .raw-step {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 24px 20px; text-align: center;
+    position: relative;
+  }
+  .raw-step-icon { font-size: 32px; margin-bottom: 12px; }
+  .raw-step-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .raw-step-body { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+  .raw-step.highlight { border-color: var(--gold-dark); background: rgba(200,168,75,0.05); }
+
+  /* CTA strip */
+  .cta-strip {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 36px 32px; text-align: center;
+    margin-top: 64px;
+  }
+  .cta-strip h2 { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+  .cta-strip p  { font-size: 17px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.7; }
+  .cta-buttons  { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="hiw-wrap">
 
-  <div class="hiw-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
-
-  <h1 class="hiw-headline">Rated by science.<br><em>Not opinion.</em></h1>
-
-  <p class="hiw-intro">
-    The Apex DDI Engine — <strong style="color:var(--text-primary);">Dimensional Diagnostic Index</strong> — evaluates every photograph across five independently-weighted modules. Each module addresses a distinct dimension of photographic achievement. Together they produce a score that tells you not just <em>how good</em> your image is, but <em>exactly why</em> — and what one change would move it to the next tier.
-  </p>
-
-  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:2rem;">
-    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 16px; font-size:0.8rem; color:var(--text-muted); line-height:1.6; flex:1; min-width:200px;">
-      <span style="font-family:var(--font-mono); font-size:0.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:4px;">Like chess ELO</span>
-      Magnus Carlsen has a rating of 2830. The world knows what that means. Your photography now has the same.
-    </div>
-    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 16px; font-size:0.8rem; color:var(--text-muted); line-height:1.6; flex:1; min-width:200px;">
-      <span style="font-family:var(--font-mono); font-size:0.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:4px;">Like a report card</span>
-      A single grade tells you nothing. A report card tells you everything. The DDI is the report card your photography has always needed.
-    </div>
+  <div class="page-header" style="margin-bottom: 56px;">
+    <h1>How {{ platform_name }} Works</h1>
+    <p>Scientific scoring. Real competition. Verified results.</p>
   </div>
 
-  <!-- 5 Modules -->
-  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">The Five Modules</div>
-  <div class="modules-list">
-    <div class="module-item">
-      <div class="module-abbr">DoD</div>
-      <div class="module-content">
-        <div class="module-name">Depth of Difficulty</div>
-        <div class="module-desc">Technical and situational difficulty of capturing the image. Environmental constraints, timing precision, subject accessibility. Sharpness IS DoD for Macro. Technique IS DoD for Creative.</div>
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 1: Upload & Get Scored                                  #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Step by step</div>
+    <div class="hiw-section-title">Upload &amp; Get Scored</div>
+    <div class="hiw-section-sub">Every photograph you upload is scored instantly by the Apex DDI Engine — a multi-dimensional AI scoring system trained on photographic principles.</div>
+
+    <div class="steps-row">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">Upload your photograph</div>
+        <div class="step-body">Upload any JPEG up to 20MB. Mobile or camera. Any genre — Wildlife, Street, Landscape, People, Wedding, Macro, Drone, or Creative.</div>
       </div>
-    </div>
-    <div class="module-item">
-      <div class="module-abbr">DIS</div>
-      <div class="module-content">
-        <div class="module-name">Visual Disruption</div>
-        <div class="module-desc">How strongly the image breaks from visual convention. Intentional deviation that creates a more powerful or unexpected visual statement — not chaos, but deliberate originality.</div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-title">AI scores it instantly</div>
+        <div class="step-body">The Apex DDI Engine analyses your image across 5 dimensions in seconds. No waiting. No human subjectivity in the initial score.</div>
       </div>
-    </div>
-    <div class="module-item">
-      <div class="module-abbr">DM</div>
-      <div class="module-content">
-        <div class="module-name">Decisive Moment</div>
-        <div class="module-desc">Timing, irreversibility, and completeness of the captured moment. Whether the shutter was released at the precise instant where all elements align simultaneously.</div>
-      </div>
-    </div>
-    <div class="module-item">
-      <div class="module-abbr">WON</div>
-      <div class="module-content">
-        <div class="module-name">Wonder Factor</div>
-        <div class="module-desc">The image's capacity to arrest attention, provoke curiosity, and sustain engagement. Rare behaviour, impossible perspectives, the unseen truth.</div>
-      </div>
-    </div>
-    <div class="module-item">
-      <div class="module-abbr">AQ</div>
-      <div class="module-content">
-        <div class="module-name">Affective Quotient</div>
-        <div class="module-desc">The emotional truth and human resonance. A felt experience rather than merely a recorded one. AQ is the soul of the score — it can override technical penalties entirely.</div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">Download your score card</div>
+        <div class="step-body">Get a shareable score card showing your DDI breakdown, tier, and archetype. Every scored image automatically enters the monthly contest.</div>
       </div>
     </div>
   </div>
 
-  <!-- Tiers -->
-  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">Five Tiers</div>
-  <div class="tier-grid">
-    <div class="tier-cell"><div class="tier-name">Apprentice</div><div class="tier-range">0 — 5.0</div></div>
-    <div class="tier-cell"><div class="tier-name">Practitioner</div><div class="tier-range">5.1 — 7.5</div></div>
-    <div class="tier-cell"><div class="tier-name">Master</div><div class="tier-range">7.6 — 8.9</div></div>
-    <div class="tier-cell"><div class="tier-name">Grandmaster</div><div class="tier-range">9.0 — 9.6</div></div>
-    <div class="tier-cell legend"><div class="tier-name" style="color:var(--gold);">Legend</div><div class="tier-range">9.7 — 9.9</div></div>
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 2: Your Score Card                                      #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">The DDI Score</div>
+    <div class="hiw-section-title">Your Score Card</div>
+    <div class="hiw-section-sub">Five dimensions. One score. Each dimension captures a distinct aspect of photographic excellence — rated on a 0–10 scale.</div>
+
+    <div class="ddi-showcase">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:4px; flex-wrap:wrap;">
+        <div class="ddi-score-big">8.4</div>
+        <div>
+          <div class="ddi-tier-label">Grandmaster</div>
+          <div style="font-size:15px; font-style:italic; color:var(--text-secondary);">Sovereign Momentum</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); letter-spacing:1px; margin-bottom:24px;">WILDLIFE · CAMERA LEAGUE</div>
+
+      <div class="ddi-dims">
+        <div class="ddi-dim-card">
+          <div class="ddi-dim-val dod-col">8.5</div>
+          <div class="ddi-dim-bar"><div class="ddi-dim-fill dod-bar" style="width:85%;"></div></div>
+          <div class="ddi-dim-name">DoD</div>
+        </div>
+        <div class="ddi-dim-card">
+          <div class="ddi-dim-val dis-col">7.8</div>
+          <div class="ddi-dim-bar"><div class="ddi-dim-fill dis-bar" style="width:78%;"></div></div>
+          <div class="ddi-dim-name">Disruption</div>
+        </div>
+        <div class="ddi-dim-card">
+          <div class="ddi-dim-val dm-col">9.1</div>
+          <div class="ddi-dim-bar"><div class="ddi-dim-fill dm-bar" style="width:91%;"></div></div>
+          <div class="ddi-dim-name">DM</div>
+        </div>
+        <div class="ddi-dim-card">
+          <div class="ddi-dim-val won-col">8.2</div>
+          <div class="ddi-dim-bar"><div class="ddi-dim-fill won-bar" style="width:82%;"></div></div>
+          <div class="ddi-dim-name">Wonder</div>
+        </div>
+        <div class="ddi-dim-card">
+          <div class="ddi-dim-val aq-col">8.4</div>
+          <div class="ddi-dim-bar"><div class="ddi-dim-fill aq-bar" style="width:84%;"></div></div>
+          <div class="ddi-dim-name">AQ</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:16px; text-align:center;">
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Safeguards -->
-  <div style="font-family:var(--font-mono);font-size:0.62rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">Scoring Safeguards</div>
-  <div class="safeguards-list">
-    <div class="safeguard-row">
-      <div class="safeguard-name">Soul Bonus</div>
-      <div class="safeguard-desc">AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.</div>
-    </div>
-    <div class="safeguard-row">
-      <div class="safeguard-name">Humanity Check</div>
-      <div class="safeguard-desc">AQ &lt; 4.0 adds −1.5 to the AQ component. Technical perfection without emotional truth is not a high score.</div>
-    </div>
-    <div class="safeguard-row">
-      <div class="safeguard-name">Iconic Wall</div>
-      <div class="safeguard-desc">Scores ≥ 9.0 require both Disruption AND AQ &gt; 8.5. The highest tier cannot be reached by optimising one dimension alone.</div>
-    </div>
-    <div class="safeguard-row">
-      <div class="safeguard-name">Plateau Penalty</div>
-      <div class="safeguard-desc">DoD ≥ 9.5 + Disruption &lt; 5.0 caps at 7.9. Technical perfection without creative ambition is not mastery.</div>
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 3: Tiers                                                #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Progression</div>
+    <div class="hiw-section-title">Five Tiers of Excellence</div>
+    <div class="hiw-section-sub">Your tier is determined by your DDI score. Each image is graded independently — there's no cumulative ranking to game.</div>
+
+    <div class="tiers-strip">
+      <div class="tier-block" style="background:var(--surface-3);">
+        <div class="tier-name" style="color:#8A8478;">Apprentice</div>
+        <div class="tier-range">0–5.9</div>
+        <div class="tier-desc">Building fundamentals</div>
+      </div>
+      <div class="tier-block">
+        <div class="tier-name" style="color:#4A90D9;">Practitioner</div>
+        <div class="tier-range">6.0–7.4</div>
+        <div class="tier-desc">Consistent craft</div>
+      </div>
+      <div class="tier-block">
+        <div class="tier-name" style="color:#7ED321;">Master</div>
+        <div class="tier-range">7.5–8.4</div>
+        <div class="tier-desc">Distinctive vision</div>
+      </div>
+      <div class="tier-block" style="background:rgba(200,168,75,0.05);">
+        <div class="tier-name" style="color:var(--gold);">Grandmaster</div>
+        <div class="tier-range">8.5–9.4</div>
+        <div class="tier-desc">Exceptional work</div>
+      </div>
+      <div class="tier-block" style="background:rgba(200,168,75,0.08); border-color:var(--gold-dark);">
+        <div class="tier-name" style="color:var(--gold);">Legend</div>
+        <div class="tier-range">9.5–10</div>
+        <div class="tier-desc">Rare. Jury-eligible.</div>
+      </div>
     </div>
   </div>
 
-  <div class="hiw-cta">
-    <p>See exactly how your image scores across all five modules.</p>
-    <a href="/upload" class="btn btn-solid" style="padding:13px 32px;">Upload Free — Get My Score</a>
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 4: Weekly Challenges                                    #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Weekly</div>
+    <div class="hiw-section-title">Weekly Challenges</div>
+    <div class="hiw-section-sub">Every Monday a new challenge prompt drops. Submit an image that fits the brief — get scored, compete, and see where you rank.</div>
+
+    <div class="challenge-card">
+      <div class="challenge-card-left">
+        <div class="challenge-week">This Week · 2026-W17</div>
+        <div class="challenge-title">The Last Hour of Light</div>
+        <div class="slot-row">
+          <div class="slot-pill slot-free">Free: 1 image</div>
+          <div class="slot-pill slot-sub">Subscribed: 3 images</div>
+        </div>
+      </div>
+      <div>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid">Enter Challenge →</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-solid">Join to Enter →</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="margin-top:16px; font-size:14px; color:var(--text-muted); line-height:1.7;">
+      Subscribers get 3 submission slots per week. Challenge results are published after the weekly close. Your best score from all submissions counts.
+    </div>
+  </div>
+
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 5: Subscribe to Compete                                 #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Subscriptions</div>
+    <div class="hiw-section-title">Subscribe to Compete</div>
+    <div class="hiw-section-sub">Free members can upload and score. Subscribe to enter contests, build your POTY ranking, and compete for prize pools.</div>
+
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-track">📱 Mobile League</div>
+        <div class="pricing-price">₹299</div>
+        <div class="pricing-period">per month &nbsp;·&nbsp; ₹2,499/year</div>
+        <ul class="pricing-features">
+          <li>Unlimited scored uploads</li>
+          <li>Monthly Contest — Mobile track</li>
+          <li>POTY — Mobile League ranking</li>
+          <li>3 challenge slots per week</li>
+          <li>Peer rating — earn pool entries</li>
+          <li>RAW verification eligible</li>
+        </ul>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('subscribe', track='mobile') }}" class="btn btn-solid" style="width:100%; text-align:center;">Subscribe Mobile →</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-solid" style="width:100%; text-align:center;">Join to Subscribe →</a>
+        {% endif %}
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-track">📷 Camera League</div>
+        <div class="pricing-price">₹599</div>
+        <div class="pricing-period">per month &nbsp;·&nbsp; ₹4,999/year</div>
+        <ul class="pricing-features">
+          <li>Unlimited scored uploads</li>
+          <li>Monthly Contest — Camera track</li>
+          <li>POTY — Camera League ranking</li>
+          <li>3 challenge slots per week</li>
+          <li>Peer rating — earn pool entries</li>
+          <li>RAW verification eligible</li>
+          <li>Jury contest eligible</li>
+        </ul>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="width:100%; text-align:center;">Subscribe Camera →</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-solid" style="width:100%; text-align:center;">Join to Subscribe →</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="margin-top:12px; font-size:13px; color:var(--text-muted); text-align:center;">
+      Cancel anytime from your dashboard. Access continues to end of billing period. <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Full pricing details →</a>
+    </div>
+  </div>
+
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 6: POTY                                                 #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Annual</div>
+    <div class="hiw-section-title">Photographer of the Year</div>
+    <div class="hiw-section-sub">The POTY ranking runs year-round across 8 genres and 2 Leagues. Your top-6 average determines your standing. Prize pool: ₹50,00,000.</div>
+
+    <div class="poty-grid">
+      {% set genres = [
+        ('Wildlife',  78),
+        ('Street',    65),
+        ('Landscape', 82),
+        ('People',    71),
+        ('Wedding',   55),
+        ('Macro',     90),
+        ('Drone',     48),
+        ('Creative',  73),
+      ] %}
+      {% for genre, pct in genres %}
+      <div class="poty-genre-card">
+        <div class="poty-genre-name">{{ genre }}</div>
+        <div class="poty-genre-bar"><div class="poty-genre-fill" style="width:{{ pct }}%;"></div></div>
+        <div class="poty-genre-score">{{ '%.1f'|format(pct / 10) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="poty-rule-box">
+      <div class="poty-rule-stat">
+        <div class="poty-rule-val">6</div>
+        <div class="poty-rule-lbl">Top scores averaged</div>
+      </div>
+      <div class="poty-rule-stat">
+        <div class="poty-rule-val">24</div>
+        <div class="poty-rule-lbl">Min images to qualify</div>
+      </div>
+      <div class="poty-rule-stat">
+        <div class="poty-rule-val">16</div>
+        <div class="poty-rule-lbl">Competitions per year</div>
+      </div>
+      <div class="poty-rule-text">
+        Your POTY score is the average of your top 6 DDI scores in a genre, across all images uploaded during the year. Upload more — only your best 6 count.
+      </div>
+    </div>
+  </div>
+
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# Section 7: RAW Verification                                     #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="hiw-section">
+    <div class="hiw-section-label">Integrity</div>
+    <div class="hiw-section-title">RAW Verification</div>
+    <div class="hiw-section-sub">All provisional contest winners must verify their result by submitting the original RAW file. This is what keeps the competition honest.</div>
+
+    <div class="raw-steps">
+      <div class="raw-step">
+        <div class="raw-step-icon">🏆</div>
+        <div class="raw-step-title">You place in the top 3</div>
+        <div class="raw-step-body">Your image achieves a provisional winning position in a contest. You receive an email notification with instructions.</div>
+      </div>
+      <div class="raw-step highlight">
+        <div class="raw-step-icon">📂</div>
+        <div class="raw-step-title">Submit your RAW file</div>
+        <div class="raw-step-body">Upload your original RAW or full-resolution source file through the platform within the stated deadline. Our automated system verifies EXIF, resolution, and authenticity.</div>
+      </div>
+      <div class="raw-step">
+        <div class="raw-step-icon">✓</div>
+        <div class="raw-step-title">Result confirmed</div>
+        <div class="raw-step-body">Verification passes → your result is confirmed and prize disbursed. All verified. Always retain your original files.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; font-size:14px; color:var(--text-muted); line-height:1.7;">
+      Random spot-check verification may be conducted on any image at any time, regardless of competition standing. See the <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Contest Rules</a> for full details.
+    </div>
+  </div>
+
+  {# ─────────────────────────────────────────────────────────────── #}
+  {# CTA strip                                                       #}
+  {# ─────────────────────────────────────────────────────────────── #}
+  <div class="cta-strip">
+    <h2>Ready to find out your score?</h2>
+    <p>Upload your first image and get your DDI score in seconds.<br>No subscription needed to start.</p>
+    <div class="cta-buttons">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px; padding:14px 32px;">Upload a Photo →</a>
+        <a href="{{ url_for('contests') }}" class="btn" style="font-size:16px; padding:14px 32px;">View Contests</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-solid" style="font-size:16px; padding:14px 32px;">Join Free →</a>
+        <a href="{{ url_for('pricing') }}" class="btn" style="font-size:16px; padding:14px 32px;">View Pricing</a>
+      {% endif %}
+    </div>
   </div>
 
 </div>
