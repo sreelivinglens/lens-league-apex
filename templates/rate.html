@@ -1,17 +1,294 @@
 {% extends "base.html" %}
-{% block title %}Rate Images — Lens League Apex{% endblock %}
+{% block title %}Rate Images — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
   .rate-wrap { max-width: 720px; margin: 0 auto; }
+
+  /* Credits bar */
+  .credits-bar {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+    margin-bottom: 32px;
+  }
+  .credit-box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 22px; text-align: center;
+  }
+  .credit-val { font-family: var(--font-mono); font-size: 34px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .credit-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 6px; }
+
+  /* Rating card */
+  .rating-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden; margin-bottom: 28px;
+  }
+  .rating-image {
+    width: 100%; max-height: 480px; object-fit: contain;
+    background: var(--surface-3); display: block;
+  }
+  .rating-image-placeholder {
+    width: 100%; height: 300px; background: var(--surface-3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-family: var(--font-mono); font-size: 13px;
+  }
+  .rating-meta {
+    padding: 18px 22px; border-bottom: 1px solid var(--border-subtle);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  .rating-genre {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+  }
+  .rating-timer {
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);
+  }
+
+  /* Sliders */
+  .rating-form { padding: 24px 22px; }
+  .slider-group { margin-bottom: 22px; }
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-label { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); }
+  .slider-desc { font-size: 13px; color: var(--text-muted); }
+  .slider-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); min-width: 36px; text-align: right; }
+
+  input[type=range] {
+    width: 100%; height: 6px; border-radius: 3px;
+    background: var(--border); outline: none; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--gold); cursor: pointer;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--gold); cursor: pointer;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+
+  /* Minimum time warning */
+  .time-warning {
+    background: rgba(184,112,10,0.08); border: 1px solid var(--amber);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-size: 14px; color: var(--amber); margin-bottom: 16px; display: none;
+  }
+
+  /* Non-subscriber state */
+  .upgrade-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 40px 32px; text-align: center;
+    margin-bottom: 28px;
+  }
+
+  /* How it works */
+  .how-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+  .how-num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; flex-shrink: 0; width: 32px; }
+  .how-text { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+  .how-text strong { color: var(--text-primary); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="rate-wrap">
-  <div class="page-header"><h1>Rate Images</h1></div>
-  <p style="font-size:14px; color:var(--text-muted);">
-    Contact <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a> to contest within 48 hours.
-  </p>
+
+  <div class="page-header">
+    <h1>Rate Images</h1>
+    <p>Blind peer ratings — help calibrate the platform, earn pool entries</p>
+  </div>
+
+  {% if not is_subscriber %}
+  {# ── Non-subscriber state ─────────────────────────────────────── #}
+  <div class="upgrade-card">
+    <div style="font-size:40px; margin-bottom:16px;">☆</div>
+    <h2 style="font-size:22px; font-weight:700; margin-bottom:10px;">Peer Rating is for subscribers</h2>
+    <p style="font-size:16px; color:var(--text-secondary); line-height:1.7; max-width:480px; margin:0 auto 24px;">
+      Rate other photographers' images using the DDI framework. Earn credits,
+      unlock peer pool entries, and help keep scores honest.
+    </p>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Rate →</a>
+  </div>
+
+  {% else %}
+  {# ── Credits bar ──────────────────────────────────────────────── #}
+  <div class="credits-bar">
+    <div class="credit-box">
+      <div class="credit-val">{{ credits }}</div>
+      <div class="credit-lbl">Credits This Month</div>
+    </div>
+    <div class="credit-box">
+      <div class="credit-val">{{ lifetime_given }}</div>
+      <div class="credit-lbl">All-Time Ratings</div>
+    </div>
+    <div class="credit-box">
+      <div class="credit-val">{{ queue_remaining }}</div>
+      <div class="credit-lbl">In Queue</div>
+    </div>
+  </div>
+
+  {% if bias_flag %}
+  <div style="background:var(--red-dim); border:1px solid var(--red); border-left:4px solid var(--red); border-radius:var(--radius-md); padding:14px 18px; margin-bottom:24px; font-size:14px; color:var(--red);">
+    <strong>Rating pattern flagged.</strong> Your ratings have been flagged for review. You may continue rating, but credits are paused pending admin review.
+  </div>
+  {% endif %}
+
+  {% if assignment and image %}
+  {# ── Rating card ──────────────────────────────────────────────── #}
+  <div class="rating-card">
+
+    {% if image.thumb_url %}
+    <img src="{{ image.thumb_url }}" alt="Image to rate" class="rating-image" id="ratingImage">
+    {% else %}
+    <div class="rating-image-placeholder">Image not available</div>
+    {% endif %}
+
+    <div class="rating-meta">
+      <div>
+        <div class="rating-genre">{{ image.genre }}</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">Rate this image on each DDI dimension · 1–10</div>
+      </div>
+      <div class="rating-timer" id="timerDisplay">⏱ 0s</div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_rating') }}" class="rating-form" id="ratingForm">
+      <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+      <input type="hidden" name="client_start_ts" id="clientStartTs" value="">
+      <input type="hidden" name="time_spent" id="timeSpent" value="0">
+
+      {% set dims = [
+        ('dod',        'DoD',        'Depth of Detail — technical precision, sharpness, compositional complexity'),
+        ('disruption', 'Disruption', 'Visual surprise — unconventional perspective, breaks convention'),
+        ('dm',         'DM',         'Decisive Moment — timing, the unrepeatable instant, narrative peak'),
+        ('wonder',     'Wonder',     'Emotional impact — transcendence, the feeling it leaves'),
+        ('aq',         'AQ',         "Authenticity Quotient — soul, honesty, the photographer's unique voice"),
+      ] %}
+
+      {% for field, label, desc in dims %}
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">{{ label }}</div>
+            <div class="slider-desc">{{ desc }}</div>
+          </div>
+          <div class="slider-val" id="val_{{ field }}">5.0</div>
+        </div>
+        <input type="range" name="{{ field }}" id="slider_{{ field }}"
+               min="1" max="10" step="0.5" value="5"
+               oninput="updateVal('{{ field }}', this.value)">
+      </div>
+      {% endfor %}
+
+      <div class="time-warning" id="timeWarning">
+        Please spend at least 15 seconds viewing the image before rating.
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+        <button type="submit" class="btn btn-solid" id="submitBtn">Submit Rating →</button>
+        <form method="POST" action="{{ url_for('skip_rating') }}" style="display:inline;">
+          <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+          <button type="submit" class="btn">Skip</button>
+        </form>
+      </div>
+
+    </form>
+  </div>
+
+  {% else %}
+  {# ── No image available ───────────────────────────────────────── #}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:40px 32px; text-align:center; margin-bottom:28px;">
+    {% if queue_remaining == 0 %}
+    <div style="font-size:32px; margin-bottom:16px;">✓</div>
+    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px;">Queue empty</h2>
+    <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
+      No images in the queue right now. Check back later — new images are added as members upload.
+    </p>
+    {% else %}
+    <div style="font-size:32px; margin-bottom:16px;">⏳</div>
+    <h2 style="font-size:20px; font-weight:700; margin-bottom:10px;">No assignment yet</h2>
+    <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
+      {{ queue_remaining }} image{{ 's' if queue_remaining != 1 else '' }} in the queue. Refresh to get your next assignment.
+    </p>
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="margin-top:16px;">Refresh →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── Stats footer ─────────────────────────────────────────────── #}
+  <div style="background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px;">
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Your Rating Stats</div>
+    <div style="display:flex; gap:24px; flex-wrap:wrap; font-size:14px; color:var(--text-secondary);">
+      <div>Ratings this month: <strong style="color:var(--text-primary); font-family:var(--font-mono);">{{ month_given }}</strong></div>
+      <div>Next credit reset: <strong style="color:var(--text-primary);">1 {{ next_reset }}</strong></div>
+      <div>Lifetime total: <strong style="color:var(--text-primary); font-family:var(--font-mono);">{{ lifetime_given }}</strong></div>
+    </div>
+  </div>
+
+  {% endif %}{# end is_subscriber #}
+
+  {# ── How peer rating works ────────────────────────────────────── #}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:28px 28px; margin-bottom:28px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">How Peer Rating Works</div>
+    <div class="how-row">
+      <div class="how-num">1</div>
+      <div class="how-text"><strong>Blind rating.</strong> You see the image and genre only — no photographer name, no DDI score. Rate purely on what you see.</div>
+    </div>
+    <div class="how-row">
+      <div class="how-num">2</div>
+      <div class="how-text"><strong>Earn credits.</strong> Every submitted rating earns 1 credit. Accumulate 5 credits to unlock a peer pool entry for one of your own images.</div>
+    </div>
+    <div class="how-row">
+      <div class="how-num">3</div>
+      <div class="how-text"><strong>Pool entries.</strong> When your image is in the peer pool, other subscribers rate it. You receive a peer average score alongside your DDI score.</div>
+    </div>
+    <div class="how-row">
+      <div class="how-num">4</div>
+      <div class="how-text"><strong>Divergence triggers jury review.</strong> If peer scores diverge significantly from the DDI score, the image is referred to a jury. Your DDI score is always protected.</div>
+    </div>
+    <div class="how-row" style="margin-bottom:0;">
+      <div class="how-num">5</div>
+      <div class="how-text"><strong>Bias detection.</strong> Systematic rating patterns (always high, always low, or targeting specific photographers) are flagged automatically and reviewed by admin.</div>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Track time spent viewing
+var startTs = Date.now();
+document.getElementById('clientStartTs') && (document.getElementById('clientStartTs').value = startTs);
+
+// Live timer display
+var timerEl = document.getElementById('timerDisplay');
+var timeSpentEl = document.getElementById('timeSpent');
+if (timerEl) {
+  setInterval(function() {
+    var elapsed = Math.floor((Date.now() - startTs) / 1000);
+    timerEl.textContent = '⏱ ' + elapsed + 's';
+    if (timeSpentEl) timeSpentEl.value = elapsed;
+  }, 1000);
+}
+
+// Update slider display values
+function updateVal(field, val) {
+  var el = document.getElementById('val_' + field);
+  if (el) el.textContent = parseFloat(val).toFixed(1);
+}
+
+// Enforce minimum 15 seconds before submit
+var form = document.getElementById('ratingForm');
+if (form) {
+  form.addEventListener('submit', function(e) {
+    var elapsed = Math.floor((Date.now() - startTs) / 1000);
+    if (elapsed < 13) {
+      e.preventDefault();
+      var warn = document.getElementById('timeWarning');
+      if (warn) warn.style.display = 'block';
+      setTimeout(function() { if (warn) warn.style.display = 'none'; }, 4000);
+    }
+  });
+}
+</script>
 {% endblock %}
