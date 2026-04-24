@@ -1,35 +1,358 @@
 {% extends "base.html" %}
-{% block title %}{{ image.asset_name or 'Image' }} — Lens League Apex{% endblock %}
+{% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
+  .detail-wrap { max-width: 900px; margin: 0 auto; }
+
   .detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 32px;
-    gap: 16px;
-    flex-wrap: wrap;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 32px; gap: 16px; flex-wrap: wrap;
   }
   .detail-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; flex-shrink: 0; }
+
+  .detail-image-wrap {
+    border-radius: var(--radius-md); overflow: hidden;
+    background: var(--surface-3); margin-bottom: 32px;
+    border: 1px solid var(--border);
+  }
+  .detail-image-wrap img { width: 100%; height: auto; display: block; max-height: 640px; object-fit: contain; }
+
+  .score-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 28px;
+  }
+  .score-main { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .score-number { font-family: var(--font-mono); font-size: 56px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .score-tier-badge {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: var(--radius-sm);
+    background: var(--gold-subtle); color: var(--gold); border: 1px solid var(--gold-dark);
+  }
+  .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
+
+  .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
+  @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+  .ddi-dim { text-align: center; }
+  .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .ddi-bar-track { background: var(--border); border-radius: 4px; height: 5px; margin: 6px auto 5px; max-width: 60px; }
+  .ddi-bar-fill { background: var(--gold); border-radius: 4px; height: 5px; }
+  .ddi-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+
+  .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
+  .peer-item { font-size: 14px; color: var(--text-muted); }
+  .peer-item strong { color: var(--text-primary); font-family: var(--font-mono); }
+
+  .status-banner { border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
+  .status-banner.flagged { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
+  .status-banner.review  { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-left: 4px solid var(--amber); }
+  .status-banner.raw-req { background: rgba(200,168,75,0.07); border: 1px solid var(--gold-dark); border-left: 4px solid var(--gold); }
+  .status-banner strong { color: var(--text-primary); }
+
+  .meta-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 28px; }
+  @media (max-width: 600px) { .meta-grid { grid-template-columns: 1fr; } }
+  .meta-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
+  .meta-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+  .meta-value { font-size: 15px; color: var(--text-primary); word-break: break-word; line-height: 1.5; }
+
+  .exif-block { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+  .exif-warning { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--amber); margin-top: 10px; line-height: 1.6; }
+
+  .percentile-bar-track { background: var(--border); border-radius: 6px; height: 10px; margin: 8px 0 4px; }
+  .percentile-bar-fill { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 6px; height: 10px; }
+
+  .audit-row { padding: 14px 0; border-bottom: 1px solid var(--border-subtle); display: flex; gap: 20px; }
+  .audit-row:last-child { border-bottom: none; }
+  .audit-row-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; width: 130px; flex-shrink: 0; padding-top: 2px; }
+  .audit-row-text { font-size: 15px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
+
+  #delete-modal {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.55); align-items: center; justify-content: center; padding: 20px;
+  }
+  #delete-modal.open { display: flex; }
+  .delete-modal-box { background: #fff; border-radius: var(--radius-lg); padding: 32px; max-width: 440px; width: 100%; }
 </style>
-<!-- Delete confirmation modal -->
-<div id="delete-modal" style="display:none; position:fixed; inset:0;">
-</div>
 {% endblock %}
 
-% block content %}
+{% block content %}
+<div class="detail-wrap">
 
-<!-- Header -->
-<div class="detail-header">
-  <div class="page-header">
-    <h1>{{ image.asset_name or image.original_filename }}</h1>
+  {# ── Header ─────────────────────────────────────────────────────── #}
+  <div class="detail-header">
+    <div class="page-header">
+      <h1>{{ image.asset_name or image.original_filename }}</h1>
+      <p>
+        {{ image.genre }}
+        {% if image.camera_track %}&nbsp;·&nbsp;{{ image.camera_track|title }} League{% endif %}
+        {% if image.photographer_name %}&nbsp;·&nbsp;{{ image.photographer_name }}{% endif %}
+      </p>
+    </div>
+    <div class="detail-actions">
+      <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
+      {% if image.status == 'scored' and image.score and not image.is_flagged %}
+        <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn" target="_blank">Download Card</a>
+      {% endif %}
+      {% if image.status != 'scored' %}
+        <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
+          <button type="submit" class="btn btn-solid">Score Now</button>
+        </form>
+      {% endif %}
+      <button onclick="document.getElementById('delete-modal').classList.add('open')" class="btn btn-danger">Delete</button>
+    </div>
+  </div>
+
+  {# ── Status banners ──────────────────────────────────────────────── #}
+  {% if image.is_flagged %}
+  <div class="status-banner flagged">
+    <strong>⚠ Image Flagged</strong> — {{ image.flagged_reason or 'This image has been flagged and is not publicly visible.' }}
+    {% if image.ai_suspicion and image.ai_suspicion >= 0.7 %}
+    <br><span style="font-size:13px; opacity:0.8;">AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}. If you believe this is incorrect, contact <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> with your original file.</span>
+    {% endif %}
+  </div>
+  {% elif image.needs_review %}
+    {% if image.judge_referral %}
+    <div class="status-banner raw-req">
+      <strong>📂 RAW File Requested — Score Held</strong><br>
+      Your image has been selected as a finalist. Submit your original RAW file to confirm your result.
+      <br><br>
+      <a href="{{ url_for('raw_status', image_id=image.id) }}" class="btn btn-solid" style="font-size:13px;">Submit RAW File →</a>
+      <span style="font-size:13px; color:var(--text-muted); margin-left:12px;">or go to <a href="{{ url_for('raw_status', image_id=image.id) }}" style="color:var(--gold);">RAW Status</a></span>
+    </div>
+    {% else %}
+    <div class="status-banner review">
+      <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span>
+    </div>
+    {% endif %}
+  {% endif %}
+
+  {# ── Image ───────────────────────────────────────────────────────── #}
+  {% if image.thumb_url %}
+  <div class="detail-image-wrap">
+    <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or image.original_filename }}">
+  </div>
+  {% endif %}
+
+  {# ── Score card ──────────────────────────────────────────────────── #}
+  {% if image.status == 'scored' and image.score %}
+  <div class="score-card">
+    <div class="score-main">
+      <div class="score-number">{{ image.score }}</div>
+      <div>
+        <div class="score-tier-badge">{{ image.tier or 'Scored' }}</div>
+        {% if image.soul_bonus %}<div style="font-family:var(--font-mono); font-size:12px; color:var(--gold); margin-top:4px; letter-spacing:1px;">✦ SOUL BONUS</div>{% endif %}
+      </div>
+    </div>
+    {% if image.archetype %}
+    <div class="score-archetype">{{ image.archetype }}</div>
+    {% endif %}
+
+    {# DDI dimensions #}
+    {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+    <div class="ddi-grid">
+      {% set dims = [
+        ('DoD', image.dod_score),
+        ('Disruption', image.disruption_score),
+        ('DM', image.dm_score),
+        ('Wonder', image.wonder_score),
+        ('AQ', image.aq_score),
+      ] %}
+      {% for lbl, val in dims %}
+      <div class="ddi-dim">
+        <div class="ddi-val">{{ val or '—' }}</div>
+        <div class="ddi-bar-track">
+          <div class="ddi-bar-fill" style="width:{{ ((val or 0) / 10 * 100)|int }}%;"></div>
+        </div>
+        <div class="ddi-lbl">{{ lbl }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Peer rating info #}
+    {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+    <div class="peer-strip">
+      <div class="peer-item">Peer ratings: <strong>{{ image.peer_rating_count }}</strong></div>
+      {% if image.peer_avg_score %}<div class="peer-item">Peer avg: <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
+      {% if image.blended_score %}<div class="peer-item">Blended score: <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
+    </div>
+    {% endif %}
+
+    {# Percentile #}
+    {% if percentile and percentile.percentile %}
+    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-subtle);">
+      <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Percentile — {{ image.genre }}</div>
+      <div class="percentile-bar-track">
+        <div class="percentile-bar-fill" style="width:{{ percentile.percentile|int }}%;"></div>
+      </div>
+      <div style="font-size:14px; color:var(--text-secondary);">Top <strong style="color:var(--gold);">{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Audit analysis rows ────────────────────────────────────────── #}
+  {% set audit = image.get_audit() %}
+  {% if audit and audit.rows %}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">DDI Analysis</div>
+    {% for row in audit.rows %}
+    {% if row[1] %}
+    <div class="audit-row">
+      <div class="audit-row-label">{{ row[0] }}</div>
+      <div class="audit-row-text">{{ row[1] }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% if audit.byline_1 %}
+    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-subtle); font-size:15px; font-weight:600; color:var(--text-primary);">{{ audit.byline_1 }}</div>
+    {% endif %}
+    {% if audit.byline_2_body or audit.byline_2 %}
+    <div style="font-size:15px; color:var(--text-secondary); line-height:1.7; margin-top:8px;">{{ audit.byline_2_body or audit.byline_2 }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}{# end if scored #}
+
+  {# ── Metadata grid ───────────────────────────────────────────────── #}
+  <div class="meta-grid">
+    {% if image.genre %}
+    <div class="meta-card">
+      <div class="meta-label">Genre</div>
+      <div class="meta-value">{{ image.genre }}</div>
+    </div>
+    {% endif %}
+    {% if image.subject %}
+    <div class="meta-card">
+      <div class="meta-label">Subject</div>
+      <div class="meta-value">{{ image.subject }}</div>
+    </div>
+    {% endif %}
+    {% if image.location %}
+    <div class="meta-card">
+      <div class="meta-label">Location</div>
+      <div class="meta-value">{{ image.location }}</div>
+    </div>
+    {% endif %}
+    {% if image.conditions %}
+    <div class="meta-card">
+      <div class="meta-label">Conditions</div>
+      <div class="meta-value">{{ image.conditions }}</div>
+    </div>
+    {% endif %}
+    <div class="meta-card">
+      <div class="meta-label">Uploaded</div>
+      <div class="meta-value">{{ image.created_at.strftime('%d %b %Y') if image.created_at else '—' }}</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Dimensions</div>
+      <div class="meta-value">{{ image.width }}×{{ image.height }}px &nbsp;·&nbsp; {{ image.format or 'JPEG' }}</div>
+    </div>
+  </div>
+
+  {# ── EXIF block ──────────────────────────────────────────────────── #}
+  {% if image.exif_camera or image.exif_settings or image.exif_date_taken %}
+  <div class="exif-block">
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">EXIF Data</div>
+    {% if image.exif_camera %}<div>📷 {{ image.exif_camera }}{% if image.exif_lens %} · {{ image.exif_lens }}{% endif %}</div>{% endif %}
+    {% if image.exif_settings %}<div>⚙ {{ image.exif_settings }}</div>{% endif %}
+    {% if image.exif_date_taken %}<div>📅 {{ image.exif_date_taken }}</div>{% endif %}
+    {% if image.exif_warning %}
+    <div class="exif-warning">⚠ {{ image.exif_warning }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── Judge/contest info ──────────────────────────────────────────── #}
+  {% if image.contest_result_status == 'published' and image.judge_final_score %}
+  <div style="background:rgba(200,168,75,0.06); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;">
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">🏆 Contest Result — Published</div>
+    <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{{ image.judge_final_score }}</div>
+    <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final score · {{ image.genre }}</div>
+  </div>
+  {% endif %}
+
+  {# ── Visibility status ───────────────────────────────────────────── #}
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:32px; padding:14px 18px; background:var(--surface-3); border-radius:var(--radius-md); border:1px solid var(--border);">
+    <div style="font-size:14px; color:var(--text-muted);">
+      Visibility:
+      {% if image.is_flagged %}
+        <strong style="color:var(--red);">Hidden (flagged)</strong>
+      {% elif image.needs_review %}
+        <strong style="color:var(--amber);">Hidden (under review)</strong>
+      {% elif image.is_public %}
+        <strong style="color:var(--green);">Public</strong>
+      {% else %}
+        <strong style="color:var(--text-muted);">Private</strong>
+      {% endif %}
+    </div>
+    {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
+    <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size:13px;">Share →</a>
+    {% endif %}
+  </div>
+
+  {# ── Admin section ───────────────────────────────────────────────── #}
+  {% if current_user.role == 'admin' %}
+  <div style="background:rgba(200,168,75,0.04); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      {% if image.needs_review and not image.is_flagged %}
+      <form method="POST" action="{{ url_for('admin_approve_review', image_id=image.id) }}" style="display:inline;">
+        <button type="submit" class="btn btn-solid" style="font-size:13px;">✓ Approve for Public</button>
+      </form>
+      {% endif %}
+      {% if not image.is_flagged %}
+      <form method="POST" action="{{ url_for('admin_flag_image', image_id=image.id) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger" style="font-size:13px;">Flag as AI / Remove</button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('admin_unflag_image', image_id=image.id) }}" style="display:inline;">
+        <button type="submit" class="btn" style="font-size:13px;">Unflag / Restore</button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('admin_raw_detail', image_id=image.id) }}" class="btn" style="font-size:13px;">RAW Detail →</a>
+    </div>
+
+    {# Admin feedback form #}
+    <details style="margin-top:20px;">
+      <summary style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); cursor:pointer; letter-spacing:1px; text-transform:uppercase;">Calibration Feedback</summary>
+      <form method="POST" action="{{ url_for('admin_feedback', image_id=image.id) }}" style="margin-top:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+          <select name="module" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:14px; background:#fff;">
+            <option value="overall">Overall</option>
+            <option value="dod">DoD</option>
+            <option value="disruption">Disruption</option>
+            <option value="dm">DM</option>
+            <option value="wonder">Wonder</option>
+            <option value="aq">AQ</option>
+          </select>
+          <input type="number" name="original_score" step="0.1" min="0" max="10" placeholder="Original" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px;">
+          <input type="number" name="corrected_score" step="0.1" min="0" max="10" placeholder="Corrected" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px;">
+        </div>
+        <input type="text" name="reason" required placeholder="Reason for correction" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px;">
+        <button type="submit" class="btn btn-solid" style="font-size:13px;">Save Calibration Note</button>
+      </form>
+    </details>
+  </div>
+  {% endif %}
+
+</div>{# end detail-wrap #}
+
+{# ── Delete confirmation modal ───────────────────────────────────────── #}
+<div id="delete-modal">
+  <div class="delete-modal-box">
+    <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Delete this image?</h3>
+    <p style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+      This will permanently remove the image, its scores, and all contest entries. This cannot be undone.
+    </p>
+    <div style="display:flex; gap:12px;">
+      <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn">Cancel</button>
+      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="display:inline;">
+        <button type="submit" class="btn btn-danger">Yes, Delete Permanently</button>
+      </form>
+    </div>
   </div>
 </div>
 
-<!-- RAW request banner -->
-<a href="mailto:{{ contact_email }}?subject=RAW%20File%20—%20{{ image.asset_name | urlencode }}&body=Hi%2C%0A%0APlease%20find%20attached%20the%20RAW%20file%20for%20my%20image%20'%7B%7B%20image.asset_name%20|%20urlencode%20%7D%7D%27%20(Image%20ID%3A%20%7B%7B%20image.id%20%7D%7D).%0A%0AThank%20you."
-   style="display:inline-block; padding:9px 20px; background:var(--gold); color:#000; text-decoration:none;">
-  📧 Submit RAW File to {{ contact_email }} →
-</a>
 {% endblock %}
