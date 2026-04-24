@@ -59,9 +59,22 @@
       Billing questions, subscription issues, technical problems, competition queries,
       or anything else — write to us directly.
     </div>
-    <a href="mailto:{{ contact_email }}" class="contact-email">
-      {{ contact_email }} →
-    </a>
+    <!-- Email address — always visible and copyable -->
+    <div style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); margin-bottom:16px; letter-spacing:0.5px;">
+      {{ contact_email }}
+    </div>
+    <!-- Two CTA buttons — covers webmail and native mail client -->
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+      <a href="https://mail.google.com/mail/?view=cm&to={{ contact_email }}"
+         target="_blank" rel="noopener"
+         class="contact-email" style="background:var(--gold); color:#1a1a18; border-color:var(--gold);">
+        Open in Gmail →
+      </a>
+      <a href="mailto:{{ contact_email }}"
+         class="contact-email" style="background:transparent;">
+        Open Mail App →
+      </a>
+    </div>
     <div class="contact-response">We respond within 2 working days.</div>
   </div>
 
@@ -136,7 +149,7 @@
   <div class="faq-item">
     <div class="faq-q">I was charged but my subscription isn't active.</div>
     <div class="faq-a">
-      Email us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with your registered
+      Email us at <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a> with your registered
       email and payment reference. We'll resolve it within 2 working days.
     </div>
   </div>
@@ -152,7 +165,7 @@
   <div class="faq-item">
     <div class="faq-q">How do I delete my account?</div>
     <div class="faq-a">
-      Email us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with subject
+      Email us at <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a> with subject
       <strong>Delete Account — [your email]</strong>. We'll confirm deletion within
       5 working days. Note that submitted competition images may be retained
       for integrity record-keeping per our <a href="/terms">Terms &amp; Conditions</a>.
