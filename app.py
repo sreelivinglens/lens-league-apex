@@ -327,6 +327,15 @@ with app.app_context():
                 "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decision VARCHAR(20)",
                 "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_note TEXT",
                 "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decided_at TIMESTAMP",
+                # v32 - automated RAW verification + appeal system
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decision VARCHAR(20)",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decided_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_flag_reasons TEXT",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_submitted_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decision VARCHAR(20)",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
             ]
             for sql in _migrations:
                 try:
@@ -5764,40 +5773,37 @@ def raw_submit(contest_type, image_id):
             'ct': contest_type, 'meth': method, 'fk': raw_file_key, 'lnk': raw_link})
         db.session.commit()
 
-        site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+        # Fetch the submission ID for the background thread
+        sub_row = db.session.execute(db.text(
+            "SELECT id FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct ORDER BY submitted_at DESC LIMIT 1"
+        ), {'iid': image_id, 'ct': contest_type}).fetchone()
+        sub_id = sub_row.id if sub_row else None
 
-        # Email admin -- use env var, fallback to sreelivinglens@gmail.com
-        admin_emails = _admin_notify_emails()
-        if not admin_emails:
-            admin_emails = ['sreelivinglens@gmail.com']
-        send_email(
-            admin_emails,
-            f'[RAW Received] Image #{image_id} -- {img.asset_name}',
-            (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-             f'<p style="color:#C8A84B;font-weight:700;">RAW SUBMISSION RECEIVED</p>'
-             f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
-             f'Photographer: {current_user.username} ({current_user.email})<br>'
-             f'Method: {method}</p>'
-             f'<p><a href="{site_url}/admin/raw-verification/{image_id}" style="color:#C8A84B;">Review submission</a></p>'
-             f'</div>')
-        )
-
-        # Email photographer -- confirmation
+        # Email photographer — immediate receipt confirmation
         send_email(
             current_user.email,
-            f'RAW file received -- {img.asset_name}',
+            f'RAW file received — {img.asset_name}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
              f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, {current_user.full_name or current_user.username}.</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"{img.asset_name}"</strong>. '
-             f'Our team will verify it within 48 hours and notify you of the outcome.</p>'
-             f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">'
-             f'Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#C8A84B;">sreelivinglens@gmail.com</a></p>'
+             f'Our automated system is now verifying it. You will receive a verification result by email shortly.</p>'
+             f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
              f'</div>')
         )
 
-        flash('RAW file submitted successfully. You will receive a confirmation email shortly. Our team will verify within 48 hours.', 'success')
+        # Fire auto-analysis in background — does not block the response
+        if sub_id:
+            import threading
+            t = threading.Thread(
+                target=_auto_decide_raw,
+                args=(image_id, sub_id),
+                daemon=True
+            )
+            t.start()
+
+        flash('RAW file submitted. Our automated system is verifying it now — you will receive an email with the result shortly.', 'success')
         return redirect(url_for('raw_status', image_id=image_id))
 
     return render_template('raw_submit.html', img=img, existing=existing,
@@ -5865,8 +5871,15 @@ def admin_raw_detail(image_id):
         "WHERE rs.image_id=:iid ORDER BY rs.submitted_at DESC LIMIT 1"
     ), {'iid': image_id}).fetchone()
     raw_file_url = (f"{r2.R2_PUBLIC_URL}/{submission.raw_file_key}") if (submission and submission.raw_file_key) else None
+    # Check if appeal is pending (submitted but not yet decided)
+    appeal_pending = (
+        submission and
+        submission.appeal_submitted_at and
+        not submission.appeal_decision
+    ) if submission else False
     return render_template('admin_raw_detail.html',
-        img=img, submission=submission, raw_file_url=raw_file_url)
+        img=img, submission=submission, raw_file_url=raw_file_url,
+        appeal_pending=appeal_pending)
 
 
 @app.route('/admin/image/<int:image_id>/mark-raw-verified', methods=['POST'])
@@ -6205,6 +6218,326 @@ def _run_raw_analysis(submission, img):
                 pass
 
     return overall_flag, results
+
+
+# ---------------------------------------------------------------------------
+# Automated RAW decision + appeal system  (v32)
+# ---------------------------------------------------------------------------
+
+def _auto_decide_raw(image_id, submission_id):
+    """
+    Run immediately after RAW submission in a background thread.
+    Analyses the RAW, auto-approves or auto-disqualifies, sends email to photographer.
+    """
+    with app.app_context():
+        try:
+            submission = db.session.execute(db.text(
+                "SELECT * FROM raw_submissions WHERE id=:sid"
+            ), {'sid': submission_id}).fetchone()
+            img = Image.query.get(image_id)
+            if not submission or not img:
+                return
+
+            photographer = User.query.get(img.user_id)
+            site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+
+            # Mark as running
+            db.session.execute(db.text(
+                "UPDATE raw_submissions SET analysis_status='running', analysis_run_at=NOW() WHERE id=:sid"
+            ), {'sid': submission_id})
+            db.session.commit()
+
+            # Run analysis
+            flags, results = _run_raw_analysis(submission, img)
+
+            # Build flag reason list
+            flag_reasons = []
+            if results.get('crop_flagged'):
+                flag_reasons.append(f'Significant crop detected ({results.get("crop_percentage", 0):.0%} of original RAW area)')
+            flag_map = [
+                ('vision_ai_detected',    'AI generation detected'),
+                ('vision_objects_removed','Objects appear to have been removed'),
+                ('vision_objects_added',  'Objects appear to have been added'),
+                ('vision_logo_trademark', 'Logo or trademark detected'),
+                ('vision_meaning_changed','Meaning of image appears changed from RAW'),
+                ('vision_painterly',      'Heavy painterly editing detected'),
+            ]
+            for key, label in flag_map:
+                if results.get(key):
+                    flag_reasons.append(label)
+
+            auto_decision = 'disqualified' if flags else 'approved'
+            flag_str = ' | '.join(flag_reasons) if flag_reasons else None
+
+            # Update DB
+            db.session.execute(db.text(
+                "UPDATE raw_submissions SET "
+                "analysis_status='complete', auto_decision=:dec, auto_decided_at=NOW(), "
+                "auto_flag_reasons=:fr, "
+                "exif_match=:em, crop_percentage=:cp, crop_flagged=:cf, dimension_match=:dm, "
+                "raw_original_width=:rw, raw_original_height=:rh, "
+                "vision_ai_detected=:vai, vision_objects_removed=:vor, vision_objects_added=:voa, "
+                "vision_logo_trademark=:vlt, vision_meaning_changed=:vmc, vision_painterly=:vp, "
+                "vision_crop_consistent=:vcc, vision_notes=:vn, overall_flag=:of, flag_reasons=:fr2 "
+                "WHERE id=:sid"
+            ), {
+                'dec': auto_decision, 'fr': flag_str,
+                'em': results.get('exif_match'), 'cp': results.get('crop_percentage'),
+                'cf': results.get('crop_flagged', False), 'dm': results.get('dimension_match'),
+                'rw': results.get('raw_width'), 'rh': results.get('raw_height'),
+                'vai': results.get('vision_ai_detected'), 'vor': results.get('vision_objects_removed'),
+                'voa': results.get('vision_objects_added'), 'vlt': results.get('vision_logo_trademark'),
+                'vmc': results.get('vision_meaning_changed'), 'vp': results.get('vision_painterly'),
+                'vcc': results.get('vision_crop_consistent'), 'vn': results.get('vision_notes'),
+                'of': flags, 'fr2': flag_str, 'sid': submission_id,
+            })
+
+            if auto_decision == 'approved':
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET admin_decision='approved', disqualified=FALSE WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET raw_verified=TRUE, raw_disqualified=FALSE WHERE id=:iid"
+                ), {'iid': image_id})
+                db.session.commit()
+
+                # Email 1 — Auto Approved
+                if photographer:
+                    send_email(
+                        photographer.email,
+                        f'RAW Verification Passed — {img.asset_name}',
+                        (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW Verification Passed ✓</h2>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your RAW file for <strong>"{img.asset_name}"</strong> has been verified by our automated system. Our analysis found no issues with the file.</p>'
+                         f'<div style="background:#F0F7F0;border:1px solid #4CAF50;border-radius:6px;padding:16px 20px;margin:20px 0;">'
+                         f'<p style="margin:0;font-family:Courier New,monospace;font-size:15px;color:#2E7D32;font-weight:700;">VERIFIED ✓ &nbsp;·&nbsp; DDI Score: {img.score} &nbsp;·&nbsp; {img.genre}</p>'
+                         f'</div>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image stands verified and your result is confirmed. Thank you for submitting your original file — this is what keeps Shutter League honest.</p>'
+                         f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                         f'</div>')
+                    )
+
+                # Notify admin
+                admin_emails = _admin_notify_emails()
+                if not admin_emails:
+                    admin_emails = ['sreelivinglens@gmail.com']
+                send_email(
+                    admin_emails,
+                    f'[RAW Auto-Approved] Image #{image_id} — {img.asset_name}',
+                    (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                     f'<p style="color:#4CAF50;font-weight:700;">RAW AUTO-APPROVED ✓</p>'
+                     f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
+                     f'Photographer: {photographer.username if photographer else "unknown"}<br>'
+                     f'Score: {img.score} · {img.genre}</p>'
+                     f'<p style="color:#8a8070;">No flags raised. Photographer notified.</p>'
+                     f'</div>')
+                )
+
+            else:
+                # Auto-disqualified
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET admin_decision='disqualified', disqualified=TRUE WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET raw_verified=FALSE, raw_disqualified=TRUE WHERE id=:iid"
+                ), {'iid': image_id})
+                db.session.commit()
+
+                appeal_url = f"{site_url}/raw/appeal/{image_id}"
+                reasons_html = ''.join(f'<li style="margin-bottom:6px;">{r}</li>' for r in flag_reasons)
+
+                # Email 2 — Auto Disqualified
+                if photographer:
+                    send_email(
+                        photographer.email,
+                        f'RAW Verification — Action Required · {img.asset_name}',
+                        (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#C0392B;">RAW Verification — Provisional Disqualification</h2>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Our automated RAW verification system has reviewed the file you submitted for <strong>"{img.asset_name}"</strong> and has flagged it for the following reason(s):</p>'
+                         f'<ul style="font-size:16px;line-height:1.8;color:#C0392B;background:#FFF5F5;border:1px solid #FFCCCC;border-radius:6px;padding:16px 20px 16px 36px;margin:16px 0;">{reasons_html}</ul>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">As a result, this image has been <strong>provisionally disqualified</strong> from the current contest.</p>'
+                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">If you believe this is incorrect, you may appeal this decision within <strong>48 hours</strong>. Your appeal will be reviewed personally by our admin team, who will download and inspect your RAW file manually.</p>'
+                         f'<a href="{appeal_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Appeal This Decision →</a>'
+                         f'<p style="font-size:14px;color:#8a8070;margin-top:16px;">If no appeal is received within 48 hours, the disqualification will be confirmed.</p>'
+                         f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                         f'</div>')
+                    )
+
+                # Notify admin
+                admin_emails = _admin_notify_emails()
+                if not admin_emails:
+                    admin_emails = ['sreelivinglens@gmail.com']
+                send_email(
+                    admin_emails,
+                    f'[RAW Auto-Disqualified] Image #{image_id} — {img.asset_name}',
+                    (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                     f'<p style="color:#C0392B;font-weight:700;">RAW AUTO-DISQUALIFIED</p>'
+                     f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
+                     f'Photographer: {photographer.username if photographer else "unknown"} ({photographer.email if photographer else ""})<br>'
+                     f'Flags: {flag_str}</p>'
+                     f'<p style="color:#8a8070;">Photographer has 48hrs to appeal. You will be notified if they do.</p>'
+                     f'<p><a href="{site_url}/admin/raw-verification/{image_id}" style="color:#C8A84B;">View submission</a></p>'
+                     f'</div>')
+                )
+
+        except Exception as e:
+            app.logger.error(f'[auto_decide_raw] image {image_id}: {e}')
+            try:
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='failed' WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.commit()
+            except Exception:
+                pass
+
+
+@app.route('/raw/appeal/<int:image_id>', methods=['GET', 'POST'])
+@login_required
+def raw_appeal(image_id):
+    """User submits an appeal against auto-disqualification."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+
+    submission = db.session.execute(db.text(
+        "SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY submitted_at DESC LIMIT 1"
+    ), {'iid': image_id}).fetchone()
+
+    if not submission:
+        flash('No RAW submission found for this image.', 'error')
+        return redirect(url_for('dashboard'))
+
+    # Must be auto-disqualified and not already appealed
+    if submission.auto_decision != 'disqualified':
+        flash('This image is not eligible for appeal.', 'info')
+        return redirect(url_for('raw_status', image_id=image_id))
+
+    if submission.appeal_submitted_at:
+        flash('You have already submitted an appeal for this image. We will notify you once it has been reviewed.', 'info')
+        return redirect(url_for('raw_status', image_id=image_id))
+
+    # Check 48hr window
+    if submission.auto_decided_at:
+        hours_elapsed = (datetime.utcnow() - submission.auto_decided_at).total_seconds() / 3600
+        if hours_elapsed > 48:
+            flash('The 48-hour appeal window has closed for this image.', 'error')
+            return redirect(url_for('raw_status', image_id=image_id))
+
+    if request.method == 'POST':
+        # Record the appeal
+        db.session.execute(db.text(
+            "UPDATE raw_submissions SET appeal_submitted_at=NOW() WHERE image_id=:iid"
+        ), {'iid': image_id})
+        db.session.commit()
+
+        site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+
+        # Notify admin — human review required
+        admin_emails = _admin_notify_emails()
+        if not admin_emails:
+            admin_emails = ['sreelivinglens@gmail.com']
+        send_email(
+            admin_emails,
+            f'[RAW Appeal] Human Review Required — Image #{image_id} · {img.asset_name}',
+            (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+             f'<p style="color:#C8A84B;font-weight:700;font-size:16px;">⚠️ RAW APPEAL — HUMAN REVIEW REQUIRED</p>'
+             f'<p>Image: <strong>{img.asset_name}</strong> (ID: {image_id})<br>'
+             f'Photographer: {current_user.username} ({current_user.email})<br>'
+             f'DDI Score: {img.score} · {img.genre}</p>'
+             f'<p>Auto-disqualification reasons:<br>'
+             f'<strong style="color:#C0392B;">{submission.auto_flag_reasons or "See analysis"}</strong></p>'
+             f'<p style="background:#FFF8E1;border:1px solid #C8A84B;border-radius:4px;padding:12px 16px;">'
+             f'The photographer has appealed. Please download the RAW file, compare it manually with the submitted image, and make a final decision.</p>'
+             f'<a href="{site_url}/admin/raw-verification/{image_id}" '
+             f'style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;'
+             f'font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+             f'text-decoration:none;border-radius:4px;margin:16px 0;">Review &amp; Decide →</a>'
+             f'</div>')
+        )
+
+        flash('Your appeal has been submitted. Our admin team will review your RAW file manually and notify you of the outcome.', 'success')
+        return redirect(url_for('raw_status', image_id=image_id))
+
+    return render_template('raw_appeal.html', img=img, submission=submission)
+
+
+@app.route('/admin/raw-appeal/<int:image_id>/decide', methods=['POST'])
+@login_required
+@admin_required
+def admin_raw_appeal_decide(image_id):
+    """Admin makes final decision on a RAW appeal — uphold or overturn."""
+    img = Image.query.get_or_404(image_id)
+    decision  = request.form.get('decision', '').strip()  # 'uphold' or 'overturn'
+    admin_note = request.form.get('admin_note', '').strip()
+
+    if decision not in ('uphold', 'overturn'):
+        flash('Invalid decision.', 'error')
+        return redirect(url_for('admin_raw_detail', image_id=image_id))
+
+    photographer = User.query.get(img.user_id)
+    site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
+
+    db.session.execute(db.text(
+        "UPDATE raw_submissions SET appeal_decision=:dec, appeal_decided_at=NOW(), "
+        "appeal_admin_note=:note, appeal_decided_by=:by WHERE image_id=:iid"
+    ), {'dec': decision, 'note': admin_note or None, 'by': current_user.id, 'iid': image_id})
+
+    if decision == 'uphold':
+        # Disqualification confirmed — already disqualified in DB, just notify
+        if photographer:
+            send_email(
+                photographer.email,
+                f'Appeal Decision — Disqualification Confirmed · {img.asset_name}',
+                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                 f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Appeal Decision — Disqualification Confirmed</h2>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for appealing the automated disqualification of <strong>"{img.asset_name}"</strong>.</p>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Our admin team has personally downloaded and reviewed your original RAW file against the submitted image. After careful examination, we have determined that the concerns raised by our automated system are valid.</p>'
+                 f'<div style="background:#FFF5F5;border:1px solid #FFCCCC;border-radius:6px;padding:16px 20px;margin:16px 0;">'
+                 f'<p style="margin:0;font-size:16px;font-weight:700;color:#C0392B;">The disqualification stands.</p>'
+                 + (f'<p style="margin:8px 0 0;font-size:15px;color:#4A4840;">Reason: {admin_note}</p>' if admin_note else '')
+                 + f'</div>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your account remains active and all your other scores and contest standings are unaffected. You are welcome to continue participating in future contests.</p>'
+                 f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                 f'</div>')
+            )
+        flash(f'Appeal upheld — disqualification of "{img.asset_name}" confirmed. Photographer notified.', 'warning')
+
+    else:
+        # Overturn — reinstate the image
+        db.session.execute(db.text(
+            "UPDATE raw_submissions SET disqualified=FALSE, admin_decision='approved' WHERE image_id=:iid"
+        ), {'iid': image_id})
+        db.session.execute(db.text(
+            "UPDATE images SET raw_verified=TRUE, raw_disqualified=FALSE WHERE id=:iid"
+        ), {'iid': image_id})
+
+        if photographer:
+            send_email(
+                photographer.email,
+                f'Appeal Successful — Image Reinstated · {img.asset_name}',
+                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                 f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Appeal Successful — Image Reinstated</h2>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for appealing the automated disqualification of <strong>"{img.asset_name}"</strong>.</p>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Our admin team has personally downloaded and reviewed your original RAW file against the submitted image. After careful examination, we have found that our automated system made an incorrect assessment.</p>'
+                 f'<div style="background:#F0F7F0;border:1px solid #4CAF50;border-radius:6px;padding:16px 20px;margin:16px 0;">'
+                 f'<p style="margin:0;font-size:16px;font-weight:700;color:#2E7D32;">The disqualification has been overturned. Your image is reinstated. ✓</p>'
+                 f'</div>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your result and DDI score of <strong>{img.score}</strong> stand confirmed. We apologise for the inconvenience caused by the automated flag.</p>'
+                 f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                 f'</div>')
+            )
+        flash(f'Appeal overturned — "{img.asset_name}" reinstated. Photographer notified.', 'success')
+
+    db.session.commit()
+    return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
 # ---------------------------------------------------------------------------
