@@ -17,7 +17,7 @@
     <p style="font-size:16px; color:var(--text-muted); line-height:1.6; margin-bottom:8px;">
       If you cancel, you will keep full access to your
       <strong style="color:var(--text-primary);">
-        {% if current_user.subscription_track == 'camera' %}📷 Camera{% else %}📱 Mobile{% endif %}
+        {% if current_user.subscription_track == 'camera' %~📷 Camera{% else %~📱 Mobile{% endif %}
         League
       </strong>
       subscription until the end of your current billing period.
@@ -50,8 +50,8 @@
     </div>
 
     <p style="font-size:13px; color:var(--text-muted); margin-top:20px;">
-      Changed your mind or have a question?
-      <a href="mailto:sreeks@gmail.com" style="color:var(--gold);">sreeks@gmail.com</a>
+      Changed your mind or ask a question?
+      <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a>
     </p>
 
   </div>
