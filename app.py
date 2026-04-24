@@ -55,10 +55,10 @@ def send_email(to_addresses, subject, html_body, text_body=None):
     if isinstance(to_addresses, str):
         to_addresses = [to_addresses]
 
-    sender_email = os.getenv('MAIL_USERNAME', 'sreeks@gmail.com')
+    sender_email = os.getenv('MAIL_USERNAME', CONTACT_EMAIL)
 
     payload = {
-        'sender':     {'name': 'Lens League Apex', 'email': sender_email},
+        'sender':     {'name': PLATFORM_NAME, 'email': sender_email},
         'to':         [{'email': addr} for addr in to_addresses],
         'subject':    subject,
         'htmlContent': html_body,
@@ -207,6 +207,29 @@ app.config['REMEMBER_COOKIE_SECURE']   = True
 uri = app.config['SQLALCHEMY_DATABASE_URI']
 if uri and uri.startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = uri.replace('postgres://', 'postgresql://', 1)
+
+# ---------------------------------------------------------------------------
+# Platform constants  -  single source of truth for branding + contact emails
+# Change these env vars in Railway; no code deploy needed.
+# ---------------------------------------------------------------------------
+PLATFORM_NAME    = os.getenv('PLATFORM_NAME',    'Shutter League')
+CONTACT_EMAIL    = os.getenv('CONTACT_EMAIL',    'info@shutterleague.com')
+ADMIN_EMAIL      = os.getenv('ADMIN_EMAIL',      'admin@shutterleague.com')
+ADMIN_NOTIFY_EMAIL = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
+
+# Startup warnings for missing critical env vars
+_REQUIRED_ENV_VARS = [
+    ('BREVO_API_KEY',       'emails will not send'),
+    ('CONTACT_EMAIL',       'falling back to info@shutterleague.com'),
+    ('ADMIN_EMAIL',         'falling back to admin@shutterleague.com'),
+    ('ADMIN_NOTIFY_EMAIL',  'falling back to admin@shutterleague.com'),
+    ('RAZORPAY_KEY_ID',     'payments will not work'),
+    ('SECRET_KEY',          'using insecure dev key'),
+]
+for _var, _hint in _REQUIRED_ENV_VARS:
+    if not os.getenv(_var):
+        import logging
+        logging.warning(f'[config] ENV VAR NOT SET: {_var} — {_hint}')
 
 db.init_app(app)
 
@@ -649,12 +672,12 @@ with app.app_context():
 
     try:
         with db.engine.connect() as conn:
-            exists = conn.execute(db.text("SELECT id FROM users WHERE email='admin@lenslague.com'")).fetchone()
+            exists = conn.execute(db.text("SELECT id FROM users WHERE email='admin@shutterleague.com'")).fetchone()
             if not exists:
                 new_hash = generate_password_hash('LensAdmin2026!')
                 conn.execute(db.text(
                     "INSERT INTO users (email, username, password_hash, full_name, role, is_active, created_at) "
-                    "VALUES ('admin@lenslague.com','admin',:h,'Admin','admin',true,NOW())"
+                    "VALUES ('admin@shutterleague.com','admin',:h,'Admin','admin',true,NOW())"
                 ), {'h': new_hash})
                 conn.commit()
                 print('Admin account created.')
@@ -669,8 +692,8 @@ def load_user(user_id):
 
 
 @app.context_processor
-def inject_judge_status():
-    """Inject is_approved_judge into every template context."""
+def inject_globals():
+    """Inject platform constants and judge status into every template context."""
     is_approved_judge = False
     if current_user.is_authenticated and current_user.role != 'admin':
         try:
@@ -681,7 +704,12 @@ def inject_judge_status():
             is_approved_judge = result is not None
         except Exception:
             pass
-    return {'is_approved_judge': is_approved_judge}
+    return {
+        'is_approved_judge': is_approved_judge,
+        'platform_name':     PLATFORM_NAME,
+        'contact_email':     CONTACT_EMAIL,
+        'admin_email':       ADMIN_EMAIL,
+    }
 
 
 def admin_required(f):
@@ -1444,7 +1472,7 @@ def upload():
                     ' League check: this image appears to have been taken on a dedicated camera, '
                     'but you are in the Mobile League. The image has been held for review. '
                     'If you shoot on a camera, please switch to the Camera League. '
-                    'Contact sreeks@gmail.com with questions.',
+                    'Contact '+CONTACT_EMAIL+' with questions.',
                     'warning'
                 )
             elif strike == 2:
@@ -1461,7 +1489,7 @@ def upload():
                 flash(
                     ' Three league mismatches detected. Your contest access has been suspended '
                     'and this month\'s contest entries have been removed. '
-                    'Contact sreeks@gmail.com to resolve.',
+                    'Contact '+CONTACT_EMAIL+' to resolve.',
                     'error'
                 )
                 _month = datetime.utcnow().strftime('%Y-%m')
@@ -1506,7 +1534,7 @@ def upload():
                     flash(
                         ' This image has been flagged as potentially AI-generated and cannot be submitted. '
                         'Only original photographs taken by you are accepted. '
-                        'If you believe this is an error, contact sreeks@gmail.com.',
+                        'If you believe this is an error, contact '+CONTACT_EMAIL+'.',
                         'error'
                     )
                 else:
@@ -1559,14 +1587,14 @@ def upload():
                         if img.score >= 9.0 and ai_suspicion < 0.4:
                             flash(
                                 f' Grandmaster score! Your image has been submitted for RAW verification. '
-                                f'Email your original RAW file to sreeks@gmail.com within 7 days.',
+                                f'Email your original RAW file to {CONTACT_EMAIL} within 7 days.',
                                 'warning'
                             )
                         else:
                             flash(
                                 f' Your image has been flagged for human review before going public. '
                                 f'This is usually resolved within 24-48 hours. '
-                                f'Contact sreeks@gmail.com if you have questions.',
+                                f'Contact {CONTACT_EMAIL} if you have questions.',
                                 'warning'
                             )
             except Exception as e:
@@ -1589,13 +1617,13 @@ def upload():
                 return jsonify({
                     'status': 'flagged',
                     'image_id': img.id,
-                    'message': ' This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact sreeks@gmail.com.',
+                    'message': ' This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact '+CONTACT_EMAIL+'.',
                     'redirect': url_for('dashboard')
                 })
             if getattr(img, 'needs_review', False):
                 if img.score >= 9.0:
                     msg = (f' Grandmaster score ({img.score})! Your image has been held for RAW verification. '
-                           f'Email your original RAW file to sreeks@gmail.com within 7 days.')
+                           f'Email your original RAW file to {CONTACT_EMAIL} within 7 days.')
                 else:
                     msg = (' Your image has been held for human review before going public. '
                            'Usually resolved within 24-48 hours.')
@@ -3398,7 +3426,7 @@ def contest_enter_monthly(genre):
         return redirect(url_for('pricing'))
 
     if getattr(current_user, 'league_suspended', False):
-        flash(' Your contest access is suspended due to league mismatches. Contact sreeks@gmail.com to resolve.', 'error')
+        flash(' Your contest access is suspended due to league mismatches. Contact '+CONTACT_EMAIL+' to resolve.', 'error')
         return redirect(url_for('poty'))
 
     genre = normalise_genre(genre)
@@ -4097,7 +4125,7 @@ def cancel_subscription():
         except Exception as e:
             app.logger.error(f'[cancel] Razorpay cancel failed for {sub_id}: {e}')
             # Still cancel locally  -  don't leave user stuck
-            flash('Your subscription has been cancelled. If you continue to be charged, contact sreeks@gmail.com.', 'warning')
+            flash('Your subscription has been cancelled. If you continue to be charged, contact '+CONTACT_EMAIL+'.', 'warning')
 
     # Clear subscription fields in DB
     current_user.is_subscribed      = False
@@ -4407,7 +4435,7 @@ def submit_rating():
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review Triggered</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> has received peer ratings that diverge significantly from its DDI score. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> is protected and unchanged.</p>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This image has been referred to our jury for review. You will be notified once the review is complete. No action is required from you.</p>'
-                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#B8892A;">sreelivinglens@gmail.com</a></p>'
+                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:'+CONTACT_EMAIL+'" style="color:#B8892A;">'+CONTACT_EMAIL+'</a></p>'
                         f'</div>'
                     )
                 except Exception as mail_err:
@@ -4445,7 +4473,7 @@ def submit_rating():
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review In Progress</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> is receiving peer ratings that are being reviewed for consistency. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> stands and is unaffected.</p>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This is an automated notice. No action is required from you. The peer review process will complete automatically.</p>'
-                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:sreelivinglens@gmail.com" style="color:#B8892A;">sreelivinglens@gmail.com</a></p>'
+                        f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Questions? Contact <a href="mailto:'+CONTACT_EMAIL+'" style="color:#B8892A;">'+CONTACT_EMAIL+'</a></p>'
                         f'</div>'
                     )
                 except Exception as mail_err:
@@ -5947,7 +5975,7 @@ def admin_raw_decide(image_id):
                  f'<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> has been disqualified.</p>'
                  f'{"<p>Reason: " + notes + "</p>" if notes else ""}'
-                 f'<p style="font-size:14px;color:#8a8070;">Contact sreelivinglens@gmail.com to contest within 48 hours.</p>'
+                 f'<p style="font-size:14px;color:#8a8070;">Contact '+CONTACT_EMAIL+' to contest within 48 hours.</p>'
                  f'</div>')
             )
         flash(f'RAW rejected -- "{img.asset_name}" disqualified.', 'warning')
@@ -6322,7 +6350,7 @@ def _auto_decide_raw(image_id, submission_id):
                 # Notify admin
                 admin_emails = _admin_notify_emails()
                 if not admin_emails:
-                    admin_emails = ['sreelivinglens@gmail.com']
+                    admin_emails = [ADMIN_NOTIFY_EMAIL]
                 send_email(
                     admin_emails,
                     f'[RAW Auto-Approved] Image #{image_id} — {img.asset_name}',
@@ -6370,7 +6398,7 @@ def _auto_decide_raw(image_id, submission_id):
                 # Notify admin
                 admin_emails = _admin_notify_emails()
                 if not admin_emails:
-                    admin_emails = ['sreelivinglens@gmail.com']
+                    admin_emails = [ADMIN_NOTIFY_EMAIL]
                 send_email(
                     admin_emails,
                     f'[RAW Auto-Disqualified] Image #{image_id} — {img.asset_name}',
@@ -6439,7 +6467,7 @@ def raw_appeal(image_id):
         # Notify admin — human review required
         admin_emails = _admin_notify_emails()
         if not admin_emails:
-            admin_emails = ['sreelivinglens@gmail.com']
+            admin_emails = [ADMIN_NOTIFY_EMAIL]
         send_email(
             admin_emails,
             f'[RAW Appeal] Human Review Required — Image #{image_id} · {img.asset_name}',
@@ -6775,7 +6803,7 @@ def cron_raw_reminders():
              f'<div style="background:#F5F0E8;border-left:3px solid #C8A84B;padding:16px 20px;margin:20px 0;font-size:16px;color:#4A4840;line-height:1.7;">'
              f'<strong style="color:#1a1a18;">You are welcome to continue competing.</strong> The same image may be entered again in future contests. If your image achieves a provisional winning position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
              f'</div>'
-             f'<p style="font-size:15px;color:#8A8478;line-height:1.7;">If you believe this notice was sent in error, please write to <a href="mailto:sreeks@gmail.com" style="color:#C8A84B;">sreeks@gmail.com</a> within 48 hours.</p>'
+             f'<p style="font-size:15px;color:#8A8478;line-height:1.7;">If you believe this notice was sent in error, please write to <a href="mailto:'+CONTACT_EMAIL+'" style="color:#C8A84B;">'+CONTACT_EMAIL+'</a> within 48 hours.</p>'
              f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Your account remains active and your DDI scores are unaffected.</p>'
              f'</div>')
         )
