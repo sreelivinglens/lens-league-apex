@@ -801,14 +801,27 @@ def index():
                            .order_by(Image.score.desc())
                            .limit(6).all())
         active_challenge = _get_active_challenge()
+        # Top challenge entry thumb for Slide 2 carousel
+        challenge_thumb = None
+        if active_challenge:
+            top_sub = (WeeklySubmission.query
+                       .filter_by(challenge_id=active_challenge.id)
+                       .join(Image, WeeklySubmission.image_id == Image.id)
+                       .filter(Image.thumb_url != None)
+                       .order_by(Image.score.desc())
+                       .first())
+            if top_sub:
+                challenge_thumb = top_sub.image.thumb_url
     except Exception:
         recent_images = []
         carousel_images = []
         active_challenge = None
+        challenge_thumb = None
     return render_template('index.html',
                            recent_images=recent_images,
                            carousel_images=carousel_images,
                            active_challenge=active_challenge,
+                           challenge_thumb=challenge_thumb,
                            now=datetime.utcnow())
 
 
