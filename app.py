@@ -3263,8 +3263,70 @@ def faq():
 def refund_policy():
     return render_template('refund_policy.html')
 
-@app.route('/contact')
+@app.route('/contact', methods=['GET', 'POST'])
 def contact():
+    if request.method == 'POST':
+        name    = request.form.get('name',    '').strip()
+        email   = request.form.get('email',   '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
+        # Basic validation
+        if not name or not email or not subject or not message:
+            flash('Please fill in all fields.', 'error')
+            return render_template('contact.html',
+                                   form_name=name, form_email=email,
+                                   form_subject=subject, form_message=message)
+
+        if len(message) > 3000:
+            flash('Message is too long (max 3000 characters).', 'error')
+            return render_template('contact.html',
+                                   form_name=name, form_email=email,
+                                   form_subject=subject, form_message=message)
+
+        # Simple rate limit — one submission per session per 60 seconds
+        import time as _time
+        last_sent = session.get('contact_last_sent', 0)
+        if _time.time() - last_sent < 60:
+            flash('Please wait a moment before sending another message.', 'warning')
+            return render_template('contact.html',
+                                   form_name=name, form_email=email,
+                                   form_subject=subject, form_message=message)
+
+        # Build and send email to admin
+        html_body = (
+            f'<h2 style="color:#B8892A;">Contact Form — {PLATFORM_NAME}</h2>'
+            f'<table style="border-collapse:collapse; font-family:Arial,sans-serif; font-size:15px;">'
+            f'<tr><td style="padding:8px 16px 8px 0; color:#8A8478; font-weight:600;">FROM</td>'
+            f'<td style="padding:8px 0;">{name} &lt;{email}&gt;</td></tr>'
+            f'<tr><td style="padding:8px 16px 8px 0; color:#8A8478; font-weight:600;">SUBJECT</td>'
+            f'<td style="padding:8px 0;">{subject}</td></tr>'
+            f'</table>'
+            f'<hr style="border:none; border-top:1px solid #E0D8C8; margin:20px 0;">'
+            f'<p style="font-family:Arial,sans-serif; font-size:15px; line-height:1.7; color:#1a1a18;">'
+            f'{message.replace(chr(10), "<br>")}</p>'
+            f'<hr style="border:none; border-top:1px solid #E0D8C8; margin:20px 0;">'
+            f'<p style="font-size:13px; color:#8A8478;">Reply directly to {email}</p>'
+        )
+        text_body = f'From: {name} <{email}>\nSubject: {subject}\n\n{message}'
+
+        admin_to = ADMIN_NOTIFY_EMAIL
+        mail_subject = f'[{PLATFORM_NAME}] Contact: {subject}'
+
+        ok = send_email(admin_to, mail_subject, html_body, text_body)
+
+        if ok:
+            session['contact_last_sent'] = _time.time()
+            flash('Your message has been sent. We respond within 2 working days.', 'success')
+            return render_template('contact.html')
+        else:
+            app.logger.error(f'[contact] Failed to send contact email from {email}')
+            flash('Message could not be sent right now. Please email us directly at '
+                  + CONTACT_EMAIL + '.', 'error')
+            return render_template('contact.html',
+                                   form_name=name, form_email=email,
+                                   form_subject=subject, form_message=message)
+
     return render_template('contact.html')
 
 @app.route('/contest-rules')
