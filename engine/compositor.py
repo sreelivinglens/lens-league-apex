@@ -96,7 +96,7 @@ def draw_header(canvas, draw, left, right):
         lh = HEADER_H - 12
         lw = int(logo.size[0] * lh / logo.size[1])
         logo = logo.resize((lw, lh), _PL.LANCZOS)
-        canvas.paste(logo, (PAD, 6), logo)
+        canvas.paste(logo, (PAD, 6), logo.split()[3])
         logo_placed = True
     except Exception:
         pass
@@ -117,7 +117,7 @@ def draw_footer(canvas, draw, stamp):
         lh = FOOTER_H - 16
         lw = int(logo.size[0] * lh / logo.size[1])
         logo = logo.resize((lw, lh), _PL.LANCZOS)
-        canvas.paste(logo, (PAD, CH - FOOTER_H + 8), logo)
+        canvas.paste(logo, (PAD, CH - FOOTER_H + 8), logo.split()[3])
         draw.text((PAD + lw + 16, CH-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
                   font=fnt(24,mono=True), fill=T3)
@@ -161,17 +161,16 @@ def build_card1(photo_path, data, out_path):
     score = str(data.get('score','—'))
     tier  = data.get('tier','').upper()
     draw.text((RX,RY), score, font=fnt(260,bold=True), fill=GOLD)
-    # Logo — right panel, top right, vertically centred with score number
+    # Logo — right panel, top right, aligned with score top
     try:
-        from PIL import Image as _PL2
-        lg = _PL2.open(LOGO_PATH).convert('RGBA')
-        lg_h = 220
+        lg = PilImage.open(LOGO_PATH).convert('RGBA')
+        lg_h = 240
         lg_w = int(lg.size[0] * lg_h / lg.size[1])
-        lg = lg.resize((lg_w, lg_h), _PL2.LANCZOS)
-        score_block_h = 280
+        lg = lg.resize((lg_w, lg_h), PilImage.LANCZOS)
         lg_x = CW - PAD - lg_w
-        lg_y = HEADER_H + PAD + (score_block_h - lg_h) // 2
-        canvas.paste(lg, (lg_x, lg_y), lg)
+        lg_y = HEADER_H + PAD + 54  # 54px = font internal leading, aligns logo top with "9" top
+        # paste with alpha mask
+        canvas.paste(lg, (lg_x, lg_y), lg.split()[3])
     except Exception:
         pass
     RY += lh(fnt(260,bold=True)) + 10
@@ -320,13 +319,23 @@ def build_card2(data, out_path):
 
     draw.rectangle([RX-24, byline_top, RX-16, RY+20], fill=GOLD_D)
 
-    # Footer with URL — redrawn at actual dynamic canvas bottom
+    # Footer with logo — redrawn at actual dynamic canvas bottom
     actual_h = DYN_H
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h], fill=S1)
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1], fill=BORDER)
-    draw.text((PAD, actual_h-FOOTER_H+24),
-              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
-              font=fnt(28,mono=True), fill=T3)
+    try:
+        _lgo = PilImage.open(LOGO_PATH).convert('RGBA')
+        _lh = FOOTER_H - 16
+        _lw = int(_lgo.size[0] * _lh / _lgo.size[1])
+        _lgo = _lgo.resize((_lw, _lh), PilImage.LANCZOS)
+        canvas.paste(_lgo, (PAD, actual_h - FOOTER_H + 8), _lgo.split()[3])
+        draw.text((PAD + _lw + 16, actual_h-FOOTER_H+26),
+                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
+                  font=fnt(24,mono=True), fill=T3)
+    except Exception:
+        draw.text((PAD, actual_h-FOOTER_H+26),
+                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
+                  font=fnt(28,mono=True), fill=T3)
     stamp = f"SL · {data.get('score','')} · {data.get('tier','').upper()}"
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
     draw.text((CW-PAD-sw, actual_h-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
