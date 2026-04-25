@@ -169,15 +169,15 @@ body:has(.sl-hp) footer { display: none !important; }
 
 /* ══ SLIDE 4 — POTY ══ */
 .s4-left { flex: 1; background: #e8dfc8; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-right: 2px solid #C8A84B; overflow: hidden; }
-.s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
+.s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 20px 28px; overflow: hidden; }
 .s4-badge-wrap { position: absolute; inset: 0; z-index: 2; }
 .s4-badge { width: 100%; height: 100%; object-fit: cover; object-position: center; animation: badgePulse 4s ease-in-out infinite; position: absolute; inset: 0; }
 @keyframes badgePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
 .s4-label { font-size: 13px; letter-spacing: 3px; color: #C8A84B; margin-bottom: 12px; }
 .s4-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; color: #fff; line-height: 1.2; margin-bottom: 6px; }
-.s4-sub { font-size: 15px; color: #6a8aaa; letter-spacing: 1px; margin-bottom: 24px; font-style: italic; font-family: Georgia, serif; }
-.s4-divider { height: 1px; background: rgba(200,168,75,0.25); margin-bottom: 24px; }
-.s4-prize-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.s4-sub { font-size: 15px; color: #6a8aaa; letter-spacing: 1px; margin-bottom: 12px; font-style: italic; font-family: Georgia, serif; }
+.s4-divider { height: 1px; background: rgba(200,168,75,0.25); margin-bottom: 14px; }
+.s4-prize-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
 .s4-medal { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
 .s4-prize-info { flex: 1; }
 .s4-prize-place { font-size: 11px; letter-spacing: 3px; color: #4a6a8a; margin-bottom: 3px; }
@@ -186,10 +186,10 @@ body:has(.sl-hp) footer { display: none !important; }
 .s4-cta {
   position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
   font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
-  padding: 18px 14px; border: none; cursor: pointer;
+  padding: 16px 14px; border: none; cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
   width: 100%; display: flex; align-items: center; justify-content: center;
-  line-height: 1; margin-top: 24px; text-decoration: none;
+  line-height: 1; margin-top: 14px; text-decoration: none;
 }
 .s4-cta::before {
   content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
@@ -226,6 +226,32 @@ body:has(.sl-hp) footer { display: none !important; }
   animation: shimmer 3s infinite;
 }
 
+
+/* ── Footer nav strip ── */
+.sl-footer-nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px 20px;
+  border-left: 1px solid #1a1a18;
+  gap: 8px;
+  min-width: 140px;
+}
+.sl-footer-nav.cream { border-left-color: #D4C9A8; }
+.sl-footer-nav a {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #3a3a38;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.sl-footer-nav a:hover { color: #C8A84B; }
+.sl-footer-nav.cream a { color: #8a7a5a; }
+.sl-footer-nav.cream a:hover { color: #B8943B; }
+
 /* ── DOTS ── */
 .sl-dots { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
 .sl-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(200,168,75,0.3); border: 1px solid rgba(200,168,75,0.5); cursor: pointer; transition: all 0.3s; }
@@ -233,7 +259,7 @@ body:has(.sl-hp) footer { display: none !important; }
 
 /* ── BOTTOM STRIP ── */
 .sl-bottom-frame {
-  max-width: 100%; display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 100%; display: grid; grid-template-columns: 1fr 1fr auto;
   height: 110px; border-top: 1px solid #1a1a18;
   background: #090907; flex-shrink: 0; transition: background 0.6s;
 }
@@ -301,6 +327,7 @@ body:has(.sl-hp) footer { display: none !important; }
   .s1-photo, .s2-left, .s3-left, .s4-left, .s5-left { flex: none; width: 100%; height: 56vw; min-height: 220px; max-height: 380px; }
   .s1-panel, .s2-right, .s3-right, .s4-right, .s5-right { width: 100%; flex: none; border-left: none; border-top: 2px solid #C8A84B; }
   .sl-bottom-frame { grid-template-columns: 1fr; height: auto; }
+  .sl-footer-nav { border-left: none; border-top: 1px solid #1a1a18; flex-direction: row; flex-wrap: wrap; gap: 12px; min-width: auto; }
   .sl-strip { border-right: none; border-bottom: 1px solid #1a1a18; }
   .sl-strip:last-child { border-bottom: none; }
   .sl-cta-strip { gap: 8px; }
@@ -577,6 +604,12 @@ body:has(.sl-hp) footer { display: none !important; }
         <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
         <div class="sl-hl2" id="slHl2">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
       </div>
+      <div class="sl-footer-nav" id="slFooterNav">
+        <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+        <a href="{{ url_for('terms') }}">Terms</a>
+        <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+      </div>
     </div>
 
   </div>
@@ -601,18 +634,21 @@ function goTo(n) {
   cur = (n + total) % total;
   slides.forEach(function(s,i){ s.classList.toggle('active', i===cur); });
   dots.forEach(function(d,i){ d.classList.toggle('on', i===cur); });
+  var footerNav = document.getElementById('slFooterNav');
   if(cur===1){
     bottomFrame.classList.add('cream'); stripLeft.classList.add('cream'); stripRight.classList.add('cream');
     hlEl.className='sl-hl cream-hl'; hl2El.className='sl-hl2 cream';
+    if(footerNav) footerNav.classList.add('cream');
   } else {
     bottomFrame.classList.remove('cream'); stripLeft.classList.remove('cream'); stripRight.classList.remove('cream');
     hlEl.className='sl-hl'; hl2El.className='sl-hl2';
+    if(footerNav) footerNav.classList.remove('cream');
   }
 }
 
 function startAuto() {
   clearInterval(autoTimer);
-  autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 6000);
+  autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 9000);
 }
 
 document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); startAuto(); });
