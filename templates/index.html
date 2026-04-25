@@ -328,6 +328,7 @@ body:has(.sl-hp) footer { display: none !important; }
   .s1-panel, .s2-right, .s3-right, .s4-right, .s5-right { width: 100%; flex: none; border-left: none; border-top: 2px solid #C8A84B; }
   .sl-bottom-frame { grid-template-columns: 1fr; height: auto; }
   .sl-footer-nav { border-left: none; border-top: 1px solid #1a1a18; flex-direction: row; flex-wrap: wrap; gap: 12px; min-width: auto; }
+  .sl-arrow { display: none; }
   .sl-strip { border-right: none; border-bottom: 1px solid #1a1a18; }
   .sl-strip:last-child { border-bottom: none; }
   .sl-cta-strip { gap: 8px; }
@@ -658,9 +659,48 @@ function startAuto() {
   autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 9000);
 }
 
-document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); startAuto(); });
-document.getElementById('slNext').addEventListener('click', function(){ goTo(cur+1); startAuto(); });
-dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.dataset.i)); startAuto(); }); });
+document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); /* Touch swipe support */
+var touchStartX = 0;
+document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
+  touchStartX = e.touches[0].clientX;
+}, {passive: true});
+document.getElementById('slFrameInner').addEventListener('touchend', function(e){
+  var diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 50){
+    if(diff > 0) goTo(cur+1); else goTo(cur-1);
+    startAuto();
+  }
+}, {passive: true});
+
+startAuto(); });
+document.getElementById('slNext').addEventListener('click', function(){ goTo(cur+1); /* Touch swipe support */
+var touchStartX = 0;
+document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
+  touchStartX = e.touches[0].clientX;
+}, {passive: true});
+document.getElementById('slFrameInner').addEventListener('touchend', function(e){
+  var diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 50){
+    if(diff > 0) goTo(cur+1); else goTo(cur-1);
+    startAuto();
+  }
+}, {passive: true});
+
+startAuto(); });
+dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.dataset.i)); /* Touch swipe support */
+var touchStartX = 0;
+document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
+  touchStartX = e.touches[0].clientX;
+}, {passive: true});
+document.getElementById('slFrameInner').addEventListener('touchend', function(e){
+  var diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 50){
+    if(diff > 0) goTo(cur+1); else goTo(cur-1);
+    startAuto();
+  }
+}, {passive: true});
+
+startAuto(); }); });
 document.getElementById('slFrameInner').addEventListener('click', function(){ paused=!paused; });
 
 /* Rotating headline */
@@ -773,6 +813,19 @@ if(mcCanvas){
 document.querySelectorAll(".flash.success").forEach(function(f){
   setTimeout(function(){f.classList.add("hiding");setTimeout(function(){f.remove();},300);},5000);
 });
+
+/* Touch swipe support */
+var touchStartX = 0;
+document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
+  touchStartX = e.touches[0].clientX;
+}, {passive: true});
+document.getElementById('slFrameInner').addEventListener('touchend', function(e){
+  var diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 50){
+    if(diff > 0) goTo(cur+1); else goTo(cur-1);
+    startAuto();
+  }
+}, {passive: true});
 
 startAuto();
 </script>
