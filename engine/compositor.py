@@ -58,7 +58,7 @@ PAD      = 80
 HEADER_H = 100
 FOOTER_H = 80
 
-SITE_URL = 'lenslague.com'
+SITE_URL = 'shutterleague.com'
 
 def lh(font):
     d = ImageDraw.Draw(PilImage.new('RGB',(1,1)))
@@ -96,7 +96,7 @@ def draw_footer(canvas, draw, stamp):
     draw.rectangle([0,CH-FOOTER_H,CW,CH], fill=S1)
     draw.rectangle([0,CH-FOOTER_H,CW,CH-FOOTER_H+1], fill=BORDER)
     draw.text((PAD, CH-FOOTER_H+24),
-              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX  ·  {SITE_URL}',
+              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
               font=fnt(28,mono=True), fill=T3)
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
     draw.text((CW-PAD-sw, CH-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
@@ -187,8 +187,8 @@ def build_card1(photo_path, data, out_path):
         if fw>0:
             draw.rectangle([mx+12,by,mx+12+fw,by+10],fill=GOLD if top else GOLD_D)
 
-    draw_header(canvas, draw, 'THE LENS LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
-    draw_footer(canvas, draw, f"LL · {score} · {tier}")
+    draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
+    draw_footer(canvas, draw, f"SL · {score} · {tier}")
     canvas.save(out_path,'JPEG',quality=96)
     return out_path
 
@@ -283,9 +283,9 @@ def build_card2(data, out_path):
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h], fill=S1)
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1], fill=BORDER)
     draw.text((PAD, actual_h-FOOTER_H+24),
-              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  LENS LEAGUE APEX  ·  {SITE_URL}',
+              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
               font=fnt(28,mono=True), fill=T3)
-    stamp = f"LL · {data.get('score','')} · {data.get('tier','').upper()}"
+    stamp = f"SL · {data.get('score','')} · {data.get('tier','').upper()}"
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
     draw.text((CW-PAD-sw, actual_h-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 
