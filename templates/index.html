@@ -3,12 +3,18 @@
 
 {% block extra_css %}
 <style>
-/* ── Override base.html main container ── */
+/* ── Override base.html main + footer ── */
 body:has(.sl-hp) main {
   max-width: none !important;
   padding: 0 !important;
   margin: 0 !important;
   width: 100% !important;
+  height: calc(100vh - 64px) !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+body:has(.sl-hp) footer {
+  display: none !important;
 }
 body:has(.sl-hp) {
   overflow: hidden !important;
@@ -809,9 +815,49 @@ body:has(.sl-hp) {
   var track  = document.getElementById('slTrack');
   var panels = document.getElementById('slPanels');
   var left   = document.getElementById('slLeft');
+  var right  = document.querySelector('.sl-right');
   var pb     = document.getElementById('slPaused');
   var dots   = document.querySelectorAll('.sl-dot');
   var isMobile = window.innerWidth < 769;
+
+  // Force overflow hidden on containers — belt and suspenders for all browsers
+  function initSizing(){
+    var hp = document.querySelector('.sl-hp');
+    var body = document.querySelector('.sl-body');
+    if(!hp || !body) return;
+
+    // Ensure main has no padding/margin
+    var main = document.querySelector('main');
+    if(main){
+      main.style.cssText = 'max-width:none!important;padding:0!important;margin:0!important;width:100%!important;height:calc(100vh - 64px)!important;overflow:hidden!important;display:block!important;';
+    }
+
+    // Set explicit pixel widths on track containers
+    if(!isMobile && left && right){
+      var leftW  = left.offsetWidth;
+      var rightW = right.offsetWidth;
+      if(track  && leftW)  track.style.width  = (leftW  * 5) + 'px';
+      if(panels && rightW) panels.style.width = (rightW * 5) + 'px';
+
+      // Set each slide/panel to exact pixel width
+      document.querySelectorAll('.sl-slide').forEach(function(s){
+        s.style.width = leftW + 'px';
+        s.style.minWidth = leftW + 'px';
+      });
+      document.querySelectorAll('.sl-panel').forEach(function(p){
+        p.style.width = rightW + 'px';
+        p.style.minWidth = rightW + 'px';
+      });
+    }
+  }
+
+  // Run on load and resize
+  initSizing();
+  window.addEventListener('resize', function(){
+    isMobile = window.innerWidth < 769;
+    initSizing();
+    goTo(cur);
+  });
 
   // Headlines for Slide 1
   var hls = [
