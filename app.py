@@ -786,18 +786,28 @@ def auto_title(filename, genre=None, archetype=None, location=None, subject=None
 @app.route('/')
 def index():
     try:
-        # Recent 4 public scored images for proof-of-activity strip
+        # Recent public scored images for bottom strips
         recent_images = (Image.query
                          .filter(Image.status=='scored', Image.score!=None,
                                  Image.is_public==True, Image.is_flagged==False)
                          .order_by(Image.scored_at.desc())
-                         .limit(4).all())
+                         .limit(6).all())
+        # Hero carousel — Grandmaster/Master only, score >= 8.0
+        carousel_images = (Image.query
+                           .filter(Image.status=='scored', Image.score!=None,
+                                   Image.is_public==True, Image.is_flagged==False,
+                                   Image.tier.in_(['Grandmaster','Master']),
+                                   Image.score>=8.0)
+                           .order_by(Image.score.desc())
+                           .limit(6).all())
         active_challenge = _get_active_challenge()
     except Exception:
         recent_images = []
+        carousel_images = []
         active_challenge = None
     return render_template('index.html',
                            recent_images=recent_images,
+                           carousel_images=carousel_images,
                            active_challenge=active_challenge,
                            now=datetime.utcnow())
 
