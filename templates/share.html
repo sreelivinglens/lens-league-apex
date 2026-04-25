@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>{{ image.asset_name }} · {{ image.tier }} · Lens League Apex</title>
+<title>{{ image.asset_name }} · {{ image.tier }} · Shutter League</title>
 
 <!-- Open Graph -->
-<meta property="og:title"       content="{{ image.asset_name }} · {{ image.tier }} · Lens League Apex">
+<meta property="og:title"       content="{{ image.asset_name }} · {{ image.tier }} · Shutter League">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
 <meta property="og:image"       content="{{ image.thumb_url or (request.host_url ~ 'image/' ~ image.id ~ '/thumb') }}">
 <meta property="og:url"         content="{{ request.url }}">
@@ -220,7 +220,7 @@
 <body>
 
 <div class="top-bar">
-  <a href="{{ url_for('index') }}" class="brand">LENS LEAGUE APEX</a>
+  <a href="{{ url_for('index') }}" class="brand">SHUTTER LEAGUE</a>
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="top-btn">My Dashboard</a>
   {% else %}
@@ -232,7 +232,7 @@
 
   <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
     <div>
-      <span class="brand-dark">THE LENS LEAGUE</span>
+      <span class="brand-dark">SHUTTER LEAGUE</span>
       <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
     </div>
     {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
@@ -427,13 +427,13 @@
 </div>
 
 <div class="copy-feedback" id="copyFeedback">✓ Share link copied to clipboard!</div>
-<div class="powered">POWERED BY APEX DDI ENGINE · LENS LEAGUE</div>
+<div class="powered">POWERED BY APEX DDI ENGINE · SHUTTER LEAGUE</div>
 
 <script>
 function shareThis() {
   const url   = window.location.href;
-  const title = "{{ image.asset_name }} — {{ image.tier }} · Lens League Apex";
-  const text  = "Rated by the Apex DDI Engine on Lens League Apex";
+  const title = "{{ image.asset_name }} — {{ image.tier }} · Shutter League";
+  const text  = "Rated by the Apex DDI Engine on Shutter League";
   if (navigator.share) {
     navigator.share({ title, text, url }).catch(() => copyFallback(url));
   } else { copyFallback(url); }
