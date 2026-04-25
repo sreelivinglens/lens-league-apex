@@ -72,6 +72,8 @@
     display: flex; justify-content: space-between; align-items: center;
   }
   .card-header .brand-dark { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--black); letter-spacing: 2px; }
+  .sl-logo { height: 48px; width: auto; display: inline-block; vertical-align: middle; }
+  .top-bar-logo { height: 26px; width: auto; vertical-align: middle; margin-right: 8px; }
   .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.5); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
@@ -220,7 +222,7 @@
 <body>
 
 <div class="top-bar">
-  <a href="{{ url_for('index') }}" class="brand">SHUTTER LEAGUE</a>
+  <a href="{{ url_for('index') }}" class="brand" style="display:flex;align-items:center;gap:8px;"><img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" class="top-bar-logo" alt="Shutter League"><span>SHUTTER LEAGUE</span></a>
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="top-btn">My Dashboard</a>
   {% else %}
@@ -231,9 +233,9 @@
 <div class="card">
 
   <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-    <div>
-      <span class="brand-dark">SHUTTER LEAGUE</span>
-      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" class="sl-logo" alt="Shutter League">
+      <span class="engine-tag">APEX DDI ENGINE · FULL EVALUATION</span>
     </div>
     {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
       {% if already_reported %}
