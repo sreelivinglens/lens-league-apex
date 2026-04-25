@@ -60,6 +60,23 @@ FOOTER_H = 80
 
 SITE_URL   = 'shutterleague.com'
 LOGO_PATH  = os.path.join(FONT_DIR, 'shutterleague-logo-cropped.png')
+# Fallback paths in case FONT_DIR resolution differs on Railway
+_LOGO_FALLBACKS = [
+    LOGO_PATH,
+    os.path.join(os.path.dirname(FONT_DIR), 'engine', 'shutterleague-logo-cropped.png'),
+    os.path.join(os.path.dirname(FONT_DIR), 'static', 'img', 'shutterleague-logo-cropped.png'),
+    '/app/engine/shutterleague-logo-cropped.png',
+]
+
+def _load_logo(h):
+    for p in _LOGO_FALLBACKS:
+        if p and os.path.exists(p):
+            try:
+                lg = PilImage.open(p).convert('RGBA')
+                w = int(lg.size[0] * h / lg.size[1])
+                return lg.resize((w, h), PilImage.LANCZOS), w
+            except: continue
+    return None, 0
 
 def lh(font):
     d = ImageDraw.Draw(PilImage.new('RGB',(1,1)))
@@ -89,18 +106,10 @@ def draw_text(draw, text, font, color, x, y, max_w, sp=12):
 def draw_header(canvas, draw, left, right):
     draw.rectangle([0,0,CW,HEADER_H], fill=GOLD)
     # Try to paste logo on left of gold bar
-    logo_placed = False
-    try:
-        from PIL import Image as _PL
-        logo = _PL.open(LOGO_PATH).convert('RGBA')
-        lh = HEADER_H - 12
-        lw = int(logo.size[0] * lh / logo.size[1])
-        logo = logo.resize((lw, lh), _PL.LANCZOS)
+    logo, lw = _load_logo(HEADER_H - 12)
+    if logo:
         canvas.paste(logo, (PAD, 6), logo.split()[3])
-        logo_placed = True
-    except Exception:
-        pass
-    if not logo_placed:
+    else:
         draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=BLACK)
     rw = tw(draw,right,fnt(26,mono=True))
     draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
@@ -110,21 +119,13 @@ def draw_footer(canvas, draw, stamp):
     draw.rectangle([0,CH-FOOTER_H,CW,CH], fill=S1)
     draw.rectangle([0,CH-FOOTER_H,CW,CH-FOOTER_H+1], fill=BORDER)
     # Try to paste logo
-    logo_ok = False
-    try:
-        from PIL import Image as _PL
-        logo = _PL.open(LOGO_PATH).convert('RGBA')
-        lh = FOOTER_H - 16
-        lw = int(logo.size[0] * lh / logo.size[1])
-        logo = logo.resize((lw, lh), _PL.LANCZOS)
-        canvas.paste(logo, (PAD, CH - FOOTER_H + 8), logo.split()[3])
-        draw.text((PAD + lw + 16, CH-FOOTER_H+26),
+    ftr_logo, flw = _load_logo(FOOTER_H - 16)
+    if ftr_logo:
+        canvas.paste(ftr_logo, (PAD, CH - FOOTER_H + 8), ftr_logo.split()[3])
+        draw.text((PAD + flw + 16, CH-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
                   font=fnt(24,mono=True), fill=T3)
-        logo_ok = True
-    except Exception:
-        pass
-    if not logo_ok:
+    else:
         draw.text((PAD, CH-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
                   font=fnt(28,mono=True), fill=T3)
@@ -162,17 +163,11 @@ def build_card1(photo_path, data, out_path):
     tier  = data.get('tier','').upper()
     draw.text((RX,RY), score, font=fnt(260,bold=True), fill=GOLD)
     # Logo — right panel, top right, aligned with score top
-    try:
-        lg = PilImage.open(LOGO_PATH).convert('RGBA')
-        lg_h = 240
-        lg_w = int(lg.size[0] * lg_h / lg.size[1])
-        lg = lg.resize((lg_w, lg_h), PilImage.LANCZOS)
-        lg_x = CW - PAD - lg_w
-        lg_y = HEADER_H + PAD + 54  # 54px = font internal leading, aligns logo top with "9" top
-        # paste with alpha mask
-        canvas.paste(lg, (lg_x, lg_y), lg.split()[3])
-    except Exception:
-        pass
+    rp_logo, rp_lw = _load_logo(240)
+    if rp_logo:
+        lg_x = CW - PAD - rp_lw
+        lg_y = HEADER_H + PAD + 54
+        canvas.paste(rp_logo, (lg_x, lg_y), rp_logo.split()[3])
     RY += lh(fnt(260,bold=True)) + 10
     draw.text((RX,RY), tier, font=fnt(72,bold=True,mono=True), fill=GOLD)
     RY += lh(fnt(72,bold=True,mono=True)) + 16
@@ -323,16 +318,13 @@ def build_card2(data, out_path):
     actual_h = DYN_H
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h], fill=S1)
     draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1], fill=BORDER)
-    try:
-        _lgo = PilImage.open(LOGO_PATH).convert('RGBA')
-        _lh = FOOTER_H - 16
-        _lw = int(_lgo.size[0] * _lh / _lgo.size[1])
-        _lgo = _lgo.resize((_lw, _lh), PilImage.LANCZOS)
-        canvas.paste(_lgo, (PAD, actual_h - FOOTER_H + 8), _lgo.split()[3])
-        draw.text((PAD + _lw + 16, actual_h-FOOTER_H+26),
+    c2_logo, c2_lw = _load_logo(FOOTER_H - 16)
+    if c2_logo:
+        canvas.paste(c2_logo, (PAD, actual_h - FOOTER_H + 8), c2_logo.split()[3])
+        draw.text((PAD + c2_lw + 16, actual_h-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
                   font=fnt(24,mono=True), fill=T3)
-    except Exception:
+    else:
         draw.text((PAD, actual_h-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
                   font=fnt(28,mono=True), fill=T3)
