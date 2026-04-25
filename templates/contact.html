@@ -8,6 +8,9 @@
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 32px 36px; margin-bottom: 24px;
   }
+  @media (max-width: 600px) {
+    .contact-card { padding: 20px 18px; }
+  }
   .contact-label {
     font-family: var(--font-mono); font-size: 12px; font-weight: 600;
     letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px;
@@ -18,27 +21,58 @@
   .contact-body {
     font-size: 16px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;
   }
-  .contact-email {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-    color: var(--gold); text-decoration: none; padding: 12px 20px;
-    border: 1px solid var(--gold-dark); border-radius: var(--radius-sm);
-    transition: background 0.2s;
+  .contact-email-display {
+    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    color: var(--gold); margin-bottom: 20px; letter-spacing: 0.5px;
   }
-  .contact-email:hover { background: var(--gold-subtle); }
   .contact-response {
     font-size: 14px; color: var(--text-muted); margin-top: 12px;
   }
   .contact-divider {
     border: none; border-top: 1px solid var(--border); margin: 32px 0;
   }
+
+  /* Form */
+  .contact-form { display: flex; flex-direction: column; gap: 18px; }
+  .contact-form .form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 520px) {
+    .contact-form .form-row { grid-template-columns: 1fr; }
+  }
+  .contact-form label {
+    display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    width: 100%; background: #FFFFFF; border: 1px solid var(--border);
+    color: var(--text-primary); padding: 11px 14px; font-family: var(--font-body);
+    font-size: 16px; border-radius: var(--radius-sm); outline: none;
+    transition: border-color 0.2s;
+  }
+  .contact-form input:focus,
+  .contact-form select:focus,
+  .contact-form textarea:focus { border-color: var(--gold); }
+  .contact-form textarea { min-height: 130px; resize: vertical; line-height: 1.6; }
+  .contact-form .char-count {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    text-align: right; margin-top: 4px;
+  }
+  .contact-form .char-count.warn { color: var(--amber); }
+  .contact-form .submit-row {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .contact-form .submit-note {
+    font-size: 14px; color: var(--text-muted);
+  }
+
+  /* FAQ */
   .faq-item { margin-bottom: 24px; }
-  .faq-q {
-    font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;
-  }
-  .faq-a {
-    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
-  }
+  .faq-q { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .faq-a { font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
   .faq-a a { color: var(--gold); }
 </style>
 {% endblock %}
@@ -48,81 +82,101 @@
 
   <div class="page-header">
     <h1>Contact Us</h1>
-    <p>{{ platform_name }} &nbsp;·&nbsp; We're a small team. We read every email.</p>
+    <p>{{ platform_name }} &nbsp;·&nbsp; We are a small team. We read every message.</p>
   </div>
 
-  <!-- Primary contact -->
+  {# ── Contact form ──────────────────────────────────────────────────────── #}
   <div class="contact-card">
-    <div class="contact-label">General enquiries &amp; support</div>
+    <div class="contact-label">Send us a message</div>
     <div class="contact-title">Get in touch</div>
     <div class="contact-body">
       Billing questions, subscription issues, technical problems, competition queries,
-      or anything else — write to us directly.
+      or anything else — fill in the form and we will get back to you.
     </div>
-    <!-- Email address — always visible and copyable -->
-    <div style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); margin-bottom:16px; letter-spacing:0.5px;">
-      {{ contact_email }}
+
+    <form class="contact-form" method="POST" action="{{ url_for('contact') }}">
+
+      <div class="form-row">
+        <div>
+          <label for="cf-name">Your name</label>
+          <input type="text" id="cf-name" name="name" required maxlength="120"
+                 placeholder="Full name"
+                 value="{{ form_name or (current_user.full_name if current_user.is_authenticated else '') }}">
+        </div>
+        <div>
+          <label for="cf-email">Your email</label>
+          <input type="email" id="cf-email" name="email" required maxlength="200"
+                 placeholder="you@example.com"
+                 value="{{ form_email or (current_user.email if current_user.is_authenticated else '') }}">
+        </div>
+      </div>
+
+      <div>
+        <label for="cf-subject">Subject</label>
+        <select id="cf-subject" name="subject" required>
+          <option value="" disabled {% if not form_subject %}selected{% endif %}>Select a topic…</option>
+          <option value="Billing or refund request"       {% if form_subject == 'Billing or refund request' %}selected{% endif %}>Billing or refund request</option>
+          <option value="Subscription issue"              {% if form_subject == 'Subscription issue' %}selected{% endif %}>Subscription issue</option>
+          <option value="Technical issue or bug"          {% if form_subject == 'Technical issue or bug' %}selected{% endif %}>Technical issue or bug</option>
+          <option value="Image integrity appeal"          {% if form_subject == 'Image integrity appeal' %}selected{% endif %}>Image integrity appeal</option>
+          <option value="Account deletion request"        {% if form_subject == 'Account deletion request' %}selected{% endif %}>Account deletion request</option>
+          <option value="Brand sponsorship enquiry"       {% if form_subject == 'Brand sponsorship enquiry' %}selected{% endif %}>Brand sponsorship enquiry</option>
+          <option value="Other"                           {% if form_subject == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="cf-message">Message</label>
+        <textarea id="cf-message" name="message" required maxlength="3000"
+                  placeholder="Describe your question or issue in as much detail as you can…">{{ form_message or '' }}</textarea>
+        <div class="char-count" id="charCount">0 / 3000</div>
+      </div>
+
+      <div class="submit-row">
+        <span class="submit-note">We respond within 2 working days.</span>
+        <button type="submit" class="btn btn-solid">Send Message →</button>
+      </div>
+
+    </form>
+
+    <hr class="contact-divider" style="margin:28px 0 20px;">
+    <div style="font-size:14px; color:var(--text-muted); line-height:1.7;">
+      Prefer email directly?
+      <span class="contact-email-display" style="font-size:14px;">{{ contact_email }}</span>
     </div>
-    <!-- Two CTA buttons — covers webmail and native mail client -->
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-      <a href="https://mail.google.com/mail/?view=cm&to={{ contact_email }}"
-         target="_blank" rel="noopener"
-         class="contact-email" style="background:var(--gold); color:#1a1a18; border-color:var(--gold);">
-        Open in Gmail →
-      </a>
-      <a href="mailto:{{ contact_email }}" class="contact-email">
-        Open Mail App →
-      </a>
-    </div>
-    <div class="contact-response">We respond within 2 working days.</div>
   </div>
 
-  <!-- Specific contact reasons -->
+  {# ── What to include ───────────────────────────────────────────────────── #}
   <div class="contact-card">
-    <div class="contact-label">What to include in your email</div>
+    <div class="contact-label">What to include</div>
     <div style="display:flex; flex-direction:column; gap:16px;">
 
       <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
-          Billing or refund request
-        </div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Billing or refund request</div>
         <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
-          Subject: <strong>Refund Request — [your email] — [plan name]</strong><br>
           Include your registered email address and the date of charge.
           See our <a href="/refund-policy" style="color:var(--gold);">Refund Policy</a> for full details.
         </div>
       </div>
 
       <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
-          Image integrity appeal
-        </div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Image integrity appeal</div>
         <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
-          Subject: <strong>Appeal — [your username] — [image ID]</strong><br>
-          If you believe a flag or strike was applied in error, include your RAW file
-          or original image. We review within 14 days.
+          Include your username and image ID. If you have your original RAW file or camera roll metadata, attach it. We review within 14 days.
         </div>
       </div>
 
       <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
-          Technical issue or bug
-        </div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Technical issue or bug</div>
         <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
-          Subject: <strong>Bug — [brief description]</strong><br>
-          Include your browser, device, and a screenshot if possible.
-          We take platform issues seriously and respond fast.
+          Include your browser, device, and a screenshot if possible. We take platform issues seriously and respond fast.
         </div>
       </div>
 
       <div style="border-left:3px solid var(--gold-dark); padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">
-          Brand sponsorship enquiry
-        </div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Brand sponsorship enquiry</div>
         <div style="font-size:15px; color:var(--text-secondary); line-height:1.6;">
-          Subject: <strong>Sponsorship — [brand name]</strong><br>
-          Tell us about your brand and the kind of challenge or competition
-          you'd like to sponsor. We'll respond with our media pack.
+          Tell us about your brand and the kind of challenge or competition you would like to sponsor. We will respond with our media pack.
         </div>
       </div>
 
@@ -131,7 +185,7 @@
 
   <hr class="contact-divider">
 
-  <!-- Quick FAQs -->
+  {# ── Quick FAQs ────────────────────────────────────────────────────────── #}
   <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">
     Common questions
   </div>
@@ -146,30 +200,45 @@
   </div>
 
   <div class="faq-item">
-    <div class="faq-q">I was charged but my subscription isn't active.</div>
+    <div class="faq-q">I was charged but my subscription is not active.</div>
     <div class="faq-a">
-      Email us at <span style="color:var(--gold);">{{ contact_email }}</span> with your registered
-      email and payment reference. We'll resolve it within 2 working days.
+      Use the form above — select "Billing or refund request" and include your registered
+      email and payment reference. We will resolve it within 2 working days.
     </div>
   </div>
 
   <div class="faq-item">
-    <div class="faq-q">My image was flagged as AI-generated but it isn't.</div>
+    <div class="faq-q">My image was flagged as AI-generated but it is not.</div>
     <div class="faq-a">
-      Email us your original RAW file or camera roll metadata within 7 days of the flag.
-      Subject: <strong>Appeal — [username] — [image ID]</strong>. We review all appeals.
+      Use the form above — select "Image integrity appeal" and include your username and image ID.
+      Attach your original RAW file or camera roll metadata if you have it. We review all appeals.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">How do I delete my account?</div>
     <div class="faq-a">
-      Email us at <span style="color:var(--gold);">{{ contact_email }}</span> with subject
-      <strong>Delete Account — [your email]</strong>. We'll confirm deletion within
+      Use the form above — select "Account deletion request". We will confirm deletion within
       5 working days. Note that submitted competition images may be retained
       for integrity record-keeping per our <a href="/terms">Terms &amp; Conditions</a>.
     </div>
   </div>
 
 </div>
+
+<script>
+(function() {
+  var ta  = document.getElementById('cf-message');
+  var cnt = document.getElementById('charCount');
+  if (!ta || !cnt) return;
+
+  function update() {
+    var len = ta.value.length;
+    cnt.textContent = len + ' / 3000';
+    cnt.classList.toggle('warn', len > 2700);
+  }
+  ta.addEventListener('input', update);
+  update();
+})();
+</script>
 {% endblock %}
