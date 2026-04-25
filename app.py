@@ -246,6 +246,35 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
+
+@app.before_request
+def block_railway_url():
+    """Block Railway UAT URL — show dead-end page."""
+    host = request.host.lower()
+    if 'railway.app' in host:
+        return '''<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAT Closed</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0D0D0B;color:#F0EFE8;font-family:"Courier New",monospace;
+       display:flex;align-items:center;justify-content:center;height:100vh;}
+  .box{text-align:center;padding:40px;}
+  .title{font-size:18px;letter-spacing:4px;color:#C8A84B;margin-bottom:20px;}
+  .msg{font-size:14px;color:#4a4a48;letter-spacing:1px;line-height:1.8;}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="title">UAT PERIOD CLOSED</div>
+    <div class="msg">This testing environment is no longer available.<br>Thank you for your participation.</div>
+  </div>
+</body>
+</html>''', 410
+
 @login_manager.unauthorized_handler
 def unauthorized():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
