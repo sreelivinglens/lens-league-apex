@@ -199,17 +199,14 @@ body:has(.sl-hp) footer { display: none !important; }
 }
 
 /* Rotating headline */
-.sl-hl-block {
-  padding: 12px 26px 12px;
-  flex-shrink: 0;
-  border-top: 1px solid #1e1e1c;
-}
+
 .sl-hl {
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 18px;
+  line-height: 1.5;
   font-family: Georgia, serif;
   color: #9a9890;
   font-style: italic;
+  padding: 0 4px;
 }
 .sl-hl em { color: #C8A84B; font-style: italic; }
 
@@ -450,10 +447,7 @@ body:has(.sl-hp) footer { display: none !important; }
             <div class="sl-protected">DDI SCORES PROTECTED &nbsp;&#183;&nbsp; KNOW MORE &#8594;</div>
           </div>
 
-          <!-- Rotating headline -->
-          <div class="sl-hl-block">
-            <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
-          </div>
+
 
 
 
@@ -474,22 +468,9 @@ body:has(.sl-hp) footer { display: none !important; }
         </div>
       </div>
 
-      <!-- Right: gallery -->
-      <div class="sl-strip">
-        <div class="sl-strip-lbl">Shutter League Gallery</div>
-        <div class="sl-strip-imgs">
-          {% if recent_images %}
-            {% for img in recent_images %}
-              <div class="sl-strip-img">
-                {% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="">{% else %}<div class="sl-strip-img-ph">IMG</div>{% endif %}
-              </div>
-            {% endfor %}
-          {% else %}
-            {% for g in ["WILD","LAND","STRT","PORT","MACR","AERL"] %}
-              <div class="sl-strip-img"><div class="sl-strip-img-ph">{{ g }}</div></div>
-            {% endfor %}
-          {% endif %}
-        </div>
+      <!-- Right: rotating headline -->
+      <div class="sl-strip" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
       </div>
 
     </div>
