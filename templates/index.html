@@ -201,7 +201,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s5-left { flex: 1; background: #0d1f1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; position: relative; }
 .s5-right { width: 420px; flex-shrink: 0; background: #EBF4F0; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 28px; overflow: hidden; }
 .s5-chart-label { font-size: 15px; letter-spacing: 2px; color: #4a9a7a; margin-bottom: 12px; text-align: center; }
-.s5-legend { display: flex; gap: 24px; margin-top: 12px; justify-content: center; }
+.s5-legend { display: flex; gap: 24px; margin-top: 8px; justify-content: center; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 4px; }
 .s5-leg-item { display: flex; align-items: center; gap: 8px; font-size: 15px; letter-spacing: 1px; }
 .s5-leg-dot { width: 28px; height: 3px; border-radius: 2px; }
 .s5-label { font-size: 12px; letter-spacing: 3px; color: #2a6a4a; margin-bottom: 8px; }
@@ -332,13 +332,16 @@ body:has(.sl-hp) footer { display: none !important; }
   .sl-dots { position: relative; bottom: auto; left: auto; transform: none; justify-content: center; padding: 10px 0; background: rgba(0,0,0,0.4); z-index: 10; }
   .sl-strip { border-right: none; border-bottom: 1px solid #1a1a18; }
   .sl-strip:last-child { border-bottom: none; }
-  .sl-cta-strip { gap: 8px; }
-  .sl-strip-btn { font-size: 10px; padding: 10px 0; }
+  .sl-cta-strip { gap: 6px; }
+  .sl-strip-btn { font-size: 9px; letter-spacing: 1px; padding: 10px 0; }
 }
 @media (max-width: 480px) {
   .sl-gold { height: 12px; }
   .s1-score-num { font-size: 60px; }
   .s1-tier { font-size: 18px; }
+}
+@media (max-width: 768px) {
+  #slMobileLogin { display: flex !important; }
 }
 </style>
 {% endblock %}
@@ -599,6 +602,12 @@ body:has(.sl-hp) footer { display: none !important; }
 
       </div><!-- /sl-track -->
     </div><!-- /sl-frame-inner -->
+
+    <!-- Mobile login bar -->
+    <div id="slMobileLogin" style="display:none; background:#0D0D0B; border-top:1px solid #1a1a18; padding:8px 18px; justify-content:flex-end; gap:12px; align-items:center;">
+      <a href="{{ url_for('login') }}" style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-decoration:none;border:1px solid #C8A84B;padding:6px 16px;">LOGIN</a>
+      <a href="{{ url_for('register') }}" style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:2px;color:#0D0D0B;background:#C8A84B;text-decoration:none;padding:6px 16px;font-weight:700;">JOIN FREE</a>
+    </div>
 
     <!-- BOTTOM STRIP -->
     <div class="sl-bottom-frame" id="slBottomFrame">
