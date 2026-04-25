@@ -240,6 +240,8 @@ body:has(.sl-hp) footer { display: none !important; }
   height: 76px;
 }
 .sl-strip-btn {
+  position: relative;
+  overflow: hidden;
   background: #C8A84B;
   color: #0D0D0B;
   font-family: "Courier New", monospace;
@@ -254,6 +256,21 @@ body:has(.sl-hp) footer { display: none !important; }
   text-decoration: none;
   display: inline-block;
   white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+}
+.sl-strip-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+  animation: sl-shimmer 3s infinite;
+}
+.sl-strip-btn:nth-child(2)::before { animation-delay: 0.4s; }
+.sl-strip-btn:nth-child(3)::before { animation-delay: 0.8s; }
+@keyframes sl-shimmer {
+  0%   { left: -100%; }
+  40%  { left: 150%; }
+  100% { left: 150%; }
 }
 .sl-strip-btn:hover { background: #D4B85A; color: #0D0D0B; }
 
