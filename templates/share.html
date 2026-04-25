@@ -75,14 +75,16 @@
   .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.5); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
-  .photo-logo-overlay {
+  .photo-logo {
     position: absolute;
-    bottom: 12px; right: 12px;
-    height: 64px; width: 64px;
+    bottom: 12px;
+    right: 12px;
+    width: 56px;
+    height: 56px;
     object-fit: contain;
-    opacity: 0.88;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+    opacity: 0.85;
     pointer-events: none;
+    display: block;
   }
   .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover;
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
@@ -266,8 +268,7 @@
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
     <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-         class="photo-logo-overlay" alt=""
-         onerror="this.style.display='none'">
+         class="photo-logo" alt="" onerror="this.style.display='none'">
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
     {% endif %}
