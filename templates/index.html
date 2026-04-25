@@ -69,7 +69,7 @@ body:has(.sl-hp) footer { display: none !important; }
 /* ══ SLIDE 1 — Dark / Grandmaster ══ */
 .s1-photo {
   flex: 1; position: relative; overflow: hidden;
-  background: #060e06; min-width: 0;
+  background: #060e06; min-width: 0; min-height: 300px;
 }
 .s1-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .s1-photo-overlay {
@@ -329,6 +329,7 @@ body:has(.sl-hp) footer { display: none !important; }
   .sl-bottom-frame { grid-template-columns: 1fr; height: auto; }
   .sl-footer-nav { border-left: none; border-top: 1px solid #1a1a18; flex-direction: row; flex-wrap: wrap; gap: 12px; min-width: auto; }
   .sl-arrow { display: none; }
+  .sl-dots { position: relative; bottom: auto; left: auto; transform: none; justify-content: center; padding: 10px 0; background: rgba(0,0,0,0.4); z-index: 10; }
   .sl-strip { border-right: none; border-bottom: 1px solid #1a1a18; }
   .sl-strip:last-child { border-bottom: none; }
   .sl-cta-strip { gap: 8px; }
@@ -368,7 +369,7 @@ body:has(.sl-hp) footer { display: none !important; }
             {% if carousel_images %}
               {% set hero = carousel_images[0] %}
               {% if hero.thumb_url %}
-                <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or '' }}">
+                <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or '' }}" loading="eager" decoding="sync" fetchpriority="high">
                 <div class="s1-photo-overlay"></div>
               {% endif %}
             {% endif %}
