@@ -88,7 +88,20 @@ def draw_text(draw, text, font, color, x, y, max_w, sp=12):
 
 def draw_header(canvas, draw, left, right):
     draw.rectangle([0,0,CW,HEADER_H], fill=GOLD)
-    draw.text((PAD,28), left,  font=fnt(36,bold=True,mono=True), fill=BLACK)
+    # Try to paste logo on left of gold bar
+    logo_placed = False
+    try:
+        from PIL import Image as _PL
+        logo = _PL.open(LOGO_PATH).convert('RGBA')
+        lh = HEADER_H - 12
+        lw = int(logo.size[0] * lh / logo.size[1])
+        logo = logo.resize((lw, lh), _PL.LANCZOS)
+        canvas.paste(logo, (PAD, 6), logo)
+        logo_placed = True
+    except Exception:
+        pass
+    if not logo_placed:
+        draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=BLACK)
     rw = tw(draw,right,fnt(26,mono=True))
     draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
 
