@@ -369,7 +369,7 @@ body:has(.sl-hp) footer { display: none !important; }
                 {% endif %}
               </div>
               <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-                   class="s1-logo" alt="Shutter League" onerror="this.style.display='none'">
+                   class="s1-logo" alt="Shutter League" onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
             </div>
             <div class="s1-info-block">
               {% if carousel_images %}
@@ -487,9 +487,9 @@ body:has(.sl-hp) footer { display: none !important; }
           <div class="s4-left">
             <div class="s4-badge-wrap">
               <img class="s4-badge"
-                   src="{{ url_for('static', filename='img/POTY_revised.png') }}"
+                   src="{{ url_for('static', filename='img/POTY revised.png') }}"
                    alt="Photographer of the Year"
-                   onerror="this.style.display='none'">
+                   onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
             </div>
           </div>
           <div class="s4-right">
@@ -612,7 +612,7 @@ function goTo(n) {
 
 function startAuto() {
   clearInterval(autoTimer);
-  autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 2500);
+  autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 6000);
 }
 
 document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); startAuto(); });
