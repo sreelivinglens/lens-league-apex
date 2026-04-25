@@ -3263,6 +3263,28 @@ def faq():
 def refund_policy():
     return render_template('refund_policy.html')
 
+@app.route('/robots.txt')
+def robots_txt():
+    content = (
+        "User-agent: *\n"
+        "Disallow: /admin\n"
+        "Disallow: /sree-admin\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /profile\n"
+        "Disallow: /upload\n"
+        "Disallow: /bulk-upload\n"
+        "Disallow: /rate\n"
+        "Disallow: /raw\n"
+        "Disallow: /judge\n"
+        "Disallow: /subscribe\n"
+        "Disallow: /subscription\n"
+        "Crawl-delay: 10\n"
+        "\n"
+        "# Automated scraping, bulk harvesting, and data extraction are\n"
+        "# strictly prohibited. See /terms for full legal restrictions.\n"
+    )
+    return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
