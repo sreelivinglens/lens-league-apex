@@ -72,18 +72,17 @@
     display: flex; justify-content: space-between; align-items: center;
   }
   .card-header .brand-dark { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--black); letter-spacing: 2px; }
+  .photo-logo-overlay {
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    height: 72px; width: auto;
+    opacity: 0.88;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8));
+    pointer-events: none;
+  }
   .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.5); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
-  .photo-logo-overlay {
-    position: absolute; bottom: 12px; right: 12px;
-    height: 52px; width: auto;
-    opacity: 0.92;
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.7));
-    pointer-events: none;
-  }
-  .sl-logo { height: 48px; width: auto; display: inline-block; vertical-align: middle; }
-  .top-bar-logo { height: 26px; width: auto; vertical-align: middle; margin-right: 8px; }
   .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover;
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
@@ -229,10 +228,7 @@
 <body>
 
 <div class="top-bar">
-  <a href="{{ url_for('index') }}" class="brand" style="display:flex;align-items:center;gap:8px;">
-    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" class="top-bar-logo" alt="">
-    SHUTTER LEAGUE
-  </a>
+  <a href="{{ url_for('index') }}" class="brand">SHUTTER LEAGUE</a>
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="top-btn">My Dashboard</a>
   {% else %}
@@ -243,9 +239,9 @@
 <div class="card">
 
   <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" class="sl-logo" alt="Shutter League">
-      <span class="engine-tag">APEX DDI ENGINE &nbsp;·&nbsp; FULL EVALUATION</span>
+    <div>
+      <span class="brand-dark">SHUTTER LEAGUE</span>
+      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
     </div>
     {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
       {% if already_reported %}
@@ -268,7 +264,7 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+    <img src="/static/img/shutterleague-logo-cropped.png"
          class="photo-logo-overlay" alt="Shutter League">
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
