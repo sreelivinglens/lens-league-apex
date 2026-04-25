@@ -14,6 +14,14 @@
   .dash-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
   .dash-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; flex-shrink: 0; }
 
+  /* Mobile: stack header vertically so buttons never overlap heading */
+  @media (max-width: 600px) {
+    .dash-header { flex-direction: column; gap: 14px; }
+    .dash-header .page-header { flex: none; width: 100%; }
+    .dash-actions { width: 100%; }
+    .dash-actions .btn { flex: 1; justify-content: center; }
+  }
+
   /* Stats row */
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
   @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
