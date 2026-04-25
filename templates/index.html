@@ -3,424 +3,139 @@
 
 {% block extra_css %}
 <style>
-/* ── Override base.html main + footer ── */
 body:has(.sl-hp) main {
   max-width: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  width: 100% !important;
-  height: calc(100vh - 64px) !important;
-  overflow: hidden !important;
-  display: block !important;
-}
-body:has(.sl-hp) footer {
-  display: none !important;
-}
-body:has(.sl-hp) {
+  width: 100vw !important;
   overflow: hidden !important;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body:has(.sl-hp) footer { display: none !important; }
+*, *::before, *::after { box-sizing: border-box; }
 
-/* ── Page shell: fills viewport below nav ── */
 .sl-hp {
-  width: 100%;
-  height: calc(100vh - 64px); /* base.html nav = 64px */
+  width: 100vw;
+  font-family: 'Courier New', monospace;
+  background: #0D0D0B;
+  color: #F0EFE8;
   display: flex;
   flex-direction: column;
+}
+.sl-gold { height: 10px; background: #C8A84B; width: 100%; flex-shrink: 0; }
+
+.sl-hero {
+  display: flex;
+  height: calc(100vh - 64px - 20px - 88px);
   overflow: hidden;
-  background: #0D0D0B;
-  font-family: 'Courier New', monospace;
-  color: #F0EFE8;
 }
 
-/* ── Gold bars ── */
-.sl-gold-top, .sl-gold-bot {
-  height: 10px;
-  background: #C8A84B;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* ── Body grid ── */
-.sl-body {
+.sl-photo {
   flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr 390px;
-  overflow: hidden;
-  width: 100%;
-}
-
-/* ── LEFT panel ── */
-.sl-left {
   position: relative;
   overflow: hidden;
-  cursor: pointer;
+  background: #060e06;
   min-width: 0;
-  width: 100%;
 }
-.sl-slides-track {
-  display: flex;
-  width: 500%;
-  height: 100%;
-  will-change: transform;
-  transition: transform 0.65s cubic-bezier(.4,0,.2,1);
-}
-.sl-slide {
-  width: 20%;
-  height: 100%;
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.sl-slide img.sl-slide-img {
-  position: absolute;
-  inset: 0;
+.sl-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  pointer-events: none;
-  -webkit-user-select: none;
-  user-select: none;
+  display: block;
 }
-.sl-slide-overlay {
+.sl-photo-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(6,14,6,0.2) 0%, rgba(6,14,6,0.55) 100%);
-  pointer-events: none;
+  background: linear-gradient(to right, rgba(6,14,6,0.1) 0%, rgba(6,14,6,0.5) 100%);
 }
-.sl-s1 { background: #060e06; }
-.sl-s2 { background: #F5F0E4; }
-.sl-s3 { background: #0a1520; }
-.sl-s4 { background: #0a0608; }
-.sl-s5 { background: #EBF4F0; }
-
-.sl-slide-tag {
+.sl-photo-tag {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  font-size: 9px;
-  letter-spacing: 2px;
+  top: 14px; left: 16px;
+  font-size: 9px; letter-spacing: 2px;
   padding: 4px 12px;
   border-left: 3px solid #C8A84B;
   background: rgba(13,13,11,0.85);
   color: #C8A84B;
-  z-index: 2;
-}
-.sl-s2 .sl-slide-tag,
-.sl-s5 .sl-slide-tag {
-  background: rgba(245,240,228,0.9);
-  color: #7a5a10;
-  border-left-color: #7a5a10;
 }
 .sl-dots {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
+  bottom: 14px; left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  gap: 7px;
-  z-index: 2;
+  display: flex; gap: 7px;
 }
 .sl-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
   background: rgba(200,168,75,0.35);
   border: 1px solid rgba(200,168,75,0.5);
-  cursor: pointer;
-  transition: all 0.3s;
-  -webkit-tap-highlight-color: transparent;
 }
 .sl-dot.on {
-  background: #C8A84B;
-  width: 20px;
-  border-radius: 3px;
-  border-color: #C8A84B;
+  background: #C8A84B; width: 20px; border-radius: 3px; border-color: #C8A84B;
 }
-.sl-paused {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: 8px;
-  letter-spacing: 1.5px;
-  color: #C8A84B;
-  background: rgba(13,13,11,0.85);
-  padding: 3px 8px;
-  border: 1px solid rgba(200,168,75,0.3);
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 2;
-}
-.sl-paused.on { opacity: 1; }
 
-/* ── RIGHT panel ── */
-.sl-right {
-  width: 390px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.sl-panels-track {
-  display: flex;
-  width: 500%;
-  height: 100%;
-  will-change: transform;
-  transition: transform 0.65s cubic-bezier(.4,0,.2,1);
-}
 .sl-panel {
-  width: 20%;
-  height: 100%;
+  width: 390px;
   flex-shrink: 0;
+  background: #0e0e0c;
+  border-left: 1px solid #1e1e1c;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 16px 22px;
+  padding: 20px 24px;
   overflow: hidden;
 }
-.sl-p1 { background: #0e0e0c; border-left: 1px solid #1e1e1c; }
-.sl-p2 { background: #FBF8F0; border-left: 1px solid #D8C890; }
-.sl-p3 { background: #0a1018; border-left: 1px solid #1a2a3a; }
-.sl-p4 { background: #0a0608; border-left: 1px solid #2a1a20; }
-.sl-p5 { background: #F0F8F4; border-left: 1px solid #A8D8C0; }
-
-/* Panel text */
-.sl-sup { font-size: 9px; letter-spacing: 2px; margin-bottom: 3px; }
-.sl-sup1 { color: #5a5a58; }
-.sl-sup2 { color: #9a8040; }
-.sl-sup3 { color: #4a7a9a; }
-.sl-sup4 { color: #7a4a5a; }
-.sl-sup5 { color: #2a7a5a; }
-.sl-hl { font-size: 17px; line-height: 1.3; font-family: Georgia,'Times New Roman',serif; min-height: 42px; transition: opacity 0.3s; }
+.sl-sup { font-size: 9px; letter-spacing: 2px; color: #5a5a58; margin-bottom: 4px; }
+.sl-hl { font-size: 18px; line-height: 1.3; font-family: Georgia,serif; color: #F0EFE8; min-height: 46px; }
 .sl-hl em { color: #C8A84B; font-style: italic; }
-.sl-hl1 { color: #F0EFE8; }
-.sl-hl2 { color: #2a1a00; }
-.sl-hl3 { color: #C0E0F0; }
-.sl-hl4 { color: #F0D0D8; }
-.sl-hl5 { color: #0a3a2a; }
-.sl-hl-sub { font-size: 11px; letter-spacing: 1px; font-style: italic; font-family: Georgia,serif; margin-top: 3px; }
-.sl-hl-sub1 { color: #4a4a48; }
-.sl-hl-sub2 { color: #7a6030; }
-.sl-hl-sub3 { color: #4a7a9a; }
-.sl-hl-sub4 { color: #7a4a54; }
-.sl-hl-sub5 { color: #2a6a4a; }
-.sl-div1 { height: 1px; background: #1e1e1c; margin: 10px 0; }
-.sl-div2 { height: 1px; background: #D8C890; margin: 10px 0; }
-.sl-div3 { height: 1px; background: #1a3a5a; margin: 10px 0; }
-.sl-div4 { height: 1px; background: #3a1a20; margin: 10px 0; }
-.sl-div5 { height: 1px; background: #A8D8C0; margin: 10px 0; }
+.sl-hl-sub { font-size: 11px; letter-spacing: 1px; font-style: italic; font-family: Georgia,serif; margin-top: 4px; color: #4a4a48; }
+.sl-divider { height: 1px; background: #1e1e1c; margin: 12px 0; }
 
-/* Score block */
-.sl-score-row { display: flex; align-items: flex-end; gap: 10px; }
-.sl-score-num { font-size: 60px; font-weight: 700; color: #C8A84B; line-height: 1; letter-spacing: -2px; }
-.sl-tier { font-size: 13px; letter-spacing: 4px; color: #C8A84B; font-weight: 700; }
-.sl-pips { display: flex; gap: 4px; margin-top: 5px; }
-.sl-pip { width: 20px; height: 4px; background: #1e1e1c; }
+.sl-score-row { display: flex; align-items: flex-end; gap: 12px; }
+.sl-score-num { font-size: 64px; font-weight: 700; color: #C8A84B; line-height: 1; letter-spacing: -2px; }
+.sl-score-right { display: flex; flex-direction: column; padding-bottom: 6px; }
+.sl-tier { font-size: 14px; letter-spacing: 4px; color: #C8A84B; font-weight: 700; }
+.sl-pips { display: flex; gap: 5px; margin-top: 7px; }
+.sl-pip { width: 22px; height: 5px; background: #1e1e1c; }
 .sl-pip.on { background: #C8A84B; }
-.sl-meta-title { font-size: 15px; font-weight: 700; font-family: Georgia,serif; margin-top: 8px; color: #F0EFE8; }
-.sl-meta-row { font-size: 10px; color: #5a5a58; letter-spacing: 1px; margin-top: 2px; }
-.sl-soul { font-size: 9px; color: #C8A84B; letter-spacing: 1.5px; margin-top: 5px; }
-.sl-protected { font-size: 9px; color: #3a3a38; border: 1px solid #1e1e1c; padding: 4px 10px; display: inline-block; margin-top: 6px; }
+.sl-meta-title { font-size: 16px; font-weight: 700; font-family: Georgia,serif; margin-top: 10px; color: #F0EFE8; }
+.sl-meta-row { font-size: 10px; color: #5a5a58; letter-spacing: 1px; margin-top: 3px; line-height: 1.6; }
+.sl-soul { font-size: 10px; color: #C8A84B; letter-spacing: 1.5px; margin-top: 6px; }
+.sl-protected { font-size: 10px; color: #3a3a38; border: 1px solid #1e1e1c; padding: 5px 12px; display: inline-block; margin-top: 8px; }
 
-/* CTAs — all solid gold */
-.sl-ctas { display: flex; flex-direction: column; gap: 9px; }
-.sl-cta-row { display: flex; align-items: center; gap: 12px; }
+.sl-ctas { display: flex; flex-direction: column; gap: 10px; }
+.sl-cta-row { display: flex; align-items: center; gap: 14px; }
 .sl-btn {
-  background: #C8A84B;
-  color: #0D0D0B;
+  background: #C8A84B; color: #0D0D0B;
   font-family: 'Courier New', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 10px 0;
-  border: none;
-  cursor: pointer;
-  width: 138px;
-  text-align: center;
-  flex-shrink: 0;
-  text-decoration: none;
-  display: inline-block;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  padding: 11px 0; border: none; cursor: pointer;
+  width: 142px; text-align: center; flex-shrink: 0;
+  text-decoration: none; display: inline-block;
 }
 .sl-btn:hover { background: #D4B85A; color: #0D0D0B; }
-.sl-btn-full {
-  background: #C8A84B;
-  color: #0D0D0B;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 13px 0;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-  margin-top: 8px;
-  text-decoration: none;
-  display: block;
-  -webkit-tap-highlight-color: transparent;
-}
-.sl-btn-full:hover { background: #D4B85A; color: #0D0D0B; }
 .sl-cta-by { font-size: 10px; color: #4a4a48; letter-spacing: 0.5px; line-height: 1.5; }
 
-/* Weekly challenge */
-.sl-challenge-box {
-  background: rgba(200,168,75,0.08);
-  border: 1px solid rgba(200,168,75,0.25);
-  padding: 12px 14px;
-  margin-top: 8px;
-}
-.sl-challenge-theme { font-size: 18px; font-weight: 700; color: #C8A84B; font-family: Georgia,serif; }
-.sl-challenge-detail { font-size: 10px; color: #9a8040; letter-spacing: 1px; margin-top: 4px; }
-.sl-countdown { font-size: 28px; font-weight: 700; color: #C8A84B; letter-spacing: 2px; margin-top: 8px; }
-.sl-countdown-lbl { font-size: 9px; color: #9a8040; letter-spacing: 1.5px; }
-.sl-entry-count { font-size: 10px; color: #7a6030; margin-top: 6px; letter-spacing: 1px; }
-
-/* DDI radar */
-.sl-dim-list { display: flex; flex-direction: column; gap: 0; margin-top: 6px; }
-.sl-dim { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #1a1a18; }
-.sl-dim:last-child { border-bottom: none; }
-.sl-dim-name { font-size: 10px; letter-spacing: 1.5px; color: #C8A84B; width: 72px; flex-shrink: 0; }
-.sl-dim-name.sec { color: #8A8478; }
-.sl-dim-desc { font-size: 11px; flex: 1; line-height: 1.4; color: #8AB8C8; }
-.sl-dim-desc.sec { color: #4a4a48; }
-.sl-dim-bar { width: 40px; height: 3px; background: #1e1e1c; flex-shrink: 0; }
-.sl-dim-fill { height: 3px; background: #C8A84B; }
-.sl-dim-fill.sec { background: #6a6448; }
-.sl-sci-note { font-size: 10px; color: #3a5a6a; margin-top: 8px; border-left: 2px solid #1e1e1c; padding-left: 8px; line-height: 1.7; }
-
-/* POTY */
-.sl-prize-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
-.sl-prize-card { background: #0a0a08; border: 1px solid #1e2a3a; padding: 10px; text-align: center; }
-.sl-prize-amt { font-size: 18px; font-weight: 700; color: #C8A84B; }
-.sl-prize-lbl { font-size: 9px; letter-spacing: 1.5px; color: #4a6a7a; margin-top: 2px; text-transform: uppercase; }
-.sl-prize-note { font-size: 10px; color: #3a5a6a; margin-top: 8px; line-height: 1.7; text-align: center; }
-
-/* Learning */
-.sl-learn-plan { background: #DDF0E8; border: 1px solid #A8D8C0; padding: 12px; margin-top: 8px; }
-.sl-learn-title { font-size: 13px; font-weight: 700; color: #0a3a2a; margin-bottom: 6px; font-family: Georgia,serif; }
-.sl-learn-row { font-size: 11px; color: #2a5a40; margin-top: 4px; line-height: 1.6; }
-.sl-learn-price { font-size: 18px; font-weight: 700; color: #0a6a3a; margin-top: 8px; }
-
-/* ── BOTTOM STRIP ── */
 .sl-bottom {
-  height: 86px;
+  height: 88px;
+  display: grid; grid-template-columns: 1fr 1fr;
   border-top: 1px solid #1a1a18;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  flex-shrink: 0;
-  background: #090907;
-  width: 100%;
+  background: #090907; flex-shrink: 0;
 }
-.sl-strip { padding: 8px 14px; overflow: hidden; border-right: 1px solid #1a1a18; }
+.sl-strip { padding: 8px 16px; border-right: 1px solid #1a1a18; overflow: hidden; }
 .sl-strip:last-child { border-right: none; }
 .sl-strip-lbl { font-size: 8px; letter-spacing: 2px; color: #2a2a28; margin-bottom: 6px; text-transform: uppercase; }
-.sl-strip-imgs { display: flex; gap: 5px; overflow: hidden; }
-.sl-strip-img {
-  width: 62px;
-  height: 62px;
-  flex-shrink: 0;
-  background: #111110;
-  border: 1px solid #1a1a18;
-  overflow: hidden;
-  position: relative;
-}
-.sl-strip-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-.sl-strip-img-ph {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 3px;
-  font-size: 6px;
-  color: #2a2a28;
-  letter-spacing: 0.5px;
-}
+.sl-strip-imgs { display: flex; gap: 5px; }
+.sl-strip-img { width: 62px; height: 62px; flex-shrink: 0; background: #111110; border: 1px solid #1a1a18; overflow: hidden; }
+.sl-strip-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sl-strip-img-ph { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px; font-size: 6px; color: #2a2a28; }
 
-/* ── SAFARI SPECIFIC FIXES ── */
-/* Safari needs explicit height on flex children */
-@supports (-webkit-touch-callout: none) {
-  .sl-hp { height: -webkit-fill-available; max-height: calc(100vh - 64px); }
-  .sl-body { -webkit-overflow-scrolling: touch; }
-}
-
-/* ── MOBILE: stack layout ── */
 @media (max-width: 768px) {
-  body:has(.sl-hp) { overflow: auto !important; }
-  .sl-hp {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-  .sl-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: 280px auto;
-    overflow: visible;
-    height: auto;
-  }
-  .sl-left {
-    height: 280px;
-    width: 100%;
-  }
-  .sl-right {
-    width: 100%;
-    height: auto;
-    overflow: visible;
-  }
-  .sl-panels-track {
-    flex-direction: column;
-    width: 100%;
-    height: auto;
-    transform: none !important;
-    transition: none;
-  }
-  .sl-panel {
-    width: 100%;
-    height: auto;
-    min-height: auto;
-    display: none;
-    overflow: visible;
-    padding: 16px;
-  }
-  .sl-panel.sl-panel-active {
-    display: flex;
-  }
-  .sl-bottom {
-    height: auto;
-    padding: 8px 0;
-  }
-  .sl-strip-imgs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .sl-strip {
-    padding: 8px 12px;
-  }
-  .sl-score-num { font-size: 48px; }
-  .sl-hl { font-size: 16px; }
-}
-
-/* ── SMALL MOBILE ── */
-@media (max-width: 480px) {
-  .sl-ctas { gap: 8px; }
-  .sl-btn { width: 120px; font-size: 9px; }
-  .sl-cta-by { font-size: 9px; }
-  .sl-prize-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
-  .sl-prize-amt { font-size: 15px; }
+  body:has(.sl-hp) main { width: 100% !important; }
+  .sl-hero { flex-direction: column; height: auto; }
+  .sl-photo { height: 300px; width: 100%; flex: none; }
+  .sl-panel { width: 100%; flex: none; height: auto; overflow: visible; }
+  .sl-score-num { font-size: 52px; }
+  .sl-bottom { height: auto; }
+  .sl-strip-imgs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 </style>
 {% endblock %}
@@ -428,356 +143,95 @@ body:has(.sl-hp) {
 {% block content %}
 <div class="sl-hp">
 
-  <div class="sl-gold-top"></div>
+  <div class="sl-gold"></div>
 
-  <div class="sl-body">
+  <div class="sl-hero">
 
-    <!-- ═══ LEFT: IMAGE CAROUSEL ═══ -->
-    <div class="sl-left" id="slLeft">
-      <div class="sl-slides-track" id="slTrack">
+    <div class="sl-photo">
+      {% if carousel_images %}
+        {% set hero = carousel_images[0] %}
+        {% if hero.thumb_url %}
+          <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or '' }}">
+          <div class="sl-photo-overlay"></div>
+        {% endif %}
+      {% endif %}
+      <div class="sl-photo-tag">GRANDMASTER &nbsp;·&nbsp; LIVE</div>
+      <div class="sl-dots">
+        <div class="sl-dot on"></div>
+        <div class="sl-dot"></div>
+        <div class="sl-dot"></div>
+        <div class="sl-dot"></div>
+        <div class="sl-dot"></div>
+      </div>
+    </div>
 
-        <!-- Slide 1: Hero image -->
-        <div class="sl-slide sl-s1" id="slSlide0">
-          <div class="sl-slide-tag">01 — GRANDMASTER · LIVE</div>
-          {% if carousel_images %}
-            {% set hero = carousel_images[0] %}
-            {% if hero.thumb_url %}
-              <img class="sl-slide-img" src="{{ hero.thumb_url }}" alt="{{ hero.genre }}">
-              <div class="sl-slide-overlay"></div>
-            {% endif %}
-          {% endif %}
-          <div class="sl-dots" id="slDots">
-            <div class="sl-dot on" data-slide="0"></div>
-            <div class="sl-dot" data-slide="1"></div>
-            <div class="sl-dot" data-slide="2"></div>
-            <div class="sl-dot" data-slide="3"></div>
-            <div class="sl-dot" data-slide="4"></div>
-          </div>
-          <div class="sl-paused" id="slPaused">PAUSED</div>
-        </div>
-
-        <!-- Slide 2: Weekly Challenge -->
-        <div class="sl-slide sl-s2" id="slSlide1">
-          <div class="sl-slide-tag">02 — WEEKLY CHALLENGE</div>
-          {% if active_challenge and active_challenge.thumb_url is defined and active_challenge.thumb_url %}
-            <img class="sl-slide-img" src="{{ active_challenge.thumb_url }}" alt="Weekly Challenge">
-          {% else %}
-          <svg width="320" height="300" viewBox="0 0 320 300" style="opacity:0.7">
-            <rect x="30" y="20" width="260" height="200" rx="4" fill="#E8DFC8" stroke="#C8A84B" stroke-width="1"/>
-            <text x="160" y="52" text-anchor="middle" font-size="11" fill="#7a5a10" font-family="Courier New" letter-spacing="2">THIS WEEK</text>
-            <text x="160" y="90" text-anchor="middle" font-size="22" fill="#3a2808" font-family="Georgia" font-weight="bold">
-              {% if active_challenge %}{{ active_challenge.prompt_title }}{% else %}Weekly Challenge{% endif %}
-            </text>
-            <line x1="50" y1="115" x2="270" y2="115" stroke="#C8A84B" stroke-width="0.5" opacity="0.5"/>
-            <text x="160" y="158" text-anchor="middle" font-size="34" fill="#C8A84B" font-family="Courier New" font-weight="bold" id="slCountdownLeft">--:--:--</text>
-            <text x="160" y="180" text-anchor="middle" font-size="9" fill="#9a8040" font-family="Courier New" letter-spacing="2">TIME REMAINING</text>
-            {% if active_challenge %}
-            <text x="160" y="205" text-anchor="middle" font-size="10" fill="#7a6030" font-family="Courier New" letter-spacing="1">{{ active_challenge.submission_count }} ENTRIES</text>
-            {% endif %}
-          </svg>
-          {% endif %}
-        </div>
-
-        <!-- Slide 3: DDI Radar -->
-        <div class="sl-slide sl-s3" id="slSlide2">
-          <div class="sl-slide-tag">03 — DDI DIMENSIONS</div>
-          <svg width="280" height="270" viewBox="0 0 280 270" style="opacity:0.9">
-            <g transform="translate(140,135)">
-              <polygon points="0,-88 84,-27 52,73 -52,73 -84,-27" fill="none" stroke="#2a2a28" stroke-width="1"/>
-              <polygon points="0,-62 59,-19 37,51 -37,51 -59,-19" fill="none" stroke="#1e1e1c" stroke-width="0.5"/>
-              <polygon points="0,-35 33,-11 21,29 -21,29 -33,-11" fill="none" stroke="#1a1a18" stroke-width="0.5"/>
-              <polygon points="0,-80 76,-24 47,66 -47,66 -76,-24" fill="rgba(200,168,75,0.07)" stroke="#C8A84B" stroke-width="1.5"/>
-              <line x1="0" y1="0" x2="0" y2="-88" stroke="#1e1e1c" stroke-width="0.5"/>
-              <line x1="0" y1="0" x2="84" y2="-27" stroke="#1e1e1c" stroke-width="0.5"/>
-              <line x1="0" y1="0" x2="52" y2="73" stroke="#1e1e1c" stroke-width="0.5"/>
-              <line x1="0" y1="0" x2="-52" y2="73" stroke="#1e1e1c" stroke-width="0.5"/>
-              <line x1="0" y1="0" x2="-84" y2="-27" stroke="#1e1e1c" stroke-width="0.5"/>
-              <circle cx="0" cy="-80" r="6" fill="#C8A84B"/>
-              <text x="0" y="-98" text-anchor="middle" font-size="12" fill="#C8A84B" font-family="Courier New" font-weight="bold" letter-spacing="1">DOD</text>
-              <circle cx="76" cy="-24" r="4" fill="#8A8478"/>
-              <text x="90" y="-19" font-size="9" fill="#8A8478" font-family="Courier New">DISRUPT</text>
-              <circle cx="47" cy="66" r="6" fill="#C8A84B"/>
-              <text x="52" y="82" font-size="12" fill="#C8A84B" font-family="Courier New" font-weight="bold">DM</text>
-              <circle cx="-47" cy="66" r="4" fill="#8A8478"/>
-              <text x="-100" y="82" font-size="9" fill="#8A8478" font-family="Courier New">WONDER</text>
-              <circle cx="-76" cy="-24" r="6" fill="#C8A84B"/>
-              <text x="-110" y="-19" font-size="12" fill="#C8A84B" font-family="Courier New" font-weight="bold">AQ</text>
-            </g>
-          </svg>
-        </div>
-
-        <!-- Slide 4: POTY -->
-        <div class="sl-slide sl-s4" id="slSlide3">
-          <div class="sl-slide-tag">04 — PHOTOGRAPHER OF THE YEAR</div>
-          <svg width="300" height="290" viewBox="0 0 300 290" style="opacity:0.9">
-            <circle cx="150" cy="110" r="65" fill="none" stroke="#C8A84B" stroke-width="1" opacity="0.22"/>
-            <circle cx="150" cy="110" r="46" fill="none" stroke="#4a4a58" stroke-width="0.5" opacity="0.22"/>
-            <circle cx="150" cy="110" r="29" fill="rgba(200,168,75,0.07)" stroke="#C8A84B" stroke-width="1" opacity="0.5"/>
-            <text x="150" y="122" text-anchor="middle" font-size="34" fill="#C8A84B" font-family="Georgia" opacity="0.9">★</text>
-            <text x="150" y="190" text-anchor="middle" font-size="13" fill="#C8A84B" font-family="Courier New" letter-spacing="3">PHOTOGRAPHER</text>
-            <text x="150" y="210" text-anchor="middle" font-size="13" fill="#C8A84B" font-family="Courier New" letter-spacing="3">OF THE YEAR</text>
-            <text x="150" y="230" text-anchor="middle" font-size="10" fill="#4a4a58" font-family="Courier New" letter-spacing="2">2026 · SHUTTER LEAGUE</text>
-            <line x1="70" y1="246" x2="230" y2="246" stroke="#2a2a38" stroke-width="0.5"/>
-            <text x="150" y="262" text-anchor="middle" font-size="9" fill="#2a2a48" font-family="Courier New" letter-spacing="1.5">APEX DDI ENGINE · RATED BY SCIENCE</text>
-          </svg>
-        </div>
-
-        <!-- Slide 5: Learning -->
-        <div class="sl-slide sl-s5" id="slSlide4">
-          <div class="sl-slide-tag">05 — LEARNING TRACK</div>
-          <svg width="260" height="300" viewBox="0 0 260 300" style="opacity:0.9">
-            <text x="20" y="18" font-size="9" fill="#2a7a5a" font-family="Courier New" letter-spacing="1.5">20 IMAGES · YOUR PROGRESS</text>
-            <g transform="translate(20,36)">
-              <line x1="0" y1="0" x2="0" y2="200" stroke="#A8D8C0" stroke-width="1"/>
-              <line x1="0" y1="200" x2="220" y2="200" stroke="#A8D8C0" stroke-width="1"/>
-              <text x="-12" y="4"   font-size="8" fill="#2a7a5a" font-family="Courier New" text-anchor="end">10</text>
-              <text x="-12" y="104" font-size="8" fill="#2a7a5a" font-family="Courier New" text-anchor="end">5</text>
-              <text x="-12" y="204" font-size="8" fill="#2a7a5a" font-family="Courier New" text-anchor="end">0</text>
-              <!-- DOD -->
-              <rect x="8"   y="22"  width="28" height="178" fill="#A8D8C0"/>
-              <text x="22"  y="215" font-size="7" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">DOD</text>
-              <text x="22"  y="16"  font-size="8" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">8.9</text>
-              <!-- DISRUPTION -->
-              <rect x="54"  y="30"  width="28" height="170" fill="#A8D8C0"/>
-              <text x="68"  y="215" font-size="7" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">DISRUPT</text>
-              <text x="68"  y="24"  font-size="8" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">8.5</text>
-              <!-- DM — WEAK — RED -->
-              <rect x="100" y="90"  width="28" height="110" fill="#D04020"/>
-              <text x="114" y="215" font-size="7" fill="#D04020"  font-family="Courier New" text-anchor="middle">DM</text>
-              <text x="114" y="84"  font-size="8" fill="#D04020"  font-family="Courier New" text-anchor="middle">5.5</text>
-              <!-- WONDER -->
-              <rect x="146" y="24"  width="28" height="176" fill="#A8D8C0"/>
-              <text x="160" y="215" font-size="7" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">WONDER</text>
-              <text x="160" y="18"  font-size="8" fill="#2a7a5a"  font-family="Courier New" text-anchor="middle">8.8</text>
-              <!-- AQ — BEST -->
-              <rect x="192" y="6"   width="28" height="194" fill="#0a8a5a"/>
-              <text x="206" y="215" font-size="7" fill="#0a8a5a"  font-family="Courier New" text-anchor="middle">AQ</text>
-              <text x="206" y="0"   font-size="8" fill="#0a8a5a"  font-family="Courier New" text-anchor="middle">9.7</text>
-            </g>
-            <rect x="20" y="256" width="12" height="10" fill="#D04020"/>
-            <text x="36" y="265" font-size="9" fill="#D04020" font-family="Courier New">DECISIVE MOMENT — NEEDS WORK</text>
-          </svg>
-        </div>
-
-      </div><!-- /sl-slides-track -->
-    </div><!-- /sl-left -->
-
-    <!-- ═══ RIGHT: CONTENT PANELS ═══ -->
-    <div class="sl-right">
-      <div class="sl-panels-track" id="slPanels">
-
-        <!-- Panel 1: Hero score -->
-        <div class="sl-panel sl-p1 sl-panel-active" id="slPanel0">
-          <div>
-            <div class="sl-sup sl-sup1">APEX DDI ENGINE</div>
-            <div class="sl-hl sl-hl1" id="slHeadline">Your rank is <em>waiting.</em></div>
-            <div class="sl-hl-sub sl-hl-sub1">Rated by Science. Not Opinion.</div>
-            <div class="sl-div1"></div>
-            {% if carousel_images %}
-              {% set hero = carousel_images[0] %}
-              <div class="sl-score-row">
-                <div class="sl-score-num">{{ hero.score }}</div>
-                <div style="display:flex;flex-direction:column;padding-bottom:5px">
-                  <div class="sl-tier">{{ hero.tier | upper }}</div>
-                  <div class="sl-pips">
-                    {% set tier_map = {'Apprentice':1,'Practitioner':2,'Master':3,'Grandmaster':4,'Legend':5} %}
-                    {% set active_pips = tier_map.get(hero.tier, 1) %}
-                    {% for i in range(5) %}
-                      <div class="sl-pip{% if i < active_pips %} on{% endif %}"></div>
-                    {% endfor %}
-                  </div>
-                </div>
+    <div class="sl-panel">
+      <div>
+        <div class="sl-sup">APEX DDI ENGINE</div>
+        <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
+        <div class="sl-hl-sub">Rated by Science. Not Opinion.</div>
+        <div class="sl-divider"></div>
+        {% if carousel_images %}
+          {% set hero = carousel_images[0] %}
+          <div class="sl-score-row">
+            <div class="sl-score-num">{{ hero.score }}</div>
+            <div class="sl-score-right">
+              <div class="sl-tier">{{ hero.tier | upper }}</div>
+              <div class="sl-pips">
+                {% set tier_map = {'Apprentice':1,'Practitioner':2,'Master':3,'Grandmaster':4,'Legend':5} %}
+                {% set pip_count = tier_map.get(hero.tier, 1) %}
+                {% for i in range(5) %}<div class="sl-pip{% if i < pip_count %} on{% endif %}"></div>{% endfor %}
               </div>
-              <div class="sl-meta-title">{{ hero.asset_name or 'Untitled' }}</div>
-              <div class="sl-meta-row">SHOT BY {{ hero.author.username | upper }} &nbsp;·&nbsp; {{ hero.genre | upper }}</div>
-              {% if hero.archetype %}<div class="sl-meta-row" style="margin-top:2px">Affective State: {{ hero.archetype }}</div>{% endif %}
-              {% if hero.soul_bonus %}<div class="sl-soul">★ SOUL BONUS ACTIVE — AQ ≥ 8.0</div>{% endif %}
-            {% else %}
-              <div class="sl-score-row">
-                <div class="sl-score-num">9.02</div>
-                <div style="display:flex;flex-direction:column;padding-bottom:5px">
-                  <div class="sl-tier">GRANDMASTER</div>
-                  <div class="sl-pips">
-                    <div class="sl-pip on"></div><div class="sl-pip on"></div>
-                    <div class="sl-pip on"></div><div class="sl-pip on"></div>
-                    <div class="sl-pip"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="sl-meta-title">Wildlife Photography</div>
-              <div class="sl-meta-row">RATED BY SCIENCE. NOT OPINION.</div>
-            {% endif %}
-            <div class="sl-protected">DDI SCORES PROTECTED · KNOW MORE →</div>
-          </div>
-          <div class="sl-ctas">
-            <div class="sl-cta-row">
-              <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-btn">UPLOAD IMAGE</a>
-              <span class="sl-cta-by">Know your rating.<br>Get scored instantly.</span>
-            </div>
-            <div class="sl-cta-row">
-              <a href="{{ url_for('weekly_challenge') }}" class="sl-btn">WIN BIG</a>
-              <span class="sl-cta-by">Get ranked.<br>Enter contests.</span>
-            </div>
-            <div class="sl-cta-row">
-              <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('dashboard') }}" class="sl-btn">IMPROVE</a>
-              <span class="sl-cta-by">Image by image.<br>Week by week.</span>
             </div>
           </div>
-        </div>
-
-        <!-- Panel 2: Weekly Challenge -->
-        <div class="sl-panel sl-p2" id="slPanel1">
-          <div>
-            <div class="sl-sup sl-sup2">THIS WEEK'S CHALLENGE</div>
-            {% if active_challenge %}
-              <div class="sl-hl sl-hl2" style="font-size:18px">{{ active_challenge.prompt_title }}. <em>Your window closes Sunday.</em></div>
-              <div class="sl-hl-sub sl-hl-sub2">{{ active_challenge.submission_count }} photographers have entered. Will you?</div>
-            {% else %}
-              <div class="sl-hl sl-hl2" style="font-size:18px">Weekly Challenge. <em>New prompt every Monday.</em></div>
-              <div class="sl-hl-sub sl-hl-sub2">Free to enter. Winners scored by the DDI engine.</div>
-            {% endif %}
-            <div class="sl-div2"></div>
-            <div class="sl-challenge-box">
-              {% if active_challenge %}
-                <div class="sl-challenge-theme">{{ active_challenge.prompt_title }}</div>
-                {% if active_challenge.prompt_body %}
-                  <div class="sl-challenge-detail">{{ active_challenge.prompt_body[:80] }}</div>
-                {% endif %}
-                <div class="sl-countdown" id="slCountdown">--:--:--</div>
-                <div class="sl-countdown-lbl">HOURS REMAINING</div>
-                <div class="sl-entry-count">{{ active_challenge.submission_count }} ENTRIES · CLOSES {{ active_challenge.closes_at.strftime('%a %d %b, %I:%M %p') | upper }}</div>
-              {% else %}
-                <div class="sl-challenge-theme">New Challenge Monday</div>
-                <div class="sl-challenge-detail">ANY GENRE · OPEN TO ALL</div>
-                <div class="sl-countdown">--:--:--</div>
-                <div class="sl-countdown-lbl">CHECK BACK MONDAY</div>
-              {% endif %}
-            </div>
-            <div style="font-size:11px;color:#7a6030;margin-top:10px;line-height:1.7">
-              Open to all subscribers.<br>
-              Top 3 scores win bonus credits.<br>
-              Winner featured on homepage.
+          <div class="sl-meta-title">{{ hero.asset_name or 'Untitled' }}</div>
+          <div class="sl-meta-row">SHOT BY {{ hero.author.username | upper }}&nbsp;·&nbsp;{{ hero.genre | upper if hero.genre else '' }}</div>
+          {% if hero.archetype %}<div class="sl-meta-row">Affective State: {{ hero.archetype }}</div>{% endif %}
+          {% if hero.soul_bonus %}<div class="sl-soul">&#9733; SOUL BONUS ACTIVE &#8212; AQ &#8805; 8.0</div>{% endif %}
+        {% else %}
+          <div class="sl-score-row">
+            <div class="sl-score-num">9.02</div>
+            <div class="sl-score-right">
+              <div class="sl-tier">GRANDMASTER</div>
+              <div class="sl-pips">
+                <div class="sl-pip on"></div><div class="sl-pip on"></div>
+                <div class="sl-pip on"></div><div class="sl-pip on"></div>
+                <div class="sl-pip"></div>
+              </div>
             </div>
           </div>
-          <a href="{{ url_for('weekly_challenge') }}" class="sl-btn-full">ENTER CHALLENGE →</a>
+          <div class="sl-meta-title">Wildlife Photography</div>
+          <div class="sl-meta-row">RATED BY SCIENCE. NOT OPINION.</div>
+        {% endif %}
+        <div class="sl-protected">DDI SCORES PROTECTED &nbsp;·&nbsp; KNOW MORE &#8594;</div>
+      </div>
+
+      <div class="sl-ctas">
+        <div class="sl-cta-row">
+          <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-btn">UPLOAD IMAGE</a>
+          <span class="sl-cta-by">Know your rating.<br>Get scored instantly.</span>
         </div>
-
-        <!-- Panel 3: DDI Science -->
-        <div class="sl-panel sl-p3" id="slPanel2">
-          <div>
-            <div class="sl-sup sl-sup3">THE SCIENCE BEHIND THE SCORE</div>
-            <div class="sl-hl sl-hl3" style="font-size:16px">Five dimensions. <em>One truth.</em></div>
-            <div class="sl-hl-sub sl-hl-sub3">DOD · DM · AQ are your make-or-break scores.</div>
-            <div class="sl-div3"></div>
-            <div class="sl-dim-list">
-              <div class="sl-dim">
-                <span class="sl-dim-name">DOD</span>
-                <span class="sl-dim-desc sl-dim-desc.pri" style="color:#8AB8C8">Technical precision, sharpness, compositional complexity. No bluffing.</span>
-                <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:92%"></div></div>
-              </div>
-              <div class="sl-dim">
-                <span class="sl-dim-name">DM</span>
-                <span class="sl-dim-desc" style="color:#8AB8C8">The unrepeatable instant. Timing and instinct. Hardest to fake. Most rewarded.</span>
-                <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:93%"></div></div>
-              </div>
-              <div class="sl-dim">
-                <span class="sl-dim-name">AQ</span>
-                <span class="sl-dim-desc" style="color:#8AB8C8">Your unique voice. Soul. Honesty. Separates great from extraordinary.</span>
-                <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:90%"></div></div>
-              </div>
-              <div class="sl-dim">
-                <span class="sl-dim-name sec">DISRUPTION</span>
-                <span class="sl-dim-desc sec">Visual surprise, breaks convention</span>
-                <div class="sl-dim-bar"><div class="sl-dim-fill sec" style="width:87%"></div></div>
-              </div>
-              <div class="sl-dim">
-                <span class="sl-dim-name sec">WONDER</span>
-                <span class="sl-dim-desc sec">Emotional impact, transcendence</span>
-                <div class="sl-dim-bar"><div class="sl-dim-fill sec" style="width:89%"></div></div>
-              </div>
-            </div>
-            <div class="sl-sci-note">Individual scores visible only to you.<br>Reverse engineering is prohibited.</div>
-          </div>
-          <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}" class="sl-btn-full">GET SCORED →</a>
+        <div class="sl-cta-row">
+          <a href="{{ url_for('weekly_challenge') }}" class="sl-btn">WIN BIG</a>
+          <span class="sl-cta-by">Get ranked.<br>Enter contests.</span>
         </div>
-
-        <!-- Panel 4: POTY -->
-        <div class="sl-panel sl-p4" id="slPanel3">
-          <div>
-            <div class="sl-sup sl-sup4">2026 SEASON</div>
-            <div class="sl-hl sl-hl4" style="font-size:17px">Photographer of <em>the Year.</em></div>
-            <div class="sl-hl-sub sl-hl-sub4">The most prestigious title in Shutter League.</div>
-            <div class="sl-div4"></div>
-            <div class="sl-prize-grid">
-              <div class="sl-prize-card">
-                <div class="sl-prize-amt">₹50,000</div>
-                <div class="sl-prize-lbl">Grand Prize</div>
-              </div>
-              <div class="sl-prize-card">
-                <div class="sl-prize-amt">₹20,000</div>
-                <div class="sl-prize-lbl">Runner Up</div>
-              </div>
-              <div class="sl-prize-card">
-                <div class="sl-prize-amt">₹10,000</div>
-                <div class="sl-prize-lbl">Third Place</div>
-              </div>
-              <div class="sl-prize-card">
-                <div class="sl-prize-amt">12</div>
-                <div class="sl-prize-lbl">Monthly Contests</div>
-              </div>
-            </div>
-            <div class="sl-prize-note">
-              Open to Camera Track &amp; Mobile Track subscribers.<br>
-              Verified by RAW file · Judged by DDI Engine + Expert Jury.
-            </div>
-          </div>
-          <a href="{{ url_for('poty') }}" class="sl-btn-full">ENTER THE LEAGUE →</a>
+        <div class="sl-cta-row">
+          <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('dashboard') }}" class="sl-btn">IMPROVE</a>
+          <span class="sl-cta-by">Image by image.<br>Week by week.</span>
         </div>
+      </div>
+    </div>
 
-        <!-- Panel 5: Learning -->
-        <div class="sl-panel sl-p5" id="slPanel4">
-          <div>
-            <div class="sl-sup sl-sup5">LEARNING TRACK</div>
-            <div class="sl-hl sl-hl5" style="font-size:17px">Improve your photography <em>image by image.</em></div>
-            <div class="sl-hl-sub sl-hl-sub5">Weekly evaluation + personal mentor.</div>
-            <div class="sl-div5"></div>
-            <div class="sl-learn-plan">
-              <div class="sl-learn-title">What you get every month</div>
-              <div class="sl-learn-row">★ Weekly image evaluation by the DDI Engine</div>
-              <div class="sl-learn-row">★ Personal mentor focused on your weakest dimension</div>
-              <div class="sl-learn-row">★ Progress report after every 10 images evaluated</div>
-              <div class="sl-learn-row">★ Targeted exercises for DM, AQ and more</div>
-              <div class="sl-learn-price">₹100 / month</div>
-            </div>
-            <div style="font-size:10px;color:#3a7a5a;margin-top:6px;line-height:1.6">No contracts. Cancel anytime.</div>
-          </div>
-          <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('dashboard') }}" class="sl-btn-full">ENROLL NOW →</a>
-        </div>
+  </div>
 
-      </div><!-- /sl-panels-track -->
-    </div><!-- /sl-right -->
-
-  </div><!-- /sl-body -->
-
-  <!-- ═══ BOTTOM STRIP ═══ -->
   <div class="sl-bottom">
     <div class="sl-strip">
       <div class="sl-strip-lbl">Top of the League</div>
       <div class="sl-strip-imgs">
         {% if carousel_images %}
-          {% for img in carousel_images %}
-          <div class="sl-strip-img">
-            {% if img.thumb_url %}
-              <img src="{{ img.thumb_url }}" alt="{{ img.genre }}">
-            {% else %}
-              <div class="sl-strip-img-ph">{{ img.genre | upper if img.genre else 'IMG' }}</div>
-            {% endif %}
-          </div>
-          {% endfor %}
+          {% for img in carousel_images %}<div class="sl-strip-img">{% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="">{% else %}<div class="sl-strip-img-ph">IMG</div>{% endif %}</div>{% endfor %}
         {% else %}
-          {% for g in ['WILDLIFE','LANDSCAPE','STREET','PORTRAIT','MACRO'] %}
-          <div class="sl-strip-img"><div class="sl-strip-img-ph">{{ g }}</div></div>
-          {% endfor %}
+          {% for g in ['WILD','LAND','STRT','PORT','MACR'] %}<div class="sl-strip-img"><div class="sl-strip-img-ph">{{ g }}</div></div>{% endfor %}
         {% endif %}
       </div>
     </div>
@@ -785,202 +239,33 @@ body:has(.sl-hp) {
       <div class="sl-strip-lbl">Shutter League Gallery</div>
       <div class="sl-strip-imgs">
         {% if recent_images %}
-          {% for img in recent_images %}
-          <div class="sl-strip-img">
-            {% if img.thumb_url %}
-              <img src="{{ img.thumb_url }}" alt="{{ img.genre }}">
-            {% else %}
-              <div class="sl-strip-img-ph">{{ img.genre | upper if img.genre else 'IMG' }}</div>
-            {% endif %}
-          </div>
-          {% endfor %}
+          {% for img in recent_images %}<div class="sl-strip-img">{% if img.thumb_url %}<img src="{{ img.thumb_url }}" alt="">{% else %}<div class="sl-strip-img-ph">IMG</div>{% endif %}</div>{% endfor %}
         {% else %}
-          {% for g in ['AERIAL','NIGHT','SPORT','ABSTRACT','TRAVEL'] %}
-          <div class="sl-strip-img"><div class="sl-strip-img-ph">{{ g }}</div></div>
-          {% endfor %}
+          {% for g in ['AERL','NGHT','SPRT','ABST','TRVL'] %}<div class="sl-strip-img"><div class="sl-strip-img-ph">{{ g }}</div></div>{% endfor %}
         {% endif %}
       </div>
     </div>
   </div>
 
-  <div class="sl-gold-bot"></div>
+  <div class="sl-gold"></div>
 
-</div><!-- /sl-hp -->
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-(function(){
-  var cur = 0, paused = false, timer = null;
-  var track  = document.getElementById('slTrack');
-  var panels = document.getElementById('slPanels');
-  var left   = document.getElementById('slLeft');
-  var right  = document.querySelector('.sl-right');
-  var pb     = document.getElementById('slPaused');
-  var dots   = document.querySelectorAll('.sl-dot');
-  var isMobile = window.innerWidth < 769;
-
-  // Force correct sizing on all containers
-  function initSizing(){
-    // Step 1: Reset main inline
-    var main = document.querySelector('main');
-    if(main){
-      main.style.maxWidth = 'none';
-      main.style.padding = '0';
-      main.style.margin = '0';
-      main.style.width = '100%';
-      main.style.overflow = 'hidden';
-      main.style.display = 'block';
-      main.style.height = (window.innerHeight - 64) + 'px';
-    }
-
-    if(isMobile) return;
-
-    // Step 2: Use requestAnimationFrame to ensure layout is complete
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        if(!left || !right || !track || !panels) return;
-        var leftW  = left.getBoundingClientRect().width;
-        var rightW = right.getBoundingClientRect().width;
-        if(leftW < 10 || rightW < 10) return; // not rendered yet
-
-        // Set pixel widths on tracks
-        track.style.width  = (leftW  * 5) + 'px';
-        panels.style.width = (rightW * 5) + 'px';
-
-        // Set each slide to exact pixel width
-        document.querySelectorAll('.sl-slide').forEach(function(s){
-          s.style.width    = leftW + 'px';
-          s.style.minWidth = leftW + 'px';
-          s.style.maxWidth = leftW + 'px';
-        });
-        document.querySelectorAll('.sl-panel').forEach(function(p){
-          p.style.width    = rightW + 'px';
-          p.style.minWidth = rightW + 'px';
-          p.style.maxWidth = rightW + 'px';
-        });
-
-        // Re-apply current position after sizing
-        goTo(cur);
-      });
-    });
-  }
-
-  // Run after DOM is fully painted
-  function runInit(){
-    isMobile = window.innerWidth < 769;
-    initSizing();
-    goTo(0);
-  }
-  if(document.readyState === 'complete'){
-    runInit();
-  } else {
-    window.addEventListener('load', runInit);
-  }
-  window.addEventListener('resize', function(){
-    isMobile = window.innerWidth < 769;
-    initSizing();
-    goTo(cur);
-  });
-
-  // Headlines for Slide 1
-  var hls = [
-    'Your rank is <em>waiting.</em>',
-    'Find out what your photography is <em>really worth.</em>',
-    'Rated by Science. <em>Not Opinion.</em>'
-  ];
-  var hi = 0;
-  var hlEl = document.getElementById('slHeadline');
-  if(hlEl){
-    hlEl.style.transition = 'opacity 0.3s';
-    setInterval(function(){
-      hi = (hi + 1) % hls.length;
-      hlEl.style.opacity = '0';
-      setTimeout(function(){ hlEl.innerHTML = hls[hi]; hlEl.style.opacity = '1'; }, 320);
-    }, 3500);
-  }
-
-  function goTo(n) {
-    cur = ((n % 5) + 5) % 5;
-    if(!isMobile){
-      track.style.transform  = 'translateX(-' + (20 * cur) + '%)';
-      panels.style.transform = 'translateX(-' + (20 * cur) + '%)';
-    } else {
-      // Mobile: show/hide panels
-      document.querySelectorAll('.sl-panel').forEach(function(p, i){
-        p.classList.toggle('sl-panel-active', i === cur);
-      });
-    }
-    dots.forEach(function(d, i){
-      d.className = 'sl-dot' + (i === cur ? ' on' : '');
-    });
-  }
-
-  function next(){ if(!paused) goTo(cur + 1); }
-
-  function pauseCarousel(){
-    paused = true;
-    if(pb) pb.classList.add('on');
-    clearInterval(timer);
-  }
-  function resumeCarousel(){
-    paused = false;
-    if(pb) pb.classList.remove('on');
-    timer = setInterval(next, 2500);
-  }
-
-  // Click image panel to pause/resume
-  if(left){
-    left.addEventListener('click', function(){ paused ? resumeCarousel() : pauseCarousel(); });
-    left.addEventListener('touchstart', function(){ pauseCarousel(); }, { passive: true });
-  }
-
-  // Mouse leave page to resume
-  document.addEventListener('mouseleave', function(){ if(paused) resumeCarousel(); });
-
-  // Dot clicks
-  dots.forEach(function(d){
-    d.addEventListener('click', function(e){
-      e.stopPropagation();
-      pauseCarousel();
-      goTo(parseInt(d.getAttribute('data-slide')));
-    });
-  });
-
-  // Start timer — goTo(0) called by initSizing after rAF
-  timer = setInterval(next, 2500);
-
-  // ── Countdown timer for Weekly Challenge ──
-  {% if active_challenge %}
-  var closeTime = new Date('{{ active_challenge.closes_at.isoformat() }}Z').getTime();
-  var cdEl = document.getElementById('slCountdown');
-  var cdElLeft = document.getElementById('slCountdownLeft');
-
-  function updateCountdown(){
-    var now  = Date.now();
-    var diff = closeTime - now;
-    if(diff <= 0){
-      var s = '00:00:00';
-      if(cdEl) cdEl.textContent = s;
-      if(cdElLeft) cdElLeft.textContent = s;
-      return;
-    }
-    var h = Math.floor(diff / 3600000);
-    var m = Math.floor((diff % 3600000) / 60000);
-    var sc = Math.floor((diff % 60000) / 1000);
-    var str = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sc).padStart(2,'0');
-    if(cdEl) cdEl.textContent = str;
-    if(cdElLeft) cdElLeft.textContent = str;
-  }
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-  {% endif %}
-
-  // ── Flash message auto-dismiss (preserve from old homepage) ──
-  document.querySelectorAll('.flash.success').forEach(function(f){
-    setTimeout(function(){ f.classList.add('hiding'); setTimeout(function(){ f.remove(); }, 300); }, 5000);
-  });
-
-})();
+var hls = ['Your rank is <em>waiting.</em>','Find out what your photography is <em>really worth.</em>','Rated by Science. <em>Not Opinion.</em>'];
+var hi = 0, hlEl = document.getElementById('slHl');
+if(hlEl){
+  hlEl.style.transition = 'opacity 0.3s';
+  setInterval(function(){
+    hi = (hi+1)%hls.length;
+    hlEl.style.opacity='0';
+    setTimeout(function(){hlEl.innerHTML=hls[hi];hlEl.style.opacity='1';},320);
+  },3500);
+}
+document.querySelectorAll('.flash.success').forEach(function(f){
+  setTimeout(function(){f.classList.add('hiding');setTimeout(function(){f.remove();},300);},5000);
+});
 </script>
 {% endblock %}
