@@ -264,8 +264,9 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <img src="/static/img/shutterleague-logo-cropped.png"
-         class="photo-logo-overlay" alt="Shutter League">
+    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+         class="photo-logo-overlay" alt="Shutter League"
+         onerror="this.style.display='none'">
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
     {% endif %}
