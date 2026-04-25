@@ -154,7 +154,7 @@ body:has(.sl-hp) footer { display: none !important; }
   flex-shrink: 0;
 }
 .sl-photographer {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: 2px;
   color: #F0EFE8;
@@ -169,75 +169,43 @@ body:has(.sl-hp) footer { display: none !important; }
   margin-bottom: 4px;
 }
 .sl-meta-row {
-  font-size: 14px;
-  color: #9a9890;
+  font-size: 17px;
+  color: #C8B890;
   letter-spacing: 1px;
-  margin-top: 3px;
+  margin-top: 5px;
   line-height: 1.6;
 }
 .sl-soul {
-  font-size: 13px;
+  font-size: 16px;
   color: #C8A84B;
   letter-spacing: 1.5px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .sl-protected {
-  font-size: 12px;
-  color: #5a5a58;
-  border: 1px solid #2a2a28;
-  padding: 5px 12px;
+  font-size: 15px;
+  color: #7a7870;
+  border: 1px solid #3a3a38;
+  padding: 7px 16px;
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 /* Rotating headline */
 .sl-hl-block {
-  padding: 12px 26px 0;
+  padding: 16px 26px 24px;
   flex-shrink: 0;
+  margin-top: auto;
 }
 .sl-hl {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.4;
   font-family: Georgia, serif;
-  color: #7a7870;
+  color: #9a9890;
   font-style: italic;
 }
 .sl-hl em { color: #C8A84B; font-style: italic; }
 
-/* CTA block — fills remaining space */
-.sl-cta-block {
-  flex: 1;
-  padding: 16px 26px 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 12px;
-  min-height: 0;
-}
-.sl-cta-row { display: flex; align-items: center; gap: 16px; }
-.sl-btn {
-  background: #C8A84B;
-  color: #0D0D0B;
-  font-family: "Courier New", monospace;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 14px 0;
-  border: none;
-  cursor: pointer;
-  width: 155px;
-  text-align: center;
-  flex-shrink: 0;
-  text-decoration: none;
-  display: inline-block;
-}
-.sl-btn:hover { background: #D4B85A; color: #0D0D0B; }
-.sl-cta-by {
-  font-size: 14px;
-  color: #9a9890;
-  letter-spacing: 0.5px;
-  line-height: 1.6;
-}
+/* CTAs moved to bottom strip */
 
 /* ── BOTTOM STRIP ── */
 .sl-bottom-frame {
@@ -270,10 +238,10 @@ body:has(.sl-hp) footer { display: none !important; }
   background: #C8A84B;
   color: #0D0D0B;
   font-family: "Courier New", monospace;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 2px;
-  padding: 10px 0;
+  padding: 14px 0;
   border: none;
   cursor: pointer;
   flex: 1;
@@ -479,21 +447,7 @@ body:has(.sl-hp) footer { display: none !important; }
             <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
           </div>
 
-          <!-- CTAs -->
-          <div class="sl-cta-block">
-            <div class="sl-cta-row">
-              <a href="{{ url_for("upload") if current_user.is_authenticated else url_for("register") }}" class="sl-btn">UPLOAD IMAGE</a>
-              <span class="sl-cta-by">Know your rating.<br>Get scored instantly.</span>
-            </div>
-            <div class="sl-cta-row">
-              <a href="{{ url_for("weekly_challenge") }}" class="sl-btn">WIN BIG</a>
-              <span class="sl-cta-by">Get ranked.<br>Enter contests.</span>
-            </div>
-            <div class="sl-cta-row">
-              <a href="{{ url_for("register") if not current_user.is_authenticated else url_for("dashboard") }}" class="sl-btn">IMPROVE</a>
-              <span class="sl-cta-by">Image by image.<br>Week by week.</span>
-            </div>
-          </div>
+
 
         </div>
       </div>
