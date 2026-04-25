@@ -148,6 +148,22 @@ def build_card1(photo_path, data, out_path):
         cx,cy = (nw-PHOTO_W)//2,(nh-INNER_H)//2
         ph = ph.crop((cx,cy,cx+PHOTO_W,cy+INNER_H))
         canvas.paste(ph,(0,HEADER_H))
+        # Overlay logo on photo — bottom right, uncropable watermark
+        try:
+            from PIL import Image as _PL2
+            wm = _PL2.open(LOGO_PATH).convert('RGBA')
+            wm_h = 120
+            wm_w = int(wm.size[0] * wm_h / wm.size[1])
+            wm = wm.resize((wm_w, wm_h), _PL2.LANCZOS)
+            # Semi-transparent
+            r,g,b,a = wm.split()
+            a = a.point(lambda x: int(x * 0.75))
+            wm.putalpha(a)
+            wm_x = PHOTO_W - wm_w - 24
+            wm_y = HEADER_H + INNER_H - wm_h - 20
+            canvas.paste(wm, (wm_x, wm_y), wm)
+        except Exception:
+            pass
     except:
         draw.rectangle([0,HEADER_H,PHOTO_W,HEADER_H+INNER_H],fill=S3)
 
