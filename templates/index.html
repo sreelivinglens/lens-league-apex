@@ -22,6 +22,9 @@ body:has(.sl-hp) footer { display: none !important; }
   color: #F0EFE8;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
+  overflow: hidden;
 }
 
 /* ── Gold bars ── */
@@ -34,6 +37,7 @@ body:has(.sl-hp) footer { display: none !important; }
   flex-direction: column;
   background: #0D0D0B;
   overflow: hidden;
+  height: 0; /* forces flex child to respect parent height */
 }
 .sl-frame-inner {
   flex: 1;
