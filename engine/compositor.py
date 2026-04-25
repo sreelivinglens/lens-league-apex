@@ -161,15 +161,16 @@ def build_card1(photo_path, data, out_path):
     score = str(data.get('score','—'))
     tier  = data.get('tier','').upper()
     draw.text((RX,RY), score, font=fnt(260,bold=True), fill=GOLD)
-    # Logo — top right of right panel, next to score
+    # Logo — right panel, top right, vertically centred with score number
     try:
         from PIL import Image as _PL2
         lg = _PL2.open(LOGO_PATH).convert('RGBA')
         lg_h = 220
         lg_w = int(lg.size[0] * lg_h / lg.size[1])
         lg = lg.resize((lg_w, lg_h), _PL2.LANCZOS)
+        score_block_h = 280
         lg_x = CW - PAD - lg_w
-        lg_y = HEADER_H + PAD
+        lg_y = HEADER_H + PAD + (score_block_h - lg_h) // 2
         canvas.paste(lg, (lg_x, lg_y), lg)
     except Exception:
         pass
