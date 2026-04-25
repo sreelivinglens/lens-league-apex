@@ -820,39 +820,63 @@ body:has(.sl-hp) {
   var dots   = document.querySelectorAll('.sl-dot');
   var isMobile = window.innerWidth < 769;
 
-  // Force overflow hidden on containers — belt and suspenders for all browsers
+  // Force correct sizing on all containers
   function initSizing(){
-    var hp = document.querySelector('.sl-hp');
-    var body = document.querySelector('.sl-body');
-    if(!hp || !body) return;
-
-    // Ensure main has no padding/margin
+    // Step 1: Reset main inline
     var main = document.querySelector('main');
     if(main){
-      main.style.cssText = 'max-width:none!important;padding:0!important;margin:0!important;width:100%!important;height:calc(100vh - 64px)!important;overflow:hidden!important;display:block!important;';
+      main.style.maxWidth = 'none';
+      main.style.padding = '0';
+      main.style.margin = '0';
+      main.style.width = '100%';
+      main.style.overflow = 'hidden';
+      main.style.display = 'block';
+      main.style.height = (window.innerHeight - 64) + 'px';
     }
 
-    // Set explicit pixel widths on track containers
-    if(!isMobile && left && right){
-      var leftW  = left.offsetWidth;
-      var rightW = right.offsetWidth;
-      if(track  && leftW)  track.style.width  = (leftW  * 5) + 'px';
-      if(panels && rightW) panels.style.width = (rightW * 5) + 'px';
+    if(isMobile) return;
 
-      // Set each slide/panel to exact pixel width
-      document.querySelectorAll('.sl-slide').forEach(function(s){
-        s.style.width = leftW + 'px';
-        s.style.minWidth = leftW + 'px';
+    // Step 2: Use requestAnimationFrame to ensure layout is complete
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        if(!left || !right || !track || !panels) return;
+        var leftW  = left.getBoundingClientRect().width;
+        var rightW = right.getBoundingClientRect().width;
+        if(leftW < 10 || rightW < 10) return; // not rendered yet
+
+        // Set pixel widths on tracks
+        track.style.width  = (leftW  * 5) + 'px';
+        panels.style.width = (rightW * 5) + 'px';
+
+        // Set each slide to exact pixel width
+        document.querySelectorAll('.sl-slide').forEach(function(s){
+          s.style.width    = leftW + 'px';
+          s.style.minWidth = leftW + 'px';
+          s.style.maxWidth = leftW + 'px';
+        });
+        document.querySelectorAll('.sl-panel').forEach(function(p){
+          p.style.width    = rightW + 'px';
+          p.style.minWidth = rightW + 'px';
+          p.style.maxWidth = rightW + 'px';
+        });
+
+        // Re-apply current position after sizing
+        goTo(cur);
       });
-      document.querySelectorAll('.sl-panel').forEach(function(p){
-        p.style.width = rightW + 'px';
-        p.style.minWidth = rightW + 'px';
-      });
-    }
+    });
   }
 
-  // Run on load and resize
-  initSizing();
+  // Run after DOM is fully painted
+  function runInit(){
+    isMobile = window.innerWidth < 769;
+    initSizing();
+    goTo(0);
+  }
+  if(document.readyState === 'complete'){
+    runInit();
+  } else {
+    window.addEventListener('load', runInit);
+  }
   window.addEventListener('resize', function(){
     isMobile = window.innerWidth < 769;
     initSizing();
@@ -923,9 +947,8 @@ body:has(.sl-hp) {
     });
   });
 
-  // Start
+  // Start timer — goTo(0) called by initSizing after rAF
   timer = setInterval(next, 2500);
-  goTo(0);
 
   // ── Countdown timer for Weekly Challenge ──
   {% if active_challenge %}
