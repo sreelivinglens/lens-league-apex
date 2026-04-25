@@ -104,7 +104,7 @@ def send_challenge_notification(challenge):
     if not users:
         return 0
 
-    site_url = os.getenv('SITE_URL', 'https://lensleagueapex.com')
+    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
     challenge_url = f"{site_url}/challenge"
 
     sponsor_line = ''
@@ -128,7 +128,7 @@ def send_challenge_notification(challenge):
 
       <!-- Header -->
       <tr><td style="background:#1a1a18;padding:24px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX</p>
+        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
       </td></tr>
 
       <!-- Challenge banner -->
@@ -154,8 +154,8 @@ def send_challenge_notification(challenge):
       <!-- Footer -->
       <tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">
         <p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">
-          You're receiving this because you have an account on Lens League Apex.<br>
-          <a href="{site_url}" style="color:#C8A84B;">lensleagueapex.com</a>
+          You're receiving this because you have an account on Shutter League.<br>
+          <a href="{site_url}" style="color:#C8A84B;">shutterleague.com</a>
         </p>
       </td></tr>
 
@@ -164,7 +164,7 @@ def send_challenge_notification(challenge):
 </table>
 </body></html>"""
 
-        text_body = f"""LENS LEAGUE APEX  -  Weekly Challenge
+        text_body = f"""SHUTTER LEAGUE  -  Weekly Challenge
 
 This week: {challenge.prompt_title}
 {challenge.week_ref}
@@ -176,7 +176,7 @@ Closes: {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
 
 Enter here: {challenge_url}
 
- -  Lens League Apex"""
+ -  Shutter League"""
 
         if send_email(user.email, f"This week's challenge: {challenge.prompt_title}", html_body, text_body):
             sent += 1
@@ -190,7 +190,7 @@ FREE_IMAGE_LIMIT_DEFAULT = 3  # Free images per month from month 2 onwards
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-me')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///lensleague.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///shutterleague.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER']       = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
@@ -906,7 +906,7 @@ def onboarding():
         current_user.agreed_at           = datetime.utcnow()
         current_user.onboarding_complete = True
         db.session.commit()
-        flash('Welcome to Lens League! Your account is ready.', 'success')
+        flash('Welcome to Shutter League! Your account is ready.', 'success')
         return redirect(url_for('dashboard'))
 
     _loc = {}
@@ -1402,7 +1402,7 @@ def upload():
                     }), 409
                 else:
                     return jsonify({'error': True, 'message':
-                        ' This image has already been submitted to Lens League by another member. ' +
+                        ' This image has already been submitted to Shutter League by another member. ' +
                         'Submitting images that belong to another photographer violates our Member Agreement ' +
                         'and may have legal implications. Only submit your own original photographs.'
                     }), 409
@@ -1913,7 +1913,7 @@ def download_card(image_id):
         pdf_bytes,
         headers={
             'Content-Type':        'application/pdf',
-            'Content-Disposition': f'inline; filename="LensLeague_{clean}_RatingCard.pdf"',
+            'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
             'Content-Length':      str(len(pdf_bytes)),
             'Cache-Control':       'no-store, no-cache, must-revalidate',
             'Pragma':              'no-cache',
@@ -4518,9 +4518,9 @@ def submit_rating():
                 try:
                     send_email(
                         photographer.email,
-                        'Your image is under peer review - Lens League Apex',
+                        'Your image is under peer review - Shutter League',
                         f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Lens League Apex</p>'
+                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Shutter League</p>'
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review Triggered</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> has received peer ratings that diverge significantly from its DDI score. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> is protected and unchanged.</p>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This image has been referred to our jury for review. You will be notified once the review is complete. No action is required from you.</p>'
@@ -4556,9 +4556,9 @@ def submit_rating():
                 try:
                     send_email(
                         photographer.email,
-                        'Peer review in progress on your image - Lens League Apex',
+                        'Peer review in progress on your image - Shutter League',
                         f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Lens League Apex</p>'
+                        f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B8892A;">Shutter League</p>'
                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">Peer Review In Progress</h2>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name or "Untitled"}"</strong> is receiving peer ratings that are being reviewed for consistency. Your DDI score of <strong style="color:#B8892A;">{img.score}</strong> stands and is unaffected.</p>'
                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">This is an automated notice. No action is required from you. The peer review process will complete automatically.</p>'
@@ -4685,7 +4685,7 @@ def admin_export_ratings_csv():
             '1' if (rater and rater.rating_bias_flag) else '0',
         ])
 
-    filename = f'lens_league_peer_ratings_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_peer_ratings_{date.today().strftime("%Y%m%d")}.csv'
     return Response(
         output.getvalue(),
         mimetype='text/csv',
@@ -4765,7 +4765,7 @@ def admin_export_users():
             '1' if u.rating_bias_flag else '0',
             '1' if u.is_active else '0',
         ])
-    filename = f'lens_league_users_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_users_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -4799,7 +4799,7 @@ def admin_export_subscriptions():
             u.subscribed_at.strftime('%Y-%m-%d %H:%M:%S') if u.subscribed_at else '',
             u.razorpay_sub_id or '',
         ])
-    filename = f'lens_league_subscriptions_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_subscriptions_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -4840,7 +4840,7 @@ def admin_export_images():
             img.scored_at.strftime('%Y-%m-%d %H:%M:%S') if img.scored_at else '',
             img.created_at.strftime('%Y-%m-%d %H:%M:%S') if img.created_at else '',
         ])
-    filename = f'lens_league_images_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_images_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -4892,7 +4892,7 @@ def admin_export_camera_rankings():
                 round(min(scores), 2), round(max(scores), 2),
             ])
 
-    filename = f'lens_league_camera_rankings_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_camera_rankings_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -4935,7 +4935,7 @@ def admin_export_lens_rankings():
                 round(min(scores), 2), round(max(scores), 2),
             ])
 
-    filename = f'lens_league_lens_rankings_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_lens_rankings_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -4984,7 +4984,7 @@ def admin_export_peer_ratings_full():
             img.blended_score     if img else '',
         ])
 
-    filename = f'lens_league_peer_ratings_full_{date.today().strftime("%Y%m%d")}.csv'
+    filename = f'shutter_league_peer_ratings_full_{date.today().strftime("%Y%m%d")}.csv'
     return Response(output.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'})
 
@@ -5114,7 +5114,7 @@ def server_error(e):
 
 @app.route('/health')
 def health():
-    return jsonify({'status': 'ok', 'app': 'Lens League Apex'}), 200
+    return jsonify({'status': 'ok', 'app': 'Shutter League'}), 200
 
 
 # ===========================================================================
@@ -5189,18 +5189,18 @@ def admin_judge_invite():
         f'<tr><td align="center">'
         f'<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
         f'<tr><td style="background:#1a1a18;padding:24px 32px;">'
-        f'<p style="margin:0;font-family:\'Courier New\',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">LENS LEAGUE APEX</p>'
+        f'<p style="margin:0;font-family:\'Courier New\',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>'
         f'</td></tr>'
         f'<tr><td style="padding:28px 32px;">'
         f'<h2 style="margin:0 0 16px;font-size:22px;color:#1a1a18;">You have been invited to join our jury</h2>'
         f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">Dear {name or "Photographer"},</p>'
-        f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">We would be honoured to have you serve as a judge on Lens League Apex.</p>'
+        f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">We would be honoured to have you serve as a judge on Shutter League.</p>'
         f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">Please complete your judge profile. This link expires in 72 hours.</p>'
         f'<a href="{register_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:\'Courier New\',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Complete Judge Profile</a>'
         f'<p style="font-size:13px;color:#8a8070;margin-top:24px;">If the button does not work: {register_url}</p>'
         f'</td></tr></table></td></tr></table></body></html>'
     )
-    send_email(email, 'Invitation to join the Lens League Apex Jury', html_body)
+    send_email(email, 'Invitation to join the Shutter League Jury', html_body)
     flash(f'Invitation sent to {email}. Token valid 72 hours.', 'success')
     return redirect(url_for('admin_judges'))
 
@@ -5536,9 +5536,9 @@ def admin_judge_approve(judge_id):
     site_url = os.getenv('SITE_URL', 'https://lens-league-apex-production.up.railway.app')
     send_email(
         judge.email,
-        'Welcome to the Lens League Apex Jury',
+        'Welcome to the Shutter League Jury',
         (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex</p>'
+         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
          f'<h2>Welcome, {judge.name}.</h2>'
          f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your judge profile has been approved. You can now access your judging dashboard.</p>'
          f'<a href="{site_url}/judge/dashboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">Go to Dashboard</a>'
@@ -5711,9 +5711,9 @@ def admin_populate_judge_pool():
         if pending_count:
             send_email(
                 judge.email,
-                f'[Lens League Jury] {pending_count} image(s) assigned for {contest_ref}',
+                f'[Shutter League Jury] {pending_count} image(s) assigned for {contest_ref}',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  --  Jury</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League  --  Jury</p>'
                  f'<h2 style="font-size:20px;">New images assigned</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pending_count} image(s)</strong> for <strong>{contest_ref}</strong>.<br>'
                  f'Deadline: <strong>{deadline.strftime("%d %B %Y, %H:%M UTC")}</strong> -- <strong style="color:#C8A84B;">{deadline_hours} hours from now</strong></p>'
@@ -5816,9 +5816,9 @@ def admin_contest_go_live():
             continue
         send_email(
             photographer.email,
-            f'🏆 You placed {ordinals[rank]} in {contest_ref} -- Lens League Apex',
+            f'🏆 You placed {ordinals[rank]} in {contest_ref} -- Shutter League',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex</p>'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
              f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
              f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>"{row.asset_name}"</strong> ({row.genre}) has placed <strong style="color:#C8A84B;">{ordinals[rank]}</strong> in <strong>{contest_ref}</strong>.</p>'
              f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">The results are now live on the leaderboard.</p>'
@@ -6038,9 +6038,9 @@ def admin_raw_decide(image_id):
         if photographer:
             send_email(
                 photographer.email,
-                'RAW verification approved -- Lens League Apex',
+                'RAW verification approved -- Shutter League',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2>RAW Verification Approved</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> has passed RAW verification.</p>'
                  f'{"<p>Admin note: " + notes + "</p>" if notes else ""}'
@@ -6058,9 +6058,9 @@ def admin_raw_decide(image_id):
         if photographer:
             send_email(
                 photographer.email,
-                'RAW verification failed -- Lens League Apex',
+                'RAW verification failed -- Shutter League',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> has been disqualified.</p>'
                  f'{"<p>Reason: " + notes + "</p>" if notes else ""}'
@@ -6074,9 +6074,9 @@ def admin_raw_decide(image_id):
         if photographer:
             send_email(
                 photographer.email,
-                'RAW resubmission required -- Lens League Apex',
+                'RAW resubmission required -- Shutter League',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2>RAW Resubmission Required</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Please resubmit the RAW for <strong>"{img.asset_name}"</strong> within 24 hours.</p>'
                  f'{"<p>Reason: " + notes + "</p>" if notes else ""}'
@@ -6137,7 +6137,7 @@ def admin_resolve_flag(assignment_id):
             assignment.judge_email,
             f'Your flag has been reviewed -- {assignment.asset_name}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Lens League Apex -- Jury</p>'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League -- Jury</p>'
              f'<h2 style="font-size:20px;font-weight:700;margin-bottom:12px;">Flag Reviewed</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you for flagging <strong>"{assignment.asset_name}"</strong> ({assignment.genre}).</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Admin decision: <strong style="color:#C8A84B;">{action_label.title()}</strong>.</p>'
@@ -6760,7 +6760,7 @@ def admin_notify_winners():
             photographer.email,
             f'Congratulations -- provisional winner in {contest_ref}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, submit the original RAW file within <strong>{raw_hours} hours</strong>.</p>'
@@ -6807,7 +6807,7 @@ def cron_judge_reminders():
                 row.email,
                 f'[{"Reminder" if hours==48 else "Final Reminder"}] {row.cnt} image(s) due in {label}',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex  --  Jury</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League  --  Jury</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">'
                  f'{"Reminder" if hours==48 else "Final reminder"}: {row.cnt} image(s) to review</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Deadline: <strong>{row.dl.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
@@ -6850,7 +6850,7 @@ def cron_raw_reminders():
                 row.email,
                 f'[{"Reminder" if hours==48 else "FINAL"}] RAW for "{row.asset_name}" due in {label}',
                 (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">RAW file due in {label}</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;"><strong>"{row.asset_name}"</strong><br>'
                  f'Deadline: <strong>{row.deadline.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
@@ -6885,7 +6885,7 @@ def cron_raw_reminders():
             row.email,
             f'Your image was not considered for this competition -- RAW file not received',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Lens League Apex</p>'
+             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">We are sorry -- your image could not be considered</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>"{row.asset_name}"</strong> was not considered for this competition because the RAW file was not received within the required deadline.</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional winners to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
