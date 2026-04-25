@@ -120,6 +120,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s2-cd-sep { font-size: 50px; font-weight: 700; color: #C8A84B; line-height: 1; padding-top: 2px; }
 .s2-cd-lbl { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.55); margin-top: 6px; }
 .s2-photo-credit { position: absolute; bottom: 16px; left: 18px; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+@media (max-width: 768px) { .s2-photo-credit { display: none; } }
 .s2-right { width: 420px; flex-shrink: 0; background: #F5F0E4; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
 .s2-week { font-size: 13px; letter-spacing: 3px; color: #C8A84B; margin-bottom: 12px; }
 .s2-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; font-style: italic; color: #1a1a18; line-height: 1.2; margin-bottom: 16px; }
@@ -342,6 +343,8 @@ body:has(.sl-hp) footer { display: none !important; }
 }
 @media (max-width: 768px) {
   #slMobileLogin { display: flex !important; }
+  .s2-cd-num { font-size: 38px; }
+  .s2-cd-sep { font-size: 32px; }
 }
 </style>
 {% endblock %}
