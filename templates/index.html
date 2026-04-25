@@ -30,489 +30,707 @@ body:has(.sl-hp) footer { display: none !important; }
 /* ── Gold bars ── */
 .sl-gold { height: 18px; background: #C8A84B; width: 100%; flex-shrink: 0; }
 
-/* ── Wide screen wrapper — max 1280px centred, grey flanks ── */
+/* ── Frame ── */
 .sl-frame {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #0D0D0B;
   overflow: hidden;
-  height: 0; /* forces flex child to respect parent height */
+  height: 0;
 }
 .sl-frame-inner {
   flex: 1;
-  display: flex;
   overflow: hidden;
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-/* Grey flanks on very wide screens */
-@media (min-width: 1280px) {
-  .sl-frame { background: #111110; }
-  .sl-frame-inner { box-shadow: 0 0 0 1px rgba(200,168,75,0.1); }
-}
-
-/* ── HERO: photo left + panel right ── */
-.sl-hero {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* ── Photo panel ── */
-.sl-photo {
-  flex: 1;
   position: relative;
-  overflow: hidden;
-  background: #060e06;
-  min-width: 0;
 }
-.sl-photo img {
+
+/* ── CAROUSEL CROSSFADE ── */
+.sl-track {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
 }
-.sl-photo-overlay {
+.sl-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  pointer-events: none;
+}
+.sl-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ══ SLIDE 1 — Dark / Grandmaster ══ */
+.s1-photo {
+  flex: 1; position: relative; overflow: hidden;
+  background: #060e06; min-width: 0;
+}
+.s1-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.s1-photo-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to right, rgba(6,14,6,0.05) 60%, rgba(6,14,6,0.5) 100%);
 }
-.sl-photo-tag {
+.s1-photo-tag {
   position: absolute; top: 18px; left: 20px;
-  font-size: 11px; letter-spacing: 2px;
-  padding: 5px 14px;
-  border-left: 3px solid #C8A84B;
-  background: rgba(13,13,11,0.88);
-  color: #C8A84B;
-  z-index: 2;
+  font-size: 11px; letter-spacing: 2px; padding: 5px 14px;
+  border-left: 3px solid #C8A84B; background: rgba(13,13,11,0.88); color: #C8A84B;
 }
-.sl-dots {
-  position: absolute; bottom: 18px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; gap: 8px; z-index: 2;
+.s1-panel {
+  width: 420px; flex-shrink: 0; background: #0a0a08;
+  border-left: 2px solid #C8A84B; display: flex; flex-direction: column; overflow: hidden;
 }
-.sl-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(200,168,75,0.3);
-  border: 1px solid rgba(200,168,75,0.5);
-  cursor: pointer;
+.s1-score-block {
+  padding: 18px 26px 12px; border-bottom: 1px solid #1e1e1c;
+  flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
 }
+.s1-score-left { flex: 1; }
+.s1-score-num { font-size: 92px; font-weight: 700; color: #C8A84B; line-height: 1; letter-spacing: -4px; }
+.s1-tier { font-size: 28px; letter-spacing: 4px; color: #C8A84B; font-weight: 700; margin-top: 2px; }
+.s1-pips { display: flex; gap: 6px; margin-top: 10px; }
+.s1-pip { width: 28px; height: 6px; background: #2a2a28; }
+.s1-pip.on { background: #C8A84B; }
+.s1-logo { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; margin-top: 4px; opacity: 0.9; }
+.s1-info-block { padding: 12px 26px; border-bottom: 1px solid #1e1e1c; flex-shrink: 0; }
+.s1-photographer { font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #F0EFE8; text-transform: uppercase; }
+.s1-gold-line { height: 1px; background: rgba(200,168,75,0.35); margin: 10px 0; }
+.s1-asset-title { font-size: 20px; font-weight: 700; font-family: Georgia, serif; color: #F0EFE8; margin-bottom: 4px; }
+.s1-meta-row { font-size: 15px; color: #C8B890; letter-spacing: 1px; margin-top: 5px; }
+.s1-soul { font-size: 16px; color: #C8A84B; letter-spacing: 1.5px; margin-top: 10px; }
+.s1-protected { font-size: 15px; color: #7a7870; border: 1px solid #3a3a38; padding: 7px 16px; display: inline-block; margin-top: 10px; }
+
+/* ══ SLIDE 2 — Challenge ══ */
+.s2-left { flex: 1; position: relative; overflow: hidden; background: #1a1a18; }
+.s2-left img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.s2-left-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 70%, rgba(245,240,228,0.1) 100%);
+}
+.s2-left-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.s2-live-tag { font-size: 13px; letter-spacing: 3px; color: #C8A84B; border: 1px solid #C8A84B; padding: 6px 18px; margin-bottom: 24px; background: rgba(0,0,0,0.4); }
+.s2-cd-label { font-size: 13px; letter-spacing: 3px; color: rgba(255,255,255,0.65); margin-bottom: 12px; }
+.s2-countdown { display: flex; gap: 16px; align-items: flex-start; }
+.s2-cd-unit { text-align: center; }
+.s2-cd-num { font-size: 58px; font-weight: 700; color: #fff; line-height: 1; }
+.s2-cd-sep { font-size: 50px; font-weight: 700; color: #C8A84B; line-height: 1; padding-top: 2px; }
+.s2-cd-lbl { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.55); margin-top: 6px; }
+.s2-photo-credit { position: absolute; bottom: 16px; left: 18px; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+.s2-right { width: 420px; flex-shrink: 0; background: #F5F0E4; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
+.s2-week { font-size: 13px; letter-spacing: 3px; color: #C8A84B; margin-bottom: 12px; }
+.s2-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; font-style: italic; color: #1a1a18; line-height: 1.2; margin-bottom: 16px; }
+.s2-divider { height: 1px; background: #D4C9A8; margin: 14px 0; }
+.s2-meta-row { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: baseline; }
+.s2-meta-lbl { font-size: 13px; letter-spacing: 2px; color: #8a8070; }
+.s2-meta-val { font-size: 16px; font-weight: 700; color: #1a1a18; }
+.s2-poty { font-size: 15px; color: #6a6058; border-left: 3px solid #C8A84B; padding-left: 12px; margin: 16px 0; line-height: 1.7; font-family: Georgia, serif; }
+.s2-poty strong { color: #B8943B; font-size: 16px; letter-spacing: 1px; }
+.s2-btn {
+  position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
+  font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 18px 14px; border: none; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  line-height: 1; margin-top: 16px; text-decoration: none;
+}
+.s2-btn::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+  animation: shimmer 3s infinite;
+}
+
+/* ══ SLIDE 3 — DDI Radar ══ */
+.s3-left { flex: 1; background: #0a1520; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.s3-right { width: 420px; flex-shrink: 0; background: #1a0a20; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
+.s3-label { font-size: 13px; letter-spacing: 3px; color: #4a9ebb; margin-bottom: 14px; }
+.s3-title { font-size: 34px; font-weight: 700; font-family: Georgia, serif; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+.s3-sub { font-size: 14px; color: #7a8899; margin-bottom: 24px; letter-spacing: 1px; }
+.s3-dim { display: flex; flex-direction: column; gap: 14px; }
+.s3-dim-row { display: flex; align-items: center; gap: 14px; }
+.s3-dim-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.s3-dim-name { font-size: 16px; color: #e0ddd8; letter-spacing: 1px; }
+.s3-cta {
+  position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
+  font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 18px 14px; border: none; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  line-height: 1; margin-top: 28px; text-decoration: none;
+}
+.s3-cta::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+  animation: shimmer 3s infinite;
+}
+
+/* ══ SLIDE 4 — POTY ══ */
+.s4-left { flex: 1; background: #e8dfc8; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-right: 2px solid #C8A84B; overflow: hidden; }
+.s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
+.s4-badge-wrap { position: absolute; inset: 0; z-index: 2; }
+.s4-badge { width: 100%; height: 100%; object-fit: cover; object-position: center; animation: badgePulse 4s ease-in-out infinite; position: absolute; inset: 0; }
+@keyframes badgePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+.s4-label { font-size: 13px; letter-spacing: 3px; color: #C8A84B; margin-bottom: 12px; }
+.s4-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; color: #fff; line-height: 1.2; margin-bottom: 6px; }
+.s4-sub { font-size: 15px; color: #6a8aaa; letter-spacing: 1px; margin-bottom: 24px; font-style: italic; font-family: Georgia, serif; }
+.s4-divider { height: 1px; background: rgba(200,168,75,0.25); margin-bottom: 24px; }
+.s4-prize-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.s4-medal { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.s4-prize-info { flex: 1; }
+.s4-prize-place { font-size: 11px; letter-spacing: 3px; color: #4a6a8a; margin-bottom: 3px; }
+.s4-prize-amount { font-size: 30px; font-weight: 700; line-height: 1; }
+.s4-prize-label { font-size: 12px; color: #4a6a8a; letter-spacing: 1px; margin-top: 2px; }
+.s4-cta {
+  position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
+  font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 18px 14px; border: none; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  line-height: 1; margin-top: 24px; text-decoration: none;
+}
+.s4-cta::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+  animation: shimmer 3s infinite;
+}
+
+/* ══ SLIDE 5 — Mentor ══ */
+.s5-left { flex: 1; background: #0d1f1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; position: relative; }
+.s5-right { width: 420px; flex-shrink: 0; background: #EBF4F0; border-left: 2px solid #C8A84B; display: flex; flex-direction: column; justify-content: center; padding: 28px; overflow: hidden; }
+.s5-chart-label { font-size: 15px; letter-spacing: 2px; color: #4a9a7a; margin-bottom: 12px; text-align: center; }
+.s5-legend { display: flex; gap: 24px; margin-top: 12px; justify-content: center; }
+.s5-leg-item { display: flex; align-items: center; gap: 8px; font-size: 15px; letter-spacing: 1px; }
+.s5-leg-dot { width: 28px; height: 3px; border-radius: 2px; }
+.s5-label { font-size: 12px; letter-spacing: 3px; color: #2a6a4a; margin-bottom: 8px; }
+.s5-title { font-size: 30px; font-weight: 700; font-family: Georgia, serif; color: #0d1f1a; line-height: 1.2; margin-bottom: 6px; }
+.s5-price { font-size: 44px; font-weight: 700; color: #C8A84B; line-height: 1; margin-bottom: 2px; }
+.s5-price-sub { font-size: 12px; color: #4a7a5a; letter-spacing: 2px; margin-bottom: 12px; }
+.s5-divider { height: 1px; background: rgba(45,120,80,0.2); margin: 10px 0; }
+.s5-feature { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 9px; }
+.s5-tick { width: 18px; height: 18px; border-radius: 50%; background: #2d7850; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.s5-feature-text { font-size: 17px; color: #1a3a2a; line-height: 1.5; }
+.s5-cta {
+  position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
+  font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 16px 14px; border: none; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  line-height: 1; margin-top: 14px; text-decoration: none;
+}
+.s5-cta::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
+  animation: shimmer 3s infinite;
+}
+
+/* ── DOTS ── */
+.sl-dots { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+.sl-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(200,168,75,0.3); border: 1px solid rgba(200,168,75,0.5); cursor: pointer; transition: all 0.3s; }
 .sl-dot.on { background: #C8A84B; width: 26px; border-radius: 4px; }
-
-/* ── Right content panel ── */
-.sl-panel {
-  width: 420px;
-  flex-shrink: 0;
-  background: #0a0a08;
-  border-left: 2px solid #C8A84B;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Score top block */
-.sl-score-block {
-  padding: 18px 26px 12px;
-  border-bottom: 1px solid #1e1e1c;
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-.sl-score-left { flex: 1; min-width: 0; }
-.sl-score-num {
-  font-size: 92px;
-  font-weight: 700;
-  color: #C8A84B;
-  line-height: 1;
-  letter-spacing: -4px;
-}
-.sl-tier {
-  font-size: 28px;
-  letter-spacing: 4px;
-  color: #C8A84B;
-  font-weight: 700;
-  margin-top: 2px;
-}
-.sl-pips { display: flex; gap: 6px; margin-top: 10px; }
-.sl-pip { width: 28px; height: 6px; background: #2a2a28; }
-.sl-pip.on { background: #C8A84B; }
-.sl-logo {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  flex-shrink: 0;
-  margin-top: 4px;
-  opacity: 0.9;
-}
-
-/* Photo info block */
-.sl-info-block {
-  padding: 12px 26px 12px;
-  border-bottom: 1px solid #1e1e1c;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.sl-photographer {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: #F0EFE8;
-  text-transform: uppercase;
-}
-.sl-gold-line { height: 1px; background: rgba(200,168,75,0.35); margin: 10px 0; }
-.sl-asset-title {
-  font-size: 20px;
-  font-weight: 700;
-  font-family: Georgia, serif;
-  color: #F0EFE8;
-  margin-bottom: 4px;
-}
-.sl-meta-row {
-  font-size: 15px;
-  color: #C8B890;
-  letter-spacing: 1px;
-  margin-top: 5px;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sl-soul {
-  font-size: 16px;
-  color: #C8A84B;
-  letter-spacing: 1.5px;
-  margin-top: 10px;
-}
-.sl-protected {
-  font-size: 15px;
-  color: #7a7870;
-  border: 1px solid #3a3a38;
-  padding: 7px 16px;
-  display: inline-block;
-  margin-top: 10px;
-}
-
-/* Rotating headline */
-
-.sl-hl {
-  font-size: 18px;
-  line-height: 1.5;
-  font-family: Georgia, serif;
-  color: #9a9890;
-  font-style: italic;
-  padding: 0 4px;
-}
-.sl-hl em { color: #C8A84B; font-style: italic; }
-
-/* CTAs moved to bottom strip */
 
 /* ── BOTTOM STRIP ── */
 .sl-bottom-frame {
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: 110px;
-  border-top: 1px solid #1a1a18;
-  background: #090907;
-  flex-shrink: 0;
+  max-width: 100%; display: grid; grid-template-columns: 1fr 1fr;
+  height: 110px; border-top: 1px solid #1a1a18;
+  background: #090907; flex-shrink: 0; transition: background 0.6s;
 }
+.sl-bottom-frame.cream { background: #EDE8D8; border-top: 1px solid #D4C9A8; }
 .sl-strip { padding: 10px 18px; border-right: 1px solid #1a1a18; overflow: hidden; }
+.sl-strip.cream { border-right-color: #D4C9A8; }
 .sl-strip:last-child { border-right: none; }
-.sl-strip-lbl {
-  font-size: 10px; letter-spacing: 2px;
-  color: #3a3a38; margin-bottom: 7px;
-  text-transform: uppercase;
-}
-
-/* Left bottom: 3 CTA buttons */
-.sl-cta-strip {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 76px;
-}
+.sl-cta-strip { display: flex; align-items: center; gap: 12px; height: 76px; }
 .sl-strip-btn {
-  position: relative;
-  overflow: hidden;
-  background: #C8A84B;
-  color: #0D0D0B;
-  font-family: "Courier New", monospace;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 18px 0;
-  border: none;
-  cursor: pointer;
-  flex: 1;
-  text-align: center;
+  position: relative; overflow: hidden; background: #C8A84B; color: #0D0D0B;
+  font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 18px 0; border: none; cursor: pointer; flex: 1;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
   text-decoration: none;
-  display: inline-block;
-  white-space: nowrap;
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
 }
 .sl-strip-btn::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%; width: 60%; height: 100%;
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
   background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.38) 50%, transparent 100%);
-  animation: sl-shimmer 3s infinite;
+  animation: shimmer 3s infinite;
 }
 .sl-strip-btn:nth-child(2)::before { animation-delay: 0.4s; }
 .sl-strip-btn:nth-child(3)::before { animation-delay: 0.8s; }
-@keyframes sl-shimmer {
-  0%   { left: -100%; }
-  40%  { left: 150%; }
-  100% { left: 150%; }
-}
-.sl-strip-btn:hover { background: #D4B85A; color: #0D0D0B; }
+.sl-strip-btn:hover { background: #D4B85A; }
+.sl-hl { font-size: 18px; line-height: 1.5; font-family: Georgia, serif; color: #9a9890; font-style: italic; }
+.sl-hl em { color: #C8A84B; font-style: italic; }
+.sl-hl2 { font-size: 17px; color: #F0EFE8; font-family: Georgia, serif; font-style: normal; letter-spacing: 0.5px; line-height: 1.4; }
+.sl-hl2.cream { color: #3a3028; }
+.sl-hl.cream-hl { color: #6a6058; font-size: 18px; }
+.sl-hl.cream-hl em { color: #B8943B; }
 
-/* Right bottom: gallery */
-.sl-strip-imgs { display: flex; gap: 6px; }
-.sl-strip-img {
-  width: 62px; height: 62px;
-  flex-shrink: 0;
-  background: #111110;
-  border: 1px solid #1a1a18;
-  overflow: hidden;
+/* ── ARROWS ── */
+.sl-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 20; background: rgba(13,13,11,0.7); border: 1px solid rgba(200,168,75,0.4);
+  color: #C8A84B; font-size: 20px; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none; transition: background 0.2s;
 }
-.sl-strip-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sl-strip-img-ph {
-  width: 100%; height: 100%;
-  display: flex; align-items: flex-end; justify-content: center;
-  padding-bottom: 4px; font-size: 7px; color: #2a2a28;
-}
+.sl-arrow:hover { background: rgba(200,168,75,0.2); }
+.sl-arrow.prev { left: 14px; }
+.sl-arrow.next { right: 14px; }
+
+@keyframes shimmer { 0%{left:-100%} 40%{left:150%} 100%{left:150%} }
 
 /* ── RESPONSIVE ── */
-
-/* Large desktop */
 @media (min-width: 1440px) {
-  .sl-panel { width: 460px; }
-  .sl-score-num { font-size: 100px; }
-  .sl-tier { font-size: 30px; }
-  .sl-logo { width: 90px; height: 90px; }
+  .s1-panel, .s2-right, .s3-right, .s4-right, .s5-right { width: 460px; }
+  .s1-score-num { font-size: 100px; }
+  .s1-tier { font-size: 30px; }
+  .s1-logo { width: 90px; height: 90px; }
 }
-
-/* Small desktop / laptop */
 @media (max-width: 1100px) {
-  .sl-panel { width: 380px; }
-  .sl-score-num { font-size: 80px; }
-  .sl-tier { font-size: 24px; }
-  .sl-logo { width: 68px; height: 68px; }
-  .sl-photographer { font-size: 18px; }
-  .sl-btn { width: 140px; font-size: 12px; }
+  .s1-panel, .s2-right, .s3-right, .s4-right, .s5-right { width: 380px; }
+  .s1-score-num { font-size: 80px; }
+  .s1-tier { font-size: 24px; }
 }
-
-/* Tablet landscape */
-@media (max-width: 900px) {
-  .sl-panel { width: 320px; }
-  .sl-score-num { font-size: 68px; }
-  .sl-tier { font-size: 20px; }
-  .sl-logo { width: 58px; height: 58px; }
-  .sl-asset-title { font-size: 17px; }
-  .sl-photographer { font-size: 16px; }
-  .sl-btn { width: 120px; font-size: 11px; padding: 11px 0; }
-  .sl-cta-by { font-size: 12px; }
-}
-
-/* Tablet portrait + mobile landscape */
 @media (max-width: 768px) {
-  body:has(.sl-hp) { overflow: auto !important; }
-  body:has(.sl-hp) main { width: 100% !important; overflow: visible !important; }
-  .sl-hp { width: 100%; height: auto; overflow: visible; }
+  body:has(.sl-hp) main { overflow: visible !important; }
+  .sl-hp { height: auto; overflow: visible; }
   .sl-frame, .sl-frame-inner { overflow: visible; height: auto; }
-  .sl-hero { flex-direction: column; overflow: visible; height: auto; }
-  .sl-photo {
-    width: 100%; flex: none;
-    height: 56vw; min-height: 220px; max-height: 420px;
-  }
-  .sl-panel {
-    width: 100%; flex: none; height: auto;
-    overflow: visible; border-left: none;
-    border-top: 2px solid #C8A84B;
-  }
-  .sl-score-num { font-size: 72px; }
-  .sl-tier { font-size: 22px; }
-  .sl-logo { width: 64px; height: 64px; }
-  .sl-cta-block { padding: 16px 20px 20px; }
-  .sl-btn { width: 130px; }
-  .sl-bottom-frame {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
+  .sl-slide { position: relative; inset: auto; opacity: 0; height: 0; overflow: hidden; pointer-events: none; transition: none; }
+  .sl-slide.active { opacity: 1; height: auto; pointer-events: auto; }
+  .sl-slide { flex-direction: column; }
+  .s1-photo, .s2-left, .s3-left, .s4-left, .s5-left { flex: none; width: 100%; height: 56vw; min-height: 220px; max-height: 380px; }
+  .s1-panel, .s2-right, .s3-right, .s4-right, .s5-right { width: 100%; flex: none; border-left: none; border-top: 2px solid #C8A84B; }
+  .sl-bottom-frame { grid-template-columns: 1fr; height: auto; }
   .sl-strip { border-right: none; border-bottom: 1px solid #1a1a18; }
   .sl-strip:last-child { border-bottom: none; }
-  .sl-strip-imgs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .sl-cta-strip { gap: 10px; }
+  .sl-cta-strip { gap: 8px; }
   .sl-strip-btn { font-size: 10px; padding: 10px 0; }
 }
-
-/* Mobile portrait */
 @media (max-width: 480px) {
   .sl-gold { height: 12px; }
-  .sl-photo { height: 72vw; }
-  .sl-score-block { padding: 16px 18px 12px; gap: 8px; }
-  .sl-score-num { font-size: 60px; }
-  .sl-tier { font-size: 18px; letter-spacing: 2px; }
-  .sl-logo { width: 52px; height: 52px; }
-  .sl-info-block { padding: 12px 18px 14px; }
-  .sl-photographer { font-size: 15px; }
-  .sl-asset-title { font-size: 16px; }
-  .sl-meta-row { font-size: 13px; }
-  .sl-hl-block { padding: 10px 18px 0; }
-  .sl-hl { font-size: 15px; }
-  .sl-cta-block { padding: 12px 18px 16px; gap: 10px; }
-  .sl-btn { width: 120px; font-size: 11px; padding: 10px 0; }
-  .sl-cta-by { font-size: 12px; }
-  .sl-strip-btn { font-size: 9px; letter-spacing: 1px; }
-  .sl-bottom-frame { height: auto; }
-}
-
-/* Landscape phone */
-@media (max-height: 500px) and (orientation: landscape) {
-  .sl-hero { flex-direction: row; height: calc(100vh - 40px - 80px); }
-  .sl-photo { flex: 1; height: 100%; }
-  .sl-panel { width: 320px; height: 100%; overflow-y: auto; }
-  .sl-score-num { font-size: 56px; }
-  .sl-tier { font-size: 16px; }
-  .sl-logo { width: 48px; height: 48px; }
+  .s1-score-num { font-size: 60px; }
+  .s1-tier { font-size: 18px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="sl-hp">
-
   <div class="sl-gold"></div>
 
   <div class="sl-frame">
-    <div class="sl-frame-inner">
-      <div class="sl-hero">
+    <div class="sl-frame-inner" id="slFrameInner">
 
-        <!-- PHOTO -->
-        <div class="sl-photo">
-          {% if carousel_images %}
-            {% set hero = carousel_images[0] %}
-            {% if hero.thumb_url %}
-              <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or '' }}">
-              <div class="sl-photo-overlay"></div>
-            {% endif %}
-          {% endif %}
-          <div class="sl-photo-tag">GRANDMASTER &nbsp;&#183;&nbsp; LIVE</div>
-          <div class="sl-dots">
-            <div class="sl-dot on"></div>
-            <div class="sl-dot"></div>
-            <div class="sl-dot"></div>
-            <div class="sl-dot"></div>
-            <div class="sl-dot"></div>
-          </div>
-        </div>
+      <div class="sl-arrow prev" id="slPrev">&#8249;</div>
+      <div class="sl-arrow next" id="slNext">&#8250;</div>
 
-        <!-- RIGHT PANEL -->
-        <div class="sl-panel">
+      <div class="sl-dots" id="slDots">
+        <div class="sl-dot on" data-i="0"></div>
+        <div class="sl-dot" data-i="1"></div>
+        <div class="sl-dot" data-i="2"></div>
+        <div class="sl-dot" data-i="3"></div>
+        <div class="sl-dot" data-i="4"></div>
+      </div>
 
-          <!-- Score + Logo -->
-          <div class="sl-score-block">
-            <div class="sl-score-left">
-              {% if carousel_images %}
-                {% set hero = carousel_images[0] %}
-                <div class="sl-score-num">{{ hero.score }}</div>
-                <div class="sl-tier">{{ hero.tier | upper }}</div>
-                <div class="sl-pips">
-                  {% set tier_map = {"Apprentice":1,"Practitioner":2,"Master":3,"Grandmaster":4,"Legend":5} %}
-                  {% set pip_count = tier_map.get(hero.tier, 1) %}
-                  {% for i in range(5) %}<div class="sl-pip{% if i < pip_count %} on{% endif %}"></div>{% endfor %}
-                </div>
-              {% else %}
-                <div class="sl-score-num">9.02</div>
-                <div class="sl-tier">GRANDMASTER</div>
-                <div class="sl-pips">
-                  <div class="sl-pip on"></div><div class="sl-pip on"></div>
-                  <div class="sl-pip on"></div><div class="sl-pip on"></div>
-                  <div class="sl-pip"></div>
-                </div>
-              {% endif %}
-            </div>
-            <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-                 class="sl-logo" alt="Shutter League"
-                 onerror="this.style.display='none'">
-          </div>
+      <div class="sl-track" id="slTrack">
 
-          <!-- Photo info -->
-          <div class="sl-info-block">
+        <!-- ═══ SLIDE 1 — Grandmaster ═══ -->
+        <div class="sl-slide active">
+          <div class="s1-photo">
             {% if carousel_images %}
               {% set hero = carousel_images[0] %}
-              <div class="sl-photographer">SHOT BY {{ hero.author.username | upper }}</div>
-              <div class="sl-gold-line"></div>
-              <div class="sl-asset-title">{{ hero.asset_name or "Untitled" }}</div>
-              <div class="sl-meta-row">{{ hero.genre | upper if hero.genre else "" }}{% if hero.genre and hero.archetype %} &nbsp;&#183;&nbsp; {% endif %}{{ hero.archetype if hero.archetype else "" }}</div>
-              {% if hero.soul_bonus %}<div class="sl-soul">&#9733; SOUL BONUS ACTIVE &#8212; AQ &#8805; 8.0</div>{% endif %}
-            {% else %}
-              <div class="sl-photographer">SHOT BY SREEKUMAR</div>
-              <div class="sl-gold-line"></div>
-              <div class="sl-asset-title">Wildlife Photography</div>
-              <div class="sl-meta-row">WILDLIFE &nbsp;&#183;&nbsp; Wonder/Transcendence</div>
-              <div class="sl-soul">&#9733; SOUL BONUS ACTIVE &#8212; AQ &#8805; 8.0</div>
+              {% if hero.thumb_url %}
+                <img src="{{ hero.thumb_url }}" alt="{{ hero.genre or '' }}">
+                <div class="s1-photo-overlay"></div>
+              {% endif %}
             {% endif %}
-            <div class="sl-protected">DDI SCORES PROTECTED &nbsp;&#183;&nbsp; KNOW MORE &#8594;</div>
+            <div class="s1-photo-tag">GRANDMASTER &nbsp;&#183;&nbsp; LIVE</div>
           </div>
-
-
-
-
-
+          <div class="s1-panel">
+            <div class="s1-score-block">
+              <div class="s1-score-left">
+                {% if carousel_images %}
+                  {% set hero = carousel_images[0] %}
+                  <div class="s1-score-num">{{ hero.score }}</div>
+                  <div class="s1-tier">{{ hero.tier | upper }}</div>
+                  <div class="s1-pips">
+                    {% set tier_map = {"Apprentice":1,"Practitioner":2,"Master":3,"Grandmaster":4,"Legend":5} %}
+                    {% set pip_count = tier_map.get(hero.tier, 1) %}
+                    {% for i in range(5) %}<div class="s1-pip{% if i < pip_count %} on{% endif %}"></div>{% endfor %}
+                  </div>
+                {% else %}
+                  <div class="s1-score-num">9.02</div>
+                  <div class="s1-tier">GRANDMASTER</div>
+                  <div class="s1-pips">
+                    <div class="s1-pip on"></div><div class="s1-pip on"></div>
+                    <div class="s1-pip on"></div><div class="s1-pip on"></div>
+                    <div class="s1-pip"></div>
+                  </div>
+                {% endif %}
+              </div>
+              <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+                   class="s1-logo" alt="Shutter League" onerror="this.style.display='none'">
+            </div>
+            <div class="s1-info-block">
+              {% if carousel_images %}
+                {% set hero = carousel_images[0] %}
+                <div class="s1-photographer">SHOT BY {{ hero.author.username | upper }}</div>
+                <div class="s1-gold-line"></div>
+                <div class="s1-asset-title">{{ hero.asset_name or "Untitled" }}</div>
+                <div class="s1-meta-row">{{ hero.genre | upper if hero.genre else "" }}{% if hero.genre and hero.archetype %} &nbsp;&#183;&nbsp; {% endif %}{{ hero.archetype if hero.archetype else "" }}</div>
+                {% if hero.soul_bonus %}<div class="s1-soul">&#9733; SOUL BONUS ACTIVE &#8212; AQ &#8805; 8.0</div>{% endif %}
+              {% else %}
+                <div class="s1-photographer">SHOT BY SREEKUMAR</div>
+                <div class="s1-gold-line"></div>
+                <div class="s1-asset-title">Wildlife Photography</div>
+                <div class="s1-meta-row">WILDLIFE &nbsp;&#183;&nbsp; Wonder/Transcendence</div>
+                <div class="s1-soul">&#9733; SOUL BONUS ACTIVE &#8212; AQ &#8805; 8.0</div>
+              {% endif %}
+              <div class="s1-protected">DDI SCORES PROTECTED &nbsp;&#183;&nbsp; KNOW MORE &#8594;</div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <!-- ═══ SLIDE 2 — Weekly Challenge ═══ -->
+        <div class="sl-slide">
+          <div class="s2-left">
+            {% if challenge_thumb %}
+              <img src="{{ challenge_thumb }}" alt="Top challenge entry">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80" alt="Challenge">
+            {% endif %}
+            <div class="s2-left-overlay"></div>
+            <div class="s2-left-content">
+              <div class="s2-live-tag">&#9679; OPEN NOW</div>
+              <div class="s2-cd-label">CLOSES IN</div>
+              <div class="s2-countdown">
+                <div class="s2-cd-unit"><div class="s2-cd-num" id="cdD">--</div><div class="s2-cd-lbl">DAYS</div></div>
+                <div class="s2-cd-sep">:</div>
+                <div class="s2-cd-unit"><div class="s2-cd-num" id="cdH">--</div><div class="s2-cd-lbl">HRS</div></div>
+                <div class="s2-cd-sep">:</div>
+                <div class="s2-cd-unit"><div class="s2-cd-num" id="cdM">--</div><div class="s2-cd-lbl">MIN</div></div>
+                <div class="s2-cd-sep">:</div>
+                <div class="s2-cd-unit"><div class="s2-cd-num" id="cdS">--</div><div class="s2-cd-lbl">SEC</div></div>
+              </div>
+            </div>
+            <div class="s2-photo-credit">TOP ENTRY THIS WEEK</div>
+          </div>
+          <div class="s2-right">
+            {% if active_challenge %}
+              <div class="s2-week">WEEKLY CHALLENGE &nbsp;&#183;&nbsp; {{ active_challenge.week_ref }}</div>
+              <div class="s2-title">&#8220;{{ active_challenge.prompt_title }}&#8221;</div>
+              <div class="s2-divider"></div>
+              <div class="s2-meta-row">
+                <div class="s2-meta-lbl">CLOSES</div>
+                <div class="s2-meta-val">{{ active_challenge.closes_at.strftime('%a %d %b, %H:%M') }} UTC</div>
+              </div>
+              <div class="s2-meta-row">
+                <div class="s2-meta-lbl">SUBMISSIONS</div>
+                <div class="s2-meta-val">{{ active_challenge.submission_count }} entries so far</div>
+              </div>
+              <div class="s2-meta-row">
+                <div class="s2-meta-lbl">FREE MEMBERS</div>
+                <div class="s2-meta-val">1 image / week</div>
+              </div>
+            {% else %}
+              <div class="s2-week">WEEKLY CHALLENGE</div>
+              <div class="s2-title">&#8220;New prompt every Monday&#8221;</div>
+              <div class="s2-divider"></div>
+              <div class="s2-meta-row"><div class="s2-meta-lbl">FREE MEMBERS</div><div class="s2-meta-val">1 image / week</div></div>
+            {% endif %}
+            <div class="s2-poty">
+              <strong>POTY QUALIFIER</strong><br>
+              Top entries count toward Photographer of the Year
+            </div>
+            <a href="{{ url_for('weekly_challenge') }}" class="s2-btn">ENTER CHALLENGE</a>
+          </div>
+        </div>
+
+        <!-- ═══ SLIDE 3 — DDI Framework ═══ -->
+        <div class="sl-slide">
+          <div class="s3-left">
+            <svg id="radarSvg" width="320" height="320" viewBox="-170 -170 340 340">
+              <circle cx="0" cy="0" r="140" fill="none" stroke="rgba(74,158,187,0.15)" stroke-width="1"/>
+              <circle cx="0" cy="0" r="105" fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
+              <circle cx="0" cy="0" r="70"  fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
+              <circle cx="0" cy="0" r="35"  fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
+              <line x1="0" y1="-140" x2="0" y2="140" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
+              <line x1="-133" y1="-43" x2="133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
+              <line x1="-82" y1="-113" x2="82" y2="113" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
+              <line x1="82" y1="-113" x2="-82" y2="113" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
+              <line x1="133" y1="-43" x2="-133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
+              <polygon id="radarPoly" points="" fill="rgba(200,168,75,0.22)" stroke="#C8A84B" stroke-width="2"/>
+              <text x="0" y="-152" text-anchor="middle" fill="#4a9ebb" font-size="10" font-family="Courier New">DEGREE OF DIFFICULTY</text>
+              <text x="152" y="-36" text-anchor="start" fill="#e74c6f" font-size="10" font-family="Courier New">VISUAL DISRUPTION</text>
+              <text x="98" y="132" text-anchor="middle" fill="#C8A84B" font-size="10" font-family="Courier New">DECISIVE MOMENT</text>
+              <text x="-98" y="132" text-anchor="middle" fill="#6bcb8b" font-size="10" font-family="Courier New">WONDER FACTOR</text>
+              <text x="-152" y="-36" text-anchor="end" fill="#b57bee" font-size="10" font-family="Courier New">AFFECTIVE QUOTIENT</text>
+            </svg>
+          </div>
+          <div class="s3-right">
+            <div class="s3-label">THE DDI FRAMEWORK</div>
+            <div class="s3-title">5 Dimensions.<br>One True Score.</div>
+            <div class="s3-sub">EVERY IMAGE RATED ACROSS</div>
+            <div class="s3-dim">
+              <div class="s3-dim-row"><div class="s3-dim-dot" style="background:#4a9ebb;"></div><div class="s3-dim-name">Degree of Difficulty</div></div>
+              <div class="s3-dim-row"><div class="s3-dim-dot" style="background:#e74c6f;"></div><div class="s3-dim-name">Visual Disruption</div></div>
+              <div class="s3-dim-row"><div class="s3-dim-dot" style="background:#C8A84B;"></div><div class="s3-dim-name">Decisive Moment</div></div>
+              <div class="s3-dim-row"><div class="s3-dim-dot" style="background:#6bcb8b;"></div><div class="s3-dim-name">Wonder Factor</div></div>
+              <div class="s3-dim-row"><div class="s3-dim-dot" style="background:#b57bee;"></div><div class="s3-dim-name">Affective Quotient</div></div>
+            </div>
+            <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}" class="s3-cta">GET YOUR SCORE</a>
+          </div>
+        </div>
+
+        <!-- ═══ SLIDE 4 — POTY ═══ -->
+        <div class="sl-slide">
+          <div class="s4-left">
+            <div class="s4-badge-wrap">
+              <img class="s4-badge"
+                   src="{{ url_for('static', filename='img/POTY_revised.png') }}"
+                   alt="Photographer of the Year"
+                   onerror="this.style.display='none'">
+            </div>
+          </div>
+          <div class="s4-right">
+            <div class="s4-label">ANNUAL AWARDS</div>
+            <div class="s4-title">Photographer<br>of the Year</div>
+            <div class="s4-sub">Top ranked photographers win big</div>
+            <div class="s4-divider"></div>
+            <div class="s4-prize-row">
+              <div class="s4-medal" style="background:rgba(200,168,75,0.15);border:2px solid #C8A84B;color:#C8A84B;">1</div>
+              <div class="s4-prize-info">
+                <div class="s4-prize-place">GRAND CHAMPION</div>
+                <div class="s4-prize-amount" style="color:#C8A84B;">&#8377;50,000</div>
+                <div class="s4-prize-label">CASH PRIZE</div>
+              </div>
+            </div>
+            <div class="s4-prize-row">
+              <div class="s4-medal" style="background:rgba(180,180,180,0.1);border:2px solid #aaa;color:#aaa;">2</div>
+              <div class="s4-prize-info">
+                <div class="s4-prize-place">RUNNER UP</div>
+                <div class="s4-prize-amount" style="color:#aaa;">&#8377;20,000</div>
+                <div class="s4-prize-label">CASH PRIZE</div>
+              </div>
+            </div>
+            <div class="s4-prize-row">
+              <div class="s4-medal" style="background:rgba(180,100,40,0.15);border:2px solid #c87840;color:#c87840;">3</div>
+              <div class="s4-prize-info">
+                <div class="s4-prize-place">THIRD PLACE</div>
+                <div class="s4-prize-amount" style="color:#c87840;">&#8377;10,000</div>
+                <div class="s4-prize-label">CASH PRIZE</div>
+              </div>
+            </div>
+            <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('weekly_challenge') }}" class="s4-cta">ENTER THE LEAGUE</a>
+          </div>
+        </div>
+
+        <!-- ═══ SLIDE 5 — Human + AI Mentor ═══ -->
+        <div class="sl-slide">
+          <div class="s5-left">
+            <div class="s5-chart-label">SCORE PROGRESSION — WITH VS WITHOUT MENTORING</div>
+            <canvas id="mentorChart" width="480" height="300"></canvas>
+            <div class="s5-legend">
+              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#e74c6f;"></div><span style="color:#e74c6f;">WITHOUT MENTOR</span></div>
+              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#4acba0;"></div><span style="color:#4acba0;">WITH MENTOR</span></div>
+            </div>
+          </div>
+          <div class="s5-right">
+            <div class="s5-label">HUMAN + AI MENTOR</div>
+            <div class="s5-title">Get Better.<br>Fast.</div>
+            <div class="s5-price">&#8377;999<span style="font-size:18px;color:#6a9a7a;">/mo</span></div>
+            <div class="s5-price-sub">CANCEL ANYTIME</div>
+            <div class="s5-divider"></div>
+            <div class="s5-feature">
+              <div class="s5-tick"><svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#fff" stroke-width="1.5"/></svg></div>
+              <div class="s5-feature-text">Personal score analysis every week</div>
+            </div>
+            <div class="s5-feature">
+              <div class="s5-tick"><svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#fff" stroke-width="1.5"/></svg></div>
+              <div class="s5-feature-text">Dimension-by-dimension feedback</div>
+            </div>
+            <div class="s5-feature">
+              <div class="s5-tick"><svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#fff" stroke-width="1.5"/></svg></div>
+              <div class="s5-feature-text">Ranked improvement tracking</div>
+            </div>
+            <div class="s5-feature">
+              <div class="s5-tick"><svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="#fff" stroke-width="1.5"/></svg></div>
+              <div class="s5-feature-text">Priority challenge submissions</div>
+            </div>
+            <a href="{{ url_for('pricing') }}" class="s5-cta">ENROLL NOW</a>
+          </div>
+        </div>
+
+      </div><!-- /sl-track -->
+    </div><!-- /sl-frame-inner -->
 
     <!-- BOTTOM STRIP -->
-    <div class="sl-bottom-frame">
-
-      <!-- Left: 3 CTA buttons -->
-      <div class="sl-strip" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top:10px;">
-        <div class="sl-strip-lbl" style="display:none;">Get Started</div>
+    <div class="sl-bottom-frame" id="slBottomFrame">
+      <div class="sl-strip" id="slStripLeft" style="display:flex;flex-direction:column;justify-content:flex-start;padding-top:10px;">
         <div class="sl-cta-strip">
-          <a href="{{ url_for("upload") if current_user.is_authenticated else url_for("register") }}" class="sl-strip-btn">UPLOAD IMAGE</a>
-          <a href="{{ url_for("weekly_challenge") }}" class="sl-strip-btn">WIN BIG</a>
-          <a href="{{ url_for("register") if not current_user.is_authenticated else url_for("dashboard") }}" class="sl-strip-btn">IMPROVE</a>
+          <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-strip-btn">UPLOAD IMAGE</a>
+          <a href="{{ url_for('weekly_challenge') }}" class="sl-strip-btn">WIN BIG</a>
+          <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('dashboard') }}" class="sl-strip-btn">IMPROVE</a>
         </div>
       </div>
-
-      <!-- Right: rotating headline -->
-      <div class="sl-strip" style="display:flex; flex-direction:column; justify-content:center; gap:6px;">
+      <div class="sl-strip" id="slStripRight" style="display:flex;flex-direction:column;justify-content:center;gap:6px;">
         <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
-        <div class="sl-hl" id="slHl2" style="font-size:17px; color:#F0EFE8; font-style:normal; letter-spacing:0.5px;">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
+        <div class="sl-hl2" id="slHl2">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
       </div>
-
     </div>
+
   </div>
-
   <div class="sl-gold"></div>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-var hls=["Your rank is <em>waiting.</em>","Find out what your photography is <em>really worth.</em>","Rated by Science. <em>Not Opinion.</em>"];
-var hi=0,hlEl=document.getElementById("slHl");
-if(hlEl){
-  hlEl.style.transition="opacity 0.3s";
-  setInterval(function(){
-    hi=(hi+1)%hls.length;
-    hlEl.style.opacity="0";
-    setTimeout(function(){hlEl.innerHTML=hls[hi];hlEl.style.opacity="1";},320);
-  },3500);
+var cur = 0, total = 5, autoTimer, paused = false;
+var dots = document.querySelectorAll('.sl-dot');
+var slides = document.querySelectorAll('.sl-slide');
+var bottomFrame = document.getElementById('slBottomFrame');
+var stripLeft = document.getElementById('slStripLeft');
+var stripRight = document.getElementById('slStripRight');
+var hlEl = document.getElementById('slHl');
+var hl2El = document.getElementById('slHl2');
+var hls = ["Your rank is <em>waiting.</em>","Find out what your photography is <em>really worth.</em>","Rated by Science. <em>Not Opinion.</em>"];
+var hi = 0;
+
+function goTo(n) {
+  cur = (n + total) % total;
+  slides.forEach(function(s,i){ s.classList.toggle('active', i===cur); });
+  dots.forEach(function(d,i){ d.classList.toggle('on', i===cur); });
+  if(cur===1){
+    bottomFrame.classList.add('cream'); stripLeft.classList.add('cream'); stripRight.classList.add('cream');
+    hlEl.className='sl-hl cream-hl'; hl2El.className='sl-hl2 cream';
+  } else {
+    bottomFrame.classList.remove('cream'); stripLeft.classList.remove('cream'); stripRight.classList.remove('cream');
+    hlEl.className='sl-hl'; hl2El.className='sl-hl2';
+  }
 }
+
+function startAuto() {
+  clearInterval(autoTimer);
+  autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 2500);
+}
+
+document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); startAuto(); });
+document.getElementById('slNext').addEventListener('click', function(){ goTo(cur+1); startAuto(); });
+dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.dataset.i)); startAuto(); }); });
+document.getElementById('slFrameInner').addEventListener('click', function(){ paused=!paused; });
+
+/* Rotating headline */
+hlEl.style.transition='opacity 0.3s';
+setInterval(function(){
+  hi=(hi+1)%hls.length;
+  hlEl.style.opacity='0';
+  setTimeout(function(){ hlEl.innerHTML=hls[hi]; hlEl.style.opacity='1'; },320);
+},3500);
+
+/* Countdown to challenge close */
+{% if active_challenge %}
+var cdTarget = new Date("{{ active_challenge.closes_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}");
+{% else %}
+var cdTarget = (function(){ var now=new Date(); var d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),0,0,0)); var day=d.getUTCDay(); var daysUntil=(8-day)%7||7; d.setUTCDate(d.getUTCDate()+daysUntil); return d; })();
+{% endif %}
+function tick(){
+  var now=new Date(); var diff=Math.max(0,cdTarget-now);
+  var days=Math.floor(diff/86400000); var hrs=Math.floor((diff%86400000)/3600000);
+  var mins=Math.floor((diff%3600000)/60000); var secs=Math.floor((diff%60000)/1000);
+  document.getElementById('cdD').textContent=String(days).padStart(2,'0');
+  document.getElementById('cdH').textContent=String(hrs).padStart(2,'0');
+  document.getElementById('cdM').textContent=String(mins).padStart(2,'0');
+  document.getElementById('cdS').textContent=String(secs).padStart(2,'0');
+}
+tick(); setInterval(tick,1000);
+
+/* Radar animation */
+var radarAxes=[-90,-90+72,-90+144,-90+216,-90+288];
+var radarBase=[0.85,0.72,0.91,0.68,0.78];
+var radarT=0;
+var radarPoly=document.getElementById('radarPoly');
+function radarAnimate(){
+  radarT+=0.018;
+  var pts=radarAxes.map(function(a,i){
+    var v=radarBase[i]+Math.sin(radarT+i*1.2)*0.18;
+    v=Math.max(0.28,Math.min(1.0,v));
+    var rad=a*Math.PI/180;
+    return (Math.cos(rad)*v*130).toFixed(1)+','+(Math.sin(rad)*v*130).toFixed(1);
+  });
+  if(radarPoly) radarPoly.setAttribute('points',pts.join(' '));
+  requestAnimationFrame(radarAnimate);
+}
+radarAnimate();
+
+/* Mentor chart animation */
+var mcCanvas=document.getElementById('mentorChart');
+if(mcCanvas){
+  var ctx5=mcCanvas.getContext('2d');
+  var W5=mcCanvas.width,H5=mcCanvas.height;
+  var pad5={l:44,r:16,t:16,b:36};
+  var woData=[5.2,5.4,5.3,5.6,5.5,5.7,5.6,5.8,5.7,5.9];
+  var wiData=[5.2,5.8,6.3,6.9,7.4,7.8,8.1,8.5,8.8,9.1];
+  var phase5=0,prog5=0,pauseTimer5=0;
+  function drawGrid5(){
+    ctx5.clearRect(0,0,W5,H5);
+    var gw=W5-pad5.l-pad5.r,gh=H5-pad5.t-pad5.b;
+    ctx5.strokeStyle='rgba(74,155,122,0.12)'; ctx5.lineWidth=1;
+    for(var i=0;i<=5;i++){
+      var y=pad5.t+(gh/5)*i;
+      ctx5.beginPath(); ctx5.moveTo(pad5.l,y); ctx5.lineTo(W5-pad5.r,y); ctx5.stroke();
+      ctx5.fillStyle='rgba(74,155,122,0.45)'; ctx5.font='14px Courier New'; ctx5.textAlign='right';
+      ctx5.fillText((10-i*2).toFixed(0),pad5.l-6,y+4);
+    }
+    for(var j=0;j<woData.length;j++){
+      var x=pad5.l+(gw/(woData.length-1))*j;
+      ctx5.fillStyle='rgba(74,155,122,0.35)'; ctx5.font='13px Courier New'; ctx5.textAlign='center';
+      ctx5.fillText('W'+(j+1),x,H5-pad5.b+14);
+    }
+  }
+  function drawLinePartial(data,color,prog){
+    var gw=W5-pad5.l-pad5.r,gh=H5-pad5.t-pad5.b;
+    var pts=Math.floor(prog*(data.length-1));
+    var frac=(prog*(data.length-1))-pts;
+    ctx5.beginPath(); ctx5.strokeStyle=color; ctx5.lineWidth=2.5;
+    ctx5.shadowColor=color; ctx5.shadowBlur=6;
+    for(var i=0;i<=pts&&i<data.length;i++){
+      var x=pad5.l+(gw/(data.length-1))*i;
+      var y=pad5.t+gh-((data[i]-4)/6)*gh;
+      if(i===0) ctx5.moveTo(x,y); else ctx5.lineTo(x,y);
+    }
+    if(pts<data.length-1&&frac>0){
+      var x0=pad5.l+(gw/(data.length-1))*pts,x1=pad5.l+(gw/(data.length-1))*(pts+1);
+      var y0=pad5.t+gh-((data[pts]-4)/6)*gh,y1=pad5.t+gh-((data[pts+1]-4)/6)*gh;
+      ctx5.lineTo(x0+(x1-x0)*frac,y0+(y1-y0)*frac);
+    }
+    ctx5.stroke(); ctx5.shadowBlur=0;
+    var ex,ey;
+    if(pts<data.length-1){
+      var x0=pad5.l+(gw/(data.length-1))*pts,x1=pad5.l+(gw/(data.length-1))*(pts+1);
+      var y0=pad5.t+gh-((data[pts]-4)/6)*gh,y1=pad5.t+gh-((data[pts+1]-4)/6)*gh;
+      ex=x0+(x1-x0)*frac; ey=y0+(y1-y0)*frac;
+    } else {
+      ex=pad5.l+(gw/(data.length-1))*(data.length-1);
+      ey=pad5.t+gh-((data[data.length-1]-4)/6)*gh;
+    }
+    ctx5.beginPath(); ctx5.arc(ex,ey,5,0,Math.PI*2); ctx5.fillStyle=color; ctx5.fill();
+  }
+  function animChart5(){
+    drawGrid5();
+    if(phase5===0){ prog5+=0.008; drawLinePartial(woData,'#e74c6f',Math.min(prog5,1)); if(prog5>=1){phase5=1;pauseTimer5=0;prog5=0;} }
+    else if(phase5===1){ drawLinePartial(woData,'#e74c6f',1); pauseTimer5++; if(pauseTimer5>60) phase5=2; }
+    else if(phase5===2){ drawLinePartial(woData,'#e74c6f',1); prog5+=0.010; drawLinePartial(wiData,'#4acba0',Math.min(prog5,1)); if(prog5>=1){phase5=3;pauseTimer5=0;prog5=0;} }
+    else if(phase5===3){ drawLinePartial(woData,'#e74c6f',1); drawLinePartial(wiData,'#4acba0',1); pauseTimer5++; if(pauseTimer5>120){phase5=0;prog5=0;} }
+    requestAnimationFrame(animChart5);
+  }
+  animChart5();
+}
+
 document.querySelectorAll(".flash.success").forEach(function(f){
   setTimeout(function(){f.classList.add("hiding");setTimeout(function(){f.remove();},300);},5000);
 });
+
+startAuto();
 </script>
 {% endblock %}
