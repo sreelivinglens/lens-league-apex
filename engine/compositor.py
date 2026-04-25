@@ -58,7 +58,8 @@ PAD      = 80
 HEADER_H = 100
 FOOTER_H = 80
 
-SITE_URL = 'shutterleague.com'
+SITE_URL   = 'shutterleague.com'
+LOGO_PATH  = os.path.join(FONT_DIR, 'shutterleague-logo-cropped.png')
 
 def lh(font):
     d = ImageDraw.Draw(PilImage.new('RGB',(1,1)))
@@ -92,16 +93,30 @@ def draw_header(canvas, draw, left, right):
     draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
 
 def draw_footer(canvas, draw, stamp):
-    """Footer with branding and URL for social sharing attribution."""
+    """Footer with Shutter League logo and branding."""
     draw.rectangle([0,CH-FOOTER_H,CW,CH], fill=S1)
     draw.rectangle([0,CH-FOOTER_H,CW,CH-FOOTER_H+1], fill=BORDER)
-    draw.text((PAD, CH-FOOTER_H+24),
-              f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
-              font=fnt(28,mono=True), fill=T3)
+    # Try to paste logo
+    logo_ok = False
+    try:
+        from PIL import Image as _PL
+        logo = _PL.open(LOGO_PATH).convert('RGBA')
+        lh = FOOTER_H - 16
+        lw = int(logo.size[0] * lh / logo.size[1])
+        logo = logo.resize((lw, lh), _PL.LANCZOS)
+        canvas.paste(logo, (PAD, CH - FOOTER_H + 8), logo)
+        draw.text((PAD + lw + 16, CH-FOOTER_H+26),
+                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
+                  font=fnt(24,mono=True), fill=T3)
+        logo_ok = True
+    except Exception:
+        pass
+    if not logo_ok:
+        draw.text((PAD, CH-FOOTER_H+26),
+                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
+                  font=fnt(28,mono=True), fill=T3)
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
-    draw.text((CW-PAD-sw, CH-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
-
-
+    draw.text((CW-PAD-sw, CH-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 def build_card1(photo_path, data, out_path):
     """Card 1 — Photo + Score + Modules (landscape brag card)"""
     canvas = PilImage.new('RGB',(CW,CH),BLACK)
