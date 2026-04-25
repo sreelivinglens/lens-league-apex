@@ -471,7 +471,7 @@ body:has(.sl-hp) footer { display: none !important; }
       <!-- Right: rotating headline -->
       <div class="sl-strip" style="display:flex; flex-direction:column; justify-content:center; gap:6px;">
         <div class="sl-hl" id="slHl">Your rank is <em>waiting.</em></div>
-        <div class="sl-hl" id="slHl2" style="font-size:13px; color:#F0EFE8; font-style:normal; letter-spacing:0.5px;">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
+        <div class="sl-hl" id="slHl2" style="font-size:17px; color:#F0EFE8; font-style:normal; letter-spacing:0.5px;">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
       </div>
 
     </div>
@@ -485,21 +485,15 @@ body:has(.sl-hp) footer { display: none !important; }
 {% block extra_js %}
 <script>
 var hls=["Your rank is <em>waiting.</em>","Find out what your photography is <em>really worth.</em>","Rated by Science. <em>Not Opinion.</em>"];
-var hi=0,hlEl=document.getElementById("slHl"),hl2El=document.getElementById("slHl2");
-var hl2Text="Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor & Affective Quotient";
+var hi=0,hlEl=document.getElementById("slHl");
 if(hlEl){
   hlEl.style.transition="opacity 0.3s";
   setInterval(function(){
     hi=(hi+1)%hls.length;
     hlEl.style.opacity="0";
-    if(hl2El){hl2El.style.opacity="0";}
-    setTimeout(function(){
-      hlEl.innerHTML=hls[hi];hlEl.style.opacity="1";
-      if(hl2El){hl2El.textContent=hl2Text;hl2El.style.opacity="1";}
-    },320);
+    setTimeout(function(){hlEl.innerHTML=hls[hi];hlEl.style.opacity="1";},320);
   },3500);
 }
-if(hl2El){hl2El.style.transition="opacity 0.3s";}
 document.querySelectorAll(".flash.success").forEach(function(f){
   setTimeout(function(){f.classList.add("hiding");setTimeout(function(){f.remove();},300);},5000);
 });
