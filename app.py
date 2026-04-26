@@ -871,6 +871,10 @@ def register():
 
 @app.route('/auth/google')
 def auth_google():
+    # Save next URL in session so we can redirect after OAuth
+    next_url = request.args.get('next', '')
+    if next_url:
+        session['post_login_next'] = next_url
     redirect_uri = url_for('auth_google_callback', _external=True)
     return google.authorize_redirect(redirect_uri, prompt='select_account')
 
@@ -908,6 +912,10 @@ def auth_google_callback():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
+        # Redirect to stored next URL if available
+        post_next = session.pop('post_login_next', None)
+        if post_next:
+            return redirect(post_next)
         return redirect(url_for('dashboard'))
     else:
         # New user  -  create account, send to onboarding
@@ -960,6 +968,10 @@ def onboarding():
         current_user.onboarding_complete = True
         db.session.commit()
         flash('Welcome to Shutter League! Your account is ready.', 'success')
+        # Redirect to intended destination if set before login
+        post_next = session.pop('post_login_next', None)
+        if post_next:
+            return redirect(post_next)
         return redirect(url_for('dashboard'))
 
     _loc = {}
