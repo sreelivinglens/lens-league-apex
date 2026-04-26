@@ -28,7 +28,7 @@
   .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:var(--gold); border-radius:50%; transition:.3s; }
   input:checked + .toggle-slider:before { transform:translateX(24px); }
   .save-badge { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#0D0D0B; background:var(--gold); padding:3px 8px; border-radius:4px; text-transform:uppercase; }
-  .plans-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; max-width:1000px; margin:0 auto 64px; }
+  .plans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1200px; margin:0 auto 64px; }
   .plan-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; }
   .plan-card:hover { border-color:var(--gold-dark); }
   .plan-card.featured { border-color:var(--gold); }
@@ -83,7 +83,10 @@
   .faq-q { font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
   .faq-a { font-size:16px; color:var(--text-primary); line-height:1.8; }
   @media(max-width:768px) {
-    .plans-grid { grid-template-columns:1fr; }
+    .plans-grid { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:520px) {
+  .plans-grid { grid-template-columns:1fr; }
     .extras-grid { grid-template-columns:1fr; }
     .open-card-header { flex-direction:column; }
     .open-prizes { grid-template-columns:1fr; }
@@ -110,6 +113,31 @@
   </div>
 
   <div class="plans-grid">
+
+    <!-- Learning Only -->
+    <div class="plan-card" style="border-color:#F5C518;">
+      <span class="plan-icon">📚</span>
+      <div class="plan-name">Learning Only</div>
+      <div class="plan-track">AI Mentor · Improvement Paths</div>
+      <div class="plan-price">
+        <span class="plan-amount">₹100</span><span class="plan-period">/month</span>
+      </div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> <strong>12 scored images / month</strong></li>
+        <li><span class="check">✓</span> Full DDI analysis — 5 dimensions</li>
+        <li><span class="check">✓</span> AI mentor feedback on every upload</li>
+        <li><span class="check">✓</span> Improvement paths — know what to fix</li>
+        <li><span class="check">✓</span> Score history &amp; progress tracking</li>
+        <li><span class="check">✓</span> Shareable score card</li>
+        <li><span class="muted">—</span> <span style="color:rgba(255,255,255,0.5)">Weekly Challenge &amp; POTY</span></li>
+        <li><span class="muted">—</span> <span style="color:rgba(255,255,255,0.5)">Contest prize eligibility</span></li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('subscribe', track='learning') }}" class="plan-cta primary">Start Learning →</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="plan-cta primary">Start Learning →</a>
+      {% endif %}
+    </div>
 
     <!-- Free -->
     <div class="plan-card">

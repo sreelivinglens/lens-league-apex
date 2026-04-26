@@ -636,6 +636,7 @@ img {
         <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}" style="color:var(--gold-light);">Challenge</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+        <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
         {% if current_user.is_subscribed %}
@@ -701,7 +702,7 @@ img {
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="/how-it-works" onclick="toggleNav()">How It Works</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
-    <a href="{{ url_for('learning') }}" onclick="toggleNav()" style="color:#F5C518; font-weight:700;">Learn — Mentor ₹999/mo</a>
+    <a href="{{ url_for('learning') }}" onclick="toggleNav()" style="color:#F5C518; font-weight:700;">Learn</a>
     <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
     <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:var(--gold);">Join Free</a>
   {% endif %}
