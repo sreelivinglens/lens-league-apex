@@ -1,8 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Subscribe — {{ track | title }} Track — Lens League Apex{% endblock %}
+{% block title %}Subscribe — {{ track_label }} — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
+  :root {
+    --gold: #F5C518 !important; --gold-dark: #F5C518 !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted: var(--text-primary) !important;
+  }
+
   .sub-wrap { max-width: 520px; margin: 0 auto; padding: clamp(40px,6vw,72px) var(--page-pad); }
   .sub-header { text-align: center; margin-bottom: 40px; }
   .sub-track-icon { font-size: 48px; margin-bottom: 16px; display: block; }
@@ -42,15 +48,16 @@
 <div class="sub-wrap">
 
   <div class="sub-header">
-    <span class="sub-track-icon">{{ '📷' if track == 'camera' else '📱' }}</span>
-    <div class="sub-eyebrow">{{ track | title }} Track</div>
-    <h1 class="sub-title">Subscribe to Lens League</h1>
+    <span class="sub-track-icon">{{ '📷' if track == 'camera' else ('📱' if track == 'mobile' else ('📚' if track == 'learning' else '🎯')) }}</span>
+    <div class="sub-eyebrow">{{ track_label }}</div>
+    <h1 class="sub-title">Subscribe to Shutter League</h1>
     <div class="sub-plan-badge">
-      {{ '📷 DSLR · Mirrorless · Film' if track == 'camera' else '📱 iPhone · Android · Smartphone' }}
+      {{ '📷 DSLR · Mirrorless · Film' if track == 'camera' else ('📱 iPhone · Android · Smartphone' if track == 'mobile' else track_description) }}
     </div>
   </div>
 
   <!-- Plan toggle -->
+  {% if track in ('camera', 'mobile') %}
   <div class="plan-toggle">
     <a href="{{ url_for('subscribe', track=track) }}?plan=monthly"
        class="plan-opt {{ 'active' if plan == 'monthly' else '' }}">
@@ -65,6 +72,7 @@
       <div class="plan-opt-save">Save 30%</div>
     </a>
   </div>
+  {% endif %}
 
   <div class="sub-card">
     <div class="sub-price-row">
@@ -81,19 +89,54 @@
 
     <hr class="sub-divider">
 
+    {% if track == 'learning' %}
+    <div class="sub-feature"><span class="check">✓</span> <strong>12 scored images / month</strong></div>
+    <div class="sub-feature"><span class="check">✓</span> Full DDI analysis — 5 dimensions</div>
+    <div class="sub-feature"><span class="check">✓</span> AI mentor — dimension-by-dimension feedback</div>
+    <div class="sub-feature"><span class="check">✓</span> Improvement paths — know what to fix</div>
+    <div class="sub-feature"><span class="check">✓</span> Score history &amp; progress tracking</div>
+    <div class="sub-feature"><span class="check">✓</span> Shareable score card</div>
+    {% elif track == 'mentor' %}
+    <div class="sub-feature"><span class="check">✓</span> <strong>12 scored images / month</strong></div>
+    <div class="sub-feature"><span class="check">✓</span> Everything in Learning</div>
+    <div class="sub-feature"><span class="check">✓</span> Personal score review every week</div>
+    <div class="sub-feature"><span class="check">✓</span> 1-on-1 with a human photographer-mentor</div>
+    <div class="sub-feature"><span class="check">✓</span> AI prepares your brief before every session</div>
+    <div class="sub-feature"><span class="check">✓</span> Competition strategy — what to enter and when</div>
+    {% else %}
     <div class="sub-feature"><span class="check">✓</span> Unlimited scored images per month</div>
     <div class="sub-feature"><span class="check">✓</span> Full Apex DDI analysis — 5 scoring modules</div>
-    <div class="sub-feature"><span class="check">✓</span> Monthly genre contests &amp; leaderboard</div>
+    <div class="sub-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY qualification</div>
     <div class="sub-feature"><span class="check">✓</span> Peer-to-peer blind rating system</div>
     <div class="sub-feature"><span class="check">✓</span>
-      {% if track == 'camera' %}Annual Grand Prix — POTY prize pool{% else %}Annual Mobile POTY prize pool{% endif %}
+      {% if track == 'camera' %}Annual Grand Prix — POTY prize pool ₹50L{% else %}Annual Mobile POTY prize pool ₹12L{% endif %}
     </div>
     <div class="sub-feature"><span class="check">✓</span> Open Competition eligible</div>
-    <div class="sub-feature"><span class="check">✓</span> Shareable Apex rating card</div>
+    <div class="sub-feature"><span class="check">✓</span> Shareable score card</div>
+    {% endif %}
 
     <hr class="sub-divider">
 
-    {% if subscription %}
+    {% if track in ('learning', 'mentor') %}
+    <div style="text-align:center; padding:28px 20px; background:rgba(245,197,24,0.08); border:1px solid #F5C518; border-radius:var(--radius-md);">
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:12px;">Coming Soon</div>
+      <div style="font-size:17px; color:var(--text-primary); line-height:1.6; margin-bottom:20px;">
+        Payments for this plan are opening shortly.<br>
+        Leave your email and we'll notify you first.
+      </div>
+      <form method="POST" action="{{ url_for('contact') }}" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <input type="hidden" name="subject" value="Early access — {{ track_label }}">
+        <input type="hidden" name="message" value="I want to be notified when {{ track_label }} (₹{{ amount }}/mo) payments go live.">
+        <input type="email" name="email" required placeholder="your@email.com"
+               value="{{ current_user.email }}"
+               style="flex:1; min-width:200px; padding:12px 16px; border:1px solid #F5C518; background:#000; color:#FFFFFF; border-radius:var(--radius-sm); font-size:16px; outline:none;">
+        <button type="submit" class="sub-btn" style="width:auto; padding:12px 24px; margin:0; flex-shrink:0;">
+          Notify Me →
+        </button>
+      </form>
+    </div>
+
+    {% elif subscription %}
       <button class="sub-btn" id="pay-btn" onclick="startPayment()">
         Pay ₹{{ amount | int }} — Activate Subscription
       </button>
@@ -113,7 +156,7 @@
     {% else %}
       <div class="no-payment">
         Payment system is currently unavailable. Please try again shortly or contact
-        <a href="mailto:verify@lensleague.com" style="color:var(--gold);">verify@lensleague.com</a>
+        <a href="mailto:{{ contact_email }}" style="color:var(--gold);">{{ contact_email }}</a>
       </div>
     {% endif %}
 
@@ -141,7 +184,7 @@ function startPayment() {
     key:             '{{ razorpay_key }}',
     subscription_id: '{{ subscription.id }}',
     name:            'Lens League Apex',
-    description:     '{{ track | title }} Track — {{ plan | title }}',
+    description:     '{{ track_label }} — {{ plan | title }}ly',
     image:           '/static/logo.png',
     handler: function(response) {
       document.getElementById('rzp_payment_id').value      = response.razorpay_payment_id;
@@ -153,7 +196,7 @@ function startPayment() {
       email: '{{ current_user.email }}',
       name:  '{{ current_user.full_name or current_user.username }}',
     },
-    theme: { color: '#C8A84B' },
+    theme: { color: '#F5C518' },
     modal: {
       ondismiss: function() {
         btn.disabled    = false;

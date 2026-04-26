@@ -104,6 +104,7 @@
       </ul>
       <a href="{{ url_for('subscribe', track='learning') if current_user.is_authenticated else url_for('auth_google', next=url_for('subscribe', track='learning')) }}"
          class="plan-cta secondary">START LEARNING →</a>
+      <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-primary); text-align:center; margin-top:10px; letter-spacing:1px;">PAYMENTS OPENING SOON</div>
     </div>
 
     <!-- Human + AI Mentor ₹999 -->
@@ -123,6 +124,7 @@
       </ul>
       <a href="{{ url_for('subscribe', track='mentor') if current_user.is_authenticated else url_for('auth_google', next=url_for('subscribe', track='mentor')) }}"
          class="plan-cta primary">GET A MENTOR →</a>
+      <div style="font-family:var(--font-mono); font-size:11px; color:#FFFFFF; text-align:center; margin-top:10px; letter-spacing:1px;">PAYMENTS OPENING SOON</div>
     </div>
 
   </div>
