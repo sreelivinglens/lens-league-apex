@@ -18,6 +18,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   :root {
     --black:      #0a0a0a;
     --surface-1:  #0a0a0a;
@@ -72,7 +84,7 @@
     display: flex; justify-content: space-between; align-items: center;
   }
   .card-header .brand-dark { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--black); letter-spacing: 2px; }
-  .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.5); letter-spacing: 1.5px; }
+  .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.85); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
   .photo-wrap img { width: 100%; display: block; max-height: 480px; object-fit: cover;
@@ -83,7 +95,7 @@
   .tier-strip {
     background: #0d0d0b; padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(200,168,75,0.3);
+    border-bottom: 1px solid rgba(245,197,24,0.15);
   }
   .tier-strip .tier-word {
     font-family: var(--font-mono); font-size: 22px; font-weight: 700;
@@ -101,7 +113,7 @@
   /* ── Contest winner badge ── */
   .contest-badge {
     position: absolute; top: 16px; right: 16px; z-index: 4;
-    background: #C8A84B; color: #1a1a18;
+    background: #F5C518; color: #1a1a18;
     padding: 5px 10px; border-radius: 4px;
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 0.5px; pointer-events: none;
@@ -109,7 +121,7 @@
 
   .judge-badge {
     position: absolute; top: 16px; left: 16px;
-    background: rgba(200,168,75,0.15); border: 1px solid var(--gold);
+    background: rgba(245,197,24,0.15); border: 1px solid var(--gold);
     border-radius: 4px; padding: 5px 12px;
     font-family: var(--font-mono); font-size: 14px; font-weight: 600;
     letter-spacing: 1.5px; color: var(--gold); backdrop-filter: blur(8px);
@@ -128,7 +140,7 @@
   .byline-section {
     padding: 24px 28px; border-bottom: 1px solid var(--border);
     border-left: 3px solid var(--gold);
-    background: linear-gradient(90deg, rgba(200,168,75,0.04), transparent);
+    background: linear-gradient(90deg, rgba(245,197,24,0.15), transparent);
   }
   .byline-tag      { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
   .byline-text     { font-size: 18px; color: var(--text-2); line-height: 1.75; margin-bottom: 16px; }
@@ -146,7 +158,7 @@
   /* Register CTA — logged-out only */
   .register-cta {
     padding: 28px 28px; text-align: center;
-    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.06));
+    background: linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));
     border-top: 1px solid var(--gold-dark);
   }
   .register-cta .cta-eyebrow { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
@@ -412,7 +424,7 @@
       </div>
       <div style="display:flex; gap:10px;">
         <button type="submit" style="
-          flex:1; background:#C8A84B; color:#000; border:none; border-radius:6px;
+          flex:1; background:#F5C518; color:#000; border:none; border-radius:6px;
           padding:11px; font-family:monospace; font-size:14px; font-weight:700;
           letter-spacing:1px; text-transform:uppercase; cursor:pointer;">
           Submit Report
@@ -463,7 +475,7 @@
       </div>
     </div>
     <button onclick="document.getElementById('dopamine-popup').style.display='none'"
-            style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
+            style="background:none;border:none;color:rgba(255,255,255,0.85);font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
   </div>
 </div>
 
