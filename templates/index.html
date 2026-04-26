@@ -1,3 +1,8 @@
+{% block extra_head %}
+<link rel="preload" as="image" href="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}" fetchpriority="high">
+<link rel="preload" as="image" href="{{ url_for('static', filename='img/POTY revised.png') }}" fetchpriority="low">
+{% endblock %}
+
 {% extends "base.html" %}
 {% block title %}Shutter League — Find out what your photography is really worth{% endblock %}
 
@@ -419,7 +424,7 @@ body:has(.sl-hp) footer { display: none !important; }
                 {% endif %}
               </div>
               <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-                   class="s1-logo" alt="Shutter League" onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
+                   class="s1-logo" alt="Shutter League" fetchpriority="high" loading="eager" onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
             </div>
             <div class="s1-info-block">
               {% if carousel_images %}
