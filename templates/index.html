@@ -112,7 +112,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s1-pips { display: flex; gap: 6px; margin-top: 10px; }
 .s1-pip { width: 28px; height: 6px; background: #2a2a28; }
 .s1-pip.on { background: #F5C518; }
-.s1-logo { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; margin-top: 4px; opacity: 0.9; }
+.s1-logo { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; margin-top: 4px; opacity: 0.95; mix-blend-mode: lighten; }
 .s1-info-block { padding: 12px 26px; border-bottom: 1px solid #1e1e1c; flex-shrink: 0; }
 .s1-photographer { font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #F0EFE8; text-transform: uppercase; }
 .s1-gold-line { height: 1px; background: rgba(245,197,24,0.15); margin: 10px 0; }
@@ -320,7 +320,7 @@ body:has(.sl-hp) footer { display: none !important; }
 }
 .sl-arrow:hover { background: rgba(245,197,24,0.15); }
 .sl-arrow.prev { left: 14px; }
-.sl-arrow.next { right: 14px; }
+.sl-arrow.next { right: calc(420px + 14px); }
 
 @keyframes shimmer { 0%{left:-100%} 40%{left:150%} 100%{left:150%} }
 
@@ -424,7 +424,7 @@ body:has(.sl-hp) footer { display: none !important; }
                 {% endif %}
               </div>
               <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-                   class="s1-logo" alt="Shutter League" fetchpriority="high" loading="eager" onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
+                   class="s1-logo" alt="Shutter League" fetchpriority="high" loading="eager" width="80" height="80" onerror="this.onerror=null;this.src=this.src.replace('POTY_revised.png','POTY.png');">
             </div>
             <div class="s1-info-block">
               {% if carousel_images %}
