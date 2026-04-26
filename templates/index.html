@@ -217,7 +217,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s5-legend { display: flex; gap: 24px; margin-top: 8px; justify-content: center; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 4px; }
 .s5-leg-item { display: flex; align-items: center; gap: 8px; font-size: 15px; letter-spacing: 1px; color: #FFFFFF; font-weight: 700; }
 .s5-leg-dot { width: 28px; height: 3px; border-radius: 2px; }
-.s5-label { font-size: 14px; letter-spacing: 3px; color: #F5C518; margin-bottom: 8px; font-weight: 700; }
+.s5-label { font-size: 16px; letter-spacing: 3px; color: #F5C518; margin-bottom: 8px; font-weight: 700; }
 .s5-title { font-size: 30px; font-weight: 700; font-family: Georgia, serif; color: #000000; line-height: 1.2; margin-bottom: 6px; }
 .s5-price { font-size: 44px; font-weight: 700; color: #F5C518; line-height: 1; margin-bottom: 2px; }
 .s5-price-sub { font-size: 13px; color: #000000; letter-spacing: 2px; margin-bottom: 12px; font-weight: 700; }
@@ -393,7 +393,7 @@ body:has(.sl-hp) footer { display: none !important; }
                 <div class="s1-photo-overlay"></div>
               {% endif %}
             {% endif %}
-            <div class="s1-photo-tag">GRANDMASTER &nbsp;&#183;&nbsp; LIVE</div>
+            
           </div>
           <div class="s1-panel">
             <div class="s1-score-block">
@@ -510,16 +510,16 @@ body:has(.sl-hp) footer { display: none !important; }
               <line x1="133" y1="-43" x2="-133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
               <polygon id="radarPoly" points="" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="2"/>
               <!-- Top: Degree of Difficulty -->
-              <text x="0" y="-158" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="Courier New" font-weight="bold">DEGREE OF DIFFICULTY</text>
+              <text x="0" y="-158" text-anchor="middle" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">DEGREE OF DIFFICULTY</text>
               <!-- Right: Visual Disruption -->
-              <text x="152" y="-50" text-anchor="start" fill="#FFFFFF" font-size="18" font-family="Courier New" font-weight="bold">VISUAL</text>
+              <text x="152" y="-50" text-anchor="start" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">VISUAL</text>
               <text x="152" y="-34" text-anchor="start" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">DISRUPTION</text>
               <!-- Bottom right: Decisive Moment -->
-              <text x="90" y="148" text-anchor="middle" fill="#F5C518" font-size="18" font-family="Courier New" font-weight="bold">DECISIVE MOMENT</text>
+              <text x="90" y="148" text-anchor="middle" fill="#F5C518" font-size="22" font-family="Courier New" font-weight="bold">DECISIVE MOMENT</text>
               <!-- Bottom left: Wonder Factor -->
-              <text x="-90" y="148" text-anchor="middle" fill="#FFFFFF" font-size="18" font-family="Courier New" font-weight="bold">WONDER FACTOR</text>
+              <text x="-90" y="148" text-anchor="middle" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">WONDER FACTOR</text>
               <!-- Left: Affective Quotient -->
-              <text x="-152" y="-50" text-anchor="end" fill="#FFFFFF" font-size="18" font-family="Courier New" font-weight="bold">AFFECTIVE</text>
+              <text x="-152" y="-50" text-anchor="end" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">AFFECTIVE</text>
               <text x="-152" y="-34" text-anchor="end" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">QUOTIENT</text>
             </svg>
           </div>
@@ -587,8 +587,8 @@ body:has(.sl-hp) footer { display: none !important; }
             <div class="s5-chart-label">SCORE PROGRESSION — WITH VS WITHOUT MENTORING</div>
             <canvas id="mentorChart" width="480" height="300"></canvas>
             <div class="s5-legend">
-              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#e74c6f;"></div><span style="color:#e74c6f;">WITHOUT MENTOR</span></div>
-              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#4acba0;"></div><span style="color:#4acba0;">WITH MENTOR</span></div>
+              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#FFFFFF;"></div><span style="color:#FFFFFF;">WITHOUT MENTOR</span></div>
+              <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#4acba0;"></div><span style="color:#FFFFFF;">WITH MENTOR</span></div>
             </div>
           </div>
           <div class="s5-right">
@@ -828,10 +828,10 @@ if(mcCanvas){
   }
   function animChart5(){
     drawGrid5();
-    if(phase5===0){ prog5+=0.008; drawLinePartial(woData,'#e74c6f',Math.min(prog5,1)); if(prog5>=1){phase5=1;pauseTimer5=0;prog5=0;} }
-    else if(phase5===1){ drawLinePartial(woData,'#e74c6f',1); pauseTimer5++; if(pauseTimer5>60) phase5=2; }
-    else if(phase5===2){ drawLinePartial(woData,'#e74c6f',1); prog5+=0.010; drawLinePartial(wiData,'#4acba0',Math.min(prog5,1)); if(prog5>=1){phase5=3;pauseTimer5=0;prog5=0;} }
-    else if(phase5===3){ drawLinePartial(woData,'#e74c6f',1); drawLinePartial(wiData,'#4acba0',1); pauseTimer5++; if(pauseTimer5>120){phase5=0;prog5=0;} }
+    if(phase5===0){ prog5+=0.008; drawLinePartial(woData,'#FFFFFF',Math.min(prog5,1)); if(prog5>=1){phase5=1;pauseTimer5=0;prog5=0;} }
+    else if(phase5===1){ drawLinePartial(woData,'#FFFFFF',1); pauseTimer5++; if(pauseTimer5>60) phase5=2; }
+    else if(phase5===2){ drawLinePartial(woData,'#FFFFFF',1); prog5+=0.010; drawLinePartial(wiData,'#4acba0',Math.min(prog5,1)); if(prog5>=1){phase5=3;pauseTimer5=0;prog5=0;} }
+    else if(phase5===3){ drawLinePartial(woData,'#FFFFFF',1); drawLinePartial(wiData,'#4acba0',1); pauseTimer5++; if(pauseTimer5>120){phase5=0;prog5=0;} }
     requestAnimationFrame(animChart5);
   }
   animChart5();
