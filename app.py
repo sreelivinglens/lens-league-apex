@@ -4146,7 +4146,7 @@ def admin_weekly_challenge():
 @app.route('/subscribe/<track>', methods=['GET', 'POST'])
 @login_required
 def subscribe(track):
-    if track not in ('camera', 'mobile'):
+    if track not in ('camera', 'mobile', 'learning', 'mentor'):
         return redirect(url_for('pricing'))
 
     plan = request.args.get('plan', 'monthly')
@@ -4165,10 +4165,20 @@ def subscribe(track):
             'monthly': os.getenv('RAZORPAY_PLAN_CAMERA_MONTHLY', ''),
             'annual':  os.getenv('RAZORPAY_PLAN_CAMERA_ANNUAL', ''),
         },
+        'learning': {
+            'monthly': os.getenv('RAZORPAY_PLAN_LEARNING_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_LEARNING_ANNUAL', ''),
+        },
+        'mentor': {
+            'monthly': os.getenv('RAZORPAY_PLAN_MENTOR_MONTHLY', ''),
+            'annual':  os.getenv('RAZORPAY_PLAN_MENTOR_ANNUAL', ''),
+        },
     }
     display_prices = {
-        'mobile': {'monthly': 299,  'annual': 2499},
-        'camera': {'monthly': 599,  'annual': 4999},
+        'mobile':   {'monthly': 299,  'annual': 2499},
+        'camera':   {'monthly': 599,  'annual': 4999},
+        'learning': {'monthly': 100,  'annual': 999},
+        'mentor':   {'monthly': 999,  'annual': 9999},
     }
 
     plan_id = plan_ids[track][plan]
@@ -4201,8 +4211,14 @@ def subscribe(track):
             current_user.razorpay_sub_id     = subscription_id
             db.session.commit()
 
-            flash(f' Welcome to the {track.title()} Track! Your subscription is active.', 'success')
-            return redirect(url_for('dashboard'))
+            track_names = {
+                'camera':   'Camera Track',
+                'mobile':   'Mobile Track',
+                'learning': 'Learning — ₹100/mo',
+                'mentor':   'Human + AI Mentor',
+            }
+            flash(f'Welcome to {track_names.get(track, track.title())}! Your subscription is active.', 'success')
+            return redirect(url_for('learning') if track in ('learning', 'mentor') else url_for('dashboard'))
         except Exception as e:
             app.logger.error(f'[subscribe] verification failed: {e}')
             flash('Payment verification failed. Please contact support if you were charged.', 'error')
@@ -4224,10 +4240,24 @@ def subscribe(track):
             app.logger.error(f'[subscribe] subscription create failed: {e}')
             flash('Could not initialise payment. Please try again.', 'error')
 
+    track_labels = {
+        'camera':   'Camera Track',
+        'mobile':   'Mobile Track',
+        'learning': 'Learning Only',
+        'mentor':   'Human + AI Mentor',
+    }
+    track_descriptions = {
+        'camera':   'Unlimited uploads · POTY · Contests',
+        'mobile':   'Unlimited uploads · POTY · Contests',
+        'learning': '12 scored images/month · AI mentor · Improvement paths',
+        'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
+    }
     return render_template('subscribe.html',
         track=track, plan=plan, amount=amount,
         subscription=subscription,
         razorpay_key=razorpay_key,
+        track_label=track_labels.get(track, track.title()),
+        track_description=track_descriptions.get(track, ''),
     )
 
 
