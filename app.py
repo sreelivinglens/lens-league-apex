@@ -3407,6 +3407,11 @@ def contact():
 def contest_rules():
     return render_template('contest_rules.html')
 
+
+@app.route('/learning')
+def learning():
+    return render_template('learning.html')
+
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html', open_contest_active=is_open_contest_active())
