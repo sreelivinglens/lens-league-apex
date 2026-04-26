@@ -825,7 +825,7 @@ def index():
         carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
-                                   Image.tier.in_(['Grandmaster','Master']),
+                                   Image.tier.in_(['Legend','Grandmaster','Master']),
                                    Image.score>=8.0)
                            .order_by(Image.score.desc())
                            .limit(6).all())
@@ -1572,7 +1572,7 @@ def upload():
                 if ai_suspicion >= 0.7:
                     # TIER 3  -  Auto-flagged: almost certainly AI-generated
                     img.score            = 0.0
-                    img.tier             = 'Apprentice'
+                    img.tier = 'Rookie'
                     img.dod_score        = 0.0
                     img.disruption_score = 0.0
                     img.dm_score         = 0.0
@@ -2093,7 +2093,7 @@ def leaderboard():
         .distinct().order_by(User.city).all()
     ) if c[0]]
 
-    all_tiers = ['Apprentice', 'Practitioner', 'Master', 'Grandmaster', 'Legend']
+    all_tiers = ['Rookie', 'Shooter', 'Contender', 'Craftsman', 'Maverick', 'Master', 'Grandmaster', 'Legend']
 
     # -- Camera rankings (lazy  -  only computed for Cameras tab) ---------------
     camera_rankings = []
@@ -2950,7 +2950,7 @@ def admin_flag_image(image_id):
     img.flagged_reason = reason
     img.flagged_at     = datetime.utcnow()
     img.score          = 0.0
-    img.tier           = 'Apprentice'
+    img.tier = 'Rookie'
     db.session.commit()
     flash(f'Image "{img.asset_name}" flagged and hidden from public view.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
@@ -3210,7 +3210,7 @@ def public_profile(username):
     best_image   = images[0] if images else None
 
     # Top tier across all scored images
-    tier_order = ['Legend', 'Grandmaster', 'Master', 'Practitioner', 'Apprentice']
+    tier_order = ['Legend', 'Grandmaster', 'Master', 'Maverick', 'Craftsman', 'Contender', 'Shooter', 'Rookie']
     all_tiers  = [i.tier for i in images if i.tier]
     top_tier   = next((t for t in tier_order if t in all_tiers), None)
 
