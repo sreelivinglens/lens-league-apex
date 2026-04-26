@@ -1,14 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Sign In — Shutter League{% endblock %}
 
+{% block extra_css %}<style>
+  /* ── v46 3-COLOUR RULE ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+  }
+</style>{% endblock %}
 {% block content %}
 <div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
   <div style="width:100%; max-width:420px;">
 
     <div style="text-align:center; margin-bottom:40px;">
-      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">APEX DDI ENGINE</div>
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
       <h1 style="font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:8px;">Welcome to Shutter League</h1>
-      <p style="font-size:17px; color:var(--text-secondary);">Rated by science. Not opinion.</p>
+      <p style="font-size:17px; color:var(--text-primary); font-weight:600;">Upload a photo. Get your score in 60 seconds.</p>
     </div>
 
     <div class="card" style="padding:32px;">
@@ -31,7 +41,7 @@
         Continue with Google
       </a>
 
-      <div style="margin-top:20px; font-size:14px; color:var(--text-muted); text-align:center; line-height:1.7;">
+      <div style="margin-top:20px; font-size:14px; color:var(--text-primary); text-align:center; line-height:1.7;">
         By continuing you agree to our
         <a href="{{ url_for('terms') }}" style="color:var(--gold); text-decoration:none;">Terms &amp; Conditions</a>
         and
@@ -41,7 +51,7 @@
       <!-- Data usage notice -->
       <div style="margin-top:14px; padding:12px 16px; background:var(--surface-3);
                   border:1px solid var(--border); border-radius:var(--radius-sm);
-                  font-size:13px; color:var(--text-muted); text-align:center; line-height:1.65;">
+                  font-size:13px; color:var(--text-primary); text-align:center; line-height:1.65;">
         🔒 We collect only your email and name via Google.
         We never sell your data or share it with advertisers.
         &nbsp;<a href="/privacy" style="color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy →</a>
@@ -50,7 +60,7 @@
     </div>
 
     <div style="margin-top:24px; text-align:center;">
-      <div style="display:flex; flex-direction:column; gap:10px; font-size:15px; color:var(--text-muted);">
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:15px; color:var(--text-primary);">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
           No password needed — Google handles sign-in

@@ -1,14 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Server Error — Lens League Apex{% endblock %}
+{% block extra_css %}<style>
+  /* ── v46 3-COLOUR RULE ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+  }
+</style>{% endblock %}
 {% block content %}
 <div style="min-height:65vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 20px;">
   <div style="max-width:480px;">
-    <div style="font-family:var(--font-mono); font-size:80px; font-weight:700; color:var(--surface-4); line-height:1; margin-bottom:24px;">500</div>
+    <div style="font-family:var(--font-mono); font-size:80px; font-weight:700; color:#F5C518; line-height:1; margin-bottom:24px;">500</div>
     <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:4px; color:var(--red); text-transform:uppercase; margin-bottom:16px;">Server Error</div>
     <h1 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:var(--text-primary); margin-bottom:16px; line-height:1.3;">
       Something went wrong
     </h1>
-    <p style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:36px;">
+    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:36px;">
       The Apex DDI Engine encountered an unexpected error.
       Our team has been notified. Please try again in a few moments.
     </p>
