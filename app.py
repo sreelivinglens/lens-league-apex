@@ -3436,6 +3436,28 @@ def contest_rules():
     return render_template('contest_rules.html')
 
 
+@app.route('/notify-me', methods=['POST'])
+def notify_me():
+    email   = request.form.get('email', '').strip()
+    subject = request.form.get('subject', 'Early access notification')
+    if email:
+        try:
+            # Log to contact table or just flash and redirect
+            app.logger.info(f'[notify-me] {email} — {subject}')
+            # Send email notification to admin
+            _send_email(
+                to=os.getenv('ADMIN_EMAIL', 'admin@shutterleague.com'),
+                subject=f'Early Access Request: {subject}',
+                body=f'Email: {email}\nSubject: {subject}'
+            )
+        except Exception as e:
+            app.logger.error(f'[notify-me] error: {e}')
+    flash('Got it! We will notify you as soon as payments go live.', 'success')
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('index'))
+
+
 @app.route('/learning')
 def learning():
     return render_template('learning.html',
