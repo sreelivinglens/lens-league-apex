@@ -160,6 +160,29 @@
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text-primary); }
   .empty-state h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 10px; }
   .empty-state p { font-size: 16px; line-height: 1.7; }
+
+  /* ── Mentor nudge banner ── */
+  .mentor-nudge {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    background: #000000; border: 1px solid #F5C518;
+    border-radius: var(--radius-md); padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .mentor-nudge-left { flex: 1; min-width: 0; }
+  .mentor-nudge-eyebrow {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .mentor-nudge-title {
+    font-size: 20px; font-weight: 700; color: #FFFFFF;
+    margin-bottom: 4px; line-height: 1.3;
+  }
+  .mentor-nudge-sub {
+    font-size: 14px; color: #FFFFFF;
+    font-family: var(--font-mono);
+  }
 </style>
 {% endblock %}
 
@@ -235,6 +258,22 @@
   <div style="flex-shrink:0;">
     <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:13px;">Upgrade to Unlimited →</a>
   </div>
+</div>
+{% endif %}
+
+
+{# ── Mentor nudge (non-mentor subscribers only) ─────────────────────────── #}
+{% if not current_user.has_mentor_subscription %}
+<div class="mentor-nudge">
+  <div class="mentor-nudge-left">
+    <div class="mentor-nudge-eyebrow">Human + AI Mentor · 1-on-1 · Weekly</div>
+    <div class="mentor-nudge-title">Get Better. Fast.</div>
+    <div class="mentor-nudge-sub">₹999/mo · Personal score analysis every week · Cancel anytime</div>
+  </div>
+  <a href="{{ url_for('learning') }}" class="btn btn-solid"
+     style="font-size:13px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
+    Learn More →
+  </a>
 </div>
 {% endif %}
 
