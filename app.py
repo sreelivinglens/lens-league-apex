@@ -186,6 +186,7 @@ Enter here: {challenge_url}
 
 FREE_IMAGE_LIMIT_MONTH1 = 6  # Free images in first calendar month after registration
 FREE_IMAGE_LIMIT_DEFAULT = 3  # Free images per month from month 2 onwards
+LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -1402,24 +1403,39 @@ def upload():
             return redirect(request.url)
 
         # -- Free quota check (6 in month 1, 3/month thereafter) ----------
-        if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+        if current_user.role != 'admin':
             from datetime import date as _date
-            today      = _date.today()
-            reg_date   = current_user.created_at.date() if current_user.created_at else today
-            in_month1  = (today.year == reg_date.year and today.month == reg_date.month)
-            free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
+            today       = _date.today()
             month_start = datetime(today.year, today.month, 1)
             month_count = Image.query.filter(
                 Image.user_id == current_user.id,
                 Image.created_at >= month_start,
             ).count()
-            if month_count >= free_limit:
-                msg = (
-                    f'You have used all {free_limit} free scored images for this month. '
-                    'Upgrade to Camera or Mobile track for unlimited uploads and contest entry.'
-                )
-                flash(msg, 'error')
-                return redirect(url_for('pricing'))
+            _track = getattr(current_user, 'subscription_track', None) or ''
+            _is_sub = getattr(current_user, 'is_subscribed', False)
+
+            if not _is_sub:
+                # Free tier
+                reg_date  = current_user.created_at.date() if current_user.created_at else today
+                in_month1 = (today.year == reg_date.year and today.month == reg_date.month)
+                free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
+                if month_count >= free_limit:
+                    flash(
+                        f'You have used all {free_limit} free scored images for this month. '
+                        'Upgrade to Learning (₹100/mo) for 12 images/month, or Camera/Mobile for unlimited.',
+                        'error'
+                    )
+                    return redirect(url_for('pricing'))
+            elif _track == 'learning':
+                # ₹100 Learning tier — 12 images/month
+                if month_count >= LEARNING_IMAGE_LIMIT:
+                    flash(
+                        f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
+                        'Upgrade to Camera or Mobile track for unlimited uploads and contest access.',
+                        'error'
+                    )
+                    return redirect(url_for('pricing'))
+            # Camera/Mobile/Mentor tracks — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
@@ -3410,7 +3426,8 @@ def contest_rules():
 
 @app.route('/learning')
 def learning():
-    return render_template('learning.html')
+    return render_template('learning.html',
+                           learning_limit=LEARNING_IMAGE_LIMIT)
 
 @app.route('/pricing')
 def pricing():
