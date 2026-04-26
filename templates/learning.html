@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% block title %}Get Better. Fast. — Human + AI Mentor — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── v46 3-COLOUR RULE ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+  }
+
+  .learn-wrap { max-width: 900px; margin: 0 auto; padding: 0 var(--page-pad) 80px; }
+
+  /* ── Hero ── */
+  .learn-hero {
+    text-align: center;
+    padding: 64px var(--page-pad) 56px;
+    border-bottom: 1px solid rgba(245,197,24,0.2);
+    margin-bottom: 64px;
+  }
+  .learn-hero-eyebrow {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 4px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .learn-hero-title {
+    font-size: clamp(36px, 6vw, 64px); font-weight: 700;
+    font-family: Georgia, serif; color: var(--text-primary);
+    line-height: 1.1; margin-bottom: 20px;
+  }
+  .learn-hero-title em { font-style: italic; color: #F5C518; }
+  .learn-hero-sub {
+    font-size: clamp(17px, 2.5vw, 22px); color: var(--text-primary);
+    max-width: 560px; margin: 0 auto 36px; line-height: 1.6;
+  }
+  .learn-hero-price {
+    font-size: clamp(42px, 7vw, 72px); font-weight: 700;
+    color: #F5C518; line-height: 1; margin-bottom: 8px;
+  }
+  .learn-hero-price span {
+    font-size: clamp(18px, 2.5vw, 24px); color: var(--text-primary);
+    font-weight: 400;
+  }
+  .learn-hero-cancel {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 3px; color: var(--text-primary); margin-bottom: 32px;
+  }
+  .learn-cta-primary {
+    display: inline-block; padding: 18px 48px;
+    background: #F5C518; color: #000000;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; text-decoration: none;
+    border-radius: var(--radius-md); transition: opacity 0.2s;
+  }
+  .learn-cta-primary:hover { opacity: 0.88; }
+
+  /* ── Graph proof section ── */
+  .proof-section {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 48px; align-items: center; margin-bottom: 80px;
+  }
+  @media (max-width: 700px) {
+    .proof-section { grid-template-columns: 1fr; gap: 32px; }
+  }
+  .proof-graph {
+    background: #0d1f1a; border-radius: var(--radius-lg);
+    padding: 24px; aspect-ratio: 4/3;
+    display: flex; flex-direction: column;
+  }
+  .proof-graph canvas { flex: 1; width: 100%; }
+  .proof-legend {
+    display: flex; gap: 20px; justify-content: center;
+    margin-top: 12px;
+  }
+  .proof-leg-item {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 13px;
+    font-weight: 700; color: #FFFFFF;
+  }
+  .proof-leg-line { width: 24px; height: 3px; border-radius: 2px; }
+  .proof-copy {}
+  .proof-eyebrow {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .proof-title {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    font-family: Georgia, serif; color: var(--text-primary);
+    line-height: 1.2; margin-bottom: 16px;
+  }
+  .proof-body {
+    font-size: 18px; color: var(--text-primary);
+    line-height: 1.7; margin-bottom: 24px;
+  }
+  .proof-stat {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;
+  }
+  .proof-stat-num {
+    font-size: 48px; font-weight: 700; color: #F5C518;
+    font-family: var(--font-mono); line-height: 1;
+  }
+  .proof-stat-label {
+    font-size: 17px; color: var(--text-primary); line-height: 1.4;
+  }
+
+  /* ── How it works ── */
+  .how-section { margin-bottom: 80px; }
+  .section-eyebrow {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 12px; text-align: center;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+    font-family: Georgia, serif; color: var(--text-primary);
+    line-height: 1.2; margin-bottom: 48px; text-align: center;
+  }
+  .how-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+  }
+  .how-card {
+    background: var(--surface-2); border: 1px solid rgba(245,197,24,0.2);
+    border-radius: var(--radius-lg); padding: 32px 24px; text-align: center;
+  }
+  .how-num {
+    font-family: var(--font-mono); font-size: 48px; font-weight: 700;
+    color: #F5C518; line-height: 1; margin-bottom: 16px;
+  }
+  .how-title {
+    font-size: 20px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .how-body { font-size: 16px; color: var(--text-primary); line-height: 1.6; }
+
+  /* ── Features ── */
+  .features-section { margin-bottom: 80px; }
+  .feature-row {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 28px 0; border-bottom: 1px solid rgba(245,197,24,0.15);
+  }
+  .feature-row:last-child { border-bottom: none; }
+  .feature-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(245,197,24,0.12); border: 1px solid #F5C518;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .feature-content { flex: 1; }
+  .feature-title {
+    font-size: 20px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .feature-body { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
+
+  /* ── Dopamine loop ── */
+  .loop-section {
+    background: var(--surface-2); border: 1px solid rgba(245,197,24,0.2);
+    border-radius: var(--radius-lg); padding: 48px 40px;
+    margin-bottom: 80px; text-align: center;
+  }
+  @media (max-width: 600px) { .loop-section { padding: 32px 20px; } }
+  .loop-steps {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 8px; margin: 32px 0;
+  }
+  .loop-step {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    color: #000000; background: #F5C518;
+    padding: 8px 16px; border-radius: 99px;
+    white-space: nowrap;
+  }
+  .loop-arrow {
+    font-size: 20px; color: #F5C518; font-weight: 700;
+  }
+
+  /* ── Pricing CTA ── */
+  .pricing-cta {
+    text-align: center; padding: 64px 40px;
+    background: #000000; border-radius: var(--radius-lg);
+    border: 1px solid #F5C518;
+  }
+  @media (max-width: 600px) { .pricing-cta { padding: 40px 20px; } }
+  .pricing-cta-eyebrow {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 3px; color: #F5C518; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .pricing-cta-title {
+    font-size: clamp(28px, 5vw, 48px); font-weight: 700;
+    font-family: Georgia, serif; color: #FFFFFF;
+    margin-bottom: 8px; line-height: 1.2;
+  }
+  .pricing-cta-price {
+    font-size: clamp(48px, 8vw, 80px); font-weight: 700;
+    color: #F5C518; line-height: 1; margin: 16px 0 4px;
+  }
+  .pricing-cta-per {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; color: #FFFFFF; margin-bottom: 32px;
+  }
+  .pricing-cta-note {
+    font-size: 15px; color: rgba(255,255,255,0.7);
+    margin-top: 16px; font-family: var(--font-mono);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<div class="learn-hero">
+  <div class="learn-hero-eyebrow">Human + AI Mentor · 1-on-1 · Weekly</div>
+  <h1 class="learn-hero-title">Get Better.<br><em>Fast.</em></h1>
+  <p class="learn-hero-sub">
+    Every week your mentor analyses your score, identifies your weakest dimension,
+    and gives you one specific thing to fix. Not a course. Not a lecture.
+    A personal coach who knows your photography.
+  </p>
+  <div class="learn-hero-price">₹999<span>/mo</span></div>
+  <div class="learn-hero-cancel">CANCEL ANYTIME</div>
+  <a href="{{ url_for('subscribe', track='mentor') if current_user.is_authenticated else url_for('register') }}"
+     class="learn-cta-primary">START THIS WEEK →</a>
+</div>
+
+<div class="learn-wrap">
+
+  <!-- ── PROOF ── -->
+  <div class="proof-section">
+    <div class="proof-graph">
+      <canvas id="learnChart"></canvas>
+      <div class="proof-legend">
+        <div class="proof-leg-item">
+          <div class="proof-leg-line" style="background:#FFFFFF;"></div>
+          WITHOUT MENTOR
+        </div>
+        <div class="proof-leg-item">
+          <div class="proof-leg-line" style="background:#4acba0;"></div>
+          WITH MENTOR
+        </div>
+      </div>
+    </div>
+    <div class="proof-copy">
+      <div class="proof-eyebrow">The Data</div>
+      <div class="proof-title">Mentored photographers improve 4× faster.</div>
+      <div class="proof-body">
+        Without feedback, scores plateau. With a weekly mentor session
+        targeting your specific weak dimension, the curve breaks upward.
+      </div>
+      <div class="proof-stat">
+        <div class="proof-stat-num">4×</div>
+        <div class="proof-stat-label">faster improvement<br>with weekly mentoring</div>
+      </div>
+      <div class="proof-stat">
+        <div class="proof-stat-num">10</div>
+        <div class="proof-stat-label">weeks to a measurably<br>different photographer</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HOW IT WORKS ── -->
+  <div class="how-section">
+    <div class="section-eyebrow">How It Works</div>
+    <div class="section-title">Simple. Personal. Weekly.</div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <div class="how-title">Upload</div>
+        <div class="how-body">Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">02</div>
+        <div class="how-title">Get Analysed</div>
+        <div class="how-body">Your mentor reviews your score. Identifies your weakest dimension. Not in general — for your specific image.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <div class="how-title">One Fix</div>
+        <div class="how-body">You get one specific thing to work on. Not a list. Not a course. One thing that moves your score.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">04</div>
+        <div class="how-title">Shoot Again</div>
+        <div class="how-body">Apply the fix. Upload again. See if the score moved. The loop continues. The improvement compounds.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FEATURES ── -->
+  <div class="features-section">
+    <div class="section-eyebrow">What's Included</div>
+    <div class="section-title">Everything you need.<br>Nothing you don't.</div>
+
+    <div class="feature-row">
+      <div class="feature-icon">📊</div>
+      <div class="feature-content">
+        <div class="feature-title">Personal score analysis every week</div>
+        <div class="feature-body">Your mentor reviews your actual uploaded images and DDI scores — not generic advice. Specific to you, your genre, your level.</div>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-content">
+        <div class="feature-title">Dimension-by-dimension feedback</div>
+        <div class="feature-body">All 5 DDI dimensions broken down. Where you're strong. Where you're losing points. What to prioritise this week.</div>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-icon">📈</div>
+      <div class="feature-content">
+        <div class="feature-title">Ranked improvement tracking</div>
+        <div class="feature-body">See your score curve week by week. Watch which dimensions are moving. Know exactly how much you've improved since you started.</div>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-icon">🏆</div>
+      <div class="feature-content">
+        <div class="feature-title">Competition strategy</div>
+        <div class="feature-body">Your mentor helps you pick the right images for Weekly Challenges and POTY. Know which shots to enter and why.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DOPAMINE LOOP ── -->
+  <div class="loop-section">
+    <div class="section-eyebrow">The Loop</div>
+    <div class="section-title">This is how you get better.</div>
+    <div class="loop-steps">
+      <div class="loop-step">Upload</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">Get scored</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">Mentor feedback</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">One fix</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">Shoot again</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">Score moves</div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step">Repeat</div>
+    </div>
+    <p style="font-size:18px; color:var(--text-primary); max-width:500px; margin:0 auto; line-height:1.7;">
+      Every upload teaches you something. Every score tells you where you are.
+      Every mentor session closes the gap.
+    </p>
+  </div>
+
+  <!-- ── PRICING CTA ── -->
+  <div class="pricing-cta">
+    <div class="pricing-cta-eyebrow">Human + AI Mentor · 1-on-1 · Weekly</div>
+    <div class="pricing-cta-title">Start improving<br>this week.</div>
+    <div class="pricing-cta-price">₹999</div>
+    <div class="pricing-cta-per">PER MONTH · CANCEL ANYTIME</div>
+    <a href="{{ url_for('subscribe', track='mentor') if current_user.is_authenticated else url_for('register') }}"
+       class="learn-cta-primary">ENROLL NOW →</a>
+    <div class="pricing-cta-note">
+      Already have a Camera or Mobile subscription?<br>
+      Add mentoring to your existing plan.
+      <a href="{{ url_for('pricing') }}" style="color:#F5C518; text-decoration:none;"> See all plans →</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── GRAPH ANIMATION ── -->
+<script>
+(function() {
+  var canvas = document.getElementById('learnChart');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var woData = [5.2, 5.4, 5.3, 5.6, 5.5, 5.7, 5.6, 5.8, 5.7, 5.9];
+  var wiData = [5.2, 5.8, 6.3, 6.9, 7.4, 7.8, 8.1, 8.5, 8.8, 9.1];
+  var pad = {l:44, r:16, t:16, b:36};
+  var phase = 0, prog = 0, pause = 0;
+
+  function drawGrid() {
+    var W = canvas.width, H = canvas.height;
+    var gw = W - pad.l - pad.r, gh = H - pad.t - pad.b;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+    for (var i = 0; i <= 5; i++) {
+      var y = pad.t + (gh / 5) * i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'right';
+      ctx.fillText((10 - i * 2), pad.l - 6, y + 4);
+    }
+    for (var j = 0; j < woData.length; j++) {
+      var x = pad.l + (gw / (woData.length - 1)) * j;
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center';
+      ctx.fillText('W' + (j + 1), x, H - pad.b + 16);
+    }
+  }
+
+  function drawLine(data, color, prog) {
+    var W = canvas.width, H = canvas.height;
+    var gw = W - pad.l - pad.r, gh = H - pad.t - pad.b;
+    var pts = Math.floor(prog * (data.length - 1));
+    var frac = (prog * (data.length - 1)) - pts;
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 3;
+    ctx.shadowColor = color; ctx.shadowBlur = 8;
+    for (var i = 0; i <= pts && i < data.length; i++) {
+      var x = pad.l + (gw / (data.length - 1)) * i;
+      var y = pad.t + gh - ((data[i] - 4) / 6) * gh;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    if (pts < data.length - 1 && frac > 0) {
+      var x0 = pad.l + (gw / (data.length - 1)) * pts;
+      var x1 = pad.l + (gw / (data.length - 1)) * (pts + 1);
+      var y0 = pad.t + gh - ((data[pts] - 4) / 6) * gh;
+      var y1 = pad.t + gh - ((data[pts + 1] - 4) / 6) * gh;
+      ctx.lineTo(x0 + (x1 - x0) * frac, y0 + (y1 - y0) * frac);
+    }
+    ctx.stroke(); ctx.shadowBlur = 0;
+  }
+
+  function animate() {
+    drawGrid();
+    if (phase === 0) {
+      prog += 0.008; drawLine(woData, '#FFFFFF', Math.min(prog, 1));
+      if (prog >= 1) { phase = 1; pause = 0; prog = 0; }
+    } else if (phase === 1) {
+      drawLine(woData, '#FFFFFF', 1); pause++;
+      if (pause > 60) phase = 2;
+    } else if (phase === 2) {
+      drawLine(woData, '#FFFFFF', 1); prog += 0.010;
+      drawLine(wiData, '#4acba0', Math.min(prog, 1));
+      if (prog >= 1) { phase = 3; pause = 0; prog = 0; }
+    } else if (phase === 3) {
+      drawLine(woData, '#FFFFFF', 1); drawLine(wiData, '#4acba0', 1);
+      pause++; if (pause > 120) { phase = 0; prog = 0; }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+
+{% endblock %}
