@@ -3,6 +3,45 @@
 
 {% block extra_css %}
 <style>
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* badge variants */
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* img-tier-badge variants */
+  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
+  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
+  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
+  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
+  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
+  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
+  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
+  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .dash-header {
     display: flex;
     justify-content: space-between;
@@ -52,7 +91,7 @@
 
   .img-card-body { padding: 14px 16px; }
   .img-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .img-card-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .img-card-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
   .img-card-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--gold); margin-top: 6px; }
 
   /* Banners */
@@ -68,7 +107,7 @@
   .raw-request-card {
     background: rgba(180,130,0,0.06); border: 1px solid var(--gold-dark);
     border-left: 4px solid var(--gold); border-radius: var(--radius-md);
-    padding: 14px 18px; margin-top: 8px; font-size: 14px; color: var(--text-secondary);
+    padding: 14px 18px; margin-top: 8px; font-size: 14px; color: var(--text-primary);
   }
   .raw-request-card a { color: var(--gold); font-weight: 600; text-decoration: none; }
   .raw-request-card a:hover { text-decoration: underline; }
@@ -90,11 +129,11 @@
     border-bottom: 1px solid var(--border-subtle);
   }
   .poty-row:last-child { border-bottom: none; }
-  .poty-genre { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; width: 110px; flex-shrink: 0; }
+  .poty-genre { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 110px; flex-shrink: 0; }
   .poty-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; }
   .poty-bar-fill { background: var(--gold); border-radius: 4px; height: 8px; transition: width 0.5s; }
   .poty-avg { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--gold); width: 52px; text-align: right; flex-shrink: 0; }
-  .poty-count { font-size: 13px; color: var(--text-muted); width: 60px; text-align: right; flex-shrink: 0; }
+  .poty-count { font-size: 13px; color: var(--text-primary); width: 60px; text-align: right; flex-shrink: 0; }
 
   /* Peer rating widget */
   .peer-widget {
@@ -103,23 +142,23 @@
   }
   .peer-widget-title {
     font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;
+    letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
   }
   .peer-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
   .peer-stat-val { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .peer-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .peer-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
 
   /* Contest wins */
   .win-card {
-    background: rgba(200,168,75,0.06); border: 1px solid var(--gold-dark);
+    background: rgba(245,197,24,0.15); border: 1px solid var(--gold-dark);
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
   .win-badge { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
 
   /* Empty state */
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-  .empty-state h3 { font-size: 20px; color: var(--text-secondary); margin-bottom: 10px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-primary); }
+  .empty-state h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 10px; }
   .empty-state p { font-size: 16px; line-height: 1.7; }
 </style>
 {% endblock %}
@@ -186,7 +225,7 @@
       Free tier — {{ free_tier.used }}/{{ free_tier.limit }} images this month
       {% if free_tier.in_month1 %}<span style="font-family:var(--font-mono); font-size:12px; color:var(--gold); margin-left:8px;">WELCOME MONTH</span>{% endif %}
     </div>
-    <div style="font-size:14px; color:var(--text-muted); margin-top:2px;">
+    <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">
       {{ free_tier.remaining }} scored image{{ 's' if free_tier.remaining != 1 else '' }} remaining this month
     </div>
     <div class="free-nudge-bar-track">
@@ -201,11 +240,11 @@
 
 {# ── Weekly challenge banner ──────────────────────────────────────────────── #}
 {% if active_challenge and active_challenge.is_open %}
-<div style="background:rgba(200,168,75,0.07); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+<div style="background:rgba(245,197,24,0.15); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
   <div>
     <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
     <div style="font-size:18px; font-weight:700; color:var(--text-primary); font-style:italic;">{{ active_challenge.prompt_title }}</div>
-    <div style="font-size:14px; color:var(--text-muted); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
+    <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
   </div>
   <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:13px;">Enter Challenge →</a>
 </div>
@@ -237,7 +276,7 @@
       — <a href="#pool-entry-{{ rating_widget.pool_candidate.id }}" style="color:var(--gold); font-weight:600;">use it below</a>
     </div>
     {% elif rating_widget.credits_to_next > 0 %}
-    <div style="font-size:14px; color:var(--text-muted);">{{ rating_widget.credits_to_next }} more rating{{ 's' if rating_widget.credits_to_next > 1 else '' }} to unlock a pool entry</div>
+    <div style="font-size:14px; color:var(--text-primary);">{{ rating_widget.credits_to_next }} more rating{{ 's' if rating_widget.credits_to_next > 1 else '' }} to unlock a pool entry</div>
     {% endif %}
   </div>
 </div>
@@ -248,8 +287,8 @@
 <div style="margin-bottom:36px;">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
     <div>
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">POTY Tracker</div>
-      <div style="font-size:14px; color:var(--text-muted); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase;">POTY Tracker</div>
+      <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
     </div>
     {% if poty_tracker.best_avg %}
     <div style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">Best avg: {{ poty_tracker.best_avg }}</div>
@@ -279,7 +318,7 @@
 {# ── Contest wins ─────────────────────────────────────────────────────────── #}
 {% if contest_wins %}
 <div style="margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">🏆 Contest Results</div>
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Contest Results</div>
   {% for img in contest_wins %}
   <div class="win-card">
     {% if img.thumb_url %}
@@ -287,7 +326,7 @@
     {% endif %}
     <div style="flex:1; min-width:0;">
       <div style="font-weight:700; color:var(--text-primary); font-size:15px;">{{ img.asset_name or img.original_filename }}</div>
-      <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
+      <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
     </div>
     <div class="win-badge">{{ img.tier }}</div>
     <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--gold);">{{ img.judge_final_score }}</div>
@@ -350,7 +389,7 @@
 
     {# Pool entry unlock #}
     {% if rating_widget and rating_widget.unlocks_pending > 0 and rating_widget.pool_candidate and rating_widget.pool_candidate.id == img.id and not img.is_in_peer_pool %}
-    <div id="pool-entry-{{ img.id }}" style="padding:12px 16px; background:rgba(200,168,75,0.06); border-top:1px solid var(--border);" onclick="event.preventDefault();">
+    <div id="pool-entry-{{ img.id }}" style="padding:12px 16px; background:rgba(245,197,24,0.15); border-top:1px solid var(--border);" onclick="event.preventDefault();">
       <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
         <input type="hidden" name="image_id" value="{{ img.id }}">
         <button type="submit" class="btn btn-solid" style="font-size:13px; width:100%;">🔓 Enter Peer Pool</button>

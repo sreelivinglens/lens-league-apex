@@ -3,6 +3,18 @@
 
 {% block extra_css %}
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .poty-wrap { max-width: 860px; margin: 0 auto; }
 
   /* Hero */
@@ -23,7 +35,7 @@
   }
   .poty-hero h1 em { font-style: italic; color: var(--gold); }
   .poty-hero-sub {
-    font-size: clamp(16px,2vw,19px); color: var(--text-secondary);
+    font-size: clamp(16px,2vw,19px); color: var(--text-primary);
     line-height: 1.8; max-width: 620px; margin: 0 auto;
   }
 
@@ -31,7 +43,7 @@
   .poty-section { margin-bottom: 64px; }
   .poty-section-eye {
     font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 4px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 4px; color: var(--text-primary); text-transform: uppercase;
     margin-bottom: 20px;
   }
   .poty-section h2 {
@@ -40,7 +52,7 @@
   }
   .poty-section h2 em { font-style: italic; color: var(--gold); }
   .poty-section p {
-    font-size: 17px; color: var(--text-secondary);
+    font-size: 17px; color: var(--text-primary);
     line-height: 1.85; margin-bottom: 16px;
   }
   .poty-section p:last-child { margin-bottom: 0; }
@@ -67,17 +79,17 @@
   .comp-table thead tr { background: var(--surface-3); }
   .comp-table th {
     padding: 13px 18px; font-family: var(--font-mono); font-size: 12px;
-    font-weight: 600; letter-spacing: 2px; color: var(--text-muted);
+    font-weight: 600; letter-spacing: 2px; color: var(--text-primary);
     text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border);
   }
   .comp-table th:first-child { width: 22%; }
   .comp-table td {
     padding: 13px 18px; border-bottom: 1px solid var(--border-subtle);
-    color: var(--text-secondary); vertical-align: top; line-height: 1.55;
+    color: var(--text-primary); vertical-align: top; line-height: 1.55;
   }
   .comp-table td:first-child { font-weight: 700; color: var(--text-primary); font-size: 15px; }
   .comp-table tr:last-child td { border-bottom: none; }
-  .comp-table .ours td { background: rgba(184,137,42,0.05); }
+  .comp-table .ours td { background: rgba(245,197,24,0.12); }
   .comp-table .ours td:first-child { color: var(--gold); }
   .comp-highlight { color: var(--gold); font-weight: 600; }
 
@@ -99,7 +111,7 @@
     margin-bottom: 5px;
   }
   .poty-step-desc {
-    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
+    font-size: 16px; color: var(--text-primary); line-height: 1.7;
   }
 
   /* Prize structure */
@@ -127,7 +139,7 @@
     font-family: var(--font-mono); font-size: 12px; font-weight: 600;
     letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px;
   }
-  .prize-track.cam .prize-track-label { color: #B8892A; }
+  .prize-track.cam .prize-track-label { color: #F5C518; }
   .prize-track.mob .prize-track-label { color: #3A7CA5; }
   .prize-row {
     display: flex; justify-content: space-between; align-items: baseline;
@@ -135,12 +147,12 @@
     font-size: 15px;
   }
   .prize-row:last-child { border-bottom: none; }
-  .prize-row-name { color: var(--text-secondary); }
+  .prize-row-name { color: var(--text-primary); }
   .prize-row-amt { font-family: var(--font-mono); font-weight: 700; color: var(--gold); font-size: 15px; }
   .prize-row.top .prize-row-name { color: var(--text-primary); font-weight: 600; }
   .prize-row.top .prize-row-amt { font-size: 18px; }
   .prize-note {
-    font-size: 15px; color: var(--text-muted); line-height: 1.7;
+    font-size: 15px; color: var(--text-primary); line-height: 1.7;
     background: var(--surface-3); border-radius: var(--radius-sm);
     padding: 14px 18px;
   }
@@ -155,7 +167,7 @@
     color: var(--text-primary); margin-bottom: 10px;
   }
   .poty-cta h3 em { font-style: italic; color: var(--gold); }
-  .poty-cta p { font-size: 17px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.7; }
+  .poty-cta p { font-size: 17px; color: var(--text-primary); margin-bottom: 28px; line-height: 1.7; }
 
   @media (max-width: 640px) {
     .prize-tracks { grid-template-columns: 1fr; }
@@ -291,7 +303,7 @@
       <h2>The Prize Pool — <em>₹65 Lakhs</em></h2>
       <div class="prize-total">Annual · Fixed · Guaranteed</div>
     </div>
-    <p style="font-size:17px;color:var(--text-secondary);line-height:1.8;margin-bottom:24px;">The prize structure is published and fixed before the platform year begins. Camera and Mobile Leagues have their own prize pools — 16 prize categories in total across both leagues.</p>
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:24px;">The prize structure is published and fixed before the platform year begins. Camera and Mobile Leagues have their own prize pools — 16 prize categories in total across both leagues.</p>
 
     <div class="prize-tracks">
       <div class="prize-track cam">

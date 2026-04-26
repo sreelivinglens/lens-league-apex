@@ -4,6 +4,18 @@
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .ex-wrap { max-width: 800px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) 0; }
 
   .ex-eyebrow {
@@ -20,7 +32,7 @@
   }
   .ex-headline em { font-style: italic; color: var(--gold); }
 
-  .ex-intro { font-size: 1rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 2.5rem; max-width: 560px; }
+  .ex-intro { font-size: 1rem; color: var(--text-primary); line-height: 1.8; margin-bottom: 2.5rem; max-width: 560px; }
 
   /* Score card layout */
   .score-card {
@@ -49,7 +61,7 @@
 
   .sc-meta {}
   .sc-title { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .sc-info { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+  .sc-info { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-primary); }
 
   .sc-score-block { text-align: right; flex-shrink: 0; }
   .sc-score-num {
@@ -65,7 +77,7 @@
   /* Module bars */
   .modules { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
   .mod-row { display: flex; align-items: center; gap: 12px; }
-  .mod-name { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+  .mod-name { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-primary); width: 90px; flex-shrink: 0; }
   .mod-bar-track { flex: 1; height: 5px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
   .mod-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 99px; }
   .mod-val { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--text-primary); width: 30px; text-align: right; }
@@ -76,13 +88,13 @@
     margin-bottom: 16px;
     display: flex; gap: 12px; align-items: center;
   }
-  .sc-arch-label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+  .sc-arch-label { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: #FFFFFF; }
   .sc-arch-value { font-size: 1rem; font-weight: 600; color: var(--gold); }
 
   .sc-tip {
-    background: rgba(200,168,75,0.06); border-left: 3px solid var(--gold-dark);
+    background: rgba(245,197,24,0.15); border-left: 3px solid var(--gold-dark);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: 14px 18px; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7;
+    padding: 14px 18px; font-size: 0.875rem; color: var(--text-primary); line-height: 1.7;
   }
   .sc-tip strong { color: var(--gold); }
 
@@ -95,10 +107,10 @@
 
   .ex-cta {
     text-align: center; padding: 28px;
-    background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.05));
+    background: linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));
     border: 1px solid var(--gold-dark); border-radius: var(--radius-lg);
   }
-  .ex-cta p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
+  .ex-cta p { font-size: 0.95rem; color: var(--text-primary); margin-bottom: 1rem; }
 </style>
 {% endblock %}
 
@@ -110,7 +122,7 @@
   <h1 class="ex-headline">This is what you<br><em>actually receive.</em></h1>
 
   <p class="ex-intro">
-    Not a number from 1 to 5. The <strong style="color:var(--text-primary);">DDI — Dimensional Diagnostic Index</strong> — gives you a precise multi-dimensional analysis across five independently-weighted modules, a photographer archetype, and one specific improvement tip targeted to your image. Think of it like a medical diagnosis: not just "this image is good" — but <em>which</em> dimension is strong, which is holding it back, and the single physical change that would move it to the next tier.
+    Five dimensions. One score. One thing to fix. This is what you get the moment your photo is uploaded.
   </p>
 
   {% if example_image %}
@@ -157,7 +169,7 @@
           <div class="sc-arch-value">{{ example_image.archetype }}</div>
         </div>
         {% if example_image.soul_bonus %}
-        <div style="margin-left:auto; font-family:var(--font-mono); font-size:0.65rem; font-weight:600; letter-spacing:1.5px; color:var(--gold); background:rgba(200,168,75,0.08); border:1px solid var(--gold-dark); padding:4px 10px; border-radius:99px;">★ SOUL BONUS</div>
+        <div style="margin-left:auto; font-family:var(--font-mono); font-size:0.65rem; font-weight:600; letter-spacing:1.5px; color:var(--gold); background:rgba(245,197,24,0.15); border:1px solid var(--gold-dark); padding:4px 10px; border-radius:99px;">★ SOUL BONUS</div>
         {% endif %}
       </div>
       {% endif %}
@@ -169,7 +181,7 @@
     </div>
   </div>
 
-  <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:2rem;">
+  <div style="font-size:0.8rem; color:var(--text-primary); text-align:center; margin-bottom:2rem;">
     This is a real image scored by a real member. Score and analysis generated by the Apex DDI Engine — Dimensional Diagnostic Index.
     <a href="{{ url_for('share_image', image_id=example_image.id) }}" style="color:var(--gold); text-decoration:none; margin-left:4px;">View full score card →</a>
   </div>

@@ -3,6 +3,45 @@
 
 {% block extra_css %}
 <style>
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* badge variants */
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* img-tier-badge variants */
+  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
+  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
+  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
+  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
+  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
+  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
+  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
+  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .profile-wrap { max-width: 560px; margin: 0 auto; }
 
   .profile-section {
@@ -35,15 +74,15 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 14px; background: var(--surface-3); border: 1px solid var(--border);
     border-radius: 99px; font-family: var(--font-mono); font-size: 11px;
-    font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted);
+    font-weight: 600; letter-spacing: 1.5px; color: var(--text-primary);
     text-transform: uppercase; margin-bottom: 20px;
   }
   .pw-strength-track { height: 5px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
   .pw-strength-fill  { height: 100%; width: 0%; border-radius: 99px; transition: width 0.3s, background 0.3s; }
-  .pw-strength-label { font-size: 13px; margin-top: 5px; color: var(--text-muted); font-family: var(--font-mono); }
+  .pw-strength-label { font-size: 13px; margin-top: 5px; color: var(--text-primary); font-family: var(--font-mono); }
   .danger-zone { background: var(--surface-2); border: 1px solid #5a1a1a; border-radius: var(--radius-lg); padding: 24px 32px; }
   .danger-zone-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; display: block; }
-  .danger-zone p { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+  .danger-zone p { font-size: 14px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
 
   /* ── Progress Dashboard ──────────────────────────────────────── */
   .progress-summary-row {
@@ -68,7 +107,7 @@
   }
   .progress-stat-label {
     font-size: 11px;
-    color: var(--text-muted);
+    color: var(--text-primary);
     margin-top: 4px;
     letter-spacing: 0.5px;
   }
@@ -87,7 +126,7 @@
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 2px;
-    color: var(--text-muted);
+    color: var(--text-primary);
     text-transform: uppercase;
     margin-bottom: 12px;
   }
@@ -134,12 +173,12 @@
   }
   .progress-callout-sub {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-primary);
     line-height: 1.4;
   }
   .progress-unlock-hint {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-primary);
     line-height: 1.6;
     background: var(--surface-3);
     border: 1px solid var(--border);
@@ -264,7 +303,7 @@
 
       <div class="form-group">
         <label for="username">Username
-          <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(visible on leaderboard)</span>
+          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(visible on leaderboard)</span>
         </label>
         <input type="text" id="username" name="username"
                value="{{ current_user.username }}"
@@ -275,7 +314,7 @@
         <label>Email Address</label>
         <input type="email" value="{{ current_user.email }}" disabled
                style="opacity:0.5; cursor:not-allowed;">
-        <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">
+        <div style="font-size:12px; color:var(--text-primary); margin-top:5px;">
           Email cannot be changed. Contact support if needed.
         </div>
       </div>
@@ -320,7 +359,7 @@
 
       <div style="background:var(--surface-3); border:1px solid var(--border);
                   border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-                  padding:12px 16px; font-size:13px; color:var(--text-secondary);
+                  padding:12px 16px; font-size:13px; color:var(--text-primary);
                   margin-top:20px; line-height:1.6;">
         ⚠️ You will be <strong style="color:var(--text-primary);">logged out</strong> after changing your password.
       </div>
@@ -336,9 +375,9 @@
   <!-- ── UPGRADE / CANCEL ──────────────────────────────────────── -->
   {% if not current_user.is_subscribed %}
   <div class="profile-section" style="border-color:var(--gold-dark);
-       background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));">
+       background:linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));">
     <span class="profile-section-label">Upgrade Your Plan</span>
-    <p style="font-size:14px; color:var(--text-secondary); line-height:1.7; margin-bottom:20px;">
+    <p style="font-size:14px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
       You have used <strong style="color:var(--text-primary);">{{ images_used }}/3</strong> free images.
       Upgrade to get 4 images per month, monthly contests, and POTY ₹50L eligibility.
     </p>
@@ -385,7 +424,7 @@ function checkStrength(pw) {
   const levels = [
     { pct: '15%',  color: '#E05555', text: 'Very weak' },
     { pct: '32%',  color: '#E09940', text: 'Weak' },
-    { pct: '55%',  color: '#C8A84B', text: 'Fair' },
+    { pct: '55%',  color: '#F5C518', text: 'Fair' },
     { pct: '78%',  color: '#4CAF73', text: 'Strong' },
     { pct: '100%', color: '#2E7D52', text: 'Very strong' },
   ];
@@ -412,7 +451,7 @@ function validatePasswords() {
 (function () {
   // Resolve CSS variables to concrete colours for Chart.js
   const style   = getComputedStyle(document.documentElement);
-  const gold    = style.getPropertyValue('--gold').trim()      || '#C8A84B';
+  const gold    = style.getPropertyValue('--gold').trim()      || '#F5C518';
   const muted   = style.getPropertyValue('--text-muted').trim()|| '#888';
   const border  = style.getPropertyValue('--border').trim()    || '#333';
   const surface = style.getPropertyValue('--surface-3').trim() || '#1e1e1e';
@@ -420,10 +459,10 @@ function validatePasswords() {
   // Tier → colour map (used for trend dots)
   const TIER_COLORS = {
     'Legend':       '#FFD700',
-    'Grandmaster':  '#C8A84B',
+    'Grandmaster':  '#F5C518',
     'Master':       '#4CAF73',
-    'Practitioner': '#5B9BD5',
-    'Apprentice':   '#888',
+    'Craftsman':    '#F5C518',
+    'Rookie':       '#FFFFFF',
   };
 
   // ── Radar chart ──────────────────────────────────────────────────

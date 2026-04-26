@@ -3,12 +3,24 @@
 
 {% block extra_css %}
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .pricing-hero { text-align:center; padding: clamp(48px,8vw,80px) 0 40px; }
   .pricing-hero h1 { font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
   .pricing-hero h1 em { font-style:normal; color:var(--gold); }
-  .pricing-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-secondary); max-width:580px; margin:0 auto 32px; line-height:1.8; }
+  .pricing-hero p { font-size:clamp(15px,2vw,18px); color:var(--text-primary); max-width:580px; margin:0 auto 32px; line-height:1.8; }
   .pricing-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:48px; }
-  .toggle-label { font-family:var(--font-mono); font-size:15px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; cursor:pointer; }
+  .toggle-label { font-family:var(--font-mono); font-size:15px; font-weight:600; letter-spacing:2px; color:#FFFFFF; text-transform:uppercase; cursor:pointer; }
   .toggle-label.active { color:var(--gold); }
   .toggle-switch { position:relative; width:52px; height:28px; cursor:pointer; }
   .toggle-switch input { opacity:0; width:0; height:0; }
@@ -26,23 +38,23 @@
   .plan-track { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; }
   .plan-price { margin-bottom:24px; }
   .plan-amount { font-size:42px; font-weight:700; color:var(--text-primary); line-height:1; }
-  .plan-period { font-size:16px; color:var(--text-muted); margin-left:4px; }
-  .plan-billed { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:4px; }
+  .plan-period { font-size:16px; color:#FFFFFF; margin-left:4px; }
+  .plan-billed { font-size:15px; color:#FFFFFF; font-family:var(--font-mono); margin-top:4px; }
   .plan-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:12px; }
-  .plan-features li { font-size:16px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
+  .plan-features li { font-size:16px; color:var(--text-primary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
   .plan-features .check { color:var(--gold); font-weight:700; flex-shrink:0; }
-  .plan-features .muted { color:var(--text-muted); }
+  .plan-features .muted { color:rgba(255,255,255,0.5); }
   .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; }
   .plan-cta.primary { background:var(--gold); color:#0D0D0B; }
   .plan-cta.primary:hover { opacity:.85; }
-  .plan-cta.secondary { background:transparent; color:var(--text-secondary); border:1px solid var(--border); }
+  .plan-cta.secondary { background:transparent; color:#FFFFFF; border:1px solid var(--border); }
   .plan-cta.secondary:hover { border-color:var(--gold-dark); color:var(--gold); }
   .extras-section { max-width:720px; margin:0 auto 64px; }
-  .extras-title { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:4px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px; text-align:center; }
+  .extras-title { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:4px; color:#FFFFFF; text-transform:uppercase; margin-bottom:20px; text-align:center; }
   .extras-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .extra-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
   .extra-name { font-size:17px; font-weight:600; color:var(--text-primary); }
-  .extra-desc { font-size:15px; color:var(--text-muted); margin-top:2px; }
+  .extra-desc { font-size:15px; color:#FFFFFF; margin-top:2px; }
   .extra-price { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
 
   /* Open Competition entry section */
@@ -57,19 +69,19 @@
   .open-card-desc { font-size:16px; color:var(--text-secondary); line-height:1.8; max-width:480px; }
   .open-price-box { text-align:center; flex-shrink:0; }
   .open-price-amount { font-size:42px; font-weight:700; color:var(--gold); line-height:1; }
-  .open-price-per { font-size:15px; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px; }
+  .open-price-per { font-size:15px; color:#FFFFFF; font-family:var(--font-mono); margin-top:2px; }
   .open-prizes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:24px; }
   .open-prize-item { background:#F5F0E8; border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; text-align:center; }
-  .open-prize-label { font-family:var(--font-mono); font-size: 15px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
+  .open-prize-label { font-family:var(--font-mono); font-size: 15px; letter-spacing:1.5px; color:#FFFFFF; text-transform:uppercase; margin-bottom:6px; }
   .open-prize-amount { font-size:18px; font-weight:700; color:var(--gold); line-height:1; }
-  .open-prize-sub { font-size:14px; color:var(--text-muted); margin-top:3px; }
+  .open-prize-sub { font-size:14px; color:#FFFFFF; margin-top:3px; }
   .open-rules { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
-  .open-rule-pill { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; color:var(--text-muted); background:#F5F0E8; border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
+  .open-rule-pill { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1px; color:#000000; background:#F5C518; border:1px solid var(--border); border-radius:99px; padding:5px 12px; text-transform:uppercase; }
 
   .faq-section { max-width:720px; margin:0 auto 64px; }
   .faq-item { border-bottom:1px solid var(--border); padding:20px 0; }
   .faq-q { font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:8px; cursor:pointer; }
-  .faq-a { font-size:16px; color:var(--text-secondary); line-height:1.8; }
+  .faq-a { font-size:16px; color:var(--text-primary); line-height:1.8; }
   @media(max-width:768px) {
     .plans-grid { grid-template-columns:1fr; }
     .extras-grid { grid-template-columns:1fr; }
@@ -111,11 +123,11 @@
       <ul class="plan-features">
         <li><span class="check">✓</span> 6 free scored images — first month</li>
         <li><span class="check">✓</span> 3 free scored images — every month after</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#FFFFFF;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Apex Byline improvement tip</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> View leaderboard</li>
-        <li><span class="muted">—</span> <span style="color:var(--text-muted)">Weekly Challenge &amp; POTY</span></li>
+        <li><span class="muted">—</span> <span style="color:rgba(255,255,255,0.6)">Weekly Challenge &amp; POTY</span></li>
         <li><span class="muted">—</span> <span style="color:var(--text-muted)">Ongoing uploads</span></li>
       </ul>
       {% if current_user.is_authenticated %}
@@ -143,7 +155,7 @@
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Unlimited scored images</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#FFFFFF;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
         <li><span class="check">✓</span> Annual Grand Prix — <a href="{{ url_for('poty') }}" style="color:var(--gold);">POTY</a> ₹50L</li>
@@ -172,7 +184,7 @@
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Unlimited scored images</li>
-        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
+        <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#FFFFFF;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
         <li><span class="check">✓</span> Annual Mobile POTY ₹12L pool</li>

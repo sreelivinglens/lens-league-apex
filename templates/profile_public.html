@@ -3,6 +3,45 @@
 
 {% block extra_css %}
 <style>
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* badge variants */
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* img-tier-badge variants */
+  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
+  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
+  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
+  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
+  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
+  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
+  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
+  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .profile-wrap { max-width: 900px; margin: 0 auto; padding: 40px var(--page-pad) 80px; }
 
   /* ── Header ── */
@@ -40,11 +79,11 @@
     background: var(--gold-subtle); color: var(--gold);
     border: 1px solid var(--gold-dark);
   }
-  .badge-tier-grandmaster { background: rgba(138,97,175,0.15); color: #c49eff; border: 1px solid rgba(138,97,175,0.3); }
-  .badge-tier-master      { background: rgba(59,130,200,0.15);  color: #7abfff; border: 1px solid rgba(59,130,200,0.3); }
-  .badge-tier-practitioner{ background: rgba(76,175,115,0.15);  color: #7adfa8; border: 1px solid rgba(76,175,115,0.3); }
-  .badge-tier-legend      { background: var(--gold-subtle);     color: var(--gold); border: 1px solid var(--gold-dark); }
-  .badge-tier-apprentice  { background: var(--surface-3);       color: var(--text-muted); border: 1px solid var(--border); }
+  
+  
+  .badge-tier-craftsman{ background: rgba(76,175,115,0.15);  color: #7adfa8; border: 1px solid rgba(76,175,115,0.3); }
+  
+  .badge-tier-rookie  { background: var(--surface-3);       color: var(--text-muted); border: 1px solid var(--border); }
   .profile-location {
     font-size: 15px; color: var(--text-muted); margin-top: 10px;
     display: flex; align-items: center; gap: 6px;
@@ -117,11 +156,11 @@
     letter-spacing: 1px; text-transform: uppercase;
     padding: 2px 6px; border-radius: 3px;
   }
-  .img-tier-badge.grandmaster { background: rgba(138,97,175,0.4); color: #c49eff; }
-  .img-tier-badge.master      { background: rgba(59,130,200,0.4);  color: #7abfff; }
-  .img-tier-badge.practitioner{ background: rgba(76,175,115,0.4);  color: #7adfa8; }
-  .img-tier-badge.legend      { background: rgba(201,168,76,0.3);  color: var(--gold); }
-  .img-tier-badge.apprentice  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+  
+  
+  
+  
+  
 
   /* ── Best score spotlight ── */
   .best-score-card {
@@ -276,7 +315,7 @@
         {% endif %}
         <div class="img-overlay">
           <span class="img-genre">{{ img.genre }}</span>
-          <span class="img-tier-badge {{ (img.tier or 'Apprentice') | lower }}">{{ img.tier or 'Apprentice' }}</span>
+          <span class="img-tier-badge {{ (img.tier or 'Rookie') | lower }}">{{ img.tier or 'Rookie' }}</span>
         </div>
       </div>
       {% endfor %}

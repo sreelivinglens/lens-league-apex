@@ -3,6 +3,18 @@
 
 {% block extra_css %}
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .upload-wrap { max-width: 680px; margin: 0 auto; }
 
   /* ── UPLOAD CAROUSEL ── */
@@ -47,7 +59,7 @@
     font-family: var(--font-mono);
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-primary);
     margin-top: 4px;
   }
   .carousel-progress {
@@ -71,16 +83,16 @@
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
   }
   .dz-icon { font-size: 3rem; margin-bottom: 14px; display: block; }
-  .dz-label { font-size: 17px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+  .dz-label { font-size: 17px; color: var(--text-primary); margin-bottom: 6px; font-weight: 500; }
   .dz-label strong { color: var(--gold); }
-  .dz-hint { font-size: 15px; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 1px; }
+  .dz-hint { font-size: 15px; color: var(--text-primary); font-family: var(--font-mono); letter-spacing: 1px; }
 
   .preview-area {
     display: none; margin-top: 16px; background: #F5F0E8;
     border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
   }
   .preview-area img { width: 100%; max-height: 340px; object-fit: contain; display: block; background: #F5F0E8; }
-  .file-info { padding: 10px 16px; font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); border-top: 1px solid var(--border); }
+  .file-info { padding: 10px 16px; font-family: var(--font-mono); font-size: 15px; color: var(--text-primary); border-top: 1px solid var(--border); }
 
   /* size warning — soft, amber, not red */
   .file-size-warning {
@@ -93,11 +105,11 @@
     background: var(--red-dim); border: 1px solid var(--red);
     border-radius: var(--radius-sm); color: #F0A0A0; font-size: 16px; line-height: 1.6;
   }
-  .genre-hint { min-height: 20px; font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-top: 6px; padding: 0 2px; }
+  .genre-hint { min-height: 20px; font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-top: 6px; padding: 0 2px; }
   .exif-note {
     margin-top: 20px; padding: 14px 18px; background: #F5F0E8;
     border-left: 3px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    font-size: 16px; color: var(--text-secondary); line-height: 1.65;
+    font-size: 16px; color: var(--text-primary); line-height: 1.65;
   }
   .exif-note strong { color: var(--gold); }
 
@@ -113,14 +125,14 @@
     display: flex; align-items: center; gap: 10px; padding: 14px 16px;
     background: #F5F0E8; border: 2px solid var(--border);
     border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.2s, background 0.2s;
-    font-size: 16px; font-weight: 500; color: var(--text-secondary); user-select: none;
+    font-size: 16px; font-weight: 500; color: var(--text-primary); user-select: none;
   }
   .shot-on-option label .shot-icon {
     font-size: 1.6rem; line-height: 1; flex-shrink: 0;
     font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
   }
   .shot-on-option label .shot-text { line-height: 1.3; }
-  .shot-on-option label .shot-text small { display: block; font-size: 14px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+  .shot-on-option label .shot-text small { display: block; font-size: 14px; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
   .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
   .shot-on-option input[type="radio"]:checked + label .shot-text { color: var(--gold); }
   .shot-on-option label:hover { border-color: var(--border-strong); background: #EDE8DC; }
@@ -132,7 +144,7 @@
     display: flex; gap: 12px; align-items: flex-start;
   }
   .legal-box input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
-  .legal-box label { font-size: 15px; color: var(--text-secondary); line-height: 1.6; cursor: pointer; }
+  .legal-box label { font-size: 15px; color: var(--text-primary); line-height: 1.6; cursor: pointer; }
   .legal-box label a { color: var(--gold); text-decoration: none; }
   .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
 
@@ -154,15 +166,15 @@
   }
   .breath-ring-hero {
     width: 140px; height: 140px; border-radius: 50%;
-    border: 3px solid rgba(200,168,75,0.5);
-    background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%);
+    border: 3px solid rgba(245,197,24,0.15);
+    background: radial-gradient(circle, rgba(245,197,24,0.15) 0%, rgba(245,197,24,0.15) 70%, transparent 100%);
     animation: breatheHero 8s ease-in-out infinite;
     display: flex; align-items: center; justify-content: center;
   }
   @keyframes breatheHero {
-    0%   { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
-    50%  { transform: scale(1.18); border-color: rgba(200,168,75,0.9); box-shadow: 0 0 48px 10px rgba(200,168,75,0.18); }
-    100% { transform: scale(0.82); border-color: rgba(200,168,75,0.3); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    0%   { transform: scale(0.82); border-color: rgba(245,197,24,0.15); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
+    50%  { transform: scale(1.18); border-color: rgba(245,197,24,0.15); box-shadow: 0 0 48px 10px rgba(245,197,24,0.15); }
+    100% { transform: scale(0.82); border-color: rgba(245,197,24,0.15); box-shadow: 0 0 0 0 rgba(200,168,75,0); }
   }
   .breath-inner-dot {
     width: 16px; height: 16px; border-radius: 50%;
@@ -181,23 +193,23 @@
   }
   .breath-counts {
     font-family: var(--font-mono); font-size: 15px; letter-spacing: 3px;
-    color: rgba(200,168,75,0.65); text-transform: uppercase;
+    color: rgba(245,197,24,0.15); text-transform: uppercase;
   }
-  .breath-tagline { font-size: 17px; color: rgba(184,182,174,0.6); font-style: italic; }
+  .breath-tagline { font-size: 17px; color:#FFFFFF; font-style: italic; }
   .overlay-copy {
     display: flex; flex-direction: column; align-items: center; gap: 5px;
     margin-bottom: 32px;
   }
   .overlay-phase {
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
-    letter-spacing: 3px; color: rgba(200,168,75,0.65); text-transform: uppercase;
+    letter-spacing: 3px; color: rgba(245,197,24,0.15); text-transform: uppercase;
   }
   .overlay-status {
-    font-size: 16px; font-weight: 500; color: rgba(184,182,174,0.65);
+    font-size: 16px; font-weight: 500; color:#FFFFFF;
     text-align: center; max-width: 340px; line-height: 1.5;
   }
   .overlay-substatus {
-    font-family: var(--font-mono); font-size: 14px; color: rgba(122,120,112,0.55);
+    font-family: var(--font-mono); font-size: 14px; color:#FFFFFF;
     text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px;
   }
   .mini-timer { display: flex; flex-direction: column; align-items: center; }
@@ -205,7 +217,7 @@
   .mini-clock-svg { transform: rotate(-90deg); }
   .mini-ring-bg   { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
   .mini-ring-fill {
-    fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4;
+    fill: none; stroke: rgba(245,197,24,0.15); stroke-width: 4;
     stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195;
     transition: stroke-dashoffset .9s linear;
   }
@@ -215,11 +227,11 @@
   }
   .mini-clock-secs {
     font-family: var(--font-mono); font-size: 18px; font-weight: 700;
-    color: rgba(200,168,75,0.75); line-height: 1;
+    color: rgba(245,197,24,0.15); line-height: 1;
   }
   .mini-clock-unit {
     font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px;
-    color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px;
+    color:#FFFFFF; text-transform: uppercase; margin-top: 2px;
   }
 </style>
 {% endblock %}
@@ -327,12 +339,12 @@
       </div>
 
       <div class="form-group">
-        <label for="location">Location <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
+        <label for="location">Location <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
       </div>
 
       <div class="form-group">
-        <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-muted); text-transform:none;">(optional)</span></label>
+        <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <textarea id="subject" name="subject" placeholder="Brief context about this image — subject, conditions, technique…" maxlength="500"></textarea>
       </div>
 
@@ -353,7 +365,7 @@
       <div style="margin-top:16px; padding:16px 18px; background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
           <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Leaderboard</div>
-          <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately.</div>
+          <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-primary); letter-spacing:.5px;">Hidden images are scored privately.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
@@ -365,7 +377,7 @@
         </label>
       </div>
 
-      <div style="padding:12px 16px; background:#F5F0E8; border:1px solid var(--border); border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:15px; color:var(--text-secondary); line-height:1.6; margin-top:20px; margin-bottom:16px;">
+      <div style="padding:12px 16px; background:#F5F0E8; border:1px solid var(--border); border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:15px; color:var(--text-primary); line-height:1.6; margin-top:20px; margin-bottom:16px;">
         ⏰ <strong style="color:var(--amber);">Best upload times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM
       </div>
 
@@ -603,7 +615,7 @@
         document.getElementById('breathLabel').textContent = '🙏';
         document.getElementById('clockSecs').textContent   = '✓';
         document.getElementById('clockRing').style.strokeDashoffset = '0';
-        document.getElementById('clockRing').style.stroke  = 'rgba(200,168,75,0.9)';
+        document.getElementById('clockRing').style.stroke  = 'rgba(245,197,24,0.15)';
         setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 800);
         return;
       }

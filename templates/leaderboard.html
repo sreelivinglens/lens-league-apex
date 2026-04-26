@@ -3,6 +3,45 @@
 
 {% block extra_css %}
 <style>
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* badge variants */
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  /* img-tier-badge variants */
+  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
+  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
+  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
+  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
+  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
+  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
+  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
+  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
 /* ── Wrapper ── */
 .lb-wrap { max-width: 1100px; }
 
@@ -101,7 +140,7 @@
   font-family: var(--font-mono); font-size: 13px; font-weight: 700;
   line-height: 1;
 }
-.tile-rank.gold   { background: #C8A84B; color: #3a2a00; }
+.tile-rank.gold   { background: #F5C518; color: #3a2a00; }
 .tile-rank.silver { background: #8a8a8a; color: #fff; }
 .tile-rank.bronze { background: #8B5E3C; color: #fff; }
 .tile-rank.other  {
@@ -115,7 +154,7 @@
   font-family: var(--font-mono); font-size: 12px; font-weight: 600;
   letter-spacing: .5px; padding: 3px 9px; border-radius: 99px;
 }
-.tile-track.camera { background: rgba(200,168,75,0.88); color: #1a1200; }
+.tile-track.camera { background: rgba(245,197,24,0.15); color: #1a1200; }
 .tile-track.mobile {
   background: rgba(13,13,11,0.72); color: rgba(255,255,255,0.85);
   border: 1px solid rgba(255,255,255,0.18);
@@ -151,11 +190,9 @@
   letter-spacing: 1px; text-transform: uppercase;
   padding: 3px 9px; border-radius: 99px;
 }
-.tier-legend       { background: rgba(200,168,75,0.22); color: #f0d87a; border: 1px solid rgba(200,168,75,0.5); }
-.tier-grandmaster  { background: rgba(138,97,175,0.25); color: #c49eff; border: 1px solid rgba(138,97,175,0.45); }
-.tier-master       { background: rgba(59,130,200,0.25); color: #7abfff; border: 1px solid rgba(59,130,200,0.45); }
-.tier-practitioner { background: rgba(76,175,115,0.25); color: #7adfa8; border: 1px solid rgba(76,175,115,0.45); }
-.tier-apprentice   { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.18); }
+
+
+
 
 .tile-peer-count {
   font-family: var(--font-mono); font-size: 12px; color: var(--green);
@@ -206,7 +243,7 @@
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-size: 13px; font-weight: 700;
 }
-.pg-rank-badge.gold   { background: #C8A84B; color: #3a2a00; }
+.pg-rank-badge.gold   { background: #F5C518; color: #3a2a00; }
 .pg-rank-badge.silver { background: #8a8a8a; color: #fff; }
 .pg-rank-badge.bronze { background: #8B5E3C; color: #fff; }
 .pg-rank-badge.other  { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; }
@@ -375,7 +412,7 @@ body { overflow-x: hidden; }
         <!-- Contest winner badge -->
         {% if image.contest_result_status == 'published' and image.judge_final_score %}
         <div style="position:absolute; top:8px; right:8px; z-index:4;
-                    background:#C8A84B; color:#1a1a18;
+                    background:#F5C518; color:#1a1a18;
                     padding:4px 8px; border-radius:4px;
                     font-size:13px; font-weight:700;
                     font-family:var(--font-mono); letter-spacing:0.5px;
@@ -453,9 +490,12 @@ body { overflow-x: hidden; }
       <div class="pg-footer">
         {% if best >= 9.7 %}<span class="pg-tier-pill tier-legend">Legend</span>
         {% elif best >= 9.0 %}<span class="pg-tier-pill tier-grandmaster">Grandmaster</span>
-        {% elif best >= 7.6 %}<span class="pg-tier-pill tier-master">Master</span>
-        {% elif best >= 5.1 %}<span class="pg-tier-pill tier-practitioner">Practitioner</span>
-        {% else %}<span class="pg-tier-pill tier-apprentice">Apprentice</span>
+        {% elif best >= 8.0 %}<span class="pg-tier-pill tier-master">Master</span>
+        {% elif best >= 7.0 %}<span class="pg-tier-pill tier-maverick">Maverick</span>
+        {% elif best >= 6.0 %}<span class="pg-tier-pill tier-craftsman">Craftsman</span>
+        {% elif best >= 5.0 %}<span class="pg-tier-pill tier-contender">Contender</span>
+        {% elif best >= 4.0 %}<span class="pg-tier-pill tier-shooter">Shooter</span>
+        {% else %}<span class="pg-tier-pill tier-rookie">Rookie</span>
         {% endif %}
         {% if p.total_peer_ratings %}
         <span class="pg-peer"><span class="peer-dot"></span>{{ p.total_peer_ratings }} peer</span>

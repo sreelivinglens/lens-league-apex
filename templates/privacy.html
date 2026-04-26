@@ -3,6 +3,18 @@
 
 {% block extra_css %}
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
   .terms-wrap { max-width: 760px; margin: 0 auto; }
   .terms-wrap h2 {
     font-size: 18px; font-weight: 700; color: var(--text-primary);
@@ -10,16 +22,16 @@
     font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase;
   }
   .terms-wrap h2 span { color: var(--gold); margin-right: 10px; }
-  .terms-wrap p  { font-size: 16px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 14px; }
+  .terms-wrap p  { font-size: 16px; color: var(--text-primary); line-height: 1.8; margin-bottom: 14px; }
   .terms-wrap ul { margin: 10px 0 16px 20px; }
-  .terms-wrap ul li { font-size: 16px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 6px; }
+  .terms-wrap ul li { font-size: 16px; color: var(--text-primary); line-height: 1.8; margin-bottom: 6px; }
   .terms-wrap strong { color: var(--text-primary); }
   .terms-highlight {
     background: var(--surface-3); border: 1px solid var(--border);
     border-left: 3px solid var(--gold-dark);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     padding: 16px 20px; margin: 24px 0;
-    font-size: 16px; color: var(--text-secondary); line-height: 1.7;
+    font-size: 16px; color: var(--text-primary); line-height: 1.7;
   }
   .terms-highlight strong { color: var(--gold); }
 </style>
@@ -115,6 +127,24 @@
   </ul>
   <p><strong>Grievance Officer:</strong> For any data protection concerns, contact <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> with subject line <strong>DPDP Grievance — [your username]</strong>.</p>
   <p>We do not transfer personal data outside India except to the service providers listed in Section 04, each of whom processes data under appropriate contractual safeguards. We retain personal data only for as long as necessary for the purposes described in this policy or as required by applicable law.</p>
+
+  
+  <h2><span>11</span> International Users</h2>
+  <p>{{ platform_name }} is operated from India. If you access the platform from outside India, your data is processed and stored in India. By using the platform, you consent to this transfer.</p>
+
+  <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:20px 0 10px;">European Union &amp; United Kingdom (GDPR / UK GDPR)</h3>
+  <p>If you are located in the EU or UK, you have rights under GDPR / UK GDPR including: right of access, rectification, erasure, restriction of processing, data portability, and the right to object. To exercise these rights email <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> with subject <strong>GDPR Request — [username]</strong>. We will respond within 30 days. Our lawful basis for processing is your consent (given at registration) and legitimate interests (platform operation).</p>
+
+  <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:20px 0 10px;">United Arab Emirates</h3>
+  <p>Users in the UAE are subject to Federal Decree-Law No. 45 of 2021 on Personal Data Protection. You have the right to access, correct, and request deletion of your personal data. Contact us at <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span>.</p>
+
+  <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:20px 0 10px;">Australia (Privacy Act 1988)</h3>
+  <p>Australian users have rights under the Privacy Act 1988 and Australian Privacy Principles. You may request access to or correction of your personal information by contacting us directly.</p>
+
+  <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:20px 0 10px;">Canada (PIPEDA)</h3>
+  <p>Canadian users have rights under the Personal Information Protection and Electronic Documents Act (PIPEDA). You may withdraw consent and request access to or deletion of your personal data at any time.</p>
+
+  <p>For all international privacy requests: email <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> with subject <strong>Privacy Request — [your country] — [username]</strong>. We aim to respond within 30 days.</p>
 
   <div class="terms-highlight">
     Questions about your privacy?

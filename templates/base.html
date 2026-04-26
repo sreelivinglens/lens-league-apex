@@ -11,6 +11,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
+  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
 
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
@@ -43,7 +55,7 @@
   --red-dim:     rgba(192, 57, 43, 0.10);
   --amber:       #B8700A;
   --amber-dim:   rgba(184, 112, 10, 0.12);
-  --dim:         #8A8478;
+  --dim:         #FFFFFF;
 
   --font-body:  Georgia, 'Times New Roman', serif;
   --font-mono:  'JetBrains Mono', 'Courier New', monospace;
@@ -81,7 +93,7 @@ table { max-width: none; }
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 nav {
   background: rgba(26, 24, 20, 0.94);
-  border-bottom: 1px solid rgba(200,168,75,0.15);
+  border-bottom: 1px solid rgba(245,197,24,0.15);
   backdrop-filter: blur(12px);
   height: var(--nav-height);
   padding: 0 var(--page-pad);
@@ -121,7 +133,7 @@ nav {
 .nav-links a.nav-admin:hover { background: var(--gold-subtle); }
 .nav-links a.nav-active {
   color: var(--gold) !important;
-  background: rgba(184,137,42,0.15);
+  background: rgba(245,197,24,0.12);
   border-bottom: 2px solid var(--gold);
   padding-bottom: 4px;
 }
@@ -196,7 +208,7 @@ nav {
 }
 .nav-mobile a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
 .nav-mobile a.nav-admin { color: var(--gold); }
-.nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(184,137,42,0.12); }
+.nav-mobile a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.12); }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -310,7 +322,7 @@ main {
 }
 .card-gold {
   border-color: var(--gold-dark);
-  background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04));
+  background: linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));
 }
 
 /* ── Grid System ─────────────────────────────────────────────────────────── */
@@ -524,7 +536,7 @@ td {
   vertical-align: middle;
 }
 tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: rgba(184,137,42,0.05); }
+tbody tr:hover { background: rgba(245,197,24,0.12); }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 footer {
