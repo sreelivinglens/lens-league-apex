@@ -124,7 +124,7 @@
         Payments for this plan are opening shortly.<br>
         Leave your email and we'll notify you first.
       </div>
-      <form method="POST" action="{{ url_for('contact') }}" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+      <form method="POST" action="{{ url_for('notify_me') }}" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
         <input type="hidden" name="subject" value="Early access — {{ track_label }}">
         <input type="hidden" name="message" value="I want to be notified when {{ track_label }} (₹{{ amount }}/mo) payments go live.">
         <input type="email" name="email" required placeholder="your@email.com"
