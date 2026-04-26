@@ -163,8 +163,11 @@ OPEN_OPENS_BEFORE_GRAND_PRIX_MONTHS = 3
 
 # ── Tier map ──────────────────────────────────────────────────────────────────
 def get_tier(score: float) -> str:
-    if score <= 5.0:  return 'Apprentice'
-    if score <  7.6:  return 'Practitioner'
+    if score <  4.0:  return 'Rookie'
+    if score <  5.0:  return 'Shooter'
+    if score <  6.0:  return 'Contender'
+    if score <  7.0:  return 'Craftsman'
+    if score <  8.0:  return 'Maverick'
     if score <  9.0:  return 'Master'
     if score <  9.7:  return 'Grandmaster'
     return 'Legend'
@@ -323,7 +326,7 @@ def compute_percentile(score: float, genre: str = None) -> dict:
 
         platform_avg = round(sum(all_scores) / total, 2)
 
-        master_scores = [s for s in all_scores if 7.6 <= s < 9.0]
+        master_scores = [s for s in all_scores if 8.0 <= s < 9.0]
         master_avg = round(sum(master_scores) / len(master_scores), 2) if master_scores else None
 
         gm_scores = [s for s in all_scores if s >= 9.0]
