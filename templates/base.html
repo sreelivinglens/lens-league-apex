@@ -693,26 +693,27 @@ img {
   <!-- Desktop nav -->
   <div class="nav-links">
     {% if current_user.is_authenticated %}
-      {% if is_approved_judge and current_user.role != 'admin' %}
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}nav-active{% endif %} nav-admin">Dashboard</a>
+        <a href="{{ url_for('admin_users') }}" class="{% if request.endpoint == 'admin_users' %}nav-active{% endif %} nav-admin">Users</a>
+        <a href="{{ url_for('admin_weekly_challenge') }}" class="{% if request.endpoint == 'admin_weekly_challenge' %}nav-active{% endif %} nav-admin">Weekly Challenge</a>
+        <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %} nav-admin">Contests</a>
+        <a href="{{ url_for('admin_judges') }}" class="{% if request.endpoint == 'admin_judges' %}nav-active{% endif %} nav-admin">Jury</a>
+        <a href="{{ url_for('admin_raw_verification') }}" class="{% if request.endpoint == 'admin_raw_verification' %}nav-active{% endif %} nav-admin">RAW</a>
+        <a href="{{ url_for('admin_reports') }}" class="{% if request.endpoint == 'admin_reports' %}nav-active{% endif %} nav-admin">Reports{% if open_reports_count %} <span style="background:var(--red);color:#fff;border-radius:99px;padding:1px 6px;font-size:11px;margin-left:2px;">{{ open_reports_count }}</span>{% endif %}</a>
+        <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
+      {% elif is_approved_judge %}
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
         <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
       {% else %}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
-        <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}" style="color:var(--gold-light);">Challenge</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
-        {% if current_user.is_subscribed %}
-        <a href="{{ url_for('rate') }}" class="{% if request.endpoint == 'rate' %}nav-active{% endif %}" style="color:var(--green);">★ Rate</a>
-        {% endif %}
-        {% if current_user.role == 'admin' %}
-          <a href="{{ url_for('admin_dashboard') }}" class="nav-admin">Admin</a>
-          <a href="{{ url_for('admin_weekly_challenge') }}" class="nav-admin" style="font-size:13px;">⚡ Challenge</a>
-        {% endif %}
         <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
       {% endif %}
     {% else %}
@@ -743,7 +744,16 @@ img {
 <!-- Mobile menu -->
 <div class="nav-mobile" id="navMobile">
   {% if current_user.is_authenticated %}
-    {% if is_approved_judge and current_user.role != 'admin' %}
+    {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" onclick="toggleNav()">Dashboard</a>
+      <a href="{{ url_for('admin_users') }}" onclick="toggleNav()">Users</a>
+      <a href="{{ url_for('admin_weekly_challenge') }}" onclick="toggleNav()">Weekly Challenge</a>
+      <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
+      <a href="{{ url_for('admin_judges') }}" onclick="toggleNav()">Jury</a>
+      <a href="{{ url_for('admin_raw_verification') }}" onclick="toggleNav()">RAW</a>
+      <a href="{{ url_for('admin_reports') }}" onclick="toggleNav()">Reports</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
+    {% elif is_approved_judge %}
       <a href="{{ url_for('judge_dashboard') }}" onclick="toggleNav()" style="color:var(--gold);">⚖️ Jury Dashboard</a>
       <a href="{{ url_for('judge_history') }}" onclick="toggleNav()">Scoring History</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
@@ -751,17 +761,10 @@ img {
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
-      <a href="{{ url_for('weekly_challenge') }}" onclick="toggleNav()" style="color:var(--gold-light);">Challenge</a>
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
       <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
-      {% if current_user.is_subscribed %}
-      <a href="{{ url_for('rate') }}" onclick="toggleNav()" style="color:var(--green);">★ Rate</a>
-      {% endif %}
-      {% if current_user.role == 'admin' %}
-        <a href="{{ url_for('admin_dashboard') }}" class="nav-admin" onclick="toggleNav()">Admin</a>
-      {% endif %}
       <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
     {% endif %}
   {% else %}
