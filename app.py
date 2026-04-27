@@ -1651,6 +1651,92 @@ def upload():
                             review_reason_parts.append(f'Grandmaster score {img.score} requires RAW verification')
                         img.flagged_reason  = ' . '.join(review_reason_parts)
 
+                        # ── Notify user and admin ──────────────────────────
+                        try:
+                            user_obj  = img.user
+                            user_name = (user_obj.display_name or user_obj.email.split('@')[0]) if user_obj else 'Photographer'
+                            image_url = f"https://shutterleague.com/image/{img.id}"
+
+                            if img.score >= 9.0 and ai_suspicion < 0.4:
+                                # RAW verification — email user
+                                send_email(
+                                    to_addresses=[user_obj.email] if user_obj else [],
+                                    subject='[Shutter League] Grandmaster Score — RAW Verification Required',
+                                    html_body=(
+                                        f'<p>Hi {user_name},</p>'
+                                        f'<p>Congratulations — your image <strong>{img.asset_name or "Untitled"}</strong> '
+                                        f'scored <strong>{img.score}</strong> ({img.tier}).</p>'
+                                        f'<p>Scores of 9.0 and above require RAW file verification to confirm authenticity. '
+                                        f'Please email your original RAW file to '
+                                        f'<a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> within <strong>7 days</strong>.</p>'
+                                        f'<p>Your image is held from public view until verification is complete.</p>'
+                                        f'<p><a href="{image_url}">View your image</a></p>'
+                                        f'<p>The Shutter League Team</p>'
+                                    ),
+                                    text_body=(
+                                        f'Hi {user_name},\n\n'
+                                        f'Congratulations — your image "{img.asset_name or "Untitled"}" scored {img.score} ({img.tier}).\n\n'
+                                        f'Scores of 9.0+ require RAW file verification. '
+                                        f'Please email your original RAW file to {CONTACT_EMAIL} within 7 days.\n\n'
+                                        f'Your image is held from public view until verification is complete.\n'
+                                        f'View: {image_url}\n\nThe Shutter League Team'
+                                    )
+                                )
+                                # RAW verification — email admin
+                                send_email(
+                                    to_addresses=[ADMIN_EMAIL],
+                                    subject=f'[Admin] RAW Verification Required — {img.asset_name or "Untitled"} ({img.score})',
+                                    html_body=(
+                                        f'<p>A Grandmaster-tier image requires RAW verification.</p>'
+                                        f'<ul>'
+                                        f'<li><strong>Image:</strong> {img.asset_name or "Untitled"}</li>'
+                                        f'<li><strong>Score:</strong> {img.score} — {img.tier}</li>'
+                                        f'<li><strong>Photographer:</strong> {img.photographer_name or user_name}</li>'
+                                        f'<li><strong>Genre:</strong> {img.genre}</li>'
+                                        f'<li><strong>User:</strong> {user_obj.email if user_obj else "unknown"}</li>'
+                                        f'</ul>'
+                                        f'<p><a href="{image_url}">Review image</a></p>'
+                                        f'<p>User has been asked to submit RAW file to {CONTACT_EMAIL} within 7 days.</p>'
+                                    ),
+                                    text_body=(
+                                        f'RAW Verification Required\n\n'
+                                        f'Image: {img.asset_name or "Untitled"}\n'
+                                        f'Score: {img.score} — {img.tier}\n'
+                                        f'Photographer: {img.photographer_name or user_name}\n'
+                                        f'Genre: {img.genre}\n'
+                                        f'User: {user_obj.email if user_obj else "unknown"}\n'
+                                        f'Review: {image_url}\n\n'
+                                        f'User notified to send RAW to {CONTACT_EMAIL} within 7 days.'
+                                    )
+                                )
+                            else:
+                                # AI suspicion amber zone — notify admin only
+                                send_email(
+                                    to_addresses=[ADMIN_EMAIL],
+                                    subject=f'[Admin] Image Flagged for Review — {img.asset_name or "Untitled"}',
+                                    html_body=(
+                                        f'<p>An image has been flagged for human review.</p>'
+                                        f'<ul>'
+                                        f'<li><strong>Image:</strong> {img.asset_name or "Untitled"}</li>'
+                                        f'<li><strong>Score:</strong> {img.score} — {img.tier}</li>'
+                                        f'<li><strong>Photographer:</strong> {img.photographer_name or user_name}</li>'
+                                        f'<li><strong>Reason:</strong> {img.flagged_reason}</li>'
+                                        f'<li><strong>User:</strong> {user_obj.email if user_obj else "unknown"}</li>'
+                                        f'</ul>'
+                                        f'<p><a href="{image_url}">Review image</a></p>'
+                                    ),
+                                    text_body=(
+                                        f'Image flagged for human review.\n\n'
+                                        f'Image: {img.asset_name or "Untitled"}\n'
+                                        f'Score: {img.score} — {img.tier}\n'
+                                        f'Reason: {img.flagged_reason}\n'
+                                        f'User: {user_obj.email if user_obj else "unknown"}\n'
+                                        f'Review: {image_url}'
+                                    )
+                                )
+                        except Exception as _mail_err:
+                            app.logger.error(f'[review notification email error] {_mail_err}')
+
                     db.session.commit()
 
                     try:
