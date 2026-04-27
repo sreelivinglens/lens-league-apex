@@ -1,756 +1,721 @@
 {% extends "base.html" %}
-{% block title %}Admin — Lens League Apex{% endblock %}
+{% block title %}Admin — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
-  .cal-table th {
-    padding: 14px 18px;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    background: var(--surface-3);
-    text-transform: uppercase;
-  }
-  .cal-table td {
-    padding: 14px 18px;
-    font-size: 17px;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border-subtle);
-    white-space: nowrap;
-  }
-  .cal-table td.mono { font-family: var(--font-mono); font-size: 16px; }
-  .cal-table td.gold { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--gold); }
-  .cal-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+  .admin-wrap { max-width: 1100px; margin: 0 auto; }
 
-  .sub-table th {
-    padding: 13px 16px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    text-align: left;
-    border-bottom: 1px solid var(--border);
+  /* ── Top nav buttons ── */
+  .admin-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .admin-nav-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    text-decoration: none; color: var(--text-secondary);
+    background: var(--surface-1); cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
     white-space: nowrap;
-    background: var(--surface-3);
-    text-transform: uppercase;
   }
-  .sub-table td {
-    padding: 12px 16px;
-    font-size: 16px;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border-subtle);
-    vertical-align: middle;
+  .admin-nav-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+  .admin-nav-btn.gold { border-color: var(--gold-dark); color: var(--gold); }
+  .admin-nav-btn.red  { border-color: #7a2222; color: var(--red); }
+  .admin-nav-btn .badge-count {
+    background: var(--red); color: #fff;
+    border-radius: 99px; padding: 1px 6px;
+    font-size: 11px; font-weight: 700;
   }
-  .sub-table tbody tr:hover { background: rgba(200,168,75,0.03); }
 
-  /* ── Admin tile grid ── */
-  .admin-tile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 14px;
-    margin-top: 4px;
-  }
-  .admin-tile {
-    background: var(--surface-1);
+  /* ── Collapsible sections ── */
+  .admin-section {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
+    margin-bottom: 12px;
     overflow: hidden;
+  }
+  .admin-section.urgent { border-color: var(--gold-dark); }
+  .admin-section.danger { border-color: #7a2222; }
+
+  .admin-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; cursor: pointer;
+    background: var(--surface-1);
+    user-select: none; gap: 12px;
+    transition: background 0.15s;
+  }
+  .admin-section-header:hover { background: var(--surface-3); }
+  .admin-section.urgent .admin-section-header { background: rgba(245,197,24,0.06); }
+  .admin-section.danger .admin-section-header  { background: rgba(192,57,43,0.05); }
+
+  .admin-section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-section.urgent .admin-section-title { color: var(--gold); }
+  .admin-section.danger  .admin-section-title { color: var(--red); }
+
+  .admin-section-meta { font-size: 13px; color: var(--text-muted); }
+  .admin-chevron {
+    font-size: 11px; color: var(--text-muted);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .admin-chevron.open { transform: rotate(180deg); }
+
+  .admin-section-body {
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .admin-section-body.collapsed { display: none; }
+
+  /* ── Action required banner ── */
+  .action-banner {
+    background: #1a0f00; border: 2px solid var(--gold);
+    border-radius: var(--radius-md); padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .action-banner-text { font-size: 15px; color: #fff; line-height: 1.6; }
+
+  /* ── Tile grid ── */
+  .admin-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .admin-tile {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
     display: flex; flex-direction: column;
     transition: border-color .2s, box-shadow .18s;
   }
-  .admin-tile:hover { border-color: var(--gold-dark); box-shadow: 0 4px 18px rgba(0,0,0,0.07); }
-  .admin-tile.is-flagged { border-color: var(--red); }
+  .admin-tile:hover { border-color: var(--gold-dark); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .admin-tile.is-flagged  { border-color: var(--red); }
   .admin-tile.needs-review { border-color: var(--gold-dark); }
   .admin-tile.is-ref { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
 
   .admin-tile-img-wrap { position: relative; }
-  .admin-tile-img {
-    width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
-    background: var(--surface-3);
-  }
-  .admin-tile-placeholder {
-    width: 100%; aspect-ratio: 4/3; background: var(--surface-3);
-    display: flex; align-items: center; justify-content: center; font-size: 28px;
-  }
-  .admin-tile-checkbox {
-    position: absolute; top: 8px; left: 8px;
-    accent-color: var(--gold); width: 18px; height: 18px; cursor: pointer;
-  }
+  .admin-tile-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--surface-3); }
+  .admin-tile-placeholder { width: 100%; aspect-ratio: 4/3; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .admin-tile-checkbox { position: absolute; top: 8px; left: 8px; accent-color: var(--gold); width: 18px; height: 18px; cursor: pointer; }
   .admin-tile-status {
     position: absolute; top: 8px; right: 8px;
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 1px; padding: 3px 8px; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; padding: 3px 7px; border-radius: 3px;
   }
   .admin-tile-status.scored  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
   .admin-tile-status.pending { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
-  .admin-tile-flag {
-    position: absolute; bottom: 8px; left: 8px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: .5px; padding: 3px 8px; border-radius: 4px;
-    background: var(--red-dim); border: 1px solid var(--red); color: var(--red);
-  }
-  .admin-tile-review {
-    position: absolute; bottom: 8px; left: 8px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: .5px; padding: 3px 8px; border-radius: 4px;
-    background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold);
-  }
-  .admin-tile-ai {
-    position: absolute; bottom: 8px; right: 8px;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    padding: 3px 7px; border-radius: 4px; background: rgba(0,0,0,0.65);
-  }
+  .admin-tile-flag   { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
+  .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
+  .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(0,0,0,0.65); }
+  .admin-tile-hidden { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; }
 
   .admin-tile-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
-  .admin-tile-title {
-    font-size: 14px; font-weight: 700; color: var(--text-primary);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-decoration: none;
-  }
+  .admin-tile-title { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
   .admin-tile-title:hover { color: var(--gold); }
-  .admin-tile-meta {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
-    letter-spacing: .5px; display: flex; justify-content: space-between; align-items: center;
-  }
+  .admin-tile-meta  { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
   .admin-tile-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--gold); }
   .admin-tile-tier  { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
 
-  .admin-tile-actions {
-    padding: 8px 10px; border-top: 1px solid var(--border);
-    display: flex; gap: 6px; flex-wrap: wrap; background: var(--surface-2);
-  }
+  .admin-tile-actions { padding: 8px 10px; border-top: 1px solid var(--border); display: flex; gap: 5px; flex-wrap: wrap; background: var(--surface-1); }
 
-  .thumb-cell { display: flex; align-items: center; gap: 12px; }
-  .thumb-img {
-    width: 56px; height: 56px; object-fit: cover;
-    border: 1px solid var(--border); border-radius: var(--radius-sm); flex-shrink: 0;
-  }
-  .thumb-placeholder {
-    width: 56px; height: 56px; background: var(--surface-3);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-  }
-  .thumb-title {
-    font-size: 16px; font-weight: 600; color: var(--text-primary);
-    text-decoration: none; display: block; max-width: 160px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    transition: color 0.2s;
-  }
-  .thumb-title:hover { color: var(--gold); }
-
-  .status-chip {
-    display: inline-block; padding: 4px 10px;
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; border-radius: var(--radius-sm); white-space: nowrap;
-  }
-  .status-chip.scored  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
-  .status-chip.pending { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
-  .judge-chip {
-    display: inline-block; margin-top: 5px; padding: 3px 8px;
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; border: 1px solid var(--gold-dark);
-    background: var(--gold-subtle); color: var(--gold); border-radius: var(--radius-sm);
-  }
-
-  .action-btn-sm {
-    padding: 5px 12px; font-family: var(--font-mono); font-size: 14px;
+  /* ── Action buttons ── */
+  .act-btn {
+    padding: 5px 10px; font-family: var(--font-mono); font-size: 12px;
     font-weight: 600; border-radius: var(--radius-sm); cursor: pointer;
     border: 1px solid; background: none; white-space: nowrap; transition: all 0.2s;
   }
-  .ref-btn { border-color: var(--border-strong); color: var(--text-muted); }
-  .ref-btn:hover { border-color: var(--gold-dark); color: var(--gold); }
-  .ref-btn.active { border-color: var(--gold-dark); background: var(--gold-subtle); color: var(--gold); }
-  .del-btn { border-color: #5a1a1a; color: var(--red); }
-  .del-btn:hover { border-color: var(--red); background: var(--red-dim); }
-  .flag-chip {
-    display: inline-block; margin-top: 5px; padding: 3px 8px;
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; border: 1px solid var(--red);
-    background: var(--red-dim); color: var(--red); border-radius: var(--radius-sm);
-  }
-  .review-chip {
-    display: inline-block; margin-top: 5px; padding: 3px 8px;
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; border: 1px solid var(--gold-dark);
-    background: rgba(180,130,0,0.12); color: var(--gold); border-radius: var(--radius-sm);
-  }
-  .ai-score-chip {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; color: var(--text-muted);
-  }
-  .flag-btn { border-color: #5a1a1a; color: var(--red); }
-  .flag-btn:hover { border-color: var(--red); background: var(--red-dim); }
-  .unflag-btn { border-color: var(--green); color: var(--green); }
-  .unflag-btn:hover { border-color: var(--green); background: var(--green-dim); }
-  .approve-btn { border-color: var(--gold-dark); color: var(--gold); }
-  .approve-btn:hover { border-color: var(--gold); background: rgba(180,130,0,0.12); }
+  .act-ref     { border-color: var(--border-strong); color: var(--text-muted); }
+  .act-ref:hover { border-color: var(--gold-dark); color: var(--gold); }
+  .act-ref.active { border-color: var(--gold-dark); background: var(--gold-subtle); color: var(--gold); }
+  .act-approve { border-color: var(--gold-dark); color: var(--gold); }
+  .act-approve:hover { background: rgba(180,130,0,0.12); }
+  .act-unflag  { border-color: var(--green); color: var(--green); }
+  .act-unflag:hover { background: var(--green-dim); }
+  .act-reject  { border-color: #5a1a1a; color: var(--red); }
+  .act-reject:hover { border-color: var(--red); background: var(--red-dim); }
+  .act-flag    { border-color: #5a1a1a; color: var(--red); }
+  .act-flag:hover { border-color: var(--red); background: var(--red-dim); }
+  .act-del     { border-color: #5a1a1a; color: var(--red); }
+  .act-del:hover { border-color: var(--red); background: var(--red-dim); }
 
+  /* ── Bulk bar ── */
   .bulk-bar {
-    display: flex; align-items: center; gap: 16px; padding: 12px 16px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 12px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 14px; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 12px; flex-wrap: wrap;
   }
-  .bulk-bar label {
-    display: flex; align-items: center; gap: 8px;
-    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
-    letter-spacing: 1.5px; color: var(--text-secondary); cursor: pointer; text-transform: uppercase;
-  }
-  .bulk-bar label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--gold); }
-  .selected-count { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
-  /* Export card text wrapping fix */
-  .admin-export-grid { min-width: 0; }
-  .admin-export-grid a { white-space: normal !important; min-width: 0; overflow: hidden; }
-  .admin-export-grid a > div { min-width: 0; overflow: hidden; }
-  .admin-export-grid a > div > div { white-space: normal; overflow: hidden; text-overflow: ellipsis; }
+  .bulk-bar label { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-secondary); cursor: pointer; text-transform: uppercase; }
+  .bulk-bar label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--gold); }
 
+  /* ── Stats ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-box { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; }
+  .stat-val { font-size: 36px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+
+  /* ── Tools grid ── */
+  .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tool-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    gap: 12px;
+  }
+  .tool-label { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .tool-desc  { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── Exports ── */
+  .export-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; min-width: 0; }
+  .export-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; text-decoration: none;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-1); transition: border-color 0.2s;
+    min-width: 0;
+  }
+  .export-btn:hover { border-color: var(--gold); }
+  .export-icon { font-size: 20px; flex-shrink: 0; }
+  .export-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .export-desc  { font-size: 13px; color: var(--text-muted); margin-top: 2px; white-space: normal; }
+
+  /* ── Sub summary bar ── */
+  .sub-summary {
+    display: grid; grid-template-columns: repeat(4,1fr) auto;
+    gap: 14px; align-items: center;
+    padding: 18px 22px; margin-bottom: 16px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .sub-val { font-size: 28px; font-weight: 700; color: var(--gold); }
+  .sub-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+
+  /* ── Danger zone ── */
+  .danger-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--surface-1);
+    border: 1px solid #5a1a1a; border-radius: var(--radius-sm);
+    gap: 16px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .danger-row:last-child { margin-bottom: 0; }
+  .danger-title { font-size: 15px; font-weight: 600; color: var(--red); }
+  .danger-desc  { font-size: 13px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+
+  /* ── Cal table ── */
+  .cal-table th { padding: 12px 16px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-secondary); text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface-3); text-transform: uppercase; }
+  .cal-table td { padding: 12px 16px; font-size: 15px; color: var(--text-primary); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+  .cal-table td.mono { font-family: var(--font-mono); font-size: 14px; }
+  .cal-table td.gold { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--gold); }
+  .cal-table tbody tr:hover { background: rgba(200,168,75,0.03); }
+
+  /* ── Input ── */
+  .tool-input {
+    width: 100%; background: var(--surface-3); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 9px 12px; font-size: 15px;
+    border-radius: var(--radius-sm); outline: none;
+    transition: border-color 0.2s;
+  }
+  .tool-input:focus { border-color: var(--gold); }
+
+  /* ── Responsive ── */
   @media (max-width: 900px) {
-    .admin-stats-bar { grid-template-columns: 1fr 1fr !important; }
-    .admin-export-grid { grid-template-columns: 1fr 1fr !important; }
-    .admin-tile-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .export-grid { grid-template-columns: 1fr 1fr; }
+    .admin-tile-grid { grid-template-columns: repeat(2,1fr); }
+    .sub-summary { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 600px) {
-    .admin-stats-bar { grid-template-columns: 1fr 1fr !important; }
-    .admin-export-grid { grid-template-columns: 1fr !important; }
-    .admin-tile-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .tools-grid  { grid-template-columns: 1fr; }
+    .export-grid { grid-template-columns: 1fr; }
+    .admin-tile-grid { grid-template-columns: repeat(2,1fr); }
   }
   @media (max-width: 420px) {
-    .admin-tile-grid { grid-template-columns: 1fr !important; }
+    .admin-tile-grid { grid-template-columns: 1fr; }
   }
-  body { overflow-x: hidden; }
-  *, *::before, *::after { box-sizing: border-box; }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="admin-wrap">
 
-{# ── Pending action alert ─────────────────────────────────────────────────── #}
-{% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
-{% set flagged_items = recent | selectattr('is_flagged') | list %}
-{% if needs_action or flagged_items %}
-<div style="background:#1a0f00; border:2px solid #F5C518; border-radius:var(--radius-md);
-            padding:16px 24px; margin-bottom:28px; display:flex; align-items:center;
-            justify-content:space-between; gap:16px; flex-wrap:wrap;">
-  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-    <span style="font-size:24px;">⚠️</span>
-    <div>
-      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700;
-                  letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:4px;">
-        Action Required
-      </div>
-      <div style="font-size:15px; color:#FFFFFF; line-height:1.6;">
-        {% if needs_action %}
-          <span style="color:#F5C518; font-weight:700;">{{ needs_action|length }}</span>
-          image{{ 's' if needs_action|length != 1 else '' }} pending review
-          {% set gm_count = [] %}
-          {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% if gm_count.append(i) %}{% endif %}{% endif %}{% endfor %}
-          {% if gm_count %} · <span style="color:#F5C518; font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
-        {% endif %}
-        {% if flagged_items %}
-          {% if needs_action %} · {% endif %}
-          <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
-          flagged image{{ 's' if flagged_items|length != 1 else '' }}
-        {% endif %}
-      </div>
+  {# ── Page title ── #}
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+    <div class="page-header" style="margin-bottom:0;">
+      <h1>Admin Dashboard</h1>
+      <p>Platform control centre</p>
     </div>
   </div>
-  <a href="#recent-submissions" style="font-family:var(--font-mono); font-size:13px; font-weight:700;
-     letter-spacing:1px; color:#F5C518; border:1px solid #F5C518; padding:8px 16px;
-     border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
-    Review Now ↓
-  </a>
-</div>
-{% endif %}
 
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
-  <div class="page-header" style="margin-bottom:0;">
-    <h1>Admin Dashboard</h1>
-    <p>Engine calibration &amp; platform overview</p>
+  {# ── Top nav ── #}
+  <div class="admin-nav">
+    <a href="{{ url_for('admin_users') }}" class="admin-nav-btn">👥 Users</a>
+    <a href="{{ url_for('admin_calibration_notes') }}" class="admin-nav-btn gold">🔧 Calibration Notes</a>
+    <a href="{{ url_for('admin_reports') }}" class="admin-nav-btn red">
+      ⚑ Reports
+      {% if open_reports_count %}
+        <span class="badge-count">{{ open_reports_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('admin_judges') }}" class="admin-nav-btn gold">⚖️ Jury</a>
+    <a href="{{ url_for('admin_raw_verification') }}" class="admin-nav-btn gold">📁 RAW Verification</a>
+    <a href="{{ url_for('admin_judge_config') }}" class="admin-nav-btn gold">⚙️ Pool Config</a>
+    <a href="{{ url_for('admin_weekly_challenge') }}" class="admin-nav-btn gold">📅 Weekly Challenge</a>
+    <a href="{{ url_for('admin_subscriptions') }}" class="admin-nav-btn">💳 Subscriptions</a>
   </div>
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <a href="{{ url_for('admin_users') }}" class="btn btn-solid" style="padding:10px 20px;">
-      👥 User Management
-    </a>
-    <a href="{{ url_for('admin_calibration_notes') }}" class="btn"
-       style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
-      🔧 Calibration Notes
-    </a>
-    <a href="{{ url_for('admin_reports') }}" class="btn"
-       style="border-color:#6b3a3a; color:#c97b7b; padding:10px 20px;">
-      ⚑ Reports{% if open_reports_count %} <span style="background:#c97b7b; color:#000; border-radius:99px; padding:1px 7px; font-size:14px; margin-left:4px;">{{ open_reports_count }}</span>{% endif %}
-    </a>
-    <a href="{{ url_for('admin_judges') }}" class="btn"
-       style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
-      ⚖️ Jury
-    </a>
-    <a href="{{ url_for('admin_raw_verification') }}" class="btn"
-       style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
-      📁 RAW Verification
-    </a>
-    <a href="{{ url_for('admin_judge_config') }}" class="btn"
-       style="border-color:var(--gold-dark); color:var(--gold); padding:10px 20px;">
-      ⚙️ Pool Config
-    </a>
-  </div>
-</div>
 
-<!-- STATS -->
-<div class="grid-4" style="margin-bottom:40px;">
-  <div class="stat-box"><div class="stat-val">{{ total_users }}</div><div class="stat-lbl">Members</div></div>
-  <div class="stat-box"><div class="stat-val">{{ total_images }}</div><div class="stat-lbl">Total Images</div></div>
-  <div class="stat-box"><div class="stat-val">{{ scored }}</div><div class="stat-lbl">Scored</div></div>
-  <div class="stat-box"><div class="stat-val">{{ pending }}</div><div class="stat-lbl">Pending</div></div>
-</div>
-
-{% if cal_stats %}
-{% if drift_alerts %}
-<div style="margin-bottom:24px;">
-  {% for alert in drift_alerts %}
-  <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px;
-              background:{{ 'var(--red-dim)' if alert.type == 'low' else 'var(--amber-dim)' }};
-              border:1px solid {{ 'var(--red)' if alert.type == 'low' else 'var(--amber)' }};
-              border-radius:var(--radius-sm); font-size:16px;
-              color:{{ '#F0A0A0' if alert.type == 'low' else '#F0C888' }};">
-    {{ '⚠️' if alert.type == 'low' else '📈' }}
-    <strong style="font-family:var(--font-mono);">{{ alert.genre }}</strong>
-    &nbsp;—&nbsp;{{ alert.msg }}
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-  <div>
-    <div class="section-label" style="margin-bottom:4px;">Calibration Data by Genre</div>
-    <div style="font-size:15px; color:var(--text-muted);">
-      Live averages &nbsp;·&nbsp;
-      {% if cal_trend %}Trend vs previous snapshot shown &nbsp;·&nbsp;{% endif %}
-      Click <strong style="color:var(--gold);">Run Calibration Log</strong> to save a snapshot
-    </div>
-  </div>
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <form method="POST" action="{{ url_for('run_calibration') }}">
-      <button type="submit" class="btn btn-solid" style="padding:10px 24px;">📸 Run Calibration Log</button>
-    </form>
-    <form method="POST" action="{{ url_for('fix_calibration_table') }}"
-          onsubmit="return confirm('Rebuild calibration_logs table? This clears all previous snapshots.');">
-      <button type="submit" class="btn" style="padding:10px 20px; border-color:#7a2222; color:#f88;">
-        🔧 Fix Table
-      </button>
-    </form>
-  </div>
-</div>
-
-<div class="table-wrap" style="margin-bottom:40px;">
-  <table class="cal-table" style="width:100%; border-collapse:collapse;">
-    <thead>
-      <tr>
-        <th>Genre</th><th>Count</th><th>Avg Score</th><th>Avg DoD</th>
-        <th>Avg Dis</th><th>Avg DM</th><th>Avg Wonder</th><th>Avg AQ</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for genre, s in cal_stats.items() %}
-      {% set trend = cal_trend.get(genre, {}) %}
-      <tr>
-        <td style="font-weight:600; font-size:17px;">
-          {{ genre }}
-          {% if s.avg_score < 5.0 %}
-            <span style="font-size:14px; color:var(--red); font-family:var(--font-mono); margin-left:6px;">⚠ LOW</span>
-          {% elif s.avg_score > 8.5 %}
-            <span style="font-size:14px; color:var(--amber); font-family:var(--font-mono); margin-left:6px;">📈 HIGH</span>
-          {% endif %}
-        </td>
-        <td class="mono">{{ s.count }}</td>
-        <td>
-          <span class="gold" style="font-size:18px;">{{ s.avg_score }}</span>
-          {% if trend.get('score_delta') is not none %}
-            {% set d = trend.score_delta %}
-            <span style="font-family:var(--font-mono); font-size:14px; margin-left:6px;
-                         color:{{ 'var(--green)' if d > 0 else ('var(--red)' if d < 0 else 'var(--text-muted)') }};">
-              {{ '↑' if d > 0 else ('↓' if d < 0 else '→') }}{{ '%+.2f'|format(d) if d != 0 else '' }}
-            </span>
-          {% endif %}
-        </td>
-        <td class="mono">{{ s.avg_dod }}{% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}<span style="font-size:14px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dod_delta > 0 else '↓' }}</span>{% endif %}</td>
-        <td class="mono">{{ s.avg_dis }}{% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}<span style="font-size:14px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dis_delta > 0 else '↓' }}</span>{% endif %}</td>
-        <td class="mono">{{ s.avg_dm }}{% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}<span style="font-size:14px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dm_delta > 0 else '↓' }}</span>{% endif %}</td>
-        <td class="mono">{{ s.avg_wonder }}{% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}<span style="font-size:14px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.wonder_delta > 0 else '↓' }}</span>{% endif %}</td>
-        <td class="mono">{{ s.avg_aq }}{% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}<span style="font-size:14px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.aq_delta > 0 else '↓' }}</span>{% endif %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
-            padding:20px 24px; margin-bottom:40px;">
-  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px;
-              color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">When to Run Calibration Log</div>
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
-    {% for icon, title, desc in [
-      ('📸', 'Before scoring changes', 'Run before deploying new auto_score.py to capture the baseline'),
-      ('📅', 'Monthly snapshot', 'Track if average scores are drifting over time'),
-      ('📦', 'After bulk uploads', 'Check if new batches are skewing genre averages'),
-      ('🔧', 'After corrections', 'Verify calibration notes are improving scores'),
-    ] %}
-    <div style="display:flex; gap:10px; align-items:flex-start;">
-      <span style="font-size:20px; flex-shrink:0;">{{ icon }}</span>
+  {# ── Action Required Banner ── #}
+  {% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
+  {% set flagged_items = recent | selectattr('is_flagged') | list %}
+  {% if needs_action or flagged_items %}
+  <div class="action-banner">
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span style="font-size:22px;">⚠️</span>
       <div>
-        <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">{{ title }}</div>
-        <div style="font-size:15px; color:var(--text-secondary); line-height:1.5;">{{ desc }}</div>
+        <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Action Required</div>
+        <div class="action-banner-text">
+          {% if needs_action %}
+            <span style="color:var(--gold); font-weight:700;">{{ needs_action|length }}</span>
+            image{{ 's' if needs_action|length != 1 else '' }} pending review
+            {% set gm_count = [] %}
+            {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% if gm_count.append(i) %}{% endif %}{% endif %}{% endfor %}
+            {% if gm_count %}&nbsp;·&nbsp;<span style="color:var(--gold); font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
+          {% endif %}
+          {% if flagged_items %}
+            {% if needs_action %}&nbsp;·&nbsp;{% endif %}
+            <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
+            flagged image{{ 's' if flagged_items|length != 1 else '' }}
+          {% endif %}
+        </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-<!-- HEALTH CHECK -->
-<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:24px;">
-  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
-    🔍 Database Health Check
-  </div>
-  <p style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
-    Check all scored images for missing audit data, broken download cards, or formatting issues.
-    Use <strong style="color:var(--gold);">Rescore All</strong> to fix images with missing analysis data.
-  </p>
-  <div style="display:flex; gap:12px; flex-wrap:wrap;">
-    <a href="{{ url_for('admin_health_check') }}" target="_blank"
-       class="btn" style="padding:10px 24px; border-color:var(--gold-dark); color:var(--gold);">
-      🔍 Run Health Check
+    <a href="#section-review" style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
+      Review Now ↓
     </a>
-    <form method="POST" action="{{ url_for('fix_tiers') }}"
-          onsubmit="return confirm('Recalculate all tier assignments from scores? This fixes any model-assigned tiers.')">
-      <button type="submit" class="btn" style="padding:10px 24px; border-color:var(--gold-dark); color:var(--gold);">
-        🏆 Fix All Tiers
-      </button>
-    </form>
-    <form method="POST" action="{{ url_for('admin_rescore_all') }}"
-          onsubmit="return confirm('Rescore all images with missing data? This uses API credits and may take several minutes.');">
-      <button type="submit" class="btn" style="padding:10px 24px;">
-        🔄 Rescore Images with Missing Data
-      </button>
-    </form>
   </div>
-</div>
+  {% endif %}
 
-<!-- FIX PHOTOGRAPHER NAMES -->
-<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
-    ✏️ Fix Photographer Names
-  </div>
-  <p style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
-    Bulk rename all images credited to a specific photographer name.
-  </p>
-  <form method="POST" action="{{ url_for('fix_photographer_names') }}"
-        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-    <div style="flex:1; min-width:150px;">
-      <label style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">CURRENT NAME</label>
-      <input type="text" name="old_name" placeholder="e.g. Admin" value="Admin"
-             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:17px; border-radius:var(--radius-sm); outline:none;">
-    </div>
-    <div style="flex:1; min-width:150px;">
-      <label style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">REPLACE WITH</label>
-      <input type="text" name="new_name" placeholder="e.g. Sree"
-             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:17px; border-radius:var(--radius-sm); outline:none;">
-    </div>
-    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;"
-            onclick="return confirm('Rename all images? Cannot be undone.')">
-      Rename All →
-    </button>
-  </form>
-</div>
-
-<!-- IMAGE TRANSFER -->
-<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px; margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">
-    🔄 Transfer Images to Photographer
-  </div>
-  <p style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
-    Transfer all images credited to a photographer name to their registered account.
-  </p>
-  <form method="POST" action="{{ url_for('admin_transfer_images') }}"
-        style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-    <div style="flex:1; min-width:200px;">
-      <label style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-muted); display:block; margin-bottom:6px;">PHOTOGRAPHER NAME</label>
-      <input type="text" name="photographer_name" placeholder="e.g. Ashok Kochhar"
-             style="width:100%; background:var(--surface-3); border:1px solid var(--border); color:var(--text-primary); padding:10px 14px; font-size:17px; border-radius:var(--radius-sm); outline:none;">
-    </div>
-    <button type="submit" class="btn btn-solid" style="padding:10px 24px; white-space:nowrap;">Transfer Images →</button>
-  </form>
-</div>
-
-<!-- RECENT SUBMISSIONS -->
-<div id="recent-submissions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-  <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <form method="POST" action="{{ url_for('backfill_hashes') }}">
-      <button type="submit" class="btn" style="border-color:var(--gold-dark); color:var(--gold); padding:8px 18px;">
-        🔍 Backfill Hashes
-      </button>
-    </form>
-    <form method="POST" action="{{ url_for('admin_cleanup') }}"
-          onsubmit="return confirm('Delete all images with no thumbnail? This cannot be undone.');">
-      <button type="submit" class="btn btn-danger" style="padding:8px 18px;">🗑 Delete Broken</button>
-    </form>
-  </div>
-</div>
-
-<form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
-  <div class="bulk-bar">
-    <label>
-      <input type="checkbox" id="selectAll" onchange="toggleAll(this)">
-      Select All
-    </label>
-    <span class="selected-count" id="selectedCount">0 selected</span>
-    <button type="submit" id="bulkDeleteBtn" disabled class="btn btn-danger" style="padding:7px 18px; opacity:0.4;">
-      🗑 Delete Selected
-    </button>
-  </div>
-
-  <div class="admin-tile-grid">
-    {% for img in recent %}
-    {%- set tile_class = 'is-flagged' if img.is_flagged else ('needs-review' if img.needs_review else ('is-ref' if img.is_calibration_example else '')) -%}
-
-    <div class="admin-tile {{ tile_class }}">
-
-      <!-- Hidden forms -->
-      <form id="ref-form-{{ img.id }}" method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}" style="display:none;"></form>
-      <form id="del-form-{{ img.id }}" method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}" style="display:none;"></form>
-      <form id="flag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_flag_image', image_id=img.id) }}" style="display:none;">
-        <input type="hidden" name="reason" value="Manually flagged as AI-generated by admin">
-      </form>
-      <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
-      <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
-      <form id="reject-form-{{ img.id }}" method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
-        <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
-      </form>
-
-      <!-- Image -->
-      <div class="admin-tile-img-wrap">
-        <input type="checkbox" name="image_ids" value="{{ img.id }}"
-               class="admin-tile-checkbox row-check" onchange="updateCount()">
-
-        {% if img.thumb_url %}
-        <img src="{{ img.thumb_url }}" class="admin-tile-img" alt="{{ img.asset_name }}">
-        {% else %}
-        <div class="admin-tile-placeholder">🖼️</div>
-        {% endif %}
-
-        <span class="admin-tile-status {{ img.status }}">{{ img.status.upper() }}</span>
-
-        {% if img.is_flagged %}
-        <span class="admin-tile-flag">🚫 AI</span>
-        {% elif img.needs_review %}
-          {% if img.score and img.score >= 9.0 %}
-          <span class="admin-tile-review">🏆 GM</span>
-          {% else %}
-          <span class="admin-tile-review">🔍 REVIEW</span>
-          {% endif %}
-        {% elif img.judge_referral %}
-        <span class="admin-tile-review">⚖️ REF</span>
-        {% endif %}
-
-        {% if img.ai_suspicion and img.ai_suspicion >= 0.4 %}
-        <span class="admin-tile-ai" style="color:{% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold){% endif %};">
-          AI {{ '%.2f'|format(img.ai_suspicion) }}
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 1 — NEEDS ATTENTION (always open)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section urgent" id="section-review">
+    <div class="admin-section-header" onclick="toggleSection('review')">
+      <div class="admin-section-title">
+        ⚠ Needs Attention
+        {% if needs_action or flagged_items %}
+        <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(245,197,24,0.15); color:var(--gold); border:1px solid var(--gold-dark);">
+          {{ (needs_action|length) + (flagged_items|length) }}
         </span>
         {% endif %}
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <form method="POST" action="{{ url_for('backfill_hashes') }}">
+            <button type="submit" class="act-btn act-ref" style="font-size:11px; padding:4px 10px;">🔍 Backfill Hashes</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_cleanup') }}"
+                onsubmit="return confirm('Delete all images with no thumbnail? Cannot be undone.');">
+            <button type="submit" class="act-btn act-del" style="font-size:11px; padding:4px 10px;">🗑 Delete Broken</button>
+          </form>
+        </div>
+        <span class="admin-chevron open" id="chev-review">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body" id="body-review">
 
-        {% if not img.is_public and not img.is_flagged %}
-        <span style="position:absolute;bottom:8px;right:8px;
-                     background:rgba(0,0,0,0.85);border:1px solid rgba(255,255,255,0.4);
-                     color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;
-                     letter-spacing:1px;padding:3px 7px;border-radius:3px;">🔒 HIDDEN</span>
-        {% endif %}
+      <form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
+        <div class="bulk-bar">
+          <label>
+            <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All
+          </label>
+          <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
+          <button type="submit" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;">🗑 Delete Selected</button>
+        </div>
+
+        <div class="admin-tile-grid">
+          {% for img in recent %}
+          {%- set tile_class = 'is-flagged' if img.is_flagged else ('needs-review' if img.needs_review else ('is-ref' if img.is_calibration_example else '')) -%}
+          <div class="admin-tile {{ tile_class }}">
+
+            <form id="ref-form-{{ img.id }}"    method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}" style="display:none;"></form>
+            <form id="del-form-{{ img.id }}"    method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}" style="display:none;"></form>
+            <form id="flag-form-{{ img.id }}"   method="POST" action="{{ url_for('admin_flag_image', image_id=img.id) }}" style="display:none;">
+              <input type="hidden" name="reason" value="Manually flagged as AI-generated by admin">
+            </form>
+            <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
+            <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
+            <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
+              <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
+            </form>
+
+            <div class="admin-tile-img-wrap">
+              <input type="checkbox" name="image_ids" value="{{ img.id }}"
+                     class="admin-tile-checkbox row-check" onchange="updateCount()">
+              {% if img.thumb_url %}
+              <img src="{{ img.thumb_url }}" class="admin-tile-img" alt="{{ img.asset_name }}">
+              {% else %}
+              <div class="admin-tile-placeholder">🖼️</div>
+              {% endif %}
+              <span class="admin-tile-status {{ img.status }}">{{ img.status.upper() }}</span>
+              {% if img.is_flagged %}
+                <span class="admin-tile-flag">🚫 AI</span>
+              {% elif img.needs_review %}
+                {% if img.score and img.score >= 9.0 %}
+                  <span class="admin-tile-review">🏆 GM</span>
+                {% else %}
+                  <span class="admin-tile-review">🔍 REVIEW</span>
+                {% endif %}
+              {% elif img.judge_referral %}
+                <span class="admin-tile-review">⚖️ REF</span>
+              {% endif %}
+              {% if img.ai_suspicion and img.ai_suspicion >= 0.4 %}
+              <span class="admin-tile-ai" style="color:{% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold){% endif %};">
+                AI {{ '%.2f'|format(img.ai_suspicion) }}
+              </span>
+              {% endif %}
+              {% if not img.is_public and not img.is_flagged %}
+              <span class="admin-tile-hidden">🔒 HIDDEN</span>
+              {% endif %}
+            </div>
+
+            <div class="admin-tile-body">
+              <a href="{{ url_for('image_detail', image_id=img.id) }}" class="admin-tile-title">
+                {{ img.asset_name or img.original_filename or 'Untitled' }}
+              </a>
+              <div class="admin-tile-meta">
+                <span>{{ img.genre or '—' }}</span>
+                <span>{{ img.created_at.strftime('%d %b') }}</span>
+              </div>
+              <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
+                <div class="admin-tile-score">{{ img.score or '—' }}</div>
+                <div class="admin-tile-tier">{{ img.tier or '' }}</div>
+              </div>
+            </div>
+
+            <div class="admin-tile-actions">
+              <button type="submit" form="ref-form-{{ img.id }}"
+                      class="act-btn act-ref {{ 'active' if img.is_calibration_example }}"
+                      title="{{ 'Remove REF' if img.is_calibration_example else 'Set as REF' }}">
+                {{ '★' if img.is_calibration_example else '☆' }} REF
+              </button>
+              {% if img.is_flagged %}
+                <button type="submit" form="unflag-form-{{ img.id }}" class="act-btn act-unflag"
+                        onclick="return confirm('Unflag and restore?');">✓ Unflag</button>
+              {% elif img.needs_review %}
+                <button type="submit" form="approve-form-{{ img.id }}" class="act-btn act-approve"
+                        onclick="return confirm('Approve and make public?');">✓ OK</button>
+                <button type="submit" form="reject-form-{{ img.id }}" class="act-btn act-reject"
+                        onclick="return confirm('Reject? User notified.');">✗ Reject</button>
+                <button type="submit" form="flag-form-{{ img.id }}" class="act-btn act-flag"
+                        onclick="return confirm('Flag as AI-generated?');">🚫</button>
+              {% else %}
+                <button type="submit" form="flag-form-{{ img.id }}" class="act-btn act-flag"
+                        onclick="return confirm('Flag as AI-generated?');">🚫 Flag</button>
+              {% endif %}
+              <button type="submit" form="del-form-{{ img.id }}" class="act-btn act-del"
+                      onclick="return confirm('Delete? Cannot be undone.');">🗑</button>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 2 — PLATFORM STATS & CALIBRATION (collapsed)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section" id="section-stats">
+    <div class="admin-section-header" onclick="toggleSection('stats')">
+      <div class="admin-section-title" style="color:var(--text-muted);">
+        📊 Platform Stats &amp; Calibration
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="admin-section-meta">{{ total_users }} members · {{ scored }} scored</span>
+        <span class="admin-chevron" id="chev-stats">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body collapsed" id="body-stats">
+
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val">{{ total_users }}</div><div class="stat-lbl">Members</div></div>
+        <div class="stat-box"><div class="stat-val">{{ total_images }}</div><div class="stat-lbl">Total Images</div></div>
+        <div class="stat-box"><div class="stat-val">{{ scored }}</div><div class="stat-lbl">Scored</div></div>
+        <div class="stat-box"><div class="stat-val">{{ pending }}</div><div class="stat-lbl">Pending</div></div>
       </div>
 
-      <!-- Body -->
-      <div class="admin-tile-body">
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="admin-tile-title">
-          {{ img.asset_name or img.original_filename or 'Untitled' }}
+      {% if cal_stats %}
+      {% if drift_alerts %}
+      <div style="margin-bottom:16px;">
+        {% for alert in drift_alerts %}
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:6px;
+                    background:{{ 'var(--red-dim)' if alert.type == 'low' else 'var(--amber-dim)' }};
+                    border:1px solid {{ 'var(--red)' if alert.type == 'low' else 'var(--amber)' }};
+                    border-radius:var(--radius-sm); font-size:15px;
+                    color:{{ '#F0A0A0' if alert.type == 'low' else '#F0C888' }};">
+          {{ '⚠️' if alert.type == 'low' else '📈' }}
+          <strong style="font-family:var(--font-mono);">{{ alert.genre }}</strong> — {{ alert.msg }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Calibration by Genre</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <form method="POST" action="{{ url_for('run_calibration') }}">
+            <button type="submit" class="btn btn-solid" style="padding:8px 18px; font-size:13px;">📸 Run Calibration Log</button>
+          </form>
+          <form method="POST" action="{{ url_for('fix_calibration_table') }}"
+                onsubmit="return confirm('Rebuild calibration_logs table? Clears all previous snapshots.');">
+            <button type="submit" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;">🔧 Fix Table</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <table class="cal-table" style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Genre</th><th>Count</th><th>Avg Score</th><th>Avg DoD</th>
+              <th>Avg Dis</th><th>Avg DM</th><th>Avg Wonder</th><th>Avg AQ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for genre, s in cal_stats.items() %}
+            {% set trend = cal_trend.get(genre, {}) %}
+            <tr>
+              <td style="font-weight:600;">
+                {{ genre }}
+                {% if s.avg_score < 5.0 %}
+                  <span style="font-size:12px; color:var(--red); font-family:var(--font-mono); margin-left:6px;">⚠ LOW</span>
+                {% elif s.avg_score > 8.5 %}
+                  <span style="font-size:12px; color:var(--amber); font-family:var(--font-mono); margin-left:6px;">📈 HIGH</span>
+                {% endif %}
+              </td>
+              <td class="mono">{{ s.count }}</td>
+              <td>
+                <span class="gold" style="font-size:16px;">{{ s.avg_score }}</span>
+                {% if trend.get('score_delta') is not none %}
+                  {% set d = trend.score_delta %}
+                  <span style="font-family:var(--font-mono); font-size:12px; margin-left:4px;
+                               color:{{ 'var(--green)' if d > 0 else ('var(--red)' if d < 0 else 'var(--text-muted)') }};">
+                    {{ '↑' if d > 0 else ('↓' if d < 0 else '→') }}{{ '%+.2f'|format(d) if d != 0 else '' }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="mono">{{ s.avg_dod }}{% if trend.get('dod_delta') is not none and trend.dod_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dod_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dod_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_dis }}{% if trend.get('dis_delta') is not none and trend.dis_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dis_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dis_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_dm }}{% if trend.get('dm_delta') is not none and trend.dm_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.dm_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.dm_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_wonder }}{% if trend.get('wonder_delta') is not none and trend.wonder_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.wonder_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.wonder_delta > 0 else '↓' }}</span>{% endif %}</td>
+              <td class="mono">{{ s.avg_aq }}{% if trend.get('aq_delta') is not none and trend.aq_delta != 0 %}<span style="font-size:12px; color:{{ 'var(--green)' if trend.aq_delta > 0 else 'var(--red)' }};">{{ '↑' if trend.aq_delta > 0 else '↓' }}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 3 — TOOLS (collapsed)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section" id="section-tools">
+    <div class="admin-section-header" onclick="toggleSection('tools')">
+      <div class="admin-section-title" style="color:var(--text-muted);">🔧 Tools</div>
+      <span class="admin-chevron" id="chev-tools">▼</span>
+    </div>
+    <div class="admin-section-body collapsed" id="body-tools">
+
+      <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Database &amp; Engine</div>
+      <div class="tools-grid" style="margin-bottom:20px;">
+        <div class="tool-row">
+          <div>
+            <div class="tool-label">Health Check</div>
+            <div class="tool-desc">Scan all scored images for missing audit data or broken cards</div>
+          </div>
+          <a href="{{ url_for('admin_health_check') }}" target="_blank" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold); flex-shrink:0;">Run →</a>
+        </div>
+        <div class="tool-row">
+          <div>
+            <div class="tool-label">Fix All Tiers</div>
+            <div class="tool-desc">Recalculate all tier assignments from scores</div>
+          </div>
+          <form method="POST" action="{{ url_for('fix_tiers') }}"
+                onsubmit="return confirm('Recalculate all tier assignments?')">
+            <button type="submit" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);">Run →</button>
+          </form>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Photographer &amp; Image Management</div>
+
+      <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;">
+        <div class="tool-label" style="margin-bottom:10px;">Fix Photographer Names</div>
+        <form method="POST" action="{{ url_for('fix_photographer_names') }}"
+              style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:140px;">
+            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Current name</div>
+            <input type="text" name="old_name" value="Admin" class="tool-input">
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Replace with</div>
+            <input type="text" name="new_name" placeholder="New name" class="tool-input">
+          </div>
+          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
+                  onclick="return confirm('Rename all images? Cannot be undone.')">Rename →</button>
+        </form>
+      </div>
+
+      <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px;">
+        <div class="tool-label" style="margin-bottom:10px;">Transfer Images to Photographer</div>
+        <form method="POST" action="{{ url_for('admin_transfer_images') }}"
+              style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:200px;">
+            <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Photographer name</div>
+            <input type="text" name="photographer_name" placeholder="e.g. Ashok Kochhar" class="tool-input">
+          </div>
+          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;">Transfer →</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 4 — EXPORTS & REPORTS (collapsed)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section" id="section-exports">
+    <div class="admin-section-header" onclick="toggleSection('exports')">
+      <div class="admin-section-title" style="color:var(--text-muted);">📊 Exports &amp; Reports</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="admin-section-meta">{{ stats.subscribers }} subscribers · {{ stats.free_users }} free</span>
+        <span class="admin-chevron" id="chev-exports">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body collapsed" id="body-exports">
+
+      <div class="sub-summary">
+        <div>
+          <div class="sub-lbl">Subscribers</div>
+          <div class="sub-val">{{ stats.subscribers }}</div>
+        </div>
+        <div>
+          <div class="sub-lbl">Camera League</div>
+          <div class="sub-val" style="color:var(--text-primary);">{{ stats.camera_subs }}</div>
+        </div>
+        <div>
+          <div class="sub-lbl">Mobile League</div>
+          <div class="sub-val" style="color:var(--text-primary);">{{ stats.mobile_subs }}</div>
+        </div>
+        <div>
+          <div class="sub-lbl">Free Users</div>
+          <div class="sub-val" style="color:var(--text-muted);">{{ stats.free_users }}</div>
+        </div>
+        <a href="{{ url_for('admin_subscriptions') }}" class="btn btn-solid" style="padding:10px 18px; font-size:13px; white-space:nowrap;">View Subscriptions →</a>
+      </div>
+
+      <div class="export-grid" style="margin-bottom:16px;">
+        <a href="{{ url_for('admin_export_users') }}" class="export-btn">
+          <span class="export-icon">👥</span>
+          <div><div class="export-title">User Base</div><div class="export-desc">All users · subscription · credits</div></div>
         </a>
-        <div class="admin-tile-meta">
-          <span>{{ img.genre or '—' }}</span>
-          <span>{{ img.created_at.strftime('%d %b') }}</span>
+        <a href="{{ url_for('admin_export_subscriptions') }}" class="export-btn">
+          <span class="export-icon">💳</span>
+          <div><div class="export-title">Subscriptions</div><div class="export-desc">Active · plan · payment IDs</div></div>
+        </a>
+        <a href="{{ url_for('admin_export_images') }}" class="export-btn">
+          <span class="export-icon">🖼️</span>
+          <div><div class="export-title">Images &amp; Scores</div><div class="export-desc">All scored · DDI · EXIF</div></div>
+        </a>
+        <a href="{{ url_for('admin_export_peer_ratings_full') }}" class="export-btn">
+          <span class="export-icon">⭐</span>
+          <div><div class="export-title">Peer Ratings</div><div class="export-desc">Full audit · bias flags · delta</div></div>
+        </a>
+        <a href="{{ url_for('admin_export_camera_rankings') }}" class="export-btn">
+          <span class="export-icon">📷</span>
+          <div><div class="export-title">Camera Rankings</div><div class="export-desc">Avg score by camera model</div></div>
+        </a>
+        <a href="{{ url_for('admin_export_lens_rankings') }}" class="export-btn">
+          <span class="export-icon">🔭</span>
+          <div><div class="export-title">Lens Rankings</div><div class="export-desc">Avg score by lens model</div></div>
+        </a>
+        <a href="{{ url_for('admin_export_ratings_csv') }}" class="export-btn">
+          <span class="export-icon">📊</span>
+          <div><div class="export-title">Ratings Audit</div><div class="export-desc">Peer ratings export</div></div>
+        </a>
+      </div>
+      <div style="font-size:13px; color:var(--text-muted);">All exports download as CSV.</div>
+
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
+     SECTION 5 — DANGER ZONE (collapsed)
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section danger" id="section-danger">
+    <div class="admin-section-header" onclick="toggleSection('danger')">
+      <div class="admin-section-title">⚠ Danger Zone</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">Destructive actions — use with caution</span>
+        <span class="admin-chevron" id="chev-danger">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body collapsed" id="body-danger">
+
+      <div class="danger-row">
+        <div>
+          <div class="danger-title">Rescore Images with Missing Data</div>
+          <div class="danger-desc">Re-runs AI scoring on images with incomplete analysis. Uses API credits and may take several minutes.</div>
         </div>
-        <div style="display:flex; align-items:baseline; gap:8px; margin-top:2px;">
-          <div class="admin-tile-score">{{ img.score or '—' }}</div>
-          <div class="admin-tile-tier">{{ img.tier or '' }}</div>
+        <form method="POST" action="{{ url_for('admin_rescore_all') }}"
+              onsubmit="return confirm('Rescore all images with missing data? Uses API credits.');">
+          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Run Rescore</button>
+        </form>
+      </div>
+
+      <div class="danger-row">
+        <div>
+          <div class="danger-title">Fix Beta Plan Labels</div>
+          <div class="danger-desc">Updates all manually-activated beta users to monthly plan so MRR calculates correctly.</div>
         </div>
+        <form method="POST" action="{{ url_for('admin_fix_beta_plans') }}"
+              onsubmit="return confirm('Update all beta users to monthly plan?');">
+          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Run Fix</button>
+        </form>
       </div>
 
-      <!-- Actions -->
-      <div class="admin-tile-actions">
-        <button type="submit" form="ref-form-{{ img.id }}"
-                class="action-btn-sm ref-btn {{ 'active' if img.is_calibration_example }}"
-                title="{{ 'Remove REF' if img.is_calibration_example else 'Set as REF' }}">
-          {{ '★' if img.is_calibration_example else '☆' }} REF
-        </button>
-        {% if img.is_flagged %}
-        <button type="submit" form="unflag-form-{{ img.id }}"
-                class="action-btn-sm unflag-btn"
-                onclick="return confirm('Unflag and restore to public?');">✓ Unflag</button>
-        {% elif img.needs_review %}
-        <button type="submit" form="approve-form-{{ img.id }}"
-                class="action-btn-sm approve-btn"
-                onclick="return confirm('Approve and make public?');">✓ OK</button>
-        <button type="submit" form="reject-form-{{ img.id }}"
-                class="action-btn-sm del-btn"
-                onclick="return confirm('Reject? Image removed and user notified.');">✗ Reject</button>
-        <button type="submit" form="flag-form-{{ img.id }}"
-                class="action-btn-sm flag-btn"
-                onclick="return confirm('Flag as AI-generated?');">🚫</button>
-        {% else %}
-        <button type="submit" form="flag-form-{{ img.id }}"
-                class="action-btn-sm flag-btn"
-                onclick="return confirm('Flag as AI-generated?');">🚫 Flag</button>
-        {% endif %}
-        <button type="submit" form="del-form-{{ img.id }}"
-                class="action-btn-sm del-btn"
-                onclick="return confirm('Delete? Cannot be undone.');">🗑</button>
+      <div class="danger-row" style="border-color:#8a0000;">
+        <div>
+          <div class="danger-title">Reset All Peer Rating Credits &amp; Data</div>
+          <div class="danger-desc">Resets all users' rating_credits to 0 and clears all peer rating data — assignments, ratings, pool entries, blended scores. Cannot be undone.</div>
+        </div>
+        <form method="POST" action="{{ url_for('admin_reset_rating_credits') }}"
+              onsubmit="return confirm('Reset ALL peer rating credits and data to zero? This cannot be undone.');">
+          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Reset All</button>
+        </form>
       </div>
 
-    </div>
-    {% endfor %}
-  </div>
-</form>
-
-
-<!-- DATA EXPORTS -->
-<div style="margin-top:40px;">
-  <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:3px; color:var(--text-muted); text-transform:uppercase; margin-bottom:20px;">
-    📊 Data Exports &amp; Admin Reports
-  </div>
-
-  <!-- Subscription summary bar -->
-  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:22px 28px; margin-bottom:20px; display:grid; grid-template-columns:repeat(4,1fr) auto; gap:16px; align-items:center;">
-    <div style="padding:0 16px 0 0; border-right:1px solid var(--border);">
-      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px;">Subscribers</div>
-      <div style="font-size:28px; font-weight:700; color:var(--gold);">{{ stats.subscribers }}</div>
-    </div>
-    <div style="padding:0 16px; border-right:1px solid var(--border);">
-      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px;">Camera League</div>
-      <div style="font-size:28px; font-weight:700; color:var(--text-primary);">{{ stats.camera_subs }}</div>
-    </div>
-    <div style="padding:0 16px; border-right:1px solid var(--border);">
-      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px;">Mobile League</div>
-      <div style="font-size:28px; font-weight:700; color:var(--text-primary);">{{ stats.mobile_subs }}</div>
-    </div>
-    <div style="padding:0 16px;">
-      <div style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px;">Free Users</div>
-      <div style="font-size:28px; font-weight:700; color:var(--text-secondary);">{{ stats.free_users }}</div>
-    </div>
-    <div style="justify-self:end;">
-      <a href="{{ url_for('admin_subscriptions') }}" class="btn btn-solid" style="padding:12px 22px; white-space:nowrap;">
-        View Subscriptions →
-      </a>
     </div>
   </div>
 
-  <!-- Export buttons grid -->
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; min-width:0;" class="admin-export-grid">
-
-    <a href="{{ url_for('admin_export_users') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">👥</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">User Base</div>
-        <div style="font-size:15px; color:var(--text-muted);">All users · subscription status · credits</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_subscriptions') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">💳</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Subscriptions</div>
-        <div style="font-size:15px; color:var(--text-muted);">Active subscribers · plan · Razorpay IDs</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_images') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">🖼️</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Images &amp; Scores</div>
-        <div style="font-size:15px; color:var(--text-muted);">All scored images · DDI scores · EXIF data</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_peer_ratings_full') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">⭐</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Peer-to-Peer Ratings</div>
-        <div style="font-size:15px; color:var(--text-muted);">Full audit · bias flags · delta from DDI</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_camera_rankings') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">📷</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Camera &amp; Phone Rankings</div>
-        <div style="font-size:15px; color:var(--text-muted);">Avg score by camera/phone model</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_lens_rankings') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">🔭</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Lens Rankings</div>
-        <div style="font-size:15px; color:var(--text-muted);">Avg score by lens model · brand data</div>
-      </div>
-    </a>
-
-    <a href="{{ url_for('admin_export_ratings_csv') }}" class="btn" style="display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none;">
-      <span style="font-size:20px;">📊</span>
-      <div>
-        <div style="font-weight:600; color:var(--text-primary); font-size:16px;">Ratings Audit</div>
-        <div style="font-size:15px; color:var(--text-muted);">Existing peer ratings export</div>
-      </div>
-    </a>
-
-  </div>
-  <div style="font-size:15px; color:var(--text-muted); margin-top:12px;">
-    All exports download as CSV. Winners export will be available once the judging system is live.
-  </div>
-
-  <!-- Fix beta plan labels -->
-  <div style="margin-top:20px; padding:16px 20px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-    <div>
-      <div style="font-size:16px; font-weight:600; color:var(--text-primary);">Fix Beta Plan Labels</div>
-      <div style="font-size:15px; color:var(--text-muted); margin-top:2px;">Updates all manually-activated 'beta' users to 'monthly' so MRR calculates correctly.</div>
-    </div>
-    <form method="POST" action="{{ url_for('admin_fix_beta_plans') }}" onsubmit="return confirm('Update all beta users to monthly plan?');">
-      <button type="submit" class="btn" style="padding:8px 18px; font-size:15px;">Run Fix</button>
-    </form>
-  </div>
 </div>
-
-<!-- PEER RATING RESET -->
-<div style="background:var(--surface-2); border:1px solid #5a1a1a; border-radius:var(--radius-md); padding:24px; margin-top:36px;">
- <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--red); text-transform:uppercase; margin-bottom:8px;">
- ⚠️ Peer Rating — v27 One-Time Migration
- </div>
- <p style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
- Resets all users rating_credits to 0 and clears all peer rating data (assignments, ratings, pool entries, blended scores). Run once after v27 deploy. Cannot be undone.
- </p>
- <form method="POST" action="{{ url_for('admin_reset_rating_credits') }}"
- onsubmit="return confirm('Reset ALL peer rating credits and data to zero? This cannot be undone.');">
- <button type="submit" class="btn btn-danger" style="padding:10px 24px;">
- Reset All Rating Credits and Peer Data
- </button>
- </form>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function toggleSection(name) {
+  const body = document.getElementById('body-' + name);
+  const chev = document.getElementById('chev-' + name);
+  const isCollapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', !isCollapsed);
+  chev.classList.toggle('open', isCollapsed);
+}
 function toggleAll(cb) {
   document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
   updateCount();
