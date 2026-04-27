@@ -1619,19 +1619,19 @@ def upload():
                     try:
                         _u = User.query.get(img.user_id)
                         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-                        _iurl = f"https://shutterleague.com/image/{img.id}"
-                        send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] Image Flagged — AI Generation Detected',html_body=(f'<p>Hi {_uname},</p><p>Your image <strong>{img.asset_name or "Untitled"}</strong> has been flagged as potentially AI-generated.</p><p>Contact <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> if this is an error.</p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Your image "{img.asset_name or "Untitled"}" was flagged as potentially AI-generated.
-
-Contact {CONTACT_EMAIL} if this is an error.
-
-The Shutter League Team'))
-                        send_email(to_addresses=[ADMIN_EMAIL],subject=f'[Admin] AI Flag — {img.asset_name or "Untitled"}',html_body=(f'<p>Auto-flagged AI image.</p><ul><li>Image: {img.asset_name or "Untitled"}</li><li>Suspicion: {ai_suspicion:.2f}</li><li>User: {_u.email if _u else "unknown"}</li></ul><p><a href="{_iurl}">Review</a></p>'),text_body=(f'AI Flag
-Image: {img.asset_name or "Untitled"}
-Suspicion: {ai_suspicion:.2f}
-User: {_u.email if _u else "unknown"}
-Review: {_iurl}'))
+                        _iurl = f'https://shutterleague.com/image/{img.id}'
+                        send_email(
+                            to_addresses=[_u.email] if _u else [],
+                            subject='[Shutter League] Image Flagged — AI Generation Detected',
+                            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been flagged as potentially AI-generated.</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
+                            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" was flagged as potentially AI-generated.\n\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
+                        )
+                        send_email(
+                            to_addresses=[ADMIN_EMAIL],
+                            subject='[Admin] AI Flag — ' + (img.asset_name or 'Untitled'),
+                            html_body=('<p>Auto-flagged AI image.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>AI Suspicion: ' + str(round(ai_suspicion, 2)) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                            text_body=('AI Flag\nImage: ' + (img.asset_name or 'Untitled') + '\nSuspicion: ' + str(round(ai_suspicion, 2)) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
+                        )
                     except Exception as _me:
                         app.logger.error(f'[AI flag email error] {_me}')
                     flash(
@@ -1672,27 +1672,27 @@ Review: {_iurl}'))
                         try:
                             _u = User.query.get(img.user_id)
                             _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-                            _iurl = f"https://shutterleague.com/image/{img.id}"
+                            _iurl = f'https://shutterleague.com/image/{img.id}'
                             if img.score >= 9.0 and ai_suspicion < 0.4:
-                                send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] Grandmaster Score — RAW Verification Required',html_body=(f'<p>Hi {_uname},</p><p>Congratulations — <strong>{img.asset_name or "Untitled"}</strong> scored <strong>{img.score}</strong> ({img.tier}).</p><p>Email your original RAW file to <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> within <strong>7 days</strong>.</p><p>Your image is held from public view until verified.</p><p><a href="{_iurl}">View your image</a></p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Congratulations — "{img.asset_name or "Untitled"}" scored {img.score} ({img.tier}).
-
-Email your RAW file to {CONTACT_EMAIL} within 7 days.
-View: {_iurl}
-
-The Shutter League Team'))
-                                send_email(to_addresses=[ADMIN_EMAIL],subject=f'[Admin] RAW Verification Required — {img.asset_name or "Untitled"} ({img.score})',html_body=(f'<p>Grandmaster image needs RAW verification.</p><ul><li>Image: {img.asset_name or "Untitled"}</li><li>Score: {img.score} — {img.tier}</li><li>Photographer: {img.photographer_name or _uname}</li><li>User: {_u.email if _u else "unknown"}</li></ul><p><a href="{_iurl}">Review</a></p>'),text_body=(f'RAW Required
-Image: {img.asset_name or "Untitled"}
-Score: {img.score}
-User: {_u.email if _u else "unknown"}
-Review: {_iurl}'))
+                                send_email(
+                                    to_addresses=[_u.email] if _u else [],
+                                    subject='[Shutter League] Grandmaster Score — RAW Verification Required',
+                                    html_body=('<p>Hi ' + _uname + ',</p><p>Congratulations — <strong>' + (img.asset_name or 'Untitled') + '</strong> scored <strong>' + str(img.score) + '</strong> (' + (img.tier or '') + ').</p><p>Email your original RAW file to <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> within <strong>7 days</strong>.</p><p>Your image is held from public view until verified.</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
+                                    text_body=('Hi ' + _uname + ',\n\nCongratulations — "' + (img.asset_name or 'Untitled') + '" scored ' + str(img.score) + ' (' + (img.tier or '') + ').\n\nEmail your RAW file to ' + CONTACT_EMAIL + ' within 7 days.\nView: ' + _iurl + '\n\nThe Shutter League Team')
+                                )
+                                send_email(
+                                    to_addresses=[ADMIN_EMAIL],
+                                    subject='[Admin] RAW Verification Required — ' + (img.asset_name or 'Untitled') + ' (' + str(img.score) + ')',
+                                    html_body=('<p>Grandmaster image needs RAW verification.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Photographer: ' + (img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                    text_body=('RAW Required\nImage: ' + (img.asset_name or 'Untitled') + '\nScore: ' + str(img.score) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
+                                )
                             else:
-                                send_email(to_addresses=[ADMIN_EMAIL],subject=f'[Admin] Image Flagged for Review — {img.asset_name or "Untitled"}',html_body=(f'<p>Image flagged for review.</p><ul><li>Image: {img.asset_name or "Untitled"}</li><li>Score: {img.score} — {img.tier}</li><li>Reason: {img.flagged_reason}</li><li>User: {_u.email if _u else "unknown"}</li></ul><p><a href="{_iurl}">Review</a></p>'),text_body=(f'Flagged for review.
-Image: {img.asset_name or "Untitled"}
-Reason: {img.flagged_reason}
-User: {_u.email if _u else "unknown"}
-Review: {_iurl}'))
+                                send_email(
+                                    to_addresses=[ADMIN_EMAIL],
+                                    subject='[Admin] Image Flagged for Review — ' + (img.asset_name or 'Untitled'),
+                                    html_body=('<p>Image flagged for review.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Reason: ' + (img.flagged_reason or '') + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                    text_body=('Flagged for review.\nImage: ' + (img.asset_name or 'Untitled') + '\nReason: ' + (img.flagged_reason or '') + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
+                                )
                         except Exception as _me:
                             app.logger.error(f'[review notification email error] {_me}')
 
@@ -3028,13 +3028,12 @@ def admin_flag_image(image_id):
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-        send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] Image Removed — Policy Violation',html_body=(f'<p>Hi {_uname},</p><p>Your image <strong>{img.asset_name or "Untitled"}</strong> has been removed. Reason: {reason}</p><p>Contact <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> if this is an error.</p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Your image "{img.asset_name or "Untitled"}" has been removed.
-Reason: {reason}
-Contact {CONTACT_EMAIL} if this is an error.
-
-The Shutter League Team'))
+        send_email(
+            to_addresses=[_u.email] if _u else [],
+            subject='[Shutter League] Image Removed — Policy Violation',
+            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been removed. Reason: ' + reason + '</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
+            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" has been removed.\nReason: ' + reason + '\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
+        )
     except Exception as _me:
         app.logger.error(f'[admin flag email error] {_me}')
     flash(f'Image "{img.asset_name}" flagged and hidden from public view.', 'success')
@@ -3056,13 +3055,13 @@ def admin_unflag_image(image_id):
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-        _iurl = f"https://shutterleague.com/image/{img.id}"
-        send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] Your Image Has Been Restored',html_body=(f'<p>Hi {_uname},</p><p>Your image <strong>{img.asset_name or "Untitled"}</strong> has been restored to public view.</p><p><a href="{_iurl}">View your image</a></p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Your image "{img.asset_name or "Untitled"}" has been restored to public view.
-View: {_iurl}
-
-The Shutter League Team'))
+        _iurl = f'https://shutterleague.com/image/{img.id}'
+        send_email(
+            to_addresses=[_u.email] if _u else [],
+            subject='[Shutter League] Your Image Has Been Restored',
+            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been restored to public view.</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
+            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" has been restored to public view.\nView: ' + _iurl + '\n\nThe Shutter League Team')
+        )
     except Exception as _me:
         app.logger.error(f'[unflag email error] {_me}')
     flash(f'Image "{img.asset_name}" unflagged and restored to public view.', 'success')
@@ -3082,14 +3081,13 @@ def admin_approve_review(image_id):
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-        _iurl = f"https://shutterleague.com/image/{img.id}"
-        send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] Your Image Is Now Live',html_body=(f'<p>Hi {_uname},</p><p>Your image <strong>{img.asset_name or "Untitled"}</strong> has passed review and is now live.</p><p>Score: <strong>{img.score}</strong> — {img.tier}</p><p><a href="{_iurl}">View your image</a></p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Your image "{img.asset_name or "Untitled"}" is now live.
-Score: {img.score} — {img.tier}
-View: {_iurl}
-
-The Shutter League Team'))
+        _iurl = f'https://shutterleague.com/image/{img.id}'
+        send_email(
+            to_addresses=[_u.email] if _u else [],
+            subject='[Shutter League] Your Image Is Now Live',
+            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has passed review and is now live.</p><p>Score: <strong>' + str(img.score) + '</strong> — ' + (img.tier or '') + '</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
+            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" is now live.\nScore: ' + str(img.score) + ' — ' + (img.tier or '') + '\nView: ' + _iurl + '\n\nThe Shutter League Team')
+        )
     except Exception as _me:
         app.logger.error(f'[approve review email error] {_me}')
     flash(f'Image "{img.asset_name}" approved  -  now visible to public.', 'success')
@@ -3106,7 +3104,7 @@ def admin_reject_review(image_id):
     img.needs_review   = True
     img.is_public      = False
     img.is_flagged     = True
-    img.flagged_reason = f'RAW verification rejected: {reason}'
+    img.flagged_reason = 'RAW verification rejected: ' + reason
     img.flagged_at     = datetime.utcnow()
     img.score          = 0.0
     img.tier           = 'Rookie'
@@ -3114,17 +3112,17 @@ def admin_reject_review(image_id):
     try:
         _u = User.query.get(img.user_id)
         _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-        send_email(to_addresses=[_u.email] if _u else [],subject='[Shutter League] RAW Verification — Image Removed',html_body=(f'<p>Hi {_uname},</p><p>Your image <strong>{img.asset_name or "Untitled"}</strong> did not pass RAW verification and has been removed. Reason: {reason}</p><p>Contact <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> if this is an error.</p><p>The Shutter League Team</p>'),text_body=(f'Hi {_uname},
-
-Your image "{img.asset_name or "Untitled"}" did not pass RAW verification.
-Reason: {reason}
-Contact {CONTACT_EMAIL} if this is an error.
-
-The Shutter League Team'))
+        send_email(
+            to_addresses=[_u.email] if _u else [],
+            subject='[Shutter League] RAW Verification — Image Removed',
+            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> did not pass RAW verification and has been removed. Reason: ' + reason + '</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
+            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" did not pass RAW verification.\nReason: ' + reason + '\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
+        )
     except Exception as _me:
         app.logger.error(f'[reject review email error] {_me}')
     flash(f'Image "{img.asset_name}" rejected — user notified.', 'warning')
     return redirect(request.referrer or url_for('admin_dashboard'))
+
 
 
 # -- Community Report Routes ---------------------------------------------------
