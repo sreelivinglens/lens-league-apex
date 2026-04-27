@@ -615,6 +615,72 @@ img {
   -webkit-touch-callout: none;
 }
 
+/* ── Cookie consent banner ───────────────────────────────────────────────── */
+#cookie-banner {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(26,24,20,0.97);
+  border-top: 1px solid rgba(245,197,24,0.20);
+  padding: 16px var(--page-pad);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#cookie-banner.cb-visible { display: flex; }
+.cb-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #cccccc;
+  line-height: 1.6;
+  flex: 1;
+  min-width: 220px;
+}
+.cb-text a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+.cb-actions { display: flex; gap: 10px; flex-shrink: 0; }
+#cb-accept {
+  background: var(--gold);
+  border: none;
+  color: #0D0D0B;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+#cb-accept:hover { opacity: 0.88; }
+#cb-dismiss {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #aaaaaa;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#cb-dismiss:hover { border-color: rgba(255,255,255,0.4); color: #ffffff; }
+@media (max-width: 480px) {
+  #cookie-banner { padding: 14px 16px; }
+  .cb-text { font-size: 12px; }
+}
+
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
@@ -835,5 +901,32 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 })();
 </script>
+
+<!-- ── Cookie consent banner ─────────────────────────────────────────────── -->
+<div id="cookie-banner" role="region" aria-label="Cookie consent">
+  <div class="cb-text">
+    We use cookies to keep you logged in and improve your experience.
+    <a href="/privacy">Learn more</a>
+  </div>
+  <div class="cb-actions">
+    <button id="cb-accept" onclick="cbAccept()">Accept</button>
+    <button id="cb-dismiss" onclick="cbAccept()" aria-label="Dismiss">&times;</button>
+  </div>
+</div>
+<script>
+(function(){
+  if (!localStorage.getItem('sl_cookie_ok')) {
+    document.getElementById('cookie-banner').classList.add('cb-visible');
+  }
+})();
+function cbAccept() {
+  localStorage.setItem('sl_cookie_ok', '1');
+  var b = document.getElementById('cookie-banner');
+  b.style.transition = 'opacity 0.3s';
+  b.style.opacity = '0';
+  setTimeout(function(){ b.classList.remove('cb-visible'); b.style.opacity = ''; }, 300);
+}
+</script>
+
 </body>
 </html>
