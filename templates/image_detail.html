@@ -76,7 +76,7 @@
     background: rgba(0,0,0,0.55); align-items: center; justify-content: center; padding: 20px;
   }
   #delete-modal.open { display: flex; }
-  .delete-modal-box { background: #fff; border-radius: var(--radius-lg); padding: 32px; max-width: 440px; width: 100%; }
+  .delete-modal-box { background: #fff; border-radius: var(--radius-lg); padding: 32px; max-width: 520px; width: 100%; }
 </style>
 {% endblock %}
 
@@ -358,9 +358,13 @@
       This will permanently remove the image, its scores, and all contest entries. This cannot be undone.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:100px;">Cancel</button>
-      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="flex:1; min-width:140px;">
-        <button type="submit" class="btn btn-danger" style="width:100%; white-space:nowrap;">Yes, Delete Permanently</button>
+      <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:120px;">Cancel</button>
+      {% if current_user.role == 'admin' and image.user_id != current_user.id %}
+      <form method="POST" action="{{ url_for('admin_delete_image', image_id=image.id) }}" style="flex:2; min-width:180px;">
+      {% else %}
+      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="flex:2; min-width:180px;">
+      {% endif %}
+        <button type="submit" class="btn btn-danger" style="width:100%;">Yes, Delete Permanently</button>
       </form>
     </div>
   </div>
