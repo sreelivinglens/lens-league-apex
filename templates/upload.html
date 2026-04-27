@@ -119,25 +119,23 @@
     letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
   }
   .shot-on-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 420px) { .shot-on-options { grid-template-columns: 1fr; } }
   .shot-on-option { position: relative; }
   .shot-on-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
   .shot-on-option label {
     display: flex; align-items: center; gap: 10px; padding: 14px 16px;
-    background: #1a1a1a; border: 2px solid var(--border);
+    background: #F5F0E8; border: 2px solid var(--border);
     border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.2s, background 0.2s;
-    font-size: 16px; font-weight: 500; color: #FFFFFF; user-select: none;
+    font-size: 16px; font-weight: 500; color: var(--text-primary); user-select: none;
   }
   .shot-on-option label .shot-icon {
     font-size: 1.6rem; line-height: 1; flex-shrink: 0;
     font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
   }
-  .shot-on-option label .shot-text { line-height: 1.3; color: #FFFFFF; }
-  .shot-on-option label .shot-text small { display: block; font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 400; margin-top: 2px; }
-  .shot-on-option input[type="radio"]:checked + label { border-color: #F5C518; background: rgba(245,197,24,0.1); color: #F5C518; }
-  .shot-on-option input[type="radio"]:checked + label .shot-text { color: #F5C518; }
-  .shot-on-option input[type="radio"]:checked + label .shot-text small { color: rgba(245,197,24,0.8); }
-  .shot-on-option label:hover { border-color: #F5C518; background: #111111; }
+  .shot-on-option label .shot-text { line-height: 1.3; }
+  .shot-on-option label .shot-text small { display: block; font-size: 14px; color: var(--text-primary); font-weight: 400; margin-top: 2px; }
+  .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
+  .shot-on-option input[type="radio"]:checked + label .shot-text { color: var(--gold); }
+  .shot-on-option label:hover { border-color: var(--border-strong); background: #111111; }
   .shot-on-required-hint { font-size: 15px; color: var(--red); margin-top: 6px; display: none; }
 
   .legal-box {
@@ -519,6 +517,23 @@
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  function showWarning(msg) {
+    fileError.style.display     = 'none';
+    fileSizeWarn.innerHTML      = msg;
+    fileSizeWarn.style.display  = 'block';
+    fileSizeWarn.style.background    = '#2a1e00';
+    fileSizeWarn.style.border        = '1px solid #F5C518';
+    fileSizeWarn.style.borderLeft    = '4px solid #F5C518';
+    fileSizeWarn.style.color         = '#F5C518';
+    fileSizeWarn.style.fontSize      = '16px';
+    fileSizeWarn.style.lineHeight    = '1.6';
+    fileSizeWarn.style.padding       = '16px 18px';
+    document.getElementById('scoringOverlay').classList.remove('active');
+    submitBtn.disabled    = false;
+    submitBtn.textContent = '⬆ Submit for Scoring';
+    fileSizeWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   // ── Genre hints ──────────────────────────────────────────────────────────
   const genreHints = {
     'Creative':       '🎨 ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting.',
@@ -619,6 +634,13 @@
         document.getElementById('clockRing').style.strokeDashoffset = '0';
         document.getElementById('clockRing').style.stroke  = '#F5C518';
         setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 800);
+        return;
+      }
+
+      if (resp && resp.status === 'needs_review') {
+        const msg = resp.message || '⚠ Your image has been held for review before going public.';
+        showWarning(msg);
+        setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 5000);
         return;
       }
 
