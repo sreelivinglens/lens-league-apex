@@ -17,8 +17,8 @@
     transition: border-color 0.2s, color 0.2s, background 0.2s;
     white-space: nowrap;
   }
-  .admin-nav-btn:hover { border-color: var(--gold); color: var(--text-primary); background: var(--gold-subtle); }
-  .admin-nav-btn.gold { border-color: var(--gold-dark); color: var(--text-primary); }
+  .admin-nav-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+  .admin-nav-btn.gold { border-color: var(--gold-dark); color: var(--gold); }
   .admin-nav-btn.red  { border-color: #7a2222; color: var(--red); }
   .admin-nav-btn .badge-count {
     background: var(--red); color: #fff;
@@ -105,8 +105,8 @@
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 1px; padding: 3px 7px; border-radius: 3px;
   }
-  .admin-tile-status.scored  { background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; }
-  .admin-tile-status.pending { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.2); color: #cccccc; }
+  .admin-tile-status.scored  { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
+  .admin-tile-status.pending { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
   .admin-tile-flag   { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
   .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
   .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(0,0,0,0.65); }
@@ -261,7 +261,6 @@
     </a>
     <a href="{{ url_for('admin_judges') }}" class="admin-nav-btn gold">⚖️ Jury</a>
     <a href="{{ url_for('admin_raw_verification') }}" class="admin-nav-btn gold">📁 RAW Verification</a>
-    <a href="{{ url_for('admin_judge_config') }}" class="admin-nav-btn gold">⚙️ Pool Config</a>
     <a href="{{ url_for('admin_weekly_challenge') }}" class="admin-nav-btn gold">📅 Weekly Challenge</a>
     <a href="{{ url_for('admin_subscriptions') }}" class="admin-nav-btn">💳 Subscriptions</a>
   </div>
