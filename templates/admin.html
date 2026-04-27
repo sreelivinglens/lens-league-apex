@@ -230,7 +230,45 @@
 
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+{# ── Pending action alert ─────────────────────────────────────────────────── #}
+{% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
+{% set flagged_items = recent | selectattr('is_flagged') | list %}
+{% if needs_action or flagged_items %}
+<div style="background:#1a0f00; border:2px solid #F5C518; border-radius:var(--radius-md);
+            padding:16px 24px; margin-bottom:28px; display:flex; align-items:center;
+            justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <span style="font-size:24px;">⚠️</span>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700;
+                  letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:4px;">
+        Action Required
+      </div>
+      <div style="font-size:15px; color:#FFFFFF; line-height:1.6;">
+        {% if needs_action %}
+          <span style="color:#F5C518; font-weight:700;">{{ needs_action|length }}</span>
+          image{{ 's' if needs_action|length != 1 else '' }} pending review
+          {% set raw_needed = needs_action | selectattr('score') | list | selectattr('score') | list %}
+          {% set gm_raw = needs_action | selectattr('score') | list %}
+          {% set gm_count = [] %}
+          {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% set _ = gm_count.append(i) %}{% endif %}{% endfor %}
+          {% if gm_count %} · <span style="color:#F5C518; font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
+        {% endif %}
+        {% if flagged_items %}
+          {% if needs_action %} · {% endif %}
+          <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
+          flagged image{{ 's' if flagged_items|length != 1 else '' }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <a href="#recent-submissions" style="font-family:var(--font-mono); font-size:13px; font-weight:700;
+     letter-spacing:1px; color:#F5C518; border:1px solid #F5C518; padding:8px 16px;
+     border-radius:var(--radius-sm); text-decoration:none; white-space:nowrap; flex-shrink:0;">
+    Review Now ↓
+  </a>
+</div>
+{% endif %}
   <div class="page-header" style="margin-bottom:0;">
     <h1>Admin Dashboard</h1>
     <p>Engine calibration &amp; platform overview</p>
@@ -450,7 +488,7 @@
 </div>
 
 <!-- RECENT SUBMISSIONS -->
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+<div id="recent-submissions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
   <div class="section-label" style="margin-bottom:0;">Recent Submissions</div>
   <div style="display:flex; gap:10px; flex-wrap:wrap;">
     <form method="POST" action="{{ url_for('backfill_hashes') }}">
@@ -491,6 +529,9 @@
       </form>
       <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
       <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
+      <form id="reject-form-{{ img.id }}" method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
+        <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
+      </form>
 
       <!-- Image -->
       <div class="admin-tile-img-wrap">
@@ -554,6 +595,9 @@
         <button type="submit" form="approve-form-{{ img.id }}"
                 class="action-btn-sm approve-btn"
                 onclick="return confirm('Approve and make public?');">✓ OK</button>
+        <button type="submit" form="reject-form-{{ img.id }}"
+                class="action-btn-sm del-btn"
+                onclick="return confirm('Reject RAW verification? Image will be removed and user notified.');">✗ Reject</button>
         <button type="submit" form="flag-form-{{ img.id }}"
                 class="action-btn-sm flag-btn"
                 onclick="return confirm('Flag as AI-generated?');">🚫</button>
