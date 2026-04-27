@@ -515,14 +515,33 @@
     submitBtn.textContent    = '⬆ Submit for Scoring';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  function showError(msg) {
-    fileError.textContent    = msg;
-    fileError.style.display  = 'block';
-    submitBtn.disabled       = false;
-    submitBtn.textContent    = '⬆ Submit for Scoring';
-    document.getElementById('scoringOverlay').classList.remove('active');
-    fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+
+  // ── Audio context — created at submit (during user gesture) ─────────────
+  var _audioCtx = null;
+  function _initAudio() {
+    try {
+      if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    } catch(e) {}
+  }
+  function playBowl() {
+    try {
+      var ctx = _audioCtx; if (!ctx) return;
+      var freqs = [220, 440, 660, 880], gains = [0.5, 0.25, 0.12, 0.06], dur = 3.5;
+      freqs.forEach(function(freq, i) {
+        var osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination); osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+      });
+    } catch(e) {}
+  }
+  function haptic() { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {} }
+  function notifyComplete() { playBowl(); haptic(); }
 
   function showWarning(msg) {
     fileError.style.display          = 'none';
@@ -540,36 +559,6 @@
     submitBtn.textContent = '⬆ Submit for Scoring';
     fileSizeWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-
-  // ── Meditation bowl sound ─────────────────────────────────────────────────
-  function playBowl() {
-    try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      var freqs   = [220, 440, 660, 880];
-      var gains   = [0.5, 0.25, 0.12, 0.06];
-      var duration = 3.5;
-      freqs.forEach(function(freq, i) {
-        var osc  = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + duration);
-      });
-    } catch(e) {}
-  }
-
-  // ── Haptic feedback (Android only) ───────────────────────────────────────
-  function haptic() {
-    try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {}
-  }
-
-  function notifyComplete() { playBowl(); haptic(); }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
   const genreHints = {
@@ -624,6 +613,7 @@
 
     // All good — show overlay and fire XHR
     submitBtn.disabled = true;
+    _initAudio();  // unlock AudioContext during user gesture
     startOverlay();
 
     const xhr = new XMLHttpRequest();
@@ -678,8 +668,8 @@
 
       if (resp && resp.status === 'needs_review') {
         notifyComplete();
-        var msg = resp.message || '⚠ Your image has been held for review before going public.';
-        showWarning(msg);
+        var wMsg = resp.message || '⚠ Your image has been held for review before going public.';
+        showWarning(wMsg);
         setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 5000);
         return;
       }
