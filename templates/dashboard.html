@@ -407,12 +407,24 @@
            alt="{{ img.tier }}" onerror="this.style.display='none'">
       {% endif %}
 
-      <div class="status-badge {{ img.status }}">
+      <div class="status-badge {{ img.status }}"
+           style="{% if img.is_flagged %}background:rgba(192,57,43,0.85);border-color:#c0392b;color:#fff;
+                  {% elif img.needs_review %}background:rgba(180,120,0,0.9);border-color:#F5C518;color:#F5C518;
+                  {% endif %}">
         {% if img.is_flagged %}FLAGGED
-        {% elif img.needs_review %}REVIEW
+        {% elif img.needs_review %}⚠ REVIEW
         {% elif img.status == 'scored' %}{{ img.tier or 'SCORED' }}
         {% else %}PENDING{% endif %}
       </div>
+
+      {% if not img.is_public and not img.is_flagged %}
+      <div style="position:absolute;bottom:8px;left:8px;
+                  background:rgba(0,0,0,0.82);border:1px solid rgba(255,255,255,0.3);
+                  color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;
+                  letter-spacing:1.5px;padding:3px 8px;border-radius:3px;">
+        🔒 HIDDEN
+      </div>
+      {% endif %}
     </div>
 
     {# Card body #}
