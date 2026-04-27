@@ -257,9 +257,10 @@
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
+            <input type="hidden" name="is_public" value="0" id="isPublicHidden">
             <input type="checkbox" name="is_public" value="1" id="isPublicToggle" checked style="opacity:0; position:absolute; width:0; height:0;">
-            <div id="bulkToggleTrack" style="position:absolute; inset:0; border-radius:99px; background:var(--gold); transition:background .2s;"></div>
-            <div id="bulkToggleThumb" style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s;"></div>
+            <div id="bulkToggleTrack" style="position:absolute; inset:0; border-radius:99px; background:var(--gold); transition:background .2s; pointer-events:none;"></div>
+            <div id="bulkToggleThumb" style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; pointer-events:none;"></div>
           </div>
           <span id="bulkToggleLabel" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1px; color:var(--gold); text-transform:uppercase;">Public</span>
         </label>
@@ -541,6 +542,7 @@ form.addEventListener('submit', function(e) {
   xhr.onload = function() {
     clearInterval(ticker); clearInterval(breathCycle);
     if (xhr.status === 200) {
+      notifyComplete();
       clockSecs.textContent = '✓';
       clockRing.style.strokeDashoffset = '0';
       clockRing.style.stroke = 'rgba(200,168,75,0.9)';
@@ -562,17 +564,46 @@ form.addEventListener('submit', function(e) {
 
 window.addEventListener('DOMContentLoaded', initPage);
 
+// ── Meditation bowl sound ─────────────────────────────────────────────────
+function playBowl() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var freqs = [220, 440, 660, 880], gains = [0.5, 0.25, 0.12, 0.06], dur = 3.5;
+    freqs.forEach(function(freq, i) {
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+    });
+  } catch(e) {}
+}
+function haptic() { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {} }
+function notifyComplete() { playBowl(); haptic(); }
+
 // Leaderboard toggle
 (function() {
-  const cb = document.getElementById('isPublicToggle');
+  const cb    = document.getElementById('isPublicToggle');
+  const hidden = document.getElementById('isPublicHidden');
   const track = document.getElementById('bulkToggleTrack');
   const thumb = document.getElementById('bulkToggleThumb');
   const label = document.getElementById('bulkToggleLabel');
   if (!cb) return;
   cb.addEventListener('change', function() {
-    if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
-    else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
+    if (this.checked) {
+      hidden.disabled = true;
+      track.style.background = 'var(--gold)'; thumb.style.left = '23px';
+      label.style.color = 'var(--gold)'; label.textContent = 'Public';
+    } else {
+      hidden.disabled = false;
+      track.style.background = 'var(--border)'; thumb.style.left = '3px';
+      label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden';
+    }
   });
+  // Init: disable hidden input since checkbox starts checked
+  hidden.disabled = true;
 })();
 </script>
 {% endblock %}
