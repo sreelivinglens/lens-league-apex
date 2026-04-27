@@ -91,6 +91,18 @@
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
 
+  /* ── Tier colour map ── */
+  :root {
+    --tier-rookie:      #888888;
+    --tier-shooter:     #c87941;
+    --tier-contender:   #3da85a;
+    --tier-craftsman:   #2ab8a0;
+    --tier-maverick:    #3a7adf;
+    --tier-master:      #9b6fdf;
+    --tier-grandmaster: #F5C518;
+    --tier-legend:      #e04040;
+  }
+
   /* Tier strip — below image */
   .tier-strip {
     background: #0d0d0b; padding: 14px 24px;
@@ -99,15 +111,21 @@
   }
   .tier-strip .tier-word {
     font-family: var(--font-mono); font-size: 22px; font-weight: 700;
-    color: var(--gold); letter-spacing: 3px; text-transform: uppercase; line-height: 1;
+    letter-spacing: 3px; text-transform: uppercase; line-height: 1;
   }
   .tier-strip .tier-sub {
-    font-family: var(--font-mono); font-size: 11px; color: #FFFFFF;
+    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.5);
     letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
   }
   .tier-engine {
-    font-family: var(--font-mono); font-size: 11px; color: #F5C518;
+    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.4);
     letter-spacing: 2px; text-transform: uppercase;
+  }
+  .tier-badge-wrap {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #0a0a0a; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--tier-color, #F5C518);
   }
 
   /* ── Contest winner badge ── */
@@ -268,9 +286,7 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
-         style="position:absolute;bottom:12px;right:12px;width:56px;height:56px;object-fit:contain;mix-blend-mode:lighten;opacity:0.9;pointer-events:none;display:block;"
-         alt="{{ image.tier }} badge" onerror="this.style.display='none'">
+
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
     {% endif %}
@@ -280,19 +296,30 @@
   </div>
 
   <!-- Tier strip — below image, unobstructed -->
+  {% set tier_lc = image.tier|lower|replace(' ','') if image.tier else 'grandmaster' %}
+  {% if tier_lc == 'rookie' %}{% set tc = '#888888' %}
+  {% elif tier_lc == 'shooter' %}{% set tc = '#c87941' %}
+  {% elif tier_lc == 'contender' %}{% set tc = '#3da85a' %}
+  {% elif tier_lc == 'craftsman' %}{% set tc = '#2ab8a0' %}
+  {% elif tier_lc == 'maverick' %}{% set tc = '#3a7adf' %}
+  {% elif tier_lc == 'master' %}{% set tc = '#9b6fdf' %}
+  {% elif tier_lc == 'legend' %}{% set tc = '#e04040' %}
+  {% else %}{% set tc = '#F5C518' %}{% endif %}
   <div class="tier-strip">
     <div style="display:flex; align-items:center; gap:14px;">
       {% if image.tier %}
-      <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
-           style="width:48px;height:48px;object-fit:contain;mix-blend-mode:lighten;flex-shrink:0;"
-           alt="{{ image.tier }} badge" onerror="this.style.display='none'">
+      <div class="tier-badge-wrap" style="--tier-color:{{ tc }};">
+        <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
+             style="width:44px;height:44px;object-fit:contain;"
+             alt="{{ image.tier }} badge" onerror="this.parentElement.style.display='none'">
+      </div>
       {% endif %}
       <div>
-        <div class="tier-word">{{ image.tier }}</div>
-        <div class="tier-sub">Dimensional Diagnostic Index</div>
+        <div class="tier-word" style="color:{{ tc }};">{{ image.tier }}</div>
+        <div class="tier-sub">DDI ENGINE</div>
       </div>
     </div>
-    <div class="tier-engine">APEX DDI ENGINE</div>
+    <div class="tier-engine">APEX DDI</div>
   </div>
 
   <!-- Image info — always visible -->
