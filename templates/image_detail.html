@@ -69,6 +69,7 @@
   .audit-row:last-child { border-bottom: none; }
   .audit-row-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; width: 130px; flex-shrink: 0; padding-top: 2px; }
   .audit-row-text { font-size: 15px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
+  @media (max-width: 520px) { .audit-row { flex-direction: column; gap: 6px; } .audit-row-label { width: auto; } }
 
   #delete-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
