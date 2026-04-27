@@ -249,10 +249,15 @@
                 <div class="result-score">
                   {% if sub.image.score %}{{ "%.1f"|format(sub.image.score) }}{% endif %}
                 </div>
-                <input type="number" name="rank_{{ sub.id }}" class="result-rank-input"
-                       placeholder="Rank" min="1" max="3"
-                       value="{{ sub.result_rank or '' }}"
-                       title="Enter 1, 2, or 3 for podium position">
+                <select name="rank_{{ sub.id }}" class="result-rank-input"
+                        style="width:60px; padding:6px 4px; border:1px solid var(--border);
+                               border-radius:var(--radius-sm); font-size:14px; text-align:center;
+                               background:var(--surface-1); color:var(--text-primary);">
+                  <option value="">—</option>
+                  <option value="1" {% if sub.result_rank == 1 %}selected{% endif %}>1</option>
+                  <option value="2" {% if sub.result_rank == 2 %}selected{% endif %}>2</option>
+                  <option value="3" {% if sub.result_rank == 3 %}selected{% endif %}>3</option>
+                </select>
                 <input type="text" name="note_{{ sub.id }}" class="result-note-input"
                        placeholder="Optional judge note..."
                        value="{{ sub.result_note or '' }}">
