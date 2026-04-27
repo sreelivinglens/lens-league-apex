@@ -401,6 +401,12 @@
       <div class="score-overlay">{{ img.score }}</div>
       {% endif %}
 
+      {% if img.tier and img.status == 'scored' and not img.is_flagged %}
+      <img src="{{ url_for('static', filename='img/SL-' ~ img.tier|replace(' ','') ~ '.png') }}"
+           style="position:absolute;bottom:8px;right:8px;width:32px;height:32px;object-fit:contain;mix-blend-mode:lighten;pointer-events:none;"
+           alt="{{ img.tier }}" onerror="this.style.display='none'">
+      {% endif %}
+
       <div class="status-badge {{ img.status }}">
         {% if img.is_flagged %}FLAGGED
         {% elif img.needs_review %}REVIEW
@@ -414,7 +420,14 @@
       <div class="img-card-title">{{ img.asset_name or img.original_filename }}</div>
       <div class="img-card-meta">{{ img.genre }}{% if img.camera_track %} · {{ img.camera_track|title }}{% endif %}</div>
       {% if img.score %}
-      <div class="img-card-score">{{ img.score }}</div>
+      <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
+        {% if img.tier and img.status == 'scored' %}
+        <img src="{{ url_for('static', filename='img/SL-' ~ img.tier|replace(' ','') ~ '.png') }}"
+             style="width:16px;height:16px;object-fit:contain;mix-blend-mode:lighten;flex-shrink:0;"
+             alt="" onerror="this.style.display='none'">
+        {% endif %}
+        <div class="img-card-score">{{ img.score }}</div>
+      </div>
       {% endif %}
     </div>
 

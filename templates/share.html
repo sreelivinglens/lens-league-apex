@@ -268,9 +268,9 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-    <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-         style="position:absolute;bottom:12px;right:12px;width:56px;height:56px;object-fit:contain;opacity:0.85;pointer-events:none;display:block;"
-         alt="" onerror="this.style.display='none'">
+    <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
+         style="position:absolute;bottom:12px;right:12px;width:56px;height:56px;object-fit:contain;mix-blend-mode:lighten;opacity:0.9;pointer-events:none;display:block;"
+         alt="{{ image.tier }} badge" onerror="this.style.display='none'">
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
     {% endif %}
@@ -281,9 +281,16 @@
 
   <!-- Tier strip — below image, unobstructed -->
   <div class="tier-strip">
-    <div>
-      <div class="tier-word">{{ image.tier }}</div>
-      <div class="tier-sub">Dimensional Diagnostic Index</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      {% if image.tier %}
+      <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
+           style="width:48px;height:48px;object-fit:contain;mix-blend-mode:lighten;flex-shrink:0;"
+           alt="{{ image.tier }} badge" onerror="this.style.display='none'">
+      {% endif %}
+      <div>
+        <div class="tier-word">{{ image.tier }}</div>
+        <div class="tier-sub">Dimensional Diagnostic Index</div>
+      </div>
     </div>
     <div class="tier-engine">APEX DDI ENGINE</div>
   </div>

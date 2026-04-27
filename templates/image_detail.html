@@ -23,7 +23,7 @@
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 28px;
   }
-  .score-main { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .score-main { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
   .score-number { font-family: var(--font-mono); font-size: 56px; font-weight: 700; color: var(--gold); line-height: 1; }
   .score-tier-badge {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
@@ -32,6 +32,7 @@
     background: #000000; color: #F5C518; border: 1px solid #F5C518;
   }
   .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
+  .score-tier-img { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; mix-blend-mode: lighten; }
 
   .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
@@ -140,6 +141,12 @@
   <div class="score-card">
     <div class="score-main">
       <div class="score-number">{{ image.score }}</div>
+      {% if image.tier %}
+      <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
+           alt="{{ image.tier }} badge"
+           class="score-tier-img"
+           onerror="this.style.display='none'">
+      {% endif %}
       <div>
         <div class="score-tier-badge">{{ image.tier or 'Scored' }}</div>
         {% if image.soul_bonus %}<div style="font-family:var(--font-mono); font-size:12px; color:var(--gold); margin-top:4px; letter-spacing:1px;">✦ SOUL BONUS</div>{% endif %}
