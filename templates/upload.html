@@ -119,6 +119,7 @@
     letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
   }
   .shot-on-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 420px) { .shot-on-options { grid-template-columns: 1fr; } }
   .shot-on-option { position: relative; }
   .shot-on-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
   .shot-on-option label {

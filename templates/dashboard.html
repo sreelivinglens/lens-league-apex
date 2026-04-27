@@ -169,11 +169,11 @@
     border-radius: var(--radius-md); padding: 20px 24px;
     margin-bottom: 28px;
   }
-  .mentor-nudge-left { flex: 1; min-width: 0; }
+  .mentor-nudge-left { flex: 1; min-width: 200px; }
   .mentor-nudge-eyebrow {
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 2px; color: #F5C518; text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .mentor-nudge-title {
     font-size: 20px; font-weight: 700; color: #FFFFFF;
@@ -182,6 +182,11 @@
   .mentor-nudge-sub {
     font-size: 14px; color: #FFFFFF;
     font-family: var(--font-mono);
+  }
+  @media (max-width: 520px) {
+    .mentor-nudge { flex-direction: column; align-items: flex-start; }
+    .mentor-nudge-left { min-width: 0; width: 100%; }
+    .mentor-nudge-eyebrow { white-space: normal; }
   }
 </style>
 {% endblock %}
@@ -407,24 +412,12 @@
            alt="{{ img.tier }}" onerror="this.style.display='none'">
       {% endif %}
 
-      <div class="status-badge {{ img.status }}"
-           style="{% if img.is_flagged %}background:rgba(192,57,43,0.85);border-color:#c0392b;color:#fff;
-                  {% elif img.needs_review %}background:rgba(180,120,0,0.9);border-color:#F5C518;color:#F5C518;
-                  {% endif %}">
+      <div class="status-badge {{ img.status }}">
         {% if img.is_flagged %}FLAGGED
-        {% elif img.needs_review %}⚠ REVIEW
+        {% elif img.needs_review %}REVIEW
         {% elif img.status == 'scored' %}{{ img.tier or 'SCORED' }}
         {% else %}PENDING{% endif %}
       </div>
-
-      {% if not img.is_public and not img.is_flagged %}
-      <div style="position:absolute;bottom:8px;left:8px;
-                  background:rgba(0,0,0,0.82);border:1px solid rgba(255,255,255,0.3);
-                  color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;
-                  letter-spacing:1.5px;padding:3px 8px;border-radius:3px;">
-        🔒 HIDDEN
-      </div>
-      {% endif %}
     </div>
 
     {# Card body #}

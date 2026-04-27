@@ -248,10 +248,8 @@
         {% if needs_action %}
           <span style="color:#F5C518; font-weight:700;">{{ needs_action|length }}</span>
           image{{ 's' if needs_action|length != 1 else '' }} pending review
-          {% set raw_needed = needs_action | selectattr('score') | list | selectattr('score') | list %}
-          {% set gm_raw = needs_action | selectattr('score') | list %}
           {% set gm_count = [] %}
-          {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% set _ = gm_count.append(i) %}{% endif %}{% endfor %}
+          {% for i in needs_action %}{% if i.score and i.score >= 9.0 %}{% if gm_count.append(i) %}{% endif %}{% endif %}{% endfor %}
           {% if gm_count %} · <span style="color:#F5C518; font-weight:700;">{{ gm_count|length }}</span> require RAW verification{% endif %}
         {% endif %}
         {% if flagged_items %}
@@ -269,6 +267,8 @@
   </a>
 </div>
 {% endif %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
   <div class="page-header" style="margin-bottom:0;">
     <h1>Admin Dashboard</h1>
     <p>Engine calibration &amp; platform overview</p>
@@ -563,6 +563,13 @@
           AI {{ '%.2f'|format(img.ai_suspicion) }}
         </span>
         {% endif %}
+
+        {% if not img.is_public and not img.is_flagged %}
+        <span style="position:absolute;bottom:8px;right:8px;
+                     background:rgba(0,0,0,0.85);border:1px solid rgba(255,255,255,0.4);
+                     color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;
+                     letter-spacing:1px;padding:3px 7px;border-radius:3px;">🔒 HIDDEN</span>
+        {% endif %}
       </div>
 
       <!-- Body -->
@@ -597,7 +604,7 @@
                 onclick="return confirm('Approve and make public?');">✓ OK</button>
         <button type="submit" form="reject-form-{{ img.id }}"
                 class="action-btn-sm del-btn"
-                onclick="return confirm('Reject RAW verification? Image will be removed and user notified.');">✗ Reject</button>
+                onclick="return confirm('Reject? Image removed and user notified.');">✗ Reject</button>
         <button type="submit" form="flag-form-{{ img.id }}"
                 class="action-btn-sm flag-btn"
                 onclick="return confirm('Flag as AI-generated?');">🚫</button>
