@@ -515,12 +515,19 @@
     submitBtn.textContent    = '⬆ Submit for Scoring';
     document.getElementById('scoringOverlay').classList.remove('active');
     fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  function showError(msg) {
+    fileError.textContent    = msg;
+    fileError.style.display  = 'block';
+    submitBtn.disabled       = false;
+    submitBtn.textContent    = '⬆ Submit for Scoring';
+    document.getElementById('scoringOverlay').classList.remove('active');
+    fileError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function showWarning(msg) {
-    fileError.style.display     = 'none';
-    fileSizeWarn.innerHTML      = msg;
-    fileSizeWarn.style.display  = 'block';
+    fileError.style.display          = 'none';
+    fileSizeWarn.innerHTML           = msg;
+    fileSizeWarn.style.display       = 'block';
     fileSizeWarn.style.background    = '#2a1e00';
     fileSizeWarn.style.border        = '1px solid #F5C518';
     fileSizeWarn.style.borderLeft    = '4px solid #F5C518';
@@ -533,6 +540,36 @@
     submitBtn.textContent = '⬆ Submit for Scoring';
     fileSizeWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+
+  // ── Meditation bowl sound ─────────────────────────────────────────────────
+  function playBowl() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var freqs   = [220, 440, 660, 880];
+      var gains   = [0.5, 0.25, 0.12, 0.06];
+      var duration = 3.5;
+      freqs.forEach(function(freq, i) {
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration);
+      });
+    } catch(e) {}
+  }
+
+  // ── Haptic feedback (Android only) ───────────────────────────────────────
+  function haptic() {
+    try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {}
+  }
+
+  function notifyComplete() { playBowl(); haptic(); }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
   const genreHints = {
@@ -617,6 +654,7 @@
       }
 
       if (resp && resp.status === 'flagged') {
+        notifyComplete();
         document.getElementById('scoringOverlay').classList.remove('active');
         showError(resp.message || '🚫 This image was flagged as potentially AI-generated.');
         setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 4000);
@@ -624,6 +662,7 @@
       }
 
       if (resp && resp.status === 'ok' && resp.image_id) {
+        notifyComplete();
         document.getElementById('overlayPhase').textContent  = 'COMPLETE';
         document.getElementById('overlayStatus').textContent = resp.score
           ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
@@ -638,7 +677,8 @@
       }
 
       if (resp && resp.status === 'needs_review') {
-        const msg = resp.message || '⚠ Your image has been held for review before going public.';
+        notifyComplete();
+        var msg = resp.message || '⚠ Your image has been held for review before going public.';
         showWarning(msg);
         setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 5000);
         return;
