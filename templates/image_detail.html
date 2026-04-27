@@ -357,10 +357,10 @@
     <p style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
       This will permanently remove the image, its scores, and all contest entries. This cannot be undone.
     </p>
-    <div style="display:flex; gap:12px;">
-      <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn">Cancel</button>
-      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="display:inline;">
-        <button type="submit" class="btn btn-danger">Yes, Delete Permanently</button>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:100px;">Cancel</button>
+      <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="flex:1; min-width:140px;">
+        <button type="submit" class="btn btn-danger" style="width:100%; white-space:nowrap;">Yes, Delete Permanently</button>
       </form>
     </div>
   </div>
