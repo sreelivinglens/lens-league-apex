@@ -695,7 +695,6 @@ img {
     {% if current_user.is_authenticated %}
       {% if current_user.role == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}nav-active{% endif %} nav-admin">Dashboard</a>
-        <a href="{{ url_for('admin_judges') }}" class="{% if request.endpoint == 'admin_judges' %}nav-active{% endif %} nav-admin">Jury</a>
         <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
       {% elif is_approved_judge %}
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
@@ -741,7 +740,6 @@ img {
   {% if current_user.is_authenticated %}
     {% if current_user.role == 'admin' %}
       <a href="{{ url_for('admin_dashboard') }}" onclick="toggleNav()">Dashboard</a>
-      <a href="{{ url_for('admin_judges') }}" onclick="toggleNav()">Jury</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
     {% elif is_approved_judge %}
       <a href="{{ url_for('judge_dashboard') }}" onclick="toggleNav()" style="color:var(--gold);">⚖️ Jury Dashboard</a>
