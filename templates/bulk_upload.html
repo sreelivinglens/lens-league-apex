@@ -488,6 +488,8 @@ form.addEventListener('submit', function(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing…';
 
+  _initAudio();
+
   const total        = Math.min(files.length, 10);
   const overlay      = document.getElementById('scoringOverlay');
   const clockRing    = document.getElementById('clockRing');
@@ -562,6 +564,32 @@ form.addEventListener('submit', function(e) {
 });
 
 window.addEventListener('DOMContentLoaded', initPage);
+
+// ── Audio — context created at submit (user gesture), played at completion ──
+var _audioCtx = null;
+function _initAudio() {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  } catch(e) {}
+}
+function playBowl() {
+  try {
+    var ctx = _audioCtx; if (!ctx) return;
+    var freqs = [220, 440, 660, 880], gains = [0.5, 0.25, 0.12, 0.06], dur = 3.5;
+    freqs.forEach(function(freq, i) {
+      var osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination); osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+    });
+  } catch(e) {}
+}
+function haptic() { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {} }
+function notifyComplete() { playBowl(); haptic(); }
 
 // Leaderboard toggle
 (function() {
