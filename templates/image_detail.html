@@ -32,7 +32,8 @@
     background: #000000; color: #F5C518; border: 1px solid #F5C518;
   }
   .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
-  .score-tier-img { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; mix-blend-mode: lighten; }
+  .score-tier-img-wrap { width: 80px; height: 80px; flex-shrink: 0; background: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245,197,24,0.25); }
+  .score-tier-img { width: 76px; height: 76px; object-fit: contain; }
 
   .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
@@ -142,10 +143,12 @@
     <div class="score-main">
       <div class="score-number">{{ image.score }}</div>
       {% if image.tier %}
-      <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
-           alt="{{ image.tier }} badge"
-           class="score-tier-img"
-           onerror="this.style.display='none'">
+      <div class="score-tier-img-wrap">
+        <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
+             alt="{{ image.tier }} badge"
+             class="score-tier-img"
+             onerror="this.parentElement.style.display='none'">
+      </div>
       {% endif %}
       <div>
         <div class="score-tier-badge">{{ image.tier or 'Scored' }}</div>
