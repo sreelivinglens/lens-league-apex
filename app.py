@@ -7266,6 +7266,123 @@ def send_results_announcement(challenge, winners):
     return sent
 
 
+def send_winners_email(challenge, winners):
+    """
+    Send a personalised congratulations email to each of the top-3 winners.
+    Called immediately after ranking in auto_publish_weekly_challenge.
+    Each winner gets their rank, image title, score, and a link to the results page.
+    """
+    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    results_url = site_url + '/challenge/results/' + challenge.week_ref
+    ordinals    = {1: '1st', 2: '2nd', 3: '3rd'}
+    medals      = {1: '🥇', 2: '🥈', 3: '🥉'}
+
+    sent = 0
+    for w in sorted(winners, key=lambda x: x.result_rank):
+        owner = User.query.get(w.user_id) if w.user_id else None
+        if not owner or not owner.email:
+            continue
+        img       = w.image
+        name      = owner.full_name or owner.username
+        rank_str  = ordinals.get(w.result_rank, str(w.result_rank))
+        medal     = medals.get(w.result_rank, '')
+        img_title = img.asset_name if img else 'Your image'
+        score_str = str(img.score) if img and img.score else ''
+        score_line = (
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
+            'letter-spacing:1px;color:#8a8070;">DDI Score: '
+            + score_str + '</p>'
+        ) if score_str else ''
+
+        html_body = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+            '<table width="560" cellpadding="0" cellspacing="0"'
+            ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
+            'overflow:hidden;max-width:560px;width:100%;">'
+
+            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+            '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
+            'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+            'SHUTTER LEAGUE</p></td></tr>'
+
+            '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
+            'Weekly Challenge . ' + challenge.week_ref + '</p>'
+            '<h1 style="margin:0;font-size:30px;font-style:italic;color:#C8A84B;line-height:1.1;">'
+            + medal + ' You placed ' + rank_str + '</h1>'
+            '</td></tr>'
+
+            '<tr><td style="padding:32px 32px 24px;">'
+            '<p style="margin:0 0 20px;font-size:17px;color:#1a1a18;line-height:1.6;">'
+            'Congratulations, ' + name + '.</p>'
+            '<p style="margin:0 0 24px;font-size:16px;color:#4A4840;line-height:1.6;">'
+            'Your photograph <strong style="color:#1a1a18;">' + img_title + '</strong> '
+            'placed <strong style="color:#C8A84B;">' + rank_str + '</strong> in this week&#39;s '
+            '<em>' + challenge.prompt_title + '</em> challenge.'
+            '</p>'
+
+            '<table cellpadding="0" cellspacing="0"'
+            ' style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;'
+            'padding:16px 20px;margin-bottom:28px;width:100%;">'
+            '<tr><td>'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
+            'letter-spacing:1px;color:#8a8070;">Challenge: ' + challenge.prompt_title + '</p>'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
+            'letter-spacing:1px;color:#8a8070;">Week: ' + challenge.week_ref + '</p>'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
+            'letter-spacing:1px;color:#8a8070;">Image: ' + img_title + '</p>'
+            + score_line +
+            '<p style="margin:0;font-family:Courier New,monospace;font-size:14px;'
+            'font-weight:700;letter-spacing:1px;color:#C8A84B;">Rank: '
+            + medal + ' ' + rank_str + '</p>'
+            '</td></tr></table>'
+
+            '<a href="' + results_url + '"'
+            ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+            'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
+            'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
+            'text-decoration:none;border-radius:4px;">View Full Results</a>'
+            '</td></tr>'
+
+            '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">'
+            '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
+            'You&#39;re receiving this because you placed in a Shutter League weekly challenge.<br>'
+            '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a>'
+            '</p></td></tr>'
+
+            '</table></td></tr></table></body></html>'
+        )
+
+        text_body = (
+            'SHUTTER LEAGUE  -  ' + medal + ' You placed ' + rank_str + '!\n\n'
+            'Congratulations, ' + name + '.\n\n'
+            'Your photograph "' + img_title + '" placed ' + rank_str
+            + ' in the ' + challenge.prompt_title + ' challenge (' + challenge.week_ref + ').\n'
+        )
+        if score_str:
+            text_body += 'DDI Score: ' + score_str + '\n'
+        text_body += '\nSee full results: ' + results_url + '\n\n -  Shutter League'
+
+        if send_email(
+            owner.email,
+            medal + ' You placed ' + rank_str + ' — ' + challenge.prompt_title,
+            html_body,
+            text_body
+        ):
+            sent += 1
+            app.logger.info(
+                '[winners_email] Sent to ' + owner.email
+                + ' (' + rank_str + ' — ' + img_title + ')'
+            )
+
+    return sent
+
+
 # ===========================================================================
 # Scheduled jobs
 # ===========================================================================
@@ -7344,6 +7461,9 @@ def auto_publish_weekly_challenge():
 
             sent = send_results_announcement(challenge, ranked)
             app.logger.info('[cron] Results announcement sent to ' + str(sent) + ' users')
+
+            wsent = send_winners_email(challenge, ranked)
+            app.logger.info('[cron] Winners emails sent to ' + str(wsent) + ' winners')
 
             _send_admin_reminder(now)
 
