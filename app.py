@@ -7399,8 +7399,18 @@ def _next_week_ref(now):
 # ---------------------------------------------------------------------------
 # Start APScheduler - only in main worker, not Flask reloader child process
 # ---------------------------------------------------------------------------
-import os as _os_sched
-if not _os_sched.environ.get('WERKZEUG_RUN_MAIN'):
+# Gunicorn-safe scheduler start:
+# In Gunicorn, each worker runs this module-level code.
+# We use a file-based lock so only the first worker starts the scheduler.
+import os as _os_sched, fcntl as _fcntl
+_sched_lock_path = '/tmp/sl_scheduler.lock'
+try:
+    _lock_fh = open(_sched_lock_path, 'w')
+    _fcntl.flock(_lock_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+    _got_lock = True
+except (IOError, OSError):
+    _got_lock = False
+if _got_lock:
     _scheduler = BackgroundScheduler(timezone='UTC')
     _scheduler.add_job(
         func             = auto_publish_weekly_challenge,
