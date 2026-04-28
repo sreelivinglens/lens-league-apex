@@ -303,7 +303,7 @@
       <div class="form-group">
         <label for="genre">Genre</label>
         <select id="genre" name="genre" required>
-          <option value="" disabled selected>Select a genre…</option>
+          <option value="" selected hidden>Select a genre…</option>
           {% if genre_choices %}
             {% for gid, glabel in genre_choices %}
             <option value="{{ gid }}">{{ glabel }}</option>
