@@ -13,6 +13,9 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
 
+# IST offset — admin types local IST times; subtract to store as UTC
+_IST_OFFSET = timedelta(hours=5, minutes=30)
+
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
@@ -146,7 +149,7 @@ def send_challenge_notification(challenge):
           <strong style="color:#1a1a18;">You have:</strong> {slot_text}
         </p>
         <p style="margin:0 0 24px;font-size:14px;color:#8a8070;">
-          Closes {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
+          Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
         </p>
         <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
       </td></tr>
@@ -172,7 +175,7 @@ This week: {challenge.prompt_title}
 {'Brief: ' + challenge.prompt_body if challenge.prompt_body else ''}
 
 You have: {slot_text}
-Closes: {challenge.closes_at.strftime('%A %d %B, %H:%M UTC')}
+Closes: {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
 
 Enter here: {challenge_url}
 
@@ -744,6 +747,7 @@ def inject_globals():
         'platform_name':     PLATFORM_NAME,
         'contact_email':     CONTACT_EMAIL,
         'admin_email':       ADMIN_EMAIL,
+        'timedelta':         timedelta,
     }
 
 
@@ -4126,8 +4130,8 @@ def admin_weekly_challenge():
                 return redirect(url_for('admin_weekly_challenge'))
 
             try:
-                opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M')
-                closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M')
+                opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M') - _IST_OFFSET
+                closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M') - _IST_OFFSET
             except ValueError:
                 flash('Invalid date format.', 'error')
                 return redirect(url_for('admin_weekly_challenge'))
@@ -4229,9 +4233,9 @@ def admin_weekly_challenge():
             closes_str = request.form.get('closes_at', '').strip()
             try:
                 if opens_str:
-                    ch.opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M')
+                    ch.opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M') - _IST_OFFSET
                 if closes_str:
-                    ch.closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M')
+                    ch.closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M') - _IST_OFFSET
                     ch.results_at = ch.closes_at + timedelta(days=1)
             except ValueError:
                 flash('Invalid date format.', 'error')
