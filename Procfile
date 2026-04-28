@@ -1,1 +1,1 @@
-web: gunicorn app:app --workers 2 --timeout 300 --keep-alive 5
+web: gunicorn app:app --workers 2 --timeout 300 --keep-alive 5 --preload

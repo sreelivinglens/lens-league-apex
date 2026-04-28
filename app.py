@@ -7399,18 +7399,21 @@ def _next_week_ref(now):
 # ---------------------------------------------------------------------------
 # Start APScheduler - only in main worker, not Flask reloader child process
 # ---------------------------------------------------------------------------
-# Gunicorn-safe scheduler start:
-# In Gunicorn, each worker runs this module-level code.
-# We use a file-based lock so only the first worker starts the scheduler.
-import os as _os_sched, fcntl as _fcntl
-_sched_lock_path = '/tmp/sl_scheduler.lock'
-try:
-    _lock_fh = open(_sched_lock_path, 'w')
-    _fcntl.flock(_lock_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
-    _got_lock = True
-except (IOError, OSError):
-    _got_lock = False
-if _got_lock:
+@app.route('/admin/cron/test-weekly-results', methods=['POST'])
+@login_required
+@admin_required
+def admin_test_weekly_results():
+    """Manually trigger the weekly results cron for testing. Admin only."""
+    import threading
+    t = threading.Thread(target=auto_publish_weekly_challenge, daemon=True)
+    t.start()
+    flash('Weekly results cron triggered - check Railway logs for output.', 'success')
+    return redirect(url_for('admin_weekly_challenge'))
+
+
+# Scheduler starts once in the master process via --preload Gunicorn flag.
+# Workers fork after this runs, so the scheduler is inherited, not duplicated.
+if True:
     _scheduler = BackgroundScheduler(timezone='UTC')
     _scheduler.add_job(
         func             = auto_publish_weekly_challenge,
