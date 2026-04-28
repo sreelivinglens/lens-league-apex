@@ -12,6 +12,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, desc
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # IST offset — admin types local IST times; subtract to store as UTC
 _IST_OFFSET = timedelta(hours=5, minutes=30)
@@ -7152,6 +7154,264 @@ def cron_raw_reminders():
 
     db.session.commit()
     return jsonify({'sent_48hr': sent_48, 'sent_24hr': sent_24, 'disqualified': disq, 'status': 'ok'})
+
+
+
+# ===========================================================================
+# Weekly results announcement  -  sent to all active users
+# ===========================================================================
+
+def send_results_announcement(challenge, winners):
+    """Send weekly results email to all active users."""
+    users = User.query.filter_by(is_active=True).filter(
+        User.email != None, User.email != ''
+    ).all()
+    if not users:
+        return 0
+
+    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    results_url = site_url + '/challenge/results/' + challenge.week_ref
+    ordinals    = {1: '1st', 2: '2nd', 3: '3rd'}
+
+    winners_html = ''
+    for w in sorted(winners, key=lambda x: x.result_rank):
+        img       = w.image
+        owner     = User.query.get(w.user_id) if w.user_id else None
+        name      = (owner.full_name or owner.username) if owner else 'Photographer'
+        score_str = str(img.score) if img and img.score else ''
+        winners_html += (
+            '<tr>'
+            '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'font-weight:700;color:#C8A84B;width:48px;">' + ordinals[w.result_rank] + '</td>'
+            '<td style="padding:10px 16px;font-size:15px;color:#1a1a18;">'
+            + (img.asset_name if img else 'Untitled') +
+            '</td>'
+            '<td style="padding:10px 16px;font-size:14px;color:#6a6458;">' + name + '</td>'
+            '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'color:#8a8070;">' + score_str + '</td>'
+            '</tr>'
+        )
+
+    sent = 0
+    for user in users:
+        html_body = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+            '<table width="560" cellpadding="0" cellspacing="0"'
+            ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
+            'overflow:hidden;max-width:560px;width:100%;">'
+            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+            '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
+            'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+            'SHUTTER LEAGUE</p></td></tr>'
+            '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
+            'Results . ' + challenge.week_ref + '</p>'
+            '<h1 style="margin:0;font-size:30px;font-style:italic;color:#C8A84B;line-height:1.1;">'
+            + challenge.prompt_title + '</h1></td></tr>'
+            '<tr><td style="padding:28px 32px;">'
+            '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.6;">'
+            'The results are in. Here are this week&#39;s top photographers:</p>'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="border:1px solid #E0D8C8;border-radius:6px;overflow:hidden;margin-bottom:24px;">'
+            + winners_html +
+            '</table>'
+            '<a href="' + results_url + '"'
+            ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+            'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
+            'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
+            'text-decoration:none;border-radius:4px;">See Full Results</a>'
+            '</td></tr>'
+            '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">'
+            '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
+            'You&#39;re receiving this because you have an account on Shutter League.<br>'
+            '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a>'
+            '</p></td></tr>'
+            '</table></td></tr></table></body></html>'
+        )
+        text_body = (
+            'SHUTTER LEAGUE  -  Weekly Results\n\n'
+            'Challenge: ' + challenge.prompt_title + ' (' + challenge.week_ref + ')\n\n'
+        )
+        for w in sorted(winners, key=lambda x: x.result_rank):
+            img2  = w.image
+            own2  = User.query.get(w.user_id) if w.user_id else None
+            nam2  = (own2.full_name or own2.username) if own2 else 'Photographer'
+            text_body += (
+                ordinals[w.result_rank] + ': '
+                + (img2.asset_name if img2 else 'Untitled')
+                + '  -  ' + nam2 + '\n'
+            )
+        text_body += '\nSee full results: ' + results_url + '\n\n -  Shutter League'
+
+        if send_email(
+            user.email,
+            'Results: ' + challenge.prompt_title + ' (' + challenge.week_ref + ')',
+            html_body,
+            text_body
+        ):
+            sent += 1
+
+    return sent
+
+
+# ===========================================================================
+# Scheduled jobs
+# ===========================================================================
+
+def auto_publish_weekly_challenge():
+    """
+    Cron: every Monday 13:30 UTC (7:00 PM IST).
+    Finds most recently closed challenge, auto-ranks top 3 by DDI score
+    (subscribers prioritised), emails results to all users + admin reminder.
+    Skips silently if results already manually published.
+    """
+    with app.app_context():
+        try:
+            now = datetime.utcnow()
+            app.logger.info('[cron] auto_publish_weekly_challenge running')
+
+            challenge = (WeeklyChallenge.query
+                         .filter(WeeklyChallenge.closes_at < now,
+                                 WeeklyChallenge.is_active == True)
+                         .order_by(WeeklyChallenge.closes_at.desc())
+                         .first())
+
+            if not challenge:
+                app.logger.info('[cron] No closed challenge found - skipping')
+                _send_admin_reminder(now)
+                return
+
+            already_ranked = WeeklySubmission.query.filter(
+                WeeklySubmission.challenge_id == challenge.id,
+                WeeklySubmission.result_rank != None
+            ).count()
+
+            if already_ranked > 0:
+                app.logger.info(
+                    '[cron] ' + challenge.week_ref + ' already ranked - skipping'
+                )
+                _send_admin_reminder(now)
+                return
+
+            all_subs = (WeeklySubmission.query
+                        .filter_by(challenge_id=challenge.id)
+                        .join(Image, WeeklySubmission.image_id == Image.id)
+                        .filter(Image.score != None,
+                                Image.is_flagged == False,
+                                Image.needs_review == False)
+                        .order_by(
+                            WeeklySubmission.is_subscriber.desc(),
+                            Image.score.desc()
+                        )
+                        .all())
+
+            if not all_subs:
+                app.logger.info(
+                    '[cron] ' + challenge.week_ref + ' has no scoreable submissions - skipping'
+                )
+                _send_admin_reminder(now)
+                return
+
+            ranked     = []
+            seen_users = set()
+            rank       = 1
+            for sub in all_subs:
+                if sub.user_id in seen_users:
+                    continue
+                sub.result_rank = rank
+                ranked.append(sub)
+                seen_users.add(sub.user_id)
+                rank += 1
+                if rank > 3:
+                    break
+
+            db.session.commit()
+            app.logger.info(
+                '[cron] ' + challenge.week_ref + ' - ranked ' + str(len(ranked)) + ' winners'
+            )
+
+            sent = send_results_announcement(challenge, ranked)
+            app.logger.info('[cron] Results announcement sent to ' + str(sent) + ' users')
+
+            _send_admin_reminder(now)
+
+        except Exception as e:
+            app.logger.error('[cron] auto_publish_weekly_challenge error: ' + str(e))
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+
+def _send_admin_reminder(now):
+    """Email admin to create next week's challenge."""
+    try:
+        site_url      = os.getenv('SITE_URL', 'https://shutterleague.com')
+        next_week_ref = _next_week_ref(now)
+        send_email(
+            [ADMIN_EMAIL],
+            '[Shutter League] Create next week\'s challenge - ' + next_week_ref,
+            (
+                '<div style="font-family:Courier New,monospace;max-width:560px;'
+                'margin:0 auto;padding:32px;color:#1a1a18;">'
+                '<p style="font-weight:700;color:#C8A84B;font-size:15px;'
+                'letter-spacing:2px;text-transform:uppercase;">'
+                'Shutter League  -  Admin Reminder</p>'
+                '<h2 style="font-size:20px;margin-bottom:12px;">'
+                'Create this week\'s challenge</h2>'
+                '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
+                'It&#39;s Monday evening. Results have been published.<br>'
+                'Please create the challenge for <strong>' + next_week_ref + '</strong>.</p>'
+                '<a href="' + site_url + '/admin/weekly-challenge"'
+                ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+                'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
+                'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+                'text-decoration:none;border-radius:4px;margin:16px 0;">'
+                'Create Challenge</a>'
+                '</div>'
+            ),
+            (
+                'Shutter League Admin Reminder\n\n'
+                'Create challenge for ' + next_week_ref + '.\n'
+                + site_url + '/admin/weekly-challenge'
+            )
+        )
+        app.logger.info('[cron] Admin reminder sent for ' + next_week_ref)
+    except Exception as e:
+        app.logger.error('[cron] Admin reminder failed: ' + str(e))
+
+
+def _next_week_ref(now):
+    """Return ISO week ref for the week after the given datetime."""
+    days_ahead  = (7 - now.weekday()) % 7
+    if days_ahead == 0:
+        days_ahead = 7
+    next_monday = now + timedelta(days=days_ahead)
+    iso         = next_monday.isocalendar()
+    return str(iso[0]) + '-W' + str(iso[1]).zfill(2)
+
+
+# ---------------------------------------------------------------------------
+# Start APScheduler - only in main worker, not Flask reloader child process
+# ---------------------------------------------------------------------------
+import os as _os_sched
+if not _os_sched.environ.get('WERKZEUG_RUN_MAIN'):
+    _scheduler = BackgroundScheduler(timezone='UTC')
+    _scheduler.add_job(
+        func             = auto_publish_weekly_challenge,
+        trigger          = CronTrigger(day_of_week='mon', hour=13, minute=30, timezone='UTC'),
+        id               = 'weekly_results',
+        name             = 'Auto-publish weekly challenge results',
+        replace_existing = True,
+    )
+    _scheduler.start()
+    import atexit as _atexit
+    _atexit.register(lambda: _scheduler.shutdown(wait=False))
 
 
 if __name__ == '__main__':
