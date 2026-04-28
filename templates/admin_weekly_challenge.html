@@ -78,6 +78,15 @@
       <p>Create prompts - set dates - publish results</p>
       {% endif %}
     </div>
+    <form method="POST" action="{{ url_for('admin_test_weekly_results') }}" style="align-self:flex-start;">
+      <button type="submit"
+              style="padding:8px 16px;font-family:var(--font-mono);font-size:12px;font-weight:700;
+                     letter-spacing:1px;text-transform:uppercase;background:#2a2a28;color:var(--gold);
+                     border:1px solid var(--gold);border-radius:4px;cursor:pointer;"
+              onclick="return confirm('Trigger weekly results cron now? This will auto-rank and email all users if W18 has no results yet.')">
+        ⚙ Test Cron
+      </button>
+    </form>
   </div>
 
   {# ── Create new challenge ── #}
@@ -103,12 +112,12 @@
         </div>
 
         <div class="form-group">
-          <label>Opens at (UTC)</label>
+          <label>Opens at (IST)</label>
           <input type="datetime-local" name="opens_at" value="{{ default_open }}" required>
         </div>
 
         <div class="form-group">
-          <label>Closes at (UTC)</label>
+          <label>Closes at (IST)</label>
           <input type="datetime-local" name="closes_at" value="{{ default_close }}" required>
         </div>
 
@@ -304,14 +313,14 @@
 
                 <div style="display:flex; flex-direction:column; gap:5px;">
                   <label style="font-family:var(--font-mono); font-size:11px; font-weight:600;
-                                letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Opens at (UTC)</label>
+                                letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Opens at (IST)</label>
                   <input type="datetime-local" name="opens_at" class="edit-input"
                          value="{{ (ch.opens_at + timedelta(hours=5, minutes=30)).strftime('%Y-%m-%dT%H:%M') }}">
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:5px;">
                   <label style="font-family:var(--font-mono); font-size:11px; font-weight:600;
-                                letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Closes at (UTC)</label>
+                                letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">Closes at (IST)</label>
                   <input type="datetime-local" name="closes_at" class="edit-input"
                          value="{{ (ch.closes_at + timedelta(hours=5, minutes=30)).strftime('%Y-%m-%dT%H:%M') }}">
                 </div>
