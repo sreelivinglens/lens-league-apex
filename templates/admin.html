@@ -269,7 +269,7 @@
   {# ── Action Required Banner ── #}
   {% set needs_action = recent | selectattr('needs_review') | rejectattr('is_flagged') | list %}
   {% set flagged_items = recent | selectattr('is_flagged') | list %}
-  {% if needs_action or flagged_items %}
+  {% if needs_action or flagged_items or open_reports_count %}
   <div class="action-banner">
     <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
       <span style="font-size:22px;">⚠️</span>
@@ -287,6 +287,12 @@
             {% if needs_action %}&nbsp;·&nbsp;{% endif %}
             <span style="color:#f08080; font-weight:700;">{{ flagged_items|length }}</span>
             flagged image{{ 's' if flagged_items|length != 1 else '' }}
+          {% endif %}
+          {% if open_reports_count %}
+            {% if needs_action or flagged_items %}&nbsp;·&nbsp;{% endif %}
+            <span style="color:#f08080; font-weight:700;">{{ open_reports_count }}</span>
+            user report{{ 's' if open_reports_count != 1 else '' }} filed
+            &nbsp;<a href="{{ url_for('admin_reports') }}" style="color:var(--red); font-weight:700; text-decoration:underline;">View Reports →</a>
           {% endif %}
         </div>
       </div>

@@ -513,13 +513,13 @@ body:has(.sl-hp) footer { display: none !important; }
             <div id="ddiScanLine" style="position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(245,197,24,0.5),transparent);top:0;pointer-events:none;"></div>
             <div id="ddiStatus" style="font-size:11px;letter-spacing:3px;color:#F5C518;margin-bottom:16px;opacity:0.8;">ANALYSING IMAGE</div>
             <div id="ddiScoreNum" style="font-size:88px;font-weight:700;color:#F5C518;line-height:1;letter-spacing:-4px;min-width:180px;text-align:center;">&#8212;</div>
-            <div id="ddiTierLabel" style="font-size:18px;letter-spacing:4px;color:#333;font-weight:700;margin-bottom:20px;transition:color 0.4s;">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</div>
+            <div id="ddiTierLabel" style="font-size:18px;letter-spacing:4px;color:#ffffff;font-weight:700;margin-bottom:20px;transition:color 0.4s;">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</div>
             <div id="ddiBarWrap" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;">
-              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl0">Difficulty</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar0" style="width:0%;height:100%;background:#4a9ebb;border-radius:3px;"></div></div></div>
-              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl1">Disruption</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar1" style="width:0%;height:100%;background:#e74c6f;border-radius:3px;"></div></div></div>
-              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl2">Moment</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar2" style="width:0%;height:100%;background:#F5C518;border-radius:3px;"></div></div></div>
-              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl3">Wonder</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar3" style="width:0%;height:100%;background:#6bcb8b;border-radius:3px;"></div></div></div>
-              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl4">Affective</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar4" style="width:0%;height:100%;background:#b57bee;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25);text-transform:uppercase;transition:color 0.5s;" id="dlbl0">Difficulty</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar0" style="width:0%;height:100%;background:#4a9ebb;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25);text-transform:uppercase;transition:color 0.5s;" id="dlbl1">Disruption</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar1" style="width:0%;height:100%;background:#e74c6f;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25);text-transform:uppercase;transition:color 0.5s;" id="dlbl2">Moment</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar2" style="width:0%;height:100%;background:#F5C518;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25);text-transform:uppercase;transition:color 0.5s;" id="dlbl3">Wonder</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar3" style="width:0%;height:100%;background:#6bcb8b;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.25);text-transform:uppercase;transition:color 0.5s;" id="dlbl4">Affective</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar4" style="width:0%;height:100%;background:#b57bee;border-radius:3px;"></div></div></div>
             </div>
             <div style="margin-top:18px;display:flex;gap:6px;">
               <div id="dd0" style="width:6px;height:6px;border-radius:50%;background:#F5C518;opacity:0.2;"></div>
@@ -750,7 +750,7 @@ tick(); setInterval(tick,1000);
       b.style.transition='none';
       b.style.width='0%';
       b.style.opacity='0.4';
-      document.getElementById('dlbl'+i).style.color='#333';
+      document.getElementById('dlbl'+i).style.color='rgba(255,255,255,0.2)';
     }
   }
 
@@ -764,9 +764,9 @@ tick(); setInterval(tick,1000);
 
     ddiResetBars();
     scoreEl.textContent='—';
-    scoreEl.style.color='#333';
+    scoreEl.style.color='rgba(255,255,255,0.15)';
     tierEl.textContent='——————';
-    tierEl.style.color='#333';
+    tierEl.style.color='rgba(255,255,255,0.15)';
     statusEl.textContent='ANALYSING IMAGE';
     scanEl.style.display='block';
 
@@ -812,7 +812,7 @@ tick(); setInterval(tick,1000);
             b.style.opacity='1';
             b.style.transition='width 0.7s ease-out';
             b.style.width=ddiFinalWidths[idx]+'%';
-            document.getElementById('dlbl'+idx).style.color='#888';
+            document.getElementById('dlbl'+idx).style.color='#ffffff';
           },idx*160);
         })(i);
       }
@@ -828,7 +828,7 @@ tick(); setInterval(tick,1000);
           scoreEl.textContent=cur.toFixed(2);
           var pct=cur*10;
           tierEl.textContent=ddiGetTier(pct);
-          tierEl.style.color=pct>=87?'#F5C518':pct>=75?'#888':'#555';
+          tierEl.style.color=pct>=87?'#F5C518':'#ffffff';
           if(p<1) requestAnimationFrame(anim);
         }
         requestAnimationFrame(anim);
