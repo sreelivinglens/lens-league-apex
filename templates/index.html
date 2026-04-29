@@ -168,7 +168,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s3-label { font-size: 15px; letter-spacing: 3px; color: #F5C518; margin-bottom: 14px; font-weight: 700; }
 .s3-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; color: #FFFFFF; margin-bottom: 8px; line-height: 1.3; }
 .s3-sub { font-size: 15px; color: #FFFFFF; margin-bottom: 24px; letter-spacing: 1px; font-weight: 600; }
-.s3-dim { display: flex; flex-direction: column; gap: 14px; }
+.s3-dim { display: flex; flex-direction: column; gap: 8px; }
 .s3-dim-row { display: flex; align-items: center; gap: 14px; }
 .s3-dim-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .s3-dim-name { font-size: 18px; color: #FFFFFF; letter-spacing: 1px; font-weight: 600; }
@@ -229,7 +229,7 @@ body:has(.sl-hp) footer { display: none !important; }
   .s5-from { font-size: 13px; font-weight: 700; color: #000000; letter-spacing: 1px; margin-bottom: 2px; }
 .s5-price-sub { font-size: 13px; color: #000000; letter-spacing: 2px; margin-bottom: 12px; font-weight: 700; }
 .s5-divider { height: 1px; background: rgba(0,0,0,0.2); margin: 10px 0; }
-.s5-feature { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 9px; }
+.s5-feature { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
 .s5-tick { width: 18px; height: 18px; border-radius: 50%; background: #2d7850; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
 .s5-feature-text { font-size: 17px; color: #000000; line-height: 1.5; font-weight: 600; }
 .s5-cta {
@@ -506,7 +506,7 @@ body:has(.sl-hp) footer { display: none !important; }
         <!-- ═══ SLIDE 3 — DDI Framework ═══ -->
         <div class="sl-slide">
           <div class="s3-left">
-            <svg id="radarSvg" width="480" height="420" viewBox="-240 -210 480 420">
+            <svg id="radarSvg" width="100%" height="100%" viewBox="-280 -230 560 460" preserveAspectRatio="xMidYMid meet" style="max-height:420px;">
               <circle cx="0" cy="0" r="140" fill="none" stroke="rgba(74,158,187,0.15)" stroke-width="1"/>
               <circle cx="0" cy="0" r="105" fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
               <circle cx="0" cy="0" r="70"  fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
@@ -518,17 +518,17 @@ body:has(.sl-hp) footer { display: none !important; }
               <line x1="133" y1="-43" x2="-133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
               <polygon id="radarPoly" points="" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="2"/>
               <!-- Top: Degree of Difficulty -->
-              <text x="0" y="-158" text-anchor="middle" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">DEGREE OF DIFFICULTY</text>
+              <text x="0" y="-158" text-anchor="middle" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">DEGREE OF DIFFICULTY</text>
               <!-- Right: Visual Disruption -->
-              <text x="152" y="-50" text-anchor="start" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">VISUAL</text>
-              <text x="152" y="-34" text-anchor="start" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">DISRUPTION</text>
+              <text x="150" y="-50" text-anchor="start" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">VISUAL</text>
+              <text x="150" y="-32" text-anchor="start" fill="#FFFFFF" font-size="14" font-family="Courier New" font-weight="bold">DISRUPTION</text>
               <!-- Bottom right: Decisive Moment -->
-              <text x="90" y="148" text-anchor="middle" fill="#F5C518" font-size="22" font-family="Courier New" font-weight="bold">DECISIVE MOMENT</text>
+              <text x="95" y="168" text-anchor="middle" fill="#F5C518" font-size="16" font-family="Courier New" font-weight="bold">DECISIVE MOMENT</text>
               <!-- Bottom left: Wonder Factor -->
-              <text x="-90" y="148" text-anchor="middle" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">WONDER FACTOR</text>
+              <text x="-95" y="168" text-anchor="middle" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">WONDER FACTOR</text>
               <!-- Left: Affective Quotient -->
-              <text x="-152" y="-50" text-anchor="end" fill="#FFFFFF" font-size="22" font-family="Courier New" font-weight="bold">AFFECTIVE</text>
-              <text x="-152" y="-34" text-anchor="end" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">QUOTIENT</text>
+              <text x="-150" y="-50" text-anchor="end" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">AFFECTIVE</text>
+              <text x="-150" y="-32" text-anchor="end" fill="#FFFFFF" font-size="14" font-family="Courier New" font-weight="bold">QUOTIENT</text>
             </svg>
           </div>
           <div class="s3-right">
@@ -593,7 +593,7 @@ body:has(.sl-hp) footer { display: none !important; }
         <div class="sl-slide">
           <div class="s5-left">
             <div class="s5-chart-label">SCORE PROGRESSION — WITH VS WITHOUT MENTORING</div>
-            <canvas id="mentorChart" width="480" height="300"></canvas>
+            <canvas id="mentorChart" width="480" height="300" style="max-width:100%; display:block;"></canvas>
             <div class="s5-legend">
               <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#FFFFFF;"></div><span style="color:#FFFFFF;">WITHOUT MENTOR</span></div>
               <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#4acba0;"></div><span style="color:#FFFFFF;">WITH MENTOR</span></div>
@@ -692,48 +692,9 @@ function startAuto() {
   autoTimer = setInterval(function(){ if(!paused) goTo(cur+1); }, 9000);
 }
 
-document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); /* Touch swipe support */
-var touchStartX = 0;
-document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
-  touchStartX = e.touches[0].clientX;
-}, {passive: true});
-document.getElementById('slFrameInner').addEventListener('touchend', function(e){
-  var diff = touchStartX - e.changedTouches[0].clientX;
-  if(Math.abs(diff) > 50){
-    if(diff > 0) goTo(cur+1); else goTo(cur-1);
-    startAuto();
-  }
-}, {passive: true});
-
-startAuto(); });
-document.getElementById('slNext').addEventListener('click', function(){ goTo(cur+1); /* Touch swipe support */
-var touchStartX = 0;
-document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
-  touchStartX = e.touches[0].clientX;
-}, {passive: true});
-document.getElementById('slFrameInner').addEventListener('touchend', function(e){
-  var diff = touchStartX - e.changedTouches[0].clientX;
-  if(Math.abs(diff) > 50){
-    if(diff > 0) goTo(cur+1); else goTo(cur-1);
-    startAuto();
-  }
-}, {passive: true});
-
-startAuto(); });
-dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.dataset.i)); /* Touch swipe support */
-var touchStartX = 0;
-document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
-  touchStartX = e.touches[0].clientX;
-}, {passive: true});
-document.getElementById('slFrameInner').addEventListener('touchend', function(e){
-  var diff = touchStartX - e.changedTouches[0].clientX;
-  if(Math.abs(diff) > 50){
-    if(diff > 0) goTo(cur+1); else goTo(cur-1);
-    startAuto();
-  }
-}, {passive: true});
-
-startAuto(); }); });
+document.getElementById('slPrev').addEventListener('click', function(){ goTo(cur-1); startAuto(); });
+document.getElementById('slNext').addEventListener('click', function(){ goTo(cur+1); startAuto(); });
+dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.dataset.i)); startAuto(); }); });
 document.getElementById('slFrameInner').addEventListener('click', function(){ paused=!paused; });
 
 /* Rotating headline */
