@@ -1504,7 +1504,7 @@ def upload():
         existing = Image.query.filter(Image.phash.isnot(None)).all()
         for ex in existing:
             sim = hash_similarity_pct(phash, ex.phash)
-            if sim >= 90.0:
+            if sim >= 95.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
                 if ex.user_id == current_user.id:
                     return jsonify({'error': True, 'message':
@@ -4593,7 +4593,7 @@ def bulk_upload():
                 duplicate_found = False
                 for ex in existing_imgs:
                     sim = hash_similarity_pct(phash, ex.phash)
-                    if sim >= 90.0:
+                    if sim >= 95.0:
                         if ex.user_id == current_user.id:
                             result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
                         else:
