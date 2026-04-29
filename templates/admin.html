@@ -324,6 +324,18 @@
     </div>
     <div class="admin-section-body" id="body-review">
 
+      {# Search bar #}
+      <form method="GET" action="{{ url_for('admin_dashboard') }}" style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" name="q" value="{{ admin_q or '' }}"
+               placeholder="Search by username, title, genre…"
+               style="flex:1; padding:8px 14px; border:1px solid var(--border); border-radius:var(--radius-sm);
+                      font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); outline:none;">
+        <button type="submit" class="act-btn act-ref" style="padding:8px 16px;">🔍 Search</button>
+        {% if admin_q %}
+        <a href="{{ url_for('admin_dashboard') }}" class="act-btn" style="padding:8px 14px; text-decoration:none;">✕ Clear</a>
+        {% endif %}
+      </form>
+
       <form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
         <div class="bulk-bar">
           <label>
@@ -387,6 +399,9 @@
                 <span>{{ img.genre or '—' }}</span>
                 <span>{{ img.created_at.strftime('%d %b') }}</span>
               </div>
+              <div style="font-family:var(--font-mono); font-size:11px; color:var(--gold); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                @{{ recent_users.get(img.user_id, img.user_id) }}
+              </div>
               <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
                 <div class="admin-tile-score">{{ img.score or '—' }}</div>
                 <div class="admin-tile-tier">{{ img.tier or '' }}</div>
@@ -421,6 +436,24 @@
           {% endfor %}
         </div>
       </form>
+
+      {# Pagination #}
+      {% if recent_pages.pages > 1 %}
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+        {% if recent_pages.has_prev %}
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q) }}"
+           style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">← Prev</a>
+        {% endif %}
+        <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">
+          Page {{ recent_pages.page }} of {{ recent_pages.pages }} &nbsp;·&nbsp; {{ recent_pages.total }} images
+        </span>
+        {% if recent_pages.has_next %}
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q) }}"
+           style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">Next →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
     </div>
   </div>
 
