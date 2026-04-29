@@ -50,6 +50,14 @@ class User(db.Model, UserMixin):
 
     agreed_at         = db.Column(db.DateTime, nullable=True)
 
+    # v52 — legal consent tracking
+    terms_accepted_at = db.Column(db.DateTime, nullable=True)
+    terms_version     = db.Column(db.String(20), nullable=True)
+    signup_ip         = db.Column(db.String(45), nullable=True)
+
+    # v53 — POTY welcome banner
+    poty_banner_dismissed = db.Column(db.Boolean, default=False)
+
     is_subscribed        = db.Column(db.Boolean, default=False)
     subscription_track   = db.Column(db.String(20), nullable=True)
     subscription_plan    = db.Column(db.String(20), nullable=True)
