@@ -42,6 +42,8 @@ body:has(.sl-hp) footer { display: none !important; }
   height: calc(100vh - 64px);
   max-height: calc(100dvh - 64px);
   overflow: hidden;
+  /* Safari fix: ensure content never overflows viewport */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Gold bars ── */
@@ -187,7 +189,7 @@ body:has(.sl-hp) footer { display: none !important; }
 
 /* ══ SLIDE 4 — POTY ══ */
 .s4-left { flex: 1; background: #e8dfc8; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-right: 2px solid #F5C518; overflow: hidden; }
-.s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: center; padding: 20px 28px; overflow: hidden; }
+.s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px 28px 24px; overflow-y: auto; }
 .s4-badge-wrap { position: absolute; inset: 0; z-index: 2; }
 .s4-badge { width: 100%; height: 100%; object-fit: cover; object-position: center; animation: badgePulse 4s ease-in-out infinite; position: absolute; inset: 0; }
 @keyframes badgePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
@@ -207,7 +209,7 @@ body:has(.sl-hp) footer { display: none !important; }
   padding: 16px 14px; border: none; cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
   width: 100%; display: flex; align-items: center; justify-content: center;
-  line-height: 1; margin-top: 14px; text-decoration: none;
+  line-height: 1; margin-top: 10px; text-decoration: none; flex-shrink: 0;
 }
 .s4-cta::before {
   content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
