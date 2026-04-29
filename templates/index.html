@@ -190,18 +190,18 @@ body:has(.sl-hp) footer { display: none !important; }
 .s4-left { flex: 1; background: #e8dfc8; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border-right: 2px solid #F5C518; overflow: hidden; }
 .s4-right { width: 420px; flex-shrink: 0; background: #0a1020; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: flex-start; padding: 14px 24px 16px; overflow-y: auto; }
 .s4-badge-wrap { position: absolute; inset: 0; z-index: 2; }
-.s4-badge { width: 100%; height: 100%; object-fit: cover; object-position: center; animation: badgePulse 4s ease-in-out infinite; position: absolute; inset: 0; }
+.s4-badge { width: 100%; height: 100%; object-fit: cover; object-position: center; position: absolute; inset: 0; }
 @keyframes badgePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
 .s4-label { font-size: 13px; letter-spacing: 3px; color: #F5C518; margin-bottom: 12px; }
 .s4-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; color: #fff; line-height: 1.2; margin-bottom: 6px; }
-.s4-sub { font-size: 15px; color: #FFFFFF; letter-spacing: 1px; margin-bottom: 12px; font-style: italic; font-family: Georgia, serif; }
+.s4-sub { font-size: 14px; color: #ffffff; letter-spacing: 1px; margin-bottom: 10px; font-family: Georgia, serif; font-style: italic; }
 .s4-divider { height: 1px; background: rgba(245,197,24,0.15); margin-bottom: 10px; }
 .s4-prize-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .s4-medal { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
 .s4-prize-info { flex: 1; }
-.s4-prize-place { font-size: 11px; letter-spacing: 3px; color: #FFFFFF; margin-bottom: 3px; }
+.s4-prize-place { font-size: 10px; letter-spacing: 2px; color: #F5C518; margin-bottom: 2px; }
 .s4-prize-amount { font-size: 26px; font-weight: 700; line-height: 1; }
-.s4-prize-label { font-size: 13px; color: #FFFFFF; letter-spacing: 1px; margin-top: 2px; font-weight: 700; }
+.s4-prize-label { font-size: 11px; color: #ffffff; letter-spacing: 1px; margin-top: 2px; font-weight: 700; }
 .s4-cta {
   position: relative; overflow: hidden; background: #F5C518; color: #0D0D0B;
   font-family: "Courier New", monospace; font-size: 14px; font-weight: 700; letter-spacing: 2px;
@@ -558,27 +558,35 @@ body:has(.sl-hp) footer { display: none !important; }
             <div class="s4-sub">Top ranked photographers win big</div>
             <div class="s4-divider"></div>
             <div class="s4-prize-row">
-              <div class="s4-medal" style="background:rgba(245,197,24,0.15);border:2px solid #F5C518;color:#F5C518;">1</div>
+              <div class="s4-medal" style="background:#000;border:2px solid #F5C518;color:#F5C518;">1</div>
               <div class="s4-prize-info">
                 <div class="s4-prize-place">GRAND CHAMPION</div>
-                <div class="s4-prize-amount" style="color:#F5C518;">&#8377;50,000</div>
+                <div class="s4-prize-amount" style="color:#F5C518;">&#8377;5,00,000</div>
                 <div class="s4-prize-label">CASH PRIZE</div>
               </div>
             </div>
             <div class="s4-prize-row">
-              <div class="s4-medal" style="background:rgba(180,180,180,0.1);border:2px solid #aaa;color:#aaa;">2</div>
+              <div class="s4-medal" style="background:#000;border:2px solid #ffffff;color:#ffffff;">2</div>
               <div class="s4-prize-info">
                 <div class="s4-prize-place">RUNNER UP</div>
-                <div class="s4-prize-amount" style="color:#aaa;">&#8377;20,000</div>
+                <div class="s4-prize-amount" style="color:#ffffff;">&#8377;2,50,000</div>
                 <div class="s4-prize-label">CASH PRIZE</div>
               </div>
             </div>
             <div class="s4-prize-row">
-              <div class="s4-medal" style="background:rgba(180,100,40,0.15);border:2px solid #c87840;color:#c87840;">3</div>
+              <div class="s4-medal" style="background:#000;border:2px solid #ffffff;color:#ffffff;">3</div>
               <div class="s4-prize-info">
                 <div class="s4-prize-place">THIRD PLACE</div>
-                <div class="s4-prize-amount" style="color:#c87840;">&#8377;10,000</div>
+                <div class="s4-prize-amount" style="color:#ffffff;">&#8377;1,00,000</div>
                 <div class="s4-prize-label">CASH PRIZE</div>
+              </div>
+            </div>
+            <div class="s4-prize-row">
+              <div class="s4-medal" style="background:#000;border:2px solid #F5C518;color:#F5C518;">8</div>
+              <div class="s4-prize-info">
+                <div class="s4-prize-place">CATEGORY WINNERS</div>
+                <div class="s4-prize-amount" style="color:#F5C518;">&#8377;50,000 <span style="font-size:13px;color:#ffffff;letter-spacing:1px;">EACH</span></div>
+                <div class="s4-prize-label">&#8377;4,00,000 TOTAL · 8 GENRES</div>
               </div>
             </div>
             <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('weekly_challenge') }}" class="s4-cta">ENTER THE LEAGUE</a>
