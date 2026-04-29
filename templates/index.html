@@ -163,7 +163,7 @@ body:has(.sl-hp) footer { display: none !important; }
 }
 
 /* ══ SLIDE 3 — DDI Radar ══ */
-.s3-left { flex: 1; background: #0a1520; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.s3-left { flex: 1; background: #0a1520; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 .s3-right { width: 420px; flex-shrink: 0; background: #1a0a20; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: flex-start; padding: 28px 32px; overflow-y: auto; }
 .s3-label { font-size: 15px; letter-spacing: 3px; color: #F5C518; margin-bottom: 14px; font-weight: 700; }
 .s3-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; color: #FFFFFF; margin-bottom: 8px; line-height: 1.3; }
@@ -367,6 +367,10 @@ body:has(.sl-hp) footer { display: none !important; }
   .s2-cd-sep { font-size: 32px; }
   .s2-left-content { padding-bottom: 40px; }
   .s2-photo-credit { display: none; }
+  #ddiScoreNum { font-size: 54px !important; letter-spacing: -2px !important; }
+  #ddiTierLabel { font-size: 14px !important; letter-spacing: 2px !important; margin-bottom: 12px !important; }
+  #ddiBarWrap { gap: 7px !important; }
+  .s3-left { padding: 16px 20px !important; }
 }
 </style>
 {% endblock %}
@@ -503,33 +507,25 @@ body:has(.sl-hp) footer { display: none !important; }
           </div>
         </div>
 
-        <!-- ═══ SLIDE 3 — DDI Framework ═══ -->
+        <!-- ═══ SLIDE 3 — DDI Scoring Animation ═══ -->
         <div class="sl-slide">
           <div class="s3-left">
-            <svg id="radarSvg" width="100%" height="100%" viewBox="-280 -230 560 460" preserveAspectRatio="xMidYMid meet" style="max-height:420px;">
-              <circle cx="0" cy="0" r="140" fill="none" stroke="rgba(74,158,187,0.15)" stroke-width="1"/>
-              <circle cx="0" cy="0" r="105" fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
-              <circle cx="0" cy="0" r="70"  fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
-              <circle cx="0" cy="0" r="35"  fill="none" stroke="rgba(74,158,187,0.12)" stroke-width="1"/>
-              <line x1="0" y1="-140" x2="0" y2="140" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
-              <line x1="-133" y1="-43" x2="133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
-              <line x1="-82" y1="-113" x2="82" y2="113" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
-              <line x1="82" y1="-113" x2="-82" y2="113" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
-              <line x1="133" y1="-43" x2="-133" y2="43" stroke="rgba(74,158,187,0.18)" stroke-width="1"/>
-              <polygon id="radarPoly" points="" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="2"/>
-              <!-- Top: Degree of Difficulty -->
-              <text x="0" y="-158" text-anchor="middle" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">DEGREE OF DIFFICULTY</text>
-              <!-- Right: Visual Disruption -->
-              <text x="150" y="-50" text-anchor="start" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">VISUAL</text>
-              <text x="150" y="-32" text-anchor="start" fill="#FFFFFF" font-size="14" font-family="Courier New" font-weight="bold">DISRUPTION</text>
-              <!-- Bottom right: Decisive Moment -->
-              <text x="95" y="168" text-anchor="middle" fill="#F5C518" font-size="16" font-family="Courier New" font-weight="bold">DECISIVE MOMENT</text>
-              <!-- Bottom left: Wonder Factor -->
-              <text x="-95" y="168" text-anchor="middle" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">WONDER FACTOR</text>
-              <!-- Left: Affective Quotient -->
-              <text x="-150" y="-50" text-anchor="end" fill="#FFFFFF" font-size="16" font-family="Courier New" font-weight="bold">AFFECTIVE</text>
-              <text x="-150" y="-32" text-anchor="end" fill="#FFFFFF" font-size="14" font-family="Courier New" font-weight="bold">QUOTIENT</text>
-            </svg>
+            <div id="ddiScanLine" style="position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(245,197,24,0.5),transparent);top:0;pointer-events:none;"></div>
+            <div id="ddiStatus" style="font-size:11px;letter-spacing:3px;color:#F5C518;margin-bottom:16px;opacity:0.8;">ANALYSING IMAGE</div>
+            <div id="ddiScoreNum" style="font-size:88px;font-weight:700;color:#F5C518;line-height:1;letter-spacing:-4px;min-width:180px;text-align:center;">&#8212;</div>
+            <div id="ddiTierLabel" style="font-size:18px;letter-spacing:4px;color:#333;font-weight:700;margin-bottom:20px;transition:color 0.4s;">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</div>
+            <div id="ddiBarWrap" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl0">Difficulty</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar0" style="width:0%;height:100%;background:#4a9ebb;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl1">Disruption</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar1" style="width:0%;height:100%;background:#e74c6f;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl2">Moment</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar2" style="width:0%;height:100%;background:#F5C518;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl3">Wonder</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar3" style="width:0%;height:100%;background:#6bcb8b;border-radius:3px;"></div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:82px;font-size:10px;letter-spacing:1px;color:#333;text-transform:uppercase;transition:color 0.5s;" id="dlbl4">Affective</div><div style="flex:1;height:5px;background:#0d1f2e;border-radius:3px;overflow:hidden;"><div id="dbar4" style="width:0%;height:100%;background:#b57bee;border-radius:3px;"></div></div></div>
+            </div>
+            <div style="margin-top:18px;display:flex;gap:6px;">
+              <div id="dd0" style="width:6px;height:6px;border-radius:50%;background:#F5C518;opacity:0.2;"></div>
+              <div id="dd1" style="width:6px;height:6px;border-radius:50%;background:#F5C518;opacity:0.2;"></div>
+              <div id="dd2" style="width:6px;height:6px;border-radius:50%;background:#F5C518;opacity:0.2;"></div>
+            </div>
           </div>
           <div class="s3-right">
             <div class="s3-label">THE DDI FRAMEWORK</div>
@@ -722,23 +718,120 @@ function tick(){
 }
 tick(); setInterval(tick,1000);
 
-/* Radar animation */
-var radarAxes=[-90,-90+72,-90+144,-90+216,-90+288];
-var radarBase=[0.85,0.72,0.91,0.68,0.78];
-var radarT=0;
-var radarPoly=document.getElementById('radarPoly');
-function radarAnimate(){
-  radarT+=0.018;
-  var pts=radarAxes.map(function(a,i){
-    var v=radarBase[i]+Math.sin(radarT+i*1.2)*0.18;
-    v=Math.max(0.28,Math.min(1.0,v));
-    var rad=a*Math.PI/180;
-    return (Math.cos(rad)*v*130).toFixed(1)+','+(Math.sin(rad)*v*130).toFixed(1);
-  });
-  if(radarPoly) radarPoly.setAttribute('points',pts.join(' '));
-  requestAnimationFrame(radarAnimate);
-}
-radarAnimate();
+/* DDI Scoring Animation — Slide 3 */
+(function(){
+  var ddiTiers=[[0,'——'],[20,'ROOKIE'],[40,'SHOOTER'],[55,'CONTENDER'],[65,'CRAFTSMAN'],[75,'MAVERICK'],[82,'MASTER'],[87,'GRANDMASTER'],[92,'LEGEND']];
+  var ddiFinalWidths=[91,84,89,86,87];
+  var ddiFinalScore=8.74;
+  var ddiScanIv=null, ddiDotIv=null, ddiPulseIvs=[], ddiLoopTimer=null;
+
+  function ddiGetTier(pct){var t='——';for(var i=0;i<ddiTiers.length;i++){if(pct>=ddiTiers[i][0])t=ddiTiers[i][1];}return t;}
+
+  function ddiClearAll(){
+    if(ddiScanIv) clearInterval(ddiScanIv);
+    if(ddiDotIv) clearInterval(ddiDotIv);
+    ddiPulseIvs.forEach(function(iv){clearInterval(iv);});
+    ddiPulseIvs=[];
+    if(ddiLoopTimer) clearTimeout(ddiLoopTimer);
+  }
+
+  function ddiResetBars(){
+    for(var i=0;i<5;i++){
+      var b=document.getElementById('dbar'+i);
+      if(!b) return;
+      b.style.transition='none';
+      b.style.width='0%';
+      b.style.opacity='0.4';
+      document.getElementById('dlbl'+i).style.color='#333';
+    }
+  }
+
+  function ddiRun(){
+    ddiClearAll();
+    var scanEl=document.getElementById('ddiScanLine');
+    var scoreEl=document.getElementById('ddiScoreNum');
+    var tierEl=document.getElementById('ddiTierLabel');
+    var statusEl=document.getElementById('ddiStatus');
+    if(!scanEl||!scoreEl) return;
+
+    ddiResetBars();
+    scoreEl.textContent='—';
+    scoreEl.style.color='#333';
+    tierEl.textContent='——————';
+    tierEl.style.color='#333';
+    statusEl.textContent='ANALYSING IMAGE';
+    scanEl.style.display='block';
+
+    var scanY=0, scanDir=1;
+    ddiScanIv=setInterval(function(){
+      scanY+=scanDir*4;
+      var h=scanEl.parentElement?scanEl.parentElement.offsetHeight:480;
+      if(scanY>h) scanDir=-1;
+      if(scanY<0) scanDir=1;
+      scanEl.style.top=scanY+'px';
+    },16);
+
+    var dotIdx=0;
+    ddiDotIv=setInterval(function(){
+      for(var i=0;i<3;i++){var d=document.getElementById('dd'+i);if(d)d.style.opacity=i===dotIdx?'1':'0.2';}
+      dotIdx=(dotIdx+1)%3;
+    },350);
+
+    for(var i=0;i<5;i++){
+      (function(idx){
+        var iv=setInterval(function(){
+          var b=document.getElementById('dbar'+idx);
+          if(!b){clearInterval(iv);return;}
+          b.style.transition='width '+(0.15+Math.random()*0.25)+'s ease-in-out';
+          b.style.width=(15+Math.random()*60)+'%';
+          b.style.opacity=(0.4+Math.random()*0.5).toFixed(2);
+        },180+idx*40);
+        ddiPulseIvs.push(iv);
+      })(i);
+    }
+
+    setTimeout(function(){
+      ddiClearAll();
+      scanEl.style.display='none';
+      for(var i=0;i<3;i++){var d=document.getElementById('dd'+i);if(d)d.style.opacity='0';}
+      statusEl.textContent='SCORE READY';
+
+      for(var i=0;i<5;i++){
+        (function(idx){
+          setTimeout(function(){
+            var b=document.getElementById('dbar'+idx);
+            if(!b) return;
+            b.style.opacity='1';
+            b.style.transition='width 0.7s ease-out';
+            b.style.width=ddiFinalWidths[idx]+'%';
+            document.getElementById('dlbl'+idx).style.color='#888';
+          },idx*160);
+        })(i);
+      }
+
+      setTimeout(function(){
+        scoreEl.style.color='#F5C518';
+        var start=null,dur=1400;
+        function anim(ts){
+          if(!start) start=ts;
+          var p=Math.min((ts-start)/dur,1);
+          var e=1-Math.pow(1-p,3);
+          var cur=e*ddiFinalScore;
+          scoreEl.textContent=cur.toFixed(2);
+          var pct=cur*10;
+          tierEl.textContent=ddiGetTier(pct);
+          tierEl.style.color=pct>=87?'#F5C518':pct>=75?'#888':'#555';
+          if(p<1) requestAnimationFrame(anim);
+        }
+        requestAnimationFrame(anim);
+      },400);
+
+      ddiLoopTimer=setTimeout(ddiRun, 5000);
+    },2800);
+  }
+
+  ddiRun();
+})();
 
 /* Mentor chart animation */
 var mcCanvas=document.getElementById('mentorChart');
