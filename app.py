@@ -3557,6 +3557,16 @@ def sree_admin_login():
 def poty():
     return render_template('poty.html')
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/shipping-policy')
+def shipping_policy():
+    return render_template('shipping_policy.html')
+
+
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
