@@ -40,7 +40,7 @@ body:has(.sl-hp) footer { display: none !important; }
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 64px);
-  overflow: visible;
+  overflow: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -52,11 +52,12 @@ body:has(.sl-hp) footer { display: none !important; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
+  height: 0;
 }
 .sl-frame-inner {
   flex: 1;
-  overflow: visible;
+  overflow: hidden;
   position: relative;
 }
 
