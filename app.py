@@ -376,6 +376,8 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
+                # v53  -  POTY welcome banner dismiss flag
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS poty_banner_dismissed BOOLEAN DEFAULT FALSE",
                 # v29  -  weekly challenge
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
@@ -1311,6 +1313,8 @@ def dashboard():
             Image.judge_final_score.desc()
         ).all()
 
+    show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1318,7 +1322,20 @@ def dashboard():
                            active_challenge=active_challenge,
                            zone3_flagged=zone3_flagged,
                            zone2_pending=zone2_pending,
-                           contest_wins=contest_wins)
+                           contest_wins=contest_wins,
+                           show_poty_banner=show_poty_banner)
+
+
+# ---------------------------------------------------------------------------
+# POTY welcome banner dismiss
+# ---------------------------------------------------------------------------
+
+@app.route('/dismiss-poty-banner', methods=['POST'])
+@login_required
+def dismiss_poty_banner():
+    current_user.poty_banner_dismissed = True
+    db.session.commit()
+    return ('', 204)
 
 
 # ---------------------------------------------------------------------------
