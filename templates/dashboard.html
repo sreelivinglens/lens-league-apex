@@ -20,17 +20,27 @@
   .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
   .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
   .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
-  /* img-tier-badge variants */
-  .img-tier-badge.legend      { background:rgba(245,197,24,0.3);  color:#F5C518; }
-  .img-tier-badge.grandmaster { background:rgba(245,197,24,0.2);  color:#F5C518; }
-  .img-tier-badge.master      { background:rgba(255,255,255,0.2); color:#FFFFFF; }
-  .img-tier-badge.maverick    { background:rgba(255,255,255,0.15);color:#FFFFFF; }
-  .img-tier-badge.craftsman   { background:rgba(255,255,255,0.12);color:#FFFFFF; }
-  .img-tier-badge.contender   { background:rgba(255,255,255,0.10);color:#FFFFFF; }
-  .img-tier-badge.shooter     { background:rgba(255,255,255,0.08);color:#FFFFFF; }
-  .img-tier-badge.rookie      { background:rgba(255,255,255,0.06);color:#FFFFFF; }
+  /* img-tier-badge variants — solid backgrounds so badge reads on any photo colour */
+  .img-tier-badge.legend      { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .img-tier-badge.grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .img-tier-badge.master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .img-tier-badge.maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .img-tier-badge.craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .img-tier-badge.contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .img-tier-badge.shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .img-tier-badge.rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
 
-  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+  /* ── Status badge override: always solid so it reads on any photo ── */
+  .img-thumb .status-badge {
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+  }
+  .img-thumb .status-badge.scored {
+    background: #000 !important;
+    color: #F5C518 !important;
+    border: 1px solid #F5C518 !important;
+  }
   :root {
     --gold:           #F5C518 !important;
     --gold-light:     #F5C518 !important;
@@ -154,7 +164,11 @@
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
-  .win-badge { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
+  .win-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #000; background: var(--gold); text-transform: uppercase; padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+  @media (max-width: 480px) {
+    .win-card { flex-wrap: wrap; }
+    .win-card > div { min-width: 0; }
+  }
 
   /* Empty state */
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text-primary); }
