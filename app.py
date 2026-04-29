@@ -5032,6 +5032,243 @@ def admin_export_ratings_csv():
 # Admin  -  Subscription view
 # ---------------------------------------------------------------------------
 
+
+# ---------------------------------------------------------------------------
+# Admin — Contest Management (v53)
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/contests', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_contests():
+    """
+    Contest management hub: POTY/BOW/Open period + Brand contests + Announcements.
+    """
+    current_year = datetime.utcnow().year
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        # ── Save / update contest period ────────────────────────────────────
+        if action == 'save_period':
+            year = request.form.get('platform_year', type=int) or current_year
+
+            def _parse_ist(field):
+                val = request.form.get(field, '').strip()
+                if not val:
+                    return None
+                try:
+                    return datetime.strptime(val, '%Y-%m-%dT%H:%M') - _IST_OFFSET
+                except ValueError:
+                    return None
+
+            period = ContestPeriod.query.filter_by(platform_year=year).first()
+            if not period:
+                period = ContestPeriod(platform_year=year, created_by=current_user.id)
+                db.session.add(period)
+
+            period.poty_opens_at        = _parse_ist('poty_opens_at')
+            period.poty_closes_at       = _parse_ist('poty_closes_at')
+            period.poty_status          = request.form.get('poty_status', 'upcoming')
+            period.bow_entry_opens_at   = _parse_ist('bow_entry_opens_at')
+            period.bow_entry_closes_at  = _parse_ist('bow_entry_closes_at')
+            period.bow_judging_ends_at  = _parse_ist('bow_judging_ends_at')
+            period.bow_status           = request.form.get('bow_status', 'upcoming')
+            period.open_opens_at        = _parse_ist('open_opens_at')
+            period.open_closes_at       = _parse_ist('open_closes_at')
+            period.open_cooling_ends_at = _parse_ist('open_cooling_ends_at')
+            period.open_status          = request.form.get('open_status', 'upcoming')
+            period.winners_announced_at = _parse_ist('winners_announced_at')
+            period.announcement_banner  = request.form.get('announcement_banner', '').strip() or None
+            period.banner_active        = request.form.get('banner_active') == '1'
+            db.session.commit()
+            flash('Contest period saved.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Brand contest — create ──────────────────────────────────────────
+        elif action == 'create_brand':
+            brand_name  = request.form.get('brand_name', '').strip()
+            title       = request.form.get('title', '').strip()
+            brief       = request.form.get('brief', '').strip()
+            prize_desc  = request.form.get('prize_desc', '').strip()
+            prize_value = request.form.get('prize_value', '').strip() or None
+            opens_str   = request.form.get('opens_at', '').strip()
+            closes_str  = request.form.get('closes_at', '').strip()
+            max_entries = request.form.get('max_entries_per_user', 3, type=int)
+
+            if not all([brand_name, title, brief, prize_desc, opens_str, closes_str]):
+                flash('All fields except prize value are required.', 'error')
+                return redirect(url_for('admin_contests'))
+
+            try:
+                opens_at  = datetime.strptime(opens_str,  '%Y-%m-%dT%H:%M') - _IST_OFFSET
+                closes_at = datetime.strptime(closes_str, '%Y-%m-%dT%H:%M') - _IST_OFFSET
+            except ValueError:
+                flash('Invalid date format.', 'error')
+                return redirect(url_for('admin_contests'))
+
+            bc = BrandContest(
+                brand_name=brand_name,
+                title=title,
+                brief=brief,
+                prize_desc=prize_desc,
+                prize_value=prize_value,
+                opens_at=opens_at,
+                closes_at=closes_at,
+                max_entries_per_user=max_entries,
+                status='draft',
+                created_by=current_user.id,
+            )
+            db.session.add(bc)
+            db.session.commit()
+            flash(f'Brand contest "{title}" created as draft.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Brand contest — status transitions ─────────────────────────────
+        elif action in ('brand_activate', 'brand_close', 'brand_judging', 'brand_publish'):
+            bc_id = request.form.get('brand_contest_id', type=int)
+            bc    = BrandContest.query.get_or_404(bc_id)
+            status_map = {
+                'brand_activate': 'active',
+                'brand_close':    'closed',
+                'brand_judging':  'judging',
+                'brand_publish':  'results_published',
+            }
+            bc.status = status_map[action]
+            if action == 'brand_publish':
+                bc.results_published_at = datetime.utcnow()
+            db.session.commit()
+            flash(f'Brand contest "{bc.title}" status updated to {bc.status}.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Announcement — create ──────────────────────────────────────────
+        elif action == 'create_announcement':
+            title        = request.form.get('title', '').strip()
+            body         = request.form.get('body', '').strip()
+            contest_type = request.form.get('contest_type', 'poty')
+            audience     = request.form.get('audience', 'all')
+            delivery     = request.form.get('delivery', 'both')
+            cta_label    = request.form.get('cta_label', '').strip() or None
+            cta_url      = request.form.get('cta_url', '').strip() or None
+            banner_active= request.form.get('banner_active') == '1'
+
+            if not title or not body:
+                flash('Title and body are required.', 'error')
+                return redirect(url_for('admin_contests'))
+
+            ann = ContestAnnouncement(
+                contest_type=contest_type,
+                title=title,
+                body=body,
+                audience=audience,
+                delivery=delivery,
+                cta_label=cta_label,
+                cta_url=cta_url,
+                banner_active=banner_active,
+                status='draft',
+                created_by=current_user.id,
+            )
+            db.session.add(ann)
+            db.session.commit()
+            flash(f'Announcement "{title}" created.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Announcement — toggle banner ───────────────────────────────────
+        elif action in ('banner_activate', 'banner_deactivate'):
+            ann_id = request.form.get('announcement_id', type=int)
+            ann    = ContestAnnouncement.query.get_or_404(ann_id)
+            ann.banner_active = (action == 'banner_activate')
+            db.session.commit()
+            flash('Banner ' + ('activated.' if ann.banner_active else 'deactivated.'), 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Announcement — send email ──────────────────────────────────────
+        elif action == 'send_announcement':
+            ann_id = request.form.get('announcement_id', type=int)
+            ann    = ContestAnnouncement.query.get_or_404(ann_id)
+            ann.status  = 'sent'
+            ann.sent_at = datetime.utcnow()
+            db.session.commit()
+
+            # Fire emails in background thread — same pattern as challenge notifications
+            import threading
+            def _send_ann(ann_id_inner):
+                with app.app_context():
+                    try:
+                        ann_inner = ContestAnnouncement.query.get(ann_id_inner)
+                        if not ann_inner:
+                            return
+                        if ann_inner.audience == 'subscribers':
+                            recips = User.query.filter_by(is_active=True, is_subscribed=True).all()
+                        elif ann_inner.audience == 'non_subscribers':
+                            recips = User.query.filter_by(is_active=True, is_subscribed=False).filter(User.role != 'admin').all()
+                        else:
+                            recips = User.query.filter_by(is_active=True).filter(User.role != 'admin').all()
+                        sent = 0
+                        for u in recips:
+                            try:
+                                _send_contest_announcement_email(u, ann_inner)
+                                sent += 1
+                            except Exception as _e:
+                                app.logger.warning('[contest_ann] email failed user ' + str(u.id) + ': ' + str(_e))
+                        app.logger.info('[contest_ann] sent to ' + str(sent) + ' users')
+                    except Exception as _e:
+                        app.logger.error('[contest_ann] thread error: ' + str(_e))
+            t = threading.Thread(target=_send_ann, args=(ann_id,), daemon=True)
+            t.start()
+            flash('Announcement queued — emails sending in background.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        flash('Unknown action.', 'error')
+        return redirect(url_for('admin_contests'))
+
+    # ── GET ─────────────────────────────────────────────────────────────────
+    period        = ContestPeriod.query.filter_by(platform_year=current_year).first()
+    brand_contests= BrandContest.query.order_by(BrandContest.created_at.desc()).all()
+    announcements = ContestAnnouncement.query.order_by(ContestAnnouncement.created_at.desc()).all()
+
+    return render_template('admin_contests.html',
+        current_year=current_year,
+        period=period,
+        brand_contests=brand_contests,
+        announcements=announcements,
+        ist=_IST_OFFSET,
+    )
+
+
+def _send_contest_announcement_email(user, ann):
+    """Send a contest announcement email to a single user via Brevo."""
+    name = user.full_name or user.username
+    cta_html = ''
+    if ann.cta_label and ann.cta_url:
+        cta_url = ann.cta_url if ann.cta_url.startswith('http') else 'https://shutterleague.com' + ann.cta_url
+        cta_html = (
+            '<div style="margin-top:24px;">'
+            '<a href="' + cta_url + '" style="background:#F5C518; color:#000; font-weight:700; '
+            'padding:12px 28px; border-radius:6px; text-decoration:none; font-size:15px;">'
+            + ann.cta_label + '</a></div>'
+        )
+    import html as _html
+    safe_title = _html.escape(ann.title)
+    safe_body  = _html.escape(ann.body)
+    safe_name  = _html.escape(name)
+    html_body = (
+        '<div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto;'
+        ' background:#000; color:#fff; padding:32px; border-radius:8px;">'
+        '<div style="font-family:monospace; font-size:11px; letter-spacing:3px;'
+        ' color:#F5C518; text-transform:uppercase; margin-bottom:8px;">Shutter League</div>'
+        '<h2 style="color:#F5C518; margin:0 0 16px 0;">' + safe_title + '</h2>'
+        '<p style="color:#ccc; font-size:15px; line-height:1.6; margin:0 0 16px 0;">Hi ' + safe_name + ',</p>'
+        '<div style="color:#fff; font-size:15px; line-height:1.7; white-space:pre-wrap;">' + safe_body + '</div>'
+        + cta_html
+        + '<p style="color:#666; font-size:12px; margin-top:32px;">You are receiving this because you are'
+        ' a member of Shutter League. '
+        '<a href="https://shutterleague.com/dashboard" style="color:#F5C518;">Visit your dashboard</a></p>'
+        '</div>'
+    )
+    send_email(user.email, ann.title, html_body)
+
+
 @app.route('/admin/subscriptions')
 @login_required
 @admin_required
