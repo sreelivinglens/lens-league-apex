@@ -3287,6 +3287,32 @@ def report_image(image_id):
     )
     db.session.add(report)
     db.session.commit()
+
+    # Notify admin by email
+    reporter_name = current_user.full_name or current_user.username
+    img_owner = User.query.get(img.user_id)
+    owner_name = img_owner.username if img_owner else 'unknown'
+    subject = 'Image Flagged by User — ' + reason
+    html_body = (
+        '<h2 style="color:#c0392b;">Image Report Filed</h2>'
+        '<p><strong>Reporter:</strong> ' + reporter_name + ' (ID ' + str(current_user.id) + ')</p>'
+        '<p><strong>Image:</strong> ' + (img.asset_name or 'Untitled') + ' (ID ' + str(img.id) + ')</p>'
+        '<p><strong>Owner:</strong> ' + owner_name + '</p>'
+        '<p><strong>Reason:</strong> ' + reason + '</p>'
+        '<p><strong>Detail:</strong> ' + (detail or '—') + '</p>'
+        '<p><a href="https://shutterleague.com/admin" style="background:#c0392b;color:#fff;padding:10px 20px;'
+        'text-decoration:none;font-weight:700;border-radius:4px;">Review in Admin</a></p>'
+    )
+    try:
+        import threading
+        threading.Thread(
+            target=send_email,
+            args=([ADMIN_NOTIFY_EMAIL], subject, html_body),
+            daemon=True
+        ).start()
+    except Exception:
+        pass
+
     flash('Report submitted. Our team will review it.', 'success')
     return redirect(back_url)
 
