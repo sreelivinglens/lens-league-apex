@@ -3300,7 +3300,7 @@ def report_image(image_id):
         '<p><strong>Owner:</strong> ' + owner_name + '</p>'
         '<p><strong>Reason:</strong> ' + reason + '</p>'
         '<p><strong>Detail:</strong> ' + (detail or '—') + '</p>'
-        '<p><a href="https://shutterleague.com/admin" style="background:#c0392b;color:#fff;padding:10px 20px;'
+        '<p><a href="https://shutterleague.com/sree-admin" style="background:#c0392b;color:#fff;padding:10px 20px;'
         'text-decoration:none;font-weight:700;border-radius:4px;">Review in Admin</a></p>'
     )
     try:
