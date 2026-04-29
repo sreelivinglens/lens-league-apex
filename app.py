@@ -1335,6 +1335,23 @@ def dashboard():
             Image.judge_final_score.desc()
         ).all()
 
+    # POTY welcome banner
+    show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
+
+    # Contest announcement banners — active banners matching user audience
+    _is_sub = getattr(current_user, 'is_subscribed', False)
+    _ann_q  = ContestAnnouncement.query.filter_by(banner_active=True)
+    if current_user.role != 'admin':
+        if _is_sub:
+            _ann_q = _ann_q.filter(
+                ContestAnnouncement.audience.in_(['all', 'subscribers'])
+            )
+        else:
+            _ann_q = _ann_q.filter(
+                ContestAnnouncement.audience.in_(['all', 'non_subscribers'])
+            )
+    contest_banners = _ann_q.order_by(ContestAnnouncement.created_at.desc()).all()
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1342,7 +1359,21 @@ def dashboard():
                            active_challenge=active_challenge,
                            zone3_flagged=zone3_flagged,
                            zone2_pending=zone2_pending,
-                           contest_wins=contest_wins)
+                           contest_wins=contest_wins,
+                           show_poty_banner=show_poty_banner,
+                           contest_banners=contest_banners)
+
+
+# ---------------------------------------------------------------------------
+# POTY welcome banner dismiss
+# ---------------------------------------------------------------------------
+
+@app.route('/dismiss-poty-banner', methods=['POST'])
+@login_required
+def dismiss_poty_banner():
+    current_user.poty_banner_dismissed = True
+    db.session.commit()
+    return ('', 204)
 
 
 # ---------------------------------------------------------------------------
@@ -2434,13 +2465,17 @@ def admin_dashboard():
                         ).count(),
     }
 
+    # Active contest banners — shown in admin dashboard for visibility
+    active_contest_banners = ContestAnnouncement.query.filter_by(banner_active=True).all()
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, recent_users=recent_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
-                           stats=stats_sub)
+                           stats=stats_sub,
+                           active_contest_banners=active_contest_banners)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
