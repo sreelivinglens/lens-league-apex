@@ -140,7 +140,7 @@ body:has(.sl-hp) footer { display: none !important; }
 .s2-cd-lbl { font-size: 13px; letter-spacing: 2px; color: #FFFFFF; margin-top: 6px; font-weight: 700; }
 .s2-photo-credit { position: absolute; bottom: 16px; left: 18px; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.9); }
 @media (max-width: 768px) { .s2-photo-credit { display: none; } }
-.s2-right { width: 420px; flex-shrink: 0; background: #F5F0E4; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: center; padding: 36px 32px; overflow: hidden; }
+.s2-right { width: 420px; flex-shrink: 0; background: #F5F0E4; border-left: 2px solid #F5C518; display: flex; flex-direction: column; justify-content: flex-start; padding: 28px 32px; overflow-y: auto; }
 .s2-week { font-size: 15px; letter-spacing: 3px; color: #F5C518; margin-bottom: 12px; font-weight: 700; }
 .s2-title { font-size: 36px; font-weight: 700; font-family: Georgia, serif; font-style: italic; color: #1a1a18; line-height: 1.2; margin-bottom: 16px; }
 .s2-divider { height: 1px; background: rgba(245,197,24,0.3); margin: 14px 0; }
@@ -256,8 +256,9 @@ body:has(.sl-hp) footer { display: none !important; }
   align-items: flex-start;
   padding: 10px 20px;
   border-left: 1px solid #1a1a18;
-  gap: 8px;
-  min-width: 140px;
+  gap: 6px;
+  min-width: 180px;
+  overflow: visible;
 }
 .sl-footer-nav.cream { border-left-color: #D4C9A8; }
 .sl-footer-nav a {
@@ -281,7 +282,7 @@ body:has(.sl-hp) footer { display: none !important; }
 /* ── BOTTOM STRIP ── */
 .sl-bottom-frame {
   max-width: 100%; display: grid; grid-template-columns: 1fr 1fr auto;
-  height: 110px; border-top: 1px solid #1a1a18;
+  min-height: 110px; border-top: 1px solid #1a1a18;
   background: #090907; flex-shrink: 0; transition: background 0.6s;
 }
 .sl-bottom-frame.cream { background: #EDE8D8; border-top: 1px solid #D4C9A8; }
@@ -305,9 +306,9 @@ body:has(.sl-hp) footer { display: none !important; }
 .sl-strip-btn:nth-child(2)::before { animation-delay: 0.4s; }
 .sl-strip-btn:nth-child(3)::before { animation-delay: 0.8s; }
 .sl-strip-btn:hover { background: #D4B85A; }
-.sl-hl { font-size: 18px; line-height: 1.5; font-family: Georgia, serif; color: #9a9890; font-style: italic; }
+.sl-hl { font-size: 18px; line-height: 1.5; font-family: Georgia, serif; color: #d4d0c8; font-style: italic; }
 .sl-hl em { color: #F5C518; font-style: italic; }
-.sl-hl2 { font-size: 17px; color: #F0EFE8; font-family: Georgia, serif; font-style: normal; letter-spacing: 0.5px; line-height: 1.4; }
+.sl-hl2 { font-size: 17px; color: #ffffff; font-family: Georgia, serif; font-style: normal; letter-spacing: 0.5px; line-height: 1.4; }
 .sl-hl2.cream { color: #3a3028; }
 .sl-hl.cream-hl { color: #000000; font-weight: 700; font-size: 18px; }
 .sl-hl.cream-hl em { color: #B8943B; }
