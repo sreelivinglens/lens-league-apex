@@ -1,127 +1,152 @@
 {% extends "base.html" %}
-{% block title %}Refund & Cancellation Policy — {{ platform_name }}{% endblock %}
+{% block title %}Refund Policy — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
-  :root {
-    --gold:           #F5C518 !important;
-    --gold-light:     #F5C518 !important;
-    --gold-dark:      #F5C518 !important;
-    --gold-subtle:    rgba(245,197,24,0.12) !important;
-    --gold-glow:      rgba(245,197,24,0.22) !important;
-    --text-secondary: var(--text-primary) !important;
-    --text-muted:     var(--text-primary) !important;
-    --text-disabled:  #888888 !important;
+  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
+  .policy-hero { margin-bottom:48px; }
+  .policy-hero h1 { font-size:36px; font-weight:800; color:var(--text-primary); margin-bottom:12px; }
+  .policy-hero p  { font-size:16px; color:var(--text-muted); line-height:1.6; }
+  .policy-section { margin-bottom:40px; }
+  .policy-section h2 { font-size:22px; font-weight:700; color:var(--gold); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .policy-section h3 { font-size:17px; font-weight:700; color:var(--text-primary); margin:20px 0 10px; }
+  .policy-section p  { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:14px; }
+  .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section ul li { margin-bottom:8px; }
+  .policy-meta { font-size:13px; color:var(--text-muted); margin-bottom:32px; }
+  .refund-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  .refund-table th { padding:12px 14px; font-size:14px; font-weight:700; color:var(--text-secondary); border-bottom:2px solid var(--border); text-align:left; background:var(--surface-3); }
+  .refund-table td { padding:12px 14px; font-size:15px; color:var(--text-primary); border-bottom:1px solid var(--border-subtle); vertical-align:top; line-height:1.5; }
+  .refund-table tr:last-child td { border-bottom:none; }
+  .eligible { color:#66cc66; font-weight:700; }
+  .not-eligible { color:#cc4444; font-weight:700; }
+  .highlight-box { background:rgba(245,197,24,0.08); border:1px solid var(--gold); border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:15px; color:var(--text-primary); line-height:1.6; }
+  .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .policy-links a { font-size:15px; color:var(--gold); text-decoration:none; }
+  .policy-links a:hover { text-decoration:underline; }
+  @media (max-width:600px) {
+    .policy-hero h1 { font-size:28px; }
+    .refund-table { font-size:14px; }
+    .refund-table th, .refund-table td { padding:10px; }
   }
-
-  .terms-wrap { max-width: 760px; margin: 0 auto; }
-  .terms-section { margin-bottom: 40px; }
-  .terms-section h2 {
-    font-size: 18px; font-weight: 700; color: var(--text-primary);
-    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-  }
-  .terms-section h2 span {
-    font-family: var(--font-mono); font-size: 14px;
-    color: var(--gold); margin-right: 10px; font-weight: 600;
-  }
-  .terms-section h3 {
-    font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
-  }
-  .terms-section p {
-    font-size: 16px; color: var(--text-primary); line-height: 1.8; margin-bottom: 12px;
-  }
-  .terms-section ul, .terms-section ol {
-    padding-left: 22px; margin-bottom: 12px;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .terms-section li { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-  .terms-section strong { color: var(--text-primary); }
-  .terms-highlight {
-    background: var(--surface-3); border: 1px solid var(--border);
-    border-left: 3px solid var(--gold-dark);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: 16px 20px; margin: 16px 0;
-    font-size: 16px; color: var(--text-primary); line-height: 1.7;
-  }
-  .terms-highlight strong { color: var(--gold); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="terms-wrap">
+<div class="policy-wrap">
 
-  <div class="page-header">
-    <h1>Refund &amp; Cancellation Policy</h1>
-    <p>Last updated: April 2026 &nbsp;·&nbsp; {{ platform_name }}</p>
+  <div class="policy-hero">
+    <h1>Refund Policy</h1>
+    <p>This policy explains when refunds are available on Shutter League, how to request one, and how long the process takes.</p>
+  </div>
+  <div class="policy-meta">Last updated: 29 April 2026 &nbsp;·&nbsp; Effective immediately</div>
+
+  <div class="highlight-box">
+    Shutter League is a digital services platform. All services are delivered instantly upon payment. Refunds are considered on a case-by-case basis as described below. If you believe you are entitled to a refund, please contact us at <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a> within the applicable window.
   </div>
 
-  <div class="terms-highlight">
-    <strong>Summary:</strong> You can cancel your subscription at any time from your dashboard.
-    No questions asked. Access continues until the end of your current billing period.
-    Competition entry fees are non-refundable once the submission window opens.
-    For any billing issue, email <span style="color:var(--gold);">{{ contact_email }}</span>.
-  </div>
-
-  <div class="terms-section">
-    <h2><span>01</span> Subscription Cancellation</h2>
-    <p>You may cancel your {{ platform_name }} subscription at any time, without giving a reason, directly from your account dashboard. No cancellation fee applies.</p>
-    <ul>
-      <li>Cancellation takes effect at the end of your current paid billing period. You retain full access to all subscription features until that date.</li>
-      <li>No partial refunds are issued for unused days within a billing period.</li>
-      <li>Once cancelled, your account reverts to the free tier. Your uploaded images and scores are retained unless you choose to delete them.</li>
-      <li>To cancel, go to your <a href="{{ url_for('dashboard') }}" style="color:var(--gold);">Dashboard</a> and select Manage Subscription, or visit the <a href="{{ url_for('cancel_subscription') }}" style="color:var(--gold);">cancellation page</a> directly.</li>
-    </ul>
-    <p>Cancellation is processed immediately on {{ platform_name }}. Your payment provider (Razorpay) will not charge you for the next billing cycle.</p>
-  </div>
-
-  <div class="terms-section">
-    <h2><span>02</span> Subscription Refunds</h2>
-    <p>{{ platform_name }} subscriptions are billed in advance. As a general rule, subscription fees are non-refundable once a billing period has commenced. However, refunds may be considered in the following circumstances:</p>
-    <ul>
-      <li><strong>Technical failure:</strong> If a platform outage lasting more than 72 consecutive hours prevented you from accessing core features during your billing period, you may request a pro-rata credit or refund for the affected period.</li>
-      <li><strong>Duplicate charge:</strong> If you were charged more than once for the same billing period due to a payment processing error, the duplicate charge will be refunded in full.</li>
-      <li><strong>Unauthorised charge:</strong> If you believe your payment details were used without your authorisation, contact us immediately at <span style="color:var(--gold);">{{ contact_email }}</span>.</li>
-    </ul>
-    <p>Refund requests must be submitted within 14 days of the charge in question. Requests submitted after this period will not be considered.</p>
-  </div>
-
-  <div class="terms-section">
-    <h2><span>03</span> Competition Entry Fees</h2>
-    <p>Paid competition entry fees (e.g. Open Competition entries at ₹50 per image per genre) are <strong>non-refundable</strong> once the submission window for that competition has opened.</p>
-    <ul>
-      <li>If a competition is cancelled by {{ platform_name }} before the submission window opens, entry fees will be refunded in full.</li>
-      <li>Disqualification due to violation of contest rules does not entitle the entrant to a refund of entry fees.</li>
-      <li>Failure to submit a required RAW file within the verification window does not entitle the entrant to a refund.</li>
-    </ul>
-  </div>
-
-  <div class="terms-section">
-    <h2><span>04</span> How to Request a Refund</h2>
-    <p>To request a refund, email <span style="color:var(--gold);">{{ contact_email }}</span> with the subject line <strong>Refund Request</strong> and include:</p>
-    <ul>
-      <li>Your registered email address</li>
-      <li>The date and amount of the charge</li>
-      <li>Your Razorpay payment ID (if available)</li>
-      <li>A brief description of the reason for your request</li>
-    </ul>
-    <p>We will acknowledge your request within 2 business days and aim to resolve it within 7 business days. Approved refunds are processed via the original payment method.</p>
-  </div>
-
-  <div class="terms-section">
-    <h2><span>05</span> Governing Law</h2>
-    <p>This Refund &amp; Cancellation Policy is governed by the laws of the Republic of India and is consistent with applicable consumer protection regulations. Nothing in this policy limits any statutory rights you may have under applicable law.</p>
-  </div>
-
-  <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
-    <p style="font-size:16px; color:var(--text-muted); margin-bottom:16px;">
-      Questions about billing? Email <span style="color:var(--gold);">{{ contact_email }}</span>
-    </p>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a href="{{ url_for('cancel_subscription') }}" class="btn btn-solid">Cancel Subscription &rarr;</a>
-      <a href="{{ url_for('terms') }}" class="btn">Terms &amp; Conditions</a>
-      <a href="{{ url_for('index') }}" class="btn">&larr; Back to Home</a>
+  <div class="policy-section">
+    <h2>Refund Eligibility Summary</h2>
+    <div style="overflow-x:auto;">
+    <table class="refund-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Refund Eligible?</th>
+          <th>Conditions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monthly Subscription — unused portion</td>
+          <td><span class="not-eligible">No</span></td>
+          <td>Subscriptions are billed monthly. Once a billing period begins, it is non-refundable. You may cancel at any time to stop future billing.</td>
+        </tr>
+        <tr>
+          <td>Monthly Subscription — technical failure</td>
+          <td><span class="eligible">Yes</span></td>
+          <td>If subscription benefits (upload access, contest entry) were not available due to a platform error, a pro-rated refund or credit will be issued.</td>
+        </tr>
+        <tr>
+          <td>Open Contest entry fee — before submission closes</td>
+          <td><span class="eligible">Yes — within 48 hours</span></td>
+          <td>If you request a refund within 48 hours of payment and the contest round has not yet closed, a full refund will be issued.</td>
+        </tr>
+        <tr>
+          <td>Open Contest entry fee — after submission closes</td>
+          <td><span class="not-eligible">No</span></td>
+          <td>Once the contest submission window closes, entry fees are non-refundable as judging has commenced.</td>
+        </tr>
+        <tr>
+          <td>Body of Work (BOW) entry fee — before judging begins</td>
+          <td><span class="eligible">Yes — within 7 days</span></td>
+          <td>If you request a refund before the judging period begins (typically 1 January), a full refund will be issued.</td>
+        </tr>
+        <tr>
+          <td>Body of Work (BOW) entry fee — after judging begins</td>
+          <td><span class="not-eligible">No</span></td>
+          <td>Once the judging period begins, BOW entry fees are non-refundable.</td>
+        </tr>
+        <tr>
+          <td>Duplicate / accidental charge</td>
+          <td><span class="eligible">Yes — always</span></td>
+          <td>If you were charged more than once for the same service, the duplicate charge will be refunded in full.</td>
+        </tr>
+        <tr>
+          <td>Failed transaction (amount deducted, service not activated)</td>
+          <td><span class="eligible">Yes — always</span></td>
+          <td>If your payment was deducted but the service was not activated within 24 hours, a full refund will be issued after verification.</td>
+        </tr>
+      </tbody>
+    </table>
     </div>
+  </div>
+
+  <div class="policy-section">
+    <h2>How to Request a Refund</h2>
+    <p>To request a refund, contact us at <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a> with the following information:</p>
+    <ul>
+      <li>Your registered email address on Shutter League</li>
+      <li>The date and amount of the transaction</li>
+      <li>Your payment reference number or UPI/bank transaction ID</li>
+      <li>The reason for the refund request</li>
+    </ul>
+    <p>We will acknowledge your request within 2 business days and communicate our decision within 5 business days.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Refund Processing Time</h2>
+    <p>Once a refund is approved, the amount will be credited to your original payment method within <strong>5–7 business days</strong>, depending on your bank or payment provider. UPI refunds are typically processed faster (1–3 business days).</p>
+    <p>Shutter League does not charge any processing fees for refunds.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Subscription Cancellation</h2>
+    <p>You may cancel your subscription at any time from your Profile page. Cancellation stops future billing immediately. Your subscription benefits remain active until the end of the current billing period. No refund is issued for the current billing period upon cancellation.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Disqualification</h2>
+    <p>If a member is disqualified from a contest due to a violation of our Terms and Conditions (including submission of AI-generated images, plagiarism, or manipulation), no refund will be issued for any contest entry fee paid.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Grievance Redressal</h2>
+    <p>If you are not satisfied with our response to a refund request, you may escalate your grievance to:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a></li>
+      <li><strong>Subject line:</strong> Grievance — Refund Escalation</li>
+      <li><strong>Response time:</strong> Within 5 business days of escalation</li>
+      <li><strong>Location:</strong> Bengaluru, Karnataka, India</li>
+    </ul>
+  </div>
+
+  <div class="policy-links">
+    <a href="{{ url_for('about') }}">About Us</a>
+    <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+    <a href="{{ url_for('terms') }}">Terms &amp; Conditions</a>
+    <a href="{{ url_for('shipping_policy') }}">Shipping &amp; Returns Policy</a>
+    <a href="{{ url_for('contact') }}">Contact Us</a>
   </div>
 
 </div>

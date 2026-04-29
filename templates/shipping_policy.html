@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Shipping &amp; Returns Policy — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
+  .policy-hero { margin-bottom:48px; }
+  .policy-hero h1 { font-size:36px; font-weight:800; color:var(--text-primary); margin-bottom:12px; }
+  .policy-hero p  { font-size:16px; color:var(--text-muted); line-height:1.6; }
+  .policy-section { margin-bottom:40px; }
+  .policy-section h2 { font-size:22px; font-weight:700; color:var(--gold); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .policy-section p  { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:14px; }
+  .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section ul li { margin-bottom:8px; }
+  .highlight-box { background:rgba(245,197,24,0.08); border:1px solid var(--gold); border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:15px; color:var(--text-primary); line-height:1.6; }
+  .policy-meta { font-size:13px; color:var(--text-muted); margin-bottom:32px; }
+  .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .policy-links a { font-size:15px; color:var(--gold); text-decoration:none; }
+  .policy-links a:hover { text-decoration:underline; }
+  @media (max-width:600px) {
+    .policy-hero h1 { font-size:28px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="policy-wrap">
+
+  <div class="policy-hero">
+    <h1>Shipping &amp; Returns Policy</h1>
+    <p>Shutter League is a fully digital platform. This policy explains how digital service delivery works and what happens if something goes wrong.</p>
+  </div>
+  <div class="policy-meta">Last updated: 29 April 2026 &nbsp;·&nbsp; Effective immediately</div>
+
+  <div class="highlight-box">
+    <strong>Shutter League sells digital services only.</strong> We do not sell, manufacture, or ship any physical goods. There is nothing to ship and therefore no shipping charges, delivery timelines, or courier-related concerns applicable to any transaction on this platform.
+  </div>
+
+  <div class="policy-section">
+    <h2>Digital Service Delivery</h2>
+    <p>All products and services sold on Shutter League are delivered digitally and immediately upon successful payment. These include:</p>
+    <ul>
+      <li><strong>Subscription Plans (Camera Track / Mobile Track)</strong> — Access is activated instantly upon payment confirmation. Members can begin uploading and accessing platform features immediately.</li>
+      <li><strong>Contest Entry Fees (Open Contest)</strong> — Entry is confirmed instantly upon payment. The submitted image enters the contest immediately.</li>
+      <li><strong>Body of Work Entry Fees</strong> — Submission access is granted immediately upon payment for non-subscribers.</li>
+      <li><strong>Top-up Credits</strong> — Additional upload or challenge slots are credited to the member&#39;s account immediately.</li>
+    </ul>
+    <p>Since all services are digital and delivered instantly, there is no shipping, tracking, or physical delivery involved at any stage.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>No Physical Returns</h2>
+    <p>As Shutter League does not deal in physical goods, there is no returns process applicable. Members cannot return a subscription, contest entry, or any other digital service once it has been activated or used.</p>
+    <p>If a member believes they were charged incorrectly or did not receive the service they paid for, they should contact us at <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a> and we will investigate and resolve the issue promptly.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Failed or Incomplete Transactions</h2>
+    <p>If a payment is deducted from your account but the corresponding service (subscription activation, contest entry, or credit) is not reflected on your Shutter League account within 24 hours, please contact us immediately:</p>
+    <ul>
+      <li>Email: <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a></li>
+      <li>Include your registered email address and the transaction reference number</li>
+    </ul>
+    <p>We will verify the transaction and either activate the service or initiate a full refund within 5–7 business days.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Refund Policy</h2>
+    <p>For full details on refunds, cancellations, and eligible scenarios, please refer to our <a href="{{ url_for('refund_policy') }}" style="color:var(--gold);">Refund Policy</a>.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>Grievance Redressal</h2>
+    <p>For any unresolved complaints or disputes related to payments, service delivery, or this policy, please contact us at:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:info@shutterleague.com" style="color:var(--gold);">info@shutterleague.com</a></li>
+      <li><strong>Response time:</strong> Within 2 business days</li>
+      <li><strong>Location:</strong> Bengaluru, Karnataka, India</li>
+    </ul>
+  </div>
+
+  <div class="policy-links">
+    <a href="{{ url_for('about') }}">About Us</a>
+    <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+    <a href="{{ url_for('terms') }}">Terms &amp; Conditions</a>
+    <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+    <a href="{{ url_for('contact') }}">Contact Us</a>
+  </div>
+
+</div>
+{% endblock %}
