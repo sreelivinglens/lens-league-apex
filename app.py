@@ -3350,6 +3350,30 @@ def admin_report_request_raw(report_id):
     img.needs_review   = True
     rpt.status         = 'actioned'
     db.session.commit()
+    # Notify the image owner
+    _owner = User.query.get(img.user_id)
+    if _owner:
+        _uname  = _owner.full_name or _owner.username
+        _ititle = img.asset_name or 'Untitled'
+        try:
+            import threading
+            threading.Thread(
+                target=send_email,
+                args=(
+                    [_owner.email],
+                    '[Shutter League] RAW File Requested for Your Image',
+                    '<p>Hi ' + _uname + ',</p>'
+                    '<p>Your image <strong>' + _ititle + '</strong> has been held for review following a community report.</p>'
+                    '<p>To complete verification, please email your original RAW file to '
+                    '<a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> within <strong>7 days</strong>.</p>'
+                    '<p>Your image will remain hidden from public view until the review is complete.</p>'
+                    '<p>If you believe this is an error, reply to this email and we will look into it.</p>'
+                    '<p>The Shutter League Team</p>'
+                ),
+                daemon=True
+            ).start()
+        except Exception:
+            pass
     flash(f'RAW requested for "{img.asset_name}"  -  image held for review.', 'success')
     return redirect(url_for('admin_reports'))
 
