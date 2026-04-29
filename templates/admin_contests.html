@@ -89,6 +89,8 @@
   .ann-actions   { display:flex; gap:10px; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--border); }
 
   .c-divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
+  .ann-edit-form { display:none; background:var(--surface-2); border:2px solid var(--gold); border-radius:10px; padding:20px 24px; margin-top:16px; }
+  .ann-edit-form.open { display:block; }
   .c-empty   { color:var(--text-muted); font-size:15px; padding:20px 0; }
   .c-alert   { padding:14px 18px; border-radius:8px; margin-bottom:20px; font-size:15px; line-height:1.5; }
   .c-alert-success { background:rgba(245,197,24,.10); border:1px solid var(--gold); color:var(--gold); }
@@ -102,6 +104,7 @@
     .c-page-title { font-size:22px; }
     .c-btn { width:100%; justify-content:center; }
     .bc-actions, .ann-actions { flex-direction:column; }
+    .bc-actions form, .ann-actions form { display:block !important; width:100%; }
   }
 </style>
 {% endblock %}
@@ -452,6 +455,61 @@
             <button type="submit" class="c-btn c-btn-outline" onclick="return confirm('Send this email now? This cannot be undone.')">📧 Send Email Now</button>
           </form>
           {% endif %}
+          <button type="button" class="c-btn c-btn-outline" onclick="toggleEdit('ann-edit-{{ ann.id }}')">✏️ Edit</button>
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="delete_announcement">
+            <input type="hidden" name="announcement_id" value="{{ ann.id }}">
+            <button type="submit" class="c-btn" style="background:none; border:2px solid #7a2222; color:#cc4444;" onclick="return confirm('Delete this announcement? This cannot be undone.')">🗑 Delete</button>
+          </form>
+        </div>
+
+        {# ── Inline edit form ── #}
+        <div class="ann-edit-form" id="ann-edit-{{ ann.id }}">
+          <div style="font-size:16px; font-weight:700; color:var(--gold); margin-bottom:16px;">Edit Announcement</div>
+          <form method="POST" action="{{ url_for('admin_contests') }}">
+            <input type="hidden" name="action" value="edit_announcement">
+            <input type="hidden" name="announcement_id" value="{{ ann.id }}">
+            <div class="c-field-row">
+              <div class="c-field">
+                <label class="c-label">Who should see / receive this?</label>
+                <select name="audience">
+                  <option value="all" {% if ann.audience == 'all' %}selected{% endif %}>All members</option>
+                  <option value="subscribers" {% if ann.audience == 'subscribers' %}selected{% endif %}>Subscribers only</option>
+                  <option value="non_subscribers" {% if ann.audience == 'non_subscribers' %}selected{% endif %}>Non-subscribers only</option>
+                </select>
+              </div>
+              <div class="c-field">
+                <label class="c-label">How to deliver?</label>
+                <select name="delivery">
+                  <option value="both" {% if ann.delivery == 'both' %}selected{% endif %}>Dashboard banner + Email</option>
+                  <option value="banner" {% if ann.delivery == 'banner' %}selected{% endif %}>Dashboard banner only</option>
+                  <option value="email" {% if ann.delivery == 'email' %}selected{% endif %}>Email only</option>
+                </select>
+              </div>
+            </div>
+            <div class="c-field">
+              <label class="c-label">Title</label>
+              <input type="text" name="title" value="{{ ann.title }}" required>
+            </div>
+            <div class="c-field">
+              <label class="c-label">Message Body</label>
+              <textarea name="body" rows="4" required>{{ ann.body }}</textarea>
+            </div>
+            <div class="c-field-row">
+              <div class="c-field">
+                <label class="c-label">Button label (optional)</label>
+                <input type="text" name="cta_label" value="{{ ann.cta_label or '' }}" placeholder="e.g. Enter Now">
+              </div>
+              <div class="c-field">
+                <label class="c-label">Button link (optional)</label>
+                <input type="text" name="cta_url" value="{{ ann.cta_url or '' }}" placeholder="e.g. /contests">
+              </div>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              <button type="submit" class="c-btn c-btn-gold">💾 Save Changes</button>
+              <button type="button" class="c-btn c-btn-outline" onclick="toggleEdit('ann-edit-{{ ann.id }}')">Cancel</button>
+            </div>
+          </form>
         </div>
       </div>
       {% endfor %}
@@ -531,6 +589,10 @@ function toggleCard(name) {
   const collapsed = body.classList.contains('collapsed');
   body.classList.toggle('collapsed', !collapsed);
   chev.classList.toggle('open', collapsed);
+}
+function toggleEdit(id) {
+  const form = document.getElementById(id);
+  form.classList.toggle('open');
 }
 </script>
 {% endblock %}
