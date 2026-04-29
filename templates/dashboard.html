@@ -202,10 +202,73 @@
     .mentor-nudge-left { min-width: 0; width: 100%; }
     .mentor-nudge-eyebrow { white-space: normal; }
   }
+  /* POTY welcome banner */
+  .poty-step-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 24px 0; }
+  @media (max-width: 600px) {
+    .poty-step-grid { grid-template-columns:1fr; gap:10px; }
+    .poty-banner-dismiss-btn { min-width:44px; min-height:44px; font-size:30px; top:10px; right:12px; display:flex; align-items:center; justify-content:center; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
+
+{# ── POTY Welcome Banner — shown to users who have not dismissed it ───────── #}
+{% if show_poty_banner %}
+<div id="poty-welcome-banner" style="background:#000; border:2px solid #F5C518; border-radius:10px; padding:28px 32px; margin-bottom:28px; position:relative;">
+  <button onclick="dismissPotyBanner()" aria-label="Dismiss" class="poty-banner-dismiss-btn" style="position:absolute; top:14px; right:16px; background:none; border:none; color:#F5C518; font-size:26px; line-height:1; cursor:pointer; padding:4px 8px;">&times;</button>
+
+  <div style="font-family:var(--font-mono,monospace); font-size:11px; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:10px;">Welcome to Shutter League</div>
+
+  <h2 style="color:#F5C518; font-size:22px; font-weight:800; margin:0 0 14px 0; line-height:1.2;">What is Photographer of the Year (POTY)?</h2>
+
+  <p style="color:#ffffff; font-size:17px; line-height:1.65; margin:0 0 16px 0;">
+    Every photo you upload is scored by our AI engine on a scale of 0&#8209;100.
+    Your <strong style="color:#F5C518;">top 6 scores</strong> in each genre are averaged to build your POTY standing.
+    The photographers with the highest averages at year&#39;s end win the title.
+  </p>
+
+  <div class="poty-step-grid">
+    <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
+      <div style="font-size:28px; margin-bottom:6px;">&#128247;</div>
+      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 1</div>
+      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Upload your best photo to the Weekly Challenge</div>
+    </div>
+    <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
+      <div style="font-size:28px; margin-bottom:6px;">&#127775;</div>
+      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 2</div>
+      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Receive your DDI score — usually within minutes</div>
+    </div>
+    <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
+      <div style="font-size:28px; margin-bottom:6px;">&#127942;</div>
+      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 3</div>
+      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Build your top&#8209;6 average and climb the POTY leaderboard</div>
+    </div>
+  </div>
+
+  <p style="color:#cccccc; font-size:15px; line-height:1.6; margin:0 0 20px 0;">
+    <strong style="color:#ffffff;">Tiers</strong> — as your average climbs you earn ranks: Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman &#8594; Maverick &#8594; Master &#8594; Grandmaster &#8594; Legend. You need at least <strong style="color:#F5C518;">6 scored images</strong> in a genre before an average is shown, and <strong style="color:#F5C518;">24 scored images</strong> to qualify for prizes.
+  </p>
+
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    {% if active_challenge and active_challenge.is_open %}
+    <a href="/upload" style="display:inline-block; background:#F5C518; color:#000; font-weight:800; font-size:16px; padding:13px 28px; border-radius:6px; text-decoration:none;">Enter This Week&#39;s Challenge &rarr;</a>
+    {% else %}
+    <a href="/upload" style="display:inline-block; background:#F5C518; color:#000; font-weight:800; font-size:16px; padding:13px 28px; border-radius:6px; text-decoration:none;">Upload a Photo &rarr;</a>
+    {% endif %}
+    <button onclick="dismissPotyBanner()" style="background:none; border:1px solid rgba(255,255,255,0.3); color:#cccccc; font-size:15px; padding:13px 20px; border-radius:6px; cursor:pointer;">I&#39;ve got it, dismiss</button>
+  </div>
+
+</div>
+
+<script>
+function dismissPotyBanner() {
+  document.getElementById('poty-welcome-banner').style.display = 'none';
+  fetch('/dismiss-poty-banner', {method:'POST', headers:{'X-CSRFToken': document.querySelector('meta[name=csrf-token]') ? document.querySelector('meta[name=csrf-token]').content : ''}})
+    .catch(function(){});
+}
+</script>
+{% endif %}
 
 {# ── Zone 3 banner: peer divergence flagged ──────────────────────────────── #}
 {% if zone3_flagged %}
