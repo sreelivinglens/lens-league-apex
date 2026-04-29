@@ -2298,24 +2298,7 @@ def admin_dashboard():
     total_images = Image.query.count()
     scored       = Image.query.filter_by(status='scored').count()
     pending      = Image.query.filter_by(status='pending').count()
-
-    admin_q    = request.args.get('q', '').strip()
-    admin_page = request.args.get('page', 1, type=int)
-    img_query  = Image.query.order_by(Image.created_at.desc())
-    if admin_q:
-        img_query = img_query.join(User, User.id == Image.user_id).filter(
-            db.or_(
-                Image.asset_name.ilike(f'%{admin_q}%'),
-                Image.original_filename.ilike(f'%{admin_q}%'),
-                Image.genre.ilike(f'%{admin_q}%'),
-                User.username.ilike(f'%{admin_q}%'),
-                User.full_name.ilike(f'%{admin_q}%'),
-            )
-        )
-    recent_pages = img_query.paginate(page=admin_page, per_page=40, error_out=False)
-    recent       = recent_pages.items
-    user_ids     = list({img.user_id for img in recent if img.user_id})
-    recent_users = {u.id: u.username for u in User.query.filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    recent       = Image.query.order_by(Image.created_at.desc()).limit(20).all()
     cal_stats    = compute_calibration_stats(Image.query.filter_by(status='scored').all())
 
     cal_trend = {}
@@ -2395,7 +2378,6 @@ def admin_dashboard():
 
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
-                           recent_pages=recent_pages, admin_q=admin_q, recent_users=recent_users,
                            cal_stats=cal_stats, cal_trend=cal_trend, drift_alerts=drift_alerts,
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
@@ -2513,6 +2495,10 @@ def admin_delete_image(image_id):
         PeerPoolEntry.query.filter_by(image_id=image_id).delete()
     except Exception:
         pass
+    try:
+        db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': image_id})
+    except Exception:
+        pass
     db.session.delete(img)
     db.session.commit()
     flash(f'Image deleted.', 'success')
@@ -2524,6 +2510,11 @@ def admin_delete_image(image_id):
 @admin_required
 def admin_cleanup():
     count = db.session.execute(db.text("SELECT COUNT(*) FROM images WHERE thumb_url IS NULL")).scalar()
+    db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM image_reports WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM rating_assignments WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM peer_ratings WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
+    db.session.execute(db.text("DELETE FROM peer_pool_entries WHERE image_id IN (SELECT id FROM images WHERE thumb_url IS NULL)"))
     db.session.execute(db.text("DELETE FROM images WHERE thumb_url IS NULL"))
     db.session.commit()
     flash(f'Deleted {count} broken images with no thumbnail.', 'success')
@@ -2570,6 +2561,10 @@ def admin_bulk_delete():
                 RatingAssignment.query.filter_by(image_id=img.id).delete()
                 PeerRating.query.filter_by(image_id=img.id).delete()
                 PeerPoolEntry.query.filter_by(image_id=img.id).delete()
+            except Exception:
+                pass
+            try:
+                db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': img.id})
             except Exception:
                 pass
             db.session.delete(img)
