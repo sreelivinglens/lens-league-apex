@@ -5254,6 +5254,38 @@ def admin_contests():
             flash('Announcement queued — emails sending in background.', 'success')
             return redirect(url_for('admin_contests'))
 
+        # ── Announcement — edit ───────────────────────────────────────────
+        elif action == 'edit_announcement':
+            ann_id   = request.form.get('announcement_id', type=int)
+            ann      = ContestAnnouncement.query.get_or_404(ann_id)
+            title    = request.form.get('title', '').strip()
+            body     = request.form.get('body', '').strip()
+            cta_label= request.form.get('cta_label', '').strip() or None
+            cta_url  = request.form.get('cta_url', '').strip() or None
+            audience = request.form.get('audience', ann.audience)
+            delivery = request.form.get('delivery', ann.delivery)
+            if not title or not body:
+                flash('Title and body are required.', 'error')
+                return redirect(url_for('admin_contests'))
+            ann.title     = title
+            ann.body      = body
+            ann.cta_label = cta_label
+            ann.cta_url   = cta_url
+            ann.audience  = audience
+            ann.delivery  = delivery
+            db.session.commit()
+            flash('Announcement updated.', 'success')
+            return redirect(url_for('admin_contests'))
+
+        # ── Announcement — delete ─────────────────────────────────────────
+        elif action == 'delete_announcement':
+            ann_id = request.form.get('announcement_id', type=int)
+            ann    = ContestAnnouncement.query.get_or_404(ann_id)
+            db.session.delete(ann)
+            db.session.commit()
+            flash('Announcement deleted.', 'success')
+            return redirect(url_for('admin_contests'))
+
         flash('Unknown action.', 'error')
         return redirect(url_for('admin_contests'))
 
