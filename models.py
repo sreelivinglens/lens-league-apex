@@ -330,38 +330,75 @@ class ContestEntry(db.Model):
 
 
 class BowSubmission(db.Model):
+    """
+    Body of Work submission.
+    Entry window: 1 Dec – 31 Dec each year.
+    Subscribers select from existing images (free); non-subscribers pay Rs. 1,000.
+    status flow: draft → submitted → under_review → qualified | rejected | winner
+    """
     __tablename__ = 'bow_submissions'
     id                 = db.Column(db.Integer, primary_key=True)
     user_id            = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    series_title       = db.Column(db.String(180), nullable=False)
-    thematic_statement = db.Column(db.Text, nullable=False)
-    image_ids_json     = db.Column(db.Text, nullable=False)
-    image_count        = db.Column(db.Integer, nullable=False)
-    status             = db.Column(db.String(20), default='submitted')
     platform_year      = db.Column(db.Integer, nullable=False)
+
+    # Submission content
+    series_title       = db.Column(db.String(180), nullable=False)
+    thematic_statement = db.Column(db.Text, nullable=False)   # brief description
+    location           = db.Column(db.String(180), nullable=True)
+    period_of_work     = db.Column(db.String(120), nullable=True)  # e.g. "Jan 2025 – Mar 2026"
+    significance       = db.Column(db.String(300), nullable=True)  # single line
+    other_details      = db.Column(db.Text, nullable=True)
+    image_ids_json     = db.Column(db.Text, nullable=False)   # JSON list of image IDs (6–10)
+    image_count        = db.Column(db.Integer, nullable=False)
+    images_agreed      = db.Column(db.Boolean, default=False, nullable=False)  # consent checkbox
+
+    # Payment — only for non-subscribers
+    is_subscriber      = db.Column(db.Boolean, default=False, nullable=False)
+    amount_paise       = db.Column(db.Integer, default=0)     # 100000 = Rs. 1,000
+    payment_ref        = db.Column(db.String(120), nullable=True)
+    payment_status     = db.Column(db.String(20), default='free')  # free | pending | paid
+
+    # Status
+    # status: draft | submitted | under_review | qualified | rejected | winner
+    status             = db.Column(db.String(20), default='submitted')
+    qualifier_emailed  = db.Column(db.Boolean, default=False)
     submitted_at       = db.Column(db.DateTime, default=datetime.utcnow)
-    notes              = db.Column(db.Text, nullable=True)
+    notes              = db.Column(db.Text, nullable=True)   # admin notes
+
     user = db.relationship('User', foreign_keys=[user_id], backref='bow_submissions', lazy=True)
+
     def get_image_ids(self):
         try: return json.loads(self.image_ids_json)
         except: return []
-    def set_image_ids(self, ids): self.image_ids_json = json.dumps(ids)
+
+    def set_image_ids(self, ids):
+        self.image_ids_json = json.dumps(ids)
+        self.image_count    = len(ids)
 
 
 class OpenContestEntry(db.Model):
+    """
+    Open contest entry — any user, any image, no theme.
+    Pricing: first image free per user per year; Rs. 200 per additional image.
+    status flow: pending_payment → confirmed | disqualified
+    Results: top 10 qualifier email in Jan cooling period, winners announced 1 Feb.
+    """
     __tablename__ = 'open_contest_entries'
     id            = db.Column(db.Integer, primary_key=True)
     user_id       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     image_id      = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
     genre         = db.Column(db.String(60), nullable=False)
     platform_year = db.Column(db.Integer,   nullable=False)
-    amount_paise  = db.Column(db.Integer,   default=5000)
+    is_free_slot  = db.Column(db.Boolean,   default=False, nullable=False)  # True for first image
+    amount_paise  = db.Column(db.Integer,   default=0)    # 0 if free slot, 20000 = Rs. 200
     payment_ref   = db.Column(db.String(120), nullable=True)
-    status        = db.Column(db.String(20), default='confirmed')
+    # status: pending_payment | confirmed | disqualified
+    status           = db.Column(db.String(20), default='confirmed')
+    qualifier_emailed= db.Column(db.Boolean, default=False)
     entered_at    = db.Column(db.DateTime,  default=datetime.utcnow)
     user  = db.relationship('User',  foreign_keys=[user_id],  backref='open_contest_entries', lazy=True)
     image = db.relationship('Image', foreign_keys=[image_id], backref='open_contest_entries', lazy=True)
-    __table_args__ = (db.UniqueConstraint('user_id', 'genre', 'platform_year', name='uq_open_contest_entry'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'image_id', 'platform_year', name='uq_open_contest_entry'),)
 
 
 class CalibrationNote(db.Model):
@@ -709,6 +746,154 @@ class RawSubmission(db.Model):
             self.vision_objects_added, self.vision_logo_trademark,
             self.vision_meaning_changed, self.vision_painterly,
         ])
+
+
+# ── v53: Contest Framework ────────────────────────────────────────────────────
+
+class ContestPeriod(db.Model):
+    """
+    Master record for each annual contest cycle.
+    One row per year covers POTY + BOW + Open windows for that year.
+    status: upcoming | active | results_pending | closed
+    """
+    __tablename__ = 'contest_periods'
+
+    id                    = db.Column(db.Integer, primary_key=True)
+    platform_year         = db.Column(db.Integer, unique=True, nullable=False)
+
+    # POTY window
+    poty_opens_at         = db.Column(db.DateTime, nullable=True)   # 1 Jun 2026 / 1 Jan onwards
+    poty_closes_at        = db.Column(db.DateTime, nullable=True)   # 31 Dec
+    poty_status           = db.Column(db.String(20), default='upcoming')  # upcoming|active|results_pending|closed
+
+    # BOW window
+    bow_entry_opens_at    = db.Column(db.DateTime, nullable=True)   # 1 Dec
+    bow_entry_closes_at   = db.Column(db.DateTime, nullable=True)   # 31 Dec
+    bow_judging_ends_at   = db.Column(db.DateTime, nullable=True)   # ~3 weeks after close
+    bow_status            = db.Column(db.String(20), default='upcoming')
+
+    # Open contest window (runs alongside POTY)
+    open_opens_at         = db.Column(db.DateTime, nullable=True)
+    open_closes_at        = db.Column(db.DateTime, nullable=True)
+    open_cooling_ends_at  = db.Column(db.DateTime, nullable=True)   # 15 Jan following year
+    open_status           = db.Column(db.String(20), default='upcoming')
+
+    # Announcement date — all winners announced together
+    winners_announced_at  = db.Column(db.DateTime, nullable=True)   # 1 Feb following year
+
+    # Announcement banner text (shown on dashboard)
+    announcement_banner   = db.Column(db.Text, nullable=True)
+    banner_active         = db.Column(db.Boolean, default=False)
+
+    created_by            = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at            = db.Column(db.DateTime, default=datetime.utcnow)
+
+    creator = db.relationship('User', foreign_keys=[created_by], backref='contest_periods_created', lazy=True)
+
+    def __repr__(self):
+        return f'<ContestPeriod year={self.platform_year}>'
+
+
+class BrandContest(db.Model):
+    """
+    Brand-sponsored contest — subscribers only, free entry.
+    Admin creates one row per brand contest. Multiple can run per year.
+    status: draft | active | judging | results_published | closed
+    """
+    __tablename__ = 'brand_contests'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    title           = db.Column(db.String(180), nullable=False)
+    brand_name      = db.Column(db.String(120), nullable=False)
+    brief           = db.Column(db.Text, nullable=False)        # what the brand wants
+    prize_desc      = db.Column(db.Text, nullable=False)        # prize description
+    prize_value     = db.Column(db.String(80), nullable=True)   # e.g. "Rs. 50,000 + trophy"
+    opens_at        = db.Column(db.DateTime, nullable=False)
+    closes_at       = db.Column(db.DateTime, nullable=False)
+    max_entries_per_user = db.Column(db.Integer, default=3)
+    # status: draft | active | judging | results_published | closed
+    status          = db.Column(db.String(20), default='draft', nullable=False)
+    results_published_at = db.Column(db.DateTime, nullable=True)
+    announcement_sent_at = db.Column(db.DateTime, nullable=True)
+    created_by      = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    entries  = db.relationship('BrandEntry', backref='contest', lazy='dynamic', cascade='all, delete-orphan')
+    creator  = db.relationship('User', foreign_keys=[created_by], backref='brand_contests_created', lazy=True)
+
+    @property
+    def is_open(self):
+        now = datetime.utcnow()
+        return self.status == 'active' and self.opens_at <= now <= self.closes_at
+
+    @property
+    def entry_count(self):
+        return self.entries.count()
+
+    def __repr__(self):
+        return f'<BrandContest {self.brand_name}: {self.title} ({self.status})>'
+
+
+class BrandEntry(db.Model):
+    """
+    A subscriber's entry into a brand contest.
+    One row per user-image-contest combination.
+    result_rank: 1 = winner, 2 = runner-up, etc. NULL = not yet ranked.
+    """
+    __tablename__ = 'brand_entries'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    contest_id      = db.Column(db.Integer, db.ForeignKey('brand_contests.id', ondelete='CASCADE'), nullable=False)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_id        = db.Column(db.Integer, db.ForeignKey('images.id'), nullable=False)
+    entered_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    result_rank     = db.Column(db.Integer, nullable=True)
+    result_note     = db.Column(db.Text, nullable=True)
+    result_emailed  = db.Column(db.Boolean, default=False)
+
+    user  = db.relationship('User',  foreign_keys=[user_id],  backref='brand_entries', lazy=True)
+    image = db.relationship('Image', foreign_keys=[image_id], backref='brand_entries', lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('contest_id', 'user_id', 'image_id', name='uq_brand_entry'),
+    )
+
+    def __repr__(self):
+        return f'<BrandEntry contest={self.contest_id} user={self.user_id} image={self.image_id}>'
+
+
+class ContestAnnouncement(db.Model):
+    """
+    Dashboard announcement banners and emailer triggers for all contest types.
+    type: poty | bow | open | brand
+    audience: all | subscribers | non_subscribers
+    delivery: banner | email | both
+    status: draft | scheduled | sent
+    """
+    __tablename__ = 'contest_announcements'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    contest_type    = db.Column(db.String(20), nullable=False)   # poty|bow|open|brand
+    contest_ref     = db.Column(db.String(40), nullable=True)    # e.g. '2026' or brand_contest id
+    title           = db.Column(db.String(180), nullable=False)
+    body            = db.Column(db.Text, nullable=False)
+    cta_label       = db.Column(db.String(80), nullable=True)    # button text
+    cta_url         = db.Column(db.String(255), nullable=True)   # button link
+    audience        = db.Column(db.String(20), default='all')    # all|subscribers|non_subscribers
+    delivery        = db.Column(db.String(20), default='both')   # banner|email|both
+    # status: draft | scheduled | sent
+    status          = db.Column(db.String(20), default='draft')
+    send_at         = db.Column(db.DateTime, nullable=True)      # scheduled send time
+    sent_at         = db.Column(db.DateTime, nullable=True)
+    banner_active   = db.Column(db.Boolean, default=False)       # show on dashboard right now
+    banner_expires_at = db.Column(db.DateTime, nullable=True)
+    created_by      = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    creator = db.relationship('User', foreign_keys=[created_by], backref='contest_announcements_created', lazy=True)
+
+    def __repr__(self):
+        return f'<ContestAnnouncement {self.contest_type} {self.title[:40]} ({self.status})>'
 
 
 # ── Migration SQL note ────────────────────────────────────────────────────────

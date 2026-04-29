@@ -23,6 +23,7 @@ from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
                     RatingAssignment, PeerRating, PeerPoolEntry,
                     WeeklyChallenge, WeeklySubmission,
+                    BowSubmission, ContestPeriod, BrandContest, BrandEntry, ContestAnnouncement,
                     get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
@@ -376,8 +377,29 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
-                # v53  -  POTY welcome banner dismiss flag
+                # v53  -  POTY banner + contest framework
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS poty_banner_dismissed BOOLEAN DEFAULT FALSE",
+                # v53  -  BOW submission fields
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS location VARCHAR(180)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS period_of_work VARCHAR(120)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS significance VARCHAR(300)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS other_details TEXT",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS images_agreed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS is_subscriber BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS amount_paise INTEGER DEFAULT 0",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_ref VARCHAR(120)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'free'",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
+                # v53  -  open contest entry fixes
+                "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS is_free_slot BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
+                # v53  -  new contest tables
+                "CREATE TABLE IF NOT EXISTS contest_periods (id SERIAL PRIMARY KEY, platform_year INTEGER UNIQUE NOT NULL, poty_opens_at TIMESTAMP, poty_closes_at TIMESTAMP, poty_status VARCHAR(20) DEFAULT 'upcoming', bow_entry_opens_at TIMESTAMP, bow_entry_closes_at TIMESTAMP, bow_judging_ends_at TIMESTAMP, bow_status VARCHAR(20) DEFAULT 'upcoming', open_opens_at TIMESTAMP, open_closes_at TIMESTAMP, open_cooling_ends_at TIMESTAMP, open_status VARCHAR(20) DEFAULT 'upcoming', winners_announced_at TIMESTAMP, announcement_banner TEXT, banner_active BOOLEAN DEFAULT FALSE, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS brand_contests (id SERIAL PRIMARY KEY, title VARCHAR(180) NOT NULL, brand_name VARCHAR(120) NOT NULL, brief TEXT NOT NULL, prize_desc TEXT NOT NULL, prize_value VARCHAR(80), opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, max_entries_per_user INTEGER DEFAULT 3, status VARCHAR(20) DEFAULT 'draft', results_published_at TIMESTAMP, announcement_sent_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS brand_entries (id SERIAL PRIMARY KEY, contest_id INTEGER NOT NULL REFERENCES brand_contests(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id), image_id INTEGER NOT NULL REFERENCES images(id), entered_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, result_emailed BOOLEAN DEFAULT FALSE, CONSTRAINT uq_brand_entry UNIQUE(contest_id, user_id, image_id))",
+                "CREATE TABLE IF NOT EXISTS contest_announcements (id SERIAL PRIMARY KEY, contest_type VARCHAR(20) NOT NULL, contest_ref VARCHAR(40), title VARCHAR(180) NOT NULL, body TEXT NOT NULL, cta_label VARCHAR(80), cta_url VARCHAR(255), audience VARCHAR(20) DEFAULT 'all', delivery VARCHAR(20) DEFAULT 'both', status VARCHAR(20) DEFAULT 'draft', send_at TIMESTAMP, sent_at TIMESTAMP, banner_active BOOLEAN DEFAULT FALSE, banner_expires_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE INDEX IF NOT EXISTS ix_brand_contests_status ON brand_contests(status)",
+                "CREATE INDEX IF NOT EXISTS ix_contest_announcements_banner ON contest_announcements(banner_active)",
                 # v29  -  weekly challenge
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
@@ -1313,8 +1335,6 @@ def dashboard():
             Image.judge_final_score.desc()
         ).all()
 
-    show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
-
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1322,20 +1342,7 @@ def dashboard():
                            active_challenge=active_challenge,
                            zone3_flagged=zone3_flagged,
                            zone2_pending=zone2_pending,
-                           contest_wins=contest_wins,
-                           show_poty_banner=show_poty_banner)
-
-
-# ---------------------------------------------------------------------------
-# POTY welcome banner dismiss
-# ---------------------------------------------------------------------------
-
-@app.route('/dismiss-poty-banner', methods=['POST'])
-@login_required
-def dismiss_poty_banner():
-    current_user.poty_banner_dismissed = True
-    db.session.commit()
-    return ('', 204)
+                           contest_wins=contest_wins)
 
 
 # ---------------------------------------------------------------------------
