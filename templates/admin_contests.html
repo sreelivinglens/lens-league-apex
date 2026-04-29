@@ -139,10 +139,10 @@
         <div class="c-card-head-title">📆 Contest Period — {{ current_year }}</div>
         <div class="c-card-head-sub">Set the dates for POTY, Body of Work, and Open Contest. These dates control when each contest opens, closes, and when winners are announced.</div>
       </div>
-      <span class="c-chev open" id="chev-period">▾</span>
+      <span class="c-chev" id="chev-period">▾</span>
     </div>
   </div>
-  <div class="c-card-body" id="body-period">
+  <div class="c-card-body collapsed" id="body-period">
 
     {% if period %}
     <div class="c-summary">
@@ -294,10 +294,10 @@
         <div class="c-card-head-title">🎯 Brand Contests <span style="font-size:14px; font-weight:400; color:var(--text-muted);">{{ brand_contests|length }} contest{{ 's' if brand_contests|length != 1 else '' }}</span></div>
         <div class="c-card-head-sub">Sponsored contests open to subscribers only — free to enter. Create a contest, activate it when ready, move it to Judging, then publish results.</div>
       </div>
-      <span class="c-chev {% if brand_contests %}open{% endif %}" id="chev-brand">▾</span>
+      <span class="c-chev" id="chev-brand">▾</span>
     </div>
   </div>
-  <div class="c-card-body {% if not brand_contests %}collapsed{% endif %}" id="body-brand">
+  <div class="c-card-body collapsed" id="body-brand">
 
     {% if brand_contests %}
       {% for bc in brand_contests %}
@@ -415,10 +415,10 @@
         </div>
         <div class="c-card-head-sub">Send banners on member dashboards and / or emails about any contest. A banner appears immediately when switched on and disappears when you hide it. An email goes out once and cannot be unsent.</div>
       </div>
-      <span class="c-chev {% if announcements %}open{% endif %}" id="chev-announce">▾</span>
+      <span class="c-chev" id="chev-announce">▾</span>
     </div>
   </div>
-  <div class="c-card-body {% if not announcements %}collapsed{% endif %}" id="body-announce">
+  <div class="c-card-body collapsed" id="body-announce">
 
     {% if announcements %}
       {% for ann in announcements %}
