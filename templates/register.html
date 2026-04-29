@@ -146,7 +146,7 @@
       <span class="section-divider">Member Agreement</span>
 
       <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
-                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
+                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:12px;">
         <input type="checkbox" id="agreed" name="agreed" value="1"
                {% if request.form.get('agreed') %}checked{% endif %}
                required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
@@ -158,6 +158,18 @@
             Member Agreement
           </button>
           and understand that submitting false work results in permanent account deletion and prize forfeiture.
+        </label>
+      </div>
+
+      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
+                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
+        <input type="checkbox" id="terms" name="terms" value="1"
+               {% if request.form.get('terms') %}checked{% endif %}
+               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
+        <label for="terms" style="font-size:16px; color:var(--text-primary); line-height:1.6; cursor:pointer;">
+          I have read and agree to the
+          <a href="https://shutterleague.com/terms" target="_blank"
+             style="color:var(--gold); text-decoration:underline;">Terms &amp; Conditions</a>.
         </label>
       </div>
 
