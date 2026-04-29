@@ -261,8 +261,8 @@ body:has(.sl-hp) footer { display: none !important; }
 }
 .sl-footer-nav.cream { border-left-color: #D4C9A8; }
 .sl-footer-nav a {
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 13px;
+  letter-spacing: 1px;
   color: #F5C518;
   text-decoration: none;
   text-transform: uppercase;
@@ -270,8 +270,8 @@ body:has(.sl-hp) footer { display: none !important; }
   transition: color 0.2s;
 }
 .sl-footer-nav a:hover { color: #fff; }
-.sl-footer-nav.cream a { color: #8a6a2a; }
-.sl-footer-nav.cream a:hover { color: #B8943B; }
+.sl-footer-nav.cream a { color: #5a3a00; }
+.sl-footer-nav.cream a:hover { color: #8a5a00; }
 
 /* ── DOTS ── */
 .sl-dots { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
@@ -644,9 +644,11 @@ body:has(.sl-hp) footer { display: none !important; }
         <div class="sl-hl2" id="slHl2">Evaluated by Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor &amp; Affective Quotient</div>
       </div>
       <div class="sl-footer-nav" id="slFooterNav">
+        <a href="{{ url_for('about') }}">About Us</a>
         <a href="{{ url_for('privacy') }}">Privacy Policy</a>
         <a href="{{ url_for('terms') }}">Terms</a>
         <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+        <a href="{{ url_for('shipping_policy') }}">Shipping &amp; Returns</a>
         <a href="{{ url_for('contact') }}">Contact</a>
       </div>
     </div>
