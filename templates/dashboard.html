@@ -272,6 +272,20 @@ function dismissPotyBanner() {
 </script>
 {% endif %}
 
+{# ── Contest announcement banners ───────────────────────────────────────── #}
+{% if contest_banners %}
+  {% for ann in contest_banners %}
+  <div class="contest-ann-banner" style="background:#000; border:1px solid #F5C518; border-radius:8px; padding:18px 20px; margin-bottom:14px;">
+    <div style="font-family:var(--font-mono,monospace); font-size:10px; letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:6px;">{{ ann.contest_type | upper }} · Announcement</div>
+    <div style="font-size:16px; font-weight:700; color:#ffffff; margin-bottom:8px;">{{ ann.title }}</div>
+    <div style="font-size:15px; color:#cccccc; line-height:1.6; white-space:pre-wrap; word-break:break-word; margin-bottom:{% if ann.cta_label and ann.cta_url %}16px{% else %}0{% endif %};">{{ ann.body }}</div>
+    {% if ann.cta_label and ann.cta_url %}
+    <a href="{{ ann.cta_url }}" style="display:inline-block; background:#F5C518; color:#000; font-weight:700; font-size:15px; padding:12px 24px; border-radius:6px; text-decoration:none;">{{ ann.cta_label }} &rarr;</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% endif %}
+
 {# ── Zone 3 banner: peer divergence flagged ──────────────────────────────── #}
 {% if zone3_flagged %}
 <div class="zone-banner amber">

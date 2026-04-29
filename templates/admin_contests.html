@@ -3,507 +3,521 @@
 
 {% block extra_css %}
 <style>
-  .admin-nav { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:32px; }
-  .admin-nav-btn {
-    padding:10px 18px; border:1px solid var(--border); border-radius:var(--radius-sm);
-    font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:0.5px;
-    color:var(--text-primary); background:var(--surface-2); text-decoration:none;
+  .c-nav { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px; }
+  /* Collapsible cards */
+  .c-card-head { cursor:pointer; user-select:none; }
+  .c-card-head:hover { background:var(--surface-2) !important; }
+  .c-card.highlight .c-card-head:hover { background:rgba(245,197,24,0.10) !important; }
+  .c-card-head-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .c-chev { font-size:20px; color:var(--text-muted); transition:transform .2s; flex-shrink:0; }
+  .c-chev.open { transform:rotate(180deg); }
+  .c-card-body.collapsed { display:none; }
+  .c-nav a {
+    padding:12px 22px; border:1px solid var(--border); border-radius:8px;
+    font-size:15px; font-weight:600; color:var(--text-primary);
+    background:var(--surface-2); text-decoration:none;
     transition:border-color .15s, background .15s;
   }
-  .admin-nav-btn:hover { border-color:var(--gold); background:var(--gold-subtle); }
-  .admin-nav-btn.gold  { border-color:var(--gold-dark); color:#1a1a18; }
-  .admin-nav-btn.active { border-color:var(--gold); background:var(--gold); color:#000; }
+  .c-nav a:hover { border-color:var(--gold); background:var(--gold-subtle); }
+  .c-nav a.active { background:var(--gold); color:#000; border-color:var(--gold); }
 
-  .admin-section { border:1px solid var(--border); border-radius:var(--radius); margin-bottom:20px; overflow:hidden; }
-  .admin-section.urgent { border-color:var(--gold-dark); }
-  .admin-section-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; background:var(--surface-2); gap:12px; }
-  .admin-section-header:hover { background:var(--surface-3); }
-  .admin-section.urgent .admin-section-header { background:rgba(245,197,24,0.06); }
-  .admin-section-title { font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-primary); }
-  .admin-section.urgent .admin-section-title { color:var(--gold); }
-  .admin-section-meta { font-size:13px; color:var(--text-muted); }
-  .admin-section-body { padding:24px 20px; }
-  .admin-section-body.collapsed { display:none; }
-  .chev { font-size:18px; transition:transform .2s; display:inline-block; }
-  .chev.open { transform:rotate(180deg); }
+  .c-page-title { font-size:28px; font-weight:800; color:var(--text-primary); margin-bottom:6px; }
+  .c-page-sub   { font-size:16px; color:var(--text-muted); margin-bottom:36px; line-height:1.5; }
 
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .form-grid.three { grid-template-columns:1fr 1fr 1fr; }
-  .form-group { display:flex; flex-direction:column; gap:6px; }
-  .form-group.full { grid-column:1/-1; }
-  label { font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); }
+  .c-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; margin-bottom:28px; overflow:hidden; }
+  .c-card.highlight { border-color:var(--gold); }
+  .c-card-head { padding:20px 28px; border-bottom:1px solid var(--border); background:var(--surface-3); }
+  .c-card.highlight .c-card-head { background:rgba(245,197,24,0.06); }
+  .c-card-head-title { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .c-card.highlight .c-card-head-title { color:var(--gold); }
+  .c-card-head-sub   { font-size:14px; color:var(--text-muted); line-height:1.5; }
+  .c-card-body  { padding:28px; }
+
+  .c-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+  .c-summary-item { background:var(--surface-3); border:1px solid var(--border); border-radius:8px; padding:18px 20px; }
+  .c-summary-label { font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; }
+  .c-summary-value { font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .c-summary-sub   { font-size:13px; color:var(--text-muted); }
+
+  .s-badge { display:inline-block; padding:5px 14px; border-radius:20px; font-size:13px; font-weight:700; letter-spacing:0.5px; }
+  .s-upcoming         { background:rgba(255,255,255,.08); color:#aaa; border:1px solid #444; }
+  .s-active           { background:rgba(245,197,24,.18); color:#e8b800; border:1px solid #e8b800; }
+  .s-judging          { background:rgba(100,150,255,.15); color:#88aaff; border:1px solid #6688cc; }
+  .s-results_pending  { background:rgba(255,165,0,.15); color:#ffaa44; border:1px solid #cc8833; }
+  .s-closed           { background:rgba(255,255,255,.05); color:#666; border:1px solid #444; }
+  .s-draft            { background:rgba(255,255,255,.05); color:#888; border:1px solid #444; }
+  .s-results_published{ background:rgba(100,220,100,.12); color:#66cc66; border:1px solid #448844; }
+  .s-sent             { background:rgba(100,220,100,.12); color:#66cc66; border:1px solid #448844; }
+
+  .c-form-section { margin-bottom:28px; }
+  .c-form-section-title { font-size:16px; font-weight:700; color:var(--gold); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .c-field { margin-bottom:20px; }
+  .c-field-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:0; }
+  .c-label { display:block; font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
+  .c-hint  { font-size:13px; color:var(--text-muted); margin-bottom:8px; line-height:1.4; }
   input[type=text], input[type=number], input[type=datetime-local], textarea, select {
-    background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
-    color:var(--text-primary); font-size:15px; padding:10px 12px; width:100%; box-sizing:border-box;
+    background:var(--surface-3); border:2px solid var(--border); border-radius:8px;
+    color:var(--text-primary); font-size:16px; padding:12px 14px; width:100%; box-sizing:border-box; line-height:1.4;
   }
   input:focus, textarea:focus, select:focus { outline:none; border-color:var(--gold); }
-  textarea { resize:vertical; min-height:80px; }
+  textarea { resize:vertical; min-height:90px; }
 
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:var(--radius-sm); font-size:14px; font-weight:600; cursor:pointer; border:none; text-decoration:none; transition:opacity .15s; }
-  .btn-gold { background:var(--gold); color:#000; }
-  .btn-gold:hover { opacity:.85; }
-  .btn-outline { background:none; border:1px solid var(--border); color:var(--text-primary); }
-  .btn-outline:hover { border-color:var(--gold); }
-  .btn-danger { background:none; border:1px solid #7a2222; color:var(--red); }
-  .btn-danger:hover { background:rgba(192,57,43,.08); }
-  .btn-sm { padding:6px 12px; font-size:13px; }
+  .c-checkbox { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .c-checkbox input[type=checkbox] { width:20px; height:20px; cursor:pointer; accent-color:var(--gold); flex-shrink:0; }
+  .c-checkbox label { font-size:15px; color:var(--text-primary); cursor:pointer; }
 
-  .contest-table { width:100%; border-collapse:collapse; }
-  .contest-table th { padding:10px 14px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-secondary); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
-  .contest-table td { padding:12px 14px; font-size:14px; border-bottom:1px solid var(--border-subtle); vertical-align:top; }
-  .contest-table tr:last-child td { border-bottom:none; }
-  .contest-table tr:hover td { background:rgba(245,197,24,.03); }
+  .c-btn { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; border:none; text-decoration:none; transition:opacity .15s; line-height:1; }
+  .c-btn-gold    { background:var(--gold); color:#000; }
+  .c-btn-gold:hover    { opacity:.85; }
+  .c-btn-outline { background:none; border:2px solid var(--border); color:var(--text-primary); }
+  .c-btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+  .c-btn-green   { background:none; border:2px solid #448844; color:#66cc66; }
+  .c-btn-green:hover   { background:rgba(100,220,100,.1); }
 
-  .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
-  .status-upcoming  { background:rgba(255,255,255,.08); color:var(--text-muted); }
-  .status-active    { background:rgba(245,197,24,.15); color:var(--gold); border:1px solid var(--gold); }
-  .status-judging   { background:rgba(100,150,255,.12); color:#88aaff; }
-  .status-results_pending { background:rgba(255,165,0,.12); color:#ffaa44; }
-  .status-closed    { background:rgba(255,255,255,.05); color:#555; }
-  .status-draft     { background:rgba(255,255,255,.05); color:#666; }
-  .status-results_published { background:rgba(100,220,100,.1); color:#66cc66; }
+  .bc-card { border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:16px; background:var(--surface-3); }
+  .bc-brand    { font-size:13px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .bc-title    { font-size:18px; font-weight:700; color:var(--text-primary); }
+  .bc-meta     { font-size:14px; color:var(--text-muted); margin-top:6px; }
+  .bc-top      { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+  .bc-actions  { display:flex; gap:10px; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--border); }
 
-  .info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-  .info-card { background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; }
-  .info-card-label { font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; }
-  .info-card-value { font-size:22px; font-weight:700; color:var(--gold); }
-  .info-card-sub   { font-size:13px; color:var(--text-muted); margin-top:4px; }
+  .ann-card      { border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:16px; background:var(--surface-3); }
+  .ann-card.live { border-color:var(--gold); background:rgba(245,197,24,0.04); }
+  .ann-title     { font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+  .ann-preview   { font-size:14px; color:var(--text-muted); line-height:1.5; margin-bottom:12px; word-break:break-word; }
+  .ann-meta      { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .ann-actions   { display:flex; gap:10px; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--border); }
 
-  .divider { border:none; border-top:1px solid var(--border); margin:24px 0; }
-  .page-title { font-size:24px; font-weight:800; color:var(--text-primary); margin-bottom:4px; }
-  .page-sub   { font-size:14px; color:var(--text-muted); margin-bottom:28px; }
+  .c-divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
+  .c-empty   { color:var(--text-muted); font-size:15px; padding:20px 0; }
+  .c-alert   { padding:14px 18px; border-radius:8px; margin-bottom:20px; font-size:15px; line-height:1.5; }
+  .c-alert-success { background:rgba(245,197,24,.10); border:1px solid var(--gold); color:var(--gold); }
+  .c-alert-error   { background:rgba(192,57,43,.12); border:1px solid #7a2222; color:#cc4444; }
 
   @media (max-width:700px) {
-    .form-grid, .form-grid.three { grid-template-columns:1fr; }
-    .info-grid { grid-template-columns:1fr 1fr; }
-  }
-  @media (max-width:480px) {
-    .info-grid { grid-template-columns:1fr; }
+    .c-field-row { grid-template-columns:1fr; }
+    .c-summary   { grid-template-columns:1fr; }
+    .c-card-body { padding:20px 16px; }
+    .c-card-head { padding:16px 20px; }
+    .c-page-title { font-size:22px; }
+    .c-btn { width:100%; justify-content:center; }
+    .bc-actions, .ann-actions { flex-direction:column; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-title">🏆 Contest Management</div>
-<div class="page-sub">POTY · BOW · Open · Brand — all contest operations from here.</div>
 
-{# ── Admin nav ── #}
-<nav class="admin-nav">
-  <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-btn">← Admin Home</a>
-  <a href="{{ url_for('admin_weekly_challenge') }}" class="admin-nav-btn gold">📅 Weekly Challenge</a>
-  <a href="{{ url_for('admin_contests') }}" class="admin-nav-btn active">🏆 Contests</a>
+<div class="c-page-title">🏆 Contest Management</div>
+<div class="c-page-sub">Set up and manage POTY, Body of Work, Open, and Brand contests — and send announcements to members.</div>
+
+<nav class="c-nav">
+  <a href="{{ url_for('admin_dashboard') }}">← Admin Home</a>
+  <a href="{{ url_for('admin_weekly_challenge') }}">📅 Weekly Challenge</a>
+  <a href="{{ url_for('admin_contests') }}" class="active">🏆 Contests</a>
 </nav>
 
-{# ── Flash messages ── #}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for cat, msg in messages %}
-      <div style="padding:12px 16px; border-radius:var(--radius-sm); margin-bottom:16px;
-        {% if cat == 'error' %}background:rgba(192,57,43,.12); border:1px solid #7a2222; color:var(--red);
-        {% else %}background:rgba(245,197,24,.10); border:1px solid var(--gold); color:var(--gold);{% endif %}">
-        {{ msg }}
-      </div>
+    <div class="c-alert {% if cat == 'error' %}c-alert-error{% else %}c-alert-success{% endif %}">{{ msg }}</div>
     {% endfor %}
   {% endif %}
 {% endwith %}
 
-{# ════════════════════════════════════════════════════════════════════════════
-   SECTION 1 — CONTEST PERIOD (POTY / BOW / Open windows)
-   ════════════════════════════════════════════════════════════════════════════ #}
-<div class="admin-section urgent" id="section-period">
-  <div class="admin-section-header" onclick="toggleSection('period')">
-    <div>
-      <div class="admin-section-title">📆 Contest Period — {{ current_year }}</div>
-      <div class="admin-section-meta">
-        POTY · BOW · Open windows for the current year
-        {% if period %}· <span class="status-pill status-{{ period.poty_status }}">POTY {{ period.poty_status }}</span>{% endif %}
+
+{# ══════════════════════════════════════════════════════════════
+   CARD 1 — CONTEST PERIOD
+══════════════════════════════════════════════════════════════ #}
+<div class="c-card highlight">
+  <div class="c-card-head" onclick="toggleCard('period')">
+    <div class="c-card-head-row">
+      <div>
+        <div class="c-card-head-title">📆 Contest Period — {{ current_year }}</div>
+        <div class="c-card-head-sub">Set the dates for POTY, Body of Work, and Open Contest. These dates control when each contest opens, closes, and when winners are announced.</div>
       </div>
+      <span class="c-chev open" id="chev-period">▾</span>
     </div>
-    <span class="chev open" id="chev-period">▾</span>
   </div>
-  <div class="admin-section-body" id="body-period">
+  <div class="c-card-body" id="body-period">
 
     {% if period %}
-    {# ── Summary cards ── #}
-    <div class="info-grid">
-      <div class="info-card">
-        <div class="info-card-label">POTY</div>
-        <div class="info-card-value"><span class="status-pill status-{{ period.poty_status }}">{{ period.poty_status }}</span></div>
-        <div class="info-card-sub">
-          {% if period.poty_opens_at %}{{ (period.poty_opens_at + ist).strftime('%d %b') }} – {{ (period.poty_closes_at + ist).strftime('%d %b %Y') }}{% else %}Not set{% endif %}
-        </div>
+    <div class="c-summary">
+      <div class="c-summary-item">
+        <div class="c-summary-label">POTY</div>
+        <div class="c-summary-value"><span class="s-badge s-{{ period.poty_status }}">{{ period.poty_status | capitalize }}</span></div>
+        <div class="c-summary-sub">{% if period.poty_opens_at %}{{ (period.poty_opens_at + ist).strftime('%-d %b') }} – {{ (period.poty_closes_at + ist).strftime('%-d %b %Y') }}{% else %}Dates not set{% endif %}</div>
       </div>
-      <div class="info-card">
-        <div class="info-card-label">BOW Entry</div>
-        <div class="info-card-value"><span class="status-pill status-{{ period.bow_status }}">{{ period.bow_status }}</span></div>
-        <div class="info-card-sub">
-          {% if period.bow_entry_opens_at %}{{ (period.bow_entry_opens_at + ist).strftime('%d %b') }} – {{ (period.bow_entry_closes_at + ist).strftime('%d %b %Y') }}{% else %}Not set{% endif %}
-        </div>
+      <div class="c-summary-item">
+        <div class="c-summary-label">Body of Work</div>
+        <div class="c-summary-value"><span class="s-badge s-{{ period.bow_status }}">{{ period.bow_status | capitalize }}</span></div>
+        <div class="c-summary-sub">{% if period.bow_entry_opens_at %}{{ (period.bow_entry_opens_at + ist).strftime('%-d %b') }} – {{ (period.bow_entry_closes_at + ist).strftime('%-d %b %Y') }}{% else %}Dates not set{% endif %}</div>
       </div>
-      <div class="info-card">
-        <div class="info-card-label">Winners Announced</div>
-        <div class="info-card-value" style="font-size:16px;">
-          {% if period.winners_announced_at %}{{ (period.winners_announced_at + ist).strftime('%d %b %Y') }}{% else %}Not set{% endif %}
-        </div>
-        <div class="info-card-sub">Open cooling ends: {% if period.open_cooling_ends_at %}{{ (period.open_cooling_ends_at + ist).strftime('%d %b %Y') }}{% else %}Not set{% endif %}</div>
+      <div class="c-summary-item">
+        <div class="c-summary-label">Winners Announced</div>
+        <div class="c-summary-value" style="font-size:16px; color:var(--gold);">{% if period.winners_announced_at %}{{ (period.winners_announced_at + ist).strftime('%-d %b %Y') }}{% else %}Not set{% endif %}</div>
+        <div class="c-summary-sub">Cooling ends: {% if period.open_cooling_ends_at %}{{ (period.open_cooling_ends_at + ist).strftime('%-d %b %Y') }}{% else %}Not set{% endif %}</div>
       </div>
     </div>
     {% endif %}
 
-    {# ── Create / Edit form ── #}
     <form method="POST" action="{{ url_for('admin_contests') }}">
       <input type="hidden" name="action" value="save_period">
       <input type="hidden" name="platform_year" value="{{ current_year }}">
 
-      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">
-        {% if period %}Edit{% else %}Create{% endif %} {{ current_year }} Contest Period
-      </div>
-
-      <div class="form-grid" style="margin-bottom:16px;">
-        <div class="form-group">
-          <label>POTY Opens (IST)</label>
-          <input type="datetime-local" name="poty_opens_at"
-            value="{{ (period.poty_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.poty_opens_at else '' }}">
+      <div class="c-form-section">
+        <div class="c-form-section-title">📸 POTY — Photographer of the Year</div>
+        <div class="c-hint">For 2026: opens 1 June, closes 31 December. From 2027 onwards: opens 1 January.</div>
+        <div class="c-field-row">
+          <div class="c-field">
+            <label class="c-label">POTY Opens</label>
+            <input type="datetime-local" name="poty_opens_at" value="{{ (period.poty_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.poty_opens_at else '2026-06-01T00:00' }}">
+          </div>
+          <div class="c-field">
+            <label class="c-label">POTY Closes</label>
+            <input type="datetime-local" name="poty_closes_at" value="{{ (period.poty_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.poty_closes_at else '2026-12-31T23:59' }}">
+          </div>
         </div>
-        <div class="form-group">
-          <label>POTY Closes (IST)</label>
-          <input type="datetime-local" name="poty_closes_at"
-            value="{{ (period.poty_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.poty_closes_at else '2026-12-31T23:59' }}">
-        </div>
-        <div class="form-group">
-          <label>BOW Entry Opens (IST)</label>
-          <input type="datetime-local" name="bow_entry_opens_at"
-            value="{{ (period.bow_entry_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_entry_opens_at else '2026-12-01T00:00' }}">
-        </div>
-        <div class="form-group">
-          <label>BOW Entry Closes (IST)</label>
-          <input type="datetime-local" name="bow_entry_closes_at"
-            value="{{ (period.bow_entry_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_entry_closes_at else '2026-12-31T23:59' }}">
-        </div>
-        <div class="form-group">
-          <label>Open Contest Opens (IST)</label>
-          <input type="datetime-local" name="open_opens_at"
-            value="{{ (period.open_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_opens_at else '' }}">
-        </div>
-        <div class="form-group">
-          <label>Open Contest Closes (IST)</label>
-          <input type="datetime-local" name="open_closes_at"
-            value="{{ (period.open_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_closes_at else '' }}">
-        </div>
-        <div class="form-group">
-          <label>Open Cooling Period Ends (IST)</label>
-          <input type="datetime-local" name="open_cooling_ends_at"
-            value="{{ (period.open_cooling_ends_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_cooling_ends_at else '2027-01-15T23:59' }}">
-        </div>
-        <div class="form-group">
-          <label>BOW Judging Ends (IST)</label>
-          <input type="datetime-local" name="bow_judging_ends_at"
-            value="{{ (period.bow_judging_ends_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_judging_ends_at else '' }}">
-        </div>
-        <div class="form-group">
-          <label>Winners Announced (IST)</label>
-          <input type="datetime-local" name="winners_announced_at"
-            value="{{ (period.winners_announced_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.winners_announced_at else '2027-02-01T10:00' }}">
-        </div>
-      </div>
-
-      {# Status overrides #}
-      <div class="form-grid three" style="margin-bottom:20px;">
-        <div class="form-group">
-          <label>POTY Status</label>
+        <div class="c-field">
+          <label class="c-label">POTY Status</label>
+          <div class="c-hint">Change this when POTY opens or closes. It controls what members see on their dashboard.</div>
           <select name="poty_status">
-            {% for s in ['upcoming','active','results_pending','closed'] %}
-            <option value="{{ s }}" {% if period and period.poty_status == s %}selected{% endif %}>{{ s }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>BOW Status</label>
-          <select name="bow_status">
-            {% for s in ['upcoming','active','judging','results_pending','closed'] %}
-            <option value="{{ s }}" {% if period and period.bow_status == s %}selected{% endif %}>{{ s }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Open Status</label>
-          <select name="open_status">
-            {% for s in ['upcoming','active','results_pending','closed'] %}
-            <option value="{{ s }}" {% if period and period.open_status == s %}selected{% endif %}>{{ s }}</option>
-            {% endfor %}
+            <option value="upcoming" {% if not period or period.poty_status == 'upcoming' %}selected{% endif %}>Upcoming — not open yet</option>
+            <option value="active"   {% if period and period.poty_status == 'active' %}selected{% endif %}>Active — open for submissions</option>
+            <option value="results_pending" {% if period and period.poty_status == 'results_pending' %}selected{% endif %}>Results Pending — submissions closed, judging in progress</option>
+            <option value="closed"   {% if period and period.poty_status == 'closed' %}selected{% endif %}>Closed — results announced</option>
           </select>
         </div>
       </div>
 
-      {# Dashboard announcement banner #}
-      <div class="form-group full" style="margin-bottom:20px;">
-        <label>Dashboard Announcement Banner Text (optional)</label>
-        <textarea name="announcement_banner" rows="2" placeholder="e.g. POTY 2026 is now open! Upload your best work and climb the leaderboard.">{{ period.announcement_banner if period and period.announcement_banner else '' }}</textarea>
-      </div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-        <input type="checkbox" id="banner_active" name="banner_active" value="1"
-          {% if period and period.banner_active %}checked{% endif %} style="width:auto;">
-        <label for="banner_active" style="letter-spacing:0; text-transform:none; font-size:14px; font-family:var(--font-body,inherit);">Show banner on all user dashboards</label>
+      <div class="c-form-section">
+        <div class="c-form-section-title">🎨 Body of Work (BOW)</div>
+        <div class="c-hint">Entry window is 1–31 December each year. Judging runs for 2–3 weeks after entries close.</div>
+        <div class="c-field-row">
+          <div class="c-field">
+            <label class="c-label">BOW Entry Opens</label>
+            <input type="datetime-local" name="bow_entry_opens_at" value="{{ (period.bow_entry_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_entry_opens_at else '2026-12-01T00:00' }}">
+          </div>
+          <div class="c-field">
+            <label class="c-label">BOW Entry Closes</label>
+            <input type="datetime-local" name="bow_entry_closes_at" value="{{ (period.bow_entry_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_entry_closes_at else '2026-12-31T23:59' }}">
+          </div>
+        </div>
+        <div class="c-field-row">
+          <div class="c-field">
+            <label class="c-label">BOW Judging Ends</label>
+            <div class="c-hint">Approximately 3 weeks after entries close.</div>
+            <input type="datetime-local" name="bow_judging_ends_at" value="{{ (period.bow_judging_ends_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.bow_judging_ends_at else '2027-01-21T23:59' }}">
+          </div>
+          <div class="c-field">
+            <label class="c-label">BOW Status</label>
+            <select name="bow_status">
+              <option value="upcoming" {% if not period or period.bow_status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+              <option value="active"   {% if period and period.bow_status == 'active' %}selected{% endif %}>Active — accepting entries</option>
+              <option value="judging"  {% if period and period.bow_status == 'judging' %}selected{% endif %}>Judging in progress</option>
+              <option value="results_pending" {% if period and period.bow_status == 'results_pending' %}selected{% endif %}>Results Pending</option>
+              <option value="closed"   {% if period and period.bow_status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <button type="submit" class="btn btn-gold">💾 Save Contest Period</button>
+      <div class="c-form-section">
+        <div class="c-form-section-title">🌐 Open Contest</div>
+        <div class="c-hint">Any member can enter. First image free, Rs. 200 per additional image. 15-day cooling period in January before results.</div>
+        <div class="c-field-row">
+          <div class="c-field">
+            <label class="c-label">Open Contest Opens</label>
+            <input type="datetime-local" name="open_opens_at" value="{{ (period.open_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_opens_at else '2026-06-01T00:00' }}">
+          </div>
+          <div class="c-field">
+            <label class="c-label">Open Contest Closes</label>
+            <input type="datetime-local" name="open_closes_at" value="{{ (period.open_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_closes_at else '2026-12-31T23:59' }}">
+          </div>
+        </div>
+        <div class="c-field-row">
+          <div class="c-field">
+            <label class="c-label">Cooling Period Ends</label>
+            <div class="c-hint">Top 10 qualifier emails go out during this period. Standard date is 15 January.</div>
+            <input type="datetime-local" name="open_cooling_ends_at" value="{{ (period.open_cooling_ends_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_cooling_ends_at else '2027-01-15T23:59' }}">
+          </div>
+          <div class="c-field">
+            <label class="c-label">Open Status</label>
+            <select name="open_status">
+              <option value="upcoming" {% if not period or period.open_status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+              <option value="active"   {% if period and period.open_status == 'active' %}selected{% endif %}>Active — accepting entries</option>
+              <option value="results_pending" {% if period and period.open_status == 'results_pending' %}selected{% endif %}>Results Pending — cooling period</option>
+              <option value="closed"   {% if period and period.open_status == 'closed' %}selected{% endif %}>Closed — results announced</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="c-form-section">
+        <div class="c-form-section-title">🏆 Winners Announcement</div>
+        <div class="c-hint">All winners — POTY, BOW, and Open — are announced on the same date. Standard date is 1 February.</div>
+        <div class="c-field" style="max-width:360px;">
+          <label class="c-label">Winners Announced On</label>
+          <input type="datetime-local" name="winners_announced_at" value="{{ (period.winners_announced_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.winners_announced_at else '2027-02-01T10:00' }}">
+        </div>
+      </div>
+
+      <div class="c-form-section">
+        <div class="c-form-section-title">📢 Dashboard Banner (optional)</div>
+        <div class="c-field">
+          <label class="c-label">Banner Message</label>
+          <div class="c-hint">This text appears as a notice on every member&#39;s dashboard when the banner is switched on. Keep it short and clear.</div>
+          <textarea name="announcement_banner" rows="2" placeholder="e.g. POTY 2026 is now open! Upload your best work and climb the leaderboard.">{{ period.announcement_banner if period and period.announcement_banner else '' }}</textarea>
+        </div>
+        <div class="c-checkbox">
+          <input type="checkbox" id="banner_active" name="banner_active" value="1" {% if period and period.banner_active %}checked{% endif %}>
+          <label for="banner_active">Show this banner on all member dashboards right now</label>
+        </div>
+      </div>
+
+      <button type="submit" class="c-btn c-btn-gold">💾 Save Contest Period</button>
     </form>
-
   </div>
 </div>
 
-{# ════════════════════════════════════════════════════════════════════════════
-   SECTION 2 — BRAND CONTESTS
-   ════════════════════════════════════════════════════════════════════════════ #}
-<div class="admin-section" id="section-brand">
-  <div class="admin-section-header" onclick="toggleSection('brand')">
-    <div>
-      <div class="admin-section-title">🎯 Brand Contests</div>
-      <div class="admin-section-meta">{{ brand_contests|length }} contest{{ 's' if brand_contests|length != 1 else '' }} · subscribers only · free entry</div>
-    </div>
-    <span class="chev" id="chev-brand">▾</span>
-  </div>
-  <div class="admin-section-body collapsed" id="body-brand">
 
-    {# ── Existing brand contests ── #}
-    {% if brand_contests %}
-    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-    <table class="contest-table" style="margin-bottom:28px;">
-      <thead>
-        <tr>
-          <th>Brand</th>
-          <th>Title</th>
-          <th>Opens</th>
-          <th>Closes</th>
-          <th>Entries</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for bc in brand_contests %}
-        <tr>
-          <td style="font-weight:600;">{{ bc.brand_name }}</td>
-          <td>{{ bc.title }}</td>
-          <td style="font-family:var(--font-mono); font-size:13px; white-space:nowrap;">{{ (bc.opens_at + ist).strftime('%d %b %Y') }}</td>
-          <td style="font-family:var(--font-mono); font-size:13px; white-space:nowrap;">{{ (bc.closes_at + ist).strftime('%d %b %Y') }}</td>
-          <td style="font-family:var(--font-mono); font-size:14px; color:var(--gold);">{{ bc.entry_count }}</td>
-          <td><span class="status-pill status-{{ bc.status }}">{{ bc.status }}</span></td>
-          <td>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              {% if bc.status == 'draft' %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="brand_activate">
-                <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
-                <button type="submit" class="btn btn-gold btn-sm">▶ Activate</button>
-              </form>
-              {% endif %}
-              {% if bc.status == 'active' %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="brand_close">
-                <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
-                <button type="submit" class="btn btn-outline btn-sm">⏹ Close</button>
-              </form>
-              {% endif %}
-              {% if bc.status in ['active','judging','closed'] %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="brand_judging">
-                <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
-                <button type="submit" class="btn btn-outline btn-sm">⚖️ Judging</button>
-              </form>
-              {% endif %}
-              {% if bc.status == 'judging' %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="brand_publish">
-                <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
-                <button type="submit" class="btn btn-gold btn-sm" onclick="return confirm('Publish results for this brand contest? This cannot be undone.')">📢 Publish Results</button>
-              </form>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{# ══════════════════════════════════════════════════════════════
+   CARD 2 — BRAND CONTESTS
+══════════════════════════════════════════════════════════════ #}
+<div class="c-card">
+  <div class="c-card-head" onclick="toggleCard('brand')">
+    <div class="c-card-head-row">
+      <div>
+        <div class="c-card-head-title">🎯 Brand Contests <span style="font-size:14px; font-weight:400; color:var(--text-muted);">{{ brand_contests|length }} contest{{ 's' if brand_contests|length != 1 else '' }}</span></div>
+        <div class="c-card-head-sub">Sponsored contests open to subscribers only — free to enter. Create a contest, activate it when ready, move it to Judging, then publish results.</div>
+      </div>
+      <span class="c-chev {% if brand_contests %}open{% endif %}" id="chev-brand">▾</span>
     </div>
+  </div>
+  <div class="c-card-body {% if not brand_contests %}collapsed{% endif %}" id="body-brand">
+
+    {% if brand_contests %}
+      {% for bc in brand_contests %}
+      <div class="bc-card">
+        <div class="bc-top">
+          <div>
+            <div class="bc-brand">{{ bc.brand_name }}</div>
+            <div class="bc-title">{{ bc.title }}</div>
+            <div class="bc-meta">
+              {{ (bc.opens_at + ist).strftime('%-d %b %Y') }} — {{ (bc.closes_at + ist).strftime('%-d %b %Y') }}
+              &nbsp;·&nbsp; <strong style="color:var(--gold);">{{ bc.entry_count }}</strong> {{ 'entry' if bc.entry_count == 1 else 'entries' }}
+              {% if bc.prize_value %}&nbsp;·&nbsp; Prize: {{ bc.prize_value }}{% endif %}
+            </div>
+          </div>
+          <span class="s-badge s-{{ bc.status }}">{{ bc.status | replace('_', ' ') | title }}</span>
+        </div>
+        <div class="bc-actions">
+          {% if bc.status == 'draft' %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="brand_activate">
+            <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
+            <button type="submit" class="c-btn c-btn-gold">▶ Activate — make it live</button>
+          </form>
+          {% endif %}
+          {% if bc.status == 'active' %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="brand_close">
+            <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
+            <button type="submit" class="c-btn c-btn-outline">⏹ Close entries</button>
+          </form>
+          {% endif %}
+          {% if bc.status in ['active','closed'] %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="brand_judging">
+            <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
+            <button type="submit" class="c-btn c-btn-outline">⚖️ Move to Judging</button>
+          </form>
+          {% endif %}
+          {% if bc.status == 'judging' %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="brand_publish">
+            <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
+            <button type="submit" class="c-btn c-btn-green" onclick="return confirm('Publish results for this brand contest? This cannot be undone.')">📢 Publish Results</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
     {% else %}
-    <div style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">No brand contests yet.</div>
+    <div class="c-empty">No brand contests yet. Create one using the form below.</div>
     {% endif %}
 
-    <hr class="divider">
-
-    {# ── Create new brand contest ── #}
-    <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Create New Brand Contest</div>
+    <hr class="c-divider">
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:20px;">Create a New Brand Contest</div>
 
     <form method="POST" action="{{ url_for('admin_contests') }}">
       <input type="hidden" name="action" value="create_brand">
-      <div class="form-grid" style="margin-bottom:16px;">
-        <div class="form-group">
-          <label>Brand Name</label>
+      <div class="c-field-row">
+        <div class="c-field">
+          <label class="c-label">Brand Name</label>
           <input type="text" name="brand_name" placeholder="e.g. Sony India" required>
         </div>
-        <div class="form-group">
-          <label>Contest Title</label>
+        <div class="c-field">
+          <label class="c-label">Contest Title</label>
           <input type="text" name="title" placeholder="e.g. Wildlife through a Sony lens" required>
         </div>
-        <div class="form-group">
-          <label>Opens (IST)</label>
+      </div>
+      <div class="c-field-row">
+        <div class="c-field">
+          <label class="c-label">Opens (IST)</label>
           <input type="datetime-local" name="opens_at" required>
         </div>
-        <div class="form-group">
-          <label>Closes (IST)</label>
+        <div class="c-field">
+          <label class="c-label">Closes (IST)</label>
           <input type="datetime-local" name="closes_at" required>
         </div>
-        <div class="form-group">
-          <label>Max Entries Per User</label>
+      </div>
+      <div class="c-field-row">
+        <div class="c-field">
+          <label class="c-label">Maximum entries per member</label>
+          <div class="c-hint">How many photos can one person submit?</div>
           <input type="number" name="max_entries_per_user" value="3" min="1" max="10">
         </div>
-        <div class="form-group">
-          <label>Prize Value (display)</label>
+        <div class="c-field">
+          <label class="c-label">Prize Value (shown to members)</label>
           <input type="text" name="prize_value" placeholder="e.g. Rs. 50,000 + trophy">
         </div>
-        <div class="form-group full">
-          <label>Brand Brief</label>
-          <textarea name="brief" rows="3" placeholder="What the brand wants photographers to capture..." required></textarea>
-        </div>
-        <div class="form-group full">
-          <label>Prize Description</label>
-          <textarea name="prize_desc" rows="2" placeholder="Full prize details..." required></textarea>
-        </div>
       </div>
-      <button type="submit" class="btn btn-gold">➕ Create Brand Contest</button>
+      <div class="c-field">
+        <label class="c-label">Brand Brief</label>
+        <div class="c-hint">Tell members what the brand is looking for. This appears on the contest entry page.</div>
+        <textarea name="brief" rows="3" placeholder="What the brand wants photographers to capture..." required></textarea>
+      </div>
+      <div class="c-field">
+        <label class="c-label">Prize Description</label>
+        <div class="c-hint">Full details of what the winner receives.</div>
+        <textarea name="prize_desc" rows="2" placeholder="Full prize details..." required></textarea>
+      </div>
+      <button type="submit" class="c-btn c-btn-gold">➕ Create Brand Contest</button>
     </form>
-
   </div>
 </div>
 
-{# ════════════════════════════════════════════════════════════════════════════
-   SECTION 3 — CONTEST ANNOUNCEMENTS
-   ════════════════════════════════════════════════════════════════════════════ #}
-<div class="admin-section" id="section-announce">
-  <div class="admin-section-header" onclick="toggleSection('announce')">
-    <div>
-      <div class="admin-section-title">📣 Announcements</div>
-      <div class="admin-section-meta">Dashboard banners + emailers for all contest types</div>
-    </div>
-    <span class="chev" id="chev-announce">▾</span>
-  </div>
-  <div class="admin-section-body collapsed" id="body-announce">
 
-    {# ── Active / scheduled announcements ── #}
-    {% if announcements %}
-    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-    <table class="contest-table" style="margin-bottom:28px;">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Title</th>
-          <th>Audience</th>
-          <th>Delivery</th>
-          <th>Status</th>
-          <th>Banner</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for ann in announcements %}
-        <tr>
-          <td><span class="status-pill status-active">{{ ann.contest_type }}</span></td>
-          <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ann.title }}</td>
-          <td style="font-family:var(--font-mono); font-size:12px;">{{ ann.audience }}</td>
-          <td style="font-family:var(--font-mono); font-size:12px;">{{ ann.delivery }}</td>
-          <td><span class="status-pill status-{{ ann.status }}">{{ ann.status }}</span></td>
-          <td>{% if ann.banner_active %}<span style="color:var(--gold);">● Live</span>{% else %}—{% endif %}</td>
-          <td>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              {% if not ann.banner_active %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="banner_activate">
-                <input type="hidden" name="announcement_id" value="{{ ann.id }}">
-                <button type="submit" class="btn btn-gold btn-sm">▶ Show Banner</button>
-              </form>
-              {% else %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="banner_deactivate">
-                <input type="hidden" name="announcement_id" value="{{ ann.id }}">
-                <button type="submit" class="btn btn-outline btn-sm">⏹ Hide</button>
-              </form>
-              {% endif %}
-              {% if ann.status == 'draft' and ann.delivery in ['email','both'] %}
-              <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
-                <input type="hidden" name="action" value="send_announcement">
-                <input type="hidden" name="announcement_id" value="{{ ann.id }}">
-                <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Send email to {{ ann.audience }} users now?')">📧 Send Email</button>
-              </form>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{# ══════════════════════════════════════════════════════════════
+   CARD 3 — ANNOUNCEMENTS
+══════════════════════════════════════════════════════════════ #}
+<div class="c-card">
+  <div class="c-card-head" onclick="toggleCard('announce')">
+    <div class="c-card-head-row">
+      <div>
+        <div class="c-card-head-title">📣 Announcements
+          {% set live_count = announcements | selectattr('banner_active') | list | length %}
+          {% if live_count %}<span style="font-size:14px; font-weight:400; color:var(--gold);">{{ live_count }} live</span>{% endif %}
+        </div>
+        <div class="c-card-head-sub">Send banners on member dashboards and / or emails about any contest. A banner appears immediately when switched on and disappears when you hide it. An email goes out once and cannot be unsent.</div>
+      </div>
+      <span class="c-chev {% if announcements %}open{% endif %}" id="chev-announce">▾</span>
     </div>
+  </div>
+  <div class="c-card-body {% if not announcements %}collapsed{% endif %}" id="body-announce">
+
+    {% if announcements %}
+      {% for ann in announcements %}
+      <div class="ann-card {% if ann.banner_active %}live{% endif %}">
+        <div class="ann-title">
+          {% if ann.banner_active %}<span style="color:var(--gold);">● Live &nbsp;</span>{% endif %}
+          {{ ann.title }}
+        </div>
+        <div class="ann-preview">{{ ann.body | truncate(140) }}</div>
+        <div class="ann-meta">
+          <span class="s-badge s-active" style="font-size:12px; padding:3px 10px;">{{ ann.contest_type | upper }}</span>
+          <span class="s-badge s-{{ ann.status }}" style="font-size:12px; padding:3px 10px;">{{ ann.status | capitalize }}</span>
+          <span style="font-size:13px; color:var(--text-muted);">To: <strong>{{ ann.audience | replace('_', ' ') | title }}</strong></span>
+          <span style="font-size:13px; color:var(--text-muted);">Via: {{ ann.delivery | replace('_', ' ') | title }}</span>
+        </div>
+        <div class="ann-actions">
+          {% if not ann.banner_active %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="banner_activate">
+            <input type="hidden" name="announcement_id" value="{{ ann.id }}">
+            <button type="submit" class="c-btn c-btn-gold">▶ Show Banner on Dashboards</button>
+          </form>
+          {% else %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="banner_deactivate">
+            <input type="hidden" name="announcement_id" value="{{ ann.id }}">
+            <button type="submit" class="c-btn c-btn-outline">⏹ Hide Banner</button>
+          </form>
+          {% endif %}
+          {% if ann.status == 'draft' and ann.delivery in ['email','both'] %}
+          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+            <input type="hidden" name="action" value="send_announcement">
+            <input type="hidden" name="announcement_id" value="{{ ann.id }}">
+            <button type="submit" class="c-btn c-btn-outline" onclick="return confirm('Send this email now? This cannot be undone.')">📧 Send Email Now</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
     {% else %}
-    <div style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">No announcements yet.</div>
+    <div class="c-empty">No announcements yet. Create one using the form below.</div>
     {% endif %}
 
-    <hr class="divider">
-
-    {# ── Create announcement ── #}
-    <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">Create Announcement</div>
+    <hr class="c-divider">
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:20px;">Create a New Announcement</div>
 
     <form method="POST" action="{{ url_for('admin_contests') }}">
       <input type="hidden" name="action" value="create_announcement">
-      <div class="form-grid" style="margin-bottom:16px;">
-        <div class="form-group">
-          <label>Contest Type</label>
+      <div class="c-field-row">
+        <div class="c-field">
+          <label class="c-label">Which contest is this about?</label>
           <select name="contest_type">
-            <option value="poty">POTY</option>
-            <option value="bow">BOW</option>
-            <option value="open">Open</option>
-            <option value="brand">Brand</option>
+            <option value="poty">POTY — Photographer of the Year</option>
+            <option value="bow">BOW — Body of Work</option>
+            <option value="open">Open Contest</option>
+            <option value="brand">Brand Contest</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Audience</label>
+        <div class="c-field">
+          <label class="c-label">Who should see / receive this?</label>
           <select name="audience">
-            <option value="all">All users</option>
+            <option value="all">All members</option>
             <option value="subscribers">Subscribers only</option>
             <option value="non_subscribers">Non-subscribers only</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Delivery</label>
+      </div>
+      <div class="c-field-row">
+        <div class="c-field">
+          <label class="c-label">How to deliver?</label>
           <select name="delivery">
-            <option value="both">Banner + Email</option>
-            <option value="banner">Banner only</option>
+            <option value="both">Dashboard banner + Email</option>
+            <option value="banner">Dashboard banner only</option>
             <option value="email">Email only</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>CTA Button Label (optional)</label>
+        <div class="c-field">
+          <label class="c-label">Button label (optional)</label>
+          <div class="c-hint">A button shown on the banner and in the email.</div>
           <input type="text" name="cta_label" placeholder="e.g. Enter Now">
         </div>
-        <div class="form-group full">
-          <label>Title</label>
-          <input type="text" name="title" placeholder="e.g. POTY 2026 is now open!" required>
-        </div>
-        <div class="form-group full">
-          <label>Body</label>
-          <textarea name="body" rows="3" placeholder="Full announcement text shown in banner and email body..." required></textarea>
-        </div>
-        <div class="form-group full">
-          <label>CTA URL (optional)</label>
-          <input type="text" name="cta_url" placeholder="e.g. /contests">
-        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-        <input type="checkbox" id="banner_active_ann" name="banner_active" value="1" style="width:auto;">
-        <label for="banner_active_ann" style="letter-spacing:0; text-transform:none; font-size:14px; font-family:var(--font-body,inherit);">Show as banner immediately</label>
+      <div class="c-field">
+        <label class="c-label">Announcement Title</label>
+        <input type="text" name="title" placeholder="e.g. POTY 2026 is now open!" required>
       </div>
-      <button type="submit" class="btn btn-gold">➕ Create Announcement</button>
+      <div class="c-field">
+        <label class="c-label">Message Body</label>
+        <div class="c-hint">Shown on the dashboard banner and in the email. Keep it clear and friendly.</div>
+        <textarea name="body" rows="4" placeholder="Write your announcement here..." required></textarea>
+      </div>
+      <div class="c-field">
+        <label class="c-label">Button link (optional)</label>
+        <div class="c-hint">Where the button takes the member. Use a path like /contests or a full URL.</div>
+        <input type="text" name="cta_url" placeholder="e.g. /contests">
+      </div>
+      <div class="c-checkbox">
+        <input type="checkbox" id="banner_active_ann" name="banner_active" value="1">
+        <label for="banner_active_ann">Show this as a banner on all dashboards immediately after saving</label>
+      </div>
+      <button type="submit" class="c-btn c-btn-gold">➕ Create Announcement</button>
     </form>
-
   </div>
 </div>
 
@@ -511,12 +525,12 @@
 
 {% block extra_js %}
 <script>
-function toggleSection(name) {
+function toggleCard(name) {
   const body = document.getElementById('body-' + name);
   const chev = document.getElementById('chev-' + name);
-  const isCollapsed = body.classList.contains('collapsed');
-  body.classList.toggle('collapsed', !isCollapsed);
-  chev.classList.toggle('open', isCollapsed);
+  const collapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', !collapsed);
+  chev.classList.toggle('open', collapsed);
 }
 </script>
 {% endblock %}
