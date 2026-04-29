@@ -226,6 +226,7 @@ if uri and uri.startswith('postgres://'):
 # Change these env vars in Railway; no code deploy needed.
 # ---------------------------------------------------------------------------
 PLATFORM_NAME    = os.getenv('PLATFORM_NAME',    'Shutter League')
+TERMS_VERSION    = 'v1'   # bump this whenever T&C page is updated
 CONTACT_EMAIL    = os.getenv('CONTACT_EMAIL',    'info@shutterleague.com')
 ADMIN_EMAIL      = os.getenv('ADMIN_EMAIL',      'admin@shutterleague.com')
 ADMIN_NOTIFY_EMAIL = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
@@ -371,6 +372,10 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
+                # v52  -  legal consent tracking
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
                 # v29  -  weekly challenge
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
@@ -966,6 +971,7 @@ def onboarding():
         state   = request.form.get('state', '').strip()
         city    = request.form.get('city', '').strip()
         agreed  = request.form.get('agreed')
+        terms   = request.form.get('terms')
 
         if not country or not state or not city:
             flash('Please select your country, state/province, and city.', 'error')
@@ -973,13 +979,24 @@ def onboarding():
         if not agreed:
             flash('Please accept the Member Agreement to continue.', 'error')
             return redirect(url_for('onboarding'))
+        if not terms:
+            flash('Please accept the Terms & Conditions to continue.', 'error')
+            return redirect(url_for('onboarding'))
 
+        now = datetime.utcnow()
         current_user.country             = country
         current_user.state               = state
         current_user.city                = city
-        current_user.agreed_at           = datetime.utcnow()
+        current_user.agreed_at           = now
+        current_user.terms_accepted_at   = now
+        current_user.terms_version       = TERMS_VERSION
+        current_user.signup_ip           = request.remote_addr
         current_user.onboarding_complete = True
         db.session.commit()
+        try:
+            send_welcome_email(current_user)
+        except Exception as _we:
+            app.logger.warning('[welcome_email] Error: ' + str(_we))
         flash('Welcome to Shutter League! Your account is ready.', 'success')
         # Redirect to intended destination if set before login
         post_next = session.pop('post_login_next', None)
@@ -7412,6 +7429,128 @@ def send_winners_email(challenge, winners):
             )
 
     return sent
+
+
+
+def send_welcome_email(user):
+    """
+    Send a welcome email to a new user after they complete onboarding.
+    Confirms T&C acceptance, links to dashboard, upload, how-it-works, challenge, support.
+    """
+    site_url     = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name         = user.full_name or user.username
+    dashboard_url = site_url + '/dashboard'
+    upload_url    = site_url + '/upload'
+    hiw_url       = site_url + '/how-it-works'
+    challenge_url = site_url + '/challenge'
+    terms_url     = site_url + '/terms'
+    accepted_date = user.terms_accepted_at.strftime('%d %b %Y') if user.terms_accepted_at else 'today'
+
+    html_body = (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+        '<table width="100%" cellpadding="0" cellspacing="0"'
+        ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+        '<table width="560" cellpadding="0" cellspacing="0"'
+        ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
+        'overflow:hidden;max-width:560px;width:100%;">'
+
+        '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+        '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
+        'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+        'SHUTTER LEAGUE</p></td></tr>'
+
+        '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+        '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+        'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Welcome</p>'
+        '<h1 style="margin:0;font-size:28px;font-style:italic;color:#C8A84B;line-height:1.2;">'
+        'You&#39;re in, ' + name + '.</h1>'
+        '</td></tr>'
+
+        '<tr><td style="padding:32px 32px 8px;">'
+        '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">'
+        'Your account is live. Get scored. See what to improve. Compete when ready.</p>'
+
+        '<table cellpadding="0" cellspacing="0"'
+        ' style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;'
+        'padding:16px 20px;margin-bottom:28px;width:100%;">'
+        '<tr><td>'
+        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;'
+        'letter-spacing:1px;color:#8a8070;text-transform:uppercase;">Agreement confirmed</p>'
+        '<p style="margin:0;font-size:14px;color:#1a1a18;">Member Agreement &amp; '
+        '<a href="' + terms_url + '" style="color:#C8A84B;">Terms &amp; Conditions</a>'
+        ' accepted on ' + accepted_date + '.</p>'
+        '</td></tr></table>'
+
+        '<p style="margin:0 0 12px;font-family:Courier New,monospace;font-size:12px;'
+        'font-weight:700;letter-spacing:2px;color:#1a1a18;text-transform:uppercase;">'
+        'What you can do now</p>'
+
+        '<table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:28px;">'
+        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
+        '<a href="' + upload_url + '" style="text-decoration:none;">'
+        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
+        '📸 Upload your first photo</p>'
+        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
+        'Get your DDI score — composition, light, emotion, difficulty, all scored.</p>'
+        '</a></td></tr>'
+        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
+        '<a href="' + challenge_url + '" style="text-decoration:none;">'
+        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
+        '🏆 Enter the weekly challenge</p>'
+        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
+        'Submit your best shot. Top 3 win. Results every Monday.</p>'
+        '</a></td></tr>'
+        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
+        '<a href="' + dashboard_url + '" style="text-decoration:none;">'
+        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
+        '📊 Your dashboard</p>'
+        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
+        'Track scores, tier, leaderboard position, and POTY standings.</p>'
+        '</a></td></tr>'
+        '<tr><td style="padding:10px 0;">'
+        '<a href="' + hiw_url + '" style="text-decoration:none;">'
+        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
+        '📖 How scoring works</p>'
+        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
+        'Understand your DDI score and what each dimension means.</p>'
+        '</a></td></tr>'
+        '</table>'
+
+        '<a href="' + upload_url + '"'
+        ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+        'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
+        'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
+        'text-decoration:none;border-radius:4px;">Upload Your First Photo &rarr;</a>'
+        '</td></tr>'
+
+        '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;margin-top:16px;">'
+        '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
+        'Questions? Reply to this email or write to '
+        '<a href="mailto:info@shutterleague.com" style="color:#C8A84B;">info@shutterleague.com</a>.<br>'
+        '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a>'
+        '</p></td></tr>'
+
+        '</table></td></tr></table></body></html>'
+    )
+
+    text_body = (
+        'SHUTTER LEAGUE  -  Welcome, ' + name + '!\n\n'
+        'Your account is live. Get scored. See what to improve. Compete when ready.\n\n'
+        'Agreement confirmed: Member Agreement & Terms and Conditions accepted on ' + accepted_date + '.\n\n'
+        'WHAT YOU CAN DO NOW\n'
+        '- Upload your first photo: ' + upload_url + '\n'
+        '- Enter the weekly challenge: ' + challenge_url + '\n'
+        '- Your dashboard: ' + dashboard_url + '\n'
+        '- How scoring works: ' + hiw_url + '\n\n'
+        'Questions? Write to info@shutterleague.com\n\n'
+        ' -  Shutter League'
+    )
+    if send_email(user.email, 'Welcome to Shutter League — you are in', html_body, text_body):
+        app.logger.info('[welcome_email] Sent to ' + user.email)
+    else:
+        app.logger.warning('[welcome_email] Failed to send to ' + user.email)
 
 
 # ===========================================================================
