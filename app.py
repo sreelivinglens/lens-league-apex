@@ -2066,8 +2066,8 @@ def score_image(image_id):
             'soul_bonus': soul_bonus, 'iucn_tag': iucn_tag or None,
             'modules': [('DoD',dod),('Disruption',disruption),('DM',dm),('Wonder',wonder),('AQ',aq)],
             'rows': [
-                ('Technical\nIntegrity', request.form.get('row_technical','')),
-                ('Geometric\nHarmony',   request.form.get('row_geometric','')),
+                ('Depth of\nDifficulty', request.form.get('row_technical','')),
+                ('Visual\nDisruption',   request.form.get('row_geometric','')),
                 ('Decisive\nMoment',     request.form.get('row_dm','')),
                 ('Wonder\nFactor',       request.form.get('row_wonder','')),
                 ('AQ  -  Soul',            request.form.get('row_aq','')),
