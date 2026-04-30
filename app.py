@@ -7429,6 +7429,8 @@ def _auto_decide_raw(image_id, submission_id):
 
             # Build flag reason list
             flag_reasons = []
+            if results.get('raw_decode_failed'):
+                flag_reasons.append('RAW file could not be decoded — possible format mismatch, corrupt file, or wrong file submitted')
             if results.get('crop_flagged'):
                 flag_reasons.append(f'Significant crop detected ({results.get("crop_percentage", 0):.0%} of original RAW area)')
             flag_map = [
