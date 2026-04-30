@@ -1787,18 +1787,43 @@ def upload():
                             _u = User.query.get(img.user_id)
                             _uname = (_u.full_name or _u.username) if _u else 'Photographer'
                             _iurl = f'https://shutterleague.com/image/{img.id}'
+                            _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
                             if img.score >= 9.0 and ai_suspicion < 0.4:
+                                # Set flag + create raw_submissions record automatically
+                                img.raw_verification_required = True
+                                _deadline = datetime.utcnow() + timedelta(days=7)
+                                _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+                                try:
+                                    db.session.execute(db.text(
+                                        "INSERT INTO raw_submissions "
+                                        "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                                        "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
+                                        "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                                    ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+                                except Exception:
+                                    pass
+                                # Email user — branded, direct submit link
                                 send_email(
                                     to_addresses=[_u.email] if _u else [],
                                     subject='[Shutter League] Grandmaster Score — RAW Verification Required',
-                                    html_body=('<p>Hi ' + _uname + ',</p><p>Congratulations — <strong>' + (img.asset_name or 'Untitled') + '</strong> scored <strong>' + str(img.score) + '</strong> (' + (img.tier or '') + ').</p><p>Email your original RAW file to <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> within <strong>7 days</strong>.</p><p>Your image is held from public view until verified.</p><p><a href="' + _iurl + '">View your image</a></p><p>The Shutter League Team</p>'),
-                                    text_body=('Hi ' + _uname + ',\n\nCongratulations — "' + (img.asset_name or 'Untitled') + '" scored ' + str(img.score) + ' (' + (img.tier or '') + ').\n\nEmail your RAW file to ' + CONTACT_EMAIL + ' within 7 days.\nView: ' + _iurl + '\n\nThe Shutter League Team')
+                                    html_body=(
+                                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                                        '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                                        '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
+                                        '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(img.score) + '</strong> (' + (img.tier or '') + ').</p>'
+                                        '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
+                                        '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                                        '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
+                                        '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                                        '</div>'
+                                    )
                                 )
+                                # Notify admin
                                 send_email(
                                     to_addresses=[ADMIN_EMAIL],
-                                    subject='[Admin] RAW Verification Required — ' + (img.asset_name or 'Untitled') + ' (' + str(img.score) + ')',
-                                    html_body=('<p>Grandmaster image needs RAW verification.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Photographer: ' + (img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
-                                    text_body=('RAW Required\nImage: ' + (img.asset_name or 'Untitled') + '\nScore: ' + str(img.score) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
+                                    subject='[Admin] Grandmaster RAW Required — ' + (img.asset_name or 'Untitled') + ' (' + str(img.score) + ')',
+                                    html_body=('<p>Grandmaster image auto-flagged for RAW verification. Submission record created. User notified with direct submit link.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Photographer: ' + (img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 7 days</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(img.id) + '">View in RAW Queue</a></p>'),
+                                    text_body=('Grandmaster RAW auto-flagged\nImage: ' + (img.asset_name or 'Untitled') + '\nScore: ' + str(img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
                                 )
                             else:
                                 send_email(
@@ -1830,8 +1855,8 @@ def upload():
                     if getattr(img, 'needs_review', False):
                         if img.score >= 9.0 and ai_suspicion < 0.4:
                             flash(
-                                f' Grandmaster score! Your image has been submitted for RAW verification. '
-                                f'Email your original RAW file to {CONTACT_EMAIL} within 7 days.',
+                                f' Grandmaster score! Your image has been held for RAW verification. '
+                                f'Check your email for a direct link to submit your original RAW file within 7 days.',
                                 'warning'
                             )
                         else:
@@ -1867,7 +1892,7 @@ def upload():
             if getattr(img, 'needs_review', False):
                 if img.score >= 9.0:
                     msg = (f' Grandmaster score ({img.score})! Your image has been held for RAW verification. '
-                           f'Email your original RAW file to {CONTACT_EMAIL} within 7 days.')
+                           f'Check your email for a direct link to submit your RAW file within 7 days.')
                 else:
                     msg = (' Your image has been held for human review before going public. '
                            'Usually resolved within 24-48 hours.')
@@ -7119,8 +7144,7 @@ def admin_raw_trigger_analysis(image_id):
 
 
 def _run_raw_analysis(submission, img):
-    """Metadata + Claude vision RAW analysis. Returns (overall_flag, results_dict).
-    Supports NEF, CR2, CR3, ARW, DNG, RAF, ORF, RW2, iPhone DNG via rawpy."""
+    """Metadata + Claude vision RAW analysis. Returns (overall_flag, results_dict)."""
     import tempfile, io as _io, base64, json as _json
     import urllib.request as _ur
 
@@ -7128,43 +7152,20 @@ def _run_raw_analysis(submission, img):
     overall_flag= False
     raw_path    = None
 
-    def _open_raw_as_rgb(path):
-        """Open any camera RAW file and return an RGB PIL Image using rawpy.
-        Falls back to PIL for non-RAW files (e.g. TIFF, large JPEG)."""
-        try:
-            import rawpy
-            from PIL import Image as _PIL
-            with rawpy.imread(path) as raw:
-                rgb = raw.postprocess(
-                    use_camera_wb=True,
-                    half_size=True,       # faster, sufficient for analysis
-                    no_auto_bright=False,
-                    output_bps=8,
-                )
-            return _PIL.fromarray(rgb)
-        except Exception:
-            # Fallback for TIFF or large JPEG submitted as RAW
-            from PIL import Image as _PIL
-            return _PIL.open(path).convert('RGB')
-
     # Step 1  -  Metadata
     try:
         if submission.raw_file_key:
             from storage import get_client, BUCKET
-            # Preserve original extension so rawpy can detect format
-            orig_ext = submission.raw_file_key.rsplit('.', 1)[-1].lower() if '.' in submission.raw_file_key else 'raw'
-            tf = tempfile.NamedTemporaryFile(suffix='.' + orig_ext, delete=False)
+            tf = tempfile.NamedTemporaryFile(suffix='.raw', delete=False)
             get_client().download_fileobj(BUCKET, submission.raw_file_key, tf)
             tf.close()
             raw_path = tf.name
 
         if raw_path:
+            from PIL import Image as PILImage
             try:
-                pil_raw  = _open_raw_as_rgb(raw_path)
+                pil_raw = PILImage.open(raw_path)
                 raw_w, raw_h = pil_raw.size
-                # rawpy half_size=True halves dimensions — double to get true sensor size
-                raw_w *= 2
-                raw_h *= 2
                 results['raw_width']  = raw_w
                 results['raw_height'] = raw_h
                 jpg_w = img.width  or 0
@@ -7177,8 +7178,7 @@ def _run_raw_analysis(submission, img):
                     if crop_pct > 0.20:
                         overall_flag = True
                 results['exif_match'] = True
-            except Exception as _me:
-                app.logger.warning(f'[raw_metadata_open] {_me}')
+            except Exception:
                 results['exif_match'] = False
     except Exception as meta_err:
         app.logger.warning(f'[raw_metadata] {meta_err}')
@@ -7197,12 +7197,13 @@ def _run_raw_analysis(submission, img):
         raw_b64 = None
         if raw_path:
             try:
-                pil_r = _open_raw_as_rgb(raw_path)
+                from PIL import Image as PILImage
+                pil_r = PILImage.open(raw_path).convert('RGB')
                 buf   = _io.BytesIO()
                 pil_r.save(buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-            except Exception as _re:
-                app.logger.warning(f'[raw_render] {_re}')
+            except Exception:
+                pass
 
         if jpg_b64 and raw_b64:
             api_key = os.getenv('ANTHROPIC_API_KEY', '')
