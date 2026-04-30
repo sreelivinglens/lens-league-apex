@@ -305,7 +305,7 @@
     </div>
   </form>
 </div>
-{% elif submission and submission.admin_decision %}
+{% elif submission and submission.admin_decision and submission.submitted_at %}
 <div style="padding:18px 22px; background:var(--surface-2); border:1px solid var(--border);
             border-radius:var(--radius-md); font-size:17px; color:var(--text-secondary);">
   <strong style="color:var(--text-primary);">Decision recorded:</strong>
