@@ -2605,6 +2605,10 @@ def delete_image(image_id):
         WeeklySubmission.query.filter_by(image_id=image_id).delete()
     except Exception:
         pass
+    try:
+        db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': image_id})
+    except Exception:
+        pass
     db.session.delete(img)
     db.session.commit()
     flash('Image deleted. Your scores and contest standings have been updated accordingly.', 'warning')
@@ -7253,7 +7257,35 @@ def admin_raw_trigger_analysis(image_id):
 
 
 def _run_raw_analysis(submission, img):
-    """Metadata + Claude vision RAW analysis. Returns (overall_flag, results_dict)."""
+    """
+    RAW file authenticity analysis. Returns (overall_flag, results_dict).
+
+    VERIFICATION PHILOSOPHY:
+    ─────────────────────────────────────────────────────────────────────
+    This engine verifies that the submitted JPEG and the RAW file show
+    the SAME photograph. It does NOT penalise legitimate photographic
+    practice. The following are explicitly acceptable and must NOT flag:
+
+      ✓ Exposure, contrast, shadows, highlights adjustments
+      ✓ Colour grading, white balance changes
+      ✓ Sharpening, noise reduction, lens corrections
+      ✓ Cropping — including heavy crops from high-resolution cameras
+        (a 100MP RAW cropped to a 2000px JPEG is completely legitimate)
+      ✓ EXIF stripped by editing software (Lightroom, Photoshop etc.)
+      ✓ Dimension mismatch due to crop or resolution difference
+
+    The ONLY triggers for a flag are:
+      ✗ File cannot be decoded (corrupt, wrong file, wrong format)
+      ✗ Objects added or removed (compositing, generative AI)
+      ✗ Subject or scene is materially different from the RAW
+      ✗ AI generation detected in the submitted JPEG
+      ✗ Logo or trademark added
+
+    DO NOT reintroduce dimension/crop checks or EXIF checks as flag
+    triggers. These punish high-resolution shooters and photographers
+    who edit in software that strips metadata — both are legitimate.
+    ─────────────────────────────────────────────────────────────────────
+    """
     import tempfile, io as _io, base64, json as _json
     import urllib.request as _ur
 
