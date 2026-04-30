@@ -6771,6 +6771,112 @@ def admin_mark_raw_verified(image_id):
     return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
+@app.route('/admin/image/<int:image_id>/request-raw', methods=['POST'])
+@login_required
+@admin_required
+def admin_request_raw(image_id):
+    """Admin manually requests RAW verification from a photographer."""
+    img = Image.query.get_or_404(image_id)
+    if img.raw_verification_required:
+        flash(f'RAW verification already requested for "{img.asset_name}".', 'info')
+        return redirect(request.referrer or url_for('admin_dashboard'))
+    img.raw_verification_required = True
+    _deadline = datetime.utcnow() + timedelta(days=7)
+    try:
+        db.session.execute(db.text(
+            "INSERT INTO raw_submissions "
+            "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+            "VALUES (:iid, :uid, 'admin-request', 'weekly', :dl, 'awaiting') "
+            "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+        ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+    except Exception:
+        pass
+    db.session.commit()
+    owner = User.query.get(img.user_id)
+    if owner:
+        _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+        _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+        _uname = owner.full_name or owner.username
+        send_email(
+            to_addresses=[owner.email],
+            subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
+            html_body=(
+                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">We are conducting a routine authenticity audit. Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been selected for RAW file verification.</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Please submit your original RAW file within <strong>7 days</strong> to confirm your result.</p>'
+                '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                '</div>'
+            )
+        )
+    flash(f'RAW verification requested for "{img.asset_name}" — photographer notified.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/admin/bulk-request-raw', methods=['POST'])
+@login_required
+@admin_required
+def admin_bulk_request_raw():
+    """Admin bulk-requests RAW verification from multiple photographers."""
+    image_ids = request.form.getlist('image_ids')
+    if not image_ids:
+        flash('No images selected.', 'warning')
+        return redirect(url_for('admin_dashboard'))
+    requested = 0
+    skipped   = 0
+    for iid in image_ids:
+        try:
+            img = Image.query.get(int(iid))
+            if not img or img.status != 'scored':
+                continue
+            if img.raw_verification_required:
+                skipped += 1
+                continue
+            img.raw_verification_required = True
+            _deadline = datetime.utcnow() + timedelta(days=7)
+            try:
+                db.session.execute(db.text(
+                    "INSERT INTO raw_submissions "
+                    "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                    "VALUES (:iid, :uid, 'admin-request', 'weekly', :dl, 'awaiting') "
+                    "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+            except Exception:
+                pass
+            owner = User.query.get(img.user_id)
+            if owner:
+                _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+                _uname = owner.full_name or owner.username
+                send_email(
+                    to_addresses=[owner.email],
+                    subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
+                    html_body=(
+                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                        '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                        '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
+                        '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
+                        '<p style="font-size:16px;line-height:1.7;color:#111111;">We are conducting a routine authenticity audit. Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been selected for RAW file verification.</p>'
+                        '<p style="font-size:16px;line-height:1.7;color:#111111;">Please submit your original RAW file within <strong>7 days</strong> to confirm your result.</p>'
+                        '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                        '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                        '</div>'
+                    )
+                )
+            requested += 1
+        except Exception as e:
+            app.logger.error(f'[bulk_request_raw] image {iid}: {e}')
+    db.session.commit()
+    msg = f'RAW verification requested for {requested} image(s).'
+    if skipped:
+        msg += f' {skipped} already had RAW requested (skipped).'
+    flash(msg, 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/admin/raw-verification/<int:image_id>/send-reminder', methods=['POST'])
 @login_required
 @admin_required
