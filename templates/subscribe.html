@@ -183,7 +183,7 @@ function startPayment() {
   const options = {
     key:             '{{ razorpay_key }}',
     subscription_id: '{{ subscription.id }}',
-    name:            'Lens League Apex',
+    name:            'Shutter League',
     description:     '{{ track_label }} — {{ plan | title }}ly',
     image:           '/static/logo.png',
     handler: function(response) {
