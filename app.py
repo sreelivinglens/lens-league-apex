@@ -6730,6 +6730,60 @@ def admin_mark_raw_verified(image_id):
     return redirect(url_for('image_detail', image_id=image_id))
 
 
+@app.route('/admin/raw-verification/<int:image_id>/send-reminder', methods=['POST'])
+@login_required
+@admin_required
+def admin_raw_send_reminder(image_id):
+    """Manually send a RAW submission reminder to the photographer."""
+    img   = Image.query.get_or_404(image_id)
+    owner = User.query.get(img.user_id)
+    if not owner:
+        flash('User not found.', 'error')
+        return redirect(url_for('admin_raw_detail', image_id=image_id))
+    sub = db.session.execute(db.text(
+        'SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
+    ), {'iid': image_id}).fetchone()
+    deadline_str = sub.deadline.strftime('%d %B %Y, %H:%M UTC') if (sub and sub.deadline) else '—'
+    uname  = owner.full_name or owner.username
+    ititle = img.asset_name or 'Untitled'
+    try:
+        import threading
+        threading.Thread(
+            target=send_email,
+            args=(
+                [owner.email],
+                '[Shutter League] Reminder: RAW File Required for ' + ititle,
+                '<p>Hi ' + uname + ',</p>'
+                '<p>This is a reminder that your RAW file for <strong>' + ititle + '</strong> '
+                'is required to confirm your contest standing.</p>'
+                '<p>Deadline: <strong>' + deadline_str + '</strong></p>'
+                '<p>Please submit your RAW file at '
+                '<a href="https://shutterleague.com">shutterleague.com</a> '
+                'or email it to <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a>.</p>'
+                '<p>The Shutter League Team</p>',
+            ),
+            daemon=True
+        ).start()
+        flash('Reminder email sent to ' + owner.email + '.', 'success')
+    except Exception as e:
+        flash('Failed to send reminder: ' + str(e), 'error')
+    return redirect(url_for('admin_raw_detail', image_id=image_id))
+
+
+@app.route('/admin/raw-verification/<int:image_id>/delete-submission', methods=['POST'])
+@login_required
+@admin_required
+def admin_raw_delete_submission(image_id):
+    """Delete the RAW submission record for this image. Does not delete the image itself."""
+    img = Image.query.get_or_404(image_id)
+    db.session.execute(db.text(
+        'DELETE FROM raw_submissions WHERE image_id=:iid'
+    ), {'iid': image_id})
+    db.session.commit()
+    flash('RAW submission record deleted for "' + (img.asset_name or 'Untitled') + '".', 'success')
+    return redirect(url_for('admin_raw_verification'))
+
+
 @app.route('/admin/raw-verification/<int:image_id>/decide', methods=['POST'])
 @login_required
 @admin_required
