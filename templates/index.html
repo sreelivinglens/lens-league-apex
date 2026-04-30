@@ -811,15 +811,26 @@ document.querySelectorAll(".flash.success").forEach(function(f){
 
 /* Touch swipe support */
 var touchStartX = 0;
+var touchStartY = 0;
+var touchLocked = false;
 document.getElementById('slFrameInner').addEventListener('touchstart', function(e){
   touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchLocked = false;
 }, {passive: true});
+document.getElementById('slFrameInner').addEventListener('touchmove', function(e){
+  var dx = Math.abs(e.touches[0].clientX - touchStartX);
+  var dy = Math.abs(e.touches[0].clientY - touchStartY);
+  if(!touchLocked && dx > dy && dx > 8){ touchLocked = true; }
+  if(touchLocked){ e.preventDefault(); }
+}, {passive: false});
 document.getElementById('slFrameInner').addEventListener('touchend', function(e){
   var diff = touchStartX - e.changedTouches[0].clientX;
-  if(Math.abs(diff) > 50){
+  if(touchLocked && Math.abs(diff) > 30){
     if(diff > 0) goTo(cur+1); else goTo(cur-1);
     startAuto();
   }
+  touchLocked = false;
 }, {passive: true});
 
 startAuto();
