@@ -522,13 +522,19 @@ with app.app_context():
                 conn_fix.execute(db.text(
                     "ALTER TABLE open_contest_entries DROP CONSTRAINT IF EXISTS open_contest_entries_user_id_genre_platform_year_key"
                 ))
-                conn_fix.execute(db.text(
-                    "ALTER TABLE open_contest_entries ADD CONSTRAINT IF NOT EXISTS uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
-                ))
                 conn_fix.commit()
+            print('open_contest_entries old constraint dropped.')
+        except Exception as ce:
+            print(f'open_contest_entries drop constraint warning: {ce}')
+        try:
+            with db.engine.connect() as conn_fix2:
+                conn_fix2.execute(db.text(
+                    "ALTER TABLE open_contest_entries ADD CONSTRAINT uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
+                ))
+                conn_fix2.commit()
             print('open_contest_entries constraint fix OK.')
         except Exception as ce:
-            print(f'open_contest_entries constraint fix warning: {ce}')
+            print(f'open_contest_entries add constraint warning: {ce}')
 
         # v27  -  peer rating tables
         try:
