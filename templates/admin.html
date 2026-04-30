@@ -366,7 +366,7 @@
           <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
           <button type="submit" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;">🗑 Delete Selected</button>
           <button type="button" id="bulkRawBtn" disabled
-                  style="opacity:0.4; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:var(--gold); background:transparent; border-radius:var(--radius-sm); cursor:pointer;"
+                  style="opacity:0.4; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
         </div>
 
@@ -455,12 +455,18 @@
                         onclick="return confirm('Flag as AI-generated?');">🚫 Flag</button>
               {% endif %}
               {% if img.status == 'scored' %}
-                {% if img.raw_verification_required %}
+                {% if img.raw_verified %}
                   <button type="button" class="act-btn" disabled
-                          style="opacity:0.45; cursor:default; border-color:var(--gold); color:var(--gold); font-size:10px;">RAW ✓</button>
+                          style="cursor:default; border-color:#2e7d32; background:#2e7d32; color:#fff; font-weight:700; font-size:11px;">✓ VERIFIED</button>
+                {% elif img.raw_disqualified %}
+                  <button type="button" class="act-btn" disabled
+                          style="cursor:default; border-color:var(--red); background:var(--red); color:#fff; font-weight:700; font-size:11px;">✗ DISQUALIFIED</button>
+                {% elif img.raw_verification_required %}
+                  <button type="button" class="act-btn" disabled
+                          style="cursor:default; border-color:#b8860b; background:transparent; color:#b8860b; font-weight:700; font-size:11px;">⏳ PENDING</button>
                 {% else %}
                   <button type="submit" form="raw-form-{{ img.id }}" class="act-btn"
-                          style="border-color:var(--gold); color:var(--gold);"
+                          style="border-color:var(--gold); background:var(--gold); color:#000; font-weight:700;"
                           onclick="return confirm('Request RAW file from photographer?');">📂 RAW</button>
                 {% endif %}
               {% endif %}
