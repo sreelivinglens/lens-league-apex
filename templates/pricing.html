@@ -161,7 +161,7 @@
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('dashboard') }}" class="plan-cta secondary">Go to Dashboard</a>
       {% else %}
-        <a href="{{ url_for('register') }}" class="plan-cta secondary">Start Free</a>
+        <a href="{{ url_for('register') }}" class="plan-cta primary">Start Free</a>
       {% endif %}
     </div>
 
