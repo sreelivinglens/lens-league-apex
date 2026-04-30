@@ -21,6 +21,36 @@
   </div>
 </div>
 
+{# ── Bulk action bar ── #}
+<form method="POST" id="bulkForm">
+<div id="bulkBar" style="display:none; position:sticky; top:0; z-index:100;
+     background:#000; border-bottom:2px solid #F5C518;
+     padding:12px 20px; margin-bottom:16px;
+     align-items:center; gap:12px; flex-wrap:wrap;">
+  <span id="bulkCount" style="font-family:var(--font-mono); font-size:13px;
+        font-weight:700; color:#F5C518; letter-spacing:1px; margin-right:4px;">0 selected</span>
+  <button type="submit" formaction="{{ url_for('admin_raw_bulk_remind') }}"
+          onclick="return confirmBulk('Send reminder emails to selected photographers?')"
+          class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);">
+    📧 Send Reminders
+  </button>
+  <button type="submit" formaction="{{ url_for('admin_raw_bulk_verify') }}"
+          onclick="return confirmBulk('Mark all selected images as RAW verified?')"
+          class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--green); color:var(--green);">
+    ✓ Mark Verified
+  </button>
+  <button type="submit" formaction="{{ url_for('admin_raw_bulk_delete') }}"
+          onclick="return confirmBulk('Delete RAW submission records for selected images? Cannot be undone.')"
+          class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--red); color:var(--red);">
+    🗑 Delete Records
+  </button>
+  <button type="button" onclick="clearAll()"
+          style="background:none; border:none; color:var(--text-muted); font-size:13px;
+                 cursor:pointer; font-family:var(--font-mono); padding:8px 12px;">
+    &#10005; Clear
+  </button>
+</div>
+
 {% if submissions %}
 
 {# Group submissions by contest_ref #}
@@ -53,6 +83,11 @@
     <table style="width:100%; border-collapse:collapse; margin-bottom:0;">
       <thead>
         <tr>
+          <th style="padding:11px 14px; width:40px; border-bottom:1px solid var(--border);
+                   background:var(--surface-3); text-align:center;">
+            <input type="checkbox" id="selectAll" onclick="toggleAll(this)"
+                   style="accent-color:var(--gold); width:16px; height:16px; cursor:pointer;">
+          </th>
           {% for col in ['Image', 'Photographer', 'Method', 'Submitted', 'Analysis', 'Decision', 'Actions'] %}
           <th style="padding:11px 14px; font-family:var(--font-mono); font-size:12px; font-weight:600;
                      letter-spacing:1.5px; color:var(--text-secondary); text-align:left;
@@ -68,6 +103,13 @@
   {% set needs_decision = s.submitted_at and not s.admin_decision %}
   <tr style="border-bottom:1px solid var(--border-subtle);
              {{ 'background:rgba(192,57,43,0.04);' if s.overall_flag else ('background:rgba(200,168,75,0.03);' if needs_decision else '') }}">
+
+    {# Checkbox #}
+    <td style="padding:12px 14px; vertical-align:middle; text-align:center;">
+      <input type="checkbox" name="image_ids" value="{{ s.image_id }}"
+             class="row-cb" onchange="updateBulkBar()"
+             style="accent-color:var(--gold); width:16px; height:16px; cursor:pointer;">
+    </td>
 
     {# Image #}
     <td style="padding:12px 14px; vertical-align:middle;">
@@ -219,5 +261,44 @@
   </p>
 </div>
 {% endif %}
+
+</form>
+
+{% block extra_js %}
+<script>
+function updateBulkBar() {
+  var cbs    = document.querySelectorAll('.row-cb:checked');
+  var bar    = document.getElementById('bulkBar');
+  var count  = document.getElementById('bulkCount');
+  var selAll = document.getElementById('selectAll');
+  var allCbs = document.querySelectorAll('.row-cb');
+  count.textContent = cbs.length + ' selected';
+  bar.style.display = cbs.length > 0 ? 'flex' : 'none';
+  selAll.indeterminate = cbs.length > 0 && cbs.length < allCbs.length;
+  selAll.checked = cbs.length === allCbs.length && allCbs.length > 0;
+}
+
+function toggleAll(source) {
+  document.querySelectorAll('.row-cb').forEach(function(cb) {
+    cb.checked = source.checked;
+  });
+  updateBulkBar();
+}
+
+function clearAll() {
+  document.querySelectorAll('.row-cb').forEach(function(cb) {
+    cb.checked = false;
+  });
+  document.getElementById('selectAll').checked = false;
+  updateBulkBar();
+}
+
+function confirmBulk(msg) {
+  var cbs = document.querySelectorAll('.row-cb:checked');
+  if (cbs.length === 0) { alert('No images selected.'); return false; }
+  return confirm(msg + ' (' + cbs.length + ' image' + (cbs.length > 1 ? 's' : '') + ')');
+}
+</script>
+{% endblock %}
 
 {% endblock %}
