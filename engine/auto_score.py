@@ -74,21 +74,33 @@ IF INTENTIONAL BLUR detected in non-Creative genre:
 
 MODULE DEFINITIONS:
 
-DoD (Difficulty of Delivery):
-  Wildlife: Physical risk, access difficulty, environmental hostility,
-    mechanical precision. Sharp animal subject = high DoD.
-    Intentional panning blur on moving animal = acceptable technique.
-  Drone: Physical difficulty of aerial operation — wind, altitude,
-    vibration control, light management from elevation, regulatory complexity.
-    Geometric patterns and impossible ground-level perspectives score highest.
-  Street: Speed of reaction, working in chaos, difficult light.
+DoD (Depth of Difficulty):
+  Score BOTH technical execution AND situational difficulty of capture.
+  Situational difficulty includes: physical risk, restricted access, environmental
+  hostility, subject unpredictability, timing constraints, regulatory complexity,
+  and the photographer's physical presence in a demanding or dangerous situation.
+  A technically competent shot taken in a war zone, extreme weather, underwater,
+  or with a dangerous animal scores higher than the same shot taken safely.
+  Technical execution includes: mechanical precision, sharpness where appropriate,
+  exposure control, and mastery of the photographic challenge the genre demands.
+
+  Per-genre guidance:
+  Wildlife: Physical risk, access to habitat, environmental hostility, mechanical
+    precision. Sharp animal subject = high DoD. Rare behaviour or dangerous proximity = maximum DoD.
+  Drone: Physical difficulty of aerial operation — wind, altitude, vibration control,
+    light management from elevation, regulatory complexity. Geometric patterns and
+    impossible ground-level perspectives score highest.
+  Street: Speed of reaction, working in chaos, difficult or hostile light conditions,
+    photographing in conflict zones, crowded environments, or restricted spaces.
     Motion blur on moving subjects is acceptable and adds energy.
   Macro: Extreme precision at high magnification. Sharpness IS DoD.
-  Landscapes: Patience, location access, weather timing, long-exposure control.
-    Long-exposure blur on water/clouds = HIGH DoD.
+  Landscapes: Patience, location access (remote or extreme terrain), weather timing,
+    long-exposure control. Predawn climbs, extreme cold, difficult terrain = high DoD.
+  Wedding/People: Emotional access, managing unpredictable human subjects, working
+    in low light, capturing unrepeatable moments under time pressure.
   Creative: See STEP 0 above.
 
-Disruption (Visual Originality):
+VD (Visual Disruption):
   Evaluate against global photographic database.
   Intentional blur, painterly rendering, multiple reflections, layered
   transparencies, drone geometry, unconventional framing = HIGH Disruption.
@@ -102,7 +114,7 @@ DM (Decisive Moment):
   to execute — right conditions, right timing, right duration.
   Selection ≠ Decision — reward active creative control.
 
-Wonder (Smithsonian Standard):
+WF (Wonder Factor):
   The Unseen Truth. Rare behaviour, scientific significance, or a view
   the audience has never seen.
   For Drone: perspectives impossible from ground = high Wonder.
@@ -117,7 +129,7 @@ AQ (Affective Quotient):
 APEX LAYER RULES:
 - Soul Bonus: AQ >= 8.0 removes ALL technical penalties
 - Humanity Check: AQ < 4.0 adds -1.5 penalty to AQ
-- Iconic Wall: score >= 9.0 requires BOTH Disruption AND AQ > 8.5
+- Iconic Wall: score >= 9.0 requires BOTH VD (Visual Disruption) AND AQ > 8.5
 - Plateau Penalty: DoD >= 9.5 + Disruption < 5.0 caps at 7.9
 - Identity Cap: >85% similarity to known winner caps at 6.0
 - 10.0 never awarded
@@ -171,11 +183,11 @@ Return this exact JSON structure:
   "archetype": "<archetype name>",
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
-  "row_technical": "<2-3 sentence technical analysis>",
-  "row_geometric": "<2-3 sentence geometric harmony analysis>",
-  "row_dm": "<2-3 sentence decisive moment analysis>",
-  "row_wonder": "<2-3 sentence wonder factor analysis>",
-  "row_aq": "<2-3 sentence AQ soul analysis>",
+  "row_technical": "<2-3 sentence DoD analysis — technical execution AND situational difficulty of capture>",
+  "row_geometric": "<2-3 sentence VD analysis — how the image breaks visual convention, compositional originality>",
+  "row_dm": "<2-3 sentence DM analysis — decisive moment, timing, irreversibility of the captured instant>",
+  "row_wonder": "<2-3 sentence WF analysis — wonder factor, unseen truth, capacity to arrest attention>",
+  "row_aq": "<2-3 sentence AQ soul analysis — emotional truth, human resonance, affective quotient>",
   "byline_1": "<gap analysis — what holds this from next tier>",
   "byline_2": "<THE ONE IMPROVEMENT: specific, physical, actionable. No brand names.>",
   "badges_g": ["<strength 1>", "<strength 2>", "<strength 3>"],
