@@ -364,7 +364,13 @@
       {% else %}
       <form method="POST" action="{{ url_for('delete_image', image_id=image.id) }}" style="flex:2; min-width:180px;">
       {% endif %}
-        <button type="submit" class="btn btn-danger" style="width:100%;">Yes, Delete Permanently</button>
+        <button type="submit" class="btn btn-danger" style="width:100%;" id="deleteConfirmBtn"
+                onclick="this.textContent='Deleting…'; this.disabled=true; document.getElementById('deleteWaitMsg').style.display='block'; return true;">
+          Yes, Delete Permanently
+        </button>
+        <p id="deleteWaitMsg" style="display:none; margin-top:10px; font-size:13px; color:var(--text-muted); text-align:center;">
+          Please wait — do not close this tab.
+        </p>
       </form>
     </div>
   </div>

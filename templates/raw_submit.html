@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Submit RAW File — Shutter League{% endblock %}
+{% block title %}Submit RAW File — Lens League Apex{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -95,9 +95,9 @@
                 text-transform:uppercase; color:var(--gold); margin-bottom:14px;">What to submit</div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       {% for point in [
-        'The original RAW file (.CR2, .CR3, .NEF, .ARW, .DNG, .RAF, .ORF or similar) straight from your camera.',
-        'The RAW file for the same photograph as your submitted JPEG — same scene, same moment.',
-        'Do not alter or reprocess the RAW file before submitting — camera-native output only.',
+        'The original RAW file (.CR2, .CR3, .NEF, .ARW, .DNG, .RAF, .ORF or similar) from your camera.',
+        'The same file number or capture that matches your submitted JPEG — e.g. IMG_4472.CR3 for IMG_4472.JPG.',
+        'Do not retouch or alter the RAW file before submitting.',
         'File size is typically 20–80 MB depending on your camera.',
       ] %}
       <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
@@ -155,11 +155,19 @@
       </div>
     </label>
 
-    <button type="submit" class="btn btn-solid"
+    <button type="submit" class="btn btn-solid" id="submitRawBtn"
             style="width:100%; padding:18px; font-size:19px; letter-spacing:2px; margin-top:8px;"
-            onclick="return confirmSubmit()">
+            onclick="return confirmAndWait()">
       Submit RAW File →
     </button>
+
+    <div id="uploadWaitMsg" style="display:none; margin-top:14px; padding:14px 18px;
+         background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark);
+         border-radius:var(--radius-sm); font-size:15px; color:var(--text-primary);
+         text-align:center; line-height:1.7;">
+      ⏳ <strong>Uploading — please do not close this browser tab.</strong><br>
+      Large RAW files may take several minutes depending on your connection speed.
+    </div>
 
     <div style="font-size:16px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
       You will receive an email confirmation once submitted. Verification takes up to 48 hours.
@@ -188,7 +196,7 @@ function showFileName(input) {
   }
 }
 
-function confirmSubmit() {
+function confirmAndWait() {
   const method = document.querySelector('[name="method"]:checked').value;
   if (method === 'upload') {
     const file = document.getElementById('rawFileInput');
@@ -203,7 +211,11 @@ function confirmSubmit() {
       return false;
     }
   }
-  return confirm('Submit this RAW file for verification? This action cannot be undone.');
+  if (!confirm('Submit this RAW file for verification? This action cannot be undone.')) return false;
+  document.getElementById('uploadWaitMsg').style.display = 'block';
+  document.getElementById('submitRawBtn').disabled = true;
+  document.getElementById('submitRawBtn').textContent = 'Uploading…';
+  return true;
 }
 </script>
 {% endblock %}
