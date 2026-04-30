@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Submit RAW File — Lens League Apex{% endblock %}
+{% block title %}Submit RAW File — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -95,9 +95,9 @@
                 text-transform:uppercase; color:var(--gold); margin-bottom:14px;">What to submit</div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       {% for point in [
-        'The original RAW file (.CR2, .CR3, .NEF, .ARW, .DNG, .RAF, .ORF or similar) from your camera.',
-        'The same file number or capture that matches your submitted JPEG — e.g. IMG_4472.CR3 for IMG_4472.JPG.',
-        'Do not retouch or alter the RAW file before submitting.',
+        'The original RAW file (.CR2, .CR3, .NEF, .ARW, .DNG, .RAF, .ORF or similar) straight from your camera.',
+        'The RAW file for the same photograph as your submitted JPEG — same scene, same moment.',
+        'Do not alter or reprocess the RAW file before submitting — camera-native output only.',
         'File size is typically 20–80 MB depending on your camera.',
       ] %}
       <div style="display:flex; gap:10px; font-size:18px; color:var(--text-secondary); line-height:1.6;">
