@@ -68,7 +68,41 @@
     <h1>RAW Submission Review</h1>
     <p>{{ img.asset_name or 'Untitled' }} &nbsp;·&nbsp; {{ img.genre or '—' }}</p>
   </div>
-  <a href="{{ url_for('admin_raw_verification') }}" class="btn" style="padding:10px 20px;">← Queue</a>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+
+    {# Send Reminder — always available #}
+    <form method="POST" action="{{ url_for('admin_raw_send_reminder', image_id=img.id) }}"
+          onsubmit="return confirm('Send RAW reminder email to the photographer?')">
+      <button type="submit" class="btn"
+              style="padding:10px 18px; font-size:14px; border-color:var(--gold-dark); color:var(--gold);">
+        📧 Send Reminder
+      </button>
+    </form>
+
+    {# Mark as Verified — available when not already verified #}
+    {% if not img.raw_verified %}
+    <form method="POST" action="{{ url_for('admin_mark_raw_verified', image_id=img.id) }}"
+          onsubmit="return confirm('Mark this image as RAW verified? This bypasses the submission process.')">
+      <button type="submit" class="btn"
+              style="padding:10px 18px; font-size:14px; border-color:var(--green); color:var(--green);">
+        ✓ Mark Verified
+      </button>
+    </form>
+    {% endif %}
+
+    {# Delete Submission — always available #}
+    {% if submission %}
+    <form method="POST" action="{{ url_for('admin_raw_delete_submission', image_id=img.id) }}"
+          onsubmit="return confirm('Delete this RAW submission record? This cannot be undone.')">
+      <button type="submit" class="btn"
+              style="padding:10px 18px; font-size:14px; border-color:var(--red); color:var(--red);">
+        🗑 Delete Record
+      </button>
+    </form>
+    {% endif %}
+
+    <a href="{{ url_for('admin_raw_verification') }}" class="btn" style="padding:10px 18px; font-size:14px;">← Queue</a>
+  </div>
 </div>
 
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px;">
