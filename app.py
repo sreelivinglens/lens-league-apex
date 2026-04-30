@@ -806,6 +806,7 @@ def inject_globals():
         'contact_email':     CONTACT_EMAIL,
         'admin_email':       ADMIN_EMAIL,
         'timedelta':         timedelta,
+        'now':               datetime.utcnow,
     }
 
 
@@ -7264,7 +7265,9 @@ def _run_raw_analysis(submission, img):
     try:
         if submission.raw_file_key:
             from storage import get_client, BUCKET
-            tf = tempfile.NamedTemporaryFile(suffix='.raw', delete=False)
+            import os as _os
+            _raw_ext = _os.path.splitext(submission.raw_file_key)[1] or '.raw'
+            tf = tempfile.NamedTemporaryFile(suffix=_raw_ext, delete=False)
             get_client().download_fileobj(BUCKET, submission.raw_file_key, tf)
             tf.close()
             raw_path = tf.name
