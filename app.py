@@ -7314,7 +7314,8 @@ def _run_raw_analysis(submission, img):
                     with rawpy.imread(path) as raw:
                         rgb = raw.postprocess(half_size=True)
                     return _PIL.fromarray(rgb)
-                except Exception:
+                except Exception as _rawpy_err:
+                    app.logger.warning(f'[rawpy] failed on {path}: {_rawpy_err}')
                     from PIL import Image as _PIL
                     return _PIL.open(path)
 
@@ -7362,7 +7363,8 @@ def _run_raw_analysis(submission, img):
                         with rawpy.imread(path) as raw:
                             rgb = raw.postprocess(half_size=True)
                         return _PIL.fromarray(rgb)
-                    except Exception:
+                    except Exception as _rawpy_err_v:
+                        app.logger.warning(f'[rawpy_vision] failed on {path}: {_rawpy_err_v}')
                         from PIL import Image as _PIL
                         return _PIL.open(path)
                 pil_r = _open_raw_as_pil_v(raw_path).convert('RGB')
