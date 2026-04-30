@@ -36,9 +36,9 @@
     Our automated system flagged your RAW file for the following reason(s):
   </p>
   <ul style="margin:0;padding-left:20px;">
-    {% for reason in submission.auto_flag_reasons.split(' | ') if submission.auto_flag_reasons %}
+    {% if submission.auto_flag_reasons %}{% for reason in submission.auto_flag_reasons.split(' | ') %}
     <li style="font-size:16px;color:#F0A0A0;line-height:1.8;">{{ reason }}</li>
-    {% endfor %}
+    {% endfor %}{% endif %}
   </ul>
 </div>
 
