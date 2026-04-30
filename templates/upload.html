@@ -273,10 +273,14 @@
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
         <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Recommended under 5 MB &nbsp;·&nbsp; Max 20 MB accepted</div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Resize to 2000px before uploading</div>
       </div>
 
       <!-- Soft size warning — amber, not a block -->
+      <div style="margin-top:10px; padding:10px 14px; background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark); border-radius:var(--radius-sm); font-size:13px; color:var(--text-muted); line-height:1.6;">
+        📂 <strong style="color:var(--text-primary);">Keep your original RAW file.</strong>
+        High-scoring images may be selected for RAW verification — you may need to submit the original file from your camera.
+      </div>
       <div class="file-size-warning" id="fileSizeWarning">
         ⚠️ This file is larger than 5 MB. It will still upload fine — the engine resizes automatically. Larger files just take a little longer to transfer.
       </div>
