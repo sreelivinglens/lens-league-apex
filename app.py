@@ -1372,6 +1372,14 @@ def dashboard():
             )
     contest_banners = _ann_q.order_by(ContestAnnouncement.created_at.desc()).all()
 
+    # RAW pending -- images flagged for verification not yet verified or disqualified
+    raw_pending = Image.query.filter(
+        Image.user_id == current_user.id,
+        Image.raw_verification_required == True,
+        Image.raw_verified == False,
+        Image.raw_disqualified == False
+    ).all() if current_user.role != 'admin' else []
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1381,7 +1389,8 @@ def dashboard():
                            zone2_pending=zone2_pending,
                            contest_wins=contest_wins,
                            show_poty_banner=show_poty_banner,
-                           contest_banners=contest_banners)
+                           contest_banners=contest_banners,
+                           raw_pending=raw_pending)
 
 
 # ---------------------------------------------------------------------------
@@ -6781,121 +6790,6 @@ def admin_raw_delete_submission(image_id):
     ), {'iid': image_id})
     db.session.commit()
     flash('RAW submission record deleted for "' + (img.asset_name or 'Untitled') + '".', 'success')
-    return redirect(url_for('admin_raw_verification'))
-
-
-@app.route('/admin/raw-verification/bulk-delete', methods=['POST'])
-@login_required
-@admin_required
-def admin_raw_bulk_delete():
-    """Bulk delete RAW submission records. Does not delete the images themselves."""
-    image_ids = request.form.getlist('image_ids')
-    if not image_ids:
-        flash('No images selected.', 'warning')
-        return redirect(url_for('admin_raw_verification'))
-    deleted = 0
-    for iid in image_ids:
-        try:
-            db.session.execute(db.text(
-                'DELETE FROM raw_submissions WHERE image_id=:iid'
-            ), {'iid': int(iid)})
-            deleted += 1
-        except Exception:
-            pass
-    db.session.commit()
-    flash(f'{deleted} RAW submission record(s) deleted.', 'success')
-    return redirect(url_for('admin_raw_verification'))
-
-
-@app.route('/admin/raw-verification/bulk-remind', methods=['POST'])
-@login_required
-@admin_required
-def admin_raw_bulk_remind():
-    """Bulk send RAW reminder emails with direct submit links."""
-    image_ids = request.form.getlist('image_ids')
-    if not image_ids:
-        flash('No images selected.', 'warning')
-        return redirect(url_for('admin_raw_verification'))
-    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-    sent = 0
-    for iid in image_ids:
-        try:
-            iid = int(iid)
-            img   = Image.query.get(iid)
-            owner = User.query.get(img.user_id) if img else None
-            if not img or not owner:
-                continue
-            sub = db.session.execute(db.text(
-                'SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY id DESC LIMIT 1'
-            ), {'iid': iid}).fetchone()
-            deadline_str = sub.deadline.strftime('%d %B %Y, %H:%M UTC') if (sub and sub.deadline) else '—'
-            contest_type = (sub.contest_type or 'weekly') if sub else 'weekly'
-            submit_url   = f'{site_url}/raw/submit/{contest_type}/{iid}'
-            uname  = owner.full_name or owner.username
-            ititle = img.asset_name or 'Untitled'
-            import threading
-            threading.Thread(
-                target=send_email,
-                args=(
-                    [owner.email],
-                    '[Shutter League] Reminder: RAW File Required for ' + ititle,
-                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;'
-                    'background:#fffef9;color:#111111;">'
-                    '<p style="font-family:\'Courier New\',monospace;font-size:12px;letter-spacing:2px;'
-                    'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                    '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">'
-                    'RAW File Required &#8212; Action Needed</h2>'
-                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + uname + ',</p>'
-                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Your RAW file for '
-                    '<strong>' + ititle + '</strong> is required to confirm your contest standing.</p>'
-                    '<p style="font-size:16px;line-height:1.7;color:#111111;">'
-                    'Deadline: <strong style="color:#F5C518;">' + deadline_str + '</strong></p>'
-                    '<a href="' + submit_url + '" style="display:inline-block;background:#F5C518;'
-                    'color:#000000;font-family:\'Courier New\',monospace;font-size:13px;font-weight:700;'
-                    'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
-                    'text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">'
-                    'Submit RAW File &#8594;</a>'
-                    '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: '
-                    '<a href="' + submit_url + '" style="color:#F5C518;">' + submit_url + '</a></p>'
-                    '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                    '</div>',
-                ),
-                daemon=True
-            ).start()
-            sent += 1
-        except Exception:
-            pass
-    flash(f'Reminder emails sent to {sent} photographer(s).', 'success')
-    return redirect(url_for('admin_raw_verification'))
-
-
-@app.route('/admin/raw-verification/bulk-verify', methods=['POST'])
-@login_required
-@admin_required
-def admin_raw_bulk_verify():
-    """Bulk mark images as RAW verified and close their submission records."""
-    image_ids = request.form.getlist('image_ids')
-    if not image_ids:
-        flash('No images selected.', 'warning')
-        return redirect(url_for('admin_raw_verification'))
-    verified = 0
-    for iid in image_ids:
-        try:
-            iid = int(iid)
-            img = Image.query.get(iid)
-            if not img:
-                continue
-            img.raw_verified     = True
-            img.raw_disqualified = False
-            db.session.execute(db.text(
-                "UPDATE raw_submissions SET admin_decision='approved', admin_decided_at=NOW() "
-                "WHERE image_id=:iid AND admin_decision IS NULL"
-            ), {'iid': iid})
-            verified += 1
-        except Exception:
-            pass
-    db.session.commit()
-    flash(f'{verified} image(s) marked as RAW verified.', 'success')
     return redirect(url_for('admin_raw_verification'))
 
 
