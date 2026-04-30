@@ -2571,31 +2571,31 @@ def delete_image(image_id):
     if img.user_id != current_user.id:
         abort(403)
 
-    # R2 cleanup first — non-blocking
+    # Collect R2 keys before DB delete
+    r2_keys = []
     for url_attr in ['thumb_url', 'card_url']:
         url = getattr(img, url_attr, None)
         if url:
             try:
-                key = url.split(r2.R2_PUBLIC_URL + '/')[-1]
-                r2.delete_file(key)
+                r2_keys.append(url.split(r2.R2_PUBLIC_URL + '/')[-1])
             except Exception:
                 pass
 
-    # Direct SQL deletes — bypasses ORM cascade, instant
+    # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
     for sql in [
-        "DELETE FROM raw_submissions     WHERE image_id = :iid",
-        "DELETE FROM weekly_submissions  WHERE image_id = :iid",
-        "DELETE FROM contest_entries     WHERE image_id = :iid",
+        "DELETE FROM raw_submissions      WHERE image_id = :iid",
+        "DELETE FROM weekly_submissions   WHERE image_id = :iid",
+        "DELETE FROM contest_entries      WHERE image_id = :iid",
         "DELETE FROM open_contest_entries WHERE image_id = :iid",
-        "DELETE FROM image_reports       WHERE image_id = :iid",
-        "DELETE FROM rating_assignments  WHERE image_id = :iid",
-        "DELETE FROM peer_ratings        WHERE image_id = :iid",
-        "DELETE FROM peer_pool_entries   WHERE image_id = :iid",
-        "DELETE FROM brand_entries       WHERE image_id = :iid",
-        "DELETE FROM calibration_notes   WHERE image_id = :iid",
-        "DELETE FROM judge_assignments   WHERE image_id = :iid",
-        "DELETE FROM judge_scores        WHERE image_id = :iid",
+        "DELETE FROM image_reports        WHERE image_id = :iid",
+        "DELETE FROM rating_assignments   WHERE image_id = :iid",
+        "DELETE FROM peer_ratings         WHERE image_id = :iid",
+        "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM brand_entries        WHERE image_id = :iid",
+        "DELETE FROM calibration_notes    WHERE image_id = :iid",
+        "DELETE FROM judge_assignments    WHERE image_id = :iid",
+        "DELETE FROM judge_scores         WHERE image_id = :iid",
     ]:
         try:
             db.session.execute(db.text(sql), {'iid': iid})
@@ -2605,6 +2605,18 @@ def delete_image(image_id):
     db.session.execute(db.text("DELETE FROM images WHERE id = :iid AND user_id = :uid"),
                        {'iid': iid, 'uid': current_user.id})
     db.session.commit()
+
+    # R2 cleanup in background — does not block user
+    if r2_keys:
+        import threading
+        def _cleanup(keys):
+            for k in keys:
+                try:
+                    r2.delete_file(k)
+                except Exception:
+                    pass
+        threading.Thread(target=_cleanup, args=(r2_keys,), daemon=True).start()
+
     flash('Image deleted. Your scores and contest standings have been updated accordingly.', 'warning')
     return redirect(url_for('dashboard'))
 
