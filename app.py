@@ -1372,14 +1372,6 @@ def dashboard():
             )
     contest_banners = _ann_q.order_by(ContestAnnouncement.created_at.desc()).all()
 
-    # RAW pending -- images flagged for verification not yet verified or disqualified
-    raw_pending = Image.query.filter(
-        Image.user_id == current_user.id,
-        Image.raw_verification_required == True,
-        Image.raw_verified == False,
-        Image.raw_disqualified == False
-    ).all() if current_user.role != 'admin' else []
-
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1389,8 +1381,7 @@ def dashboard():
                            zone2_pending=zone2_pending,
                            contest_wins=contest_wins,
                            show_poty_banner=show_poty_banner,
-                           contest_banners=contest_banners,
-                           raw_pending=raw_pending)
+                           contest_banners=contest_banners)
 
 
 # ---------------------------------------------------------------------------
@@ -1588,7 +1579,7 @@ def upload():
         existing = Image.query.filter(Image.phash.isnot(None)).all()
         for ex in existing:
             sim = hash_similarity_pct(phash, ex.phash)
-            if sim >= 95.0:
+            if sim >= 98.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
                 if ex.user_id == current_user.id:
                     return jsonify({'error': True, 'message':
@@ -1596,9 +1587,9 @@ def upload():
                     }), 409
                 else:
                     return jsonify({'error': True, 'message':
-                        ' This image has already been submitted to Shutter League by another member. ' +
-                        'Submitting images that belong to another photographer violates our Member Agreement ' +
-                        'and may have legal implications. Only submit your own original photographs.'
+                        'We were unable to accept this image. Our system has detected that it may be identical to a photograph already in our database. '
+                        'Please ensure you are submitting your own original work. '
+                        'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
                     }), 409
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
@@ -4741,11 +4732,11 @@ def bulk_upload():
                 duplicate_found = False
                 for ex in existing_imgs:
                     sim = hash_similarity_pct(phash, ex.phash)
-                    if sim >= 95.0:
+                    if sim >= 98.0:
                         if ex.user_id == current_user.id:
                             result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
                         else:
-                            result_row['status'] = 'rejected: image already submitted by another member'
+                            result_row['status'] = 'unable to accept: image may already exist in our database — contact info@shutterleague.com if you believe this is an error'
                         duplicate_found = True
                         if os.path.exists(thumb_path): os.remove(thumb_path)
                         break
