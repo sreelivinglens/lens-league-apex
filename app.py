@@ -4712,6 +4712,8 @@ def cancel_subscription():
 @app.route('/bulk-upload', methods=['GET', 'POST'])
 @login_required
 def bulk_upload():
+    if current_user.role != 'admin':
+        abort(403)
     results = []
     if request.method == 'POST':
         files = request.files.getlist('images')
@@ -4789,7 +4791,7 @@ def bulk_upload():
                     width=w, height=h, format=fmt,
                     asset_name=auto_title(filename, genre),
                     phash=phash, genre=genre, photographer_name=photographer,
-                    camera_track=request.form.get('camera_track') or getattr(current_user, 'subscription_track', None),
+                    camera_track=getattr(current_user, 'subscription_track', None),
                     status='pending',
                     is_public=(request.form.get('is_public', '1') == '1'),
                 )
