@@ -7298,8 +7298,7 @@ def _run_raw_analysis(submission, img):
                     results['crop_percentage'] = round(crop_pct, 4)
                     results['crop_flagged']    = crop_pct > 0.20
                     results['dimension_match'] = abs(raw_w - jpg_w) < raw_w * 0.5
-                    if crop_pct > 0.20:
-                        overall_flag = True
+                    # Crop percentage is informational only — editing software legitimately crops
                 results['exif_match'] = True
             except Exception as _raw_err:
                 app.logger.warning(f'[raw_analysis] Could not decode RAW file: {_raw_err}')
@@ -7353,12 +7352,17 @@ def _run_raw_analysis(submission, img):
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': jpg_b64}},
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': raw_b64}},
                             {'type': 'text', 'text': (
-                                'You are a technical photo verification engine. '
-                                'Image A is the submitted JPEG. Image B is the RAW file preview. '
-                                'Compare them. Respond ONLY with JSON, no markdown:\n'
+                                'You are a RAW file authenticity verifier for a photography contest. '
+                                'Image A is the submitted JPEG (may have editing: exposure, colour grade, shadows, highlights, sharpening — all acceptable). '
+                                'Image B is the RAW file preview (unedited or minimally processed straight from camera). '
+                                'Your job is to verify they show the SAME photograph — same scene, same subject, same moment, same composition. '
+                                'Editing differences (brightness, contrast, colour, crop within reason) are FINE and should NOT be flagged. '
+                                'Only flag genuine content manipulation. '
+                                'Respond ONLY with JSON, no markdown:\n'
                                 '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
+                                '"subject_different":bool,"scene_different":bool,'
                                 '"logo_or_trademark":bool,"meaning_changed":bool,"painterly":bool,'
-                                '"crop_consistent":bool,"notes":"max 80 words"}'
+                                '"notes":"max 80 words — focus on whether this is the same photograph"}'
                             )}
                         ]
                     }]
@@ -7380,13 +7384,14 @@ def _run_raw_analysis(submission, img):
                 results['vision_objects_removed'] = bool(vision.get('objects_removed'))
                 results['vision_objects_added']   = bool(vision.get('objects_added'))
                 results['vision_logo_trademark']  = bool(vision.get('logo_or_trademark'))
-                results['vision_meaning_changed'] = bool(vision.get('meaning_changed'))
+                results['vision_meaning_changed'] = bool(vision.get('meaning_changed') or vision.get('subject_different') or vision.get('scene_different'))
                 results['vision_painterly']       = bool(vision.get('painterly'))
-                results['vision_crop_consistent'] = bool(vision.get('crop_consistent'))
+                results['vision_crop_consistent'] = True  # editing is acceptable
                 results['vision_notes']           = vision.get('notes', '')
+                # Only flag genuine content manipulation — editing differences are acceptable
                 if any([results['vision_ai_detected'], results['vision_objects_removed'],
                         results['vision_objects_added'], results['vision_logo_trademark'],
-                        results['vision_meaning_changed'], results['vision_painterly']]):
+                        results['vision_meaning_changed']]):
                     overall_flag = True
     except Exception as vision_err:
         app.logger.warning(f'[raw_vision] {vision_err}')
@@ -7434,15 +7439,12 @@ def _auto_decide_raw(image_id, submission_id):
             flag_reasons = []
             if results.get('raw_decode_failed'):
                 flag_reasons.append('RAW file could not be decoded — possible format mismatch, corrupt file, or wrong file submitted')
-            if results.get('crop_flagged'):
-                flag_reasons.append(f'Significant crop detected ({results.get("crop_percentage", 0):.0%} of original RAW area)')
             flag_map = [
-                ('vision_ai_detected',    'AI generation detected'),
-                ('vision_objects_removed','Objects appear to have been removed'),
-                ('vision_objects_added',  'Objects appear to have been added'),
+                ('vision_ai_detected',    'AI generation detected in submitted image'),
+                ('vision_objects_removed','Subject or objects appear to have been removed from the original'),
+                ('vision_objects_added',  'Subject or objects appear to have been added that are not in the RAW'),
                 ('vision_logo_trademark', 'Logo or trademark detected'),
-                ('vision_meaning_changed','Meaning of image appears changed from RAW'),
-                ('vision_painterly',      'Heavy painterly editing detected'),
+                ('vision_meaning_changed','The photograph appears to show a different scene or subject than the RAW file'),
             ]
             for key, label in flag_map:
                 if results.get(key):
