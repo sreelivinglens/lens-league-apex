@@ -74,7 +74,7 @@
     <form method="POST" action="{{ url_for('admin_raw_send_reminder', image_id=img.id) }}"
           onsubmit="return confirm('Send RAW reminder email to the photographer?')">
       <button type="submit" class="btn"
-              style="padding:10px 18px; font-size:14px; border-color:var(--gold-dark); color:var(--gold);">
+              style="padding:10px 18px; font-size:14px; border-color:var(--gold); background:var(--gold); color:#000; font-weight:700;">
         📧 Send Reminder
       </button>
     </form>
