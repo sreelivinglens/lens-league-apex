@@ -710,7 +710,7 @@ img {
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
-        <a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
         <a href="{{ url_for('logout') }}" class="btn" style="margin-left:8px;">Logout</a>
       {% endif %}
     {% else %}
@@ -755,7 +755,7 @@ img {
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
-      <a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>
+      {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>{% endif %}
       <a href="{{ url_for('logout') }}" onclick="toggleNav()">Logout</a>
     {% endif %}
   {% else %}

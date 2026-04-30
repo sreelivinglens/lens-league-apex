@@ -317,7 +317,7 @@ function dismissPotyBanner() {
   </div>
   <div class="dash-actions">
     <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
-    <a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>
+    {% if current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>{% endif %}
   </div>
 </div>
 
