@@ -6725,9 +6725,14 @@ def admin_mark_raw_verified(image_id):
     img = Image.query.get_or_404(image_id)
     img.raw_verified      = True
     img.raw_disqualified  = False
+    # Also close out any open submission record so it leaves the queue
+    db.session.execute(db.text(
+        "UPDATE raw_submissions SET admin_decision='approved', admin_decided_at=NOW() "
+        "WHERE image_id=:iid AND admin_decision IS NULL"
+    ), {'iid': image_id})
     db.session.commit()
     flash(f'"{img.asset_name}" marked as RAW verified. It will now appear in the judge pool.', 'success')
-    return redirect(url_for('image_detail', image_id=image_id))
+    return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
 @app.route('/admin/raw-verification/<int:image_id>/send-reminder', methods=['POST'])
