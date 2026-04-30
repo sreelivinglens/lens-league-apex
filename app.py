@@ -7471,8 +7471,9 @@ def _auto_decide_raw(image_id, submission_id):
 
             # Build flag reason list
             flag_reasons = []
-            if results.get('raw_decode_failed'):
-                flag_reasons.append('RAW file could not be decoded — possible format mismatch, corrupt file, or wrong file submitted')
+            decode_failed = results.get('raw_decode_failed', False)
+            if decode_failed:
+                flag_reasons.append('RAW file could not be decoded by automated system — camera format may require manual verification')
             flag_map = [
                 ('vision_ai_detected',    'AI generation detected in submitted image'),
                 ('vision_objects_removed','Subject or objects appear to have been removed from the original'),
@@ -7484,7 +7485,15 @@ def _auto_decide_raw(image_id, submission_id):
                 if results.get(key):
                     flag_reasons.append(label)
 
-            auto_decision = 'disqualified' if flags else 'approved'
+            # If only flag is decode failure (format unsupported), route to manual review
+            # Do NOT auto-disqualify — camera format support is a technical limitation
+            only_decode_fail = decode_failed and len(flag_reasons) == 1
+            if not flags:
+                auto_decision = 'approved'
+            elif only_decode_fail:
+                auto_decision = 'manual_review'
+            else:
+                auto_decision = 'disqualified'
             flag_str = ' | '.join(flag_reasons) if flag_reasons else None
 
             # Update DB
@@ -7510,7 +7519,53 @@ def _auto_decide_raw(image_id, submission_id):
                 'of': flags, 'fr2': flag_str, 'sid': submission_id,
             })
 
-            if auto_decision == 'approved':
+            if auto_decision == 'manual_review':
+                # Camera format not supported by automated system — flag for admin manual check
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='manual_review', overall_flag=FALSE WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.commit()
+                photographer = User.query.get(img.user_id)
+                # Email photographer — reassure, no disqualification
+                if photographer:
+                    send_email(
+                        photographer.email,
+                        f'RAW File Received — Manual Verification — {img.asset_name}',
+                        (
+                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                            '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                            '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + (photographer.full_name or photographer.username) + '.</p>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"' + (img.asset_name or 'Untitled') + '"</strong>. '
+                            'Your camera&#39;s RAW format requires manual verification by our team. '
+                            'We will review it within <strong>48 hours</strong> and notify you of the outcome.</p>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image remains active and your contest standing is not affected during this review.</p>'
+                            '<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                            '</div>'
+                        )
+                    )
+                # Notify admin for manual review
+                admin_emails = _admin_notify_emails()
+                if not admin_emails:
+                    admin_emails = [ADMIN_NOTIFY_EMAIL]
+                site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                send_email(
+                    admin_emails,
+                    f'[RAW Manual Review Required] Image #{image_id} — {img.asset_name}',
+                    (
+                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                        '<p style="color:#C8A84B;font-weight:700;">RAW MANUAL REVIEW REQUIRED</p>'
+                        '<p>Camera RAW format could not be decoded by automated system (likely newer Nikon Z-series, Sony, or Canon format).</p>'
+                        '<p>Image: ' + (img.asset_name or 'Untitled') + ' (ID: ' + str(image_id) + ')<br>'
+                        'Photographer: ' + (photographer.username if photographer else 'unknown') + '<br>'
+                        'Score: ' + str(img.score) + ' · ' + (img.genre or '') + '</p>'
+                        '<p>Please download the RAW file and verify manually.</p>'
+                        '<a href="' + site_url + '/admin/raw-verification/' + str(image_id) + '" style="color:#C8A84B;">Review submission →</a>'
+                        '</div>'
+                    )
+                )
+
+            elif auto_decision == 'approved':
                 db.session.execute(db.text(
                     "UPDATE raw_submissions SET admin_decision='approved', disqualified=FALSE WHERE id=:sid"
                 ), {'sid': submission_id})
@@ -7554,52 +7609,55 @@ def _auto_decide_raw(image_id, submission_id):
                 )
 
             else:
-                # Auto-disqualified
+                # Flags raised — route to admin for human decision, NOT auto-disqualified
+                # Never send disqualification emails to photographers — admin makes the call
                 db.session.execute(db.text(
-                    "UPDATE raw_submissions SET admin_decision='disqualified', disqualified=TRUE WHERE id=:sid"
+                    "UPDATE raw_submissions SET analysis_status='flagged', overall_flag=TRUE WHERE id=:sid"
                 ), {'sid': submission_id})
-                db.session.execute(db.text(
-                    "UPDATE images SET raw_verified=FALSE, raw_disqualified=TRUE WHERE id=:iid"
-                ), {'iid': image_id})
                 db.session.commit()
 
-                appeal_url = f"{site_url}/raw/appeal/{image_id}"
-                reasons_html = ''.join(f'<li style="margin-bottom:6px;">{r}</li>' for r in flag_reasons)
-
-                # Email 2 — Auto Disqualified
+                # Email photographer — neutral, reassuring, no mention of disqualification
                 if photographer:
                     send_email(
                         photographer.email,
-                        f'RAW Verification — Action Required · {img.asset_name}',
-                        (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                         f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
-                         f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#C0392B;">RAW Verification — Provisional Disqualification</h2>'
-                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>'
-                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Our automated RAW verification system has reviewed the file you submitted for <strong>"{img.asset_name}"</strong> and has flagged it for the following reason(s):</p>'
-                         f'<ul style="font-size:16px;line-height:1.8;color:#C0392B;background:#FFF5F5;border:1px solid #FFCCCC;border-radius:6px;padding:16px 20px 16px 36px;margin:16px 0;">{reasons_html}</ul>'
-                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">As a result, this image has been <strong>provisionally disqualified</strong> from the current contest.</p>'
-                         f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">If you believe this is incorrect, you may appeal this decision within <strong>48 hours</strong>. Your appeal will be reviewed personally by our admin team, who will download and inspect your RAW file manually.</p>'
-                         f'<a href="{appeal_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Appeal This Decision →</a>'
-                         f'<p style="font-size:14px;color:#8a8070;margin-top:16px;">If no appeal is received within 48 hours, the disqualification will be confirmed.</p>'
-                         f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
-                         f'</div>')
+                        f'RAW File Received — Under Review · {img.asset_name}',
+                        (
+                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                            '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                            '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Under Review</h2>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + (photographer.full_name or photographer.username) + '.</p>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"' + (img.asset_name or 'Untitled') + '"</strong>. '
+                            'Our team is reviewing it and will notify you of the outcome within <strong>48 hours</strong>.</p>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image remains active and your contest standing is not affected during this review.</p>'
+                            '<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                            '</div>'
+                        )
                     )
 
-                # Notify admin
+                # Notify admin — full flag details for human decision
                 admin_emails = _admin_notify_emails()
                 if not admin_emails:
                     admin_emails = [ADMIN_NOTIFY_EMAIL]
+                reasons_html = ''.join(f'<li>{r}</li>' for r in flag_reasons)
                 send_email(
                     admin_emails,
-                    f'[RAW Auto-Disqualified] Image #{image_id} — {img.asset_name}',
-                    (f'<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                     f'<p style="color:#C0392B;font-weight:700;">RAW AUTO-DISQUALIFIED</p>'
-                     f'<p>Image: {img.asset_name} (ID: {image_id})<br>'
-                     f'Photographer: {photographer.username if photographer else "unknown"} ({photographer.email if photographer else ""})<br>'
-                     f'Flags: {flag_str}</p>'
-                     f'<p style="color:#8a8070;">Photographer has 48hrs to appeal. You will be notified if they do.</p>'
-                     f'<p><a href="{site_url}/admin/raw-verification/{image_id}" style="color:#C8A84B;">View submission</a></p>'
-                     f'</div>')
+                    f'[RAW Review Required] Image #{image_id} — {img.asset_name}',
+                    (
+                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                        '<p style="color:#C8A84B;font-weight:700;font-size:15px;">RAW VERIFICATION — HUMAN REVIEW REQUIRED</p>'
+                        '<p>The automated system raised flags on this submission. '
+                        'No action has been taken and the photographer has NOT been notified of any issue.</p>'
+                        '<p><strong>Image:</strong> ' + (img.asset_name or 'Untitled') + ' (ID: ' + str(image_id) + ')<br>'
+                        '<strong>Photographer:</strong> ' + (photographer.username if photographer else 'unknown') + ' (' + (photographer.email if photographer else '') + ')<br>'
+                        '<strong>Score:</strong> ' + str(img.score) + ' · ' + (img.genre or '') + '</p>'
+                        '<p><strong>Flags raised:</strong></p>'
+                        '<ul style="color:#C0392B;">' + reasons_html + '</ul>'
+                        '<p>Please download and inspect the RAW file manually, then approve or reject from the admin panel.</p>'
+                        '<a href="' + site_url + '/admin/raw-verification/' + str(image_id) + '" '
+                        'style="display:inline-block;background:#C8A84B;color:#000;padding:12px 24px;'
+                        'text-decoration:none;font-weight:700;border-radius:4px;">Review &amp; Decide →</a>'
+                        '</div>'
+                    )
                 )
 
         except Exception as e:
