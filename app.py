@@ -2570,6 +2570,8 @@ def delete_image(image_id):
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id:
         abort(403)
+
+    # R2 cleanup first — non-blocking
     for url_attr in ['thumb_url', 'card_url']:
         url = getattr(img, url_attr, None)
         if url:
@@ -2578,38 +2580,30 @@ def delete_image(image_id):
                 r2.delete_file(key)
             except Exception:
                 pass
-    try:
-        from models import CalibrationNote
-        CalibrationNote.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        ContestEntry.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        OpenContestEntry.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        ImageReport.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        RatingAssignment.query.filter_by(image_id=image_id).delete()
-        PeerRating.query.filter_by(image_id=image_id).delete()
-        PeerPoolEntry.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        WeeklySubmission.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': image_id})
-    except Exception:
-        pass
-    db.session.delete(img)
+
+    # Direct SQL deletes — bypasses ORM cascade, instant
+    iid = image_id
+    for sql in [
+        "DELETE FROM raw_submissions     WHERE image_id = :iid",
+        "DELETE FROM weekly_submissions  WHERE image_id = :iid",
+        "DELETE FROM contest_entries     WHERE image_id = :iid",
+        "DELETE FROM open_contest_entries WHERE image_id = :iid",
+        "DELETE FROM image_reports       WHERE image_id = :iid",
+        "DELETE FROM rating_assignments  WHERE image_id = :iid",
+        "DELETE FROM peer_ratings        WHERE image_id = :iid",
+        "DELETE FROM peer_pool_entries   WHERE image_id = :iid",
+        "DELETE FROM brand_entries       WHERE image_id = :iid",
+        "DELETE FROM calibration_notes   WHERE image_id = :iid",
+        "DELETE FROM judge_assignments   WHERE image_id = :iid",
+        "DELETE FROM judge_scores        WHERE image_id = :iid",
+    ]:
+        try:
+            db.session.execute(db.text(sql), {'iid': iid})
+        except Exception:
+            pass
+
+    db.session.execute(db.text("DELETE FROM images WHERE id = :iid AND user_id = :uid"),
+                       {'iid': iid, 'uid': current_user.id})
     db.session.commit()
     flash('Image deleted. Your scores and contest standings have been updated accordingly.', 'warning')
     return redirect(url_for('dashboard'))
