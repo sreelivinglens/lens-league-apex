@@ -297,7 +297,7 @@
       <div class="form-group">
         <label for="photographer_name">Photographer Name</label>
         <input type="text" id="photographer_name" name="photographer_name"
-               placeholder="e.g. Sreekumar Krishnan" maxlength="120"
+               placeholder="e.g. Sreekumar Krishnan" maxlength="120" required
                value="{{ current_user.full_name or current_user.username }}">
       </div>
 
@@ -352,6 +352,13 @@
       <div class="exif-note">
         📋 <strong>EXIF metadata</strong> is automatically extracted to verify camera authenticity.
         For best results upload the original JPEG straight from your camera or phone gallery.
+      </div>
+
+      <div style="background:rgba(245,197,24,0.08); border:1px solid #F5C518; border-left:4px solid #F5C518;
+                  border-radius:var(--radius-sm); padding:13px 16px; margin-bottom:14px;
+                  font-size:14px; color:var(--text-primary); line-height:1.6;">
+        ⚠ <strong>Important:</strong> Do not upload images carrying a third-party watermark or logo.
+        Only submit photographs you personally took. Images with watermarks may be flagged or disqualified.
       </div>
 
       <div class="legal-box" id="legalBox">
@@ -595,6 +602,15 @@
         `On iPhone: share the photo → choose "Medium" or "Small" size.\n` +
         `On Samsung: use Gallery → share → resize before sending.`
       );
+      return;
+    }
+
+    const photographerInput = document.getElementById('photographer_name');
+    if (!photographerInput || !photographerInput.value.trim()) {
+      photographerInput.focus();
+      photographerInput.style.borderColor = 'var(--red)';
+      photographerInput.addEventListener('input', () => photographerInput.style.borderColor = '', { once: true });
+      showError('Please enter the photographer name.');
       return;
     }
 
