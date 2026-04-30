@@ -289,28 +289,6 @@ function dismissPotyBanner() {
   {% endfor %}
 {% endif %}
 
-{# ── RAW verification pending banner ────────────────────────────────────── #}
-{% if raw_pending %}
-<div class="zone-banner red" style="border-left-color:#F5C518; border-color:#F5C518; background:rgba(245,197,24,0.06);">
-  <strong style="color:#F5C518;">📂 RAW File Required</strong> —
-  {% if raw_pending|length == 1 %}
-    Your image <strong>&#34;{{ raw_pending[0].asset_name }}&#34;</strong> has been selected for RAW verification. Your contest standing is provisional until you submit the original RAW file.
-    <a href="{{ url_for('raw_status', image_id=raw_pending[0].id) }}"
-       style="color:#F5C518; font-weight:700; text-decoration:none; margin-left:8px; white-space:nowrap;">Submit RAW &#8594;</a>
-  {% else %}
-    <strong style="color:#F5C518;">{{ raw_pending|length }} images</strong> require RAW file submission to confirm your contest standing.
-    <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-      {% for img in raw_pending %}
-      <a href="{{ url_for('raw_status', image_id=img.id) }}"
-         style="color:#F5C518; font-weight:600; text-decoration:none; font-size:14px;">
-        &#8594; {{ img.asset_name or 'Untitled' }}
-      </a>
-      {% endfor %}
-    </div>
-  {% endif %}
-</div>
-{% endif %}
-
 {# ── Zone 3 banner: peer divergence flagged ──────────────────────────────── #}
 {% if zone3_flagged %}
 <div class="zone-banner amber">
@@ -354,7 +332,7 @@ function dismissPotyBanner() {
     <div class="stat-lbl">Scored</div>
   </div>
   <div class="stat-box">
-    <div class="stat-val">{{ '%.1f'|format(stats.avg_score) if stats.avg_score else '—' }}</div>
+    <div class="stat-val">{{ '%.2f'|format(stats.avg_score) if stats.avg_score else '—' }}</div>
     <div class="stat-lbl">Avg Score</div>
   </div>
   <div class="stat-box">
@@ -521,7 +499,7 @@ function dismissPotyBanner() {
       {% endif %}
 
       {% if img.score %}
-      <div class="score-overlay">{{ img.score }}</div>
+      <div class="score-overlay">{{ "%.2f"|format(img.score) }}</div>
       {% endif %}
 
       <div class="status-badge {{ img.status }}">
@@ -538,7 +516,7 @@ function dismissPotyBanner() {
       <div class="img-card-meta">{{ img.genre }}{% if img.camera_track %} · {{ img.camera_track|title }}{% endif %}</div>
       {% if img.score %}
       <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
-        <div class="img-card-score">{{ img.score }}</div>
+        <div class="img-card-score">{{ "%.2f"|format(img.score) }}</div>
       </div>
       {% endif %}
     </div>

@@ -290,12 +290,12 @@
       </div>
 
       <div class="form-group" style="margin-top:24px;">
-        <label for="asset_name">Image Title</label>
+        <label for="asset_name">Image Title <span style="color:var(--red);font-size:15px;">*</span></label>
         <input type="text" id="asset_name" name="asset_name" placeholder="e.g. Golden Hour at Hampi" maxlength="120" required>
       </div>
 
       <div class="form-group">
-        <label for="photographer_name">Photographer Name</label>
+        <label for="photographer_name">Photographer Name <span style="color:var(--red);font-size:15px;">*</span></label>
         <input type="text" id="photographer_name" name="photographer_name"
                placeholder="e.g. Sreekumar Krishnan" maxlength="120" required
                value="{{ current_user.full_name or current_user.username }}">
@@ -672,7 +672,7 @@
         notifyComplete();
         document.getElementById('overlayPhase').textContent  = 'COMPLETE';
         document.getElementById('overlayStatus').textContent = resp.score
-          ? `Scored! LL-Score: ${resp.score} — ${resp.tier}`
+          ? `Scored! LL-Score: ${parseFloat(resp.score).toFixed(2)} — ${resp.tier}`
           : 'Image uploaded!';
         document.getElementById('overlaySubstatus').textContent = 'Loading your score card…';
         document.getElementById('breathLabel').textContent = '🙏';
