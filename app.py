@@ -516,6 +516,20 @@ with app.app_context():
         except Exception as ce:
             print(f'open_contest_entries migration warning: {ce}')
 
+        # Fix open_contest_entries unique constraint: user+genre+year → user+image+year
+        try:
+            with db.engine.connect() as conn_fix:
+                conn_fix.execute(db.text(
+                    "ALTER TABLE open_contest_entries DROP CONSTRAINT IF EXISTS open_contest_entries_user_id_genre_platform_year_key"
+                ))
+                conn_fix.execute(db.text(
+                    "ALTER TABLE open_contest_entries ADD CONSTRAINT IF NOT EXISTS uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
+                ))
+                conn_fix.commit()
+            print('open_contest_entries constraint fix OK.')
+        except Exception as ce:
+            print(f'open_contest_entries constraint fix warning: {ce}')
+
         # v27  -  peer rating tables
         try:
             with db.engine.connect() as conn5:
