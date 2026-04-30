@@ -6717,7 +6717,7 @@ def admin_raw_poty():
         "u.username, u.email, "
         "rs.submitted_at, rs.analysis_status, rs.admin_decision, rs.disqualified, rs.deadline "
         "FROM images i JOIN users u ON u.id=i.user_id "
-        "LEFT JOIN raw_submissions rs ON rs.image_id=i.id AND rs.contest_type='poty' "
+        "LEFT JOIN raw_submissions rs ON rs.image_id=i.id "
         "WHERE i.raw_verification_required=TRUE "
         "ORDER BY rs.submitted_at ASC NULLS LAST, i.score DESC"
     )).fetchall()
@@ -7270,9 +7270,21 @@ def _run_raw_analysis(submission, img):
             raw_path = tf.name
 
         if raw_path:
-            from PIL import Image as PILImage
+            def _open_raw_as_pil(path):
+                """Try rawpy first (handles NEF/CR2/ARW/DNG), fall back to PIL."""
+                try:
+                    import rawpy
+                    import numpy as np
+                    from PIL import Image as _PIL
+                    with rawpy.imread(path) as raw:
+                        rgb = raw.postprocess(half_size=True)
+                    return _PIL.fromarray(rgb)
+                except Exception:
+                    from PIL import Image as _PIL
+                    return _PIL.open(path)
+
             try:
-                pil_raw = PILImage.open(raw_path)
+                pil_raw = _open_raw_as_pil(raw_path)
                 raw_w, raw_h = pil_raw.size
                 results['raw_width']  = raw_w
                 results['raw_height'] = raw_h
@@ -7286,8 +7298,11 @@ def _run_raw_analysis(submission, img):
                     if crop_pct > 0.20:
                         overall_flag = True
                 results['exif_match'] = True
-            except Exception:
+            except Exception as _raw_err:
+                app.logger.warning(f'[raw_analysis] Could not decode RAW file: {_raw_err}')
                 results['exif_match'] = False
+                results['raw_decode_failed'] = True
+                overall_flag = True  # FLAG — unreadable RAW is not a pass
     except Exception as meta_err:
         app.logger.warning(f'[raw_metadata] {meta_err}')
         results['exif_match'] = False
@@ -7303,10 +7318,20 @@ def _run_raw_analysis(submission, img):
                 pass
 
         raw_b64 = None
-        if raw_path:
+        if raw_path and not results.get('raw_decode_failed'):
             try:
-                from PIL import Image as PILImage
-                pil_r = PILImage.open(raw_path).convert('RGB')
+                def _open_raw_as_pil_v(path):
+                    try:
+                        import rawpy
+                        import numpy as np
+                        from PIL import Image as _PIL
+                        with rawpy.imread(path) as raw:
+                            rgb = raw.postprocess(half_size=True)
+                        return _PIL.fromarray(rgb)
+                    except Exception:
+                        from PIL import Image as _PIL
+                        return _PIL.open(path)
+                pil_r = _open_raw_as_pil_v(raw_path).convert('RGB')
                 buf   = _io.BytesIO()
                 pil_r.save(buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
