@@ -142,7 +142,7 @@
   {% if image.status == 'scored' and image.score %}
   <div class="score-card">
     <div class="score-main">
-      <div class="score-number">{{ image.score }}</div>
+      <div class="score-number">{{ "%.2f"|format(image.score) }}</div>
       {% if image.tier %}
       <div class="score-tier-img-wrap">
         <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
