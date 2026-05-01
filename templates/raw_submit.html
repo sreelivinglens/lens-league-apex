@@ -108,72 +108,70 @@
     </div>
   </div>
 
-  <form method="POST" enctype="multipart/form-data"
-        action="{{ url_for('raw_submit', contest_type=contest_type, image_id=img.id) }}"
-        id="rawForm">
-    <input type="hidden" name="contest_ref" value="{{ existing.contest_ref if existing else '' }}">
+  <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px;
+              text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">
+    Choose Submission Method
+  </div>
 
-    <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px;
-                text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">
-      Choose Submission Method
+  <!-- Upload option -->
+  <label class="method-option" for="methodUpload">
+    <input type="radio" name="method" id="methodUpload" value="upload" checked
+           onchange="showMethod('upload')">
+    <div>
+      <div class="method-title">Upload RAW File</div>
+      <div class="method-desc">Upload directly from your device. Secure, encrypted storage on our servers.</div>
+      <div id="uploadArea" class="upload-area">
+        <label for="rawFileInput" style="cursor:pointer; display:block;">
+          <input type="file" id="rawFileInput"
+                 accept=".cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f,.mrw"
+                 onchange="showFileName(this)">
+          <div class="upload-icon" id="uploadIcon">📁</div>
+          <div class="upload-main-text" id="uploadLabel">Click to select your RAW file</div>
+          <div class="upload-hint">CR2, CR3, NEF, ARW, DNG, RAF, ORF and others · Up to 200 MB</div>
+        </label>
+      </div>
     </div>
+  </label>
 
-    <!-- Upload -->
-    <label class="method-option" for="methodUpload">
-      <input type="radio" name="method" id="methodUpload" value="upload" checked
-             onchange="showMethod('upload')">
-      <div>
-        <div class="method-title">Upload RAW File</div>
-        <div class="method-desc">Upload directly from your device. Secure, encrypted storage on our servers.</div>
-        <div id="uploadArea" class="upload-area">
-          <label for="rawFileInput" style="cursor:pointer; display:block;">
-            <input type="file" name="raw_file" id="rawFileInput"
-                   accept=".cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f,.mrw"
-                   onchange="showFileName(this)">
-            <div class="upload-icon" id="uploadIcon">📁</div>
-            <div class="upload-main-text" id="uploadLabel">Click to select your RAW file</div>
-            <div class="upload-hint">CR2, CR3, NEF, ARW, DNG, RAF, ORF and others · Up to 200 MB</div>
-          </label>
+  <!-- Link option -->
+  <label class="method-option" for="methodLink">
+    <input type="radio" name="method" id="methodLink" value="link"
+           onchange="showMethod('link')">
+    <div style="flex:1;">
+      <div class="method-title">Share a Link</div>
+      <div class="method-desc">Paste a Google Drive, Dropbox, or WeTransfer link to your RAW file. Make sure it is set to "Anyone with the link can view".</div>
+      <div id="linkArea" style="display:none; margin-top:10px;">
+        <input type="url" id="rawLinkInput" class="link-input"
+               placeholder="https://drive.google.com/file/d/…">
+        <div style="font-size:16px; color:var(--text-muted); margin-top:6px;">
+          Ensure the link is publicly accessible before submitting.
         </div>
       </div>
-    </label>
-
-    <!-- Link -->
-    <label class="method-option" for="methodLink">
-      <input type="radio" name="method" id="methodLink" value="link"
-             onchange="showMethod('link')">
-      <div style="flex:1;">
-        <div class="method-title">Share a Link</div>
-        <div class="method-desc">Paste a Google Drive, Dropbox, or WeTransfer link to your RAW file. Make sure it is set to "Anyone with the link can view".</div>
-        <div id="linkArea" style="display:none; margin-top:10px;">
-          <input type="url" name="raw_link" class="link-input"
-                 placeholder="https://drive.google.com/file/d/…">
-          <div style="font-size:16px; color:var(--text-muted); margin-top:6px;">
-            Ensure the link is publicly accessible before submitting.
-          </div>
-        </div>
-      </div>
-    </label>
-
-    <button type="submit" class="btn btn-solid" id="submitRawBtn"
-            style="width:100%; padding:18px; font-size:19px; letter-spacing:2px; margin-top:8px;"
-            onclick="return confirmAndWait()">
-      Submit RAW File →
-    </button>
-
-    <div id="uploadWaitMsg" style="display:none; margin-top:14px; padding:14px 18px;
-         background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark);
-         border-radius:var(--radius-sm); font-size:15px; color:var(--text-primary);
-         text-align:center; line-height:1.7;">
-      ⏳ <strong>Uploading — please do not close this browser tab.</strong><br>
-      Large RAW files may take several minutes depending on your connection speed.
     </div>
+  </label>
 
-    <div style="font-size:16px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
-      You will receive an email confirmation once submitted. Verification takes up to 48 hours.
+  <!-- Progress bar — hidden until upload starts -->
+  <div id="progressWrap" style="display:none; margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; font-family:var(--font-mono);
+                font-size:13px; color:var(--gold); margin-bottom:6px;">
+      <span id="progressLabel">Uploading…</span>
+      <span id="progressPct">0%</span>
     </div>
+    <div style="background:var(--border); border-radius:4px; height:8px; overflow:hidden;">
+      <div id="progressBar" style="background:#F5C518; height:8px; width:0%; border-radius:4px;
+           transition:width 0.3s;"></div>
+    </div>
+  </div>
 
-  </form>
+  <button class="btn btn-solid" id="submitRawBtn"
+          style="width:100%; padding:18px; font-size:19px; letter-spacing:2px; margin-top:16px;"
+          onclick="handleSubmit()">
+    Submit RAW File →
+  </button>
+
+  <div style="font-size:16px; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6;">
+    You will receive an email confirmation once submitted. Verification takes up to 48 hours.
+  </div>
   {% endif %}
 
 </div>
@@ -196,26 +194,95 @@ function showFileName(input) {
   }
 }
 
-function confirmAndWait() {
+async function handleSubmit() {
   const method = document.querySelector('[name="method"]:checked').value;
-  if (method === 'upload') {
-    const file = document.getElementById('rawFileInput');
-    if (!file || !file.files || !file.files.length) {
-      alert('Please select a RAW file to upload.');
-      return false;
-    }
-  } else {
-    const link = document.querySelector('[name="raw_link"]');
-    if (!link || !link.value.trim()) {
-      alert('Please paste a shareable link to your RAW file.');
-      return false;
-    }
+  const btn    = document.getElementById('submitRawBtn');
+  const contestRef = '{{ existing.contest_ref if existing else "" }}';
+  const contestType = '{{ contest_type }}';
+  const imageId    = '{{ img.id }}';
+
+  if (method === 'link') {
+    // Link submission — simple POST, no file transfer
+    const link = document.getElementById('rawLinkInput').value.trim();
+    if (!link) { alert('Please paste a shareable link to your RAW file.'); return; }
+    if (!confirm('Submit this link for verification? This action cannot be undone.')) return;
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const fd = new FormData();
+      fd.append('method', 'link');
+      fd.append('raw_link', link);
+      fd.append('contest_ref', contestRef);
+      const resp = await fetch(`/raw/confirm/${contestType}/${imageId}`, {method:'POST', body:fd});
+      const data = await resp.json();
+      if (data.redirect) { window.location.href = data.redirect; }
+      else { alert(data.error || 'Submission failed. Please try again.'); btn.disabled=false; btn.textContent='Submit RAW File →'; }
+    } catch(e) { alert('Network error. Please try again.'); btn.disabled=false; btn.textContent='Submit RAW File →'; }
+    return;
   }
-  if (!confirm('Submit this RAW file for verification? This action cannot be undone.')) return false;
-  document.getElementById('uploadWaitMsg').style.display = 'block';
-  document.getElementById('submitRawBtn').disabled = true;
-  document.getElementById('submitRawBtn').textContent = 'Uploading…';
-  return true;
+
+  // Upload method — presigned PUT directly to R2
+  const fileInput = document.getElementById('rawFileInput');
+  if (!fileInput.files || !fileInput.files.length) { alert('Please select a RAW file to upload.'); return; }
+  const file = fileInput.files[0];
+  if (!confirm('Submit this RAW file for verification? This action cannot be undone.')) return;
+
+  btn.disabled = true;
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressLabel').textContent = 'Getting upload URL…';
+
+  try {
+    // Step 1: Get presigned PUT URL from server (<100ms, no file data)
+    const presignResp = await fetch(`/raw/presign/${imageId}?filename=${encodeURIComponent(file.name)}`);
+    const presignData = await presignResp.json();
+    if (!presignData.url) { throw new Error(presignData.error || 'Could not get upload URL'); }
+
+    // Step 2: Upload file directly to R2 with progress bar
+    document.getElementById('progressLabel').textContent = 'Uploading to secure storage…';
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presignData.url);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          document.getElementById('progressBar').style.width = pct + '%';
+          document.getElementById('progressPct').textContent = pct + '%';
+          if (pct === 100) {
+            document.getElementById('progressLabel').textContent = 'Upload complete. Confirming…';
+          }
+        }
+      };
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) { resolve(); }
+        else { reject(new Error('R2 upload failed: ' + xhr.status)); }
+      };
+      xhr.onerror = function() { reject(new Error('Network error during upload')); };
+      xhr.send(file);
+    });
+
+    // Step 3: Notify server — record in DB, start analysis thread
+    document.getElementById('progressLabel').textContent = 'Verifying submission…';
+    const fd = new FormData();
+    fd.append('method', 'upload');
+    fd.append('key', presignData.key);
+    fd.append('contest_ref', contestRef);
+    const confirmResp = await fetch(`/raw/confirm/${contestType}/${imageId}`, {method:'POST', body:fd});
+    const confirmData = await confirmResp.json();
+    if (confirmData.redirect) {
+      document.getElementById('progressLabel').textContent = 'Done! Redirecting…';
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('progressPct').textContent = '100%';
+      setTimeout(() => { window.location.href = confirmData.redirect; }, 500);
+    } else {
+      throw new Error(confirmData.error || 'Confirmation failed');
+    }
+
+  } catch(e) {
+    alert('Upload failed: ' + e.message + '. Please try again or use the link option.');
+    btn.disabled = false;
+    btn.textContent = 'Submit RAW File →';
+    document.getElementById('progressWrap').style.display = 'none';
+  }
 }
 </script>
 {% endblock %}
