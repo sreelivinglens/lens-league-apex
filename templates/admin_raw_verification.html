@@ -172,24 +172,12 @@
             ✓ Approve
           </button>
         </form>
-        <form method="POST" action="{{ url_for('admin_raw_decide', image_id=s.image_id) }}">
-          <input type="hidden" name="decision" value="resubmit_requested">
-          <input type="hidden" name="notes" value="">
-          <button type="submit" class="btn"
-                  style="width:100%; padding:6px 12px; font-size:14px; border-color:var(--amber); color:var(--amber);"
-                  onclick="return confirm('Request resubmission from {{ s.username }}?')">
-            ↩ Resubmit
-          </button>
-        </form>
-        <form method="POST" action="{{ url_for('admin_raw_decide', image_id=s.image_id) }}">
-          <input type="hidden" name="decision" value="rejected">
-          <input type="hidden" name="notes" value="">
-          <button type="submit" class="btn"
-                  style="width:100%; padding:6px 12px; font-size:14px; border-color:var(--red); color:var(--red);"
-                  onclick="return confirm('Reject and disqualify {{ s.username }}\'s image? Cannot be undone.')">
-            ✗ Reject
-          </button>
-        </form>
+        <a href="{{ url_for('admin_raw_detail', image_id=s.image_id) }}"
+           style="display:block; width:100%; padding:6px 12px; font-size:13px; text-align:center;
+                  font-family:var(--font-mono); color:var(--amber); border:1px solid var(--amber);
+                  border-radius:var(--radius-sm); text-decoration:none; box-sizing:border-box;">
+          ↩ Reject / Resubmit →
+        </a>
         {% endif %}
 
       </div>
