@@ -7831,11 +7831,16 @@ def _auto_decide_raw(image_id, submission_id):
     """
     with app.app_context():
         try:
+            import time as _time
+            # Brief pause to ensure the calling thread's commit is visible
+            _time.sleep(0.3)
             submission = db.session.execute(db.text(
                 "SELECT * FROM raw_submissions WHERE id=:sid"
             ), {'sid': submission_id}).fetchone()
             img = Image.query.get(image_id)
+            app.logger.info(f'[auto_decide_raw] image={image_id} sub_id={submission_id} found={submission is not None}')
             if not submission or not img:
+                app.logger.error(f'[auto_decide_raw] ABORT: submission={submission is not None} img={img is not None} for sub_id={submission_id}')
                 return
 
             photographer = User.query.get(img.user_id)
