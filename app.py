@@ -2576,6 +2576,14 @@ def run_calibration():
 @app.route('/image/<int:image_id>/delete', methods=['POST'])
 @login_required
 def delete_image(image_id):
+    # Set timeout FIRST — before any DB access — so we never hang on a lock
+    # held by a background RAW analysis thread
+    try:
+        db.session.execute(db.text("SET statement_timeout = '8s'"))
+        db.session.commit()
+    except Exception:
+        pass
+
     img = Image.query.get_or_404(image_id)
     if img.user_id != current_user.id:
         abort(403)
@@ -2589,13 +2597,6 @@ def delete_image(image_id):
                 r2_keys.append(url.split(r2.R2_PUBLIC_URL + '/')[-1])
             except Exception:
                 pass
-
-    # Set a 10s statement timeout — prevents background thread DB locks
-    # from causing delete to hang indefinitely
-    try:
-        db.session.execute(db.text("SET LOCAL statement_timeout = '10s'"))
-    except Exception:
-        pass
 
     # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
