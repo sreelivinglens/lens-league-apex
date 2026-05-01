@@ -2073,7 +2073,7 @@ def score_image(image_id):
             'credit': img.photographer_name,
             'genre_tag': f"{img.genre.upper()}  .  {img.format}",
             'soul_bonus': soul_bonus, 'iucn_tag': iucn_tag or None,
-            'modules': [('DoD',dod),('Disruption',disruption),('DM',dm),('Wonder',wonder),('AQ',aq)],
+            'modules': [('DoD',dod),('VD',disruption),('DM',dm),('WF',wonder),('AQ',aq)],
             'rows': [
                 ('Depth of\nDifficulty', request.form.get('row_technical','')),
                 ('Visual\nDisruption',   request.form.get('row_geometric','')),
@@ -2119,11 +2119,11 @@ def download_card(image_id):
     audit = img.get_audit() or {}
     app.logger.info(f'[download] img={image_id} audit_keys={list(audit.keys())}')
     modules = [(n,v) for n,v in [
-        ('DoD',        img.dod_score),
-        ('Disruption', img.disruption_score),
-        ('DM',         img.dm_score),
-        ('Wonder',     img.wonder_score),
-        ('AQ',         img.aq_score),
+        ('DoD', img.dod_score),
+        ('VD',  img.disruption_score),
+        ('DM',  img.dm_score),
+        ('WF',  img.wonder_score),
+        ('AQ',  img.aq_score),
     ] if v and float(v) > 0]
 
     card_data = {
@@ -6669,21 +6669,11 @@ def raw_submit(contest_type, image_id):
         ), {'iid': image_id, 'ct': contest_type}).fetchone()
         sub_id = sub_row.id if sub_row else None
 
-        # Email photographer — immediate receipt confirmation
-        send_email(
-            current_user.email,
-            f'RAW file received — {img.asset_name}',
-            (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-             f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
-             f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, {current_user.full_name or current_user.username}.</p>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"{img.asset_name}"</strong>. '
-             f'Our automated system is now verifying it. You will receive a verification result by email shortly.</p>'
-             f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
-             f'</div>')
-        )
-
-        # Fire auto-analysis in background — does not block the response
+        # Fire background thread immediately — receipt email + analysis
+        # both happen in the thread so the HTTP response returns at once.
+        _photographer_email = current_user.email
+        _photographer_name  = current_user.full_name or current_user.username
+        _asset_name         = img.asset_name
         if sub_id:
             import threading
             t = threading.Thread(
@@ -6693,7 +6683,7 @@ def raw_submit(contest_type, image_id):
             )
             t.start()
 
-        flash('RAW file submitted. Our automated system is verifying it now — you will receive an email with the result shortly.', 'success')
+        flash('RAW file uploaded successfully. We are verifying it now — you will receive an email confirmation shortly.', 'success')
         return redirect(url_for('raw_status', image_id=image_id))
 
     return render_template('raw_submit.html', img=img, existing=existing,
@@ -7383,6 +7373,12 @@ def _run_raw_analysis(submission, img):
                         from PIL import Image as _PIL
                         return _PIL.open(path)
                 pil_r = _open_raw_as_pil_v(raw_path).convert('RGB')
+                # Cap to 1024px longest side before encoding — full-res RAW
+                # previews are 20-40MB of base64; 1024px is sufficient for
+                # vision comparison and reduces API payload by ~95%.
+                _max_px = 1024
+                if max(pil_r.size) > _max_px:
+                    pil_r.thumbnail((_max_px, _max_px))
                 buf   = _io.BytesIO()
                 pil_r.save(buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
@@ -7480,6 +7476,22 @@ def _auto_decide_raw(image_id, submission_id):
                 "UPDATE raw_submissions SET analysis_status='running', analysis_run_at=NOW() WHERE id=:sid"
             ), {'sid': submission_id})
             db.session.commit()
+
+            # Send receipt email now — upload is confirmed in DB, user can close browser
+            if photographer:
+                _uname = photographer.full_name or photographer.username
+                send_email(
+                    photographer.email,
+                    'RAW file received — ' + (img.asset_name or 'Untitled'),
+                    ('<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                     '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
+                     '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Received</h2>'
+                     '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + _uname + '.</p>'
+                     '<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"' + (img.asset_name or 'Untitled') + '"</strong>. '
+                     'Our automated system is now verifying it. You will receive a result by email shortly.</p>'
+                     '<p style="font-size:14px;color:#8a8070;margin-top:24px;">&#8212; Shutter League</p>'
+                     '</div>')
+                )
 
             # Run analysis
             flags, results = _run_raw_analysis(submission, img)
