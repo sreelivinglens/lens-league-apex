@@ -1641,10 +1641,10 @@ def upload():
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
             is_public         = (request.form.get('is_public', '1') == '1'),
-            exif_status=exif_status, exif_camera=exif_data.get('camera', ''),
-            exif_lens=exif_data.get('lens', ''),
-            exif_date_taken=exif_data.get('date_taken', ''),
-            exif_settings=exif_settings, exif_warning=exif_warning,
+            exif_status=exif_status, exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
+            exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
+            exif_date_taken=(exif_data.get('date_taken', '') or '').replace('\x00', ''),
+            exif_settings=(exif_settings or '').replace('\x00', ''), exif_warning=(exif_warning or '').replace('\x00', ''),
         )
         db.session.add(img)
         db.session.commit()
