@@ -105,12 +105,8 @@ def draw_text(draw, text, font, color, x, y, max_w, sp=12):
 
 def draw_header(canvas, draw, left, right):
     draw.rectangle([0,0,CW,HEADER_H], fill=GOLD)
-    # Try to paste logo on left of gold bar
-    logo, lw = _load_logo(HEADER_H - 12)
-    if logo:
-        canvas.paste(logo, (PAD, 6), logo.split()[3])
-    else:
-        draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=BLACK)
+    # Text only in header — logo appears in right panel and footer only
+    draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=BLACK)
     rw = tw(draw,right,fnt(26,mono=True))
     draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
 
@@ -173,7 +169,13 @@ def build_card1(photo_path, data, out_path):
     RY += lh(fnt(72,bold=True,mono=True)) + 16
 
     # Tier pips
-    tier_map = {'APPRENTICE':1,'PRACTITIONER':2,'MASTER':3,'GRANDMASTER':4,'LEGEND':5}
+    # Current 8-tier ladder mapped to 5 pip slots
+    tier_map = {
+        'ROOKIE':1, 'SHOOTER':1,
+        'CONTENDER':2, 'CRAFTSMAN':2,
+        'MAVERICK':3, 'MASTER':3,
+        'GRANDMASTER':4, 'LEGEND':5,
+    }
     active = tier_map.get(tier,1)
     for i in range(5):
         px = RX+i*44
