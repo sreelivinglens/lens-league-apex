@@ -561,7 +561,8 @@ function dismissPotyBanner() {
     {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
     <span class="raw-request-card" style="display:block;" onclick="event.preventDefault();">
       📂 <strong>RAW file requested</strong> — score held pending verification.
-      <a href="{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}" onclick="event.stopPropagation();">Submit RAW →</a>
+      <span onclick="event.stopPropagation(); window.location='{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}';"
+            style="color:var(--gold);font-weight:600;cursor:pointer;text-decoration:underline;">Submit RAW →</span>
     </span>
     {% endif %}
 
