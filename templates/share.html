@@ -319,6 +319,9 @@
         <div class="tier-sub">DDI ENGINE</div>
       </div>
     </div>
+    {% if image.score %}
+    <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#F5C518;letter-spacing:1px;line-height:1;">{{ "%.2f"|format(image.score|float) }}</div>
+    {% endif %}
     <div class="tier-engine">APEX DDI</div>
   </div>
 
@@ -332,8 +335,8 @@
     </div>
   </div>
 
-  <!-- Analysis rows — visible to EVERYONE -->
-  {% if audit and audit.get('rows') %}
+  <!-- Analysis rows — owner + admin only -->
+  {% if show_score and audit and audit.get('rows') %}
   <div class="analysis">
     {% for label, body in audit.get('rows', []) %}
     {% if body %}
@@ -346,8 +349,8 @@
   </div>
   {% endif %}
 
-  <!-- Apex Byline — visible to EVERYONE -->
-  {% if audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
+  <!-- Apex Byline — owner + admin only -->
+  {% if show_score and audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
   <div class="byline-section">
     <div class="byline-tag">Apex Byline</div>
     {% if audit.get('byline_1') %}
@@ -360,8 +363,8 @@
   </div>
   {% endif %}
 
-  <!-- Strength & Gap badges — visible to EVERYONE -->
-  {% if audit %}
+  <!-- Strength & Gap badges — owner + admin only -->
+  {% if show_score and audit %}
   {% set strengths = audit.get('badges_g', []) %}
   {% set gaps      = audit.get('badges_w', []) %}
   {% if strengths or gaps %}
@@ -405,7 +408,7 @@
       {% if image.archetype %}<div class="archetype-label">{{ image.archetype }}</div>{% endif %}
       <div class="photographer-label">{{ image.photographer_name }}</div>
     </div>
-    <div class="score-stamp">{{ image.tier.upper() if image.tier else '' }}</div>
+    <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
   </div>
 
 </div>
