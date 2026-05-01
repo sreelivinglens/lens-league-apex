@@ -7995,54 +7995,60 @@ def _auto_decide_raw(image_id, submission_id):
                      f'</div>')
                 )
 
-            else:
-                # Flags raised — route to admin for human decision, NOT auto-disqualified
-                # Never send disqualification emails to photographers — admin makes the call
+            elif auto_decision == 'disqualified':
+                # Hard disqualification — invalid file type or vision manipulation flags
+                # Auto-disqualify immediately, send specific reason to photographer
                 db.session.execute(db.text(
-                    "UPDATE raw_submissions SET analysis_status='flagged', overall_flag=TRUE WHERE id=:sid"
+                    "UPDATE raw_submissions SET analysis_status='complete', "
+                    "disqualified=TRUE, overall_flag=TRUE WHERE id=:sid"
                 ), {'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET raw_verified=FALSE, raw_disqualified=TRUE WHERE id=:iid"
+                ), {'iid': image_id})
                 db.session.commit()
 
-                # Email photographer — neutral, reassuring, no mention of disqualification
+                # Email photographer — specific disqualification reason
                 if photographer:
+                    _disq_reason = results.get('disqualify_reasons') or 'Your submission did not pass RAW file verification.'
+                    _reason_html = ''.join(f'<p style="margin:8px 0;font-size:15px;color:#C0392B;">{r.strip()}</p>' for r in _disq_reason.split(' | ') if r.strip())
                     send_email(
                         photographer.email,
-                        f'RAW File Received — Under Review · {img.asset_name}',
+                        f'RAW Verification Failed — {img.asset_name}',
                         (
-                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                            '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
-                            '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">RAW File Under Review</h2>'
-                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Thank you, ' + (photographer.full_name or photographer.username) + '.</p>'
-                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"' + (img.asset_name or 'Untitled') + '"</strong>. '
-                            'Our team is reviewing it and will notify you of the outcome within <strong>48 hours</strong>.</p>'
-                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image remains active and your contest standing is not affected during this review.</p>'
-                            '<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
+                            '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">' +
+                            '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>' +
+                            '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#C0392B;">RAW Verification Failed</h2>' +
+                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Dear {photographer.full_name or photographer.username},</p>' +
+                            f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your RAW file submission for <strong>&quot;{img.asset_name or "Untitled"}&quot;</strong> has not passed verification.</p>' +
+                            '<div style="background:#FFF5F5;border:1px solid #FFCCCC;border-radius:6px;padding:16px 20px;margin:16px 0;">' +
+                            '<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#C0392B;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;">Reason</p>' +
+                            _reason_html +
+                            '</div>' +
+                            '<p style="font-size:15px;line-height:1.7;color:#4A4840;">If you believe this is an error, you may appeal within 48 hours.</p>' +
+                            f'<a href="{site_url}/raw/appeal/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:8px 0 16px;">Appeal This Decision &#8594;</a>' +
+                            f'<p style="font-size:14px;color:#8a8070;">Questions? Contact {CONTACT_EMAIL}</p>' +
+                            '<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>' +
                             '</div>'
                         )
                     )
 
-                # Notify admin — full flag details for human decision
+                # Notify admin
                 admin_emails = _admin_notify_emails()
                 if not admin_emails:
                     admin_emails = [ADMIN_NOTIFY_EMAIL]
-                reasons_html = ''.join(f'<li>{r}</li>' for r in (results.get('disqualify_reasons') or '').split(' | ') if r)
+                _disq_reason = results.get('disqualify_reasons') or 'See submission record'
                 send_email(
                     admin_emails,
-                    f'[RAW Review Required] Image #{image_id} — {img.asset_name}',
+                    f'[RAW Auto-Disqualified] Image #{image_id} — {img.asset_name}',
                     (
-                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                        '<p style="color:#C8A84B;font-weight:700;font-size:15px;">RAW VERIFICATION — HUMAN REVIEW REQUIRED</p>'
-                        '<p>The automated system raised flags on this submission. '
-                        'No action has been taken and the photographer has NOT been notified of any issue.</p>'
-                        '<p><strong>Image:</strong> ' + (img.asset_name or 'Untitled') + ' (ID: ' + str(image_id) + ')<br>'
-                        '<strong>Photographer:</strong> ' + (photographer.username if photographer else 'unknown') + ' (' + (photographer.email if photographer else '') + ')<br>'
-                        '<strong>Score:</strong> ' + str(img.score) + ' · ' + (img.genre or '') + '</p>'
-                        '<p><strong>Flags raised:</strong></p>'
-                        '<ul style="color:#C0392B;">' + reasons_html + '</ul>'
-                        '<p>Please download and inspect the RAW file manually, then approve or reject from the admin panel.</p>'
-                        '<a href="' + site_url + '/admin/raw-verification/' + str(image_id) + '" '
-                        'style="display:inline-block;background:#C8A84B;color:#000;padding:12px 24px;'
-                        'text-decoration:none;font-weight:700;border-radius:4px;">Review &amp; Decide →</a>'
+                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">' +
+                        '<p style="color:#C0392B;font-weight:700;font-size:15px;">RAW AUTO-DISQUALIFIED</p>' +
+                        f'<p>Image: {img.asset_name or "Untitled"} (ID: {image_id})<br>' +
+                        f'Photographer: {photographer.username if photographer else "unknown"} ({photographer.email if photographer else ""})<br>' +
+                        f'Score: {img.score} · {img.genre or ""}</p>' +
+                        f'<p><strong>Reason:</strong> {_disq_reason}</p>' +
+                        '<p style="color:#8a8070;">Photographer has been notified with the specific reason and appeal link.</p>' +
+                        f'<a href="{site_url}/admin/raw-verification/{image_id}" style="color:#C8A84B;">Review submission →</a>' +
                         '</div>'
                     )
                 )
