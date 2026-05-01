@@ -96,6 +96,33 @@ def upload_fileobj(fileobj, object_key: str, content_type: str = 'image/jpeg') -
         return None
 
 
+def generate_presigned_put(object_key: str, expires: int = 900,
+                           content_type: str = 'application/octet-stream') -> str | None:
+    """
+    Generate a presigned PUT URL for direct browser-to-R2 upload.
+    expires: seconds until URL expires (default 15 minutes).
+    Returns the presigned URL string, or None on failure.
+    Cloudflare R2 supports presigned PUT but NOT presigned POST.
+    """
+    client = get_client()
+    if client is None:
+        return None
+    try:
+        url = client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket':      BUCKET,
+                'Key':         object_key,
+                'ContentType': content_type,
+            },
+            ExpiresIn=expires,
+        )
+        return url
+    except Exception as e:
+        print(f'[R2] Presigned URL generation failed: {e}')
+        return None
+
+
 def delete_file(object_key: str) -> bool:
     """Delete an object from R2. Returns True on success."""
     client = get_client()

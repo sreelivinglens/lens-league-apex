@@ -17,7 +17,7 @@ Rules enforced (per standing instructions):
   8.  sqlparse validation on every SQL statement
   9.  Show for approval — one change, one deploy, one verify (reminder)
 """
-import ast, re, sys
+import ast, re, sys, os
 import sqlparse
 
 PASS = []
@@ -129,6 +129,39 @@ if sql_errors:
     for e in sql_errors: err(e)
 else:
     ok(f"All {len(sqls)} SQL statements pass validation (sqlparse + PG rules)")
+
+# ── MODEL FIELD VALIDATION against models.py ────────────────────────────────
+print("\n[MODEL FIELDS vs models.py]")
+import re as _re
+_models_path = '/home/claude/models.py'
+if os.path.exists(_models_path):
+    with open(_models_path) as _mf:
+        _msrc = _mf.read()
+    # Extract fields per model
+    _model_fields = {}
+    for _cls in _re.findall(r'class (\w+)\([^)]*db\.Model[^)]*\):', _msrc):
+        _pat = rf'class {_cls}\([^)]+\):(.*?)(?=\nclass |\Z)'
+        _m = _re.search(_pat, _msrc, _re.DOTALL)
+        if _m:
+            _model_fields[_cls] = _re.findall(r'^\s{4}(\w+)\s*=\s*db\.Column', _m.group(1), _re.MULTILINE)
+    ok(f"models.py loaded — {len(_model_fields)} models")
+    # Check critical field rules
+    _user_f = _model_fields.get('User', [])
+    _img_f  = _model_fields.get('Image', [])
+    if 'display_name' in _user_f:
+        err("User model has display_name column — should not exist")
+    else:
+        ok("User model: no display_name column ✓")
+    if 'uploaded_at' in _img_f:
+        err("Image model has uploaded_at — should be created_at")
+    else:
+        ok("Image model: no uploaded_at column ✓")
+    for _req in ['raw_verification_required','raw_verified','raw_disqualified','created_at','score','tier','user_id']:
+        if _req not in _img_f:
+            err(f"Image model missing required field: {_req}")
+    ok("Image model: all required fields present")
+else:
+    note("models.py not found at /home/claude/models.py — upload for full field validation")
 
 # ── RULE 5: ALTER TABLE specifics (source-level check) ────────────────────────
 print("\n[RULE 5] ALTER TABLE specifics")

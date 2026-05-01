@@ -6606,6 +6606,64 @@ def admin_contest_go_live():
 # ---------------------------------------------------------------------------
 # RAW Verification  -  contestant submission
 # ---------------------------------------------------------------------------
+# RAW presigned upload — browser uploads directly to R2, bypassing Gunicorn
+# ---------------------------------------------------------------------------
+
+@app.route('/raw/presign/<int:image_id>')
+@login_required
+def raw_presign(image_id):
+    """Return a presigned R2 PUT URL for direct browser upload."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+    filename = request.args.get('filename', 'raw_file.bin')
+    filename = secure_filename(filename)
+    key = f'raw_submissions/{str(uuid.uuid4())}_{filename}'
+    presigned_url = r2.generate_presigned_put(key, expires=900)
+    if not presigned_url:
+        return jsonify({'error': 'Could not generate upload URL'}), 500
+    return jsonify({'url': presigned_url, 'key': key})
+
+
+@app.route('/raw/confirm/<contest_type>/<int:image_id>', methods=['POST'])
+@login_required
+def raw_confirm(contest_type, image_id):
+    """Called by browser after direct R2 upload completes. Records submission and fires analysis."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+    raw_file_key = request.form.get('key', '').strip()
+    raw_link     = request.form.get('raw_link', '').strip()
+    method       = request.form.get('method', 'upload')
+    contest_ref  = request.form.get('contest_ref', '')
+    if method == 'upload' and not raw_file_key:
+        return jsonify({'error': 'Missing file key'}), 400
+    if method == 'link' and not raw_link:
+        return jsonify({'error': 'Missing link'}), 400
+    if not getattr(img, 'raw_verification_required', False):
+        img.raw_verification_required = True
+    db.session.execute(db.text(
+        "INSERT INTO raw_submissions "
+        "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
+        "VALUES (:iid, :uid, :cr, :ct, :meth, :fk, :lnk, NOW(), 'pending') "
+        "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE "
+        "SET submission_method=:meth, raw_file_key=:fk, raw_link=:lnk, submitted_at=NOW(), analysis_status='pending'"
+    ), {'iid': image_id, 'uid': current_user.id, 'cr': contest_ref,
+        'ct': contest_type, 'meth': method, 'fk': raw_file_key or None, 'lnk': raw_link or None})
+    db.session.commit()
+    sub_row = db.session.execute(db.text(
+        "SELECT id FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct ORDER BY submitted_at DESC LIMIT 1"
+    ), {'iid': image_id, 'ct': contest_type}).fetchone()
+    sub_id = sub_row.id if sub_row else None
+    if sub_id:
+        import threading
+        t = threading.Thread(target=_auto_decide_raw, args=(image_id, sub_id), daemon=True)
+        t.start()
+    redirect_url = url_for('raw_status', image_id=image_id)
+    return jsonify({'redirect': redirect_url})
+
+
+# ---------------------------------------------------------------------------
 
 @app.route('/raw/submit/<contest_type>/<int:image_id>', methods=['GET', 'POST'])
 @login_required
@@ -7310,6 +7368,18 @@ def _run_raw_analysis(submission, img):
             raw_path = tf.name
 
         if raw_path:
+            # Guard: files >60MB decoded in-process risk OOM on Hobby plan (512MB).
+            # Route to manual review instead of crashing the container.
+            _raw_size_mb = os.path.getsize(raw_path) / (1024 * 1024)
+            if _raw_size_mb > 60:
+                app.logger.warning(f'[raw_analysis] file {_raw_size_mb:.0f}MB > 60MB limit — routing to manual review')
+                results['raw_decode_failed'] = True
+                results['oversize_file'] = True
+                overall_flag = True
+            else:
+             pass  # proceed to decode below
+
+        if raw_path and not results.get('raw_decode_failed'):
             def _open_raw_as_pil(path):
                 """Try rawpy first (handles NEF/CR2/ARW/DNG), fall back to PIL."""
                 try:
