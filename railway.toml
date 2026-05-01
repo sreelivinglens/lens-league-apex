@@ -1,2 +1,2 @@
 [deploy]
-startCommand = "gunicorn app:app --workers 2 --timeout 300 --keep-alive 5 --preload"
+startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5 --preload"
