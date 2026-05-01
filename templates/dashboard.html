@@ -138,6 +138,19 @@
     padding: 3px 8px; border-radius: 3px; z-index: 2;
     pointer-events: none;
   }
+  .raw-verified-pill {
+    position: absolute; top: 10px; right: 10px;
+    background: #2e7d32; color: #fff;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; z-index: 2;
+    pointer-events: none;
+  }
+  .raw-verified-banner {
+    display: block; padding: 10px 16px;
+    background: rgba(46,125,50,0.08); border-top: 1px solid rgba(46,125,50,0.3);
+    font-size: 13px; color: #2e7d32; font-weight: 600;
+  }
 
   /* Free tier nudge */
   .free-nudge {
@@ -527,6 +540,10 @@ function dismissPotyBanner() {
     <div class="img-thumb">
       {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
       <div class="raw-pill">RAW Requested</div>
+      {% elif img.raw_verified %}
+      <div class="raw-verified-pill">✓ Verified</div>
+      {% elif img.raw_disqualified %}
+      <div class="raw-pill" style="background:#c0392b;color:#fff;">Disqualified</div>
       {% endif %}
       {% if img.thumb_url %}
         <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or img.original_filename }}" loading="lazy">
@@ -564,6 +581,10 @@ function dismissPotyBanner() {
       <span onclick="event.preventDefault(); event.stopPropagation(); window.location='{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}';"
             style="color:var(--gold);font-weight:600;cursor:pointer;text-decoration:underline;">Submit RAW →</span>
     </span>
+    {% elif img.raw_verified %}
+    <span class="raw-verified-banner">✓ RAW Verified — score confirmed</span>
+    {% elif img.raw_disqualified %}
+    <span style="display:block;padding:10px 16px;background:rgba(192,57,43,0.08);border-top:1px solid rgba(192,57,43,0.3);font-size:13px;color:#c0392b;font-weight:600;">✗ RAW Disqualified</span>
     {% endif %}
 
     {# Pool entry unlock #}
