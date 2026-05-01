@@ -122,6 +122,23 @@
   .raw-request-card a { color: var(--gold); font-weight: 600; text-decoration: none; }
   .raw-request-card a:hover { text-decoration: underline; }
 
+  /* RAW pending — card highlight + pill badge */
+  .img-card.raw-pending {
+    border: 2px solid #F5C518;
+    box-shadow: 0 0 0 1px rgba(245,197,24,0.25), 0 4px 16px rgba(245,197,24,0.12);
+  }
+  .img-card.raw-pending:hover {
+    box-shadow: 0 0 0 1px rgba(245,197,24,0.4), 0 6px 20px rgba(245,197,24,0.2);
+  }
+  .raw-pill {
+    position: absolute; top: 10px; right: 10px;
+    background: #F5C518; color: #000;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; z-index: 2;
+    pointer-events: none;
+  }
+
   /* Free tier nudge */
   .free-nudge {
     background: var(--surface-3); border: 1px solid var(--border);
@@ -309,6 +326,22 @@ function dismissPotyBanner() {
 </div>
 {% endif %}
 
+{# ── RAW verification alert banner ──────────────────────────────────────── #}
+{% if raw_pending %}
+<div id="raw-alert-banner" style="background:#F5C518; color:#000; border-radius:var(--radius-md); padding:16px 22px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <span style="font-size:20px;">📂</span>
+    <div>
+      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:2px;">RAW Verification Requested</div>
+      <div style="font-size:14px; font-weight:600;">
+        {{ raw_pending|length }} image{{ 's require' if raw_pending|length != 1 else ' requires' }} RAW file submission — score held pending verification.
+      </div>
+    </div>
+  </div>
+  <a href="#raw-card-{{ raw_pending[0].id }}" style="background:#000; color:#F5C518; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:10px 18px; border-radius:4px; text-decoration:none; white-space:nowrap; flex-shrink:0;">View &#8595;</a>
+</div>
+{% endif %}
+
 {# ── Header ──────────────────────────────────────────────────────────────── #}
 <div class="dash-header">
   <div class="page-header">
@@ -488,10 +521,13 @@ function dismissPotyBanner() {
 {% if images.items %}
 <div class="img-grid">
   {% for img in images.items %}
-  <a href="{{ url_for('image_detail', image_id=img.id) }}" class="img-card">
+  <a href="{{ url_for('image_detail', image_id=img.id) }}" class="img-card{% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %} raw-pending{% endif %}" id="{% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}raw-card-{{ img.id }}{% endif %}">
 
     {# Thumbnail #}
     <div class="img-thumb">
+      {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
+      <div class="raw-pill">RAW Requested</div>
+      {% endif %}
       {% if img.thumb_url %}
         <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or img.original_filename }}" loading="lazy">
       {% else %}
@@ -521,11 +557,11 @@ function dismissPotyBanner() {
       {% endif %}
     </div>
 
-    {# RAW verification request banner #}
-    {% if img.judge_referral and img.needs_review and not img.is_flagged %}
+    {# RAW verification request banner — inside card #}
+    {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
     <div class="raw-request-card" onclick="event.preventDefault();">
       📂 <strong>RAW file requested</strong> — score held pending verification.
-      <a href="{{ url_for('raw_status', image_id=img.id) }}" onclick="event.stopPropagation();">Submit RAW →</a>
+      <a href="{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}" onclick="event.stopPropagation();">Submit RAW →</a>
     </div>
     {% endif %}
 
