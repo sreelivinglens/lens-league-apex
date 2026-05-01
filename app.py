@@ -8026,6 +8026,11 @@ def _auto_decide_raw(image_id, submission_id):
                     "UPDATE images SET raw_verified=FALSE, raw_disqualified=TRUE WHERE id=:iid"
                 ), {'iid': image_id})
                 db.session.commit()
+                # Verify the row persisted
+                _check = db.session.execute(db.text(
+                    "SELECT id, analysis_status, disqualified FROM raw_submissions WHERE id=:sid"
+                ), {'sid': submission_id}).fetchone()
+                app.logger.info(f'[auto_decide_raw] POST-COMMIT CHECK: sub_id={submission_id} found={_check is not None} status={_check.analysis_status if _check else None} disq={_check.disqualified if _check else None}')
 
                 # Email photographer — specific disqualification reason
                 if photographer:
