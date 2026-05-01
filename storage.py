@@ -80,7 +80,7 @@ def upload_fileobj(fileobj, object_key: str, content_type: str = 'image/jpeg') -
         config = TransferConfig(
             multipart_threshold = 10 * 1024 * 1024,   # 10 MB — RAW files go multipart
             multipart_chunksize = 10 * 1024 * 1024,   # 10 MB chunks
-            max_concurrency     = 2,                   # conservative for Railway
+            max_concurrency     = 4,                   # 4 parallel chunks for RAW files
             use_threads         = True,
         )
         client.upload_fileobj(
