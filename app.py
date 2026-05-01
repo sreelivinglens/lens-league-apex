@@ -8025,7 +8025,7 @@ def _auto_decide_raw(image_id, submission_id):
                 admin_emails = _admin_notify_emails()
                 if not admin_emails:
                     admin_emails = [ADMIN_NOTIFY_EMAIL]
-                reasons_html = ''.join(f'<li>{r}</li>' for r in flag_reasons)
+                reasons_html = ''.join(f'<li>{r}</li>' for r in (results.get('disqualify_reasons') or '').split(' | ') if r)
                 send_email(
                     admin_emails,
                     f'[RAW Review Required] Image #{image_id} — {img.asset_name}',
