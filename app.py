@@ -7703,6 +7703,10 @@ def _auto_decide_raw(image_id, submission_id):
                 'vcc': results.get('vision_crop_consistent'), 'vn': results.get('vision_notes'),
                 'of': flags, 'fr2': flag_str, 'sid': submission_id,
             })
+            # Commit analysis results immediately — before decision branching.
+            # This ensures analysis data is always persisted even if a branch
+            # email or subsequent UPDATE throws an exception.
+            db.session.commit()
 
             if auto_decision == 'manual_review':
                 # Camera format not supported by automated system — flag for admin manual check
