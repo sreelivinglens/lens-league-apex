@@ -6734,6 +6734,13 @@ def raw_submit(contest_type, image_id):
             return redirect(request.url)
 
         contest_ref = request.form.get('contest_ref', '')
+        # Reuse existing contest_ref (e.g. admin-request) so ON CONFLICT updates correctly
+        if not contest_ref:
+            _ex_ref = db.session.execute(db.text(
+                "SELECT contest_ref FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct ORDER BY id DESC LIMIT 1"
+            ), {'iid': image_id, 'ct': contest_type}).fetchone()
+            if _ex_ref:
+                contest_ref = _ex_ref.contest_ref or ''
         db.session.execute(db.text(
             "INSERT INTO raw_submissions "
             "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
