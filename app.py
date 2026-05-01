@@ -6657,6 +6657,14 @@ def raw_confirm(contest_type, image_id):
         return jsonify({'error': 'Missing link'}), 400
     if not getattr(img, 'raw_verification_required', False):
         img.raw_verification_required = True
+    # If an existing row was created by admin-request, use that contest_ref
+    # so the ON CONFLICT clause updates it rather than creating a duplicate.
+    if not contest_ref:
+        _existing_ref = db.session.execute(db.text(
+            "SELECT contest_ref FROM raw_submissions WHERE image_id=:iid AND contest_type=:ct ORDER BY id DESC LIMIT 1"
+        ), {'iid': image_id, 'ct': contest_type}).fetchone()
+        if _existing_ref:
+            contest_ref = _existing_ref.contest_ref or ''
     db.session.execute(db.text(
         "INSERT INTO raw_submissions "
         "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
