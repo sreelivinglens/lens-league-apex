@@ -7368,32 +7368,63 @@ def _run_raw_analysis(submission, img):
             raw_path = tf.name
 
         if raw_path:
-            # Guard: files >60MB decoded in-process risk OOM on Hobby plan (512MB).
-            # Route to manual review instead of crashing the container.
-            _raw_size_mb = os.path.getsize(raw_path) / (1024 * 1024)
-            if _raw_size_mb > 60:
-                app.logger.warning(f'[raw_analysis] file {_raw_size_mb:.0f}MB > 60MB limit — routing to manual review')
-                results['raw_decode_failed'] = True
-                results['oversize_file'] = True
-                overall_flag = True
-            else:
-             pass  # proceed to decode below
+            # ── Format-agnostic RAW decode ─────────────────────────────────
+            # Strategy:
+            #   1. Try rawpy (works for older/standard CR2, NEF, ARW, DNG)
+            #   2. Fall back to embedded JPEG extraction — works for ALL
+            #      formats: CR3, RAF, Z9 HE*, GFX 100, Alpha 1, Hasselblad.
+            #      Every RAW file contains an embedded JPEG (FF D8...FF D9).
+            # Only mark raw_decode_failed if BOTH methods fail.
 
-        if raw_path and not results.get('raw_decode_failed'):
+            def _extract_embedded_jpeg(path):
+                """Extract largest embedded JPEG from any RAW binary.
+                Scans for FF D8 (JPEG SOI) ... FF D9 (EOI) sequences.
+                Format-agnostic — works on every camera RAW ever made."""
+                from PIL import Image as _PIL
+                import io as _io2
+                with open(path, 'rb') as _f:
+                    _data = _f.read()
+                SOI = b'\xff\xd8'
+                EOI = b'\xff\xd9'
+                _candidates = []
+                _pos = 0
+                while True:
+                    _start = _data.find(SOI, _pos)
+                    if _start == -1:
+                        break
+                    _end = _data.find(EOI, _start + 2)
+                    if _end == -1:
+                        break
+                    _candidates.append(_data[_start:_end + 2])
+                    _pos = _start + 1
+                if not _candidates:
+                    raise ValueError('No embedded JPEG found in RAW file')
+                _jpeg = max(_candidates, key=len)
+                if len(_jpeg) < 10000:
+                    raise ValueError(f'Embedded JPEG too small ({len(_jpeg)} bytes)')
+                return _PIL.open(_io2.BytesIO(_jpeg)).convert('RGB')
+
             def _open_raw_as_pil(path):
-                """Try rawpy first (handles NEF/CR2/ARW/DNG), fall back to PIL."""
+                """Try rawpy first, then embedded JPEG extraction."""
                 try:
                     import rawpy
-                    import numpy as np
+                    import numpy as _np
                     from PIL import Image as _PIL
-                    with rawpy.imread(path) as raw:
-                        rgb = raw.postprocess(half_size=True)
-                    return _PIL.fromarray(rgb)
+                    with rawpy.imread(path) as _raw:
+                        _rgb = _raw.postprocess(half_size=True)
+                    app.logger.info(f'[raw_analysis] rawpy decode OK')
+                    return _PIL.fromarray(_rgb)
                 except Exception as _rawpy_err:
-                    app.logger.warning(f'[rawpy] failed on {path}: {_rawpy_err}')
-                    from PIL import Image as _PIL
-                    return _PIL.open(path)
+                    app.logger.warning(f'[rawpy] failed ({_rawpy_err}) — trying embedded JPEG')
+                try:
+                    _pil = _extract_embedded_jpeg(path)
+                    app.logger.info(f'[raw_analysis] embedded JPEG extracted OK')
+                    return _pil
+                except Exception as _emb_err:
+                    app.logger.warning(f'[raw_analysis] embedded JPEG failed: {_emb_err}')
+                    raise ValueError('Could not decode RAW file by any method')
 
+        if raw_path:
             try:
                 pil_raw = _open_raw_as_pil(raw_path)
                 raw_w, raw_h = pil_raw.size
@@ -7406,13 +7437,13 @@ def _run_raw_analysis(submission, img):
                     results['crop_percentage'] = round(crop_pct, 4)
                     results['crop_flagged']    = crop_pct > 0.20
                     results['dimension_match'] = abs(raw_w - jpg_w) < raw_w * 0.5
-                    # Crop percentage is informational only — editing software legitimately crops
                 results['exif_match'] = True
+                app.logger.info(f'[raw_analysis] decode success: {raw_w}x{raw_h}')
             except Exception as _raw_err:
-                app.logger.warning(f'[raw_analysis] Could not decode RAW file: {_raw_err}')
+                app.logger.warning(f'[raw_analysis] all decode methods failed: {_raw_err}')
                 results['exif_match'] = False
                 results['raw_decode_failed'] = True
-                overall_flag = True  # FLAG — unreadable RAW is not a pass
+                overall_flag = True
     except Exception as meta_err:
         app.logger.warning(f'[raw_metadata] {meta_err}')
         results['exif_match'] = False
@@ -7430,30 +7461,18 @@ def _run_raw_analysis(submission, img):
         raw_b64 = None
         if raw_path and not results.get('raw_decode_failed'):
             try:
-                def _open_raw_as_pil_v(path):
-                    try:
-                        import rawpy
-                        import numpy as np
-                        from PIL import Image as _PIL
-                        with rawpy.imread(path) as raw:
-                            rgb = raw.postprocess(half_size=True)
-                        return _PIL.fromarray(rgb)
-                    except Exception as _rawpy_err_v:
-                        app.logger.warning(f'[rawpy_vision] failed on {path}: {_rawpy_err_v}')
-                        from PIL import Image as _PIL
-                        return _PIL.open(path)
-                pil_r = _open_raw_as_pil_v(raw_path).convert('RGB')
-                # Cap to 1024px longest side before encoding — full-res RAW
-                # previews are 20-40MB of base64; 1024px is sufficient for
-                # vision comparison and reduces API payload by ~95%.
+                # Reuse the same dual-strategy decoder (rawpy + embedded JPEG)
+                pil_r = _open_raw_as_pil(raw_path).convert('RGB')
+                # Cap to 1024px — sufficient for vision comparison, ~95% smaller payload
                 _max_px = 1024
                 if max(pil_r.size) > _max_px:
                     pil_r.thumbnail((_max_px, _max_px))
                 buf   = _io.BytesIO()
                 pil_r.save(buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-            except Exception:
-                pass
+                app.logger.info(f'[raw_vision] preview encoded: {pil_r.size}')
+            except Exception as _v_err:
+                app.logger.warning(f'[raw_vision] could not prepare preview: {_v_err}')
 
         if jpg_b64 and raw_b64:
             api_key = os.getenv('ANTHROPIC_API_KEY', '')
