@@ -1073,6 +1073,15 @@ def login():
             return redirect(url_for('judge_dashboard'))
         return redirect(url_for('dashboard'))
 
+
+    # Store ?next= in session on GET so Google OAuth callback can redirect
+    # correctly after login. Email/password path reads request.args directly.
+    # Google OAuth goes to /auth/google without ?next= so we cache it here.
+    if request.method == 'GET':
+        _next = request.args.get('next', '').strip()
+        if _next:
+            session['post_login_next'] = _next
+
     if request.method == 'POST':
         email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
