@@ -203,6 +203,18 @@
     {% endif %}
   </div>
 
+  {# ── DDI qualifier note ────────────────────────────────────────── #}
+  {% if image.status == 'scored' and image.score %}
+  <div style="font-size:13px; color:var(--text-muted); line-height:1.6;
+              padding:10px 14px; margin-bottom:20px;
+              border-left:3px solid var(--border);
+              font-family:var(--font-mono);">
+    DDI scores are consistent and science-based. As with any AI assessment,
+    individual scores may vary slightly — your tier reflects performance
+    across multiple images, not any single result.
+  </div>
+  {% endif %}
+
   {# ── Audit analysis rows ────────────────────────────────────────── #}
   {% set audit = image.get_audit() %}
   {% if audit and audit.rows %}

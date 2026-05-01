@@ -410,6 +410,9 @@
     </div>
     <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
   </div>
+  <div style="font-size:11px; color:rgba(255,255,255,0.3); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
+    DDI scores are AI-assessed and consistent. Individual results may vary slightly.
+  </div>
 
 </div>
 
@@ -521,7 +524,7 @@
 (function() {
   var score = {{ image.score | float if image.score else 0 }};
   var tier  = "{{ image.tier or '' }}";
-  var name  = "{{ current_user.display_name or current_user.email.split('@')[0] }}";
+  var name  = "{{ current_user.full_name or current_user.username or current_user.email.split('@')[0] }}";
 
   var messages = [];
 
