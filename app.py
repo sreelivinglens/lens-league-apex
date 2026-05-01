@@ -200,11 +200,12 @@ app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-m
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///shutterleague.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle':  1800,
-    'pool_timeout':  30,
-    'pool_size':     5,
-    'max_overflow':  10,
+    'pool_pre_ping':  True,
+    'pool_recycle':   300,   # recycle connections every 5 mins (was 30 mins)
+    'pool_timeout':   10,    # fail fast if no connection available (was 30s)
+    'pool_size':      2,     # 2 connections per worker × 4 workers = 8 total
+    'max_overflow':   3,     # allow brief spikes up to 5 per worker
+    'pool_reset_on_return': 'rollback',  # release locks on connection return
 }
 app.config['UPLOAD_FOLDER']       = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
