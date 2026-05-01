@@ -7639,54 +7639,13 @@ def _run_raw_analysis(submission, img):
         results['raw_decode_failed'] = True
         overall_flag = True
 
-    # ── Stage 3: DDI score comparison ─────────────────────────────────────────
-    # Score the RAW-extracted image and compare against submitted JPEG score.
-    # Threshold configurable via RAW_SCORE_DELTA_THRESHOLD env var (default 0.3).
-    if pil_raw is not None and img.score is not None:
-        try:
-            import tempfile as _tf2
-            from engine.auto_score import auto_score as _auto_score
-            _raw_score_tmp = _tf2.NamedTemporaryFile(suffix='.jpg', delete=False)
-            _raw_score_tmp.close()
-            _score_pil = pil_raw.copy()
-            if max(_score_pil.size) > 1200:
-                _score_pil.thumbnail((1200, 1200))
-            _score_pil.save(_raw_score_tmp.name, format='JPEG', quality=90)
-            _raw_result = _auto_score(
-                image_path   = _raw_score_tmp.name,
-                genre        = img.genre,
-                title        = img.asset_name,
-                photographer = img.photographer_name,
-                subject      = img.subject,
-                location     = img.location,
-            )
-            _raw_ddi = float(_raw_result.get('score', 0))
-            results['raw_ddi_score']       = _raw_ddi
-            results['submitted_ddi_score'] = float(img.score)
-            _delta     = abs(_raw_ddi - float(img.score))
-            _threshold = float(_os.getenv('RAW_SCORE_DELTA_THRESHOLD', '0.3'))
-            results['score_delta']           = round(_delta, 3)
-            results['score_delta_threshold'] = _threshold
-            app.logger.info(
-                f'[raw_stage3] RAW DDI={_raw_ddi} submitted={img.score} '
-                f'delta={_delta:.3f} threshold={_threshold}'
-            )
-            if _delta > _threshold:
-                results['score_delta_exceeded'] = True
-                results['raw_decode_failed']    = True
-                overall_flag = True
-                app.logger.warning(
-                    f'[raw_stage3] delta {_delta:.3f} exceeds threshold — admin review'
-                )
-            else:
-                results['score_delta_exceeded'] = False
-                app.logger.info('[raw_stage3] PASS — delta within threshold')
-            try:
-                _os.unlink(_raw_score_tmp.name)
-            except Exception:
-                pass
-        except Exception as _s3_err:
-            app.logger.warning(f'[raw_stage3] DDI comparison failed: {_s3_err}')
+    # ── Stage 3: DDI score comparison — REMOVED ──────────────────────────────
+    # Score delta between RAW preview and final JPEG is not a reliable
+    # manipulation signal. RAW embedded JPEG previews are inherently lower
+    # quality (flat colour, low res) and will always score lower than a
+    # properly edited JPEG. Legitimate editing would always trigger false
+    # positives. Vision comparison in Stage 4 handles object manipulation
+    # detection directly and reliably.
 
     # ── Stage 4: Vision analysis ───────────────────────────────────────────────
     # Object manipulation + AI detection + watermark check.
@@ -7695,9 +7654,17 @@ def _run_raw_analysis(submission, img):
         jpg_b64 = None
         if img.thumb_url:
             try:
-                resp    = _ur.urlopen(img.thumb_url, timeout=10)
-                jpg_b64 = base64.b64encode(resp.read()).decode('utf-8')
-                app.logger.info(f'[raw_stage4] submitted JPEG loaded ({len(jpg_b64)} chars b64)')
+                # Use R2 direct download to avoid 403 on public URL from server
+                from storage import get_client, BUCKET
+                import io as _io3
+                _thumb_key = img.thumb_url.split('/thumbs/')[-1] if '/thumbs/' in img.thumb_url else None
+                if _thumb_key:
+                    _thumb_buf = _io3.BytesIO()
+                    get_client().download_fileobj(BUCKET, f'thumbs/{_thumb_key}', _thumb_buf)
+                    jpg_b64 = base64.b64encode(_thumb_buf.getvalue()).decode('utf-8')
+                    app.logger.info(f'[raw_stage4] submitted JPEG loaded via R2 ({len(jpg_b64)} chars b64)')
+                else:
+                    raise ValueError(f'Could not extract thumb key from URL: {img.thumb_url}')
             except Exception as _jpg_err:
                 app.logger.warning(f'[raw_stage4] could not load submitted JPEG: {_jpg_err}')
 
@@ -7881,7 +7848,6 @@ def _auto_decide_raw(image_id, submission_id):
             # Determine auto_decision from new pipeline results
             decode_failed        = results.get('raw_decode_failed', False)
             invalid_filetype     = results.get('invalid_file_type', False)
-            score_delta_exceeded = results.get('score_delta_exceeded', False)
             vision_flags = any([
                 results.get('vision_ai_detected'),
                 results.get('vision_objects_removed'),
@@ -7892,7 +7858,7 @@ def _auto_decide_raw(image_id, submission_id):
             flag_str = results.get('disqualify_reasons') or None
             if invalid_filetype or vision_flags:
                 auto_decision = 'disqualified'
-            elif decode_failed or score_delta_exceeded:
+            elif decode_failed:
                 auto_decision = 'manual_review'
             elif not flags:
                 auto_decision = 'approved'
