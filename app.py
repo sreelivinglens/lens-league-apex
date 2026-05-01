@@ -7359,251 +7359,455 @@ def admin_raw_trigger_analysis(image_id):
     return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
+def _check_raw_magic_bytes(path, declared_ext):
+    """
+    Verify file header (magic bytes) matches the declared RAW extension.
+    Returns (is_valid, reason_string).
+
+    Catches renamed JPEGs/PNGs/PDFs submitted as RAW files.
+    This is the first line of defence — cheap, no API cost.
+
+    Supported RAW signatures:
+      TIFF-based (NEF, NRW, CR2, ARW, DNG, RW2, ORF, PEF, SRW):
+        Little-endian TIFF: 49 49 2A 00
+        Big-endian TIFF:    4D 4D 00 2A
+      Canon CR3: ISO Base Media (ftyp box) — 66 74 79 70 at offset 4
+      Fuji RAF:  FUJIFILMCCD-RAW header — 46 55 4A 49 46 49 4C 4D
+      Sigma X3F: FOVb — 46 4F 56 62
+      Hasselblad 3FR: TIFF-based (same as above)
+
+    Non-RAW signatures that must be rejected:
+      JPEG: FF D8 FF
+      PNG:  89 50 4E 47
+      PDF:  25 50 44 46
+      WebP: 52 49 46 46
+      GIF:  47 49 46 38
+      BMP:  42 4D
+    """
+    try:
+        with open(path, 'rb') as _f:
+            header = _f.read(12)
+    except Exception as _e:
+        return False, f'Could not read file header: {_e}'
+
+    ext = declared_ext.lower().lstrip('.')
+
+    # Hard reject — known non-RAW signatures
+    if header[:3] == b'\xff\xd8\xff':
+        return False, 'File is a JPEG image, not a RAW camera file'
+    if header[:4] == b'\x89PNG':
+        return False, 'File is a PNG image, not a RAW camera file'
+    if header[:4] == b'%PDF':
+        return False, 'File is a PDF document, not a RAW camera file'
+    if header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+        return False, 'File is a WebP image, not a RAW camera file'
+    if header[:6] in (b'GIF87a', b'GIF89a'):
+        return False, 'File is a GIF image, not a RAW camera file'
+    if header[:2] == b'BM':
+        return False, 'File is a BMP image, not a RAW camera file'
+
+    # Fuji RAF — unique signature
+    if ext == 'raf':
+        if header[:8] == b'FUJIFILM':
+            return True, 'Fuji RAF signature confirmed'
+        return False, 'File does not have a valid Fuji RAF signature'
+
+    # Sigma X3F
+    if ext == 'x3f':
+        if header[:4] == b'FOVb':
+            return True, 'Sigma X3F signature confirmed'
+        return False, 'File does not have a valid Sigma X3F signature'
+
+    # Canon CR3 — ISO Base Media container (MP4-based)
+    if ext == 'cr3':
+        if header[4:8] == b'ftyp':
+            return True, 'Canon CR3 signature confirmed'
+        return False, 'File does not have a valid Canon CR3 signature'
+
+    # TIFF-based RAW formats (NEF, NRW, CR2, ARW, DNG, RW2, ORF, PEF, SRW, 3FR)
+    tiff_exts = {'nef', 'nrw', 'cr2', 'arw', 'dng', 'rw2', 'orf', 'pef', 'srw', '3fr'}
+    if ext in tiff_exts:
+        if header[:4] in (b'\x49\x49\x2a\x00', b'\x4d\x4d\x00\x2a'):
+            return True, f'{ext.upper()} TIFF signature confirmed'
+        return False, f'File does not have a valid {ext.upper()} RAW signature'
+
+    # Unknown extension that passed the extension whitelist — treat as suspicious
+    return False, f'Unrecognised RAW format: {ext}'
+
+
+# Valid RAW file extensions whitelist
+_VALID_RAW_EXTENSIONS = {
+    'nef', 'nrw',           # Nikon
+    'cr2', 'cr3',           # Canon
+    'raf',                  # Fuji
+    'arw', 'srf', 'sr2',    # Sony
+    'rw2',                  # Panasonic
+    'orf',                  # Olympus / OM System
+    'pef', 'ptx',           # Pentax
+    'dng',                  # Adobe DNG (universal)
+    'x3f',                  # Sigma
+    '3fr', 'fff',           # Hasselblad
+    'srw',                  # Samsung
+    'mrw',                  # Minolta/Konica
+    'rwl',                  # Leica
+}
+
+
 def _run_raw_analysis(submission, img):
     """
     RAW file authenticity analysis. Returns (overall_flag, results_dict).
 
-    VERIFICATION PHILOSOPHY:
+    VERIFICATION PIPELINE:
     ─────────────────────────────────────────────────────────────────────
-    This engine verifies that the submitted JPEG and the RAW file show
-    the SAME photograph. It does NOT penalise legitimate photographic
-    practice. The following are explicitly acceptable and must NOT flag:
+    Stage 1 — File validation (no API cost)
+      • Extension must be in _VALID_RAW_EXTENSIONS
+      • Magic bytes must match declared format
+      → Fail: auto-disqualify (renamed JPEG/PNG/PDF caught here)
 
-      ✓ Exposure, contrast, shadows, highlights adjustments
-      ✓ Colour grading, white balance changes
+    Stage 2 — RAW decode
+      • Try rawpy (older formats: CR2, older NEF, ARW, DNG)
+      • Fall back to embedded JPEG extraction (ALL formats including
+        Nikon Z-series, Canon CR3, Fuji RAF, Sony Alpha)
+      → Both fail: manual review (genuinely corrupt file)
+
+    Stage 3 — DDI score comparison
+      • Score the RAW-extracted image via auto_score engine
+      • Compare vs submitted JPEG score
+      • abs(delta) > RAW_SCORE_DELTA_THRESHOLD → admin review
+      • abs(delta) ≤ threshold → pass
+
+    Stage 4 — Vision analysis (object manipulation + AI detection)
+      AUTO-DISQUALIFY (no appeal) if any of:
+        • AI generation detected in submitted JPEG
+        • Objects removed from RAW (cloning)
+        • Objects added to submitted JPEG (compositing)
+        • Watermark/logo detected in RAW file
+        • Subject or scene materially different
+      ACCEPTABLE (never flag):
+        • Exposure, contrast, colour, crop, sharpening differences
+
+    ACCEPTABLE edits (never flagged):
+      ✓ Exposure, contrast, shadows, highlights
+      ✓ Colour grading, white balance
       ✓ Sharpening, noise reduction, lens corrections
-      ✓ Cropping — including heavy crops from high-resolution cameras
-        (a 100MP RAW cropped to a 2000px JPEG is completely legitimate)
-      ✓ EXIF stripped by editing software (Lightroom, Photoshop etc.)
-      ✓ Dimension mismatch due to crop or resolution difference
-
-    The ONLY triggers for a flag are:
-      ✗ File cannot be decoded (corrupt, wrong file, wrong format)
-      ✗ Objects added or removed (compositing, generative AI)
-      ✗ Subject or scene is materially different from the RAW
-      ✗ AI generation detected in the submitted JPEG
-      ✗ Logo or trademark added
-
-    DO NOT reintroduce dimension/crop checks or EXIF checks as flag
-    triggers. These punish high-resolution shooters and photographers
-    who edit in software that strips metadata — both are legitimate.
+      ✓ Cropping — even heavy crops from high-res cameras
+      ✓ EXIF stripped by editing software
     ─────────────────────────────────────────────────────────────────────
     """
     import tempfile, io as _io, base64, json as _json
     import urllib.request as _ur
+    import os as _os
 
-    results     = {}
-    overall_flag= False
-    raw_path    = None
+    results      = {}
+    overall_flag = False
+    raw_path     = None
+    # disqualify_reasons: list of specific human-readable strings for rejection email
+    disqualify_reasons = []
 
-    # Step 1  -  Metadata
+    # ── Stage 1: File validation ───────────────────────────────────────────────
+    # Extension check + magic bytes — catches renamed JPEGs/PNGs before any API call
     try:
-        if submission.raw_file_key:
-            from storage import get_client, BUCKET
-            import os as _os
-            _raw_ext = _os.path.splitext(submission.raw_file_key)[1] or '.raw'
-            tf = tempfile.NamedTemporaryFile(suffix=_raw_ext, delete=False)
-            get_client().download_fileobj(BUCKET, submission.raw_file_key, tf)
-            tf.close()
-            raw_path = tf.name
+        if not submission.raw_file_key:
+            results['raw_decode_failed'] = True
+            overall_flag = True
+            disqualify_reasons.append('No RAW file was attached to this submission')
+            results['disqualify_reasons'] = ' | '.join(disqualify_reasons)
+            return overall_flag, results
 
-        if raw_path:
-            # ── Format-agnostic RAW decode ─────────────────────────────────
-            # Strategy:
-            #   1. Try rawpy (works for older/standard CR2, NEF, ARW, DNG)
-            #   2. Fall back to embedded JPEG extraction — works for ALL
-            #      formats: CR3, RAF, Z9 HE*, GFX 100, Alpha 1, Hasselblad.
-            #      Every RAW file contains an embedded JPEG (FF D8...FF D9).
-            # Only mark raw_decode_failed if BOTH methods fail.
+        _raw_ext = _os.path.splitext(submission.raw_file_key)[1].lower().lstrip('.')
 
-            def _extract_embedded_jpeg(path):
-                """Extract largest embedded JPEG from any RAW binary.
-                Scans for FF D8 (JPEG SOI) ... FF D9 (EOI) sequences.
-                Format-agnostic — works on every camera RAW ever made."""
-                from PIL import Image as _PIL
-                import io as _io2
-                with open(path, 'rb') as _f:
-                    _data = _f.read()
-                SOI = b'\xff\xd8'
-                EOI = b'\xff\xd9'
-                _candidates = []
-                _pos = 0
-                while True:
-                    _start = _data.find(SOI, _pos)
-                    if _start == -1:
-                        break
-                    _end = _data.find(EOI, _start + 2)
-                    if _end == -1:
-                        break
-                    _candidates.append(_data[_start:_end + 2])
-                    _pos = _start + 1
-                if not _candidates:
-                    raise ValueError('No embedded JPEG found in RAW file')
-                _jpeg = max(_candidates, key=len)
-                if len(_jpeg) < 10000:
-                    raise ValueError(f'Embedded JPEG too small ({len(_jpeg)} bytes)')
-                return _PIL.open(_io2.BytesIO(_jpeg)).convert('RGB')
+        # Extension whitelist check
+        if _raw_ext not in _VALID_RAW_EXTENSIONS:
+            results['invalid_file_type'] = True
+            overall_flag = True
+            disqualify_reasons.append(
+                f'The submitted file (.{_raw_ext}) is not a valid RAW camera format. '
+                'Only original RAW files from your camera are accepted. '
+                'If you submitted a JPEG, PNG, or PDF, please resubmit with the original camera RAW file.'
+            )
+            app.logger.warning(f'[raw_stage1] Invalid extension: .{_raw_ext}')
+            results['disqualify_reasons'] = ' | '.join(disqualify_reasons)
+            return overall_flag, results
 
-            # Track whether rawpy succeeded — used to decide auto-approve vs manual review
-            _rawpy_succeeded = [False]
+        # Download file for magic bytes check
+        from storage import get_client, BUCKET
+        tf = tempfile.NamedTemporaryFile(suffix=f'.{_raw_ext}', delete=False)
+        get_client().download_fileobj(BUCKET, submission.raw_file_key, tf)
+        tf.close()
+        raw_path = tf.name
 
-            def _open_raw_as_pil(path):
-                """Try rawpy first, then embedded JPEG extraction.
-                Sets _rawpy_succeeded[0]=True only if rawpy works.
-                When rawpy fails, embedded JPEG is used for metadata only —
-                NOT for vision comparison (too risky for contest integrity).
-                """
-                try:
-                    import rawpy
-                    import numpy as _np
-                    from PIL import Image as _PIL
-                    with rawpy.imread(path) as _raw:
-                        _rgb = _raw.postprocess(half_size=True)
-                    app.logger.info(f'[raw_analysis] rawpy decode OK')
-                    _rawpy_succeeded[0] = True
-                    return _PIL.fromarray(_rgb)
-                except Exception as _rawpy_err:
-                    app.logger.warning(f'[rawpy] failed ({_rawpy_err}) — trying embedded JPEG for metadata only')
-                try:
-                    _pil = _extract_embedded_jpeg(path)
-                    app.logger.info(f'[raw_analysis] embedded JPEG extracted OK (metadata only — manual review required)')
-                    return _pil
-                except Exception as _emb_err:
-                    app.logger.warning(f'[raw_analysis] embedded JPEG failed: {_emb_err}')
-                    raise ValueError('Could not decode RAW file by any method')
+        # Magic bytes validation
+        magic_valid, magic_reason = _check_raw_magic_bytes(raw_path, _raw_ext)
+        app.logger.info(f'[raw_stage1] magic bytes: valid={magic_valid} reason={magic_reason}')
+        if not magic_valid:
+            results['invalid_file_type'] = True
+            overall_flag = True
+            disqualify_reasons.append(
+                f'The submitted file did not pass RAW format verification. {magic_reason}. '
+                'Please submit the original unmodified RAW file directly from your camera.'
+            )
+            results['disqualify_reasons'] = ' | '.join(disqualify_reasons)
+            return overall_flag, results
 
-        if raw_path:
+        app.logger.info(f'[raw_stage1] PASS — {magic_reason}')
+
+    except Exception as _s1_err:
+        app.logger.warning(f'[raw_stage1] error: {_s1_err}')
+        results['raw_decode_failed'] = True
+        overall_flag = True
+        results['disqualify_reasons'] = f'File validation error: {_s1_err}'
+        return overall_flag, results
+
+    # ── Stage 2: RAW decode ────────────────────────────────────────────────────
+    # Try rawpy first, then embedded JPEG extraction.
+    # Both are now valid for vision comparison — embedded JPEG is reliable for
+    # all modern camera formats (Nikon Z, Canon CR3, Fuji RAF, Sony Alpha).
+    pil_raw = None
+
+    def _extract_embedded_jpeg(path):
+        """Extract largest embedded JPEG from any RAW binary.
+        Scans for FF D8 (JPEG SOI) ... FF D9 (EOI) sequences.
+        Format-agnostic — works on every camera RAW ever made."""
+        from PIL import Image as _PIL
+        import io as _io2
+        with open(path, 'rb') as _f:
+            _data = _f.read()
+        SOI = b'\xff\xd8'
+        EOI = b'\xff\xd9'
+        _candidates = []
+        _pos = 0
+        while True:
+            _start = _data.find(SOI, _pos)
+            if _start == -1:
+                break
+            _end = _data.find(EOI, _start + 2)
+            if _end == -1:
+                break
+            _candidates.append(_data[_start:_end + 2])
+            _pos = _start + 1
+        if not _candidates:
+            raise ValueError('No embedded JPEG found in RAW file')
+        _jpeg = max(_candidates, key=len)
+        if len(_jpeg) < 50000:
+            raise ValueError(f'Embedded JPEG too small ({len(_jpeg)} bytes) — likely a thumbnail')
+        return _PIL.open(_io2.BytesIO(_jpeg)).convert('RGB')
+
+    try:
+        try:
+            import rawpy
+            import numpy as _np
+            from PIL import Image as _PIL
+            with rawpy.imread(raw_path) as _raw:
+                _rgb = _raw.postprocess(half_size=True)
+            pil_raw = _PIL.fromarray(_rgb)
+            app.logger.info(f'[raw_stage2] rawpy decode OK: {pil_raw.size}')
+        except Exception as _rawpy_err:
+            app.logger.warning(f'[raw_stage2] rawpy failed ({_rawpy_err}) — trying embedded JPEG')
             try:
-                pil_raw = _open_raw_as_pil(raw_path)
-                raw_w, raw_h = pil_raw.size
-                results['raw_width']  = raw_w
-                results['raw_height'] = raw_h
-                jpg_w = img.width  or 0
-                jpg_h = img.height or 0
-                if jpg_w and jpg_h and raw_w and raw_h:
-                    crop_pct = 1.0 - (min(raw_w, jpg_w) * min(raw_h, jpg_h)) / (raw_w * raw_h)
-                    results['crop_percentage'] = round(crop_pct, 4)
-                    results['crop_flagged']    = crop_pct > 0.20
-                    results['dimension_match'] = abs(raw_w - jpg_w) < raw_w * 0.5
-                results['exif_match'] = True
-                app.logger.info(f'[raw_analysis] decode success: {raw_w}x{raw_h}')
-                # If rawpy failed and we used embedded JPEG fallback,
-                # we cannot trust vision comparison for contest integrity.
-                # Route to manual review — admin verifies these camera formats.
-                if not _rawpy_succeeded[0]:
-                    app.logger.warning(f'[raw_analysis] rawpy unavailable for this format — routing to manual review (contest integrity)')
-                    results['raw_decode_failed'] = True
-                    overall_flag = True
-            except Exception as _raw_err:
-                app.logger.warning(f'[raw_analysis] all decode methods failed: {_raw_err}')
-                results['exif_match'] = False
-                results['raw_decode_failed'] = True
-                overall_flag = True
-    except Exception as meta_err:
-        app.logger.warning(f'[raw_metadata] {meta_err}')
-        results['exif_match'] = False
+                pil_raw = _extract_embedded_jpeg(raw_path)
+                app.logger.info(f'[raw_stage2] embedded JPEG extracted OK: {pil_raw.size}')
+            except Exception as _emb_err:
+                app.logger.warning(f'[raw_stage2] embedded JPEG failed: {_emb_err}')
+                pil_raw = None
 
-    # Step 2  -  Vision
+        if pil_raw is None:
+            results['raw_decode_failed'] = True
+            overall_flag = True
+            app.logger.warning('[raw_stage2] all decode methods failed — manual review')
+        else:
+            results['raw_width']  = pil_raw.size[0]
+            results['raw_height'] = pil_raw.size[1]
+            results['exif_match'] = True
+
+    except Exception as _s2_err:
+        app.logger.warning(f'[raw_stage2] error: {_s2_err}')
+        results['raw_decode_failed'] = True
+        overall_flag = True
+
+    # ── Stage 3: DDI score comparison ─────────────────────────────────────────
+    # Score the RAW-extracted image and compare against submitted JPEG score.
+    # Threshold configurable via RAW_SCORE_DELTA_THRESHOLD env var (default 0.3).
+    if pil_raw is not None and img.score is not None:
+        try:
+            import tempfile as _tf2
+            from engine.auto_score import auto_score as _auto_score
+            _raw_score_tmp = _tf2.NamedTemporaryFile(suffix='.jpg', delete=False)
+            _raw_score_tmp.close()
+            _score_pil = pil_raw.copy()
+            if max(_score_pil.size) > 1200:
+                _score_pil.thumbnail((1200, 1200))
+            _score_pil.save(_raw_score_tmp.name, format='JPEG', quality=90)
+            _raw_result = _auto_score(
+                image_path   = _raw_score_tmp.name,
+                genre        = img.genre,
+                title        = img.asset_name,
+                photographer = img.photographer_name,
+                subject      = img.subject,
+                location     = img.location,
+            )
+            _raw_ddi = float(_raw_result.get('score', 0))
+            results['raw_ddi_score']       = _raw_ddi
+            results['submitted_ddi_score'] = float(img.score)
+            _delta     = abs(_raw_ddi - float(img.score))
+            _threshold = float(_os.getenv('RAW_SCORE_DELTA_THRESHOLD', '0.3'))
+            results['score_delta']           = round(_delta, 3)
+            results['score_delta_threshold'] = _threshold
+            app.logger.info(
+                f'[raw_stage3] RAW DDI={_raw_ddi} submitted={img.score} '
+                f'delta={_delta:.3f} threshold={_threshold}'
+            )
+            if _delta > _threshold:
+                results['score_delta_exceeded'] = True
+                results['raw_decode_failed']    = True
+                overall_flag = True
+                app.logger.warning(
+                    f'[raw_stage3] delta {_delta:.3f} exceeds threshold — admin review'
+                )
+            else:
+                results['score_delta_exceeded'] = False
+                app.logger.info('[raw_stage3] PASS — delta within threshold')
+            try:
+                _os.unlink(_raw_score_tmp.name)
+            except Exception:
+                pass
+        except Exception as _s3_err:
+            app.logger.warning(f'[raw_stage3] DDI comparison failed: {_s3_err}')
+
+    # ── Stage 4: Vision analysis ───────────────────────────────────────────────
+    # Object manipulation + AI detection + watermark check.
+    # AUTO-DISQUALIFY (no appeal) on any positive flag.
     try:
         jpg_b64 = None
         if img.thumb_url:
             try:
                 resp    = _ur.urlopen(img.thumb_url, timeout=10)
                 jpg_b64 = base64.b64encode(resp.read()).decode('utf-8')
-                app.logger.info(f'[raw_vision] submitted JPEG loaded OK ({len(jpg_b64)} chars b64)')
+                app.logger.info(f'[raw_stage4] submitted JPEG loaded ({len(jpg_b64)} chars b64)')
             except Exception as _jpg_err:
-                app.logger.warning(f'[raw_vision] could not load submitted JPEG: {_jpg_err}')
+                app.logger.warning(f'[raw_stage4] could not load submitted JPEG: {_jpg_err}')
 
-        # CRITICAL: If we cannot load the submitted JPEG, we cannot compare.
-        # Do NOT auto-approve — route to manual review instead.
         if not jpg_b64:
-            app.logger.warning('[raw_vision] submitted JPEG unavailable — routing to manual review')
+            app.logger.warning('[raw_stage4] submitted JPEG unavailable — routing to manual review')
             results['raw_decode_failed'] = True
             overall_flag = True
 
         raw_b64 = None
-        if raw_path and not results.get('raw_decode_failed'):
+        if pil_raw is not None and jpg_b64:
             try:
-                # Reuse the same dual-strategy decoder (rawpy + embedded JPEG)
-                pil_r = _open_raw_as_pil(raw_path).convert('RGB')
-                # Cap to 1024px — sufficient for vision comparison, ~95% smaller payload
-                _max_px = 1024
-                if max(pil_r.size) > _max_px:
-                    pil_r.thumbnail((_max_px, _max_px))
-                buf   = _io.BytesIO()
-                pil_r.save(buf, format='JPEG', quality=85)
-                raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-                app.logger.info(f'[raw_vision] RAW preview encoded: {pil_r.size}')
-            except Exception as _v_err:
-                app.logger.warning(f'[raw_vision] could not prepare RAW preview: {_v_err}')
+                _vp = pil_raw.copy().convert('RGB')
+                if max(_vp.size) > 1024:
+                    _vp.thumbnail((1024, 1024))
+                _buf = _io.BytesIO()
+                _vp.save(_buf, format='JPEG', quality=85)
+                raw_b64 = base64.b64encode(_buf.getvalue()).decode('utf-8')
+                app.logger.info(f'[raw_stage4] RAW preview encoded: {_vp.size}')
+            except Exception as _ve:
+                app.logger.warning(f'[raw_stage4] RAW encode failed: {_ve}')
 
         if jpg_b64 and raw_b64:
             api_key = os.getenv('ANTHROPIC_API_KEY', '')
             if api_key:
-                payload = {
+                _vision_payload = {
                     'model': 'claude-sonnet-4-20250514',
-                    'max_tokens': 400,
+                    'max_tokens': 500,
                     'messages': [{
                         'role': 'user',
                         'content': [
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': jpg_b64}},
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': raw_b64}},
                             {'type': 'text', 'text': (
-                                'You are a strict RAW file authenticity verifier for a photography contest. '
-                                'Image A is the submitted JPEG. Image B is the embedded preview from the submitted RAW file. '
-                                'YOUR ONLY JOB: determine if both images show THE EXACT SAME PHOTOGRAPH. '
-                                'ACCEPTABLE differences (do NOT flag these): '
-                                'exposure, brightness, contrast, colour grading, shadows, highlights, sharpening, noise reduction, cropping, white balance. '
-                                'These are normal editing steps — a darker/lighter/cropped version of the same photo is still the same photo. '
-                                'FLAG IMMEDIATELY if: the subject is different (e.g. birds vs city, person vs landscape), '
-                                'the scene is different (different location, different environment), '
-                                'the moment is different (clearly different point in time, different action), '
-                                'objects have been added or removed (compositing), '
-                                'the image appears AI-generated, or a logo/trademark was added. '
-                                'BE STRICT: if in doubt about whether it is the same photograph, set subject_different=true. '
-                                'Respond ONLY with JSON, no markdown:\n'
+                                'You are a strict photography contest integrity verifier. '
+                                'Image A = submitted JPEG (final edited image). '
+                                'Image B = extracted from the submitted RAW file (original camera capture). '
+                                'YOUR TASK: identify integrity violations only. '
+                                'STRICTLY ACCEPTABLE — DO NOT FLAG THESE: '
+                                'exposure changes, brightness, contrast, shadows, highlights, '
+                                'colour grading, white balance, saturation, sharpening, '
+                                'noise reduction, lens corrections, vignetting, cropping of any amount, '
+                                'perspective correction, graduated filters, local adjustments. '
+                                'These are all legitimate photographic editing practices. '
+                                'FLAG ONLY THESE INTEGRITY VIOLATIONS: '
+                                '1. ai_generated: Image A shows AI-generated content (synthetic textures, impossible geometry, AI artifacts). '
+                                '2. objects_removed: Elements clearly visible in Image B (RAW) are missing in Image A (e.g. tree, vehicle, person, cloud removed by cloning/healing). '
+                                '3. objects_added: Elements in Image A do not exist in Image B (e.g. bicycle, sun ray, light leak, person composited in). '
+                                '4. watermark_in_raw: Image B (RAW) contains any watermark, logo, or trademark text overlay. '
+                                '5. subject_different: The main subject or scene in Image A is completely different from Image B (different animal, different location — not just a crop or angle). '
+                                'BE CONSERVATIVE: Only flag clear, obvious violations. Editing differences are never violations. '
+                                'If uncertain, set the flag to false. '
+                                'Respond ONLY with JSON, no markdown, no explanation outside notes: '
                                 '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
-                                '"subject_different":bool,"scene_different":bool,'
-                                '"logo_or_trademark":bool,"meaning_changed":bool,"painterly":bool,'
-                                '"notes":"max 80 words — state clearly whether this is the same photograph and why"}'
+                                '"watermark_in_raw":bool,"subject_different":bool,'
+                                '"notes":"max 100 words"}'
                             )}
                         ]
                     }]
                 }
-                data = _json.dumps(payload).encode('utf-8')
-                req  = _ur.Request(
-                    'https://api.anthropic.com/v1/messages', data=data,
+                _vdata = _json.dumps(_vision_payload).encode('utf-8')
+                _vreq  = _ur.Request(
+                    'https://api.anthropic.com/v1/messages', data=_vdata,
                     headers={'Content-Type': 'application/json', 'x-api-key': api_key,
                              'anthropic-version': '2023-06-01'},
                     method='POST'
                 )
-                with _ur.urlopen(req, timeout=30) as resp:
-                    rdata  = _json.loads(resp.read().decode())
-                    text   = rdata.get('content', [{}])[0].get('text', '{}')
-                    text   = text.strip().lstrip('`').lstrip('json').strip('`').strip()
-                    vision = _json.loads(text)
+                with _ur.urlopen(_vreq, timeout=30) as _vresp:
+                    _vrdata = _json.loads(_vresp.read().decode())
+                    _vtext  = _vrdata.get('content', [{}])[0].get('text', '{}')
+                    _vtext  = _vtext.strip().lstrip('`').lstrip('json').strip('`').strip()
+                    vision  = _json.loads(_vtext)
 
                 results['vision_ai_detected']    = bool(vision.get('ai_generated'))
                 results['vision_objects_removed'] = bool(vision.get('objects_removed'))
                 results['vision_objects_added']   = bool(vision.get('objects_added'))
-                results['vision_logo_trademark']  = bool(vision.get('logo_or_trademark'))
-                results['vision_meaning_changed'] = bool(vision.get('meaning_changed') or vision.get('subject_different') or vision.get('scene_different'))
-                results['vision_painterly']       = bool(vision.get('painterly'))
-                results['vision_crop_consistent'] = True  # editing is acceptable
+                results['vision_logo_trademark']  = bool(vision.get('watermark_in_raw'))
+                results['vision_meaning_changed'] = bool(vision.get('subject_different'))
+                results['vision_painterly']       = False
+                results['vision_crop_consistent'] = True
                 results['vision_notes']           = vision.get('notes', '')
-                # Only flag genuine content manipulation — editing differences are acceptable
-                if any([results['vision_ai_detected'], results['vision_objects_removed'],
-                        results['vision_objects_added'], results['vision_logo_trademark'],
-                        results['vision_meaning_changed']]):
-                    overall_flag = True
-    except Exception as vision_err:
-        app.logger.warning(f'[raw_vision] {vision_err}')
+
+                app.logger.info(
+                    f'[raw_stage4] vision: ai={results["vision_ai_detected"]} '
+                    f'obj_removed={results["vision_objects_removed"]} '
+                    f'obj_added={results["vision_objects_added"]} '
+                    f'watermark={results["vision_logo_trademark"]} '
+                    f'subject_diff={results["vision_meaning_changed"]}'
+                )
+
+                _vision_flag_map = [
+                    ('vision_ai_detected',
+                     'The submitted image shows characteristics of AI generation. '
+                     'Only original photographs taken by you on your camera are accepted.'),
+                    ('vision_objects_removed',
+                     'Our analysis found that objects present in your RAW file have been removed '
+                     'from the submitted image (e.g. cloning, healing brush, removal tools). '
+                     'Removing subjects or objects from the original scene is not permitted.'),
+                    ('vision_objects_added',
+                     'Our analysis found elements in the submitted image that do not exist in your '
+                     'original RAW file (e.g. composited subjects, added light effects, sky replacement). '
+                     'Adding elements not captured in-camera is not permitted.'),
+                    ('vision_logo_trademark',
+                     'A watermark or logo was detected in your RAW file. '
+                     'Original camera RAW files do not contain watermarks.'),
+                    ('vision_meaning_changed',
+                     'The main subject or scene in your submitted image appears materially different '
+                     'from your RAW file. Please ensure you submit the RAW file for your entered photograph.'),
+                ]
+                for _flag_key, _flag_reason in _vision_flag_map:
+                    if results.get(_flag_key):
+                        disqualify_reasons.append(_flag_reason)
+                        overall_flag = True
+                        app.logger.warning(f'[raw_stage4] AUTO-DISQUALIFY: {_flag_key}')
+
+    except Exception as _s4_err:
+        app.logger.warning(f'[raw_stage4] vision error: {_s4_err}')
     finally:
         if raw_path:
             try:
-                os.unlink(raw_path)
+                _os.unlink(raw_path)
             except Exception:
                 pass
+
+    if disqualify_reasons:
+        results['disqualify_reasons'] = ' | '.join(disqualify_reasons)
 
     return overall_flag, results
 
@@ -7654,32 +7858,26 @@ def _auto_decide_raw(image_id, submission_id):
             # Run analysis
             flags, results = _run_raw_analysis(submission, img)
 
-            # Build flag reason list
-            flag_reasons = []
-            decode_failed = results.get('raw_decode_failed', False)
-            if decode_failed:
-                flag_reasons.append('RAW file could not be decoded by automated system — camera format may require manual verification')
-            flag_map = [
-                ('vision_ai_detected',    'AI generation detected in submitted image'),
-                ('vision_objects_removed','Subject or objects appear to have been removed from the original'),
-                ('vision_objects_added',  'Subject or objects appear to have been added that are not in the RAW'),
-                ('vision_logo_trademark', 'Logo or trademark detected'),
-                ('vision_meaning_changed','The photograph appears to show a different scene or subject than the RAW file'),
-            ]
-            for key, label in flag_map:
-                if results.get(key):
-                    flag_reasons.append(label)
-
-            # If only flag is decode failure (format unsupported), route to manual review
-            # Do NOT auto-disqualify — camera format support is a technical limitation
-            only_decode_fail = decode_failed and len(flag_reasons) == 1
-            if not flags:
-                auto_decision = 'approved'
-            elif only_decode_fail:
-                auto_decision = 'manual_review'
-            else:
+            # Determine auto_decision from new pipeline results
+            decode_failed        = results.get('raw_decode_failed', False)
+            invalid_filetype     = results.get('invalid_file_type', False)
+            score_delta_exceeded = results.get('score_delta_exceeded', False)
+            vision_flags = any([
+                results.get('vision_ai_detected'),
+                results.get('vision_objects_removed'),
+                results.get('vision_objects_added'),
+                results.get('vision_logo_trademark'),
+                results.get('vision_meaning_changed'),
+            ])
+            flag_str = results.get('disqualify_reasons') or None
+            if invalid_filetype or vision_flags:
                 auto_decision = 'disqualified'
-            flag_str = ' | '.join(flag_reasons) if flag_reasons else None
+            elif decode_failed or score_delta_exceeded:
+                auto_decision = 'manual_review'
+            elif not flags:
+                auto_decision = 'approved'
+            else:
+                auto_decision = 'manual_review'
 
             # Update DB
             db.session.execute(db.text(
