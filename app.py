@@ -2590,6 +2590,13 @@ def delete_image(image_id):
             except Exception:
                 pass
 
+    # Set a 10s statement timeout — prevents background thread DB locks
+    # from causing delete to hang indefinitely
+    try:
+        db.session.execute(db.text("SET LOCAL statement_timeout = '10s'"))
+    except Exception:
+        pass
+
     # Direct SQL deletes — instant, no ORM cascade
     iid = image_id
     for sql in [
@@ -2611,9 +2618,15 @@ def delete_image(image_id):
         except Exception:
             pass
 
-    db.session.execute(db.text("DELETE FROM images WHERE id = :iid AND user_id = :uid"),
-                       {'iid': iid, 'uid': current_user.id})
-    db.session.commit()
+    try:
+        db.session.execute(db.text("DELETE FROM images WHERE id = :iid AND user_id = :uid"),
+                           {'iid': iid, 'uid': current_user.id})
+        db.session.commit()
+    except Exception as _del_err:
+        db.session.rollback()
+        app.logger.warning(f'[delete_image] DB delete failed: {_del_err}')
+        flash('Delete is taking longer than expected — please try again in a moment.', 'warning')
+        return redirect(url_for('image_detail', image_id=image_id))
 
     # R2 cleanup in background — does not block user
     if r2_keys:
@@ -7127,6 +7140,11 @@ def admin_raw_decide(image_id):
         flash('Invalid decision.', 'error')
         return redirect(url_for('admin_raw_detail', image_id=image_id))
 
+    # Rejection and resubmit requests require a reason — photographer must know why
+    if decision in ('rejected', 'resubmit_requested') and not notes:
+        flash('A reason is required when rejecting or requesting resubmission. The photographer needs to know why.', 'error')
+        return redirect(url_for('admin_raw_detail', image_id=image_id))
+
     db.session.execute(db.text(
         "UPDATE raw_submissions SET admin_decision=:dec, admin_notes=:notes, "
         "admin_decided_by=:by, admin_decided_at=NOW() WHERE image_id=:iid"
@@ -7159,16 +7177,36 @@ def admin_raw_decide(image_id):
             "UPDATE raw_submissions SET disqualified=TRUE WHERE image_id=:iid"
         ), {'iid': image_id})
         if photographer:
+            # Build image snapshot section — show submitted JPEG + RAW thumbnail side by side
+            _snap_html = ''
+            if img.thumb_url:
+                _snap_html = (
+                    '<div style="margin:20px 0; padding:16px; background:#f5f0e8; border-radius:6px;">'
+                    '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:1px;'
+                    'text-transform:uppercase;color:#8a8070;margin:0 0 12px 0;">Submitted Image</p>'
+                    '<img src="' + img.thumb_url + '" style="max-width:100%;height:auto;'
+                    'border-radius:4px;border:1px solid #e0d8c8;display:block;">'
+                    '</div>'
+                )
             send_email(
                 photographer.email,
                 'RAW verification failed -- Shutter League',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
-                 f'<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> has been disqualified.</p>'
-                 f'{"<p>Reason: " + notes + "</p>" if notes else ""}'
-                 f'<p style="font-size:14px;color:#8a8070;">Contact '+CONTACT_EMAIL+' to contest within 48 hours.</p>'
-                 f'</div>')
+                ('<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
+                 '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                 '<h2 style="color:#C0392B;">RAW Verification Failed</h2>'
+                 '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"' + (img.asset_name or 'Untitled') + '"</strong> has been reviewed by our admin team and has not passed RAW verification.</p>'
+                 + _snap_html +
+                 '<div style="background:#fff5f5;border:1px solid #ffcccc;border-radius:6px;padding:16px 20px;margin:16px 0;">'
+                 '<p style="margin:0;font-size:15px;font-weight:700;color:#C0392B;">Reason for rejection:</p>'
+                 '<p style="margin:8px 0 0;font-size:15px;color:#4A4840;line-height:1.7;">' + (notes or 'No reason provided.') + '</p>'
+                 '</div>'
+                 '<p style="font-size:16px;line-height:1.7;color:#4A4840;">If you believe this decision is incorrect, you can appeal within 48 hours.</p>'
+                 '<a href="' + os.getenv('SITE_URL','https://shutterleague.com') + '/raw/appeal/' + str(image_id) + '" '
+                 'style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;'
+                 'font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+                 'text-decoration:none;border-radius:4px;margin:8px 0 16px;">Appeal This Decision &#8594;</a>'
+                 '<p style="font-size:14px;color:#8a8070;">Or contact ' + CONTACT_EMAIL + ' to discuss.</p>'
+                 '</div>')
             )
         flash(f'RAW rejected -- "{img.asset_name}" disqualified.', 'warning')
 
