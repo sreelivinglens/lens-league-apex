@@ -7404,8 +7404,15 @@ def _run_raw_analysis(submission, img):
                     raise ValueError(f'Embedded JPEG too small ({len(_jpeg)} bytes)')
                 return _PIL.open(_io2.BytesIO(_jpeg)).convert('RGB')
 
+            # Track whether rawpy succeeded — used to decide auto-approve vs manual review
+            _rawpy_succeeded = [False]
+
             def _open_raw_as_pil(path):
-                """Try rawpy first, then embedded JPEG extraction."""
+                """Try rawpy first, then embedded JPEG extraction.
+                Sets _rawpy_succeeded[0]=True only if rawpy works.
+                When rawpy fails, embedded JPEG is used for metadata only —
+                NOT for vision comparison (too risky for contest integrity).
+                """
                 try:
                     import rawpy
                     import numpy as _np
@@ -7413,12 +7420,13 @@ def _run_raw_analysis(submission, img):
                     with rawpy.imread(path) as _raw:
                         _rgb = _raw.postprocess(half_size=True)
                     app.logger.info(f'[raw_analysis] rawpy decode OK')
+                    _rawpy_succeeded[0] = True
                     return _PIL.fromarray(_rgb)
                 except Exception as _rawpy_err:
-                    app.logger.warning(f'[rawpy] failed ({_rawpy_err}) — trying embedded JPEG')
+                    app.logger.warning(f'[rawpy] failed ({_rawpy_err}) — trying embedded JPEG for metadata only')
                 try:
                     _pil = _extract_embedded_jpeg(path)
-                    app.logger.info(f'[raw_analysis] embedded JPEG extracted OK')
+                    app.logger.info(f'[raw_analysis] embedded JPEG extracted OK (metadata only — manual review required)')
                     return _pil
                 except Exception as _emb_err:
                     app.logger.warning(f'[raw_analysis] embedded JPEG failed: {_emb_err}')
@@ -7439,6 +7447,13 @@ def _run_raw_analysis(submission, img):
                     results['dimension_match'] = abs(raw_w - jpg_w) < raw_w * 0.5
                 results['exif_match'] = True
                 app.logger.info(f'[raw_analysis] decode success: {raw_w}x{raw_h}')
+                # If rawpy failed and we used embedded JPEG fallback,
+                # we cannot trust vision comparison for contest integrity.
+                # Route to manual review — admin verifies these camera formats.
+                if not _rawpy_succeeded[0]:
+                    app.logger.warning(f'[raw_analysis] rawpy unavailable for this format — routing to manual review (contest integrity)')
+                    results['raw_decode_failed'] = True
+                    overall_flag = True
             except Exception as _raw_err:
                 app.logger.warning(f'[raw_analysis] all decode methods failed: {_raw_err}')
                 results['exif_match'] = False
@@ -7455,8 +7470,16 @@ def _run_raw_analysis(submission, img):
             try:
                 resp    = _ur.urlopen(img.thumb_url, timeout=10)
                 jpg_b64 = base64.b64encode(resp.read()).decode('utf-8')
-            except Exception:
-                pass
+                app.logger.info(f'[raw_vision] submitted JPEG loaded OK ({len(jpg_b64)} chars b64)')
+            except Exception as _jpg_err:
+                app.logger.warning(f'[raw_vision] could not load submitted JPEG: {_jpg_err}')
+
+        # CRITICAL: If we cannot load the submitted JPEG, we cannot compare.
+        # Do NOT auto-approve — route to manual review instead.
+        if not jpg_b64:
+            app.logger.warning('[raw_vision] submitted JPEG unavailable — routing to manual review')
+            results['raw_decode_failed'] = True
+            overall_flag = True
 
         raw_b64 = None
         if raw_path and not results.get('raw_decode_failed'):
@@ -7470,9 +7493,9 @@ def _run_raw_analysis(submission, img):
                 buf   = _io.BytesIO()
                 pil_r.save(buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-                app.logger.info(f'[raw_vision] preview encoded: {pil_r.size}')
+                app.logger.info(f'[raw_vision] RAW preview encoded: {pil_r.size}')
             except Exception as _v_err:
-                app.logger.warning(f'[raw_vision] could not prepare preview: {_v_err}')
+                app.logger.warning(f'[raw_vision] could not prepare RAW preview: {_v_err}')
 
         if jpg_b64 and raw_b64:
             api_key = os.getenv('ANTHROPIC_API_KEY', '')
