@@ -7486,17 +7486,23 @@ def _run_raw_analysis(submission, img):
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': jpg_b64}},
                             {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': raw_b64}},
                             {'type': 'text', 'text': (
-                                'You are a RAW file authenticity verifier for a photography contest. '
-                                'Image A is the submitted JPEG (may have editing: exposure, colour grade, shadows, highlights, sharpening — all acceptable). '
-                                'Image B is the RAW file preview (unedited or minimally processed straight from camera). '
-                                'Your job is to verify they show the SAME photograph — same scene, same subject, same moment, same composition. '
-                                'Editing differences (brightness, contrast, colour, crop within reason) are FINE and should NOT be flagged. '
-                                'Only flag genuine content manipulation. '
+                                'You are a strict RAW file authenticity verifier for a photography contest. '
+                                'Image A is the submitted JPEG. Image B is the embedded preview from the submitted RAW file. '
+                                'YOUR ONLY JOB: determine if both images show THE EXACT SAME PHOTOGRAPH. '
+                                'ACCEPTABLE differences (do NOT flag these): '
+                                'exposure, brightness, contrast, colour grading, shadows, highlights, sharpening, noise reduction, cropping, white balance. '
+                                'These are normal editing steps — a darker/lighter/cropped version of the same photo is still the same photo. '
+                                'FLAG IMMEDIATELY if: the subject is different (e.g. birds vs city, person vs landscape), '
+                                'the scene is different (different location, different environment), '
+                                'the moment is different (clearly different point in time, different action), '
+                                'objects have been added or removed (compositing), '
+                                'the image appears AI-generated, or a logo/trademark was added. '
+                                'BE STRICT: if in doubt about whether it is the same photograph, set subject_different=true. '
                                 'Respond ONLY with JSON, no markdown:\n'
                                 '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
                                 '"subject_different":bool,"scene_different":bool,'
                                 '"logo_or_trademark":bool,"meaning_changed":bool,"painterly":bool,'
-                                '"notes":"max 80 words — focus on whether this is the same photograph"}'
+                                '"notes":"max 80 words — state clearly whether this is the same photograph and why"}'
                             )}
                         ]
                     }]
