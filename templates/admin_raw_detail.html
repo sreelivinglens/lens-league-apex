@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}RAW Verification — {{ img.asset_name or 'Untitled' }} — Admin{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:0 auto;padding:32px var(--page-pad) 80px;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:32px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">
+        Admin · RAW Verification
+      </div>
+      <h1 style="font-size:28px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
+        {{ img.asset_name or 'Untitled' }}
+      </h1>
+      <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">
+        Image #{{ img.id }} &nbsp;·&nbsp; {{ img.genre or '—' }} &nbsp;·&nbsp;
+        <span style="color:var(--gold);font-weight:700;">{{ img.score }}</span> &nbsp;·&nbsp; {{ img.tier or '—' }}
+      </div>
+    </div>
+    <a href="{{ url_for('admin_raw_verification') }}"
+       style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:2px;
+              color:var(--text-primary);border:1px solid var(--border);padding:9px 18px;
+              text-decoration:none;white-space:nowrap;">
+      ← ALL RAW QUEUE
+    </a>
+  </div>
+
+  <!-- Two column layout -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+
+    <!-- Left: Image -->
+    <div>
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+                  text-transform:uppercase;margin-bottom:10px;">Scored Image (Thumbnail)</div>
+      {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or '' }}"
+             style="width:100%;border-radius:var(--radius-md);border:1px solid var(--border);display:block;">
+      {% else %}
+        <div style="width:100%;aspect-ratio:4/3;background:var(--surface-3);border-radius:var(--radius-md);
+                    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+                    font-family:var(--font-mono);font-size:12px;color:var(--text-disabled);">
+          No thumbnail
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Submission details -->
+    <div>
+      <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+                  text-transform:uppercase;margin-bottom:10px;">Submission Status</div>
+
+      {% if submission %}
+        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);
+                    padding:20px;margin-bottom:16px;">
+
+          <!-- Status badge -->
+          <div style="margin-bottom:16px;">
+            {% if submission.admin_decision == 'approved' %}
+              <span style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:11px;
+                           font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
+                ✓ VERIFIED
+              </span>
+            {% elif submission.admin_decision == 'rejected' %}
+              <span style="background:var(--red);color:#fff;font-family:var(--font-mono);font-size:11px;
+                           font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
+                ✗ REJECTED
+              </span>
+            {% elif submission.raw_file_key %}
+              <span style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:11px;
+                           font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
+                ⏳ AWAITING REVIEW
+              </span>
+            {% else %}
+              <span style="background:var(--surface-3);color:var(--text-muted);font-family:var(--font-mono);
+                           font-size:11px;font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;">
+                NOT SUBMITTED
+              </span>
+            {% endif %}
+            {% if appeal_pending %}
+              <span style="background:#8B4513;color:#fff;font-family:var(--font-mono);font-size:11px;
+                           font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:3px;margin-left:8px;">
+                ⚠ APPEAL PENDING
+              </span>
+            {% endif %}
+          </div>
+
+          <!-- Fields -->
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;width:120px;">Photographer</td>
+              <td style="padding:6px 0;color:var(--text-primary);font-weight:600;">
+                {{ submission.username or '—' }}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Email</td>
+              <td style="padding:6px 0;color:var(--text-primary);">
+                {{ submission.photographer_email or '—' }}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Contest</td>
+              <td style="padding:6px 0;color:var(--text-primary);">
+                {{ (submission.contest_type or 'weekly') | title }}
+              </td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Deadline</td>
+              <td style="padding:6px 0;color:var(--text-primary);">
+                {% if submission.deadline %}
+                  {{ submission.deadline.strftime('%d %b %Y, %H:%M UTC') }}
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% if submission.submitted_at %}
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Submitted</td>
+              <td style="padding:6px 0;color:var(--text-primary);">
+                {{ submission.submitted_at.strftime('%d %b %Y, %H:%M UTC') }}
+              </td>
+            </tr>
+            {% endif %}
+            {% if submission.admin_decided_at %}
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);
+                         text-transform:uppercase;padding:6px 0;">Decided</td>
+              <td style="padding:6px 0;color:var(--text-primary);">
+                {{ submission.admin_decided_at.strftime('%d %b %Y, %H:%M UTC') }}
+              </td>
+            </tr>
+            {% endif %}
+          </table>
+        </div>
+
+        <!-- RAW file -->
+        {% if raw_file_url %}
+          <div style="background:var(--surface-3);border:1px solid var(--gold);border-radius:var(--radius-md);
+                      padding:14px 16px;margin-bottom:16px;">
+            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--gold);
+                        text-transform:uppercase;margin-bottom:8px;">RAW File Submitted</div>
+            <a href="{{ raw_file_url }}" target="_blank" rel="noopener"
+               style="font-family:var(--font-mono);font-size:12px;color:var(--gold);
+                      word-break:break-all;text-decoration:underline;">
+              Download RAW File ↗
+            </a>
+          </div>
+        {% endif %}
+
+        <!-- Admin note -->
+        {% if submission.admin_note %}
+          <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--amber);
+                      border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;">
+            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--amber);
+                        text-transform:uppercase;margin-bottom:6px;">Admin Note</div>
+            <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">
+              {{ submission.admin_note }}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Appeal info -->
+        {% if appeal_pending %}
+          <div style="background:#fff8f0;border:1px solid var(--amber);border-radius:var(--radius-md);
+                      padding:14px 16px;margin-bottom:16px;">
+            <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--amber);
+                        text-transform:uppercase;margin-bottom:8px;">Appeal Submitted</div>
+            <div style="font-size:14px;color:var(--text-primary);line-height:1.6;">
+              {{ submission.appeal_text or '—' }}
+            </div>
+            {% if submission.appeal_submitted_at %}
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:6px;">
+                {{ submission.appeal_submitted_at.strftime('%d %b %Y, %H:%M UTC') }}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      {% else %}
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);
+                    padding:24px;text-align:center;">
+          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:var(--text-disabled);
+                      text-transform:uppercase;">No submission record found</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="border-top:1px solid var(--border);padding-top:24px;">
+    <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);
+                text-transform:uppercase;margin-bottom:16px;">Actions</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+
+      <!-- Mark verified -->
+      <form method="POST" action="{{ url_for('admin_mark_raw_verified', image_id=img.id) }}"
+            onsubmit="return confirm('Mark this image as RAW verified?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button type="submit"
+                style="background:#2E7D4F;color:#fff;font-family:var(--font-mono);font-size:12px;
+                       font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
+                       border:none;border-radius:var(--radius-sm);cursor:pointer;">
+          ✓ Mark Verified
+        </button>
+      </form>
+
+      <!-- Send reminder -->
+      {% if submission and not submission.admin_decision %}
+        <form method="POST" action="{{ url_for('admin_raw_send_reminder', image_id=img.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit"
+                  style="background:var(--amber);color:#fff;font-family:var(--font-mono);font-size:12px;
+                         font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
+                         border:none;border-radius:var(--radius-sm);cursor:pointer;">
+            ✉ Send Reminder
+          </button>
+        </form>
+      {% endif %}
+
+      <!-- Delete submission -->
+      {% if submission %}
+        <form method="POST" action="{{ url_for('admin_raw_delete_submission', image_id=img.id) }}"
+              onsubmit="return confirm('Delete this RAW submission record? This cannot be undone.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit"
+                  style="background:transparent;color:var(--red);font-family:var(--font-mono);font-size:12px;
+                         font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
+                         border:1px solid var(--red);border-radius:var(--radius-sm);cursor:pointer;">
+            ✗ Delete Submission
+          </button>
+        </form>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
