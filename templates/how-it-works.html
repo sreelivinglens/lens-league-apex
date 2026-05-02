@@ -75,15 +75,16 @@
   .aq-col    { color: var(--gold); } .aq-bar { background: var(--gold); }
 
   /* ── Section 3: Tiers ── */
-  .tiers-strip { display: flex; gap: 0; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
-  @media (max-width: 640px) { .tiers-strip { flex-direction: column; } }
-  .tier-block { flex: 1; padding: 22px 16px; text-align: center; border-right: 1px solid var(--border); }
-  .tier-block:last-child { border-right: none; }
-  @media (max-width: 640px) { .tier-block { border-right: none; border-bottom: 1px solid var(--border); } }
+  .tiers-strip { display: flex; flex-direction: column; gap: 0; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+  .tier-block { display: grid; grid-template-columns: 160px 140px 1fr; align-items: center; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface-1); }
   .tier-block:last-child { border-bottom: none; }
-  .tier-name { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-  .tier-range { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .tier-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .tier-name { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .tier-range { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text-primary); }
+  .tier-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  @media (max-width: 640px) {
+    .tier-block { grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px 16px; }
+    .tier-desc { grid-column: 1 / -1; }
+  }
 
   /* ── Section 4: Challenges ── */
   .challenge-card {
@@ -301,7 +302,7 @@
         <div class="tier-range">9.00–9.69</div>
         <div class="tier-desc">Exceptional work</div>
       </div>
-      <div class="tier-block" style="background:rgba(200,168,75,0.08); border-color:var(--gold-dark);">
+      <div class="tier-block" style="background:rgba(200,168,75,0.10); border-top: 1px solid var(--gold-dark);">
         <div class="tier-name" style="color:var(--gold);">Legend</div>
         <div class="tier-range">9.70–10.00</div>
         <div class="tier-desc">Rare. Jury-eligible.</div>
