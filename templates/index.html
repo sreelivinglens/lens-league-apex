@@ -184,7 +184,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
         } %}
         <div class="sl-tier-badge">{{ hero.tier }}</div>
           <div class="sl-hero-id-info">
-            <div class="sl-hero-id-score">{{ "%.1f"|format(hero.score) }}</div>
+            <div class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</div>
             {% if hero.genre %}<div class="sl-hero-id-meta">{{ hero.genre | upper }}</div>{% endif %}
             <div class="sl-hero-id-by">Shot by @{{ hero.author.username }}</div>
           </div>
@@ -230,7 +230,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       {% for img in gallery_imgs %}{% if img.thumb_url %}
       <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
         <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
-        <div class="sl-gimg-badge">{{ "%.1f"|format(img.score) }} &middot; {{ img.tier }}</div>
+        <div class="sl-gimg-badge">{{ "%.2f"|format(img.score) }} &middot; {{ img.tier }}</div>
         {% if img.genre %}<div class="sl-gimg-genre">{{ img.genre }}</div>{% endif %}
       </a>
       {% endif %}{% endfor %}
