@@ -7677,8 +7677,8 @@ def _run_raw_analysis(submission, img):
         if pil_raw is not None and jpg_b64:
             try:
                 _vp = pil_raw.copy().convert('RGB')
-                if max(_vp.size) > 1024:
-                    _vp.thumbnail((1024, 1024))
+                if max(_vp.size) > 2048:
+                    _vp.thumbnail((2048, 2048))
                 _buf = _io.BytesIO()
                 _vp.save(_buf, format='JPEG', quality=85)
                 raw_b64 = base64.b64encode(_buf.getvalue()).decode('utf-8')
@@ -7714,8 +7714,10 @@ def _run_raw_analysis(submission, img):
                                 '3. objects_added: Elements in Image A do not exist in Image B (e.g. bicycle, sun ray, light leak, person composited in). '
                                 '4. watermark_in_raw: Image B (RAW) contains any watermark, logo, or trademark text overlay. '
                                 '5. subject_different: The main subject or scene in Image A is completely different from Image B (different animal, different location — not just a crop or angle). '
-                                'BE CONSERVATIVE: Only flag clear, obvious violations. Editing differences are never violations. '
-                                'If uncertain, set the flag to false. '
+                                'FLAG IF THERE IS REASONABLE EVIDENCE — subtle removals count. '
+                                'A missing petal, leaf, branch, bird, or any element present in the RAW but absent in the JPEG '
+                                'is objects_removed=true, even if small. Editing differences (exposure, colour, crop) are never violations. '
+                                'If you can see a difference that is not pure editing, flag it. '
                                 'Respond ONLY with JSON, no markdown, no explanation outside notes: '
                                 '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
                                 '"watermark_in_raw":bool,"subject_different":bool,'
