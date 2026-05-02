@@ -268,6 +268,12 @@ body:has(.sl-home) main {
       <div class="sl-hero-score">8.7 &middot; GRANDMASTER &middot; WILDLIFE</div>
     {% endif %}
 
+    {# Logo unit — bottom right of hero #}
+    <div style="position:absolute;bottom:16px;right:20px;z-index:3;display:flex;align-items:center;gap:8px;opacity:0.75;">
+      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
+           alt="Shutter League" style="width:36px;height:36px;object-fit:contain;mix-blend-mode:lighten;">
+    </div>
+
     <div class="sl-hero-content">
       <div class="sl-hero-eyebrow">Photography Scoring</div>
       <div class="sl-hero-h1">Become a better photographer.</div>
@@ -290,18 +296,18 @@ body:has(.sl-home) main {
       <span class="sl-ticker-text" id="slTickText" style="transition:opacity 0.2s">Upload your photo</span>
     </div>
 
-    {# Gallery — use recent_images for variety across genres #}
-    {% set gallery_imgs = recent_images if recent_images else carousel_images[1:] %}
+    {# Gallery — Master/Grandmaster/Legend only, skip hero image, clickable to image detail #}
+    {% set gallery_imgs = carousel_images[1:] %}
     {% if gallery_imgs %}
     <div class="sl-gallery-label">Top scores this week</div>
     <div class="sl-gallery">
       {% for img in gallery_imgs %}
       {% if img.thumb_url %}
-      <div class="sl-gimg">
+      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg" style="text-decoration:none;">
         <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
         <div class="sl-gimg-badge">{{ "%.1f"|format(img.score) }} &middot; {{ img.tier }}</div>
         {% if img.genre %}<div class="sl-gimg-genre">{{ img.genre }}</div>{% endif %}
-      </div>
+      </a>
       {% endif %}
       {% endfor %}
     </div>
