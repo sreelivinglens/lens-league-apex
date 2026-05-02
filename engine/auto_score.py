@@ -192,8 +192,28 @@ Return this exact JSON structure:
   "byline_2": "<THE ONE IMPROVEMENT: specific, physical, actionable. No brand names.>",
   "badges_g": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "badges_w": ["<gap 1>", "<gap 2>", "<gap 3>"],
-  "iucn_tag": "<IUCN status if applicable, else null>"
-}}"""
+  "iucn_tag": "<IUCN status if applicable, else null>",
+  "ai_suspicion": <float 0.0-1.0>,
+  "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>"
+}}
+
+AI DETECTION — evaluate BEFORE scoring:
+Set ai_suspicion to a value between 0.0 (certainly real photograph) and 1.0 (certainly AI-generated).
+Set ai_suspicion >= 0.7 if ANY of these are present:
+(a) Biologically or physically impossible scene — animals that would never coexist or interact
+    this way in nature (e.g. tiger lunging at baby elephant with mother present, predator and
+    prey in impossible calm proximity, multiple apex predators together peacefully);
+(b) Fur, feather, or skin texture too regular, symmetrical, or perfectly rendered —
+    real animal fur has natural asymmetry and imperfection;
+(c) Water reflections geometrically perfect despite surface disturbance from subjects;
+(d) Lighting unnaturally perfect and consistent across all subjects simultaneously;
+(e) Animal scale or proportions subtly wrong relative to each other or environment;
+(f) AI image artifacts — unnaturally smooth transitions, background inconsistencies,
+    impossible bokeh, overly sharp subjects against implausibly smooth backgrounds;
+(g) Scene appears to be a composite of elements that could not be photographed together;
+(h) Overall aesthetic resembles AI image generation (Midjourney/DALL-E/Firefly style).
+Wildlife images with dramatic impossible animal interactions should score >= 0.85.
+Even if the image looks beautiful and photographic, flag AI tells honestly."""
 
 GENRE_CONTEXT = {
     'Creative': (
