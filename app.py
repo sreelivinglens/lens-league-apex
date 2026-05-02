@@ -7824,7 +7824,12 @@ def _run_raw_analysis(submission, img):
                             'Respond ONLY with JSON: '
                             '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
                             '"watermark_in_raw":bool,"subject_different":bool,'
-                            '"notes":"max 100 words"}'
+                            '"confidence":0.0-1.0,'
+                            '"notes":"max 100 words"} '
+                            'confidence = how certain you are in your overall assessment '
+                            '(1.0 = completely certain, 0.5 = genuinely uncertain, '
+                            '0.0 = cannot assess). Set confidence < 0.8 if the image is too '
+                            'dark, low contrast, or you cannot clearly compare the two images.'
                         )}]
                     }]
                 }
@@ -7835,28 +7840,57 @@ def _run_raw_analysis(submission, img):
                              'anthropic-version': '2023-06-01'},
                     method='POST'
                 )
-                with _ur.urlopen(_vreq, timeout=30) as _vresp:
-                    _vrdata = _json.loads(_vresp.read().decode())
-                    _vtext  = _vrdata.get('content', [{}])[0].get('text', '{}')
-                    _vtext  = _vtext.strip().lstrip('`').lstrip('json').strip('`').strip()
-                    vision  = _json.loads(_vtext)
+                try:
+                    with _ur.urlopen(_vreq, timeout=30) as _vresp:
+                        _vrdata = _json.loads(_vresp.read().decode())
+                except Exception as _api_err:
+                    _err_body = getattr(_api_err, 'read', lambda: b'')()
+                    app.logger.warning(
+                        f'[raw_stage4] Vision API call failed: {_api_err} — {_err_body[:200]}')
+                    results['raw_decode_failed'] = True
+                    overall_flag = True
+                    raise  # re-raise to outer except so manual review is triggered
 
-                results['vision_ai_detected']    = bool(vision.get('ai_generated'))
-                results['vision_objects_removed'] = bool(vision.get('objects_removed'))
-                results['vision_objects_added']   = bool(vision.get('objects_added'))
-                results['vision_logo_trademark']  = bool(vision.get('watermark_in_raw'))
-                results['vision_meaning_changed'] = bool(vision.get('subject_different'))
-                results['vision_painterly']       = False
-                results['vision_crop_consistent'] = True
-                results['vision_notes']           = vision.get('notes', '')
+                _vtext = _vrdata.get('content', [{}])[0].get('text', '{}')
+                _vtext = _vtext.strip().lstrip('`').lstrip('json').strip('`').strip()
+                if not _vtext:
+                    app.logger.warning('[raw_stage4] Vision returned empty response — routing to manual review')
+                    results['raw_decode_failed'] = True
+                    overall_flag = True
+                else:
+                    vision = _json.loads(_vtext)
 
-                app.logger.info(
-                    f'[raw_stage4] vision: ai={results["vision_ai_detected"]} '
-                    f'obj_removed={results["vision_objects_removed"]} '
-                    f'obj_added={results["vision_objects_added"]} '
-                    f'watermark={results["vision_logo_trademark"]} '
-                    f'subject_diff={results["vision_meaning_changed"]}'
-                )
+                    results['vision_ai_detected']    = bool(vision.get('ai_generated'))
+                    results['vision_objects_removed'] = bool(vision.get('objects_removed'))
+                    results['vision_objects_added']   = bool(vision.get('objects_added'))
+                    results['vision_logo_trademark']  = bool(vision.get('watermark_in_raw'))
+                    results['vision_meaning_changed'] = bool(vision.get('subject_different'))
+                    results['vision_painterly']       = False
+                    results['vision_crop_consistent'] = True
+                    results['vision_notes']           = vision.get('notes', '')
+
+                    _confidence = float(vision.get('confidence', 1.0))
+                    app.logger.info(
+                        f'[raw_stage4] vision: ai={results["vision_ai_detected"]} '
+                        f'obj_removed={results["vision_objects_removed"]} '
+                        f'obj_added={results["vision_objects_added"]} '
+                        f'watermark={results["vision_logo_trademark"]} '
+                        f'subject_diff={results["vision_meaning_changed"]} '
+                        f'confidence={_confidence}'
+                    )
+
+                    # Low confidence → manual review instead of auto-approve
+                    if _confidence < 0.8 and not any([
+                        results.get('vision_ai_detected'),
+                        results.get('vision_objects_removed'),
+                        results.get('vision_objects_added'),
+                        results.get('vision_logo_trademark'),
+                        results.get('vision_meaning_changed'),
+                    ]):
+                        app.logger.warning(
+                            f'[raw_stage4] low confidence ({_confidence}) — routing to manual review')
+                        results['raw_decode_failed'] = True
+                        overall_flag = True
 
                 _vision_flag_map = [
                     ('vision_ai_detected',
