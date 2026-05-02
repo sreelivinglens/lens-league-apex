@@ -1,249 +1,158 @@
 {% extends "base.html" %}
 {% block title %}Shutter League — Become a better photographer{% endblock %}
 
+{% block extra_head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+{% endblock %}
+
 {% block extra_css %}
 <style>
-/* ── Homepage overrides ── */
-body:has(.sl-home) main {
-  padding: 0 !important;
-  max-width: none !important;
-}
+body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── Hero ── */
 .sl-hero {
-  position: relative;
-  width: 100%;
-  height: calc(100svh - 64px);
-  min-height: 480px;
-  max-height: 900px;
-  overflow: hidden;
-  background: #111110;
+  position:relative; width:100%;
+  height:calc(100svh - 64px); min-height:460px; max-height:900px;
+  overflow:hidden; background:#111110;
 }
 .sl-hero-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.72;
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:center; opacity:0.75;
 }
 .sl-hero-grad {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.15) 0%,
-    rgba(0,0,0,0.10) 30%,
-    rgba(0,0,0,0.72) 70%,
-    rgba(0,0,0,0.92) 100%
-  );
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.06) 35%,
+    rgba(0,0,0,0.68) 68%,
+    rgba(0,0,0,0.93) 100%);
 }
-.sl-hero-score {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(0,0,0,0.78);
-  border: 1px solid #F5C518;
-  color: #F5C518;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 5px 12px;
-  border-radius: 3px;
+
+/* ── Identity block top-left ── */
+.sl-hero-id {
+  position:absolute; top:18px; left:18px; z-index:3;
+  display:flex; align-items:flex-start; gap:10px;
 }
+.sl-tier-badge {
+  background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:6px 11px; border-radius:3px; white-space:nowrap;
+  line-height:1.3; flex-shrink:0;
+}
+.sl-hero-id-info { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
+.sl-hero-id-score {
+  font-family:var(--font-mono); font-size:20px; font-weight:700;
+  color:#FFFFFF; line-height:1; letter-spacing:1px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.95);
+}
+.sl-hero-id-meta {
+  font-family:var(--font-mono); font-size:10px; font-weight:600;
+  color:rgba(255,255,255,0.70); letter-spacing:2px; text-transform:uppercase;
+  text-shadow:0 1px 4px rgba(0,0,0,0.95);
+}
+.sl-hero-id-by {
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
+  color:#F5C518; letter-spacing:2px; text-transform:uppercase;
+  text-shadow:0 1px 4px rgba(0,0,0,0.95);
+}
+
+/* ── Bottom content ── */
 .sl-hero-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: clamp(28px,6vw,56px) clamp(20px,5vw,64px) clamp(32px,5vw,52px);
-}
-.sl-hero-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #F5C518;
-  text-transform: uppercase;
-  margin-bottom: 14px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  position:absolute; bottom:0; left:0; right:0;
+  padding:clamp(16px,4vw,44px) clamp(18px,5vw,64px) clamp(24px,4vw,48px);
 }
 .sl-hero-h1 {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1.2;
-  font-size: clamp(28px, 5.5vw, 52px);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
-  margin-bottom: 6px;
+  font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
+  line-height:1.15; font-size:clamp(22px,4vw,50px);
+  text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
+  margin-bottom:3px;
 }
-.sl-hero-h2 {
-  font-family: var(--font-mono);
-  font-size: clamp(15px, 2.5vw, 22px);
-  font-weight: 600;
-  color: #FFFFFF;
-  display: block;
-  margin-top: 4px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
-  opacity: 0.88;
+.sl-hero-h2, .sl-hero-h3 {
+  font-family:var(--font-mono); font-size:clamp(12px,1.8vw,19px);
+  font-weight:600; color:#FFFFFF; display:block;
+  text-shadow:0 2px 8px rgba(0,0,0,0.95); opacity:0.82;
 }
-.sl-hero-h3 {
-  font-family: var(--font-mono);
-  font-size: clamp(15px, 2.5vw, 22px);
-  font-weight: 600;
-  color: #FFFFFF;
-  display: block;
-  margin-top: 2px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
-  opacity: 0.88;
-}
+.sl-hero-h2 { margin-top:3px; }
+.sl-hero-h3 { margin-top:2px; }
 .sl-hero-cta-wrap {
-  margin-top: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  margin-top:clamp(16px,3vw,26px);
+  display:flex; flex-direction:column; align-items:flex-start; gap:7px;
 }
 .sl-hero-btn {
-  display: inline-block;
-  background: #F5C518;
-  color: #0D0D0B;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 15px 32px;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: opacity 0.2s;
+  display:inline-block; background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:13px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:13px 28px; border-radius:4px; text-decoration:none;
+  transition:opacity 0.2s;
 }
-.sl-hero-btn:hover { opacity: 0.88; }
+.sl-hero-btn:hover { opacity:0.88; }
 .sl-hero-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 1px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  font-family:var(--font-mono); font-size:11px;
+  color:rgba(255,255,255,0.48); letter-spacing:1px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.8);
 }
 
-/* ── Below-fold ── */
+/* ── Below fold ── */
 .sl-below {
-  background: #FEFCF8;
-  padding: clamp(28px,4vw,48px) clamp(20px,5vw,48px) clamp(32px,5vw,56px);
-  max-width: var(--max-width);
-  margin: 0 auto;
+  background:#FEFCF8;
+  padding:clamp(22px,4vw,48px) clamp(18px,5vw,48px) clamp(32px,5vw,56px);
+  max-width:var(--max-width); margin:0 auto;
 }
-
-/* ── Step ticker ── */
 .sl-ticker-wrap {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 16px 20px;
-  margin-bottom: 36px;
-  min-height: 58px;
+  display:flex; align-items:center; gap:14px;
+  background:#FFFFFF; border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:16px 20px;
+  margin-bottom:32px; min-height:56px;
 }
 .sl-ticker-num {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: #0D0D0B;
-  background: #F5C518;
-  padding: 4px 9px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  min-width: 30px;
-  text-align: center;
+  font-family:var(--font-mono); font-size:11px; font-weight:700;
+  letter-spacing:2px; color:#0D0D0B; background:#F5C518;
+  padding:4px 9px; border-radius:3px; flex-shrink:0;
+  min-width:30px; text-align:center;
 }
 .sl-ticker-text {
-  font-family: var(--font-mono);
-  font-size: clamp(14px, 2vw, 16px);
-  font-weight: 600;
-  color: #1a1a18;
-  line-height: 1.4;
+  font-family:var(--font-mono); font-size:clamp(13px,2vw,15px);
+  font-weight:600; color:#1a1a18; line-height:1.4;
 }
-
-/* ── Gallery ── */
 .sl-gallery-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: #1a1a18;
-  margin-bottom: 14px;
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:#1a1a18; margin-bottom:12px;
 }
-.sl-gallery {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
+.sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .sl-gimg {
-  position: relative;
-  aspect-ratio: 4/3;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--surface-4);
+  position:relative; aspect-ratio:4/3;
+  border-radius:var(--radius-md); overflow:hidden; background:var(--surface-4);
+  display:block; text-decoration:none;
 }
 .sl-gimg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
+  width:100%; height:100%; object-fit:cover; display:block;
+  transition:transform 0.3s ease;
 }
-.sl-gimg:hover img { transform: scale(1.04); }
+.sl-gimg:hover img { transform:scale(1.04); }
 .sl-gimg-badge {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background: rgba(0,0,0,0.80);
-  border: 1px solid #F5C518;
-  color: #F5C518;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  padding: 3px 7px;
-  border-radius: 2px;
+  position:absolute; bottom:6px; left:6px;
+  background:rgba(0,0,0,0.82); border:1px solid #F5C518; color:#F5C518;
+  font-family:var(--font-mono); font-size:9px; font-weight:700;
+  letter-spacing:1.5px; padding:3px 7px; border-radius:2px;
 }
 .sl-gimg-genre {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(0,0,0,0.62);
-  color: rgba(255,255,255,0.90);
-  font-family: var(--font-mono);
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  padding: 2px 5px;
-  border-radius: 2px;
-  text-transform: uppercase;
+  position:absolute; top:6px; right:6px;
+  background:rgba(0,0,0,0.62); color:rgba(255,255,255,0.90);
+  font-family:var(--font-mono); font-size:8px; font-weight:600;
+  letter-spacing:1.5px; padding:2px 5px; border-radius:2px; text-transform:uppercase;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .sl-hero {
-    height: calc(100svh - 64px);
-    min-height: 420px;
-    max-height: 700px;
-  }
-  .sl-gallery { grid-template-columns: repeat(2, 1fr); }
+@media (max-width:768px) {
+  .sl-hero { min-height:400px; max-height:680px; }
+  .sl-gallery { grid-template-columns:repeat(2,1fr); }
 }
-@media (max-width: 480px) {
-  .sl-hero-content { padding: 20px 16px 28px; }
-  .sl-below { padding: 20px 16px 36px; }
+@media (max-width:480px) {
+  .sl-below { padding:18px 14px 32px; }
 }
 </style>
-
 {% endblock %}
 
 {% block content %}
@@ -254,28 +163,32 @@ body:has(.sl-home) main {
     {% if carousel_images %}
       {% set hero = carousel_images[0] %}
       {% if hero.thumb_url %}
-        <img class="sl-hero-img" src="{{ hero.thumb_url }}"
-             alt="{{ hero.genre or 'Photography' }}"
-             loading="eager" fetchpriority="high">
+        <img class="sl-hero-img" src="{{ hero.thumb_url }}?v={{ now.timestamp()|int }}"
+             alt="{{ hero.genre or 'Photography' }}" loading="eager" fetchpriority="high">
         <div class="sl-hero-grad"></div>
-        <div class="sl-hero-score">
-          {{ "%.1f"|format(hero.score) }} &middot; {{ hero.tier | upper }}{% if hero.genre %} &middot; {{ hero.genre | upper }}{% endif %}
+        <div class="sl-hero-id">
+          <div class="sl-tier-badge">{{ hero.tier }}</div>
+          <div class="sl-hero-id-info">
+            <div class="sl-hero-id-score">{{ "%.1f"|format(hero.score) }}</div>
+            {% if hero.genre %}<div class="sl-hero-id-meta">{{ hero.genre | upper }}</div>{% endif %}
+            <div class="sl-hero-id-by">Shot by @{{ hero.author.username }}</div>
+          </div>
         </div>
       {% endif %}
     {% else %}
       <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a1a18,#2d2d28);"></div>
       <div class="sl-hero-grad"></div>
-      <div class="sl-hero-score">8.7 &middot; GRANDMASTER &middot; WILDLIFE</div>
+      <div class="sl-hero-id">
+        <div class="sl-tier-badge">Grandmaster</div>
+        <div class="sl-hero-id-info">
+          <div class="sl-hero-id-score">8.7</div>
+          <div class="sl-hero-id-meta">WILDLIFE</div>
+          <div class="sl-hero-id-by">Shot by @sri</div>
+        </div>
+      </div>
     {% endif %}
 
-    {# Logo unit — bottom right of hero #}
-    <div style="position:absolute;bottom:16px;right:20px;z-index:3;display:flex;align-items:center;gap:8px;opacity:0.75;">
-      <img src="{{ url_for('static', filename='img/shutterleague-logo-cropped.png') }}"
-           alt="Shutter League" style="width:36px;height:36px;object-fit:contain;mix-blend-mode:lighten;">
-    </div>
-
     <div class="sl-hero-content">
-      <div class="sl-hero-eyebrow">Photography Scoring</div>
       <div class="sl-hero-h1">Become a better photographer.</div>
       <span class="sl-hero-h2">Find out your photo score.</span>
       <span class="sl-hero-h3">Learn as you go.</span>
@@ -290,26 +203,22 @@ body:has(.sl-home) main {
   {# ── BELOW FOLD ── #}
   <div class="sl-below">
 
-    {# Step ticker #}
     <div class="sl-ticker-wrap">
       <span class="sl-ticker-num" id="slTickNum" style="transition:opacity 0.2s">01</span>
       <span class="sl-ticker-text" id="slTickText" style="transition:opacity 0.2s">Upload your photo</span>
     </div>
 
-    {# Gallery — Master/Grandmaster/Legend only, skip hero image, clickable to image detail #}
     {% set gallery_imgs = carousel_images[1:] %}
     {% if gallery_imgs %}
     <div class="sl-gallery-label">Top scores this week</div>
     <div class="sl-gallery">
-      {% for img in gallery_imgs %}
-      {% if img.thumb_url %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg" style="text-decoration:none;">
+      {% for img in gallery_imgs %}{% if img.thumb_url %}
+      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
         <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
         <div class="sl-gimg-badge">{{ "%.1f"|format(img.score) }} &middot; {{ img.tier }}</div>
         {% if img.genre %}<div class="sl-gimg-genre">{{ img.genre }}</div>{% endif %}
       </a>
-      {% endif %}
-      {% endfor %}
+      {% endif %}{% endfor %}
     </div>
     {% endif %}
 
@@ -320,26 +229,22 @@ body:has(.sl-home) main {
 
 {% block extra_js %}
 <script>
-var slSteps = [
-  {num:'01', text:'Upload your photo'},
-  {num:'02', text:'Get scored instantly across 5 dimensions'},
-  {num:'03', text:'See exactly what to improve next time'}
+var slSteps=[
+  {num:'01',text:'Upload your photo'},
+  {num:'02',text:'Get scored instantly across 5 dimensions'},
+  {num:'03',text:'See exactly what to improve next time'}
 ];
-var slI = 0;
-var slNum  = document.getElementById('slTickNum');
-var slText = document.getElementById('slTickText');
-if(slNum && slText){
+var slI=0, slN=document.getElementById('slTickNum'), slT=document.getElementById('slTickText');
+if(slN&&slT){
   setInterval(function(){
-    slI = (slI + 1) % 3;
-    slNum.style.opacity  = '0';
-    slText.style.opacity = '0';
+    slI=(slI+1)%3;
+    slN.style.opacity=slT.style.opacity='0';
     setTimeout(function(){
-      slNum.textContent  = slSteps[slI].num;
-      slText.textContent = slSteps[slI].text;
-      slNum.style.opacity  = '1';
-      slText.style.opacity = '1';
-    }, 220);
-  }, 2800);
+      slN.textContent=slSteps[slI].num;
+      slT.textContent=slSteps[slI].text;
+      slN.style.opacity=slT.style.opacity='1';
+    },220);
+  },2800);
 }
 </script>
 {% endblock %}
