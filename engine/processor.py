@@ -13,7 +13,14 @@ from PIL import Image
 from datetime import date
 
 RAW_EXTENSIONS = {'.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.rw2'}
-IMG_EXTENSIONS  = {'.jpg', '.jpeg', '.png'}
+IMG_EXTENSIONS  = {'.jpg', '.jpeg', '.png', '.heic', '.webp'}
+
+# Register HEIC support via pillow-heif
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass
 
 THUMB_W = 1500
 JPEG_Q  = 88
