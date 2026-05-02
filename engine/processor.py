@@ -15,7 +15,7 @@ from datetime import date
 RAW_EXTENSIONS = {'.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.rw2'}
 IMG_EXTENSIONS  = {'.jpg', '.jpeg', '.png'}
 
-THUMB_W = 960
+THUMB_W = 1500
 JPEG_Q  = 88
 
 
@@ -106,6 +106,15 @@ def ingest_image(file_path, upload_folder):
         raise ValueError(
             "This looks like a rating card, not a source photo. "
             "Please upload your original photograph."
+        )
+
+    # Minimum resolution enforcement
+    short_side = min(w, h)
+    if short_side < 1500:
+        raise ValueError(
+            f'Image resolution too low ({w}\u00d7{h}px). '
+            'The shorter side must be at least 1500px. '
+            'Please upload a higher resolution file.'
         )
 
     # Compute perceptual hash BEFORE resize (more accurate on full res)
