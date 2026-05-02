@@ -57,15 +57,15 @@
   .comp-table tr:last-child td { border-bottom: none; }
   .comp-table td:first-child { color: var(--gold); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
 
-  .prize-table { width: 100%; border-collapse: collapse; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-  .prize-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
-  .prize-table td { padding: 10px 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
-  .prize-table tr:last-child td { border-bottom: none; }
-  .prize-table .award  { color: var(--gold); font-family: var(--font-mono); font-weight: 600; }
-  .prize-table .amount { color: var(--text-primary); font-weight: 700; font-family: var(--font-mono); }
-  .prize-table tr.section-head td { background: var(--surface-3); font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 8px 14px; }
-  .prize-total td { background: rgba(200,168,75,0.06); border-top: 1px solid var(--gold-dark) !important; }
-  .prize-total .amount { color: var(--gold); font-size: 17px; }
+  .award-table { width: 100%; border-collapse: collapse; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+  .award-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .award-table td { padding: 10px 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+  .award-table tr:last-child td { border-bottom: none; }
+  .award-table .award  { color: var(--gold); font-family: var(--font-mono); font-weight: 600; }
+  .award-table .amount { color: var(--text-primary); font-weight: 700; font-family: var(--font-mono); }
+  .award-table tr.section-head td { background: var(--surface-3); font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 8px 14px; }
+  .award-total td { background: rgba(200,168,75,0.06); border-top: 1px solid var(--gold-dark) !important; }
+  .award-total .amount { color: var(--gold); font-size: 17px; }
 
   .doc-meta {
     background: var(--surface-2); border: 1px solid var(--border);
@@ -78,7 +78,7 @@
 
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-md); margin: 16px 0; }
   .table-scroll .comp-table,
-  .table-scroll .prize-table { margin: 0; }
+  .table-scroll .award-table { margin: 0; }
 </style>
 {% endblock %}
 
@@ -119,14 +119,14 @@
       <li><a href="#overview">Competition Overview</a></li>
       <li><a href="#eligibility">Eligibility, Age &amp; Entry</a></li>
       <li><a href="#image-specs">Image Specifications &amp; Technical Requirements</a></li>
-      <li><a href="#prior-wins">Prior Publication &amp; Prior Prize Restriction</a></li>
+      <li><a href="#prior-wins">Prior Publication &amp; Prior Award Restriction</a></li>
       <li><a href="#judging">Judging Process &amp; Finality</a></li>
       <li><a href="#raw-verification">RAW Verification — Finalists &amp; Winners</a></li>
       <li><a href="#monthly">Monthly Programme Rules</a></li>
-      <li><a href="#poty">POTY Rules &amp; Prize Structure</a></li>
+      <li><a href="#poty">POTY Rules &amp; awards structure</a></li>
       <li><a href="#bow">Body of Work Rules</a></li>
       <li><a href="#open">Open Competition Rules</a></li>
-      <li><a href="#prizes">Prize Disbursement</a></li>
+      <li><a href="#awards">Award Disbursement</a></li>
       <li><a href="#ip">Intellectual Property</a></li>
       <li><a href="#disqualification">Disqualification &amp; Integrity</a></li>
       <li><a href="#deadlines">Deadline Extensions</a></li>
@@ -156,12 +156,12 @@
   <div class="rules-section" id="eligibility">
     <h2><span>02</span> Eligibility, Age &amp; Entry</h2>
     <h3>Age Requirement</h3>
-    <p>All competitions are open to participants who are <strong>18 years of age or older</strong> at the time of entry. {{ platform_name }} reserves the right to request proof of age at any time. Providing false information regarding age will result in immediate disqualification and forfeiture of any prizes awarded.</p>
+    <p>All competitions are open to participants who are <strong>18 years of age or older</strong> at the time of entry. {{ platform_name }} reserves the right to request proof of age at any time. Providing false information regarding age will result in immediate disqualification and forfeiture of any awards given.</p>
     <h3>General Eligibility</h3>
     <ul>
       <li>Entry is open to all registered {{ platform_name }} subscribers in good standing.</li>
       <li>Accounts with active policy violations, pending fraud investigations, or suspended status are ineligible.</li>
-      <li>Employees, directors, and immediate family members of {{ platform_name }} are ineligible for prize awards, though they may use the platform.</li>
+      <li>Employees, directors, and immediate family members of {{ platform_name }} are ineligible for award awards, though they may use the platform.</li>
       <li>Participants must hold a valid subscription for the duration of the competition cycle in which they are entered.</li>
     </ul>
     <h3>Monthly Contest &amp; POTY — Automatic Entry</h3>
@@ -191,13 +191,13 @@
 
   <!-- 4 -->
   <div class="rules-section" id="prior-wins">
-    <h2><span>04</span> Prior Publication &amp; Prior Prize Restriction</h2>
+    <h2><span>04</span> Prior Publication &amp; Prior Award Restriction</h2>
     <h3>Prior Publication</h3>
     <p>Images that have been previously published — on social media, personal websites, stock libraries, editorial outlets, or anywhere else — are fully eligible for entry. There is no restriction on prior publication.</p>
-    <h3>Prior Prize Restriction</h3>
-    <p>Images that have <strong>previously won a cash prize</strong> in any other photography competition — whether domestic or international — are <strong>not eligible</strong> for entry in any {{ platform_name }} competition. This restriction applies regardless of the prize amount, the competition's prestige, or how long ago the prize was won.</p>
+    <h3>Prior Award Restriction</h3>
+    <p>Images that have <strong>previously won a photography award</strong> in any other photography competition — whether domestic or international — are <strong>not eligible</strong> for entry in any {{ platform_name }} competition. This restriction applies regardless of the award amount, the competition's prestige, or how long ago the award was won.</p>
     <div class="rules-highlight legal">
-      <strong>Declaration required:</strong> By entering any competition on {{ platform_name }}, the photographer declares that the submitted image has not previously won a cash prize in any other competition. False declaration will result in immediate disqualification, forfeiture of all prizes, and permanent account suspension.
+      <strong>Declaration required:</strong> By entering any competition on {{ platform_name }}, the photographer declares that the submitted image has not previously won a photography award in any other competition. False declaration will result in immediate disqualification, forfeiture of all awards, and permanent account suspension.
     </div>
   </div>
 
@@ -224,7 +224,7 @@
   <div class="rules-section" id="raw-verification">
     <h2><span>06</span> RAW Verification — Finalists &amp; Winners</h2>
     <h3>Verification Requirement</h3>
-    <p>The top 3 finalists in every category across all competitions are required to submit their <strong>original RAW or full-resolution source file</strong> for authenticity verification before any prize is confirmed or announced.</p>
+    <p>The top 3 finalists in every category across all competitions are required to submit their <strong>original RAW or full-resolution source file</strong> for authenticity verification before any award is confirmed or announced.</p>
     <h3>Submission Process</h3>
     <ul>
       <li>Finalists will be notified by email with instructions to submit their original file.</li>
@@ -238,7 +238,7 @@
       <li><strong>For mobile photographers:</strong> The original file from the device gallery is accepted in HEIC, JPEG, or DNG format.</li>
     </ul>
     <h3>Consequences of Non-Submission or Failure</h3>
-    <p>Failure to submit the original file within the timeframe, or failure of the verification check, results in <strong>immediate disqualification</strong>. The prize passes to the next placed entry. {{ platform_name }}'s verification decision is final.</p>
+    <p>Failure to submit the original file within the timeframe, or failure of the verification check, results in <strong>immediate disqualification</strong>. the award passes to the next placed entry. {{ platform_name }}'s verification decision is final.</p>
     <div class="rules-highlight warning">
       <strong>Note:</strong> Images uploaded to {{ platform_name }} are automatically resized to 960px for AI scoring purposes. The verification process requires your original unresized file — not the platform copy. Always retain your original files.
     </div>
@@ -253,25 +253,25 @@
       <li>Winner is the photographer with the highest validated score in each genre and League.</li>
       <li>In the event of a tied score, the image submitted earlier in the month takes precedence.</li>
       <li>A photographer may win multiple genre categories in the same month.</li>
-      <li>All top 3 finalists per category are subject to RAW verification before prizes are confirmed (see Section 06).</li>
-      <li>Prizes are disbursed within 30 days of results finalisation, subject to winner verification, age confirmation, and tax compliance.</li>
+      <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
+      <li>Awards are disbursed within 30 days of results finalisation, subject to winner verification, age confirmation, and tax compliance.</li>
       <li>There is no restriction on when the image was originally captured — only the upload must occur within the contest month.</li>
     </ul>
   </div>
 
   <!-- 8 -->
   <div class="rules-section" id="poty">
-    <h2><span>08</span> Photographer of the Year (POTY) Rules &amp; Prize Structure</h2>
+    <h2><span>08</span> Photographer of the Year (POTY) Rules &amp; awards structure</h2>
     <ul>
       <li>POTY operates per genre and per League (Camera and Mobile independently) over the platform subscription year. 16 competitions total: 8 genres × 2 Leagues.</li>
       <li>Minimum eligibility: <strong>24 qualifying images</strong> in the specific genre during the subscription year.</li>
       <li>POTY score: arithmetic mean of the photographer's <strong>top 6 DDI scores</strong> in that genre across all qualifying images for the year.</li>
       <li>Grand POTY Camera and Grand POTY Mobile are awarded separately. The Grand POTY winner in each League is selected by jury from the 8 category Gold winners in that League.</li>
-      <li>All top 3 finalists per category are subject to RAW verification before prizes are confirmed (see Section 06).</li>
+      <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
       <li>In the event of a tied POTY score, the photographer with the higher individual peak score wins. If still tied, the photographer with the longer subscription tenure wins.</li>
     </ul>
-    <h3>POTY Prize Structure — ₹50,00,000 Total</h3>
-    <div class="table-scroll"><table class="prize-table">
+    <h3>POTY awards structure — ₹50,00,000 Total</h3>
+    <div class="table-scroll"><table class="award-table">
       <thead><tr><th>Award</th><th>Camera League</th><th>Mobile League</th><th>× Genres</th><th>Subtotal</th></tr></thead>
       <tbody>
         <tr><td class="award">Gold</td><td class="amount">₹1,50,000</td><td class="amount">₹75,000</td><td>× 8</td><td>₹17,60,000</td></tr>
@@ -280,11 +280,11 @@
         <tr class="section-head"><td colspan="4">16 category competitions (8 genres × 2 Leagues)</td><td>₹33,60,000</td></tr>
         <tr><td class="award">Grand POTY Camera</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Camera League Gold winners</td><td class="amount">₹10,00,000</td></tr>
         <tr><td class="award">Grand POTY Mobile</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Mobile League Gold winners</td><td class="amount">₹6,00,000</td></tr>
-        <tr class="prize-total"><td colspan="4"><strong>POTY Total</strong></td><td class="amount">₹50,00,000</td></tr>
+        <tr class="award-total"><td colspan="4"><strong>POTY Total</strong></td><td class="amount">₹50,00,000</td></tr>
       </tbody>
     </table></div>
     <div class="rules-highlight final">
-      <strong>Grand POTY — Combined Prize:</strong> The Grand POTY prize is awarded <em>in addition to</em> all category prizes already won. All prizes are cumulative, never substituted.
+      <strong>Grand POTY — Combined Award:</strong> The Grand POTY award is awarded <em>in addition to</em> all category awards already won. All awards are cumulative, never substituted.
     </div>
   </div>
 
@@ -298,19 +298,19 @@
       <li>BOW is cross-genre. No League split. Camera and Mobile compete together.</li>
       <li>Submissions close at 23:59 IST on the last day of Month 11 of the platform year.</li>
       <li>Judged by Jury Legends only — no peer rating layer. DDI scores are reference data only.</li>
-      <li>All images in the top 3 BOW submissions are subject to RAW verification before prizes are confirmed (see Section 06).</li>
+      <li>All images in the top 3 BOW submissions are subject to RAW verification before awards are confirmed (see Section 06).</li>
     </ul>
-    <h3>BOW Prize Structure — ₹5,25,000 Total</h3>
-    <div class="table-scroll"><table class="prize-table">
-      <thead><tr><th>Award</th><th>Prize</th><th>Notes</th></tr></thead>
+    <h3>BOW awards structure — ₹5,25,000 Total</h3>
+    <div class="table-scroll"><table class="award-table">
+      <thead><tr><th>Award</th><th>Award</th><th>Notes</th></tr></thead>
       <tbody>
         <tr><td class="award">Gold</td><td class="amount">₹3,00,000</td><td>Single winner · Jury Legends</td></tr>
         <tr><td class="award">Silver</td><td class="amount">₹1,50,000</td><td>Single winner · Jury Legends</td></tr>
         <tr><td class="award">Bronze</td><td class="amount">₹75,000</td><td>Single winner · Jury Legends</td></tr>
-        <tr class="prize-total"><td colspan="2"><strong>BOW Total</strong></td><td class="amount">₹5,25,000</td></tr>
+        <tr class="award-total"><td colspan="2"><strong>BOW Total</strong></td><td class="amount">₹5,25,000</td></tr>
       </tbody>
     </table></div>
-    <p>A photographer may win both a POTY prize and a BOW prize in the same year. These are independent competitions and prizes are cumulative.</p>
+    <p>A photographer may win both a POTY award and a BOW award in the same year. These are independent competitions and awards are cumulative.</p>
   </div>
 
   <!-- 10 -->
@@ -321,35 +321,35 @@
       <li>One winner per genre. No Silver or Bronze.</li>
       <li>Entry opens <strong>1 Oct 2026</strong> · closes <strong>31 Dec 2026</strong>.</li>
       <li>Grand Open Winner selected by jury from the 8 category winners.</li>
-      <li>All top 3 finalists per category are subject to RAW verification before prizes are confirmed (see Section 06).</li>
+      <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
     </ul>
-    <h3>Open Prize Structure — ₹8,00,000 Total</h3>
-    <div class="table-scroll"><table class="prize-table">
-      <thead><tr><th>Award</th><th>Prize</th><th>Count</th><th>Subtotal</th></tr></thead>
+    <h3>Open awards structure — ₹8,00,000 Total</h3>
+    <div class="table-scroll"><table class="award-table">
+      <thead><tr><th>Award</th><th>Award</th><th>Count</th><th>Subtotal</th></tr></thead>
       <tbody>
         <tr><td class="award">Category Winner</td><td class="amount">₹75,000</td><td>× 8 genres</td><td>₹6,00,000</td></tr>
         <tr><td class="award">Grand Open Winner</td><td class="amount">₹2,00,000</td><td>Jury · from 8 finalists</td><td>₹2,00,000</td></tr>
-        <tr class="prize-total"><td colspan="3"><strong>Open Total</strong></td><td class="amount">₹8,00,000</td></tr>
+        <tr class="award-total"><td colspan="3"><strong>Open Total</strong></td><td class="amount">₹8,00,000</td></tr>
       </tbody>
     </table></div>
     <div class="rules-highlight final">
-      <strong>Grand Open — Combined Prize:</strong> The Grand Open Winner receives their category prize (₹75,000) plus the Grand Open prize (₹2,00,000) — a combined total of <strong>₹2,75,000</strong>. All prizes are cumulative.
+      <strong>Grand Open — Combined Award:</strong> The Grand Open Winner receives their category award (₹75,000) plus the Grand Open award (₹2,00,000) — a combined total of <strong>₹2,75,000</strong>. All awards are cumulative.
     </div>
   </div>
 
   <!-- 11 -->
-  <div class="rules-section" id="prizes">
-    <h2><span>11</span> Prize Disbursement</h2>
+  <div class="rules-section" id="awards">
+    <h2><span>11</span> Award Disbursement</h2>
     <ul>
-      <li>Winners must complete identity and age verification before prizes are disbursed.</li>
-      <li>Failure to complete verification within <strong>30 days</strong> of notification results in forfeiture of the prize.</li>
-      <li>Prizes are disbursed in Indian Rupees (INR) to Indian residents. A TDS certificate will be provided where applicable under Section 194B of the Income Tax Act, 1961.</li>
+      <li>Winners must complete identity and age verification before awards are disbursed.</li>
+      <li>Failure to complete verification within <strong>30 days</strong> of notification results in forfeiture of the award.</li>
+      <li>Awards are disbursed in Indian Rupees (INR) to Indian residents. A TDS certificate will be provided where applicable under Section 194B of the Income Tax Act, 1961.</li>
       <li>Winners are solely responsible for all tax obligations in their jurisdiction.</li>
-      <li>Prizes are non-transferable.</li>
-      <li>A photographer who wins a prize and is subsequently found to have violated these rules must return the prize or its cash equivalent. {{ platform_name }} reserves the right to pursue legal recovery.</li>
+      <li>Awards are non-transferable.</li>
+      <li>A photographer who wins a award and is subsequently found to have violated these rules must return the award or its cash equivalent. {{ platform_name }} reserves the right to pursue legal recovery.</li>
     </ul>
     <div class="rules-highlight final">
-      <strong>Total annual prize pool across all competitions: ₹63,25,000</strong> — POTY ₹50,00,000 + Open ₹8,00,000 + BOW ₹5,25,000. All Grand prizes are awarded in addition to category prizes won — prizes are always cumulative, never substituted.
+      <strong>Total annual awards fund across all competitions: ₹63,25,000</strong> — POTY ₹50,00,000 + Open ₹8,00,000 + BOW ₹5,25,000. All Grand awards are awarded in addition to category awards won — awards are always cumulative, never substituted.
     </div>
   </div>
 
@@ -371,11 +371,11 @@
   <!-- 13 -->
   <div class="rules-section" id="disqualification">
     <h2><span>13</span> Disqualification, Fraud &amp; Integrity</h2>
-    <p>{{ platform_name }} reserves the right to disqualify any entry, void any result, and withhold or recover any prize in the following circumstances:</p>
+    <p>{{ platform_name }} reserves the right to disqualify any entry, void any result, and withhold or recover any award in the following circumstances:</p>
     <ul>
       <li>Submission of AI-generated images or images primarily created through generative AI tools</li>
       <li>Submission of images belonging to another photographer</li>
-      <li>Submission of an image that has previously won a cash prize in another competition</li>
+      <li>Submission of an image that has previously won a photography award in another competition</li>
       <li>Failure to pass RAW verification within the required timeframe</li>
       <li>Images that do not meet the technical specifications in Section 03</li>
       <li>Entrant is under 18 years of age</li>
@@ -390,7 +390,7 @@
     <ul>
       <li><strong>All images submitted to the platform are permanently removed</strong></li>
       <li><strong>The account is permanently deleted</strong> and the photographer is banned from registering any future account</li>
-      <li><strong>All prizes won are forfeited</strong> — including prizes already disbursed, which must be returned upon demand</li>
+      <li><strong>All awards won are forfeited</strong> — including awards already disbursed, which must be returned upon demand</li>
       <li>{{ platform_name }} reserves the right to report the matter to relevant authorities where applicable law is engaged</li>
     </ul>
     <h3>Random RAW Verification</h3>
@@ -422,7 +422,7 @@
   <div class="rules-section" id="immunity">
     <h2><span>16</span> Legal Immunity &amp; Liability</h2>
     <h3>Limitation of Liability</h3>
-    <p>{{ platform_name }}, its directors, employees, agents, and appointed judges shall not be liable for any loss, damage, or claim arising from or in connection with: competition results or prize decisions; the accuracy or fairness of any DDI score, peer rating, or jury evaluation; technical failures or interruptions; the conduct of peer raters or jury members acting in good faith; or any indirect, consequential, or punitive loss of any kind.</p>
+    <p>{{ platform_name }}, its directors, employees, agents, and appointed judges shall not be liable for any loss, damage, or claim arising from or in connection with: competition results or award decisions; the accuracy or fairness of any DDI score, peer rating, or jury evaluation; technical failures or interruptions; the conduct of peer raters or jury members acting in good faith; or any indirect, consequential, or punitive loss of any kind.</p>
     <h3>Indemnity</h3>
     <p>Participants indemnify and hold harmless {{ platform_name }}, its directors, employees, agents, and judges against any claim, liability, cost, or expense arising from the participant's entry, conduct on the platform, violation of these rules, or infringement of any third party's rights.</p>
     <h3>Judging Immunity</h3>
