@@ -33,17 +33,17 @@ body:has(.sl-home) main {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.10) 0%,
-    rgba(0,0,0,0.08) 40%,
-    rgba(0,0,0,0.65) 80%,
-    rgba(0,0,0,0.88) 100%
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.10) 30%,
+    rgba(0,0,0,0.72) 70%,
+    rgba(0,0,0,0.92) 100%
   );
 }
 .sl-hero-score {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: rgba(0,0,0,0.72);
+  background: rgba(0,0,0,0.78);
   border: 1px solid #F5C518;
   color: #F5C518;
   font-family: var(--font-mono);
@@ -68,33 +68,36 @@ body:has(.sl-home) main {
   color: #F5C518;
   text-transform: uppercase;
   margin-bottom: 14px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 .sl-hero-h1 {
   font-family: var(--font-mono);
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.2;
-  margin-bottom: 0;
-}
-.sl-hero-h1 .line1 {
-  font-size: clamp(26px, 5vw, 48px);
-  display: block;
+  font-size: clamp(28px, 5.5vw, 52px);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
+  margin-bottom: 6px;
 }
 .sl-hero-h2 {
   font-family: var(--font-mono);
   font-size: clamp(15px, 2.5vw, 22px);
   font-weight: 600;
-  color: rgba(255,255,255,0.78);
-  margin-top: 6px;
+  color: #FFFFFF;
   display: block;
+  margin-top: 4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
+  opacity: 0.88;
 }
 .sl-hero-h3 {
   font-family: var(--font-mono);
   font-size: clamp(15px, 2.5vw, 22px);
   font-weight: 600;
-  color: rgba(255,255,255,0.78);
-  margin-top: 2px;
+  color: #FFFFFF;
   display: block;
+  margin-top: 2px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.9);
+  opacity: 0.88;
 }
 .sl-hero-cta-wrap {
   margin-top: 28px;
@@ -112,66 +115,59 @@ body:has(.sl-home) main {
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 14px 28px;
+  padding: 15px 32px;
   border-radius: 4px;
   text-decoration: none;
-  border: none;
-  cursor: pointer;
   transition: opacity 0.2s;
 }
 .sl-hero-btn:hover { opacity: 0.88; }
 .sl-hero-sub {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(255,255,255,0.52);
+  color: rgba(255,255,255,0.55);
   letter-spacing: 1px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
-/* ── Below-fold container ── */
+/* ── Below-fold ── */
 .sl-below {
   background: #FEFCF8;
-  padding: clamp(32px,5vw,56px) clamp(20px,5vw,48px);
+  padding: clamp(28px,4vw,48px) clamp(20px,5vw,48px) clamp(32px,5vw,56px);
   max-width: var(--max-width);
   margin: 0 auto;
 }
 
-/* ── 3 Steps ── */
-.sl-steps-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-disabled);
-  margin-bottom: 18px;
-}
-.sl-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 48px;
-}
-.sl-step {
+/* ── Step ticker ── */
+.sl-ticker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 20px 18px;
+  padding: 16px 20px;
+  margin-bottom: 36px;
+  min-height: 58px;
+}
+.sl-ticker-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #0D0D0B;
+  background: #F5C518;
+  padding: 4px 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  min-width: 30px;
   text-align: center;
 }
-.sl-step-num {
+.sl-ticker-text {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-}
-.sl-step-text {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--text-primary);
-  line-height: 1.5;
+  font-size: clamp(14px, 2vw, 16px);
   font-weight: 600;
+  color: #1a1a18;
+  line-height: 1.4;
 }
 
 /* ── Gallery ── */
@@ -181,7 +177,7 @@ body:has(.sl-home) main {
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--text-disabled);
+  color: #1a1a18;
   margin-bottom: 14px;
 }
 .sl-gallery {
@@ -208,7 +204,7 @@ body:has(.sl-home) main {
   position: absolute;
   bottom: 6px;
   left: 6px;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.80);
   border: 1px solid #F5C518;
   color: #F5C518;
   font-family: var(--font-mono);
@@ -222,10 +218,11 @@ body:has(.sl-home) main {
   position: absolute;
   top: 6px;
   right: 6px;
-  background: rgba(0,0,0,0.55);
-  color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.62);
+  color: rgba(255,255,255,0.90);
   font-family: var(--font-mono);
   font-size: 8px;
+  font-weight: 600;
   letter-spacing: 1.5px;
   padding: 2px 5px;
   border-radius: 2px;
@@ -239,20 +236,20 @@ body:has(.sl-home) main {
     min-height: 420px;
     max-height: 700px;
   }
-  .sl-steps { grid-template-columns: 1fr; gap: 8px; }
   .sl-gallery { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
   .sl-hero-content { padding: 20px 16px 28px; }
-  .sl-below { padding: 24px 16px 40px; }
+  .sl-below { padding: 20px 16px 36px; }
 }
 </style>
+
 {% endblock %}
 
 {% block content %}
 <div class="sl-home">
 
-  {# ── HERO — full-bleed Grandmaster image ── #}
+  {# ── HERO ── #}
   <div class="sl-hero">
     {% if carousel_images %}
       {% set hero = carousel_images[0] %}
@@ -273,9 +270,7 @@ body:has(.sl-home) main {
 
     <div class="sl-hero-content">
       <div class="sl-hero-eyebrow">Photography Scoring</div>
-      <div class="sl-hero-h1">
-        <span class="line1">Become a better photographer.</span>
-      </div>
+      <div class="sl-hero-h1">Become a better photographer.</div>
       <span class="sl-hero-h2">Find out your photo score.</span>
       <span class="sl-hero-h3">Learn as you go.</span>
       <div class="sl-hero-cta-wrap">
@@ -289,33 +284,21 @@ body:has(.sl-home) main {
   {# ── BELOW FOLD ── #}
   <div class="sl-below">
 
-    {# 3 Steps #}
-    <div class="sl-steps-label">How it works</div>
-    <div class="sl-steps">
-      <div class="sl-step">
-        <div class="sl-step-num">01</div>
-        <div class="sl-step-text">Upload your photo</div>
-      </div>
-      <div class="sl-step">
-        <div class="sl-step-num">02</div>
-        <div class="sl-step-text">Get scored instantly across 5 dimensions</div>
-      </div>
-      <div class="sl-step">
-        <div class="sl-step-num">03</div>
-        <div class="sl-step-text">See exactly what to improve next time</div>
-      </div>
+    {# Step ticker #}
+    <div class="sl-ticker-wrap">
+      <span class="sl-ticker-num" id="slTickNum" style="transition:opacity 0.2s">01</span>
+      <span class="sl-ticker-text" id="slTickText" style="transition:opacity 0.2s">Upload your photo</span>
     </div>
 
-    {# Top scores gallery #}
-    {% if carousel_images and carousel_images|length > 1 %}
+    {# Gallery — use recent_images for variety across genres #}
+    {% set gallery_imgs = recent_images if recent_images else carousel_images[1:] %}
+    {% if gallery_imgs %}
     <div class="sl-gallery-label">Top scores this week</div>
     <div class="sl-gallery">
-      {% for img in carousel_images[1:] %}
+      {% for img in gallery_imgs %}
       {% if img.thumb_url %}
       <div class="sl-gimg">
-        <img src="{{ img.thumb_url }}"
-             alt="{{ img.genre or '' }}"
-             loading="lazy">
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
         <div class="sl-gimg-badge">{{ "%.1f"|format(img.score) }} &middot; {{ img.tier }}</div>
         {% if img.genre %}<div class="sl-gimg-genre">{{ img.genre }}</div>{% endif %}
       </div>
@@ -327,4 +310,30 @@ body:has(.sl-home) main {
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var slSteps = [
+  {num:'01', text:'Upload your photo'},
+  {num:'02', text:'Get scored instantly across 5 dimensions'},
+  {num:'03', text:'See exactly what to improve next time'}
+];
+var slI = 0;
+var slNum  = document.getElementById('slTickNum');
+var slText = document.getElementById('slTickText');
+if(slNum && slText){
+  setInterval(function(){
+    slI = (slI + 1) % 3;
+    slNum.style.opacity  = '0';
+    slText.style.opacity = '0';
+    setTimeout(function(){
+      slNum.textContent  = slSteps[slI].num;
+      slText.textContent = slSteps[slI].text;
+      slNum.style.opacity  = '1';
+      slText.style.opacity = '1';
+    }, 220);
+  }, 2800);
+}
+</script>
 {% endblock %}
