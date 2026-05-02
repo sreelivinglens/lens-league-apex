@@ -4204,6 +4204,96 @@ def contest_enter_monthly(genre):
             db.session.commit()
             flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)}  -  {track.title()} Track . {now.strftime("%B %Y")}.', 'success')
 
+        # ── RAW verification trigger at contest entry ─────────────────────
+        # Wildlife, Landscapes, Drone scoring >= 7.5 require RAW on POTY entry.
+        # Weekly challenges are excluded — engagement-first, no prizes.
+        _raw_genres = {'Wildlife', 'Landscapes', 'Drone'}
+        if (genre in _raw_genres
+                and img.score is not None
+                and img.score >= 7.5
+                and not getattr(img, 'raw_verification_required', False)):
+            try:
+                img.raw_verification_required = True
+                _deadline = datetime.utcnow() + timedelta(days=7)
+                _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+                try:
+                    db.session.execute(db.text(
+                        "INSERT INTO raw_submissions "
+                        "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                        "VALUES (:iid, :uid, 'poty', 'monthly', :dl, 'awaiting') "
+                        "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                    ), {'iid': img.id, 'uid': current_user.id, 'dl': _deadline})
+                except Exception:
+                    pass
+                db.session.commit()
+                _genre_label = GENRE_LABELS.get(genre, genre)
+                send_email(
+                    to_addresses=[current_user.email],
+                    subject=f'[Shutter League] RAW File Required — {img.asset_name or "Your Entry"}',
+                    html_body=(
+                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                        'padding:32px;background:#fffef9;color:#111111;">'
+                        '<p style="font-family:Courier New,monospace;font-size:12px;'
+                        'letter-spacing:2px;text-transform:uppercase;color:#F5C518;'
+                        'margin-bottom:24px;">Shutter League</p>'
+                        '<h2 style="font-size:22px;font-weight:700;color:#111111;'
+                        'margin-bottom:16px;">RAW File Required for Contest Entry</h2>'
+                        '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
+                        'Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> '
+                        'has been entered into <strong>' + _genre_label + '</strong> POTY '
+                        'and scores <strong>' + str(round(img.score, 2)) + '</strong>. '
+                        'Images in this genre scoring 7.5 and above require RAW verification '
+                        'to confirm authenticity.</p>'
+                        '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
+                        'Please submit your original RAW file within <strong>7 days</strong> '
+                        'using the link below. Failure to submit will withdraw your entry.</p>'
+                        '<p style="margin:32px 0;">'
+                        '<a href="' + _submit_url + '" style="background:#F5C518;color:#111111;'
+                        'padding:14px 28px;text-decoration:none;font-weight:700;'
+                        'font-family:Courier New,monospace;letter-spacing:1px;'
+                        'text-transform:uppercase;display:inline-block;">'
+                        'Submit RAW File &#8594;</a></p>'
+                        '<p style="font-size:13px;color:#8A8478;">Deadline: '
+                        + _deadline.strftime('%d %B %Y') + '</p>'
+                        '</div>'
+                    ),
+                    text_body=(
+                        'RAW File Required. Your image ' + (img.asset_name or 'Untitled') +
+                        ' entered into ' + _genre_label + ' POTY requires RAW verification. '
+                        'Submit within 7 days: ' + _submit_url
+                    )
+                )
+                send_email(
+                    to_addresses=[ADMIN_EMAIL],
+                    subject=f'[Admin] RAW Required — Contest Entry — {img.asset_name or "Untitled"}',
+                    html_body=(
+                        '<p>RAW verification triggered at contest entry.</p><ul>'
+                        '<li>Image: ' + (img.asset_name or 'Untitled') + '</li>'
+                        '<li>Genre: ' + _genre_label + '</li>'
+                        '<li>Score: ' + str(round(img.score, 2)) + '</li>'
+                        '<li>User: ' + current_user.email + '</li>'
+                        '<li>Deadline: ' + _deadline.strftime('%d %B %Y') + '</li></ul>'
+                    ),
+                    text_body=(
+                        'RAW required at contest entry. Image: ' + (img.asset_name or 'Untitled') +
+                        ' Score: ' + str(round(img.score, 2)) +
+                        ' User: ' + current_user.email
+                    )
+                )
+                flash(
+                    f' Your score qualifies for {_genre_label} POTY. '
+                    f'RAW verification is required — check your email for the submission link. '
+                    f'You have 7 days to submit your original RAW file.',
+                    'warning'
+                )
+                app.logger.info(
+                    f'[contest_raw_trigger] image={img.id} genre={genre} '
+                    f'score={img.score} user={current_user.id}'
+                )
+            except Exception as _raw_err:
+                app.logger.error(f'[contest_raw_trigger error] {_raw_err}')
+
         return redirect(url_for('contests'))
 
     genre_label = GENRE_LABELS.get(genre, genre)
