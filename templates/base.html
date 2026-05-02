@@ -706,7 +706,7 @@ img {
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
-        <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Contests</a>
+        <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Programmes</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
@@ -752,7 +752,7 @@ img {
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
-      <a href="{{ url_for('contests') }}" onclick="toggleNav()">Contests</a>
+      <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
       {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>{% endif %}
