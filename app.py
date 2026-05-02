@@ -1582,10 +1582,11 @@ def upload():
         try:
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
-            flash(f'Image processing failed: {e}', 'error')
             if os.path.exists(raw_path): os.remove(raw_path)
-            return redirect(request.url)
-        # Extract EXIF from original file BEFORE deletion  -  raw_path still has full metadata
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': True, 'message': str(e)}), 422
+            flash(f'Image processing failed: {e}', 'error')
+            return redirect(request.url)        # Extract EXIF from original file BEFORE deletion  -  raw_path still has full metadata
         from engine.exif_check import extract_exif
         exif_status, exif_data, exif_warning = extract_exif(raw_path)
         exif_settings = '  .  '.join(filter(None, [
