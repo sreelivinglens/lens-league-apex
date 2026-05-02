@@ -1291,7 +1291,8 @@ def dashboard():
 
         # Build per-genre summary: top-6 avg, count, top-6 images
         # Rules:
-        # - Legacy beta scores <= 10.0 are multiplied x10 to convert to 0-100 scale
+        # - Current scores are stored on 0-10 scale (e.g. 8.4)
+        # - Legacy beta scores > 10.0 were stored on 0-100 scale — divide by 10
         # - Minimum 6 scored images in a genre before avg is displayed
         # - Minimum 24 images to qualify for POTY prizes
         POTY_MIN_IMAGES  = 24
@@ -1299,8 +1300,9 @@ def dashboard():
         from decimal import Decimal, ROUND_HALF_UP
 
         def _norm(s):
+            # Normalise to 0-10 scale
             if s is None: return None
-            return round(s * 10, 2) if s <= 10.0 else s
+            return round(s / 10, 2) if s > 10.0 else s
 
         genre_rows = []
         for genre, imgs in sorted(genre_data.items()):
@@ -1311,7 +1313,7 @@ def dashboard():
             has_enough    = len(imgs) >= POTY_MIN_FOR_AVG
             if has_enough and top6:
                 _raw      = sum(i._ns for i in top6) / len(top6)
-                top6_avg  = float(Decimal(str(_raw)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP))
+                top6_avg  = float(Decimal(str(_raw)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
             else:
                 top6_avg  = None
             genre_rows.append({
@@ -1321,7 +1323,7 @@ def dashboard():
                 'top6_images':   top6,
                 'has_enough':    has_enough,
                 'qualifies':     len(imgs) >= POTY_MIN_IMAGES,
-                'bar_pct':       min(100, int((top6_avg / 100) * 100)) if top6_avg else 0,
+                'bar_pct':       min(100, int((top6_avg / 10) * 100)) if top6_avg else 0,
                 'images_needed': max(0, POTY_MIN_FOR_AVG - len(imgs)),
             })
 
