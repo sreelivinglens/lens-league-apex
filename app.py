@@ -7675,6 +7675,8 @@ def _run_raw_analysis(submission, img):
             overall_flag = True
 
         raw_b64 = None
+        diff_b64 = None
+        diff_region_count = 0
         if pil_raw is not None and jpg_b64:
             try:
                 _vp = pil_raw.copy().convert('RGB')
@@ -7687,44 +7689,143 @@ def _run_raw_analysis(submission, img):
             except Exception as _ve:
                 app.logger.warning(f'[raw_stage4] RAW encode failed: {_ve}')
 
+            # ── Diff map: align + highlight changed regions ───────────────
+            try:
+                import cv2 as _cv2
+                import numpy as _np2
+                from PIL import Image as _PIL4
+
+                _jpg_pil = _PIL4.open(_io.BytesIO(base64.b64decode(jpg_b64))).convert('RGB')
+                _raw_r   = _vp.resize(_jpg_pil.size, _PIL4.LANCZOS)
+                _a = _np2.array(_jpg_pil)
+                _b = _np2.array(_raw_r)
+
+                # ORB feature alignment
+                _gray_a = _cv2.cvtColor(_a, _cv2.COLOR_RGB2GRAY)
+                _gray_b = _cv2.cvtColor(_b, _cv2.COLOR_RGB2GRAY)
+                _orb = _cv2.ORB_create(2000)
+                _kp_a, _des_a = _orb.detectAndCompute(_gray_a, None)
+                _kp_b, _des_b = _orb.detectAndCompute(_gray_b, None)
+                _aligned = _b
+                if (_des_a is not None and _des_b is not None
+                        and len(_kp_a) > 10 and len(_kp_b) > 10):
+                    _bf = _cv2.BFMatcher(_cv2.NORM_HAMMING, crossCheck=True)
+                    _matches = sorted(_bf.match(_des_a, _des_b),
+                                      key=lambda x: x.distance)[:50]
+                    if len(_matches) >= 4:
+                        _pts_a = _np2.float32([_kp_a[m.queryIdx].pt for m in _matches])
+                        _pts_b = _np2.float32([_kp_b[m.trainIdx].pt for m in _matches])
+                        _H, _ = _cv2.findHomography(_pts_b, _pts_a, _cv2.RANSAC, 5.0)
+                        if _H is not None:
+                            _h2, _w2 = _a.shape[:2]
+                            _aligned = _cv2.warpPerspective(_b, _H, (_w2, _h2))
+
+                # Normalise exposure via CLAHE on L channel
+                def _norm_clahe(rgb):
+                    _lab = _cv2.cvtColor(rgb, _cv2.COLOR_RGB2LAB)
+                    _cl  = _cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                    _lab[:, :, 0] = _cl.apply(_lab[:, :, 0])
+                    return _cv2.cvtColor(_lab, _cv2.COLOR_LAB2RGB)
+
+                _a_n = _norm_clahe(_a)
+                _b_n = _norm_clahe(_aligned)
+
+                # Greyscale diff + threshold + morphology
+                _diff = _cv2.absdiff(
+                    _cv2.cvtColor(_a_n, _cv2.COLOR_RGB2GRAY),
+                    _cv2.cvtColor(_b_n, _cv2.COLOR_RGB2GRAY)
+                )
+                _, _thresh = _cv2.threshold(_diff, 25, 255, _cv2.THRESH_BINARY)
+                _k1 = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (15, 15))
+                _k2 = _cv2.getStructuringElement(_cv2.MORPH_ELLIPSE, (5, 5))
+                _thresh = _cv2.morphologyEx(_thresh, _cv2.MORPH_CLOSE, _k1)
+                _thresh = _cv2.morphologyEx(_thresh, _cv2.MORPH_OPEN,  _k2)
+                _contours, _ = _cv2.findContours(
+                    _thresh, _cv2.RETR_EXTERNAL, _cv2.CHAIN_APPROX_SIMPLE)
+
+                _min_area = _a.shape[0] * _a.shape[1] * 0.0003
+                _sig = [c for c in _contours if _cv2.contourArea(c) > _min_area]
+                diff_region_count = len(_sig)
+
+                # Side-by-side composite with red boxes
+                _comp = _np2.hstack([_a, _aligned])
+                _off  = _a.shape[1]
+                for _c in _sig:
+                    _x, _y, _cw, _ch = _cv2.boundingRect(_c)
+                    _cv2.rectangle(_comp, (_x, _y), (_x+_cw, _y+_ch), (255, 50, 50), 4)
+                    _cv2.rectangle(_comp, (_x+_off, _y),
+                                   (_x+_off+_cw, _y+_ch), (255, 50, 50), 4)
+
+                _comp_pil = _PIL4.fromarray(_comp)
+                if max(_comp_pil.size) > 3000:
+                    _comp_pil.thumbnail((3000, 3000))
+                _dbuf = _io.BytesIO()
+                _comp_pil.save(_dbuf, format='JPEG', quality=80)
+                diff_b64 = base64.b64encode(_dbuf.getvalue()).decode('utf-8')
+                app.logger.info(
+                    f'[raw_stage4] diff map: {diff_region_count} region(s) highlighted')
+            except Exception as _de:
+                app.logger.warning(f'[raw_stage4] diff map failed (non-fatal): {_de}')
+
         if jpg_b64 and raw_b64:
             api_key = os.getenv('ANTHROPIC_API_KEY', '')
             if api_key:
+                _content = [
+                    {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': jpg_b64}},
+                    {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': raw_b64}},
+                ]
+                if diff_b64:
+                    _content.append({'type': 'image',
+                                     'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                                'data': diff_b64}})
+
+                _diff_instruction = (
+                    'Image C = a side-by-side composite (left: submitted JPEG, right: RAW preview) '
+                    'with red boxes highlighting regions that differ significantly after correcting '
+                    'for exposure and colour differences. '
+                    'IMPORTANT: inspect every red-boxed region carefully in both panels. '
+                    'If a red box in the RAW panel (right) shows an element absent or replaced '
+                    'in the JPEG panel (left), set objects_removed=true. '
+                    'If a red box in the JPEG panel (left) shows an element not in the RAW (right), '
+                    'set objects_added=true. '
+                    'Red boxes at image edges caused purely by cropping are not violations. '
+                ) if diff_b64 else ''
+
                 _vision_payload = {
                     'model': 'claude-sonnet-4-20250514',
                     'max_tokens': 500,
                     'messages': [{
                         'role': 'user',
-                        'content': [
-                            {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': jpg_b64}},
-                            {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': raw_b64}},
-                            {'type': 'text', 'text': (
-                                'You are a strict photography contest integrity verifier. '
-                                'Image A = submitted JPEG (final edited image). '
-                                'Image B = extracted from the submitted RAW file (original camera capture). '
-                                'YOUR TASK: identify integrity violations only. '
-                                'STRICTLY ACCEPTABLE — DO NOT FLAG THESE: '
-                                'exposure changes, brightness, contrast, shadows, highlights, '
-                                'colour grading, white balance, saturation, sharpening, '
-                                'noise reduction, lens corrections, vignetting, cropping of any amount, '
-                                'perspective correction, graduated filters, local adjustments. '
-                                'These are all legitimate photographic editing practices. '
-                                'FLAG ONLY THESE INTEGRITY VIOLATIONS: '
-                                '1. ai_generated: Image A shows AI-generated content (synthetic textures, impossible geometry, AI artifacts). '
-                                '2. objects_removed: Elements clearly visible in Image B (RAW) are missing in Image A (e.g. tree, vehicle, person, cloud removed by cloning/healing). '
-                                '3. objects_added: Elements in Image A do not exist in Image B (e.g. bicycle, sun ray, light leak, person composited in). '
-                                '4. watermark_in_raw: Image B (RAW) contains any watermark, logo, or trademark text overlay. '
-                                '5. subject_different: The main subject or scene in Image A is completely different from Image B (different animal, different location — not just a crop or angle). '
-                                'FLAG IF THERE IS REASONABLE EVIDENCE — subtle removals count. '
-                                'A missing petal, leaf, branch, bird, or any element present in the RAW but absent in the JPEG '
-                                'is objects_removed=true, even if small. Editing differences (exposure, colour, crop) are never violations. '
-                                'If you can see a difference that is not pure editing, flag it. '
-                                'Respond ONLY with JSON, no markdown, no explanation outside notes: '
-                                '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
-                                '"watermark_in_raw":bool,"subject_different":bool,'
-                                '"notes":"max 100 words"}'
-                            )}
-                        ]
+                        'content': _content + [{'type': 'text', 'text': (
+                            'You are a strict photography contest integrity verifier. '
+                            'Image A = submitted JPEG (final edited image). '
+                            'Image B = extracted from the submitted RAW file (original camera capture). '
+                            + _diff_instruction +
+                            'YOUR TASK: identify integrity violations only. '
+                            'STRICTLY ACCEPTABLE — DO NOT FLAG THESE: '
+                            'exposure changes, brightness, contrast, shadows, highlights, '
+                            'colour grading, white balance, saturation, sharpening, '
+                            'noise reduction, lens corrections, vignetting, cropping of any amount, '
+                            'perspective correction, graduated filters, local adjustments. '
+                            'These are all legitimate photographic editing practices. '
+                            'FLAG ONLY THESE INTEGRITY VIOLATIONS: '
+                            '1. ai_generated: Image A shows AI-generated content. '
+                            '2. objects_removed: Elements in Image B (RAW) missing in Image A '
+                            '(e.g. log, pen, petal, person, cloud removed by cloning/healing). '
+                            '3. objects_added: Elements in Image A not in Image B '
+                            '(e.g. composited subject, added light effect, sky replacement). '
+                            '4. watermark_in_raw: Image B contains a watermark or logo. '
+                            '5. subject_different: Main subject/scene completely different between A and B. '
+                            'FLAG IF THERE IS REASONABLE EVIDENCE — subtle removals count. '
+                            'A missing petal, leaf, log, branch, pen, or any element present in the RAW '
+                            'but absent in the JPEG is objects_removed=true, even if small. '
+                            'Editing differences (exposure, colour, crop) are never violations. '
+                            'If you can see a difference that is not pure editing, flag it. '
+                            'Respond ONLY with JSON: '
+                            '{"ai_generated":bool,"objects_removed":bool,"objects_added":bool,'
+                            '"watermark_in_raw":bool,"subject_different":bool,'
+                            '"notes":"max 100 words"}'
+                        )}]
                     }]
                 }
                 _vdata = _json.dumps(_vision_payload).encode('utf-8')
