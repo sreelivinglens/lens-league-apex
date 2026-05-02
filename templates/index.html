@@ -560,31 +560,14 @@ body:has(.sl-hp) footer { display: none !important; }
           <div class="s4-right">
             <div class="s4-label">ANNUAL AWARDS</div>
             <div class="s4-title">Photographer<br>of the Year</div>
-            <div class="s4-sub">Top ranked photographers win big</div>
+            <div class="s4-sub">Annual photography honours &middot; awarded on merit</div>
             <div class="s4-divider"></div>
-            <div class="s4-prize-row">
-              <div class="s4-medal" style="background:#000;border:2px solid #F5C518;color:#F5C518;">1</div>
-              <div class="s4-prize-info">
-                <div class="s4-prize-place">GRAND CHAMPION</div>
-                <div class="s4-prize-amount" style="color:#F5C518;">&#8377;5,00,000</div>
-                <div class="s4-prize-label">CASH PRIZE</div>
+            <div style="padding:10px 0 6px;">
+              <div style="font-size:13px;letter-spacing:2px;color:#FFFFFF;margin-bottom:14px;font-weight:600;">RECOGNISED ANNUALLY ACROSS 8 GENRES</div>
+              <div style="font-size:15px;color:#FFFFFF;line-height:1.9;font-family:Georgia,serif;font-style:italic;border-left:3px solid #F5C518;padding-left:14px;margin-bottom:18px;">
+                The highest-ranked photographers of the year are honoured at the annual ceremony. Eligibility requires a Camera or Mobile League subscription.
               </div>
-            </div>
-            <div class="s4-prize-row">
-              <div class="s4-medal" style="background:#000;border:2px solid #ffffff;color:#ffffff;">2</div>
-              <div class="s4-prize-info">
-                <div class="s4-prize-place">RUNNER UP</div>
-                <div class="s4-prize-amount" style="color:#ffffff;">&#8377;2,50,000</div>
-                <div class="s4-prize-label">CASH PRIZE</div>
-              </div>
-            </div>
-            <div class="s4-prize-row">
-              <div class="s4-medal" style="background:#000;border:2px solid #ffffff;color:#ffffff;">3</div>
-              <div class="s4-prize-info">
-                <div class="s4-prize-place">THIRD PLACE</div>
-                <div class="s4-prize-amount" style="color:#ffffff;">&#8377;1,00,000</div>
-                <div class="s4-prize-label">CASH PRIZE</div>
-              </div>
+              <a href="{{ url_for('poty') }}" style="display:inline-block;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:2px;color:#F5C518;border:1px solid #F5C518;padding:8px 18px;text-decoration:none;margin-bottom:10px;">VIEW AWARDS &amp; RECOGNITION &#8594;</a>
             </div>
             <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('weekly_challenge') }}" class="s4-cta">ENTER THE LEAGUE</a>
           </div>
@@ -636,7 +619,7 @@ body:has(.sl-hp) footer { display: none !important; }
       <div class="sl-strip" id="slStripLeft" style="display:flex;flex-direction:column;justify-content:flex-start;padding-top:10px;">
         <div class="sl-cta-strip">
           <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-strip-btn">UPLOAD IMAGE</a>
-          <a href="{{ url_for('weekly_challenge') }}" class="sl-strip-btn">WIN BIG</a>
+          <a href="{{ url_for('weekly_challenge') }}" class="sl-strip-btn">COMPETE</a>
           <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('dashboard') }}" class="sl-strip-btn">IMPROVE</a>
         </div>
       </div>
@@ -669,7 +652,7 @@ var stripLeft = document.getElementById('slStripLeft');
 var stripRight = document.getElementById('slStripRight');
 var hlEl = document.getElementById('slHl');
 var hl2El = document.getElementById('slHl2');
-var hls = ["Your rank is <em>waiting.</em>","Find out what your photography is <em>really worth.</em>","Rated by Science. <em>Not Opinion.</em>"];
+var hls = ["Become a better photographer.","Find out your photo score. <em>Learn as you go.</em>","Rated by Science. <em>Not Opinion.</em>"];
 var hi = 0;
 
 function goTo(n) {
