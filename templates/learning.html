@@ -100,7 +100,7 @@
         <li><span class="check">✓</span> Shareable score card</li>
         <li><span class="cross">—</span> Weekly Challenge & POTY</li>
         <li><span class="cross">—</span> Leaderboard ranking</li>
-        <li><span class="cross">—</span> Contest prize eligibility</li>
+        <li><span class="cross">—</span> Programme eligibility</li>
       </ul>
       <a href="{{ url_for('subscribe', track='learning') if current_user.is_authenticated else url_for('auth_google', next=url_for('subscribe', track='learning')) }}"
          class="plan-cta secondary">START LEARNING →</a>

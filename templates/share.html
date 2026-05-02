@@ -31,27 +31,29 @@
   }
 
   :root {
-    --black:      #0a0a0a;
-    --surface-1:  #0a0a0a;
-    --surface-2:  #111111;
-    --surface-3:  #1a1a1a;
-    --border:     rgba(245,197,24,0.2);
-    --border-md:  rgba(245,197,24,0.35);
-    --text-1:     #FFFFFF;
-    --text-2:     #FFFFFF;
-    --text-3:     #FFFFFF;
+    --black:      #1a1a18;
+    --surface-1:  #FFFFFF;
+    --surface-2:  #FEFCF8;
+    --surface-3:  #F5F0E8;
+    --border:     #E0D8C8;
+    --border-md:  #C8C0B0;
+    --text-1:     #1a1a18;
+    --text-2:     #1a1a18;
+    --text-3:     #555550;
     --gold:       #F5C518;
     --gold-dark:  #F5C518;
     --gold-subtle:rgba(245,197,24,0.10);
-    --green:      #4CAF73;
-    --red:        #E05555;
+    --green:      #2E7D4F;
+    --red:        #C0392B;
     --font-body:  Georgia, 'Times New Roman', serif;
     --font-mono:  'JetBrains Mono', 'Courier New', monospace;
   }
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
   body {
-    background: #0a0a0a; color: #FFFFFF;
+    background: linear-gradient(160deg, #FEFCF8 0%, #F6F1E8 40%, #F0EAD8 100%);
+    background-attachment: fixed;
+    color: #1a1a18;
     font-family: var(--font-body); font-size: 17px; line-height: 1.6;
     min-height: 100vh; -webkit-font-smoothing: antialiased;
     padding: 24px 16px 48px;
@@ -63,7 +65,7 @@
   }
   .brand {
     font-family: var(--font-mono); font-size: 15px; font-weight: 600;
-    letter-spacing: 3px; color: var(--gold); text-decoration: none;
+    letter-spacing: 3px; color: #1a1a18; text-decoration: none;
   }
   .top-btn {
     padding: 8px 18px; border: 1px solid var(--gold-dark); color: var(--gold);
@@ -105,7 +107,7 @@
 
   /* Tier strip — below image */
   .tier-strip {
-    background: #0d0d0b; padding: 14px 24px;
+    background: var(--surface-3); padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid rgba(245,197,24,0.15);
   }
@@ -114,16 +116,16 @@
     letter-spacing: 3px; text-transform: uppercase; line-height: 1;
   }
   .tier-strip .tier-sub {
-    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.5);
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
   }
   .tier-engine {
-    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.4);
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     letter-spacing: 2px; text-transform: uppercase;
   }
   .tier-badge-wrap {
     width: 52px; height: 52px; border-radius: 50%;
-    background: #0a0a0a; flex-shrink: 0;
+    background: var(--surface-2); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     border: 2px solid var(--tier-color, #F5C518);
   }
@@ -147,7 +149,7 @@
 
   .img-info { padding: 22px 28px; border-bottom: 1px solid var(--border); }
   .img-title { font-size: 26px; font-weight: 700; color: var(--text-1); margin-bottom: 8px; line-height: 1.2; }
-  .img-meta  { font-family: var(--font-mono); font-size: 15px; color: #FFFFFF; letter-spacing: 1px; }
+  .img-meta  { font-family: var(--font-mono); font-size: 15px; color: var(--text-1); letter-spacing: 1px; }
 
   /* Analysis rows — visible to ALL */
   .analysis { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
@@ -162,12 +164,12 @@
   }
   .byline-tag      { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
   .byline-text     { font-size: 18px; color: var(--text-2); line-height: 1.75; margin-bottom: 16px; }
-  .improvement-tag { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #FFFFFF; text-transform: uppercase; margin-bottom: 8px; }
+  .improvement-tag { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-1); text-transform: uppercase; margin-bottom: 8px; }
   .improvement-text{ font-size: 18px; font-weight: 600; color: var(--text-1); line-height: 1.7; }
 
   /* Badges — visible to ALL */
   .badges-section { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; gap: 24px; flex-wrap: wrap; }
-  .badge-group-label { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 2px; color: #FFFFFF; text-transform: uppercase; margin-bottom: 8px; }
+  .badge-group-label { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 2px; color: var(--text-1); text-transform: uppercase; margin-bottom: 8px; }
   .badge-list { display: flex; flex-wrap: wrap; gap: 6px; }
   .badge { padding: 4px 12px; border-radius: 99px; font-size: 15px; font-weight: 500; }
   .badge-strength { background: rgba(76,175,115,0.15); border: 1px solid rgba(76,175,115,0.40); color: var(--green); }
