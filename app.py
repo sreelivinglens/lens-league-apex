@@ -2033,11 +2033,15 @@ def retry_score(image_id):
 
 
 @app.route('/image/<int:image_id>')
-@login_required
 def image_detail(image_id):
     img = Image.query.get_or_404(image_id)
-    if img.user_id != current_user.id and current_user.role != 'admin':
-        abort(403)
+    # Public scored images are viewable by anyone
+    # Private images require login and ownership
+    if not getattr(img, 'is_public', False):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login', next=request.url))
+        if img.user_id != current_user.id and current_user.role != 'admin':
+            abort(403)
     percentile_data = {}
     if img.status == 'scored' and img.score and not getattr(img, 'is_flagged', False):
         try:
