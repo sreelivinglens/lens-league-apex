@@ -100,7 +100,7 @@
   <div class="pricing-hero">
     <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">Simple, Honest Pricing</div>
     <h1>Two Tracks.<br><em>One Scientific Standard.</em></h1>
-    <p>Get 6 free scored images in your first month, then 3 free per month ongoing. No credit card. When you're ready to compete and win, pick your League.</p>
+    <p>Get 6 free scored images in your first month, then 3 free per month ongoing. No credit card. When you're ready to participate in juried programmes, pick your League.</p>
 
     <div class="pricing-toggle">
       <span class="toggle-label active" id="lbl-monthly">Monthly</span>
@@ -130,7 +130,7 @@
         <li><span class="check">✓</span> Score history &amp; progress tracking</li>
         <li><span class="check">✓</span> Shareable score card</li>
         <li><span class="muted">—</span> <span style="color:#888888">Weekly Challenge &amp; POTY</span></li>
-        <li><span class="muted">—</span> <span style="color:#888888">Contest prize eligibility</span></li>
+        <li><span class="muted">—</span> <span style="color:#888888">Juried programme eligibility</span></li>
       </ul>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('subscribe', track='learning') }}" class="plan-cta primary">Start Learning →</a>
@@ -254,7 +254,7 @@
         <div>
           <div class="open-card-sub">Annual · No Track Split</div>
           <div class="open-card-title">Enter the Open</div>
-          <div class="open-card-desc">Camera and Mobile compete together. One winner per genre, one Grand Open Winner selected by jury from the 8 category winners. <strong>Opens 1 Oct 2026.</strong></div>
+          <div class="open-card-desc">Camera and Mobile photographers participate together. One genre winner, one Grand Open recipient selected by jury from the 8 category winners. <strong>Opens 1 Oct 2026.</strong></div>
         </div>
         <div class="open-price-box">
           <div class="open-price-amount">₹50</div>
@@ -264,19 +264,19 @@
 
       <div class="open-prizes">
         <div class="open-prize-item">
-          <div class="open-prize-label">Category Winner</div>
-          <div class="open-prize-amount">₹75,000</div>
-          <div class="open-prize-sub">× 8 genres</div>
+          <div class="open-prize-label">Genre Recipient</div>
+          <div class="open-prize-amount">× 8 genres</div>
+          <div class="open-prize-sub">One per genre</div>
         </div>
         <div class="open-prize-item" style="border-color:var(--gold-dark);">
-          <div class="open-prize-label">Grand Open Winner</div>
-          <div class="open-prize-amount">₹2,00,000</div>
-          <div class="open-prize-sub">Jury · from 8 finalists</div>
+          <div class="open-prize-label">Grand Open Recipient</div>
+          <div class="open-prize-amount">Jury selected</div>
+          <div class="open-prize-sub">From 8 finalists</div>
         </div>
         <div class="open-prize-item">
-          <div class="open-prize-label">Total Pool</div>
-          <div class="open-prize-amount">₹8,00,000</div>
-          <div class="open-prize-sub">Annual</div>
+          <div class="open-prize-label">Annual Honours</div>
+          <div class="open-prize-amount" style="font-size:14px;"><a href="{{ url_for('poty') }}" style="color:var(--gold);">View awards →</a></div>
+          <div class="open-prize-sub">Full details</div>
         </div>
       </div>
 
@@ -325,7 +325,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Does the Open Competition have a League split?</div>
-      <div class="faq-a">No — Camera and Mobile photographers compete in the same pool for each genre. One winner per genre regardless of device.</div>
+      <div class="faq-a">No — Camera and Mobile photographers participate in the same pool for each genre. One recipient per genre regardless of device.</div>
     </div>
   </div>
 
