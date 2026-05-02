@@ -270,14 +270,10 @@
     <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/upload">
 
       <div class="drop-zone" id="dropZone">
-        <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png,.heic,.webp" required>
+        <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required>
         <span class="dz-icon">🖼️</span>
         <div class="dz-label">Drop your image here or <strong>click to browse</strong></div>
-        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Min 1500px on the shorter side</div>
-        <div class="dz-hint" style="font-size:12px;margin-top:6px;color:#8A8478;">
-          iPhone: Photos app &rarr; share icon &rarr; choose <strong>Actual Size</strong> &nbsp;·&nbsp;
-          Android: share directly from Gallery, not via WhatsApp or social apps
-        </div>
+        <div class="dz-hint">JPG / PNG &nbsp;·&nbsp; Max 20 MB &nbsp;·&nbsp; Resize to 2000px before uploading</div>
       </div>
 
       <!-- Soft size warning — amber, not a block -->
@@ -477,7 +473,7 @@
 
   const MAX_MB         = 20;   // hard limit — Flask also set to 20 MB
   const WARN_MB        = 5;    // soft advisory threshold
-  const ALLOWED        = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+  const ALLOWED        = ['image/jpeg', 'image/png'];
 
   // ── Drag & drop ─────────────────────────────────────────────────────────
   ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
@@ -499,7 +495,7 @@
     fileSizeWarn.style.display = 'none';
 
     if (!ALLOWED.includes(file.type)) {
-      showError('Only JPG, PNG, HEIC, and WebP files are accepted.');
+      showError('Only JPG and PNG files are accepted.');
       previewArea.style.display = 'none';
       fileInput.value = '';
       return;
@@ -600,7 +596,7 @@
 
     const file = fileInput.files[0];
     if (!file) { showError('Please select an image to upload.'); return; }
-    if (!ALLOWED.includes(file.type)) { showError('Only JPG, PNG, HEIC, and WebP files are accepted.'); return; }
+    if (!ALLOWED.includes(file.type)) { showError('Only JPG and PNG files are accepted.'); return; }
 
     // Hard block only above 20 MB (and only when iOS has reported a real size)
     if (file.size > 0 && file.size > MAX_MB * 1024 * 1024) {
@@ -635,6 +631,32 @@
         legalBox.classList.remove('error-highlight'), { once: true });
       return;
     }
+
+    // Check resolution client-side before firing XHR (fixes iOS Safari 422 issue)
+    const _resReader = new FileReader();
+    _resReader.onload = function(_re) {
+      const _tmpImg = new window.Image();
+      _tmpImg.onload = function() {
+        const _sw = Math.min(_tmpImg.naturalWidth, _tmpImg.naturalHeight);
+        if (_sw < 1500) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '⬆ Submit for Scoring';
+          showError(
+            'Image resolution too low (' + _tmpImg.naturalWidth + '×' + _tmpImg.naturalHeight + 'px). ' +
+            'The shorter side must be at least 1500px. ' +
+            'Please upload a higher resolution file.'
+          );
+          return;
+        }
+        _fireUpload();
+      };
+      _tmpImg.onerror = function() { _fireUpload(); };
+      _tmpImg.src = _re.target.result;
+    };
+    _resReader.onerror = function() { _fireUpload(); };
+    _resReader.readAsDataURL(file);
+
+    function _fireUpload() {
 
     // All good — show overlay and fire XHR
     submitBtn.disabled = true;
@@ -706,6 +728,7 @@
     xhr.ontimeout = function () { showError('Request timed out. Check your dashboard — your image may have been saved.'); };
 
     xhr.send(new FormData(form));
+    } // end _fireUpload
   });
 
   // ── Overlay ticker ───────────────────────────────────────────────────────
