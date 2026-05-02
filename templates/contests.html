@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Competitions — Shutter League{% endblock %}
+{% block title %}Photography Programmes — Shutter League{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -25,7 +25,6 @@
     margin-bottom: 3rem; max-width: 580px;
   }
 
-  /* Competition block */
   .comp-block {
     border: 1px solid var(--border);
     border-top: 3px solid var(--comp-color, var(--gold-dark));
@@ -43,7 +42,6 @@
     display: flex; justify-content: space-between; align-items: flex-start;
     gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
   }
-  .comp-title-block {}
   .comp-freq {
     font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700;
     letter-spacing: 0.16em; text-transform: uppercase;
@@ -61,36 +59,23 @@
   .comp-prize small {
     display: block; font-family: var(--font-mono); font-size: 0.62rem;
     font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--text-muted); margin-top: 4px; font-style: normal;
-    text-align: right;
+    color: var(--text-muted); margin-top: 4px; font-style: normal; text-align: right;
   }
-
-  .comp-desc {
-    font-size:1rem; color: var(--text-secondary); line-height:1.85;
-    margin-bottom:16px;
-  }
-
-  .comp-prizes {
+  .comp-desc { font-size:1rem; color: var(--text-secondary); line-height:1.85; margin-bottom:16px; }
+  .comp-honours {
     background: var(--surface-3); border-radius: var(--radius-sm);
     padding: 14px 18px; margin-bottom: 20px;
     display: flex; flex-wrap: wrap; gap: 8px 24px;
   }
-  .comp-prize-item {
-    font-family: var(--font-mono); font-size: 0.92rem; color: var(--text-secondary);
-  }
-  .comp-prize-item strong { color: var(--gold); }
-
+  .comp-honour-item { font-family: var(--font-mono); font-size: 0.92rem; color: var(--text-secondary); }
+  .comp-honour-item strong { color: var(--gold); }
   .comp-note {
     font-size: 0.95rem; color: var(--text-muted); line-height: 1.7;
     padding: 12px 16px; background: var(--surface-3);
     border-left: 2px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     margin-bottom: 20px; font-style: italic;
   }
-
   .comp-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-
-  /* Logged-in vs logged-out CTA handled via Jinja */
-
   .divider { height: 1px; background: var(--border); margin: 2.5rem 0; }
 </style>
 {% endblock %}
@@ -98,42 +83,39 @@
 {% block content %}
 <div class="contests-wrap">
 
-  <div class="page-eyebrow">Competitions</div>
-  <h1 class="page-headline">Four ways to win.<br><em>One scientific standard.</em></h1>
+  <div class="page-eyebrow">Photography Programmes</div>
+  <h1 class="page-headline">Four ways to improve.<br><em>One scientific standard.</em></h1>
   <p class="page-intro">
-    Every image you upload is automatically entered into the Monthly Contest. Strong monthly scores build your POTY standing. The Open Competition and Body of Work are separate annual entries for when you're ready to go further.
+    Every image you upload is automatically evaluated in the Monthly Programme. Strong monthly scores build your POTY standing. The Open Programme and Body of Work are separate annual submissions for when you're ready to go further.
   </p>
 
   <!-- ── MONTHLY ── -->
   <div class="comp-block monthly" id="monthly">
     <div class="comp-header">
-      <div class="comp-title-block">
+      <div>
         <div class="comp-freq">Every Calendar Month</div>
-        <div class="comp-title">Monthly Contest</div>
+        <div class="comp-title">Monthly Practice Programme</div>
       </div>
-      <div class="comp-prize">₹ 18,000<small>Per Month</small></div>
+      <div class="comp-prize">&#8377; 18,000<small>Monthly Honours</small></div>
     </div>
-
     <div class="comp-desc">
-      Every image you upload is automatically entered into the contest for its genre and League — no separate action required. Camera and Mobile Leagues are judged independently. At the end of each month, the highest-scoring image across all genres is crowned Overall Champion. Each of the 8 genres also has its own ranked winner receiving a Badge and Certificate.
+      Every image you upload is automatically evaluated for its genre and League — no separate action required. Camera and Mobile Leagues are assessed independently. At the end of each month, the highest-scoring image across all genres is recognised as Overall Champion. Each of the 8 genres also has its own ranked recipient receiving a Badge and Certificate.
       <br><br>
       Judging is three-tier: Apex DDI Engine → Blind Peer Rating → Jury (triggered when scores diverge by more than 1.5 points). You never know who is rating your image, and they never know whose it is.
     </div>
-
-    <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹ 10,000</strong> Overall Champion</div>
-      <div class="comp-prize-item"><strong>₹ 5,000</strong> 2nd Place</div>
-      <div class="comp-prize-item"><strong>₹ 3,000</strong> 3rd Place</div>
-      <div class="comp-prize-item"><strong>Badge + Certificate</strong> × 8 Genre Winners</div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>&#8377; 10,000</strong> Overall Champion</div>
+      <div class="comp-honour-item"><strong>&#8377; 5,000</strong> 2nd Place</div>
+      <div class="comp-honour-item"><strong>&#8377; 3,000</strong> 3rd Place</div>
+      <div class="comp-honour-item"><strong>Badge + Certificate</strong> × 8 Genre Recipients</div>
     </div>
-
     <div class="comp-actions">
       {% if current_user.is_authenticated %}
         {% if current_user.is_subscribed %}
           <a href="{{ url_for('dashboard') }}" class="btn btn-solid" style="padding:11px 28px;">Go to Dashboard →</a>
-          <span style="font-size:0.8rem; color:var(--text-muted);">Upload an image to enter automatically</span>
+          <span style="font-size:0.8rem; color:var(--text-muted);">Upload an image to participate automatically</span>
         {% else %}
-          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">Subscribe to Enter →</a>
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">Subscribe to Participate →</a>
           <span style="font-size:0.8rem; color:var(--text-muted);">Active subscription required</span>
         {% endif %}
       {% else %}
@@ -146,30 +128,27 @@
   <!-- ── POTY ── -->
   <div class="comp-block poty" id="poty">
     <div class="comp-header">
-      <div class="comp-title-block">
+      <div>
         <div class="comp-freq">Annual Grand Prix</div>
         <div class="comp-title">Photographer of the Year</div>
       </div>
-      <div class="comp-prize">₹ 50,00,000<small>Total Prize Pool</small></div>
+      <div class="comp-prize">&#8377; 50,00,000<small>Annual Honours</small></div>
     </div>
-
     <div class="comp-desc">
-      Your Monthly Contest scores are your POTY currency. At the end of the platform year, your best 6 images per genre determine your POTY standing — quality over volume. Minimum 24 scored images in a genre to qualify. Camera and Mobile Leagues are separate competitions, with their own Gold, Silver, and Bronze awards across all 8 genres.
+      Your monthly scores are your POTY currency. At the end of the platform year, your best 6 images per genre determine your POTY standing — quality over volume. Minimum 24 scored images in a genre to qualify. Camera and Mobile Leagues are assessed separately, with their own Gold, Silver, and Bronze recognition across all 8 genres.
       <br><br>
-      The Grand POTY winners — one Camera, one Mobile — are selected by jury from the 8 category Gold winners in each League. These are the platform's highest honours.
+      The Grand POTY recipients — one Camera, one Mobile — are selected by jury from the 8 category Gold recipients in each League. These are the platform's highest honours.
     </div>
-
-    <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹ 1,50,000</strong> Camera Gold (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 75,000</strong> Mobile Gold (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 75,000</strong> Camera Silver (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 50,000</strong> Mobile Silver (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 50,000</strong> Camera Bronze (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 25,000</strong> Mobile Bronze (×8)</div>
-      <div class="comp-prize-item"><strong>₹ 10,00,000</strong> Grand POTY Camera</div>
-      <div class="comp-prize-item"><strong>₹ 6,00,000</strong> Grand POTY Mobile</div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>&#8377; 1,50,000</strong> Camera Gold (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 75,000</strong> Mobile Gold (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 75,000</strong> Camera Silver (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 50,000</strong> Mobile Silver (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 50,000</strong> Camera Bronze (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 25,000</strong> Mobile Bronze (×8)</div>
+      <div class="comp-honour-item"><strong>&#8377; 10,00,000</strong> Grand POTY Camera</div>
+      <div class="comp-honour-item"><strong>&#8377; 6,00,000</strong> Grand POTY Mobile</div>
     </div>
-
     <div class="comp-actions">
       {% if current_user.is_authenticated %}
         {% if current_user.is_subscribed %}
@@ -187,40 +166,36 @@
   <!-- ── OPEN ── -->
   <div class="comp-block open" id="open">
     <div class="comp-header">
-      <div class="comp-title-block">
-        <div class="comp-freq">Annual · Paid Entry</div>
-        <div class="comp-title">Open Competition</div>
+      <div>
+        <div class="comp-freq">Annual · Open Submission</div>
+        <div class="comp-title">Open Photography Programme</div>
       </div>
-      <div class="comp-prize">₹ 8,00,000<small>Total Prize Pool</small></div>
+      <div class="comp-prize">&#8377; 8,00,000<small>Annual Honours</small></div>
     </div>
-
     <div class="comp-desc">
-      The Open Competition is a single-entry annual competition with no League split — Camera and Mobile photographers compete in the same pool. You select one image per genre, pay ₹50 per entry, and compete for the category prize. The Grand Open Winner is selected by jury from all 8 category winners.
+      The Open Programme is a single-entry annual submission with no League split — Camera and Mobile photographers are evaluated in the same pool. You select one image per genre, pay &#8377;50 per submission, and participate for genre recognition. The Grand Open recipient is selected by jury from all 8 genre recipients.
       <br><br>
-      Unlike the Monthly Contest and POTY, the Open has no automatic entry — you choose your best image deliberately and enter it.
+      Unlike the Monthly Programme and POTY, the Open has no automatic entry — you choose your best image deliberately and submit it.
     </div>
-
-    <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹ 75,000</strong> Category Winner (×8 genres)</div>
-      <div class="comp-prize-item"><strong>₹ 2,00,000</strong> Grand Open Winner</div>
-      <div class="comp-prize-item"><strong>₹ 50</strong> per entry</div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>&#8377; 75,000</strong> Genre Recipient (×8 genres)</div>
+      <div class="comp-honour-item"><strong>&#8377; 2,00,000</strong> Grand Open Recipient</div>
+      <div class="comp-honour-item"><strong>&#8377; 50</strong> per submission</div>
     </div>
-
     <div class="comp-note">
-      Entries open 3 months before December each year. You will be notified when the Open Competition window opens.
+      Submissions open 3 months before December each year. You will be notified when the Open Programme window opens.
     </div>
-
     <div class="comp-actions">
       {% if open_contest_active %}
         {% if current_user.is_authenticated and current_user.is_subscribed %}
-          <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid" style="padding:11px 28px;">Enter Open Competition →</a>
+          <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid" style="padding:11px 28px;">Submit to Open Programme →</a>
         {% elif current_user.is_authenticated %}
-          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">Subscribe to Enter →</a>
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">Subscribe to Participate →</a>
         {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:11px 28px;">Join to Enter →</a>
+          <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:11px 28px;">Join to Participate →</a>
         {% endif %}
       {% else %}
-        <span style="font-family:var(--font-mono); font-size:0.875rem; color:var(--text-muted); letter-spacing:1px;">OPENS SEPTEMBER · ENTRIES CLOSE NOVEMBER</span>
+        <span style="font-family:var(--font-mono); font-size:0.875rem; color:var(--text-muted); letter-spacing:1px;">OPENS SEPTEMBER · SUBMISSIONS CLOSE NOVEMBER</span>
       {% endif %}
     </div>
   </div>
@@ -228,23 +203,20 @@
   <!-- ── BOW ── -->
   <div class="comp-block bow" id="bow">
     <div class="comp-header">
-      <div class="comp-title-block">
+      <div>
         <div class="comp-freq">Annual · Curated Series</div>
         <div class="comp-title">Body of Work</div>
       </div>
-      <div class="comp-prize">₹ 5,25,000<small>Total Prize Pool</small></div>
+      <div class="comp-prize">&#8377; 5,25,000<small>Annual Honours</small></div>
     </div>
-
     <div class="comp-desc">
-      The Body of Work is the platform's most prestigious competition — and the hardest to enter. You submit 6 to 12 images as a single unified thematic series. Not a collection. A series with a narrative arc, a visual language, a point of view. Judged exclusively by Jury Legends. No peer rating.
+      The Body of Work is the platform's most prestigious programme — and the hardest to enter. You submit 6 to 12 images as a single unified thematic series. Not a collection. A series with a narrative arc, a visual language, a point of view. Evaluated exclusively by Jury Legends. No peer rating.
     </div>
-
-    <div class="comp-prizes">
-      <div class="comp-prize-item"><strong>₹ 3,00,000</strong> Gold</div>
-      <div class="comp-prize-item"><strong>₹ 1,50,000</strong> Silver</div>
-      <div class="comp-prize-item"><strong>₹ 75,000</strong> Bronze</div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>&#8377; 3,00,000</strong> Gold</div>
+      <div class="comp-honour-item"><strong>&#8377; 1,50,000</strong> Silver</div>
+      <div class="comp-honour-item"><strong>&#8377; 75,000</strong> Bronze</div>
     </div>
-
     <div class="comp-actions">
       <a href="/bow" class="btn btn-solid" style="padding:11px 28px;">Know More →</a>
       <span style="font-size:0.8rem; color:var(--text-muted);">Qualifying criteria &amp; submission details</span>
@@ -255,11 +227,11 @@
 
   <div style="text-align:center; padding: 0 0 1rem;">
     <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1.25rem; line-height:1.7;">
-      All competitions are governed by the Apex DDI Engine and the three-tier judging framework.<br>
-      Full rules, prize structure, and legal terms in the Contest Rules.
+      All programmes are governed by the Apex DDI Engine and the three-tier assessment framework.<br>
+      Full rules, recognition structure, and legal terms in the Programme Rules.
     </p>
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a href="{{ url_for('contest_rules') }}" class="btn" style="padding:10px 24px;">Contest Rules</a>
+      <a href="{{ url_for('contest_rules') }}" class="btn" style="padding:10px 24px;">Programme Rules</a>
       <a href="{{ url_for('science') }}" class="btn" style="padding:10px 24px;">The Science</a>
     </div>
   </div>
