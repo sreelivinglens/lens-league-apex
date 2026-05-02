@@ -1722,10 +1722,11 @@ def upload():
                 try:
                     import urllib.request as _sur
                     import json as _sjson
+                    import base64 as _sb64
                     _img_b64 = None
                     if img.thumb_path and os.path.exists(img.thumb_path):
                         with open(img.thumb_path, 'rb') as _sf:
-                            _img_b64 = base64.b64encode(_sf.read()).decode('utf-8')
+                            _img_b64 = _sb64.b64encode(_sf.read()).decode('utf-8')
                     if _img_b64:
                         _spayload = {
                             'model': 'claude-sonnet-4-20250514',
