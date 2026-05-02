@@ -33,30 +33,34 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* ── Identity block top-left ── */
 .sl-hero-id {
   position:absolute; top:18px; left:18px; z-index:3;
-  display:flex; align-items:flex-start; gap:10px;
+  display:inline-flex; align-items:center; gap:12px;
+  background:rgba(0,0,0,0.62);
+  border:1px solid rgba(245,197,24,0.25);
+  border-radius:6px;
+  padding:10px 14px;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
 }
 .sl-tier-badge {
-  width:88px; height:88px; object-fit:contain; flex-shrink:0;
-  filter:drop-shadow(0 2px 10px rgba(0,0,0,0.80));
+  background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:5px 10px; border-radius:3px; white-space:nowrap;
+  flex-shrink:0;
 }
-@media (max-width:768px) { .sl-tier-badge { width:72px; height:72px; } }
-@media (max-width:480px) { .sl-tier-badge { width:60px; height:60px; } }
-.sl-hero-id-info { display:flex; flex-direction:column; gap:5px; padding-top:4px; }
+.sl-hero-id-info { display:flex; flex-direction:column; gap:4px; }
 .sl-hero-id-score {
-  font-family:var(--font-mono); font-size:36px; font-weight:700;
+  font-family:var(--font-mono); font-size:32px; font-weight:700;
   color:#FFFFFF; line-height:1; letter-spacing:1px;
-  text-shadow:0 2px 10px rgba(0,0,0,0.95);
 }
-@media (max-width:768px) { .sl-hero-id-score { font-size:28px; } }
+@media (max-width:768px) { .sl-hero-id-score { font-size:26px; } }
 .sl-hero-id-meta {
-  font-family:var(--font-mono); font-size:11px; font-weight:600;
+  font-family:var(--font-mono); font-size:10px; font-weight:600;
   color:rgba(255,255,255,0.72); letter-spacing:2px; text-transform:uppercase;
-  text-shadow:0 1px 4px rgba(0,0,0,0.95);
 }
 .sl-hero-id-by {
-  font-family:var(--font-mono); font-size:11px; font-weight:700;
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
   color:#F5C518; letter-spacing:2px; text-transform:uppercase;
-  text-shadow:0 1px 4px rgba(0,0,0,0.95);
 }
 .sl-hero-sub { white-space:nowrap; }
 
@@ -178,10 +182,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
           'Shooter':'SL-Shooter.png',
           'Rookie':'SL-Rookie.png'
         } %}
-        {% set badge_file = tier_img_map.get(hero.tier, 'SL-Master.png') %}
-        <img class="sl-tier-badge"
-             src="{{ url_for('static', filename='img/' + badge_file) }}"
-             alt="{{ hero.tier }}">
+        <div class="sl-tier-badge">{{ hero.tier }}</div>
           <div class="sl-hero-id-info">
             <div class="sl-hero-id-score">{{ "%.1f"|format(hero.score) }}</div>
             {% if hero.genre %}<div class="sl-hero-id-meta">{{ hero.genre | upper }}</div>{% endif %}
@@ -193,9 +194,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a1a18,#2d2d28);"></div>
       <div class="sl-hero-grad"></div>
       <div class="sl-hero-id">
-        <img class="sl-tier-badge"
-             src="{{ url_for('static', filename='img/SL-Grandmaster.png') }}"
-             alt="Grandmaster">
+        <div class="sl-tier-badge">Grandmaster</div>
         <div class="sl-hero-id-info">
           <div class="sl-hero-id-score">8.7</div>
           <div class="sl-hero-id-meta">WILDLIFE</div>
