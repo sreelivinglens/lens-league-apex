@@ -800,7 +800,9 @@
         clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
         clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed / TOTAL, 1) * CIRC);
       } else {
-        clockSecs.textContent = '…';
+        // Count up so user sees real elapsed time — no frozen dots
+        clockSecs.textContent = elapsed;
+        clockRing.style.strokeDashoffset = 0; // ring stays full
       }
       const p = phases.find(x => elapsed >= x.from && elapsed < x.to);
       if (p) {
