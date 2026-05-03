@@ -530,7 +530,7 @@ with app.app_context():
         try:
             with db.engine.connect() as conn_fix2:
                 conn_fix2.execute(db.text(
-                    "ALTER TABLE open_contest_entries ADD CONSTRAINT uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
+                    "ALTER TABLE open_contest_entries ADD CONSTRAINT IF NOT EXISTS uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
                 ))
                 conn_fix2.commit()
             print('open_contest_entries constraint fix OK.')
