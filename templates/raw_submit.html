@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Submit RAW File — Lens League Apex{% endblock %}
+{% block title %}Submit RAW File — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -39,7 +39,7 @@
 
   <div class="page-header">
     <h1>Submit RAW File</h1>
-    <p>Required to confirm your contest result for <strong>{{ img.asset_name or 'your image' }}</strong>.</p>
+    <p>Required to confirm your programme result for <strong>{{ img.asset_name or 'your image' }}</strong>.</p>
   </div>
 
   {% if already_submitted %}
@@ -84,7 +84,7 @@
   <div style="padding:16px 20px; background:rgba(184,112,10,0.06); border:1px solid rgba(184,112,10,0.4);
               border-radius:var(--radius-md); margin-bottom:24px; font-size:18px; color:var(--amber);">
     ⏰ <strong>Deadline:</strong> {{ existing.deadline.strftime('%d %B %Y, %H:%M UTC') }}
-    &nbsp;·&nbsp; Submit before this time to keep your contest standing.
+    &nbsp;·&nbsp; Submit before this time to keep your programme standing.
   </div>
   {% endif %}
 

@@ -290,7 +290,7 @@
   {# ── Judge/contest info ──────────────────────────────────────────── #}
   {% if image.contest_result_status == 'published' and image.judge_final_score %}
   <div style="background:rgba(200,168,75,0.06); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;">
-    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">🏆 Contest Result — Published</div>
+    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">🏆 Programme Result — Published</div>
     <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{{ image.judge_final_score }}</div>
     <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final score · {{ image.genre }}</div>
   </div>
@@ -367,7 +367,7 @@
   <div class="delete-modal-box">
     <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Delete this image?</h3>
     <p style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-      This will permanently remove the image, its scores, and all contest entries. This cannot be undone.
+      This will permanently remove the image, its scores, and all programme entries. This cannot be undone.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:120px;">Cancel</button>

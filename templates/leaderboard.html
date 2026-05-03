@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Leaderboard — Lens League Apex{% endblock %}
+{% block title %}Leaderboard — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -409,7 +409,7 @@ body { overflow-x: hidden; }
         <div class="tile-img-placeholder">🖼️</div>
         {% endif %}
 
-        <!-- Contest winner badge -->
+        <!-- Programme recipient badge -->
         {% if image.contest_result_status == 'published' and image.judge_final_score %}
         <div style="position:absolute; top:8px; right:8px; z-index:4;
                     background:#F5C518; color:#1a1a18;
