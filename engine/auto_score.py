@@ -213,6 +213,37 @@ Set ai_suspicion >= 0.7 if ANY of these are present:
 (g) Scene appears to be a composite of elements that could not be photographed together;
 (h) Overall aesthetic resembles AI image generation (Midjourney/DALL-E/Firefly style).
 Wildlife images with dramatic impossible animal interactions should score >= 0.85.
+
+PEOPLE, STREET, WEDDING AND ARCHITECTURE images — additional tells:
+Only apply rules (i)-(o) when the image contains human subjects or built environments.
+Set ai_suspicion >= 0.7 if ANY of these are present:
+(i) Human proportions subtly wrong — head-to-body ratio, limb length, hand or finger
+    geometry that a real person could not have; children especially: AI frequently
+    misrenders child proportions (oversized head, too-short limbs, doll-like features);
+(j) Lighting physically inconsistent with the visible scene — backlit subjects
+    in a colonnade or alley with shadows falling in the wrong direction; overcast street
+    scenes with hard directional shadows; indoor candid with studio-quality rim lighting
+    and no visible light source; single subject lit too evenly for the environment;
+(k) Upscaling or interpolation artifacts — unnaturally smooth fine detail (hair strands
+    merge into a single mass, fabric weave too regular, skin has no pores or sensor
+    noise), transitions between subject and background too clean, no chromatic
+    aberration where a real lens would produce it;
+(l) B&W grain pattern is synthetic — AI grain is spatially uniform and perfectly
+    distributed; real sensor or film grain has clumping, variation, and luminance
+    dependency; a B&W image with perfectly even grain across shadows and highlights
+    is suspicious;
+(m) Background architectural or environmental details inconsistent — windows with
+    wrong perspective for the building angle, repeating tiles or patterns that do not
+    tile correctly, text on signs illegible or malformed, reflections in glass or
+    puddles that do not match the scene geometry;
+(n) Street or documentary image with a too-composed aesthetic — perfect expression,
+    perfect light, and perfect background separation simultaneously in a genre where
+    capturing all three at once is extremely rare; feels directed, not captured;
+(o) Hands and fingers showing AI generation artifacts — fingers that merge, incorrect
+    counts, unnatural smoothness at knuckles under grip tension, implausible geometry
+    for the posed action; halos or luminance edges around limbs or body parts where
+    they meet the background.
+Street and People images where multiple tells from (i)-(o) are present should score >= 0.75.
 Even if the image looks beautiful and photographic, flag AI tells honestly."""
 
 GENRE_CONTEXT = {
