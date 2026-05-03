@@ -188,7 +188,7 @@
   .peer-stat-val { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
   .peer-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
 
-  /* Contest wins */
+  /* Programme wins */
   .win-card {
     background: rgba(245,197,24,0.15); border: 1px solid var(--gold-dark);
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
@@ -501,10 +501,10 @@ function dismissPotyBanner() {
 </div>
 {% endif %}
 
-{# ── Contest wins ─────────────────────────────────────────────────────────── #}
+{# ── Programme wins ─────────────────────────────────────────────────────────── #}
 {% if contest_wins %}
 <div style="margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Contest Results</div>
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Programme Results</div>
   {% for img in contest_wins %}
   <div class="win-card">
     {% if img.thumb_url %}
@@ -634,7 +634,7 @@ function dismissPotyBanner() {
     <p>Try a different search term, or <a href="{{ url_for('dashboard') }}" style="color:var(--gold);">clear the search</a>.</p>
   {% else %}
     <h3>No images yet</h3>
-    <p>Upload your first photograph to get your DDI score.<br>Every scored image enters the monthly contest automatically.</p>
+    <p>Upload your first photograph to get your DDI score.<br>Every scored image enters the monthly programme automatically.</p>
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your First Image →</a>
       <a href="/how-it-works" class="btn">How It Works</a>

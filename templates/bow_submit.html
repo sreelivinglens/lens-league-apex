@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Body of Work Submission — Lens League Apex{% endblock %}
+{% block title %}Body of Work Submission — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -145,8 +145,8 @@
       <div class="bow-info-lbl">Images required</div>
     </div>
     <div class="bow-info-item">
-      <div class="bow-info-val">₹3L</div>
-      <div class="bow-info-lbl">Gold prize</div>
+      <div class="bow-info-val">Gold</div>
+      <div class="bow-info-lbl">Top honour</div>
     </div>
     <div class="bow-info-item">
       <div class="bow-info-val">Cross-genre</div>
@@ -162,7 +162,7 @@
   <div class="bow-rules">
     <strong>Before you submit:</strong> Your Body of Work is judged as a unified series — thematic coherence, narrative arc, and sustained creative vision matter as much as individual image quality. Images must be previously scored on your account. Cross-genre series are welcome. You may submit only once per platform year. Submissions cannot be modified after submission.
     <br><br>
-    <strong>Prize pool: ₹5,25,000</strong> — Gold ₹3,00,000 · Silver ₹1,50,000 · Bronze ₹75,000. Results within 45 days of Month 11 close. Judged exclusively by Jury Legends.
+    <strong>BOW Annual Honours</strong> — Gold · Silver · Bronze. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for full amounts. Results within 45 days of Month 11 close. Judged exclusively by Jury Legends.
   </div>
 
   {% if existing %}
@@ -174,7 +174,7 @@
     <p class="meta">{{ existing.image_count }} images · Submitted {{ existing.submitted_at.strftime('%d %b %Y') }} · {{ existing.platform_year }} platform year</p>
     <p style="margin-top:16px;">Your series is in the jury queue. Results are announced within 45 days of the Month 11 submission deadline. You will be notified when evaluation begins.</p>
     <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a href="{{ url_for('contests') }}" class="btn btn-solid">View Contests →</a>
+      <a href="{{ url_for('contests') }}" class="btn btn-solid">View Programmes →</a>
       <a href="{{ url_for('dashboard') }}" class="btn">My Dashboard</a>
     </div>
   </div>

@@ -57,7 +57,7 @@
   .extra-desc { font-size:15px; color:#111111; margin-top:2px; }
   .extra-price { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
 
-  /* Open Competition entry section */
+  /* Open Programme entry section */
   .open-section { max-width:720px; margin:0 auto 64px; }
   .open-card {
     background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
@@ -186,8 +186,8 @@
         <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#111111;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
-        <li><span class="check">✓</span> Annual Grand Prix — <a href="{{ url_for('poty') }}" style="color:var(--gold);">POTY eligibility</a> <a href="{{ url_for('poty') }}" style="color:#888888;font-size:13px;">· view awards →</a></li>
-        <li><span class="check">✓</span> Open Competition eligible</li>
+        <li><span class="check">✓</span> POTY Annual Honours — <a href="{{ url_for('poty') }}" style="color:var(--gold);">POTY eligibility</a> <a href="{{ url_for('poty') }}" style="color:#888888;font-size:13px;">· view awards →</a></li>
+        <li><span class="check">✓</span> Open Programme eligible</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> Leaderboard ranking</li>
       </ul>
@@ -216,7 +216,7 @@
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
         <li><span class="check">✓</span> Annual Mobile POTY eligibility <a href="{{ url_for('poty') }}" style="color:#888888;font-size:13px;">· view awards →</a></li>
-        <li><span class="check">✓</span> Open Competition eligible</li>
+        <li><span class="check">✓</span> Open Programme eligible</li>
         <li><span class="check">✓</span> Shareable rating card</li>
         <li><span class="check">✓</span> Leaderboard ranking</li>
       </ul>
@@ -246,15 +246,15 @@
     </div>
   </div>
 
-  <!-- Open Competition entry pricing -->
+  <!-- Open Programme entry pricing -->
   <div class="open-section" id="open">
-    <div class="extras-title">Open Competition</div>
+    <div class="extras-title">Open Programme</div>
     <div class="open-card">
       <div class="open-card-header">
         <div>
           <div class="open-card-sub">Annual · No Track Split</div>
           <div class="open-card-title">Enter the Open</div>
-          <div class="open-card-desc">Camera and Mobile photographers participate together. One genre winner, one Grand Open recipient selected by jury from the 8 category winners. <strong>Opens 1 Oct 2026.</strong></div>
+          <div class="open-card-desc">Camera and Mobile photographers participate together. One recipient per genre, one Grand Open recipient selected by jury from the 8 category finalists. <strong>Opens 1 Oct 2026.</strong></div>
         </div>
         <div class="open-price-box">
           <div class="open-price-amount">₹50</div>
@@ -282,7 +282,7 @@
 
       <div class="open-rules">
         <span class="open-rule-pill">🎯 No League split</span>
-        <span class="open-rule-pill">🏅 One winner per genre</span>
+        <span class="open-rule-pill">🏅 One recipient per genre</span>
         <span class="open-rule-pill">👑 Grand Open — jury selected</span>
         <span class="open-rule-pill">📅 Opens 1 Oct 2026</span>
         <span class="open-rule-pill">🌍 8 genres</span>
@@ -290,7 +290,7 @@
 
       {% if open_contest_active %}
         {% if current_user.is_authenticated %}
-          <a href="{{ url_for('open_contest_enter') }}" class="plan-cta primary">Enter Open Competition &rarr;</a>
+          <a href="{{ url_for('open_contest_enter') }}" class="plan-cta primary">Enter Open Programme &rarr;</a>
         {% else %}
           <a href="{{ url_for('register') }}" class="plan-cta primary">Join &amp; Enter &rarr;</a>
         {% endif %}
@@ -320,11 +320,11 @@
       <div class="faq-a">We offer a full refund within 7 days of subscription if you have not used any scored images in that billing period.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Can I enter the Open Competition on a free plan?</div>
-      <div class="faq-a">No — Open Competition entry requires an active Camera or Mobile subscription. The image you enter must have been previously scored on your account.</div>
+      <div class="faq-q">Can I enter the Open Programme on a free plan?</div>
+      <div class="faq-a">No — Open Programme submission requires an active Camera or Mobile subscription. The image you enter must have been previously scored on your account.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Does the Open Competition have a League split?</div>
+      <div class="faq-q">Does the Open Programme have a League split?</div>
       <div class="faq-a">No — Camera and Mobile photographers participate in the same pool for each genre. One recipient per genre regardless of device.</div>
     </div>
   </div>

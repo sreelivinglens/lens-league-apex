@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Weekly Challenge{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Lens League Apex{% endblock %}
+{% block title %}Weekly Challenge{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -124,7 +124,7 @@
     <div class="sponsor-badge">
       <strong>Sponsored by {{ challenge.sponsor_name }}</strong>
       {% if challenge.sponsor_prize %}
-        &nbsp;·&nbsp; Prize: {{ challenge.sponsor_prize }}
+        &nbsp;·&nbsp; Sponsor award: {{ challenge.sponsor_prize }}
       {% endif %}
     </div>
     {% endif %}

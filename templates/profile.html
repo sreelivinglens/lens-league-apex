@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Profile — Lens League Apex{% endblock %}
+{% block title %}My Profile — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -379,15 +379,15 @@
     <span class="profile-section-label">Upgrade Your Plan</span>
     <p style="font-size:14px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
       You have used <strong style="color:var(--text-primary);">{{ images_used }}/3</strong> free images.
-      Upgrade to get 4 images per month, monthly contests, and POTY ₹50L eligibility.
+      Upgrade to get 4 images per month, programme entry, and POTY Annual Honours eligibility.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="padding:12px 24px;">
-        📷 Camera — ₹200/mth
+        📷 Camera — ₹599/mo
       </a>
       <a href="{{ url_for('subscribe', track='mobile') }}" class="btn"
          style="padding:12px 24px; border-color:var(--gold-dark); color:var(--gold);">
-        📱 Mobile — ₹100/mth
+        📱 Mobile — ₹299/mo
       </a>
     </div>
   </div>

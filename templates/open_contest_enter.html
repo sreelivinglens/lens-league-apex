@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Enter Open Competition — Lens League Apex{% endblock %}
+{% block title %}Enter Open Programme — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -104,9 +104,9 @@
 {% block content %}
 <div class="oc-wrap">
 
-  <div class="oc-eyebrow">Open Competition {{ platform_year }}</div>
+  <div class="oc-eyebrow">Open Programme {{ platform_year }}</div>
   <h1 class="oc-heading">Enter the Open.</h1>
-  <p class="oc-sub">No track split. Camera and Mobile compete together. One winner per genre. ₹50 per entry.</p>
+  <p class="oc-sub">No track split. Camera and Mobile participate together. One recipient per genre. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for submission fees.</p>
 
   <!-- Step indicators -->
   <div class="oc-steps">
@@ -133,7 +133,7 @@
   <div class="empty-state">
     <div style="font-size:40px;margin-bottom:16px;">📷</div>
     <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No scored images yet</div>
-    <p>Upload and score at least one image before entering the Open Competition.</p>
+    <p>Upload and score at least one image before submitting to the Open Programme.</p>
     <a href="{{ url_for('upload') }}" class="oc-btn-primary" style="margin-top:20px;display:inline-block;">Upload an Image →</a>
   </div>
 
@@ -207,11 +207,11 @@
       </div>
       <div class="summary-row">
         <span class="summary-key">Competition</span>
-        <span class="summary-val">Open Competition {{ platform_year }} · No Track Split</span>
+        <span class="summary-val">Open Programme {{ platform_year }} · No Track Split</span>
       </div>
       <div class="summary-row">
-        <span class="summary-key">Entry Fee</span>
-        <span class="summary-val summary-fee">₹50</span>
+        <span class="summary-key">Submission Fee</span>
+        <span class="summary-val summary-fee"><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></span>
       </div>
     </div>
   </div>

@@ -87,7 +87,7 @@
 
   <div class="page-header">
     <h1>Programme Rules &amp; Legal Framework</h1>
-    <p>Governing document for all competitions on {{ platform_name }}</p>
+    <p>Governing document for all programmes on {{ platform_name }}</p>
   </div>
 
   <div class="doc-meta">
@@ -110,22 +110,26 @@
   </div>
 
   <div class="rules-highlight legal">
-    <strong>Legal Notice:</strong> This document constitutes the complete and binding contest rules for all competitions operated by {{ platform_name }}. By entering any competition — including Monthly Contests, Photographer of the Year (POTY), Body of Work (BOW), and the Open Competition — participants agree unconditionally to these rules. Entry constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+    <strong>Legal Notice:</strong> This document constitutes the complete and binding programme rules for all photography programmes operated by {{ platform_name }}. By participating in any programme — including Monthly Programmes, Photographer of the Year (POTY), Body of Work (BOW), and the Open Programme — participants agree unconditionally to these rules. Participation constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+  </div>
+
+  <div class="rules-highlight" style="border-left-color: var(--gold); background: rgba(200,168,75,0.04); margin-bottom: 24px;">
+    <strong>Nature of Programmes:</strong> Shutter League photography programmes are skill-based juried evaluations. Subscription fees are charged for access to the platform&#39;s software tools — automated image scoring, dimensional analysis, improvement feedback, and community rankings. Subscription fees are not entry fees and do not constitute participation in any programme. The DDI scoring engine applies uniform, deterministic criteria to all submitted images. No element of chance determines scoring outcomes or programme results. The Open Programme submission fee is a platform processing fee for the additional administrative and jury costs associated with the Open Programme format.
   </div>
 
   <div class="toc">
     <div class="toc-title">Contents</div>
     <ol>
-      <li><a href="#overview">Competition Overview</a></li>
+      <li><a href="#overview">Programme Overview</a></li>
       <li><a href="#eligibility">Eligibility, Age &amp; Entry</a></li>
       <li><a href="#image-specs">Image Specifications &amp; Technical Requirements</a></li>
       <li><a href="#prior-wins">Prior Publication &amp; Prior Award Restriction</a></li>
       <li><a href="#judging">Judging Process &amp; Finality</a></li>
-      <li><a href="#raw-verification">RAW Verification — Finalists &amp; Winners</a></li>
+      <li><a href="#raw-verification">RAW Verification — Finalists</a></li>
       <li><a href="#monthly">Monthly Programme Rules</a></li>
       <li><a href="#poty">POTY Rules &amp; awards structure</a></li>
       <li><a href="#bow">Body of Work Rules</a></li>
-      <li><a href="#open">Open Competition Rules</a></li>
+      <li><a href="#open">Open Programme Rules</a></li>
       <li><a href="#awards">Award Disbursement</a></li>
       <li><a href="#ip">Intellectual Property</a></li>
       <li><a href="#disqualification">Disqualification &amp; Integrity</a></li>
@@ -139,15 +143,15 @@
 
   <!-- 1 -->
   <div class="rules-section" id="overview">
-    <h2><span>01</span> Competition Overview</h2>
-    <p>{{ platform_name }} operates four distinct competition formats across 8 genres (Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative) and two Leagues (Camera and Mobile):</p>
+    <h2><span>01</span> Programme Overview</h2>
+    <p>{{ platform_name }} operates four distinct programme formats across 8 genres (Wildlife, Street, Landscape, People, Wedding, Macro, Drone &amp; Aerial, and Creative) and two Leagues (Camera and Mobile):</p>
     <div class="table-scroll"><table class="comp-table">
-      <thead><tr><th>Competition</th><th>Frequency</th><th>Scope</th><th>Judging</th></tr></thead>
+      <thead><tr><th>Programme</th><th>Frequency</th><th>Scope</th><th>Judging</th></tr></thead>
       <tbody>
-        <tr><td>Monthly Contest</td><td>Every calendar month</td><td>Per genre · Camera &amp; Mobile separate</td><td>DDI → Peer → Jury (triggered)</td></tr>
-        <tr><td>POTY</td><td>Annual · ₹50,00,000 pool</td><td>Per genre · Camera &amp; Mobile separate</td><td>DDI → Peer → Jury (triggered)</td></tr>
-        <tr><td>Body of Work</td><td>Annual · ₹5,25,000 pool</td><td>Cross-genre · No League split · Curated series</td><td>DDI → Jury Legends (mandatory)</td></tr>
-        <tr><td>Open Competition</td><td>Annual · ₹8,00,000 pool</td><td>All 8 genres · No League split · ₹50/entry</td><td>DDI → Peer → Jury (mandatory for Grand Open)</td></tr>
+        <tr><td>Monthly Programme</td><td>Every calendar month</td><td>Per genre · Camera &amp; Mobile separate</td><td>DDI → Peer → Jury (triggered)</td></tr>
+        <tr><td>POTY</td><td>Annual</td><td>Per genre · Camera &amp; Mobile separate</td><td>DDI → Peer → Jury (triggered)</td></tr>
+        <tr><td>Body of Work</td><td>Annual</td><td>Cross-genre · No League split · Curated series</td><td>DDI → Jury Legends (mandatory)</td></tr>
+        <tr><td>Open Programme</td><td>Annual</td><td>All 8 genres · No League split · paid submission</td><td>DDI → Peer → Jury (mandatory for Grand Open)</td></tr>
       </tbody>
     </table></div>
   </div>
@@ -156,7 +160,7 @@
   <div class="rules-section" id="eligibility">
     <h2><span>02</span> Eligibility, Age &amp; Entry</h2>
     <h3>Age Requirement</h3>
-    <p>All competitions are open to participants who are <strong>18 years of age or older</strong> at the time of entry. {{ platform_name }} reserves the right to request proof of age at any time. Providing false information regarding age will result in immediate disqualification and forfeiture of any awards given.</p>
+    <p>All programmes are open to participants who are <strong>18 years of age or older</strong> at the time of entry. {{ platform_name }} reserves the right to request proof of age at any time. Providing false information regarding age will result in immediate disqualification and forfeiture of any awards given.</p>
     <h3>General Eligibility</h3>
     <ul>
       <li>Entry is open to all registered {{ platform_name }} subscribers in good standing.</li>
@@ -164,12 +168,12 @@
       <li>Employees, directors, and immediate family members of {{ platform_name }} are ineligible for award awards, though they may use the platform.</li>
       <li>Participants must hold a valid subscription for the duration of the competition cycle in which they are entered.</li>
     </ul>
-    <h3>Monthly Contest &amp; POTY — Automatic Entry</h3>
-    <p>Every image scored by the Apex DDI Engine within the calendar month is automatically entered into the contest for its declared genre and League. No separate entry action is required.</p>
+    <h3>Monthly Programme &amp; POTY — Automatic Entry</h3>
+    <p>Every image scored by the Apex DDI Engine within the calendar month is automatically entered into the programme for its declared genre and League. No separate entry action is required.</p>
     <h3>Body of Work — Curated Submission</h3>
     <p>BOW entry requires deliberate submission of a curated series of 6–12 images. Entry is not automatic. All images must have been previously scored by the Apex DDI Engine under the submitting photographer's account.</p>
-    <h3>Open Competition — Paid Entry</h3>
-    <p>The Open Competition requires deliberate, paid entry. Each entry costs <strong>₹50 per image per genre</strong>. A photographer may enter multiple genres but may submit only one image per genre.</p>
+    <h3>Open Programme — Paid Submission</h3>
+    <p>The Open Programme requires deliberate, paid submission. Submission fees apply per image per genre. See the <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for current amounts. A photographer may submit to multiple genres but may submit only one image per genre.</p>
   </div>
 
   <!-- 3 -->
@@ -195,9 +199,9 @@
     <h3>Prior Publication</h3>
     <p>Images that have been previously published — on social media, personal websites, stock libraries, editorial outlets, or anywhere else — are fully eligible for entry. There is no restriction on prior publication.</p>
     <h3>Prior Award Restriction</h3>
-    <p>Images that have <strong>previously won a photography award</strong> in any other photography competition — whether domestic or international — are <strong>not eligible</strong> for entry in any {{ platform_name }} competition. This restriction applies regardless of the award amount, the competition's prestige, or how long ago the award was won.</p>
+    <p>Images that have <strong>previously won a photography award</strong> in any other photography programme — whether domestic or international — are <strong>not eligible</strong> for entry in any {{ platform_name }} programme. This restriction applies regardless of the award amount, the competition's prestige, or how long ago the award was won.</p>
     <div class="rules-highlight legal">
-      <strong>Declaration required:</strong> By entering any competition on {{ platform_name }}, the photographer declares that the submitted image has not previously won a photography award in any other competition. False declaration will result in immediate disqualification, forfeiture of all awards, and permanent account suspension.
+      <strong>Declaration required:</strong> By participating in any programme on {{ platform_name }}, the photographer declares that the submitted image has not previously won a photography award in any other photography programme or competition. False declaration will result in immediate disqualification, forfeiture of all awards, and permanent account suspension.
     </div>
   </div>
 
@@ -206,12 +210,12 @@
     <h2><span>05</span> Judging Process &amp; Finality</h2>
     <h3>Three-Tier Framework</h3>
     <div class="table-scroll"><table class="comp-table">
-      <thead><tr><th>Competition</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead>
+      <thead><tr><th>Programme</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th></tr></thead>
       <tbody>
-        <tr><td>Monthly Contest</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (triggered)</td></tr>
+        <tr><td>Monthly Programme</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (triggered)</td></tr>
         <tr><td>POTY</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (triggered)</td></tr>
         <tr><td>Body of Work</td><td>DDI Engine</td><td>— (not applicable)</td><td>Jury Legends (mandatory)</td></tr>
-        <tr><td>Open Competition</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (mandatory for Grand Open)</td></tr>
+        <tr><td>Open Programme</td><td>DDI Engine</td><td>Blind Peer Rating</td><td>Jury (mandatory for Grand Open)</td></tr>
       </tbody>
     </table></div>
     <h3>Finality of Decisions</h3>
@@ -222,9 +226,9 @@
 
   <!-- 6 -->
   <div class="rules-section" id="raw-verification">
-    <h2><span>06</span> RAW Verification — Finalists &amp; Winners</h2>
+    <h2><span>06</span> RAW Verification — Finalists</h2>
     <h3>Verification Requirement</h3>
-    <p>The top 3 finalists in every category across all competitions are required to submit their <strong>original RAW or full-resolution source file</strong> for authenticity verification before any award is confirmed or announced.</p>
+    <p>The top 3 finalists in every category across all programmes are required to submit their <strong>original RAW or full-resolution source file</strong> for authenticity verification before any award is confirmed or announced.</p>
     <h3>Submission Process</h3>
     <ul>
       <li>Finalists will be notified by email with instructions to submit their original file.</li>
@@ -248,14 +252,14 @@
   <div class="rules-section" id="monthly">
     <h2><span>07</span> Monthly Programme Rules</h2>
     <ul>
-      <li>Contest period: the full calendar month from 00:00 on the 1st to 23:59 on the last day (IST).</li>
+      <li>Programme period: the full calendar month from 00:00 on the 1st to 23:59 on the last day (IST).</li>
       <li>Results finalised within 10 business days of month close, following completion of Tier 2 peer rating.</li>
       <li>Winner is the photographer with the highest validated score in each genre and League.</li>
       <li>In the event of a tied score, the image submitted earlier in the month takes precedence.</li>
       <li>A photographer may win multiple genre categories in the same month.</li>
       <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
       <li>Awards are disbursed within 30 days of results finalisation, subject to winner verification, age confirmation, and tax compliance.</li>
-      <li>There is no restriction on when the image was originally captured — only the upload must occur within the contest month.</li>
+      <li>There is no restriction on when the image was originally captured — only the upload must occur within the programme month.</li>
     </ul>
   </div>
 
@@ -266,7 +270,7 @@
       <li>POTY operates per genre and per League (Camera and Mobile independently) over the platform subscription year. 16 competitions total: 8 genres × 2 Leagues.</li>
       <li>Minimum eligibility: <strong>24 qualifying images</strong> in the specific genre during the subscription year.</li>
       <li>POTY score: arithmetic mean of the photographer's <strong>top 6 DDI scores</strong> in that genre across all qualifying images for the year.</li>
-      <li>Grand POTY Camera and Grand POTY Mobile are awarded separately. The Grand POTY winner in each League is selected by jury from the 8 category Gold winners in that League.</li>
+      <li>Grand POTY Camera and Grand POTY Mobile are awarded separately. The Grand POTY recipient in each League is selected by jury from the 8 category Gold recipients in that League.</li>
       <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
       <li>In the event of a tied POTY score, the photographer with the higher individual peak score wins. If still tied, the photographer with the longer subscription tenure wins.</li>
     </ul>
@@ -278,8 +282,8 @@
         <tr><td class="award">Silver</td><td class="amount">₹75,000</td><td class="amount">₹50,000</td><td>× 8</td><td>₹10,00,000</td></tr>
         <tr><td class="award">Bronze</td><td class="amount">₹50,000</td><td class="amount">₹25,000</td><td>× 8</td><td>₹6,00,000</td></tr>
         <tr class="section-head"><td colspan="4">16 category competitions (8 genres × 2 Leagues)</td><td>₹33,60,000</td></tr>
-        <tr><td class="award">Grand POTY Camera</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Camera League Gold winners</td><td class="amount">₹10,00,000</td></tr>
-        <tr><td class="award">Grand POTY Mobile</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Mobile League Gold winners</td><td class="amount">₹6,00,000</td></tr>
+        <tr><td class="award">Grand POTY Camera</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Camera League Gold recipients</td><td class="amount">₹10,00,000</td></tr>
+        <tr><td class="award">Grand POTY Mobile</td><td colspan="3" style="font-size:14px; color:var(--text-muted);">Jury selects from 8 Mobile League Gold recipients</td><td class="amount">₹6,00,000</td></tr>
         <tr class="award-total"><td colspan="4"><strong>POTY Total</strong></td><td class="amount">₹50,00,000</td></tr>
       </tbody>
     </table></div>
@@ -295,7 +299,7 @@
       <li>One BOW submission per photographer per year. Open to all active subscribers aged 18 or over.</li>
       <li>Submission: <strong>6 to 12 images</strong> as a unified thematic series. Submissions outside this range are ineligible.</li>
       <li>All images must have been previously scored by the Apex DDI Engine under the submitting photographer's account.</li>
-      <li>BOW is cross-genre. No League split. Camera and Mobile compete together.</li>
+      <li>BOW is cross-genre. No League split. Camera and Mobile participate together.</li>
       <li>Submissions close at 23:59 IST on the last day of Month 11 of the platform year.</li>
       <li>Judged by Jury Legends only — no peer rating layer. DDI scores are reference data only.</li>
       <li>All images in the top 3 BOW submissions are subject to RAW verification before awards are confirmed (see Section 06).</li>
@@ -315,20 +319,20 @@
 
   <!-- 10 -->
   <div class="rules-section" id="open">
-    <h2><span>10</span> Open Competition Rules</h2>
+    <h2><span>10</span> Open Programme Rules</h2>
     <ul>
-      <li>Annual, paid entry. <strong>₹50 per image per genre.</strong> No League split.</li>
+      <li>Annual, paid submission. No League split. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for current submission fees.</li>
       <li>One winner per genre. No Silver or Bronze.</li>
       <li>Entry opens <strong>1 Oct 2026</strong> · closes <strong>31 Dec 2026</strong>.</li>
-      <li>Grand Open Winner selected by jury from the 8 category winners.</li>
+      <li>Grand Open Recipient selected by jury from the 8 category finalists.</li>
       <li>All top 3 finalists per category are subject to RAW verification before awards are confirmed (see Section 06).</li>
     </ul>
-    <h3>Open awards structure — ₹8,00,000 Total</h3>
+    <h3>Open awards structure</h3>
     <div class="table-scroll"><table class="award-table">
       <thead><tr><th>Award</th><th>Award</th><th>Count</th><th>Subtotal</th></tr></thead>
       <tbody>
-        <tr><td class="award">Category Winner</td><td class="amount">₹75,000</td><td>× 8 genres</td><td>₹6,00,000</td></tr>
-        <tr><td class="award">Grand Open Winner</td><td class="amount">₹2,00,000</td><td>Jury · from 8 finalists</td><td>₹2,00,000</td></tr>
+        <tr><td class="award">Category Recipient</td><td class="amount">₹75,000</td><td>× 8 genres</td><td>₹6,00,000</td></tr>
+        <tr><td class="award">Grand Open Recipient</td><td class="amount">₹2,00,000</td><td>Jury · from 8 finalists</td><td>₹2,00,000</td></tr>
         <tr class="award-total"><td colspan="3"><strong>Open Total</strong></td><td class="amount">₹8,00,000</td></tr>
       </tbody>
     </table></div>
@@ -341,15 +345,18 @@
   <div class="rules-section" id="awards">
     <h2><span>11</span> Award Disbursement</h2>
     <ul>
-      <li>Winners must complete identity and age verification before awards are disbursed.</li>
+      <li>Recipients must complete identity and age verification before awards are disbursed.</li>
       <li>Failure to complete verification within <strong>30 days</strong> of notification results in forfeiture of the award.</li>
-      <li>Awards are disbursed in Indian Rupees (INR) to Indian residents. A TDS certificate will be provided where applicable under Section 194B of the Income Tax Act, 1961.</li>
-      <li>Winners are solely responsible for all tax obligations in their jurisdiction.</li>
+      <li>Awards are disbursed in Indian Rupees (INR) to Indian residents. Tax deduction at source will be applied in accordance with applicable provisions of the Income Tax Act, 1961, as determined by the nature of the award payment. Recipients are advised to consult a tax professional regarding their specific obligations.</li>
+      <li>Recipients are solely responsible for all tax obligations in their jurisdiction.</li>
       <li>Awards are non-transferable.</li>
-      <li>A photographer who wins a award and is subsequently found to have violated these rules must return the award or its cash equivalent. {{ platform_name }} reserves the right to pursue legal recovery.</li>
+      <li>A recipient who is subsequently found to have violated these rules must return the award or its cash equivalent upon demand. {{ platform_name }} reserves the right to pursue legal recovery.</li>
     </ul>
     <div class="rules-highlight final">
-      <strong>Total annual awards fund across all competitions: ₹63,25,000</strong> — POTY ₹50,00,000 + Open ₹8,00,000 + BOW ₹5,25,000. All Grand awards are awarded in addition to category awards won — awards are always cumulative, never substituted.
+      <strong>Total annual awards fund across all programmes: ₹63,25,000</strong> — POTY ₹50,00,000 + Open ₹8,00,000 + BOW ₹5,25,000. All Grand awards are issued in addition to category awards — awards are always cumulative, never substituted.
+    </div>
+    <div class="rules-highlight warning" style="margin-top:12px;">
+      <strong>Payment Infrastructure:</strong> Award disbursement is contingent on {{ platform_name }}&#39;s payment gateway infrastructure being operational and approved at the time of disbursement. In the event that payment infrastructure is temporarily unavailable, {{ platform_name }}&#39;s obligation is to disburse within 30 days of payment infrastructure becoming available, rather than within 30 days of results finalisation. This clause does not limit {{ platform_name }}&#39;s obligation to disburse — it governs timing only.
     </div>
   </div>
 
@@ -357,13 +364,13 @@
   <div class="rules-section" id="ip">
     <h2><span>12</span> Intellectual Property</h2>
     <h3>Photographer Retains Copyright</h3>
-    <p><strong>Photographers retain full copyright in all images submitted to {{ platform_name }} at all times.</strong> Entry into any competition does not transfer, assign, or diminish the photographer's copyright in any way.</p>
+    <p><strong>Photographers retain full copyright in all images submitted to {{ platform_name }} at all times.</strong> Participation in any programme does not transfer, assign, or diminish the photographer's copyright in any way.</p>
     <h3>Licence Granted to {{ platform_name }}</h3>
-    <p>By entering a competition, photographers grant {{ platform_name }} a <strong>non-exclusive, royalty-free, worldwide licence</strong> to display winning and shortlisted images on the platform and in promotional materials; use images in press releases, social media, and marketing with full attribution; and include images in retrospective collections and annual showcases.</p>
-    <p>This licence does not permit commercial sale of the image; sublicensing to third parties; use without attribution; or any use beyond promotion of {{ platform_name }} and its competitions.</p>
+    <p>By participating in a programme, photographers grant {{ platform_name }} a <strong>non-exclusive, royalty-free, worldwide licence</strong> to display winning and shortlisted images on the platform and in promotional materials; use images in press releases, social media, and marketing with full attribution; and include images in retrospective collections and annual showcases.</p>
+    <p>This licence does not permit commercial sale of the image; sublicensing to third parties; use without attribution; or any use beyond promotion of {{ platform_name }} and its programmes.</p>
     <p>Photographers may request removal of their images from promotional use at any time by writing to {{ contact_email }}. Removal requests are processed within 30 days.</p>
     <h3>Platform IP</h3>
-    <p>The Apex DDI Engine, all scoring methodology, competition structures, and platform software remain the exclusive intellectual property of {{ platform_name }}.</p>
+    <p>The Apex DDI Engine, all scoring methodology, programme structures, and platform software remain the exclusive intellectual property of {{ platform_name }}.</p>
     <h3>Rating Cards</h3>
     <p>Rating cards generated by the Apex DDI Engine may be freely shared by the photographer on personal channels, provided {{ platform_name }} branding remains intact and unaltered.</p>
   </div>
@@ -375,15 +382,15 @@
     <ul>
       <li>Submission of AI-generated images or images primarily created through generative AI tools</li>
       <li>Submission of images belonging to another photographer</li>
-      <li>Submission of an image that has previously won a photography award in another competition</li>
+      <li>Submission of an image that has previously won a photography award in another photography programme or competition</li>
       <li>Failure to pass RAW verification within the required timeframe</li>
       <li>Images that do not meet the technical specifications in Section 03</li>
       <li>Entrant is under 18 years of age</li>
       <li>Duplicate submission of the same or substantially similar image</li>
       <li>Manipulation of the peer rating system</li>
-      <li>Multiple account creation for competition advantage</li>
+      <li>Multiple account creation for programme advantage</li>
       <li>Tampering with or stripping EXIF metadata</li>
-      <li>Any conduct that undermines the integrity of the competition</li>
+      <li>Any conduct that undermines the integrity of the programme</li>
     </ul>
     <h3>Fraud Penalty</h3>
     <p>Where fraud is determined — including AI-generated images, stolen images, or falsified RAW files — the following consequences apply immediately and without appeal:</p>
@@ -394,13 +401,13 @@
       <li>{{ platform_name }} reserves the right to report the matter to relevant authorities where applicable law is engaged</li>
     </ul>
     <h3>Random RAW Verification</h3>
-    <p>In addition to mandatory verification of top 3 finalists, <strong>{{ platform_name }} conducts random RAW verification spot checks on any image at any time</strong>, regardless of score or competition standing. Failure to respond within the stated timeframe, or failure of the verification check, will result in the image being removed and the account reviewed for fraud.</p>
+    <p>In addition to mandatory verification of top 3 finalists, <strong>{{ platform_name }} conducts random RAW verification spot checks on any image at any time</strong>, regardless of score or programme standing. Failure to respond within the stated timeframe, or failure of the verification check, will result in the image being removed and the account reviewed for fraud.</p>
   </div>
 
   <!-- 14 -->
   <div class="rules-section" id="deadlines">
     <h2><span>14</span> Deadline Extensions</h2>
-    <p>All competition deadlines may be extended at the <strong>sole and absolute discretion of {{ platform_name }}</strong>. No entrant has any right to demand, expect, or rely upon a deadline extension. Extensions granted in one cycle create no precedent or obligation for any future cycle.</p>
+    <p>All programme deadlines may be extended at the <strong>sole and absolute discretion of {{ platform_name }}</strong>. No entrant has any right to demand, expect, or rely upon a deadline extension. Extensions granted in one cycle create no precedent or obligation for any future cycle.</p>
     <p>{{ platform_name }} may shorten a deadline with a minimum of 14 days' notice, except where required by circumstances beyond its reasonable control.</p>
   </div>
 
@@ -411,7 +418,7 @@
     <ul>
       <li>{{ platform_name }} will make reasonable efforts to restore the platform and any affected data as quickly as practicable.</li>
       <li>Deadlines affected by a verifiable platform outage may be extended at the sole discretion of {{ platform_name }}.</li>
-      <li>{{ platform_name }} is not liable for any loss of submissions, scores, or competition standing arising from technical failure.</li>
+      <li>{{ platform_name }} is not liable for any loss of submissions, scores, or programme standing arising from technical failure.</li>
       <li>Photographers are advised to retain copies of all images submitted to the platform.</li>
     </ul>
     <h3>Force Majeure</h3>
@@ -422,20 +429,20 @@
   <div class="rules-section" id="immunity">
     <h2><span>16</span> Legal Immunity &amp; Liability</h2>
     <h3>Limitation of Liability</h3>
-    <p>{{ platform_name }}, its directors, employees, agents, and appointed judges shall not be liable for any loss, damage, or claim arising from or in connection with: competition results or award decisions; the accuracy or fairness of any DDI score, peer rating, or jury evaluation; technical failures or interruptions; the conduct of peer raters or jury members acting in good faith; or any indirect, consequential, or punitive loss of any kind.</p>
+    <p>{{ platform_name }}, its directors, employees, agents, and appointed judges shall not be liable for any loss, damage, or claim arising from or in connection with: programme results or award decisions; the accuracy or fairness of any DDI score, peer rating, or jury evaluation; technical failures or interruptions; the conduct of peer raters or jury members acting in good faith; or any indirect, consequential, or punitive loss of any kind.</p>
     <h3>Indemnity</h3>
     <p>Participants indemnify and hold harmless {{ platform_name }}, its directors, employees, agents, and judges against any claim, liability, cost, or expense arising from the participant's entry, conduct on the platform, violation of these rules, or infringement of any third party's rights.</p>
     <h3>Judging Immunity</h3>
     <p>Jury members acting in good faith in the exercise of their judging duties shall not be personally liable to any participant for any judging decision.</p>
     <h3>Publicity</h3>
-    <p>Winners consent to the use of their username, winning image(s), tier, and score in promotional materials published by {{ platform_name }}, with full attribution. Winners may request limited anonymisation at {{ platform_name }}'s discretion.</p>
+    <p>Recipients consent to the use of their username, awarded image(s), tier, and score in promotional materials published by {{ platform_name }}, with full attribution. Recipients may request limited anonymisation at {{ platform_name }}'s discretion.</p>
   </div>
 
   <!-- 17 -->
   <div class="rules-section" id="disputes">
     <h2><span>17</span> Disputes, Arbitration &amp; Jurisdiction</h2>
     <h3>Internal Dispute Process</h3>
-    <p>A participant who believes their image has been incorrectly scored or that a competition result is in error may raise a formal dispute through their dashboard. Each dispute costs one Rating Credit. The same image may not be disputed more than once. Following a Stage 2 jury decision, no further internal appeal is available.</p>
+    <p>A participant who believes their image has been incorrectly scored or that a programme result is in error may raise a formal dispute through their dashboard. Each dispute costs one Rating Credit. The same image may not be disputed more than once. Following a Stage 2 jury decision, no further internal appeal is available.</p>
     <h3>Arbitration</h3>
     <p>Any dispute arising out of or in connection with these rules that is not resolved through the internal dispute process shall be referred to and finally resolved by arbitration under the <strong>Arbitration and Conciliation Act, 1996</strong> (India). The seat and venue of arbitration shall be <strong>Bengaluru, Karnataka, India</strong>. The language of arbitration shall be English. The arbitrator's award shall be final and binding.</p>
     <h3>Governing Law &amp; Jurisdiction</h3>
@@ -445,8 +452,8 @@
   <!-- 18 -->
   <div class="rules-section" id="amendments">
     <h2><span>18</span> Amendments</h2>
-    <p>{{ platform_name }} reserves the right to amend these Programme Rules at any time. Amendments affecting ongoing competitions will be communicated to all active participants via the platform with a minimum of <strong>14 days' notice</strong> before taking effect, except where immediate amendment is required to protect the integrity of the competition or comply with applicable law. Continued participation following notification of an amendment constitutes acceptance of the amended rules.</p>
-    <p>In the event of any conflict between these Programme Rules and the Terms &amp; Conditions, these Programme Rules shall prevail in respect of competition matters.</p>
+    <p>{{ platform_name }} reserves the right to amend these Programme Rules at any time. Amendments affecting ongoing programmes will be communicated to all active participants via the platform with a minimum of <strong>14 days' notice</strong> before taking effect, except where immediate amendment is required to protect the integrity of the competition or comply with applicable law. Continued participation following notification of an amendment constitutes acceptance of the amended rules.</p>
+    <p>In the event of any conflict between these Programme Rules and the Terms &amp; Conditions, these Programme Rules shall prevail in respect of programme matters.</p>
   </div>
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
@@ -456,7 +463,7 @@
     </p>
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('terms') }}" class="btn btn-solid">Terms &amp; Conditions &rarr;</a>
-      <a href="{{ url_for('contests') }}" class="btn">View Contests</a>
+      <a href="{{ url_for('contests') }}" class="btn">View Programmes</a>
       <a href="{{ url_for('index') }}" class="btn">&larr; Back to Home</a>
     </div>
   </div>

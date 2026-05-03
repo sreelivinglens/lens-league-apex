@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Body of Work — Lens League Apex{% endblock %}
+{% block title %}Body of Work — Shutter League{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -70,7 +70,7 @@
   }
   .bow-rules li strong { color: var(--text-primary); }
 
-  /* Prize table */
+  /* Honours table */
   .prize-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
   .prize-table th {
     font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.14em;
@@ -188,36 +188,36 @@
 
   <!-- Prizes -->
   <div class="bow-section">
-    <div class="bow-section-title">Prize Structure</div>
+    <div class="bow-section-title">Honours Structure</div>
     <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
       <table class="prize-table">
       <thead>
         <tr>
           <th>Award</th>
           <th>What it recognises</th>
-          <th>Prize</th>
+          <th>Honour</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><span class="medal-gold">◆</span> &nbsp;Gold</td>
           <td>The single most powerful unified body of work submitted that year</td>
-          <td>₹ 3,00,000</td>
+          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
         </tr>
         <tr>
           <td><span class="medal-silver">◆</span> &nbsp;Silver</td>
           <td>Outstanding series with exceptional coherence and narrative strength</td>
-          <td>₹ 1,50,000</td>
+          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
         </tr>
         <tr>
           <td><span class="medal-bronze">◆</span> &nbsp;Bronze</td>
           <td>Remarkable submission demonstrating distinctive visual voice</td>
-          <td>₹ 75,000</td>
+          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
         </tr>
       </tbody>
     </table>
     <p style="font-size:0.875rem; color:var(--text-muted); margin-top:10px; line-height:1.6;">
-      The jury may decline to award Gold if no submission meets the required standard. Highly commended citations may be awarded at the jury's discretion, carrying no monetary prize.
+      The jury may decline to award Gold if no submission meets the required standard. Highly commended citations may be awarded at the jury's discretion.
     </p>
   </div>
 
@@ -250,7 +250,7 @@
         <div class="tl-dot">12</div>
         <div class="tl-content">
           <div class="tl-month">Month 12 — Results</div>
-          <div class="tl-desc"><strong>Gold, Silver, Bronze announced.</strong> Winning series published in the platform gallery. Prize transfer within 14 working days.</div>
+          <div class="tl-desc"><strong>Gold, Silver, Bronze announced.</strong> Winning series published in the platform gallery. Honours confirmed within 14 working days.</div>
         </div>
       </div>
     </div>
@@ -300,7 +300,7 @@
     {% endif %}
   {% else %}
     <div class="gate-box">
-      <div class="gate-title">Join to compete.</div>
+      <div class="gate-title">Join Shutter League.</div>
       <div class="gate-sub">
         Create a free account, start scoring your work, and build toward the Body of Work. It takes time — and that's the point.
       </div>
@@ -312,7 +312,7 @@
   {% endif %}
 
   <div style="margin-top:1.75rem; text-align:center;">
-    <a href="/contests" style="font-size:0.82rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border);">← All Competitions</a>
+    <a href="/contests" style="font-size:0.82rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border);">← All Programmes</a>
   </div>
 
 </div>

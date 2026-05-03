@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Results — {{ challenge.prompt_title }} — Lens League Apex{% endblock %}
+{% block title %}Results — {{ challenge.prompt_title }} — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -67,7 +67,7 @@
   <div style="font-family:var(--font-mono); font-size:13px; font-weight:600;
               letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;
               margin-bottom:16px;">
-    Winners
+    Top Results
   </div>
   <div class="podium">
     {% for sub in winners|sort(attribute='result_rank') %}
