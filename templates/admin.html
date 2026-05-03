@@ -783,6 +783,17 @@
 
       <div class="danger-row">
         <div>
+          <div class="danger-title">Refresh AI Suspicion Scores</div>
+          <div class="danger-desc">Re-runs AI detection only on all scored images. Does NOT change scores, tiers, or any other data. Run this after updating the detection prompt to backfill existing images. Images scoring &ge;0.7 are automatically moved to needs-review.</div>
+        </div>
+        <form method="POST" action="{{ url_for('admin_refresh_ai_suspicion') }}"
+              onsubmit="return confirm('Refresh AI suspicion on all scored images? Uses API credits — one call per image.');">
+          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Refresh AI Detection</button>
+        </form>
+      </div>
+
+      <div class="danger-row">
+        <div>
           <div class="danger-title">Fix Beta Plan Labels</div>
           <div class="danger-desc">Updates all manually-activated beta users to monthly plan so MRR calculates correctly.</div>
         </div>
