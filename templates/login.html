@@ -2,7 +2,7 @@
 {% block title %}Sign In — Shutter League{% endblock %}
 
 {% block extra_css %}<style>
-  /* ── v46 3-COLOUR RULE ── */
+  /* ── v47 3-COLOUR RULE ── */
   :root {
     --gold:           #F5C518 !important;
     --gold-dark:      #F5C518 !important;
@@ -10,7 +10,22 @@
     --text-secondary: var(--text-primary) !important;
     --text-muted:     var(--text-primary) !important;
   }
+  .auth-divider {
+    display:flex; align-items:center; gap:12px;
+    margin:24px 0; color:var(--text-primary); font-size:13px;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+  .auth-input {
+    width:100%; padding:11px 14px; font-size:15px;
+    background:var(--surface-2); color:var(--text-primary);
+    border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    box-sizing:border-box; outline:none; transition:border-color 0.2s;
+  }
+  .auth-input:focus { border-color:var(--gold); }
 </style>{% endblock %}
+
 {% block content %}
 <div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
   <div style="width:100%; max-width:420px;">
@@ -23,6 +38,17 @@
 
     <div class="card" style="padding:32px;">
 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div style="margin-bottom:16px; padding:12px 16px; border-radius:var(--radius-sm);
+                      font-size:14px; line-height:1.5;
+                      background:{% if cat == 'error' %}rgba(220,53,69,0.1){% else %}rgba(245,197,24,0.12){% endif %};
+                      border:1px solid {% if cat == 'error' %}rgba(220,53,69,0.3){% else %}var(--gold-dark){% endif %};
+                      color:var(--text-primary);">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <!-- Google OAuth — primary -->
       <a href="{{ url_for('auth_google') }}"
          style="display:flex; align-items:center; justify-content:center; gap:12px;
                 width:100%; padding:14px 20px;
@@ -30,7 +56,7 @@
                 border-radius:var(--radius-md); text-decoration:none;
                 font-size:16px; font-weight:600; color:var(--text-primary);
                 transition:border-color 0.2s, box-shadow 0.2s;"
-         onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 2px var(--gold-glow)'"
+         onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 2px rgba(245,197,24,0.2)'"
          onmouseout="this.style.borderColor='var(--border-strong)'; this.style.boxShadow='none'">
         <svg width="20" height="20" viewBox="0 0 18 18" style="flex-shrink:0;">
           <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
@@ -40,6 +66,32 @@
         </svg>
         Continue with Google
       </a>
+
+      <!-- Divider -->
+      <div class="auth-divider">or sign in with email</div>
+
+      <!-- Email/password form -->
+      <form method="POST" action="{{ url_for('login') }}">
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Email</label>
+          <input type="email" name="email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Password</label>
+          <input type="password" name="password" class="auth-input" placeholder="Your password" required autocomplete="current-password">
+        </div>
+        <button type="submit"
+                style="width:100%; padding:13px; background:var(--gold); color:#000000;
+                       font-family:var(--font-mono); font-size:13px; font-weight:700;
+                       letter-spacing:1px; text-transform:uppercase; border:none;
+                       border-radius:var(--radius-sm); cursor:pointer;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="margin-top:16px; text-align:center; font-size:14px; color:var(--text-primary);">
+        <a href="{{ url_for('forgot_password') }}" style="color:var(--gold); text-decoration:none;">Forgot password?</a>
+      </div>
 
       <div style="margin-top:20px; font-size:14px; color:var(--text-primary); text-align:center; line-height:1.7;">
         By continuing you agree to our
@@ -52,9 +104,8 @@
       <div style="margin-top:14px; padding:12px 16px; background:var(--surface-3);
                   border:1px solid var(--border); border-radius:var(--radius-sm);
                   font-size:13px; color:var(--text-primary); text-align:center; line-height:1.65;">
-        🔒 We collect only your email and name via Google.
-        We never sell your data or share it with advertisers.
-        &nbsp;<a href="/privacy" style="color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy →</a>
+        &#x1F512; We never sell your data or share it with advertisers.
+        &nbsp;<a href="/privacy" style="color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dark);">Privacy Policy &#8594;</a>
       </div>
 
     </div>
@@ -63,21 +114,19 @@
       <div style="display:flex; flex-direction:column; gap:10px; font-size:15px; color:var(--text-primary);">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
-          No password needed — Google handles sign-in
-        </div>
-        <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
-          <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
           Works with any Gmail or Google Workspace account
         </div>
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
-          6 free scored images · No credit card
+          6 free scored images &nbsp;&#xB7;&nbsp; No credit card
+        </div>
+        <div style="margin-top:6px; font-size:14px;">
+          Don&#39;t have an account?
+          <a href="{{ url_for('register') }}" style="color:var(--gold); text-decoration:none; font-weight:600;">Create one &#8594;</a>
         </div>
       </div>
     </div>
 
   </div>
 </div>
-
-
 {% endblock %}

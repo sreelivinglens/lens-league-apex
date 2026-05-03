@@ -387,6 +387,27 @@ function dismissPotyBanner() {
   </div>
 </div>
 
+{# ── Set password nudge (Google OAuth users without a password) ─────────── #}
+{% if not current_user.password_hash %}
+<div style="background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark);
+            border-radius:var(--radius-md); padding:16px 22px; margin-bottom:20px;
+            display:flex; align-items:center; justify-content:space-between;
+            gap:16px; flex-wrap:wrap;">
+  <div>
+    <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">
+      &#x1F512; Add a password to your account
+    </div>
+    <div style="font-size:14px; color:var(--text-primary);">
+      Sign in without Google &#8212; useful if Google is unavailable.
+    </div>
+  </div>
+  <a href="{{ url_for('set_password') }}" class="btn btn-solid"
+     style="font-size:13px; white-space:nowrap; flex-shrink:0;">
+    Set Password &#8594;
+  </a>
+</div>
+{% endif %}
+
 {# ── Subscription status / free tier nudge ───────────────────────────────── #}
 {% if free_tier %}
 <div class="free-nudge">

@@ -1,292 +1,136 @@
 {% extends "base.html" %}
 {% block title %}Create Account — Shutter League{% endblock %}
 
-{% block extra_css %}
-<style>
-  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
+{% block extra_css %}<style>
   :root {
     --gold:           #F5C518 !important;
-    --gold-light:     #F5C518 !important;
     --gold-dark:      #F5C518 !important;
     --gold-subtle:    rgba(245,197,24,0.12) !important;
-    --gold-glow:      rgba(245,197,24,0.22) !important;
     --text-secondary: var(--text-primary) !important;
     --text-muted:     var(--text-primary) !important;
-    --text-disabled:  #888888 !important;
   }
-
-  .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-
-  .section-divider {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 3px; color: var(--text-primary); text-transform: uppercase;
-    margin: 28px 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-    display: block;
+  .auth-input {
+    width:100%; padding:11px 14px; font-size:15px;
+    background:var(--surface-2); color:var(--text-primary);
+    border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    box-sizing:border-box; outline:none; transition:border-color 0.2s;
   }
-
-  @media (max-width: 640px) {
-    .location-row { grid-template-columns: 1fr; }
-  }
-</style>
-{% endblock %}
+  .auth-input:focus { border-color:var(--gold); }
+</style>{% endblock %}
 
 {% block content %}
-<div style="max-width:600px; margin:48px auto;">
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 0;">
+  <div style="width:100%; max-width:420px;">
 
-  <div style="text-align:center; margin-bottom:36px;">
-    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">JOIN THE LEAGUE</div>
-    <h1 style="font-size:clamp(24px,4vw,32px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">Create Your Account</h1>
-    <p style="font-size:16px; color:var(--text-primary);">Get your photography scientifically scored and ranked.</p>
-  </div>
+    <div style="text-align:center; margin-bottom:32px;">
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
+      <h1 style="font-size:26px; font-weight:700; color:var(--text-primary); margin-bottom:6px;">Create your account</h1>
+      <p style="font-size:15px; color:var(--text-primary);">Or <a href="{{ url_for('login') }}" style="color:var(--gold); text-decoration:none;">sign in</a> if you already have one.</p>
+    </div>
 
-  <div class="card">
-    <form method="POST" action="/register">
+    <div class="card" style="padding:32px;">
 
-      <!-- ── Account details ── -->
-      <span class="section-divider">Account Details</span>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div style="margin-bottom:16px; padding:12px 16px; border-radius:var(--radius-sm);
+                      font-size:14px; line-height:1.5;
+                      background:{% if cat == 'error' %}rgba(220,53,69,0.1){% else %}rgba(245,197,24,0.12){% endif %};
+                      border:1px solid {% if cat == 'error' %}rgba(220,53,69,0.3){% else %}var(--gold-dark){% endif %};
+                      color:var(--text-primary);">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
 
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Your display name"
-               maxlength="50" value="{{ request.form.get('username', '') }}"
-               required autocomplete="username">
-        <div style="margin-top:5px; font-size:15px; color:var(--text-primary);">Visible on leaderboards and your public profile.</div>
-      </div>
-
-      <div class="form-group">
-        <label for="full_name">Full Name</label>
-        <input type="text" id="full_name" name="full_name" placeholder="Your real name"
-               maxlength="120" value="{{ request.form.get('full_name', '') }}" autocomplete="name">
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com"
-               value="{{ request.form.get('email', '') }}" required autocomplete="email">
-      </div>
-
-      <div class="grid-2" style="gap:16px;">
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password"
-                 placeholder="Minimum 8 characters" minlength="8" required autocomplete="new-password">
+      {% if email_sent %}
+        <div style="text-align:center; padding:16px 0;">
+          <div style="font-size:40px; margin-bottom:16px;">&#x2709;&#xFE0F;</div>
+          <div style="font-size:17px; font-weight:600; color:var(--text-primary); margin-bottom:10px;">Check your email</div>
+          <div style="font-size:15px; color:var(--text-primary); line-height:1.7;">
+            We&#39;ve sent a verification link to your email address.
+            Click the link to activate your account and start scoring.
+          </div>
+          <div style="margin-top:20px; font-size:13px; color:var(--text-primary);">
+            Didn&#39;t get it? Check your spam folder, or
+            <a href="{{ url_for('register') }}" style="color:var(--gold); text-decoration:none;">try again</a>.
+          </div>
         </div>
-        <div class="form-group">
-          <label for="confirm_password">Confirm Password</label>
-          <input type="password" id="confirm_password" name="confirm_password"
-                 placeholder="Repeat password" minlength="8" required autocomplete="new-password">
+
+      {% else %}
+
+        <!-- Google OAuth — primary -->
+        <a href="{{ url_for('auth_google') }}"
+           style="display:flex; align-items:center; justify-content:center; gap:12px;
+                  width:100%; padding:14px 20px;
+                  background:#FFFFFF; border:1px solid var(--border-strong);
+                  border-radius:var(--radius-md); text-decoration:none;
+                  font-size:16px; font-weight:600; color:var(--text-primary);
+                  transition:border-color 0.2s, box-shadow 0.2s;"
+           onmouseover="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 0 2px rgba(245,197,24,0.2)'"
+           onmouseout="this.style.borderColor='var(--border-strong)'; this.style.boxShadow='none'">
+          <svg width="20" height="20" viewBox="0 0 18 18" style="flex-shrink:0;">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+          </svg>
+          Continue with Google
+        </a>
+
+        <div style="display:flex; align-items:center; gap:12px; margin:24px 0; font-size:13px; color:var(--text-primary);">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          or register with email
+          <div style="flex:1; height:1px; background:var(--border);"></div>
         </div>
-      </div>
 
-      <!-- ── Location ── -->
-      <span class="section-divider">Your Location</span>
-      <p style="font-size:15px; color:var(--text-primary); margin-bottom:16px; margin-top:-10px; line-height:1.6;">
-        Used for city rankings — "Master · 📷 · Bengaluru". Helps brands and clients find local photographers.
-      </p>
-
-      <div class="location-row">
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="country">Country <span style="color:var(--red);">*</span></label>
-          <select id="country" name="country" required onchange="updateStates()">
-            <option value="" disabled selected>Select country…</option>
-            <option value="India" {% if request.form.get('country') == 'India' %}selected{% endif %}>India</option>
-            <optgroup label="──────────">
-            {% for c in countries %}
-            {% if c != 'India' %}
-            <option value="{{ c }}" {% if request.form.get('country') == c %}selected{% endif %}>{{ c }}</option>
-            {% endif %}
-            {% endfor %}
-            </optgroup>
-          </select>
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="state">State / Province <span style="color:var(--red);">*</span></label>
-          <select id="state" name="state" required onchange="updateCities()" disabled>
-            <option value="" disabled selected>Select state…</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="city">City <span style="color:var(--red);">*</span></label>
-          <select id="city" name="city" required disabled>
-            <option value="" disabled selected>Select city…</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- ── Security question ── -->
-      <span class="section-divider">Account Recovery</span>
-      <p style="font-size:15px; color:var(--text-primary); margin-bottom:18px; margin-top:-10px;">Used to recover your account if you forget your password.</p>
-
-      <div class="form-group">
-        <label for="security_question">Security Question</label>
-        <select id="security_question" name="security_question" required>
-          <option value="" disabled {% if not request.form.get('security_question') %}selected{% endif %}>Select a question…</option>
-          {% for q in [
-            "What was the name of your first pet?",
-            "What is your mother's maiden name?",
-            "What city were you born in?",
-            "What was the make of your first car?",
-            "What is the name of the street you grew up on?",
-            "What was the name of your primary school?",
-            "What is your oldest sibling's middle name?",
-          ] %}
-          <option value="{{ q }}" {% if request.form.get('security_question') == q %}selected{% endif %}>{{ q }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="security_answer">Your Answer</label>
-        <input type="text" id="security_answer" name="security_answer"
-               placeholder="Answer (case-insensitive)" maxlength="120"
-               value="{{ request.form.get('security_answer', '') }}" required>
-      </div>
-
-      <!-- ── Member Agreement ── -->
-      <span class="section-divider">Member Agreement</span>
-
-      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
-                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:12px;">
-        <input type="checkbox" id="agreed" name="agreed" value="1"
-               {% if request.form.get('agreed') %}checked{% endif %}
-               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
-        <label for="agreed" style="font-size:16px; color:var(--text-primary); line-height:1.6; cursor:pointer;">
-          I confirm all images I submit are my original photographs — not AI-generated, not belonging to another photographer.
-          I accept the
-          <button type="button" onclick="openAgreement()"
-                  style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:16px; padding:0;">
-            Member Agreement
+        <form method="POST" action="{{ url_for('register') }}">
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Full Name</label>
+            <input type="text" name="full_name" class="auth-input"
+                   placeholder="Your name" required autocomplete="name"
+                   value="{{ full_name or '' }}">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Username</label>
+            <input type="text" name="username" class="auth-input"
+                   placeholder="letters, numbers, underscores" required autocomplete="username"
+                   value="{{ username or '' }}" pattern="[a-z0-9_]+" minlength="3">
+            <div style="font-size:12px; color:var(--text-primary); margin-top:4px; opacity:0.7;">Shown on your public profile.</div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Email</label>
+            <input type="email" name="email" class="auth-input"
+                   placeholder="you@example.com" required autocomplete="email"
+                   value="{{ email or '' }}">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Password</label>
+            <input type="password" name="password" class="auth-input"
+                   placeholder="At least 8 characters" required autocomplete="new-password" minlength="8">
+          </div>
+          <div style="margin-bottom:22px;">
+            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Confirm Password</label>
+            <input type="password" name="confirm_password" class="auth-input"
+                   placeholder="Repeat password" required autocomplete="new-password" minlength="8">
+          </div>
+          <button type="submit"
+                  style="width:100%; padding:13px; background:var(--gold); color:#000000;
+                         font-family:var(--font-mono); font-size:13px; font-weight:700;
+                         letter-spacing:1px; text-transform:uppercase; border:none;
+                         border-radius:var(--radius-sm); cursor:pointer;">
+            Create Account
           </button>
-          and understand that submitting false work results in permanent account deletion and forfeiture of all awards.
-        </label>
-      </div>
+        </form>
 
-      <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
-                  background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);">
-        <input type="checkbox" id="terms" name="terms" value="1"
-               {% if request.form.get('terms') %}checked{% endif %}
-               required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
-        <label for="terms" style="font-size:16px; color:var(--text-primary); line-height:1.6; cursor:pointer;">
-          I have read and agree to the
-          <a href="https://shutterleague.com/terms" target="_blank"
-             style="color:var(--gold); text-decoration:underline;">Terms &amp; Conditions</a>.
-        </label>
-      </div>
+        <div style="margin-top:20px; font-size:13px; color:var(--text-primary); text-align:center; line-height:1.7;">
+          By registering you agree to our
+          <a href="{{ url_for('terms') }}" style="color:var(--gold); text-decoration:none;">Terms &amp; Conditions</a>
+          and
+          <a href="{{ url_for('contest_rules') }}" style="color:var(--gold); text-decoration:none;">Programme Rules</a>.
+        </div>
 
-      <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; font-size:15px; letter-spacing:2px; margin-top:24px;">
-        Create My Account
-      </button>
-    </form>
+      {% endif %}
 
-    <div style="border-top:1px solid var(--border-subtle); margin-top:24px; padding-top:20px; text-align:center;">
-      <p style="font-size:16px; color:var(--text-primary);">
-        Already have an account?
-        <a href="{{ url_for('login') }}" style="color:var(--gold); font-weight:600; text-decoration:none; margin-left:4px;">Sign in →</a>
-      </p>
     </div>
+
   </div>
 </div>
-
-<!-- Member Agreement Modal (unchanged from before) -->
-<div id="agreementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:16px;">
-  <div style="background:var(--surface-2); border:1px solid var(--gold-dark); border-radius:var(--radius-md); max-width:580px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
-    <div style="padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="font-size:18px; font-weight:700; color:var(--gold); margin:0;">Shutter League Member Agreement</h2>
-      <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-primary); font-size:20px; cursor:pointer;">✕</button>
-    </div>
-    <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:16px; color:var(--text-primary); line-height:1.7;">
-      <p style="margin-bottom:16px;">By registering, you agree to:</p>
-      <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
-        <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
-        <li>You shoot in the correct league for your device — Camera League for DSLR/mirrorless/film, Mobile League for smartphones. Your league is chosen at subscription. EXIF data is verified on every upload.</li>
-        <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
-        <li>Fraud = all images removed, account permanently deleted, all prizes forfeited.</li>
-        <li>You retain full copyright on all images. Shutter League gets a non-exclusive licence to display them on the platform.</li>
-      </ol>
-    </div>
-    <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
-      <button onclick="closeAgreement()" class="btn" style="padding:10px 24px;">Close</button>
-      <button onclick="acceptAgreement()" class="btn btn-solid" style="padding:10px 24px;">I Agree ✓</button>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// ── Location cascade data (injected from server) ──────────────────────────
-const LOCATION_DATA = {{ location_data_json | safe }};
-
-function updateStates() {
-  const country = document.getElementById('country').value;
-  const stateEl = document.getElementById('state');
-  const cityEl  = document.getElementById('city');
-
-  stateEl.innerHTML = '<option value="" disabled selected>Select state…</option>';
-  cityEl.innerHTML  = '<option value="" disabled selected>Select city…</option>';
-  stateEl.disabled = true;
-  cityEl.disabled  = true;
-
-  if (!country || !LOCATION_DATA[country]) return;
-
-  const states = Object.keys(LOCATION_DATA[country]);
-  states.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s;
-    stateEl.appendChild(opt);
-  });
-  stateEl.disabled = false;
-}
-
-function updateCities() {
-  const country = document.getElementById('country').value;
-  const state   = document.getElementById('state').value;
-  const cityEl  = document.getElementById('city');
-
-  cityEl.innerHTML = '<option value="" disabled selected>Select city…</option>';
-  cityEl.disabled = true;
-
-  if (!country || !state) return;
-  const cities = (LOCATION_DATA[country] || {})[state] || [];
-  cities.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    cityEl.appendChild(opt);
-  });
-  cityEl.disabled = false;
-}
-
-// ── Form validation ──────────────────────────────────────────────────────
-document.querySelector('form').addEventListener('submit', function(e) {
-  const pw  = document.getElementById('password').value;
-  const cpw = document.getElementById('confirm_password').value;
-  if (pw !== cpw) {
-    e.preventDefault();
-    alert('Passwords do not match. Please check and try again.');
-    document.getElementById('confirm_password').focus();
-  }
-});
-
-// ── Modal ────────────────────────────────────────────────────────────────
-function openAgreement()  { document.getElementById('agreementModal').style.display = 'flex'; }
-function closeAgreement() { document.getElementById('agreementModal').style.display = 'none'; }
-function acceptAgreement() { document.getElementById('agreed').checked = true; closeAgreement(); }
-document.getElementById('agreementModal').addEventListener('click', function(e) {
-  if (e.target === this) closeAgreement();
-});
-
-// ── Restore selections on validation error ───────────────────────────────
-{% if request.form.get('country') %}
-document.getElementById('country').value = {{ request.form.get('country') | tojson }};
-updateStates();
-{% if request.form.get('state') %}
-document.getElementById('state').value = {{ request.form.get('state') | tojson }};
-updateCities();
-{% if request.form.get('city') %}
-document.getElementById('city').value = {{ request.form.get('city') | tojson }};
-{% endif %}
-{% endif %}
-{% endif %}
-</script>
 {% endblock %}
