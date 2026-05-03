@@ -381,6 +381,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
                 # v53  -  POTY banner + contest framework
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS poty_banner_dismissed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token VARCHAR(64)",
                 # v53  -  BOW submission fields
                 "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS location VARCHAR(180)",
                 "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS period_of_work VARCHAR(120)",
@@ -930,10 +931,9 @@ def index():
                            now=datetime.utcnow())
 
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        # Judge already logged in -- send to jury dashboard
         _jc = db.session.execute(
             db.text("SELECT id FROM judges WHERE user_id = :uid AND status = 'approved'"),
             {'uid': current_user.id}
@@ -941,7 +941,144 @@ def register():
         if _jc:
             return redirect(url_for('judge_dashboard'))
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        import secrets as _sec
+        full_name  = request.form.get('full_name',  '').strip()
+        username   = request.form.get('username',   '').strip().lower()
+        email      = request.form.get('email',      '').strip().lower()
+        password   = request.form.get('password',   '')
+        confirm_pw = request.form.get('confirm_password', '')
+
+        # -- Validation ----------------------------------------------------
+        errors = []
+        if not full_name:
+            errors.append('Please enter your full name.')
+        if not username or len(username) < 3:
+            errors.append('Username must be at least 3 characters.')
+        import re as _re
+        if not _re.match(r'^[a-z0-9_]+$', username):
+            errors.append('Username may only contain letters, numbers and underscores.')
+        if not email or '@' not in email:
+            errors.append('Please enter a valid email address.')
+        if len(password) < 8:
+            errors.append('Password must be at least 8 characters.')
+        if password != confirm_pw:
+            errors.append('Passwords do not match.')
+
+        if not errors:
+            if User.query.filter_by(email=email).first():
+                errors.append('An account with that email already exists. Please sign in.')
+            if User.query.filter_by(username=username).first():
+                errors.append('That username is taken. Please choose another.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('register.html',
+                                   full_name=full_name, username=username, email=email)
+
+        # -- Create user (inactive until email verified) -------------------
+        token = _sec.token_urlsafe(32)
+        user  = User(
+            email               = email,
+            username            = username,
+            full_name           = full_name,
+            password_hash       = generate_password_hash(password),
+            is_active           = False,
+            onboarding_complete = False,
+            agreed_at           = datetime.utcnow(),
+            signup_ip           = request.remote_addr,
+        )
+        # Store token via direct attribute (column added by migration)
+        user.email_verify_token = token
+        db.session.add(user)
+        db.session.commit()
+
+        # -- Send verification email ---------------------------------------
+        _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+        _vurl = f'{_site}/verify-email/{token}'
+        try:
+            send_email(
+                to_addresses=[email],
+                subject='[Shutter League] Verify your email address',
+                html_body=(
+                    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                    'padding:32px;background:#fffef9;color:#111111;">'
+                    '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
+                    'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                    '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">'
+                    'Verify your email address</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + full_name + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">'
+                    'Thanks for registering. Click the button below to verify your email and activate your account.</p>'
+                    '<a href="' + _vurl + '" style="display:inline-block;background:#F5C518;color:#000000;'
+                    'font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;'
+                    'text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;'
+                    'margin:20px 0 8px 0;">Verify Email &#8594;</a>'
+                    '<p style="font-size:14px;color:#111111;margin-top:8px;">'
+                    'Or copy this link: <a href="' + _vurl + '" style="color:#F5C518;">' + _vurl + '</a></p>'
+                    '<p style="font-size:13px;color:#888888;margin-top:24px;">'
+                    'If you did not register, please ignore this email.</p>'
+                    '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                    '</div>'
+                ),
+                text_body=(
+                    'Hi ' + full_name + ',\n\n'
+                    'Thanks for registering with Shutter League.\n\n'
+                    'Verify your email here:\n' + _vurl + '\n\n'
+                    'If you did not register, please ignore this email.\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _e:
+            app.logger.error(f'[register] verification email failed: {_e}')
+
+        flash(
+            'Account created! Please check your email and click the verification link to activate your account.',
+            'success'
+        )
+        return render_template('register.html', email_sent=True)
+
+    return render_template('register.html')
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    """Activate account when user clicks the link in their verification email."""
+    user = User.query.filter_by(email_verify_token=token).first()
+    if not user:
+        flash('Verification link is invalid or has already been used. Please register again or contact support.', 'error')
+        return redirect(url_for('register'))
+    user.is_active           = True
+    user.email_verify_token  = None
+    db.session.commit()
+    login_user(user)
+    flash('Email verified! Welcome to Shutter League.', 'success')
+    return redirect(url_for('onboarding'))
+
+
+@app.route('/set-password', methods=['GET', 'POST'])
+@login_required
+def set_password():
+    """Allow existing Google OAuth users to add a password to their account."""
+    if current_user.password_hash:
+        flash('Your account already has a password.', 'info')
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        password   = request.form.get('password', '')
+        confirm_pw = request.form.get('confirm_password', '')
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return render_template('set_password.html')
+        if password != confirm_pw:
+            flash('Passwords do not match.', 'error')
+            return render_template('set_password.html')
+        current_user.password_hash = generate_password_hash(password)
+        db.session.commit()
+        flash('Password set! You can now sign in with your email and password.', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('set_password.html')
 
 
 @app.route('/auth/google')
