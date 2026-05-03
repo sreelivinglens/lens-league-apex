@@ -91,6 +91,9 @@
       <li><a href="#termination">Termination</a></li>
       <li><a href="#disputes">Disputes &amp; Governing Law</a></li>
       <li><a href="#amendments">Amendments</a></li>
+      <li><a href="#payments-security">Payments &amp; Card Security</a></li>
+      <li><a href="#prohibited-use">Prohibited Use &amp; Anti-Fraud</a></li>
+      <li><a href="#grievance">Grievance Redressal</a></li>
     </ol>
   </div>
 
@@ -125,7 +128,7 @@
   <!-- 3 -->
   <div class="terms-section" id="subscriptions">
     <h2><span>03</span> Subscriptions &amp; Payments</h2>
-    <p>Subscriptions are billed in advance via Razorpay. By subscribing, you authorise {{ platform_name }} to charge the applicable fee to your payment method on a recurring basis.</p>
+    <p>Subscriptions are billed in advance via our payment gateway provider. By subscribing, you authorise {{ platform_name }} to charge the applicable fee to your payment method on a recurring basis.</p>
     <ul>
       <li>Subscription fees are non-refundable except as set out in our <a href="{{ url_for('refund_policy') }}" style="color:var(--gold);">Refund Policy</a>.</li>
       <li>You may cancel at any time from your dashboard. Access continues to the end of the current billing period.</li>
@@ -254,6 +257,30 @@
   <div class="terms-section" id="amendments">
     <h2><span>13</span> Amendments</h2>
     <p>{{ platform_name }} reserves the right to amend these Terms &amp; Conditions at any time. Material changes will be communicated to registered Members via the platform with a minimum of 14 days' notice. Continued use of the platform after the effective date of any change constitutes acceptance of the amended terms.</p>
+
+    <h2><span>14</span> Payments &amp; Card Security</h2>
+    <p>All payments on {{ platform_name }} are processed exclusively through RBI-authorised third-party payment gateways. <strong>{{ platform_name }} does not collect, process, or store your card number, CVV, UPI PIN, net banking credentials, or any other payment authentication data.</strong> All such data is handled directly and securely by the relevant payment gateway under their own PCI-DSS compliance framework.</p>
+    <p>By making a payment, you agree to the terms and privacy policy of the relevant payment gateway. Subscription fees are charged at the start of each billing period and are non-refundable except as expressly stated in the <a href="{{ url_for('refund_policy') }}" style="color:var(--gold);">Refund Policy</a>.</p>
+
+    <h2><span>15</span> Prohibited Use &amp; Anti-Fraud</h2>
+    <p>You must not use {{ platform_name }} or its payment infrastructure for any unlawful, fraudulent, or prohibited purpose including but not limited to:</p>
+    <ul>
+      <li>Using stolen, unauthorised, or fraudulently obtained payment credentials.</li>
+      <li>Initiating chargebacks or payment reversals in bad faith after receiving services.</li>
+      <li>Laundering money or using the platform to disguise the proceeds of unlawful activity.</li>
+      <li>Creating multiple accounts to circumvent subscription limits or programme eligibility rules.</li>
+      <li>Any activity that violates applicable Indian law, including the Prevention of Money Laundering Act, 2002 (PMLA) and the Information Technology Act, 2000.</li>
+    </ul>
+    <p>{{ platform_name }} reserves the right to suspend accounts, withhold funds, and report suspected fraudulent activity to the relevant authorities without prior notice.</p>
+
+    <h2><span>16</span> Grievance Redressal</h2>
+    <p>In accordance with the Consumer Protection (E-Commerce) Rules, 2020 and the Information Technology (Intermediary Guidelines) Rules, {{ platform_name }} has designated a Grievance Officer to address user complaints and concerns.</p>
+    <p><strong>Grievance Officer</strong><br>
+    Shutter League<br>
+    Bengaluru, Karnataka, India<br>
+    Email: <span style="color:var(--gold);">{{ contact_email }}</span><br>
+    Subject line: <strong>Grievance — [your username]</strong></p>
+    <p>All grievances will be acknowledged within <strong>48 hours</strong> of receipt and resolved within <strong>30 days</strong>. If you are not satisfied with the resolution, you may approach the relevant consumer forum or regulatory authority.</p>
   </div>
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
