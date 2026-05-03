@@ -967,8 +967,47 @@ def register():
             errors.append('Passwords do not match.')
 
         if not errors:
-            if User.query.filter_by(email=email).first():
-                errors.append('An account with that email already exists. Please sign in.')
+            _existing_email = User.query.filter_by(email=email).first()
+            if _existing_email:
+                if not _existing_email.is_active:
+                    # Unverified account — resend verification instead of blocking
+                    import secrets as _sec2
+                    _existing_email.email_verify_token = _sec2.token_urlsafe(32)
+                    db.session.commit()
+                    _site2 = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    _vurl2 = f'{_site2}/verify-email/{_existing_email.email_verify_token}'
+                    try:
+                        send_email(
+                            to_addresses=[email],
+                            subject='[Shutter League] Verify your email address',
+                            html_body=(
+                                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
+                                'padding:32px;background:#fffef9;color:#111111;">'
+                                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;'
+                                'text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">'
+                                'Verify your email address</h2>'
+                                '<p style="font-size:16px;line-height:1.7;color:#111111;">'
+                                'Hi ' + (_existing_email.full_name or email) + ',</p>'
+                                '<p style="font-size:16px;line-height:1.7;color:#111111;">'
+                                'Here is a fresh verification link for your account.</p>'
+                                '<a href="' + _vurl2 + '" style="display:inline-block;background:#F5C518;color:#000000;'
+                                'font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;'
+                                'text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;'
+                                'margin:20px 0 8px 0;">Verify Email &#8594;</a>'
+                                '<p style="font-size:14px;color:#111111;margin-top:8px;">'
+                                'Or copy: <a href="' + _vurl2 + '" style="color:#F5C518;">' + _vurl2 + '</a></p>'
+                                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                                '</div>'
+                            ),
+                            text_body='Hi,\n\nFresh verification link:\n' + _vurl2 + '\n\n-- Shutter League'
+                        )
+                    except Exception as _e:
+                        app.logger.error(f'[register resend] {_e}')
+                    flash('We sent a fresh verification link to your email. Please check your inbox.', 'success')
+                    return render_template('register.html', email_sent=True)
+                else:
+                    errors.append('An account with that email already exists. Please sign in.')
             if User.query.filter_by(username=username).first():
                 errors.append('That username is taken. Please choose another.')
 
