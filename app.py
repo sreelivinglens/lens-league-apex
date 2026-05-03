@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import threading
 from datetime import datetime, date, timedelta
 from functools import wraps
 
@@ -1719,226 +1720,195 @@ def upload():
                 ContestEntry.query.filter_by(user_id=current_user.id, contest_month=_month).delete()
                 db.session.commit()
 
+        # -- Background scoring thread -------------------------------------
+        # Fire-and-forget: score in background so user gets a response in
+        # 5-10s instead of waiting 45-90s for the Anthropic API + card build.
+        # The browser polls /score-status/<image_id> every 2s until done.
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
-            try:
+            img.status = 'processing'
+            db.session.commit()
+
+            def _score_in_background(image_id, _uid):
                 import traceback
                 from engine.auto_score import auto_score, build_audit_data
                 from engine.compositor import build_card1
-
-                result = auto_score(image_path=img.thumb_path, genre=img.genre,
-                                    title=img.asset_name, photographer=img.photographer_name,
-                                    subject=img.subject, location=img.location)
-
-                # -- AI suspicion check ------------------------------------
-                ai_suspicion = float(result.get('ai_suspicion', 0.0))
-                img.ai_suspicion        = ai_suspicion
-                img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
-                img.needs_review        = bool(result.get('needs_review', False))
-
-                if ai_suspicion >= 0.7:
-                    # TIER 3  -  Auto-flagged: almost certainly AI-generated
-                    img.score            = 0.0
-                    img.tier = 'Rookie'
-                    img.dod_score        = 0.0
-                    img.disruption_score = 0.0
-                    img.dm_score         = 0.0
-                    img.wonder_score     = 0.0
-                    img.aq_score         = 0.0
-                    img.archetype        = ''
-                    img.soul_bonus       = False
-                    img.status           = 'scored'
-                    img.scored_at        = datetime.utcnow()
-                    img.is_flagged       = True
-                    img.needs_review     = True
-                    img.is_public        = False
-                    img.flagged_reason   = f'AI generation detected (suspicion: {ai_suspicion:.2f}). {img.ai_suspicion_reason or ""}'.strip()
-                    img.flagged_at       = datetime.utcnow()
-                    db.session.commit()
+                with app.app_context():
                     try:
-                        _u = User.query.get(img.user_id)
-                        _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-                        _iurl = f'https://shutterleague.com/image/{img.id}'
-                        send_email(
-                            to_addresses=[_u.email] if _u else [],
-                            subject='[Shutter League] Image Flagged — AI Generation Detected',
-                            html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been flagged as potentially AI-generated.</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
-                            text_body=('Hi ' + _uname + ',\n\nYour image "' + (img.asset_name or 'Untitled') + '" was flagged as potentially AI-generated.\n\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
-                        )
-                        send_email(
-                            to_addresses=[ADMIN_EMAIL],
-                            subject='[Admin] AI Flag — ' + (img.asset_name or 'Untitled'),
-                            html_body=('<p>Auto-flagged AI image.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>AI Suspicion: ' + str(round(ai_suspicion, 2)) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
-                            text_body=('AI Flag\nImage: ' + (img.asset_name or 'Untitled') + '\nSuspicion: ' + str(round(ai_suspicion, 2)) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
-                        )
-                    except Exception as _me:
-                        app.logger.error(f'[AI flag email error] {_me}')
-                    flash(
-                        ' This image has been flagged as potentially AI-generated and cannot be submitted. '
-                        'Only original photographs taken by you are accepted. '
-                        'If you believe this is an error, contact '+CONTACT_EMAIL+'.',
-                        'error'
-                    )
-                else:
-                    # Score normally
-                    img.dod_score        = float(result.get('dod',0))
-                    img.disruption_score = float(result.get('disruption',0))
-                    img.dm_score         = float(result.get('dm',0))
-                    img.wonder_score     = float(result.get('wonder',0))
-                    img.aq_score         = float(result.get('aq',0))
-                    img.score            = float(result.get('score',0))
-                    img.tier             = get_tier(float(result.get('score',0)))
-                    img.archetype        = result.get('archetype','')
-                    img.soul_bonus       = result.get('soul_bonus',False)
-                    img.status           = 'scored'
-                    img.scored_at        = datetime.utcnow()
-                    audit = build_audit_data(result, img)
-                    img.set_audit(audit)
+                        _img = Image.query.get(image_id)
+                        if not _img:
+                            return
 
-                    # TIER 2  -  Needs human review:
-                    # (a) AI suspicion in amber zone 0.4-0.69, OR
-                    # (b) Grandmaster score (9.0+)  -  always requires RAW verification
-                    if ai_suspicion >= 0.4 or img.score >= 9.0:
-                        img.needs_review    = True
-                        img.is_public       = False   # held from public until admin clears
-                        review_reason_parts = []
-                        if ai_suspicion >= 0.4:
-                            review_reason_parts.append(f'AI suspicion score {ai_suspicion:.2f} (amber zone)')
-                        if img.score >= 9.0:
-                            review_reason_parts.append(f'Grandmaster score {img.score} requires RAW verification')
-                        img.flagged_reason  = ' . '.join(review_reason_parts)
+                        result = auto_score(
+                            image_path=_img.thumb_path, genre=_img.genre,
+                            title=_img.asset_name, photographer=_img.photographer_name,
+                            subject=_img.subject, location=_img.location
+                        )
 
-                        try:
-                            _u = User.query.get(img.user_id)
-                            _uname = (_u.full_name or _u.username) if _u else 'Photographer'
-                            _iurl = f'https://shutterleague.com/image/{img.id}'
-                            _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-                            if img.score >= 9.0 and ai_suspicion < 0.4:
-                                # Set flag + create raw_submissions record automatically
-                                img.raw_verification_required = True
-                                _deadline = datetime.utcnow() + timedelta(days=7)
-                                _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
-                                try:
-                                    db.session.execute(db.text(
-                                        "INSERT INTO raw_submissions "
-                                        "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
-                                        "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
-                                        "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
-                                    ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
-                                except Exception:
-                                    pass
-                                # Email user — branded, direct submit link
+                        ai_suspicion = float(result.get('ai_suspicion', 0.0))
+                        _img.ai_suspicion        = ai_suspicion
+                        _img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
+                        _img.needs_review        = bool(result.get('needs_review', False))
+
+                        if ai_suspicion >= 0.7:
+                            # TIER 3 — auto-flagged AI-generated
+                            _img.score            = 0.0
+                            _img.tier             = 'Rookie'
+                            _img.dod_score        = 0.0
+                            _img.disruption_score = 0.0
+                            _img.dm_score         = 0.0
+                            _img.wonder_score     = 0.0
+                            _img.aq_score         = 0.0
+                            _img.archetype        = ''
+                            _img.soul_bonus       = False
+                            _img.status           = 'scored'
+                            _img.scored_at        = datetime.utcnow()
+                            _img.is_flagged       = True
+                            _img.needs_review     = True
+                            _img.is_public        = False
+                            _img.flagged_reason   = f'AI generation detected (suspicion: {ai_suspicion:.2f}). {_img.ai_suspicion_reason or ""}'.strip()
+                            _img.flagged_at       = datetime.utcnow()
+                            db.session.commit()
+                            try:
+                                _u = User.query.get(_img.user_id)
+                                _uname = (_u.full_name or _u.username) if _u else 'Photographer'
+                                _iurl = f'https://shutterleague.com/image/{_img.id}'
                                 send_email(
                                     to_addresses=[_u.email] if _u else [],
-                                    subject='[Shutter League] Grandmaster Score — RAW Verification Required',
-                                    html_body=(
-                                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
-                                        '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                                        '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
-                                        '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(img.score) + '</strong> (' + (img.tier or '') + ').</p>'
-                                        '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
-                                        '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
-                                        '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
-                                        '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                                        '</div>'
-                                    )
+                                    subject='[Shutter League] Image Flagged — AI Generation Detected',
+                                    html_body=('<p>Hi ' + _uname + ',</p><p>Your image <strong>' + (_img.asset_name or 'Untitled') + '</strong> has been flagged as potentially AI-generated.</p><p>Contact <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a> if this is an error.</p><p>The Shutter League Team</p>'),
+                                    text_body=('Hi ' + _uname + ',\n\nYour image "' + (_img.asset_name or 'Untitled') + '" was flagged as potentially AI-generated.\n\nContact ' + CONTACT_EMAIL + ' if this is an error.\n\nThe Shutter League Team')
                                 )
-                                # Notify admin
                                 send_email(
                                     to_addresses=[ADMIN_EMAIL],
-                                    subject='[Admin] Grandmaster RAW Required — ' + (img.asset_name or 'Untitled') + ' (' + str(img.score) + ')',
-                                    html_body=('<p>Grandmaster image auto-flagged for RAW verification. Submission record created. User notified with direct submit link.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Photographer: ' + (img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 7 days</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(img.id) + '">View in RAW Queue</a></p>'),
-                                    text_body=('Grandmaster RAW auto-flagged\nImage: ' + (img.asset_name or 'Untitled') + '\nScore: ' + str(img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
+                                    subject='[Admin] AI Flag — ' + (_img.asset_name or 'Untitled'),
+                                    html_body=('<p>Auto-flagged AI image.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>AI Suspicion: ' + str(round(ai_suspicion, 2)) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                    text_body=('AI Flag\nImage: ' + (_img.asset_name or 'Untitled') + '\nSuspicion: ' + str(round(ai_suspicion, 2)) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
                                 )
-                            else:
-                                send_email(
-                                    to_addresses=[ADMIN_EMAIL],
-                                    subject='[Admin] Image Flagged for Review — ' + (img.asset_name or 'Untitled'),
-                                    html_body=('<p>Image flagged for review.</p><ul><li>Image: ' + (img.asset_name or 'Untitled') + '</li><li>Score: ' + str(img.score) + ' — ' + (img.tier or '') + '</li><li>Reason: ' + (img.flagged_reason or '') + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
-                                    text_body=('Flagged for review.\nImage: ' + (img.asset_name or 'Untitled') + '\nReason: ' + (img.flagged_reason or '') + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
-                                )
-                        except Exception as _me:
-                            app.logger.error(f'[review notification email error] {_me}')
+                            except Exception as _me:
+                                app.logger.error(f'[AI flag email error] {_me}')
 
-                    db.session.commit()
-
-                    try:
-                        card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                                      f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                                      f"{img.genre}_{img.score}.jpg")
-                        card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                        build_card1(img.thumb_path, audit, card_path)
-                        img.card_path = card_path
-                        card_url = _r2_upload_card(card_path, uid + '_card')
-                        if card_url:
-                            img.card_url = card_url
-                        db.session.commit()
-                    except Exception as card_err:
-                        app.logger.error(f'[upload card build error] {traceback.format_exc()}')
-
-                    flash(f'Auto-scored! LL-Score: {img.score}  -  {img.tier}', 'success')
-                    if getattr(img, 'needs_review', False):
-                        if img.score >= 9.0 and ai_suspicion < 0.4:
-                            flash(
-                                f' Grandmaster score! Your image has been held for RAW verification. '
-                                f'Check your email for a direct link to submit your original RAW file within 7 days.',
-                                'warning'
-                            )
                         else:
-                            flash(
-                                f' Your image has been flagged for human review before going public. '
-                                f'This is usually resolved within 24-48 hours. '
-                                f'Contact {CONTACT_EMAIL} if you have questions.',
-                                'warning'
-                            )
-            except Exception as e:
-                app.logger.error(f'[upload scoring error] {traceback.format_exc()}')
-                db.session.commit()
-                err_str = str(e)
-                if '529' in err_str or 'overloaded' in err_str.lower():
-                    flash('Image uploaded   -  AI servers are currently busy (peak hours). '
-                          'Your image has been saved. Please score it from the dashboard '
-                          'during off-peak hours: 6am-11am IST or 11pm-5am IST.', 'warning')
-                else:
-                    flash(f'Uploaded. Auto-scoring failed: {e}.', 'warning')
+                            # Score normally
+                            _img.dod_score        = float(result.get('dod', 0))
+                            _img.disruption_score = float(result.get('disruption', 0))
+                            _img.dm_score         = float(result.get('dm', 0))
+                            _img.wonder_score     = float(result.get('wonder', 0))
+                            _img.aq_score         = float(result.get('aq', 0))
+                            _img.score            = float(result.get('score', 0))
+                            _img.tier             = get_tier(float(result.get('score', 0)))
+                            _img.archetype        = result.get('archetype', '')
+                            _img.soul_bonus       = result.get('soul_bonus', False)
+                            _img.status           = 'scored'
+                            _img.scored_at        = datetime.utcnow()
+                            audit = build_audit_data(result, _img)
+                            _img.set_audit(audit)
+
+                            # TIER 2 — needs human review
+                            if ai_suspicion >= 0.4 or _img.score >= 9.0:
+                                _img.needs_review = True
+                                _img.is_public    = False
+                                review_reason_parts = []
+                                if ai_suspicion >= 0.4:
+                                    review_reason_parts.append(f'AI suspicion score {ai_suspicion:.2f} (amber zone)')
+                                if _img.score >= 9.0:
+                                    review_reason_parts.append(f'Grandmaster score {_img.score} requires RAW verification')
+                                _img.flagged_reason = ' . '.join(review_reason_parts)
+
+                                try:
+                                    _u = User.query.get(_img.user_id)
+                                    _uname = (_u.full_name or _u.username) if _u else 'Photographer'
+                                    _iurl = f'https://shutterleague.com/image/{_img.id}'
+                                    _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                                    if _img.score >= 9.0 and ai_suspicion < 0.4:
+                                        _img.raw_verification_required = True
+                                        _deadline = datetime.utcnow() + timedelta(days=7)
+                                        _submit_url = f'{_site_url}/raw/submit/weekly/{_img.id}'
+                                        try:
+                                            db.session.execute(db.text(
+                                                "INSERT INTO raw_submissions "
+                                                "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                                                "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
+                                                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                                            ), {'iid': _img.id, 'uid': _img.user_id, 'dl': _deadline})
+                                        except Exception:
+                                            pass
+                                        send_email(
+                                            to_addresses=[_u.email] if _u else [],
+                                            subject='[Shutter League] Grandmaster Score — RAW Verification Required',
+                                            html_body=(
+                                                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                                                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                                                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (_img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(_img.score) + '</strong> (' + (_img.tier or '') + ').</p>'
+                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
+                                                '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                                                '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
+                                                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                                                '</div>'
+                                            )
+                                        )
+                                        send_email(
+                                            to_addresses=[ADMIN_EMAIL],
+                                            subject='[Admin] Grandmaster RAW Required — ' + (_img.asset_name or 'Untitled') + ' (' + str(_img.score) + ')',
+                                            html_body=('<p>Grandmaster image auto-flagged for RAW verification. Submission record created. User notified with direct submit link.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' — ' + (_img.tier or '') + '</li><li>Photographer: ' + (_img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 7 days</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(_img.id) + '">View in RAW Queue</a></p>'),
+                                            text_body=('Grandmaster RAW auto-flagged\nImage: ' + (_img.asset_name or 'Untitled') + '\nScore: ' + str(_img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
+                                        )
+                                    else:
+                                        send_email(
+                                            to_addresses=[ADMIN_EMAIL],
+                                            subject='[Admin] Image Flagged for Review — ' + (_img.asset_name or 'Untitled'),
+                                            html_body=('<p>Image flagged for review.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' — ' + (_img.tier or '') + '</li><li>Reason: ' + (_img.flagged_reason or '') + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li></ul><p><a href="' + _iurl + '">Review</a></p>'),
+                                            text_body=('Flagged for review.\nImage: ' + (_img.asset_name or 'Untitled') + '\nReason: ' + (_img.flagged_reason or '') + '\nUser: ' + (_u.email if _u else 'unknown') + '\nReview: ' + _iurl)
+                                        )
+                                except Exception as _me:
+                                    app.logger.error(f'[review notification email error] {_me}')
+
+                            db.session.commit()
+
+                            try:
+                                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                              f"{secure_filename((_img.photographer_name or 'unknown').replace(' ',''))}_"
+                                              f"{_img.genre}_{_img.score}.jpg")
+                                card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                                build_card1(_img.thumb_path, audit, card_path)
+                                _img.card_path = card_path
+                                card_url = _r2_upload_card(card_path, _uid + '_card')
+                                if card_url:
+                                    _img.card_url = card_url
+                                db.session.commit()
+                            except Exception:
+                                app.logger.error(f'[upload card build error] {traceback.format_exc()}')
+
+                    except Exception as e:
+                        app.logger.error(f'[background scoring error] {traceback.format_exc()}')
+                        try:
+                            _img = Image.query.get(image_id)
+                            if _img and _img.status == 'processing':
+                                _img.status = 'error'
+                                db.session.commit()
+                        except Exception:
+                            pass
+
+            threading.Thread(
+                target=_score_in_background,
+                args=(img.id, uid),
+                daemon=True
+            ).start()
+
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
-        # XHR (upload.html) gets JSON so JS controls the redirect
-        # Standard form POST (fallback) gets the normal redirect
+        # XHR (upload.html) gets JSON — return 'processing' immediately.
+        # Browser polls /score-status/<image_id> every 2s until scored.
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            if getattr(img, 'is_flagged', False):
-                return jsonify({
-                    'status': 'flagged',
-                    'image_id': img.id,
-                    'message': ' This image has been flagged as potentially AI-generated and cannot be submitted. Only original photographs taken by you are accepted. If you believe this is an error, contact '+CONTACT_EMAIL+'.',
-                    'redirect': url_for('dashboard')
-                })
-            if getattr(img, 'needs_review', False):
-                if img.score >= 9.0:
-                    msg = (f' Grandmaster score ({img.score})! Your image has been held for RAW verification. '
-                           f'Check your email for a direct link to submit your RAW file within 7 days.')
-                else:
-                    msg = (' Your image has been held for human review before going public. '
-                           'Usually resolved within 24-48 hours.')
-                return jsonify({
-                    'status': 'needs_review',
-                    'image_id': img.id,
-                    'score': img.score,
-                    'tier': img.tier,
-                    'message': msg,
-                    'redirect': url_for('image_detail', image_id=img.id)
-                })
             _next = request.args.get('next', '')
-            _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
             return jsonify({
-                'status': 'ok',
+                'status': 'processing',
                 'image_id': img.id,
-                'score': img.score,
-                'tier': img.tier,
-                'redirect': _redir
+                'next': _next
             })
-        # If user came from challenge submit page, send them back there
+        # Non-XHR fallback — redirect straight to image detail
         next_page = request.args.get('next', '')
         if next_page == 'challenge':
             return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
@@ -1946,6 +1916,61 @@ def upload():
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
                            next_page=request.args.get('next', ''))
+
+
+@app.route('/score-status/<int:image_id>')
+@login_required
+def score_status(image_id):
+    """Polling endpoint — upload.html checks this every 2s while background scoring runs."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    _next = request.args.get('next', '')
+
+    if img.status == 'processing':
+        return jsonify({'status': 'processing'})
+
+    if img.status == 'error':
+        return jsonify({
+            'status': 'error',
+            'message': 'Scoring failed. Your image has been saved — please retry from your dashboard.'
+        })
+
+    if getattr(img, 'is_flagged', False):
+        return jsonify({
+            'status': 'flagged',
+            'image_id': img.id,
+            'message': ('&#x1F6AB; This image has been flagged as potentially AI-generated and cannot be submitted. '
+                        'Only original photographs taken by you are accepted. '
+                        'If you believe this is an error, contact ' + CONTACT_EMAIL + '.'),
+            'redirect': url_for('dashboard')
+        })
+
+    if getattr(img, 'needs_review', False):
+        if img.score and img.score >= 9.0:
+            msg = (f'&#x2728; Grandmaster score ({img.score:.2f})! Your image has been held for RAW verification. '
+                   f'Check your email for a direct link to submit your RAW file within 7 days.')
+        else:
+            msg = ('&#x26A0; Your image has been held for human review before going public. '
+                   'Usually resolved within 24-48 hours.')
+        return jsonify({
+            'status': 'needs_review',
+            'image_id': img.id,
+            'score': img.score,
+            'tier': img.tier,
+            'message': msg,
+            'redirect': url_for('image_detail', image_id=img.id)
+        })
+
+    _redir = (url_for('challenge_submit') + f'?highlight={img.id}') if _next == 'challenge' else url_for('image_detail', image_id=img.id)
+    return jsonify({
+        'status': 'ok',
+        'image_id': img.id,
+        'score': img.score,
+        'tier': img.tier,
+        'redirect': _redir
+    })
 
 
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
