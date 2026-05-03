@@ -424,7 +424,8 @@
                 <span class="admin-tile-review">⚖️ REF</span>
               {% endif %}
               {% if img.ai_suspicion and img.ai_suspicion >= 0.4 %}
-              <span class="admin-tile-ai" style="color:{% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold){% endif %};">
+              <span class="admin-tile-ai" style="color:{% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold){% endif %};"
+                    title="{{ img.ai_suspicion_reason or '' }}">
                 AI {{ '%.2f'|format(img.ai_suspicion) }}
               </span>
               {% endif %}
@@ -448,11 +449,15 @@
                 <div class="admin-tile-score">{{ img.score or '—' }}</div>
                 <div class="admin-tile-tier">{{ img.tier or '' }}</div>
               </div>
-              {% if img.flagged_reason %}
-              <div style="font-size:11px; color:#f08080; margin-top:4px; line-height:1.3; word-break:break-word;"
+              {% if img.flagged_reason %}\n              <div style="font-size:11px; color:#f08080; margin-top:4px; line-height:1.3; word-break:break-word;"
                    title="{{ img.flagged_reason }}">⚠ {{ img.flagged_reason[:60] }}{% if img.flagged_reason|length > 60 %}…{% endif %}</div>
               {% elif img.needs_review and not img.is_flagged %}
               <div style="font-size:11px; color:var(--gold); margin-top:4px;">🔍 Pending human review</div>
+              {% endif %}
+              {% if img.ai_suspicion and img.ai_suspicion >= 0.4 and img.ai_suspicion_reason and not img.is_flagged %}
+              <div style="font-size:10px; color:#b0a090; margin-top:3px; line-height:1.3; word-break:break-word;">
+                {{ img.ai_suspicion_reason[:80] }}{% if img.ai_suspicion_reason|length > 80 %}…{% endif %}
+              </div>
               {% endif %}
             </div>
 
