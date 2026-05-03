@@ -529,9 +529,19 @@ with app.app_context():
             print(f'open_contest_entries drop constraint warning: {ce}')
         try:
             with db.engine.connect() as conn_fix2:
-                conn_fix2.execute(db.text(
-                    "ALTER TABLE open_contest_entries ADD CONSTRAINT IF NOT EXISTS uq_oce_user_image_year UNIQUE (user_id, image_id, platform_year)"
-                ))
+                conn_fix2.execute(db.text("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_constraint
+                            WHERE conname = 'uq_oce_user_image_year'
+                        ) THEN
+                            ALTER TABLE open_contest_entries
+                            ADD CONSTRAINT uq_oce_user_image_year
+                            UNIQUE (user_id, image_id, platform_year);
+                        END IF;
+                    END$$;
+                """))
                 conn_fix2.commit()
             print('open_contest_entries constraint fix OK.')
         except Exception as ce:
