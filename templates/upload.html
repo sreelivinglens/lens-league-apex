@@ -774,9 +774,9 @@
     const status    = document.getElementById('overlayStatus');
     const sub       = document.getElementById('overlaySubstatus');
     const breath    = document.getElementById('breathLabel');
-    // TOTAL covers the fast upload phase. After that the ring stays full
-    // and the clock shows … while the polling loop waits for the score.
-    const TOTAL = 15, CIRC = 195;
+    // Ring fills over FILL_SECS then stays full. Clock counts up from 0
+    // throughout — no countdown, no jump, continuous forward motion.
+    const FILL_SECS = 15, CIRC = 195;
 
     const phases = [
       { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',    ss:'Sending to server securely.' },
@@ -785,7 +785,8 @@
     ];
 
     overlay.classList.add('active');
-    clockSecs.textContent = TOTAL;
+    clockSecs.textContent = '0';
+    clockRing.style.strokeDashoffset = CIRC; // start empty
 
     let bp = 0;
     const bc = setInterval(() => {
@@ -796,14 +797,12 @@
     let elapsed = 0;
     const tick = setInterval(() => {
       elapsed++;
-      if (elapsed <= TOTAL) {
-        clockSecs.textContent = Math.max(TOTAL - elapsed, 0);
-        clockRing.style.strokeDashoffset = CIRC - (Math.min(elapsed / TOTAL, 1) * CIRC);
-      } else {
-        // Count up so user sees real elapsed time — no frozen dots
-        clockSecs.textContent = elapsed;
-        clockRing.style.strokeDashoffset = 0; // ring stays full
-      }
+      // Clock always counts up — 0, 1, 2, 3 ... no reversal
+      clockSecs.textContent = elapsed;
+      // Ring fills smoothly up to FILL_SECS, then stays full
+      const fill = Math.min(elapsed / FILL_SECS, 1);
+      clockRing.style.strokeDashoffset = CIRC - (fill * CIRC);
+      // Phase labels
       const p = phases.find(x => elapsed >= x.from && elapsed < x.to);
       if (p) {
         phase.textContent  = p.p;
