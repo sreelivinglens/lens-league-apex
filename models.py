@@ -1009,6 +1009,22 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
     return rating
 
 
+class FlaggedPhash(db.Model):
+    """
+    Blocklist of perceptual hashes for confirmed AI-generated images.
+    Populated automatically when admin flags an image as AI.
+    Checked at upload — matching images are silently rejected.
+    """
+    __tablename__ = 'flagged_phashes'
+
+    id         = db.Column(db.Integer,  primary_key=True)
+    phash      = db.Column(db.String(64), nullable=False, index=True)
+    image_id   = db.Column(db.Integer,  nullable=True)   # source image for reference
+    flagged_by = db.Column(db.Integer,  nullable=True)   # admin user_id
+    flagged_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    note       = db.Column(db.Text,     nullable=True)
+
+
 def _check_rater_bias(rater_id):
     MIN_RATINGS = 20; THRESHOLD = 2.5; ZONE3_DELTA = 3.0
 

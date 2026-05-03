@@ -345,6 +345,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
                 "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
+                "CREATE TABLE IF NOT EXISTS flagged_phashes (id SERIAL PRIMARY KEY, phash VARCHAR(64) NOT NULL, image_id INTEGER, flagged_by INTEGER, flagged_at TIMESTAMP DEFAULT NOW(), note TEXT)",
                 # v27 peer rating columns  -  updated
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
@@ -1801,6 +1802,17 @@ def upload():
                         'Please ensure you are submitting your own original work. '
                         'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
                     }), 409
+
+        # Blocklist check — reject known confirmed AI images
+        from models import FlaggedPhash as _FlaggedPhash
+        for _fp in _FlaggedPhash.query.all():
+            if _fp.phash and hash_similarity_pct(phash, _fp.phash) >= 98.0:
+                if os.path.exists(thumb_path): os.remove(thumb_path)
+                return jsonify({'error': True, 'message':
+                    'We were unable to accept this image. '
+                    'Please ensure you are submitting your own original work. '
+                    'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
+                }), 409
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
@@ -3465,6 +3477,17 @@ def admin_flag_image(image_id):
     except Exception as _me:
         app.logger.error(f'[admin flag email error] {_me}')
     flash(f'Image "{img.asset_name}" flagged and hidden from public view.', 'success')
+    # Record phash in blocklist so this image cannot be resubmitted
+    if img.phash:
+        from models import FlaggedPhash as _FlaggedPhash
+        if not _FlaggedPhash.query.filter_by(phash=img.phash).first():
+            db.session.add(_FlaggedPhash(
+                phash      = img.phash,
+                image_id   = img.id,
+                flagged_by = current_user.id,
+                note       = f'Auto-recorded when admin flagged image {img.id} as AI'
+            ))
+            db.session.commit()
     return redirect(request.referrer or url_for('admin_dashboard'))
 
 
@@ -3594,6 +3617,11 @@ def report_image(image_id):
         detail=detail or None,
     )
     db.session.add(report)
+
+    # AI report — hold image from weekly results pending admin review
+    if reason == 'AI-generated':
+        img.needs_review = True
+
     db.session.commit()
 
     # Notify admin by email
