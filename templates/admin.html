@@ -110,7 +110,7 @@
   .admin-tile-status.pending { background: #000; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
   .admin-tile-flag   { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); }
   .admin-tile-review { position: absolute; bottom: 8px; left: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 3px; background: rgba(180,130,0,0.15); border: 1px solid var(--gold-dark); color: var(--gold); }
-  .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 3px; background: rgba(0,0,0,0.85); letter-spacing: 0.5px; }
+  .admin-tile-ai     { position: absolute; bottom: 8px; right: 8px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 3px; background: rgba(0,0,0,0.90); color: var(--gold); letter-spacing: 0.5px; }
   .admin-tile-hidden { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 7px; border-radius: 3px; }
 
   .admin-tile-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -425,7 +425,7 @@
                 <span class="admin-tile-review">⚖️ REF</span>
               {% endif %}
               {% if img.ai_suspicion and img.ai_suspicion >= 0.4 %}
-              <span class="admin-tile-ai" style="color:{% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold){% endif %};"
+              <span class="admin-tile-ai"
                     title="{{ img.ai_suspicion_reason or '' }}">
                 AI {{ '%.2f'|format(img.ai_suspicion) }}
               </span>
@@ -457,12 +457,12 @@
               <div style="font-size:11px; color:var(--gold); margin-top:4px;">🔍 Pending human review</div>
               {% endif %}
               {% if img.ai_suspicion and img.ai_suspicion >= 0.4 and not img.is_flagged %}
-              <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; margin-top:4px; padding:3px 8px; border-radius:3px; display:inline-block; background:{% if img.ai_suspicion >= 0.7 %}#5a0000{% else %}#3a2e00{% endif %}; color:{% if img.ai_suspicion >= 0.7 %}#ff6b6b{% else %}var(--gold){% endif %};">
+              <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; margin-top:4px; padding:3px 8px; border-radius:3px; display:inline-block; background:#1a1a18; color:var(--gold); border-left: 3px solid {% if img.ai_suspicion >= 0.7 %}var(--red){% else %}var(--gold-dark){% endif %};">
                 ⚠ AI SUSPICION: {{ '%.2f'|format(img.ai_suspicion) }}{% if img.ai_suspicion >= 0.7 %} — FLAG{% else %} — AMBER{% endif %}
               </div>
               {% if img.ai_suspicion_reason %}
-              <div style="font-size:11px; color:#c0a090; margin-top:3px; line-height:1.4; word-break:break-word;">
-                {{ img.ai_suspicion_reason[:120] }}{% if img.ai_suspicion_reason|length > 120 %}…{% endif %}
+              <div style="font-size:11px; color:#a09080; margin-top:3px; line-height:1.4; word-break:break-word;">
+                {{ img.ai_suspicion_reason[:80] }}{% if img.ai_suspicion_reason|length > 80 %}…{% endif %}
               </div>
               {% endif %}
               {% endif %}
