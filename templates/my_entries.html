@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Contest Entries — Lens League Apex{% endblock %}
+{% block title %}My Programme Entries — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -103,12 +103,12 @@
 <div class="entries-wrap">
 
   <div class="page-header">
-    <h1>My Contest Entries</h1>
-    <p>Your chosen images for each genre contest, by month</p>
+    <h1>My Programme Entries</h1>
+    <p>Your chosen images for each genre programme, by month</p>
   </div>
 
   <div style="display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap;">
-    <a href="{{ url_for('contests') }}" class="btn btn-solid">Enter a Contest &rarr;</a>
+    <a href="{{ url_for('contests') }}" class="btn btn-solid">Enter a Programme &rarr;</a>
     <a href="{{ url_for('upload') }}" class="btn">Upload New Image</a>
   </div>
 
@@ -166,9 +166,9 @@
 
   {% else %}
   <div class="empty-entries">
-    <p>You haven't entered any contests yet.<br>
+    <p>You haven&#39;t entered any programmes yet.<br>
     Upload your images, get them scored, then choose your entry for each genre.</p>
-    <a href="{{ url_for('contests') }}" class="btn btn-solid">Go to Contests &rarr;</a>
+    <a href="{{ url_for('contests') }}" class="btn btn-solid">Go to Programmes &rarr;</a>
   </div>
   {% endif %}
 
