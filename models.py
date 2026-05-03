@@ -458,10 +458,11 @@ class WeeklyChallenge(db.Model):
     results_at        = db.Column(db.DateTime, nullable=True)
     sponsor_name      = db.Column(db.String(120), nullable=True)
     sponsor_prize     = db.Column(db.Text, nullable=True)
-    is_active         = db.Column(db.Boolean, default=True)
-    results_published = db.Column(db.Boolean, default=False)
-    created_by        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    created_at        = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active          = db.Column(db.Boolean, default=True)
+    results_published  = db.Column(db.Boolean, default=False)
+    results_hold_until = db.Column(db.DateTime, nullable=True)
+    created_by         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at         = db.Column(db.DateTime, default=datetime.utcnow)
     submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic')
 
     @property

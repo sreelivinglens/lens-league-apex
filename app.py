@@ -408,6 +408,9 @@ with app.app_context():
                 "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
                 "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
                 "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
+                # v29b  -  weekly challenge 24-hour hold
+                "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_hold_until TIMESTAMP",
+                "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_published BOOLEAN DEFAULT FALSE",
                 # v30  -  image columns for jury + RAW verification
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verification_required BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verified BOOLEAN DEFAULT FALSE",
@@ -9470,8 +9473,10 @@ def auto_publish_weekly_challenge():
     """
     Cron: every Monday 13:30 UTC (7:00 PM IST).
     Finds most recently closed challenge, auto-ranks top 3 by DDI score
-    (subscribers prioritised), emails results to all users + admin reminder.
-    Skips silently if results already manually published.
+    (subscribers prioritised), sets a 24-hour hold, then emails admin only
+    with a preview + Release button.  No user or winner emails are sent here.
+    Admin releases results via /admin/weekly-results/<week_ref>/release.
+    Skips silently if already ranked or no scoreable submissions.
     """
     with app.app_context():
         try:
@@ -9533,16 +9538,18 @@ def auto_publish_weekly_challenge():
                 if rank > 3:
                     break
 
+            # Set 24-hour hold — user/winner emails withheld until admin releases
+            hold_until = now + timedelta(hours=24)
+            challenge.results_hold_until = hold_until
             db.session.commit()
             app.logger.info(
-                '[cron] ' + challenge.week_ref + ' - ranked ' + str(len(ranked)) + ' winners'
+                '[cron] ' + challenge.week_ref + ' - ranked ' + str(len(ranked))
+                + ' winners, hold until ' + hold_until.isoformat()
             )
 
-            sent = send_results_announcement(challenge, ranked)
-            app.logger.info('[cron] Results announcement sent to ' + str(sent) + ' users')
-
-            wsent = send_winners_email(challenge, ranked)
-            app.logger.info('[cron] Winners emails sent to ' + str(wsent) + ' winners')
+            # Email admin only — preview top 3 + Release button
+            _send_admin_hold_email(challenge, ranked, hold_until)
+            app.logger.info('[cron] Admin hold email sent for ' + challenge.week_ref)
 
             _send_admin_reminder(now)
 
@@ -9552,6 +9559,122 @@ def auto_publish_weekly_challenge():
                 db.session.rollback()
             except Exception:
                 pass
+
+
+def _send_admin_hold_email(challenge, ranked, hold_until):
+    """
+    Email admin with top-3 preview and a Release Results button.
+    Called by cron immediately after ranking.  No user emails sent yet.
+    hold_until is UTC; displayed as IST (+05:30) in the email.
+    """
+    try:
+        site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+        release_url = site_url + '/admin/weekly-results/' + challenge.week_ref + '/release'
+        ordinals    = {1: '1st', 2: '2nd', 3: '3rd'}
+        # Convert hold_until to IST for display
+        hold_ist    = hold_until + timedelta(hours=5, minutes=30)
+        hold_str    = hold_ist.strftime('%a %d %b %Y, %I:%M %p IST')
+
+        rows_html = ''
+        rows_text = ''
+        for w in sorted(ranked, key=lambda x: x.result_rank):
+            img   = w.image
+            owner = User.query.get(w.user_id) if w.user_id else None
+            name  = (owner.full_name or owner.username) if owner else 'Photographer'
+            title = img.asset_name if img else 'Untitled'
+            score = ('%.2f' % img.score) if img and img.score else '—'
+            ai    = ('%.2f' % img.ai_suspicion) if img and img.ai_suspicion else '0.00'
+            ord_  = ordinals.get(w.result_rank, str(w.result_rank))
+            rows_html += (
+                '<tr>'
+                '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+                'font-weight:700;color:#C8A84B;width:48px;">' + ord_ + '</td>'
+                '<td style="padding:10px 16px;font-size:14px;color:#1a1a18;">' + title + '</td>'
+                '<td style="padding:10px 16px;font-size:13px;color:#6a6458;">' + name + '</td>'
+                '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+                'color:#8a8070;">' + score + '</td>'
+                '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:12px;'
+                'color:#8a8070;">AI ' + ai + '</td>'
+                '</tr>'
+            )
+            rows_text += ord_ + ': ' + title + '  -  ' + name + '  (score ' + score + ', AI ' + ai + ')\n'
+
+        html_body = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+            '<table width="600" cellpadding="0" cellspacing="0"'
+            ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
+            'overflow:hidden;max-width:600px;width:100%;">'
+            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+            '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
+            'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+            'SHUTTER LEAGUE  —  ADMIN</p></td></tr>'
+            '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
+            'Results Hold  .  ' + challenge.week_ref + '</p>'
+            '<h1 style="margin:0;font-size:26px;font-style:italic;color:#C8A84B;line-height:1.1;">'
+            + challenge.prompt_title + '</h1></td></tr>'
+            '<tr><td style="padding:28px 32px;">'
+            '<p style="margin:0 0 6px;font-size:15px;color:#4A4840;line-height:1.6;">'
+            'Rankings are set. Results are on a <strong>24-hour integrity hold</strong>.<br>'
+            'Review the top 3 below, then release when satisfied.</p>'
+            '<p style="margin:0 0 20px;font-family:Courier New,monospace;font-size:13px;'
+            'color:#8a8070;">Auto-releases available from: <strong style="color:#1a1a18;">'
+            + hold_str + '</strong></p>'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="border:1px solid #E0D8C8;border-radius:6px;overflow:hidden;margin-bottom:8px;">'
+            '<tr style="background:#F5F0E8;">'
+            '<th style="padding:8px 16px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:1px;color:#8a8070;text-align:left;">RANK</th>'
+            '<th style="padding:8px 16px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:1px;color:#8a8070;text-align:left;">IMAGE</th>'
+            '<th style="padding:8px 16px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:1px;color:#8a8070;text-align:left;">PHOTOGRAPHER</th>'
+            '<th style="padding:8px 16px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:1px;color:#8a8070;text-align:left;">SCORE</th>'
+            '<th style="padding:8px 16px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:1px;color:#8a8070;text-align:left;">AI</th>'
+            '</tr>'
+            + rows_html +
+            '</table>'
+            '<p style="margin:0 0 20px;font-size:13px;color:#8a8070;line-height:1.6;">'
+            'AI suspicion shown for reference. Images with needs_review=True were excluded from ranking.<br>'
+            'If you spot an issue, resolve it in the admin panel before releasing.</p>'
+            '<a href="' + release_url + '"'
+            ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+            'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
+            'letter-spacing:1px;text-transform:uppercase;padding:14px 32px;'
+            'text-decoration:none;border-radius:4px;">Release Results</a>'
+            '<p style="margin:12px 0 0;font-size:12px;color:#aaa;">This link opens a confirmation page before anything is sent to users.</p>'
+            '</td></tr>'
+            '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">'
+            '<p style="margin:0;font-size:13px;color:#8a8070;">'
+            'Shutter League  —  Admin notification  —  '
+            '<a href="' + site_url + '/admin/weekly-challenge" style="color:#C8A84B;">'
+            'Weekly Challenge Admin</a>'
+            '</p></td></tr>'
+            '</table></td></tr></table></body></html>'
+        )
+        text_body = (
+            'SHUTTER LEAGUE  -  Admin: Results on Hold\n\n'
+            'Challenge: ' + challenge.prompt_title + ' (' + challenge.week_ref + ')\n'
+            'Hold until: ' + hold_str + '\n\n'
+            'Top 3 (provisional):\n' + rows_text + '\n'
+            'Release results: ' + release_url + '\n\n'
+            'Review in admin panel first if any image looks suspicious.'
+        )
+        send_email(
+            [ADMIN_EMAIL],
+            '[Shutter League] Results on hold — ' + challenge.week_ref + ' — action required',
+            html_body,
+            text_body
+        )
+    except Exception as e:
+        app.logger.error('[cron] _send_admin_hold_email failed: ' + str(e))
 
 
 def _send_admin_reminder(now):
@@ -9617,7 +9740,173 @@ def admin_test_weekly_results():
     return redirect(url_for('admin_weekly_challenge'))
 
 
-# Scheduler starts once in the master process via --preload Gunicorn flag.
+@app.route('/admin/weekly-results/<week_ref>/release', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_release_weekly_results(week_ref):
+    """
+    GET  — Confirmation page: shows top-3 and a single Confirm Release button.
+    POST — Fires user/winner emails, marks results_published=True, clears hold.
+    """
+    challenge = WeeklyChallenge.query.filter_by(week_ref=week_ref).first_or_404()
+
+    ranked = (WeeklySubmission.query
+              .filter(WeeklySubmission.challenge_id == challenge.id,
+                      WeeklySubmission.result_rank != None)
+              .order_by(WeeklySubmission.result_rank)
+              .all())
+
+    if request.method == 'POST':
+        if not ranked:
+            flash('No ranked submissions found for ' + week_ref + ' — nothing to release.', 'error')
+            return redirect(url_for('admin_weekly_challenge'))
+
+        # Fire user announcement and winner personalised emails
+        sent  = send_results_announcement(challenge, ranked)
+        wsent = send_winners_email(challenge, ranked)
+
+        # Mark published and clear hold
+        challenge.results_published  = True
+        challenge.results_hold_until = None
+        db.session.commit()
+
+        app.logger.info(
+            '[release] ' + week_ref + ' released by ' + current_user.email
+            + ' — ' + str(sent) + ' announcement emails, ' + str(wsent) + ' winner emails'
+        )
+        flash(
+            'Results for ' + week_ref + ' released. '
+            + str(sent) + ' announcement email(s) sent, '
+            + str(wsent) + ' winner email(s) sent.',
+            'success'
+        )
+        return redirect(url_for('admin_weekly_challenge'))
+
+    # GET — build confirmation page inline (no separate template needed)
+    site_url    = os.getenv('SITE_URL', 'https://shutterleague.com')
+    ordinals    = {1: '1st', 2: '2nd', 3: '3rd'}
+    now         = datetime.utcnow()
+    hold_until  = challenge.results_hold_until
+    hold_active = hold_until and hold_until > now
+    hold_ist    = (hold_until + timedelta(hours=5, minutes=30)).strftime('%d %b %Y %I:%M %p IST') if hold_until else '—'
+
+    rows = []
+    for w in ranked:
+        img   = w.image
+        owner = User.query.get(w.user_id) if w.user_id else None
+        rows.append({
+            'rank':  ordinals.get(w.result_rank, str(w.result_rank)),
+            'title': img.asset_name if img else 'Untitled',
+            'name':  (owner.full_name or owner.username) if owner else 'Photographer',
+            'score': ('%.2f' % img.score) if img and img.score else '—',
+            'ai':    ('%.2f' % img.ai_suspicion) if img and img.ai_suspicion else '0.00',
+            'needs_review': bool(img.needs_review) if img else False,
+        })
+
+    rows_html = ''
+    for r in rows:
+        ai_colour  = '#C8A84B' if float(r['ai']) >= 0.4 else '#8a8070'
+        nr_badge   = (' <span style="background:#c0392b;color:#fff;font-size:10px;'
+                      'padding:2px 5px;border-radius:3px;font-family:Courier New,monospace;">'
+                      'NEEDS REVIEW</span>') if r['needs_review'] else ''
+        rows_html += (
+            '<tr style="border-top:1px solid #E0D8C8;">'
+            '<td style="padding:12px 16px;font-family:Courier New,monospace;font-size:14px;'
+            'font-weight:700;color:#C8A84B;">' + r['rank'] + '</td>'
+            '<td style="padding:12px 16px;font-size:14px;color:#1a1a18;">'
+            + r['title'] + nr_badge + '</td>'
+            '<td style="padding:12px 16px;font-size:13px;color:#6a6458;">' + r['name'] + '</td>'
+            '<td style="padding:12px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'color:#8a8070;">' + r['score'] + '</td>'
+            '<td style="padding:12px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'color:' + ai_colour + ';">' + r['ai'] + '</td>'
+            '</tr>'
+        )
+
+    hold_banner = ''
+    if hold_active:
+        hold_banner = (
+            '<div style="background:#fff8e1;border:1px solid #C8A84B;border-radius:6px;'
+            'padding:14px 20px;margin-bottom:24px;font-size:14px;color:#4A4840;">'
+            '<strong style="color:#C8A84B;">&#9888; Hold active</strong> — '
+            'automatic release was scheduled for ' + hold_ist + '. '
+            'You can release now or wait. Either way, no emails have gone out yet.'
+            '</div>'
+        )
+
+    page_html = (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<title>Release Results — ' + week_ref + '</title>'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<style>'
+        'body{margin:0;padding:32px 16px;background:#F5F0E8;font-family:Georgia,serif;color:#1a1a18;}'
+        '.card{max-width:680px;margin:0 auto;background:#fff;border:1px solid #E0D8C8;'
+        'border-radius:8px;overflow:hidden;}'
+        '.card-head{background:#1a1a18;padding:24px 32px;}'
+        '.card-head p{margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+        'letter-spacing:2px;color:#6a6458;text-transform:uppercase;}'
+        '.card-head h1{margin:0;font-size:24px;font-style:italic;color:#C8A84B;}'
+        '.card-body{padding:28px 32px;}'
+        'table{width:100%;border-collapse:collapse;border:1px solid #E0D8C8;border-radius:6px;'
+        'overflow:hidden;margin-bottom:24px;}'
+        'th{padding:8px 16px;background:#F5F0E8;font-family:Courier New,monospace;font-size:11px;'
+        'letter-spacing:1px;color:#8a8070;text-align:left;}'
+        '.btn-release{display:inline-block;background:#C8A84B;color:#1a1a18;'
+        'font-family:Courier New,monospace;font-size:14px;font-weight:700;letter-spacing:1px;'
+        'text-transform:uppercase;padding:14px 36px;border:none;border-radius:4px;cursor:pointer;'
+        'text-decoration:none;}'
+        '.btn-release:hover{background:#b8941f;}'
+        '.btn-back{font-family:Courier New,monospace;font-size:13px;color:#8a8070;'
+        'text-decoration:none;margin-left:20px;}'
+        '.btn-back:hover{color:#1a1a18;}'
+        '.warn{background:#fff3cd;border:1px solid #ffc107;border-radius:4px;'
+        'padding:12px 16px;font-size:13px;color:#4A4840;margin-bottom:20px;}'
+        '</style></head>'
+        '<body>'
+        '<div class="card">'
+        '<div class="card-head">'
+        '<p>Release Confirmation  .  ' + week_ref + '</p>'
+        '<h1>' + challenge.prompt_title + '</h1>'
+        '</div>'
+        '<div class="card-body">'
+        + hold_banner +
+        '<p style="margin:0 0 16px;font-size:15px;color:#4A4840;line-height:1.6;">'
+        'You are about to release results to <strong>all active users</strong>. '
+        'Review the rankings below, then confirm.</p>'
+        '<table>'
+        '<tr><th>RANK</th><th>IMAGE</th><th>PHOTOGRAPHER</th><th>SCORE</th><th>AI SUSP.</th></tr>'
+        + rows_html +
+        '</table>'
+    )
+
+    if not ranked:
+        page_html += (
+            '<div class="warn">No ranked submissions found for ' + week_ref
+            + '. Run the cron first, or set ranks manually in the admin panel.</div>'
+        )
+
+    has_needs_review = any(r['needs_review'] for r in rows)
+    if has_needs_review:
+        page_html += (
+            '<div class="warn">&#9888; One or more ranked images is flagged '
+            '<strong>NEEDS REVIEW</strong>. Resolve in the '
+            '<a href="' + site_url + '/admin/weekly-challenge">admin panel</a> before releasing.</div>'
+        )
+
+    release_url = '/admin/weekly-results/' + week_ref + '/release'
+    page_html += (
+        '<form method="POST" action="' + release_url + '">'
+        '<button type="submit" class="btn-release"'
+        + (' disabled style="opacity:0.5;cursor:not-allowed;"' if not ranked else '') + '>'
+        'Confirm Release</button>'
+        '<a href="/admin/weekly-challenge" class="btn-back">&#8592; Back to admin</a>'
+        '</form>'
+        '</div></div></body></html>'
+    )
+
+    return page_html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
 # Workers fork after this runs, so the scheduler is inherited, not duplicated.
 if True:
     _scheduler = BackgroundScheduler(timezone='UTC')
