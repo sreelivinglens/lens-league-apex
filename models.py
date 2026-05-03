@@ -45,8 +45,9 @@ class User(db.Model, UserMixin):
     last_login        = db.Column(db.DateTime, nullable=True)
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
 
-    security_question = db.Column(db.String(255), nullable=True)
-    security_answer   = db.Column(db.String(255), nullable=True)
+    security_question    = db.Column(db.String(255), nullable=True)
+    security_answer      = db.Column(db.String(255), nullable=True)
+    email_verify_token   = db.Column(db.String(64),  nullable=True)  # cleared after verification
 
     agreed_at         = db.Column(db.DateTime, nullable=True)
 
