@@ -3493,18 +3493,40 @@ Even if the image looks beautiful and photographic, flag AI tells honestly."""
     images = Image.query.filter(
         Image.status == 'scored',
         Image.is_flagged == False,
-        Image.thumb_path != None
+        db.or_(Image.thumb_path != None, Image.thumb_url != None)
     ).all()
 
     results = {'refreshed': 0, 'skipped': 0, 'flagged': 0, 'errors': []}
 
     for img in images:
-        if not img.thumb_path or not os.path.exists(img.thumb_path):
+        photo_path = None
+        tmp_path   = None
+
+        # Try local disk first, fall back to R2 download
+        if img.thumb_path and os.path.exists(img.thumb_path):
+            photo_path = img.thumb_path
+        elif img.thumb_url:
+            try:
+                import tempfile
+                from storage import get_client, BUCKET
+                tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(
+                    BUCKET,
+                    'thumbs/' + img.thumb_url.split('/thumbs/')[-1],
+                    tf
+                )
+                tf.close()
+                photo_path = tmp_path = tf.name
+            except Exception as e:
+                results['errors'].append({'id': img.id, 'error': f'R2 fetch: {str(e)[:80]}'})
+                continue
+
+        if not photo_path:
             results['skipped'] += 1
             continue
         try:
             # Encode thumbnail
-            pil = PILImage.open(img.thumb_path).convert('RGB')
+            pil = PILImage.open(photo_path).convert('RGB')
             w, h = pil.size
             max_px = 800
             if max(w, h) > max_px:
@@ -3568,6 +3590,10 @@ Even if the image looks beautiful and photographic, flag AI tells honestly."""
         except Exception as e:
             db.session.rollback()
             results['errors'].append({'id': img.id, 'error': str(e)[:100]})
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                try: os.remove(tmp_path)
+                except Exception: pass
 
     app.logger.info(f'[refresh_ai_suspicion] {results}')
     return jsonify(results)
