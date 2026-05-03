@@ -690,34 +690,12 @@
         window.location.href = '/login?next=/upload'; return;
       }
 
-      if (resp && resp.status === 'flagged') {
-        notifyComplete();
-        document.getElementById('scoringOverlay').classList.remove('active');
-        showError(resp.message || '🚫 This image was flagged as potentially AI-generated.');
-        setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 4000);
-        return;
-      }
-
-      if (resp && resp.status === 'ok' && resp.image_id) {
-        notifyComplete();
-        document.getElementById('overlayPhase').textContent  = 'COMPLETE';
-        document.getElementById('overlayStatus').textContent = resp.score
-          ? `Scored! LL-Score: ${parseFloat(resp.score).toFixed(2)} — ${resp.tier}`
-          : 'Image uploaded!';
-        document.getElementById('overlaySubstatus').textContent = 'Loading your score card…';
-        document.getElementById('breathLabel').textContent = '🙏';
-        document.getElementById('clockSecs').textContent   = '✓';
-        document.getElementById('clockRing').style.strokeDashoffset = '0';
-        document.getElementById('clockRing').style.stroke  = '#F5C518';
-        setTimeout(() => { window.location.href = resp.redirect || '/image/' + resp.image_id; }, 800);
-        return;
-      }
-
-      if (resp && resp.status === 'needs_review') {
-        notifyComplete();
-        var wMsg = resp.message || '⚠ Your image has been held for review before going public.';
-        showWarning(wMsg);
-        setTimeout(() => { window.location.href = resp.redirect || '/dashboard'; }, 5000);
+      if (resp && resp.status === 'processing' && resp.image_id) {
+        // Phase 1 complete — image received. Now poll for score.
+        document.getElementById('overlayPhase').textContent    = 'ANALYSING';
+        document.getElementById('overlayStatus').textContent   = 'Apex DDI Engine evaluating…';
+        document.getElementById('overlaySubstatus').textContent = 'DoD · Disruption · DM · Wonder · AQ';
+        _startPolling(resp.image_id, resp.next || '');
         return;
       }
 
@@ -731,6 +709,62 @@
     } // end _fireUpload
   });
 
+  // ── Score polling — checks /score-status every 2s after upload ──────────
+  function _startPolling(imageId, nextPage) {
+    var _pollInterval = setInterval(function() {
+      var pollXhr = new XMLHttpRequest();
+      var url = '/score-status/' + imageId + (nextPage ? '?next=' + encodeURIComponent(nextPage) : '');
+      pollXhr.open('GET', url);
+      pollXhr.withCredentials = true;
+      pollXhr.onload = function() {
+        var r = null;
+        try { r = JSON.parse(pollXhr.responseText); } catch(e) { return; }
+
+        if (!r || r.status === 'processing') return; // still going — keep polling
+
+        clearInterval(_pollInterval);
+
+        if (r.status === 'ok') {
+          notifyComplete();
+          document.getElementById('overlayPhase').textContent    = 'COMPLETE';
+          document.getElementById('overlayStatus').textContent   = r.score
+            ? 'Scored! LL-Score: ' + parseFloat(r.score).toFixed(2) + ' \u2014 ' + r.tier
+            : 'Image uploaded!';
+          document.getElementById('overlaySubstatus').textContent = 'Loading your score card\u2026';
+          document.getElementById('breathLabel').textContent      = '\uD83D\uDE4F';
+          document.getElementById('clockSecs').textContent        = '\u2713';
+          document.getElementById('clockRing').style.strokeDashoffset = '0';
+          document.getElementById('clockRing').style.stroke       = '#F5C518';
+          setTimeout(function() { window.location.href = r.redirect || '/image/' + imageId; }, 800);
+          return;
+        }
+
+        if (r.status === 'needs_review') {
+          notifyComplete();
+          showWarning(r.message || '\u26A0 Your image has been held for review before going public.');
+          setTimeout(function() { window.location.href = r.redirect || '/dashboard'; }, 5000);
+          return;
+        }
+
+        if (r.status === 'flagged') {
+          notifyComplete();
+          document.getElementById('scoringOverlay').classList.remove('active');
+          showError(r.message || '\uD83D\uDEAB This image was flagged as potentially AI-generated.');
+          setTimeout(function() { window.location.href = r.redirect || '/dashboard'; }, 4000);
+          return;
+        }
+
+        if (r.status === 'error') {
+          document.getElementById('scoringOverlay').classList.remove('active');
+          showError(r.message || 'Scoring failed. Please retry from your dashboard.');
+          return;
+        }
+      };
+      pollXhr.onerror = function() { /* network blip — keep polling */ };
+      pollXhr.send();
+    }, 2000);
+  }
+
   // ── Overlay ticker ───────────────────────────────────────────────────────
   function startOverlay() {
     const overlay   = document.getElementById('scoringOverlay');
@@ -740,14 +774,14 @@
     const status    = document.getElementById('overlayStatus');
     const sub       = document.getElementById('overlaySubstatus');
     const breath    = document.getElementById('breathLabel');
-    const TOTAL = 35, CIRC = 195;
+    // TOTAL covers the fast upload phase. After that the ring stays full
+    // and the clock shows … while the polling loop waits for the score.
+    const TOTAL = 15, CIRC = 195;
 
     const phases = [
-      { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',     ss:'Sending to server securely.' },
-      { from:4,  to:10, p:'PROCESSING', s:'Preparing for analysis…',       ss:'Extracting metadata and verifying.' },
-      { from:10, to:24, p:'ANALYSING',  s:'Apex DDI Engine evaluating…',   ss:'DoD · Disruption · DM · Wonder · AQ' },
-      { from:24, to:31, p:'SCORING',    s:'Calculating your DDI score…',   ss:'Applying genre weights and safeguards.' },
-      { from:31, to:35, p:'FINALISING', s:'Generating your score card…',   ss:'Building archetype and improvement tip.' },
+      { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',    ss:'Sending to server securely.' },
+      { from:4,  to:10, p:'PROCESSING', s:'Preparing for analysis…',      ss:'Extracting metadata and verifying.' },
+      { from:10, to:15, p:'ANALYSING',  s:'Apex DDI Engine evaluating…',  ss:'DoD · Disruption · DM · Wonder · AQ' },
     ];
 
     overlay.classList.add('active');
@@ -774,9 +808,9 @@
         status.textContent = p.s;
         sub.textContent    = p.ss;
       } else {
-        phase.textContent  = 'PROCESSING';
-        status.textContent = 'Apex DDI Engine still analysing…';
-        sub.textContent    = 'Complex images can take up to 2 minutes. Keep this tab open.';
+        phase.textContent  = 'ANALYSING';
+        status.textContent = 'Apex DDI Engine evaluating…';
+        sub.textContent    = 'Almost there — your score will appear automatically.';
       }
     }, 1000);
 
