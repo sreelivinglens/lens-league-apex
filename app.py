@@ -3413,6 +3413,166 @@ def admin_rescore_all():
     return jsonify(results)
 
 
+@app.route('/admin/refresh-ai-suspicion', methods=['POST'])
+@login_required
+@admin_required
+def admin_refresh_ai_suspicion():
+    """
+    Re-runs AI detection ONLY on all scored, non-flagged images.
+    Updates ai_suspicion and ai_suspicion_reason only.
+    Does NOT change score, tier, DoD, or any other field.
+    Safe to run at any time — no scoring impact.
+    Use after updating the detection prompt to backfill existing images.
+    """
+    import base64, io, json, re as _re, httpx as _httpx
+    from PIL import Image as PILImage
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return jsonify({'error': 'No API key configured'}), 500
+
+    # Standalone detection-only prompt — no scoring, no JSON fields except suspicion
+    DETECTION_SYSTEM = (
+        'You are an AI image detection specialist. '
+        'Respond ONLY with a valid JSON object — no preamble, no markdown:\n'
+        '{"ai_suspicion": <float 0.0-1.0>, '
+        '"ai_suspicion_reason": "<concise reason if score >= 0.5, else null>"}'
+    )
+
+    DETECTION_PROMPT = """Analyse this photograph for signs of AI generation.
+
+AI DETECTION — evaluate carefully:
+Set ai_suspicion between 0.0 (certainly real photograph) and 1.0 (certainly AI-generated).
+Set ai_suspicion >= 0.7 if ANY of these are present:
+(a) Biologically or physically impossible scene — animals that would never coexist or interact
+    this way in nature (e.g. tiger lunging at baby elephant with mother present, predator and
+    prey in impossible calm proximity, multiple apex predators together peacefully);
+(b) Fur, feather, or skin texture too regular, symmetrical, or perfectly rendered —
+    real animal fur has natural asymmetry and imperfection;
+(c) Water reflections geometrically perfect despite surface disturbance from subjects;
+(d) Lighting unnaturally perfect and consistent across all subjects simultaneously;
+(e) Animal scale or proportions subtly wrong relative to each other or environment;
+(f) AI image artifacts — unnaturally smooth transitions, background inconsistencies,
+    impossible bokeh, overly sharp subjects against implausibly smooth backgrounds;
+(g) Scene appears to be a composite of elements that could not be photographed together;
+(h) Overall aesthetic resembles AI image generation (Midjourney/DALL-E/Firefly style).
+Wildlife images with dramatic impossible animal interactions should score >= 0.85.
+
+PEOPLE, STREET, WEDDING AND ARCHITECTURE images — additional tells:
+Only apply rules (i)-(o) when the image contains human subjects or built environments.
+Set ai_suspicion >= 0.7 if ANY of these are present:
+(i) Human proportions subtly wrong — head-to-body ratio, limb length, hand or finger
+    geometry that a real person could not have; children especially: AI frequently
+    misrenders child proportions (oversized head, too-short limbs, doll-like features);
+(j) Lighting physically inconsistent with the visible scene — backlit subjects
+    in a colonnade or alley with shadows falling in the wrong direction; overcast street
+    scenes with hard directional shadows; indoor candid with studio-quality rim lighting
+    and no visible light source; single subject lit too evenly for the environment;
+(k) Upscaling or interpolation artifacts — unnaturally smooth fine detail (hair strands
+    merge into a single mass, fabric weave too regular, skin has no pores or sensor
+    noise), transitions between subject and background too clean, no chromatic
+    aberration where a real lens would produce it;
+(l) B&W grain pattern is synthetic — AI grain is spatially uniform and perfectly
+    distributed; real sensor or film grain has clumping, variation, and luminance
+    dependency; a B&W image with perfectly even grain across shadows and highlights
+    is suspicious;
+(m) Background architectural or environmental details inconsistent — windows with
+    wrong perspective for the building angle, repeating tiles or patterns that do not
+    tile correctly, text on signs illegible or malformed, reflections in glass or
+    puddles that do not match the scene geometry;
+(n) Street or documentary image with a too-composed aesthetic — perfect expression,
+    perfect light, and perfect background separation simultaneously in a genre where
+    capturing all three at once is extremely rare; feels directed, not captured;
+(o) Hands and fingers showing AI generation artifacts — fingers that merge, incorrect
+    counts, unnatural smoothness at knuckles under grip tension, implausible geometry
+    for the posed action; halos or luminance edges around limbs or body parts where
+    they meet the background.
+Street and People images where multiple tells from (i)-(o) are present should score >= 0.75.
+Even if the image looks beautiful and photographic, flag AI tells honestly."""
+
+    images = Image.query.filter(
+        Image.status == 'scored',
+        Image.is_flagged == False,
+        Image.thumb_path != None
+    ).all()
+
+    results = {'refreshed': 0, 'skipped': 0, 'flagged': 0, 'errors': []}
+
+    for img in images:
+        if not img.thumb_path or not os.path.exists(img.thumb_path):
+            results['skipped'] += 1
+            continue
+        try:
+            # Encode thumbnail
+            pil = PILImage.open(img.thumb_path).convert('RGB')
+            w, h = pil.size
+            max_px = 800
+            if max(w, h) > max_px:
+                if w >= h: pil = pil.resize((max_px, int(h * max_px / w)), PILImage.LANCZOS)
+                else:      pil = pil.resize((int(w * max_px / h), max_px), PILImage.LANCZOS)
+            buf = io.BytesIO()
+            pil.save(buf, format='JPEG', quality=85)
+            buf.seek(0)
+            img_data = base64.standard_b64encode(buf.read()).decode('utf-8')
+
+            # Call detection-only API
+            resp = _httpx.post(
+                'https://api.anthropic.com/v1/messages',
+                headers={
+                    'x-api-key': api_key,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json'
+                },
+                json={
+                    'model': os.getenv('APEX_MODEL', 'claude-haiku-4-5-20251001'),
+                    'max_tokens': 200,
+                    'temperature': 0.2,
+                    'system': DETECTION_SYSTEM,
+                    'messages': [{
+                        'role': 'user',
+                        'content': [
+                            {'type': 'image', 'source': {
+                                'type': 'base64',
+                                'media_type': 'image/jpeg',
+                                'data': img_data
+                            }},
+                            {'type': 'text', 'text': DETECTION_PROMPT}
+                        ]
+                    }]
+                },
+                timeout=60
+            )
+            if resp.status_code != 200:
+                results['errors'].append({'id': img.id, 'error': f'API {resp.status_code}'})
+                continue
+
+            text = ''
+            for block in resp.json().get('content', []):
+                if block.get('type') == 'text':
+                    text += block.get('text', '')
+            text = _re.sub(r'```json|```', '', text).strip()
+            detection = json.loads(text)
+
+            ai_suspicion = float(detection.get('ai_suspicion', 0.0))
+            img.ai_suspicion        = ai_suspicion
+            img.ai_suspicion_reason = detection.get('ai_suspicion_reason') or None
+
+            # If newly detected as AI (>=0.7) and not already flagged — set needs_review
+            if ai_suspicion >= 0.7 and not img.is_flagged:
+                img.needs_review = True
+                results['flagged'] += 1
+
+            db.session.commit()
+            results['refreshed'] += 1
+
+        except Exception as e:
+            db.session.rollback()
+            results['errors'].append({'id': img.id, 'error': str(e)[:100]})
+
+    app.logger.info(f'[refresh_ai_suspicion] {results}')
+    return jsonify(results)
+
+
 @app.route('/admin/transfer-images', methods=['POST'])
 @login_required
 @admin_required
