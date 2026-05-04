@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>{{ image.asset_name }} · {{ image.tier }} · Shutter League</title>
+{% extends "base.html" %}
+{% block title %}{{ image.asset_name }} · {{ image.tier }} · Shutter League{% endblock %}
 
+{% block extra_head %}
 <!-- Open Graph -->
 <meta property="og:title"       content="{{ image.asset_name }} · {{ image.tier }} · Shutter League">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
@@ -12,11 +9,9 @@
 <meta property="og:url"         content="{{ request.url }}">
 <meta property="og:type"        content="website">
 <meta name="twitter:card"       content="summary_large_image">
+{% endblock %}
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-
+{% block extra_css %}
 <style>
   /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
   :root {
@@ -29,63 +24,25 @@
     --text-muted:     var(--text-primary) !important;
     --text-disabled:  #888888 !important;
   }
-
   :root {
-    --black:      #1a1a18;
-    --surface-1:  #FFFFFF;
-    --surface-2:  #FEFCF8;
-    --surface-3:  #F5F0E8;
-    --border:     #E0D8C8;
     --border-md:  #C8C0B0;
     --text-1:     #1a1a18;
     --text-2:     #1a1a18;
     --text-3:     #555550;
-    --gold:       #F5C518;
-    --gold-dark:  #F5C518;
-    --gold-subtle:rgba(245,197,24,0.10);
-    --green:      #2E7D4F;
-    --red:        #C0392B;
-    --font-body:  Georgia, 'Times New Roman', serif;
-    --font-mono:  'JetBrains Mono', 'Courier New', monospace;
-  }
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html { -webkit-text-size-adjust:100%; }
-  body {
-    background: linear-gradient(160deg, #FEFCF8 0%, #F6F1E8 40%, #F0EAD8 100%);
-    background-attachment: fixed;
-    color: #1a1a18;
-    font-family: var(--font-body); font-size: 17px; line-height: 1.6;
-    min-height: 100vh; -webkit-font-smoothing: antialiased;
-    padding: 24px 16px 48px;
   }
 
-  .top-bar {
-    max-width: 680px; margin: 0 auto 28px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .brand {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
-    letter-spacing: 3px; color: #1a1a18; text-decoration: none;
-  }
-  .top-btn {
-    padding: 8px 18px; border: 1px solid var(--gold-dark); color: var(--gold);
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 1.5px; text-decoration: none; border-radius: 4px;
-    transition: all 0.2s; white-space: nowrap;
-  }
-  .top-btn:hover { background: var(--gold); color: var(--black); }
+  .share-wrap { padding: 0 0 48px; }
 
   .card {
     max-width: 680px; margin: 0 auto;
     background: var(--surface-1); border: 1px solid var(--border-md);
     border-radius: 12px; overflow: hidden;
   }
-
   .card-header {
     background: var(--gold); padding: 10px 24px;
     display: flex; justify-content: space-between; align-items: center;
   }
-  .card-header .brand-dark { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--black); letter-spacing: 2px; }
+  .card-header .brand-dark { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: #1a1a18; letter-spacing: 2px; }
   .card-header .engine-tag { font-family: var(--font-mono); font-size: 14px; color: rgba(0,0,0,0.85); letter-spacing: 1.5px; }
 
   .photo-wrap { position: relative; background: var(--surface-3); }
@@ -93,7 +50,6 @@
     -webkit-user-select: none; -moz-user-select: none; user-select: none;
     -webkit-touch-callout: none; }
 
-  /* ── Tier colour map ── */
   :root {
     --tier-rookie:      #888888;
     --tier-shooter:     #c87941;
@@ -105,7 +61,6 @@
     --tier-legend:      #e04040;
   }
 
-  /* Tier strip — below image */
   .tier-strip {
     background: var(--surface-3); padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between;
@@ -119,10 +74,7 @@
     font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
   }
-  .tier-engine {
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
-    letter-spacing: 2px; text-transform: uppercase;
-  }
+  .tier-engine { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 2px; text-transform: uppercase; }
   .tier-badge-wrap {
     width: 52px; height: 52px; border-radius: 50%;
     background: var(--surface-2); flex-shrink: 0;
@@ -130,7 +82,6 @@
     border: 2px solid var(--tier-color, #F5C518);
   }
 
-  /* ── Programme recipient badge ── */
   .contest-badge {
     position: absolute; top: 16px; right: 16px; z-index: 4;
     background: #F5C518; color: #1a1a18;
@@ -138,7 +89,6 @@
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 0.5px; pointer-events: none;
   }
-
   .judge-badge {
     position: absolute; top: 16px; left: 16px;
     background: rgba(245,197,24,0.15); border: 1px solid var(--gold);
@@ -151,12 +101,10 @@
   .img-title { font-size: 26px; font-weight: 700; color: var(--text-1); margin-bottom: 8px; line-height: 1.2; }
   .img-meta  { font-family: var(--font-mono); font-size: 15px; color: var(--text-1); letter-spacing: 1px; }
 
-  /* Analysis rows — visible to ALL */
   .analysis { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
   .analysis-label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
   .analysis-body  { font-size: 18px; color: var(--text-2); line-height: 1.85; }
 
-  /* Apex Byline — visible to ALL */
   .byline-section {
     padding: 24px 28px; border-bottom: 1px solid var(--border);
     border-left: 3px solid var(--gold);
@@ -167,7 +115,6 @@
   .improvement-tag { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-1); text-transform: uppercase; margin-bottom: 8px; }
   .improvement-text{ font-size: 18px; font-weight: 600; color: var(--text-1); line-height: 1.7; }
 
-  /* Badges — visible to ALL */
   .badges-section { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; gap: 24px; flex-wrap: wrap; }
   .badge-group-label { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 2px; color: var(--text-1); text-transform: uppercase; margin-bottom: 8px; }
   .badge-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -175,7 +122,6 @@
   .badge-strength { background: rgba(76,175,115,0.15); border: 1px solid rgba(76,175,115,0.40); color: var(--green); }
   .badge-gap      { background: rgba(224,85,85,0.12);   border: 1px solid rgba(224,85,85,0.35);  color: var(--red); }
 
-  /* Register CTA — logged-out only */
   .register-cta {
     padding: 28px 28px; text-align: center;
     background: linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));
@@ -186,31 +132,22 @@
   .register-cta p  { font-size: 16px; color: var(--text-3); line-height: 1.7; margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
   .cta-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .btn-join-cta {
-    padding: 12px 32px; background: var(--gold); color: var(--black);
+    padding: 12px 32px; background: var(--gold); color: #1a1a18;
     font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none;
     border-radius: 6px; transition: opacity 0.2s, transform 0.15s;
   }
   .btn-join-cta:hover { opacity: 0.88; transform: translateY(-1px); }
-  .btn-login-cta {
-    padding: 12px 24px; border: 1px solid var(--border-md); color: var(--text-2);
-    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
-    letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none;
-    border-radius: 6px; transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-login-cta:hover { border-color: var(--gold-dark); color: var(--gold); }
   .cta-note { margin-top: 12px; font-family: var(--font-mono); font-size: 14px; color: #F5C518; letter-spacing: 1px; font-weight: 700; }
 
-  /* Card footer */
   .card-footer {
     padding: 16px 28px; background: var(--surface-1);
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
   }
   .archetype-label   { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--gold); letter-spacing: 1px; }
-  .photographer-label{ font-size: 15px; color: #FFFFFF; margin-top: 3px; }
+  .photographer-label{ font-size: 15px; color: #1a1a18; margin-top: 3px; }
   .score-stamp       { font-family: var(--font-mono); font-size: 14px; color: #F5C518; letter-spacing: 1px; font-weight: 700; }
 
-  /* Actions */
   .actions { max-width: 680px; margin: 20px auto 0; display: flex; gap: 12px; }
   .action-btn {
     flex: 1; padding: 15px 20px; text-align: center;
@@ -219,7 +156,7 @@
     cursor: pointer; border: none; text-decoration: none; display: block;
     transition: all 0.2s; border-radius: 6px;
   }
-  .action-primary  { background: var(--gold); color: var(--black); }
+  .action-primary  { background: var(--gold); color: #1a1a18; }
   .action-primary:hover { background: #DFC070; }
   .action-secondary{ border: 1px solid var(--border-md); background: transparent; color: var(--text-2); }
   .action-secondary:hover { border-color: var(--gold-dark); color: var(--gold); background: var(--gold-subtle); }
@@ -229,36 +166,22 @@
     background: rgba(76,175,115,0.15); border: 1px solid rgba(76,175,115,0.40);
     border-radius: 6px; text-align: center; font-size: 16px; color: var(--green);
   }
-  .powered { max-width: 680px; margin: 28px auto 0; text-align: center; font-family: var(--font-mono); font-size: 14px; letter-spacing: 2px; color: var(--surface-3); }
+  .powered { max-width: 680px; margin: 28px auto 0; text-align: center; font-family: var(--font-mono); font-size: 14px; letter-spacing: 2px; color: var(--text-muted); }
 
   @media (max-width: 520px) {
-    body { padding: 16px 12px 40px; }
     .card-header .engine-tag { display: none; }
     .img-info { padding: 18px; }
     .img-title { font-size: 18px; }
-    .mod-cell, .mod-bar-cell { padding: 12px 8px; }
-    .mod-value, .mod-num-hidden { font-size: 18px; }
-    .mod-label, .mod-bar-label { font-size: 15px; }
     .analysis, .byline-section { padding: 18px; }
     .analysis-body, .byline-text, .improvement-text { font-size: 16px; }
     .badges-section, .card-footer { padding: 14px 18px; }
     .actions { flex-direction: column; }
-    .score-num { font-size: 30px; }
   }
-  body { overflow-x: hidden; }
-  *, *::before, *::after { box-sizing: border-box; }
 </style>
-</head>
-<body>
+{% endblock %}
 
-<div class="top-bar">
-  <a href="{{ url_for('index') }}" class="brand">SHUTTER LEAGUE</a>
-  {% if current_user.is_authenticated %}
-    <a href="{{ url_for('dashboard') }}" class="top-btn">My Dashboard</a>
-  {% else %}
-    <a href="{{ url_for('register') }}" class="top-btn">Get Your Images Rated Free</a>
-  {% endif %}
-</div>
+{% block content %}
+<div class="share-wrap">
 
 <div class="card">
 
@@ -288,7 +211,6 @@
   <div class="photo-wrap">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
          alt="{{ image.asset_name }}">
-
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
     {% endif %}
@@ -297,7 +219,7 @@
     {% endif %}
   </div>
 
-  <!-- Tier strip — below image, unobstructed -->
+  <!-- Tier strip -->
   {% set tier_lc = image.tier|lower|replace(' ','') if image.tier else 'grandmaster' %}
   {% if tier_lc == 'rookie' %}{% set tc = '#888888' %}
   {% elif tier_lc == 'shooter' %}{% set tc = '#c87941' %}
@@ -327,7 +249,7 @@
     <div class="tier-engine">APEX DDI</div>
   </div>
 
-  <!-- Image info — always visible -->
+  <!-- Image info -->
   <div class="img-info">
     <div class="img-title">{{ image.asset_name or 'Untitled' }}</div>
     <div class="img-meta">
@@ -404,7 +326,7 @@
   </div>
   {% endif %}
 
-  <!-- Card footer — always visible -->
+  <!-- Card footer -->
   <div class="card-footer">
     <div>
       {% if image.archetype %}<div class="archetype-label">{{ image.archetype }}</div>{% endif %}
@@ -412,12 +334,11 @@
     </div>
     <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
   </div>
-  <div style="font-size:11px; color:rgba(255,255,255,0.3); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
+  <div style="font-size:11px; color:rgba(0,0,0,0.35); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
     DDI scores are AI-assessed and consistent. Individual results may vary slightly.
   </div>
 
 </div>
-
 
 <!-- Actions -->
 <div class="actions">
@@ -520,20 +441,20 @@
             style="background:none;border:none;color:rgba(255,255,255,0.85);font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
   </div>
 </div>
+{% endif %}
 
+</div>{# end share-wrap #}
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// Personalised dopamine message based on score and tier
+{% if current_user.is_authenticated and image.user_id == current_user.id %}
 (function() {
   var score = {{ image.score | float if image.score else 0 }};
   var tier  = "{{ image.tier or '' }}";
-  var name  = "{{ current_user.full_name or current_user.username or current_user.email.split('@')[0] }}";
-
   var messages = [];
-
   {% if image.score %}
   var score = {{ image.score | float }};
-
-  // Near-miss messages
   if (score >= 8.7 && score < 9.0) {
     messages.push("You're 0." + Math.round((9.0 - score)*10) + " away from Grandmaster.<br>One upload could do it.");
   } else if (score >= 9.4 && score < 9.7) {
@@ -543,43 +464,24 @@
   } else if (score >= 5.7 && score < 6.0) {
     messages.push("You're 0." + Math.round((6.0 - score)*10) + " away from Craftsman.<br>Shoot again.");
   }
-
-  // Tier-based messages
-  if (tier === 'Legend') {
-    messages.push("Legend. Fewer than 1% ever get here.<br>Share this.");
-  } else if (tier === 'Grandmaster') {
-    messages.push("Grandmaster. That's not luck.<br>Can you do it again?");
-  } else if (tier === 'Master') {
-    messages.push("You are a Master. Achieving 9.0 gets you into the Grandmaster League.");
-  } else if (tier === 'Maverick') {
-    messages.push("Maverick. Your eye is developing.<br>What happens if you push harder?");
-  } else if (tier === 'Craftsman') {
-    messages.push("Craftsman. The work is showing.<br>Keep going.");
-  } else if (tier === 'Contender') {
-    messages.push("Every upload teaches your eye something.<br>Upload again.");
-  } else if (tier === 'Shooter') {
-    messages.push("Every Grandmaster started here.<br>The gap closes one upload at a time.");
-  } else if (tier === 'Rookie') {
-    messages.push("Your first scores are just the baseline.<br>What does your eye see today?");
-  }
+  if (tier === 'Legend') { messages.push("Legend. Fewer than 1% ever get here.<br>Share this."); }
+  else if (tier === 'Grandmaster') { messages.push("Grandmaster. That's not luck.<br>Can you do it again?"); }
+  else if (tier === 'Master') { messages.push("You are a Master. Achieving 9.0 gets you into the Grandmaster League."); }
+  else if (tier === 'Maverick') { messages.push("Maverick. Your eye is developing.<br>What happens if you push harder?"); }
+  else if (tier === 'Craftsman') { messages.push("Craftsman. The work is showing.<br>Keep going."); }
+  else if (tier === 'Contender') { messages.push("Every upload teaches your eye something.<br>Upload again."); }
+  else if (tier === 'Shooter') { messages.push("Every Grandmaster started here.<br>The gap closes one upload at a time."); }
+  else if (tier === 'Rookie') { messages.push("Your first scores are just the baseline.<br>What does your eye see today?"); }
   {% endif %}
-
-  // Default fallback
-  if (messages.length === 0) {
-    messages.push("Your score is waiting on your next upload.<br>What will you shoot today?");
-  }
-
-  // Show after 3 seconds
+  if (messages.length === 0) { messages.push("Your score is waiting on your next upload.<br>What will you shoot today?"); }
   setTimeout(function() {
     var msg = messages[Math.floor(Math.random() * messages.length)];
     document.getElementById('popup-message').innerHTML = msg;
     document.getElementById('dopamine-popup').style.display = 'block';
   }, 3000);
 })();
-</script>
 {% endif %}
 
-<script>
 function shareThis() {
   const url   = window.location.href;
   const title = "{{ image.asset_name }} — {{ image.tier }} · Shutter League";
@@ -602,25 +504,5 @@ function showFeedback() {
   fb.style.display = 'block';
   setTimeout(() => { fb.style.display = 'none'; }, 3000);
 }
-
-// ── Image right-click & long-press protection ─────────────────────────────
-document.addEventListener('contextmenu', function(e) {
-  if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
-  if (e.target.tagName === 'A' && e.target.querySelector('img')) { e.preventDefault(); return false; }
-});
-document.addEventListener('dragstart', function(e) {
-  if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
-});
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('img').forEach(function(img) {
-    img.style.webkitTouchCallout = 'none';
-    img.style.webkitUserSelect   = 'none';
-    var parent = img.parentElement;
-    if (parent && parent.tagName === 'A') {
-      parent.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
-    }
-  });
-});
 </script>
-</body>
-</html>
+{% endblock %}

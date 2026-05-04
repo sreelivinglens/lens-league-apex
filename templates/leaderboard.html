@@ -373,6 +373,10 @@ body { overflow-x: hidden; }
        class="lb-tab {% if tab=='images' %}active{% endif %}">Top Images</a>
     <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
        class="lb-tab {% if tab=='photographers' %}active{% endif %}">Top Photographers</a>
+    <a href="?tab=cameras&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='cameras' %}active{% endif %}">📷 Cameras</a>
+    <a href="?tab=lenses&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}"
+       class="lb-tab {% if tab=='lenses' %}active{% endif %}">🔭 Lenses</a>
   </div>
 
   <!-- ════════════════════════════
@@ -478,7 +482,7 @@ body { overflow-x: hidden; }
           <div class="pg-stat-lbl">Avg Score</div>
         </div>
         <div class="pg-stat-item">
-          <div class="pg-stat-val dim">{{ p.best_score }}</div>
+          <div class="pg-stat-val dim">{{ '%.2f'|format(p.best_score) }}</div>
           <div class="pg-stat-lbl">Best</div>
         </div>
         <div class="pg-stat-item">
@@ -510,6 +514,79 @@ body { overflow-x: hidden; }
   <div class="lb-empty">No photographers match these filters.</div>
   {% endif %}
 
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       CAMERAS
+  ════════════════════════════════════ -->
+  {% if tab == 'cameras' %}
+  {% if camera_rankings %}
+  <div class="lb-gear-grid">
+    {% for cam in camera_rankings %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+      <div>
+        <div class="pg-name" style="padding-right:36px;">{{ cam.model }}</div>
+        <div class="pg-handle" style="margin-top:4px;">{% if cam.track == 'mobile' %}📱 Mobile{% else %}📷 Camera{% endif %}</div>
+      </div>
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(cam.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Score</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ '%.2f'|format(cam.best_score) }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ cam.count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lb-empty">No camera data available for these filters.</div>
+  {% endif %}
+  {% endif %}
+
+  <!-- ══════════════════════════════════
+       LENSES
+  ════════════════════════════════════ -->
+  {% if tab == 'lenses' %}
+  {% if lens_rankings %}
+  <div class="lb-gear-grid">
+    {% for lens in lens_rankings %}
+    {%- set rank = loop.index -%}
+    {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
+    <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
+      <div class="pg-rank-badge {{ rc }}">{{ rank }}</div>
+      <div>
+        <div class="pg-name" style="padding-right:36px;">{{ lens.model }}</div>
+      </div>
+      <div class="pg-stats">
+        <div class="pg-stat-item">
+          <div class="pg-stat-val">{{ '%.2f'|format(lens.avg_score) }}</div>
+          <div class="pg-stat-lbl">Avg Score</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim">{{ '%.2f'|format(lens.best_score) }}</div>
+          <div class="pg-stat-lbl">Best</div>
+        </div>
+        <div class="pg-stat-item">
+          <div class="pg-stat-val dim" style="font-size:17px;">{{ lens.count }}</div>
+          <div class="pg-stat-lbl">Images</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lb-empty">No lens data available for these filters.</div>
+  {% endif %}
   {% endif %}
 
   {% if not current_user.is_authenticated %}
