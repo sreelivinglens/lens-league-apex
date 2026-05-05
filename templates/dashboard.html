@@ -157,23 +157,29 @@
     border: 1px solid var(--border); border-radius: var(--radius-md);
     margin-bottom: 28px; overflow: hidden;
   }
+  .notif-strip.has-urgent {
+    border-color: #c0392b; border-left: 3px solid #c0392b;
+  }
   .notif-strip-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 18px; cursor: pointer; user-select: none;
-    background: var(--surface-2);
-    transition: background 0.15s;
+    background: var(--surface-2); transition: background 0.15s;
   }
   .notif-strip-header:hover { background: var(--surface-3); }
-  .notif-strip-left { display: flex; align-items: center; gap: 10px; }
-  .notif-strip-label {
+  .notif-strip-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .notif-lbl {
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary);
+    letter-spacing: 2px; text-transform: uppercase;
   }
+  .notif-lbl.urgent { color: #c0392b; }
+  .notif-lbl.normal { color: var(--text-primary); }
+  .notif-lbl-dot { color: var(--border); font-size: 10px; margin: 0 2px; }
   .notif-badge {
-    background: var(--gold); color: #000;
     font-family: var(--font-mono); font-size: 10px; font-weight: 700;
     padding: 2px 7px; border-radius: 99px; letter-spacing: 1px;
   }
+  .notif-badge.urgent { background: #c0392b; color: #fff; }
+  .notif-badge.normal { background: #4a4840; color: #F5F0E8; }
   .notif-strip-chevron {
     font-size: 10px; color: var(--text-primary);
     transition: transform 0.2s; flex-shrink: 0;
@@ -181,19 +187,32 @@
   .notif-strip-chevron.open { transform: rotate(180deg); }
   .notif-strip-body { border-top: 1px solid var(--border); }
   .notif-strip-body.collapsed { display: none; }
+  /* Section divider headers inside strip */
+  .notif-sec-hdr {
+    padding: 6px 18px 5px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .notif-sec-hdr.urgent { background: #fff5f5; color: #c0392b; border-bottom-color: #f5c6c6; }
+  .notif-sec-hdr.normal { background: var(--surface-3); color: var(--text-primary); }
+  /* Rows */
   .notif-row {
     display: flex; align-items: center; gap: 14px;
-    padding: 13px 18px; border-bottom: 1px solid var(--border);
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
   }
   .notif-row:last-child { border-bottom: none; }
-  .notif-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+  .notif-row.urgent-row {
+    background: rgba(192,57,43,0.04); border-left: 2px solid #c0392b;
+  }
+  .notif-icon { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
   .notif-text { flex: 1; min-width: 0; }
   .notif-title {
     font-size: 14px; font-weight: 600; color: var(--text-primary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .notif-sub { font-size: 13px; color: var(--text-primary); margin-top: 1px; }
+  /* Gold action (announcements / pricing) */
   .notif-action {
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
@@ -202,10 +221,43 @@
     flex-shrink: 0; transition: background 0.15s;
   }
   .notif-action:hover { background: rgba(245,197,24,0.12); }
-  .notif-row.urgent { background: rgba(245,197,24,0.05); }
+  /* Red action (urgent — RAW deadline etc.) */
+  .notif-action-urgent {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: #c0392b; text-decoration: none; white-space: nowrap;
+    border: 1px solid #c0392b; padding: 5px 12px; border-radius: 4px;
+    flex-shrink: 0; transition: background 0.15s;
+  }
+  .notif-action-urgent:hover { background: rgba(192,57,43,0.08); }
+  /* Announcement tag pill */
+  .ann-tag {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    background: #1a1a18; color: var(--gold);
+    padding: 2px 7px; border-radius: 3px;
+    display: inline-block; margin-bottom: 3px; flex-shrink: 0;
+  }
+  /* Rank badge next to username */
+  .rank-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a1a18; border: 1px solid var(--gold);
+    border-radius: 4px; padding: 4px 10px; margin-top: 6px;
+  }
+  .rank-badge-num {
+    font-family: var(--font-mono); font-size: 12px;
+    font-weight: 700; color: var(--gold);
+  }
+  .rank-badge-sep { color: rgba(245,197,24,0.3); font-size: 10px; }
+  .rank-badge-tier {
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(255,255,255,0.65);
+  }
   @media (max-width: 520px) {
     .notif-row { gap: 10px; }
-    .notif-action { width: 100%; text-align: center; margin-top: 4px; }
+    .notif-action, .notif-action-urgent { width: 100%; text-align: center; margin-top: 4px; }
+    .notif-lbl { font-size: 10px; letter-spacing: 1px; }
+    .notif-strip-left { gap: 6px; }
   }
 
   /* POTY tracker */
@@ -349,75 +401,50 @@ function dismissPotyBanner() {
 {% endif %}
 
 {# ── Notification strip ─────────────────────────────────────────────────── #}
-{%- set _notif_count = (1 if free_tier else 0)
-    + (contest_banners|length)
-    + (zone3_flagged|length)
-    + (zone2_pending|length)
-    + (raw_pending|length) -%}
-{% if _notif_count > 0 %}
-<div class="notif-strip" id="notif-strip">
+{%- set _urgent_count = (zone3_flagged|length) + (zone2_pending|length) + (raw_pending|length) -%}
+{%- set _ann_count = contest_banners|length -%}
+{%- set _total_count = _urgent_count + _ann_count -%}
+{% if _total_count > 0 %}
+<div class="notif-strip{% if _urgent_count > 0 %} has-urgent{% endif %}" id="notif-strip">
 
-  {# Header bar — always visible #}
   <div class="notif-strip-header" onclick="toggleNotifStrip()" id="notif-strip-header">
     <div class="notif-strip-left">
-      <span class="notif-strip-label">Notifications</span>
-      <span class="notif-badge">{{ _notif_count }}</span>
+      {% if _urgent_count > 0 %}
+        <span class="notif-lbl urgent">Urgent Notifications</span>
+        <span class="notif-badge urgent">{{ _urgent_count }}</span>
+      {% endif %}
+      {% if _urgent_count > 0 and _ann_count > 0 %}
+        <span class="notif-lbl-dot">·</span>
+      {% endif %}
+      {% if _ann_count > 0 %}
+        <span class="notif-lbl normal">Announcements</span>
+        <span class="notif-badge normal">{{ _ann_count }}</span>
+      {% endif %}
     </div>
     <span class="notif-strip-chevron" id="notif-chevron">▼</span>
   </div>
 
-  {# Body — collapsed by default #}
   <div class="notif-strip-body collapsed" id="notif-strip-body">
 
-    {# ── Free tier / assessment status ── #}
-    {% if free_tier %}
-    <div class="notif-row urgent">
-      <span class="notif-icon">{% if free_tier.remaining > 0 %}📸{% else %}🏁{% endif %}</span>
-      <div class="notif-text">
-        {% if free_tier.remaining > 0 %}
-          <div class="notif-title">
-            Assessment: {{ free_tier.used }}/{{ free_tier.limit }} images used
-            &nbsp;·&nbsp; {{ free_tier.remaining }} remaining
-          </div>
-          <div class="notif-sub">
-            Subscribe to compete for POTY, weekly challenges &amp; leaderboard rankings
-          </div>
-        {% else %}
-          <div class="notif-title">
-            Assessment complete
-            {% if free_tier.shadow_rank %}
-              &nbsp;·&nbsp; You are currently Rank #{{ free_tier.shadow_rank }}
-              {% if free_tier.shadow_tier %} — {{ free_tier.shadow_tier }}{% endif %}
-            {% endif %}
-          </div>
-          <div class="notif-sub">
-            {% if free_tier.shadow_rank %}
-              Subscribe to lock in your rank and compete officially
-            {% else %}
-              Subscribe to receive your official rank and compete
-            {% endif %}
-          </div>
-        {% endif %}
-      </div>
-      <a href="{{ url_for('pricing') }}" class="notif-action">See Plans →</a>
-    </div>
-    {% endif %}
+    {# ── URGENT NOTIFICATIONS section ── #}
+    {% if _urgent_count > 0 %}
+    <div class="notif-sec-hdr urgent">Urgent Notifications</div>
 
-    {# ── RAW verification pending ── #}
+    {# RAW verification pending #}
     {% if raw_pending %}
-    <div class="notif-row urgent">
+    <div class="notif-row urgent-row">
       <span class="notif-icon">📂</span>
       <div class="notif-text">
         <div class="notif-title">RAW file required — {{ raw_pending|length }} image{{ 's' if raw_pending|length != 1 else '' }}</div>
-        <div class="notif-sub">Score held pending verification · Submit within deadline</div>
+        <div class="notif-sub">Score held pending verification · Time-bound — submit before deadline</div>
       </div>
-      <a href="#raw-card-{{ raw_pending[0].id }}" class="notif-action">View ↓</a>
+      <a href="#raw-card-{{ raw_pending[0].id }}" class="notif-action-urgent">Submit Now →</a>
     </div>
     {% endif %}
 
-    {# ── Zone 3: peer divergence ── #}
+    {# Zone 3: peer divergence #}
     {% if zone3_flagged %}
-    <div class="notif-row">
+    <div class="notif-row urgent-row">
       <span class="notif-icon">⚖</span>
       <div class="notif-text">
         <div class="notif-title">Jury review triggered — {{ zone3_flagged|length }} image{{ 's' if zone3_flagged|length != 1 else '' }}</div>
@@ -426,9 +453,9 @@ function dismissPotyBanner() {
     </div>
     {% endif %}
 
-    {# ── Zone 2: peer review in progress ── #}
+    {# Zone 2: peer review in progress #}
     {% if zone2_pending %}
-    <div class="notif-row">
+    <div class="notif-row urgent-row">
       <span class="notif-icon">📊</span>
       <div class="notif-text">
         <div class="notif-title">Peer review in progress — {{ zone2_pending|length }} image{{ 's' if zone2_pending|length != 1 else '' }}</div>
@@ -436,20 +463,26 @@ function dismissPotyBanner() {
       </div>
     </div>
     {% endif %}
+    {% endif %}{# /urgent section #}
 
-    {# ── Contest announcements ── #}
+    {# ── ANNOUNCEMENTS section ── #}
+    {% if _ann_count > 0 %}
+    <div class="notif-sec-hdr normal{% if _urgent_count > 0 %}" style="border-top:1px solid var(--border){% endif %}">Announcements</div>
     {% for ann in contest_banners %}
     <div class="notif-row">
-      <span class="notif-icon">📣</span>
       <div class="notif-text">
-        <div class="notif-title">{{ ann.title }}</div>
-        <div class="notif-sub">{{ ann.contest_type | upper }} · {{ ann.body | truncate(80) }}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+          <span class="ann-tag">{{ ann.contest_type | upper }}</span>
+          <span class="notif-title" style="white-space:normal;">{{ ann.title }}</span>
+        </div>
+        <div class="notif-sub">{{ ann.body | truncate(100) }}</div>
       </div>
       {% if ann.cta_label and ann.cta_url %}
       <a href="{{ ann.cta_url }}" class="notif-action">{{ ann.cta_label }} →</a>
       {% endif %}
     </div>
     {% endfor %}
+    {% endif %}{# /announcements section #}
 
   </div>{# /notif-strip-body #}
 </div>{# /notif-strip #}
@@ -469,6 +502,20 @@ function toggleNotifStrip() {
   <div class="page-header">
     <h1>{{ current_user.full_name or current_user.username }}</h1>
     <p>Your photography portfolio &amp; scores</p>
+    {%- if free_tier and free_tier.shadow_rank %}
+    <div class="rank-badge">
+      <span class="rank-badge-num">Rank #{{ free_tier.shadow_rank }}</span>
+      <span class="rank-badge-sep">·</span>
+      <span class="rank-badge-tier">{{ free_tier.shadow_tier or 'Unranked' }}</span>
+    </div>
+    {%- elif current_user.is_subscribed %}
+    {%- set _best_tier = stats.best_score | float | round(2) %}
+    <div class="rank-badge">
+      <span class="rank-badge-num">{{ current_user.subscription_track | title }} League</span>
+      <span class="rank-badge-sep">·</span>
+      <span class="rank-badge-tier">Active</span>
+    </div>
+    {%- endif %}
   </div>
   <div class="dash-actions">
     <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
