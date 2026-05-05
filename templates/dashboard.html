@@ -152,15 +152,61 @@
     font-size: 13px; color: #2e7d32; font-weight: 600;
   }
 
-  /* Free tier nudge */
-  .free-nudge {
-    background: var(--surface-3); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 28px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  /* Notification strip */
+  .notif-strip {
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    margin-bottom: 28px; overflow: hidden;
   }
-  .free-nudge-bar { flex: 1; min-width: 200px; }
-  .free-nudge-bar-track { background: var(--border); border-radius: 4px; height: 6px; margin-top: 8px; }
-  .free-nudge-bar-fill { background: var(--gold); border-radius: 4px; height: 6px; transition: width 0.4s; }
+  .notif-strip-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; cursor: pointer; user-select: none;
+    background: var(--surface-2);
+    transition: background 0.15s;
+  }
+  .notif-strip-header:hover { background: var(--surface-3); }
+  .notif-strip-left { display: flex; align-items: center; gap: 10px; }
+  .notif-strip-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary);
+  }
+  .notif-badge {
+    background: var(--gold); color: #000;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 99px; letter-spacing: 1px;
+  }
+  .notif-strip-chevron {
+    font-size: 10px; color: var(--text-primary);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .notif-strip-chevron.open { transform: rotate(180deg); }
+  .notif-strip-body { border-top: 1px solid var(--border); }
+  .notif-strip-body.collapsed { display: none; }
+  .notif-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .notif-row:last-child { border-bottom: none; }
+  .notif-icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+  .notif-text { flex: 1; min-width: 0; }
+  .notif-title {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .notif-sub { font-size: 13px; color: var(--text-primary); margin-top: 1px; }
+  .notif-action {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gold); text-decoration: none; white-space: nowrap;
+    border: 1px solid var(--gold); padding: 5px 12px; border-radius: 4px;
+    flex-shrink: 0; transition: background 0.15s;
+  }
+  .notif-action:hover { background: rgba(245,197,24,0.12); }
+  .notif-row.urgent { background: rgba(245,197,24,0.05); }
+  @media (max-width: 520px) {
+    .notif-row { gap: 10px; }
+    .notif-action { width: 100%; text-align: center; margin-top: 4px; }
+  }
 
   /* POTY tracker */
   .poty-tracker { margin-bottom: 36px; }
@@ -302,57 +348,120 @@ function dismissPotyBanner() {
 </script>
 {% endif %}
 
-{# ── Contest announcement banners ───────────────────────────────────────── #}
-{% if contest_banners %}
-  {% for ann in contest_banners %}
-  <div style="background:#1a1400; border:2px solid #F5C518; border-left:6px solid #F5C518; border-radius:10px; padding:24px 26px; margin-bottom:16px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
-      <span style="background:#F5C518; color:#000; font-size:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; padding:5px 14px; border-radius:20px;">{{ ann.contest_type | upper }}</span>
-      <span style="font-size:13px; font-weight:700; color:#F5C518; letter-spacing:1px; text-transform:uppercase; opacity:0.8;">Announcement</span>
+{# ── Notification strip ─────────────────────────────────────────────────── #}
+{%- set _notif_count = (1 if free_tier else 0)
+    + (contest_banners|length)
+    + (zone3_flagged|length)
+    + (zone2_pending|length)
+    + (raw_pending|length) -%}
+{% if _notif_count > 0 %}
+<div class="notif-strip" id="notif-strip">
+
+  {# Header bar — always visible #}
+  <div class="notif-strip-header" onclick="toggleNotifStrip()" id="notif-strip-header">
+    <div class="notif-strip-left">
+      <span class="notif-strip-label">Notifications</span>
+      <span class="notif-badge">{{ _notif_count }}</span>
     </div>
-    <div style="font-size:24px; font-weight:800; color:#ffffff; margin-bottom:12px; line-height:1.3;">{{ ann.title }}</div>
-    <div style="font-size:18px; color:#e8e8e8; line-height:1.75; white-space:pre-wrap; word-break:break-word; margin-bottom:{% if ann.cta_label and ann.cta_url %}20px{% else %}0{% endif %};">{{ ann.body }}</div>
-    {% if ann.cta_label and ann.cta_url %}
-    <a href="{{ ann.cta_url }}" style="display:inline-block; background:#F5C518; color:#000; font-weight:800; font-size:17px; padding:14px 30px; border-radius:8px; text-decoration:none; margin-top:4px;">{{ ann.cta_label }} &rarr;</a>
-    {% endif %}
+    <span class="notif-strip-chevron" id="notif-chevron">▼</span>
   </div>
-  {% endfor %}
-{% endif %}
 
-{# ── Zone 3 banner: peer divergence flagged ──────────────────────────────── #}
-{% if zone3_flagged %}
-<div class="zone-banner amber">
-  <strong>⚠ Peer Review Triggered</strong> —
-  {% if zone3_flagged|length == 1 %}
-    Your image <strong>"{{ zone3_flagged[0].asset_name }}"</strong> has received peer ratings that diverge significantly from its DDI score. Your DDI score is protected. A jury review has been triggered automatically — no action needed.
-  {% else %}
-    {{ zone3_flagged|length }} of your images have triggered jury reviews due to peer rating divergence. Your DDI scores are protected. No action needed.
-  {% endif %}
-</div>
-{% endif %}
+  {# Body — collapsed by default #}
+  <div class="notif-strip-body collapsed" id="notif-strip-body">
 
-{# ── Zone 2 banner: peer review in progress ──────────────────────────────── #}
-{% if zone2_pending %}
-<div class="zone-banner amber" style="border-color:var(--border); border-left-color:var(--gold);">
-  <strong>📊 Peer Review In Progress</strong> —
-  {{ zone2_pending|length }} of your image{{ 's are' if zone2_pending|length > 1 else ' is' }} receiving peer ratings. Your DDI score{{ 's' if zone2_pending|length > 1 else '' }} stand{{ '' if zone2_pending|length > 1 else 's' }} unaffected.
-</div>
-{% endif %}
+    {# ── Free tier / assessment status ── #}
+    {% if free_tier %}
+    <div class="notif-row urgent">
+      <span class="notif-icon">{% if free_tier.remaining > 0 %}📸{% else %}🏁{% endif %}</span>
+      <div class="notif-text">
+        {% if free_tier.remaining > 0 %}
+          <div class="notif-title">
+            Assessment: {{ free_tier.used }}/{{ free_tier.limit }} images used
+            &nbsp;·&nbsp; {{ free_tier.remaining }} remaining
+          </div>
+          <div class="notif-sub">
+            Subscribe to compete for POTY, weekly challenges &amp; leaderboard rankings
+          </div>
+        {% else %}
+          <div class="notif-title">
+            Assessment complete
+            {% if free_tier.shadow_rank %}
+              &nbsp;·&nbsp; You are currently Rank #{{ free_tier.shadow_rank }}
+              {% if free_tier.shadow_tier %} — {{ free_tier.shadow_tier }}{% endif %}
+            {% endif %}
+          </div>
+          <div class="notif-sub">
+            {% if free_tier.shadow_rank %}
+              Subscribe to lock in your rank and compete officially
+            {% else %}
+              Subscribe to receive your official rank and compete
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+      <a href="{{ url_for('pricing') }}" class="notif-action">See Plans →</a>
+    </div>
+    {% endif %}
 
-{# ── RAW verification alert banner ──────────────────────────────────────── #}
-{% if raw_pending %}
-<div id="raw-alert-banner" style="background:#F5C518; color:#000; border-radius:var(--radius-md); padding:16px 22px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-  <div style="display:flex; align-items:center; gap:12px;">
-    <span style="font-size:20px;">📂</span>
-    <div>
-      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:2px;">RAW Verification Requested</div>
-      <div style="font-size:14px; font-weight:600;">
-        {{ raw_pending|length }} image{{ 's require' if raw_pending|length != 1 else ' requires' }} RAW file submission — score held pending verification.
+    {# ── RAW verification pending ── #}
+    {% if raw_pending %}
+    <div class="notif-row urgent">
+      <span class="notif-icon">📂</span>
+      <div class="notif-text">
+        <div class="notif-title">RAW file required — {{ raw_pending|length }} image{{ 's' if raw_pending|length != 1 else '' }}</div>
+        <div class="notif-sub">Score held pending verification · Submit within deadline</div>
+      </div>
+      <a href="#raw-card-{{ raw_pending[0].id }}" class="notif-action">View ↓</a>
+    </div>
+    {% endif %}
+
+    {# ── Zone 3: peer divergence ── #}
+    {% if zone3_flagged %}
+    <div class="notif-row">
+      <span class="notif-icon">⚖</span>
+      <div class="notif-text">
+        <div class="notif-title">Jury review triggered — {{ zone3_flagged|length }} image{{ 's' if zone3_flagged|length != 1 else '' }}</div>
+        <div class="notif-sub">Your DDI score is protected · No action needed</div>
       </div>
     </div>
-  </div>
-  <a href="#raw-card-{{ raw_pending[0].id }}" style="background:#000; color:#F5C518; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:10px 18px; border-radius:4px; text-decoration:none; white-space:nowrap; flex-shrink:0;">View &#8595;</a>
-</div>
+    {% endif %}
+
+    {# ── Zone 2: peer review in progress ── #}
+    {% if zone2_pending %}
+    <div class="notif-row">
+      <span class="notif-icon">📊</span>
+      <div class="notif-text">
+        <div class="notif-title">Peer review in progress — {{ zone2_pending|length }} image{{ 's' if zone2_pending|length != 1 else '' }}</div>
+        <div class="notif-sub">Your DDI score{{ 's' if zone2_pending|length != 1 else '' }} stand unaffected</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Contest announcements ── #}
+    {% for ann in contest_banners %}
+    <div class="notif-row">
+      <span class="notif-icon">📣</span>
+      <div class="notif-text">
+        <div class="notif-title">{{ ann.title }}</div>
+        <div class="notif-sub">{{ ann.contest_type | upper }} · {{ ann.body | truncate(80) }}</div>
+      </div>
+      {% if ann.cta_label and ann.cta_url %}
+      <a href="{{ ann.cta_url }}" class="notif-action">{{ ann.cta_label }} →</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+  </div>{# /notif-strip-body #}
+</div>{# /notif-strip #}
+<script>
+function toggleNotifStrip() {
+  var body = document.getElementById('notif-strip-body');
+  var chev = document.getElementById('notif-chevron');
+  var isCollapsed = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', !isCollapsed);
+  chev.classList.toggle('open', isCollapsed);
+}
+</script>
 {% endif %}
 
 {# ── Header ──────────────────────────────────────────────────────────────── #}
@@ -408,26 +517,6 @@ function dismissPotyBanner() {
 </div>
 {% endif %}
 
-{# ── Subscription status / free tier nudge ───────────────────────────────── #}
-{% if free_tier %}
-<div class="free-nudge">
-  <div class="free-nudge-bar">
-    <div style="font-size:15px; font-weight:600; color:var(--text-primary);">
-      Free tier — {{ free_tier.used }}/{{ free_tier.limit }} images this month
-      {% if free_tier.in_month1 %}<span style="font-family:var(--font-mono); font-size:12px; color:var(--gold); margin-left:8px;">WELCOME MONTH</span>{% endif %}
-    </div>
-    <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">
-      {{ free_tier.remaining }} scored image{{ 's' if free_tier.remaining != 1 else '' }} remaining this month
-    </div>
-    <div class="free-nudge-bar-track">
-      <div class="free-nudge-bar-fill" style="width:{{ [((free_tier.used / free_tier.limit) * 100)|int, 100]|min }}%;"></div>
-    </div>
-  </div>
-  <div style="flex-shrink:0;">
-    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:13px;">Upgrade to Unlimited →</a>
-  </div>
-</div>
-{% endif %}
 
 
 {# ── Mentor nudge (non-mentor subscribers only) ─────────────────────────── #}
