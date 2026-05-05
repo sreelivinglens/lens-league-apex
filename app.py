@@ -1930,6 +1930,213 @@ def upload():
                         if not _img:
                             return
 
+                        # ── LAYER 2: Hive AI detection ─────────────────────
+                        # Runs before Claude Vision. If Hive detects AI with
+                        # high confidence, we reject without calling Claude.
+                        # Fails safe — if Hive is down or key missing, scoring
+                        # continues normally. Never crashes the upload.
+                        _hive_key = os.getenv('HIVE_API_KEY', '')
+                        if _hive_key and _img.thumb_path and os.path.exists(_img.thumb_path):
+                            try:
+                                import urllib.request as _ureq
+                                import json as _hjson
+                                _exclude = {
+                                    'ai_generated', 'not_ai_generated', 'deepfake',
+                                    'none', 'inconclusive', 'inconclusive_video',
+                                    'not_ai_generated_audio', 'ai_generated_audio',
+                                }
+                                with open(_img.thumb_path, 'rb') as _hf:
+                                    _img_bytes = _hf.read()
+                                import base64 as _b64
+                                _b64_img = _b64.b64encode(_img_bytes).decode('utf-8')
+                                _hive_payload = _hjson.dumps({
+                                    'model': 'hive/ai-generated-and-deepfake-content-detection',
+                                    'messages': [{'role': 'user', 'content': [
+                                        {'type': 'image_url', 'image_url': {
+                                            'url': f'data:image/jpeg;base64,{_b64_img}'
+                                        }}
+                                    ]}]
+                                }).encode('utf-8')
+                                _hive_req = _ureq.Request(
+                                    'https://api.thehive.ai/api/v3/chat/completions',
+                                    data=_hive_payload,
+                                    headers={
+                                        'Authorization': f'Bearer {_hive_key}',
+                                        'Content-Type': 'application/json',
+                                    },
+                                    method='POST'
+                                )
+                                with _ureq.urlopen(_hive_req, timeout=180) as _hr:
+                                    _hive_resp = _hjson.loads(_hr.read().decode('utf-8'))
+                                # Parse response
+                                _classes = (_hive_resp.get('output', [{}])[0]
+                                            .get('classes', []))
+                                _score_map = {c['class']: c['value'] for c in _classes}
+                                _hive_ai_score = float(_score_map.get('ai_generated', 0.0))
+                                # Find generator name — highest value excluding meta-classes
+                                _gen_candidates = [
+                                    c for c in _classes
+                                    if c['class'] not in _exclude
+                                    and c['value'] > 0.001
+                                ]
+                                _hive_generator = (
+                                    max(_gen_candidates, key=lambda c: c['value'])['class']
+                                    if _gen_candidates else 'unknown'
+                                )
+                                app.logger.info(
+                                    f'[hive] image={image_id} '
+                                    f'ai_score={_hive_ai_score:.3f} '
+                                    f'generator={_hive_generator}'
+                                )
+                                # Store Hive result on image regardless of threshold
+                                _img.ai_suspicion = _hive_ai_score
+                                _img.ai_suspicion_reason = (
+                                    f'Hive: {_hive_generator} '
+                                    f'{_hive_ai_score:.0%}'
+                                )
+                                db.session.commit()
+
+                                if _hive_ai_score >= 0.85:
+                                    # ── HARD REJECT ───────────────────────
+                                    # High confidence AI — reject immediately,
+                                    # never call Claude Vision.
+                                    _img.score            = 0.0
+                                    _img.tier             = 'Rookie'
+                                    _img.dod_score        = 0.0
+                                    _img.disruption_score = 0.0
+                                    _img.dm_score         = 0.0
+                                    _img.wonder_score     = 0.0
+                                    _img.aq_score         = 0.0
+                                    _img.archetype        = ''
+                                    _img.soul_bonus       = False
+                                    _img.status           = 'scored'
+                                    _img.scored_at        = datetime.utcnow()
+                                    _img.is_flagged       = True
+                                    _img.needs_review     = True
+                                    _img.is_public        = False
+                                    _img.flagged_reason   = (
+                                        f'AI generation detected by Hive '
+                                        f'({_hive_ai_score:.0%} confidence). '
+                                        f'Generator: {_hive_generator}.'
+                                    )
+                                    _img.flagged_at       = datetime.utcnow()
+                                    db.session.commit()
+                                    # Notify user and admin
+                                    try:
+                                        _u = User.query.get(_img.user_id)
+                                        _uname = (
+                                            (_u.full_name or _u.username)
+                                            if _u else 'Photographer'
+                                        )
+                                        _gen_display = _hive_generator.replace('_', ' ').title()
+                                        send_email(
+                                            to_addresses=[_u.email] if _u else [],
+                                            subject='[Shutter League] Image Rejected &#8212; AI Generation Detected',
+                                            html_body=(
+                                                '<div style="font-family:Georgia,serif;'
+                                                'max-width:560px;margin:0 auto;padding:32px;'
+                                                'background:#fffef9;color:#111111;">'
+                                                '<p style="font-family:Courier New,monospace;'
+                                                'font-size:12px;letter-spacing:2px;'
+                                                'text-transform:uppercase;color:#F5C518;'
+                                                'margin-bottom:24px;">Shutter League</p>'
+                                                '<h2 style="font-size:22px;font-weight:700;'
+                                                'color:#111111;margin-bottom:16px;">'
+                                                'Image Rejected</h2>'
+                                                '<p style="font-size:16px;line-height:1.7;'
+                                                'color:#111111;">Hi ' + _uname + ',</p>'
+                                                '<p style="font-size:16px;line-height:1.7;'
+                                                'color:#111111;">Your image <strong>'
+                                                + (_img.asset_name or 'Untitled') +
+                                                '</strong> has been rejected. Our system '
+                                                'detected it was generated by '
+                                                + _gen_display +
+                                                ' (' + f'{_hive_ai_score:.0%}' + ' confidence).</p>'
+                                                '<p style="font-size:16px;line-height:1.7;'
+                                                'color:#111111;">Shutter League accepts only '
+                                                'original photographs taken by the submitting '
+                                                'photographer.</p>'
+                                                '<p style="font-size:14px;color:#555555;'
+                                                'margin-top:24px;">If you believe this is an '
+                                                'error, contact '
+                                                '<a href="mailto:' + CONTACT_EMAIL + '">'
+                                                + CONTACT_EMAIL + '</a> with your original '
+                                                'RAW file within 48 hours.</p>'
+                                                '<p style="font-size:14px;color:#555555;'
+                                                'margin-top:8px;">&#8212; Shutter League</p>'
+                                                '</div>'
+                                            ),
+                                            text_body=(
+                                                'Hi ' + _uname + ',\n\n'
+                                                'Your image "' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '" has been rejected.\n\n'
+                                                'Our system detected it was generated by ' +
+                                                _gen_display + ' (' +
+                                                f'{_hive_ai_score:.0%}' + ' confidence).\n\n'
+                                                'If you believe this is an error, contact ' +
+                                                CONTACT_EMAIL +
+                                                ' with your original RAW file within 48 hours.\n\n'
+                                                '-- Shutter League'
+                                            )
+                                        )
+                                        send_email(
+                                            to_addresses=[ADMIN_EMAIL],
+                                            subject=(
+                                                '[Admin] Hive Hard Reject — ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                ' (' + _gen_display + ' ' +
+                                                f'{_hive_ai_score:.0%}' + ')'
+                                            ),
+                                            html_body=(
+                                                '<p>Hive hard rejected an image — '
+                                                'Claude Vision was NOT called.</p>'
+                                                '<ul><li>Image: ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '</li><li>Generator: ' + _gen_display +
+                                                '</li><li>Confidence: ' +
+                                                f'{_hive_ai_score:.0%}' +
+                                                '</li><li>User: ' +
+                                                (_u.email if _u else 'unknown') +
+                                                '</li></ul>'
+                                            ),
+                                            text_body=(
+                                                'Hive hard reject.\nImage: ' +
+                                                (_img.asset_name or 'Untitled') +
+                                                '\nGenerator: ' + _gen_display +
+                                                '\nConfidence: ' +
+                                                f'{_hive_ai_score:.0%}' +
+                                                '\nUser: ' +
+                                                (_u.email if _u else 'unknown')
+                                            )
+                                        )
+                                    except Exception as _he:
+                                        app.logger.error(
+                                            f'[hive reject email error] {_he}'
+                                        )
+                                    return  # Stop — do not call Claude Vision
+
+                                elif _hive_ai_score >= 0.70:
+                                    # ── AMBER FLAG ────────────────────────
+                                    # Medium confidence — score with Claude
+                                    # but flag for admin review.
+                                    _img.needs_review = True
+                                    db.session.commit()
+                                    app.logger.info(
+                                        f'[hive] amber flag image={image_id} '
+                                        f'score={_hive_ai_score:.3f}'
+                                    )
+                                    # Continue to Claude Vision below
+
+                            except Exception as _hive_err:
+                                # Hive failed — log and continue to Claude
+                                # Never let Hive failure block scoring
+                                app.logger.warning(
+                                    f'[hive] check failed for image={image_id}: '
+                                    f'{_hive_err} — continuing to Claude Vision'
+                                )
+                        # ── END Hive check ─────────────────────────────────
+
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
