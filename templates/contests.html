@@ -7,8 +7,8 @@
   .contests-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
 
   .page-eyebrow {
-    font-family: var(--font-mono); font-size: 0.875rem; font-weight: 600;
-    letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold);
+    font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-primary);
     margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
   }
   .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
@@ -18,7 +18,7 @@
     font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
     color: var(--text-primary); margin-bottom: 0.75rem;
   }
-  .page-headline em { font-style: italic; color: var(--gold); }
+  .page-headline em { font-style: italic; color: #8B6914; }
 
   .page-intro {
     font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8;
@@ -52,8 +52,8 @@
     font-size: 1.45rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;
   }
   .comp-dates {
-    font-family: var(--font-mono); font-size: 0.875rem; font-weight: 600;
-    color: var(--gold); text-align: right; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700;
+    color: var(--text-primary); text-align: right; flex-shrink: 0;
     line-height: 1.5; white-space: nowrap;
   }
   .comp-dates small {
@@ -67,12 +67,15 @@
     padding: 14px 18px; margin-bottom: 20px;
     display: flex; flex-wrap: wrap; gap: 8px 24px;
   }
-  .comp-honour-item { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary); }
-  .comp-honour-item strong { color: var(--gold); }
+  .comp-honour-item {
+    font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary);
+    padding-left: 12px; border-left: 3px solid var(--gold-dark);
+  }
+  .comp-honour-item strong { color: var(--text-primary); font-weight: 700; }
   .comp-note {
-    font-size: 0.95rem; color: var(--text-muted); line-height: 1.7;
+    font-size: 0.95rem; color: var(--text-primary); line-height: 1.7;
     padding: 12px 16px; background: var(--surface-3);
-    border-left: 2px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-left: 3px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     margin-bottom: 20px; font-style: italic;
   }
   .comp-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
@@ -125,7 +128,7 @@
       <li>Prize eligibility restricted to Indian residents with a valid PAN card and an operational Indian bank account. Participation is open to all; prize payments are governed by Indian law (TDS applicable under Section 194B).</li>
       <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Scores, standings, and qualifying history reset on 1 January each year.</li>
       <li>Images must be the photographer's original work. AI-generated images, composites, and stolen images are disqualified. RAW file verification applies to all programme recipients.</li>
-      <li>Full submission rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Programme Rules</a>.</li>
+      <li>Full submission rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
     </ul>
   </div>
 
