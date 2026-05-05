@@ -1444,10 +1444,41 @@ def dashboard():
         total_count = Image.query.filter(
             Image.user_id == current_user.id,
         ).count()
+        # Compute shadow rank — position by avg DDI score across all public scored users
+        _shadow_rank = None
+        _shadow_tier = None
+        if total_count > 0:
+            try:
+                _rank_row = db.session.execute(db.text("""
+                    SELECT rank FROM (
+                        SELECT user_id,
+                               RANK() OVER (ORDER BY AVG(score) DESC) AS rank
+                        FROM images
+                        WHERE status = 'scored'
+                          AND score IS NOT NULL
+                          AND score > 0
+                          AND is_flagged = FALSE
+                        GROUP BY user_id
+                    ) ranked
+                    WHERE user_id = :uid
+                """), {'uid': current_user.id}).fetchone()
+                if _rank_row:
+                    _shadow_rank = int(_rank_row.rank)
+                # Best tier from scored images
+                _best = db.session.query(db.func.max(Image.score)).filter(
+                    Image.user_id == current_user.id,
+                    Image.score != None
+                ).scalar()
+                if _best:
+                    _shadow_tier = get_tier(float(_best))
+            except Exception:
+                pass
         free_tier = {
-            'used':      total_count,
-            'limit':     FREE_IMAGE_LIMIT,
-            'remaining': max(0, FREE_IMAGE_LIMIT - total_count),
+            'used':        total_count,
+            'limit':       FREE_IMAGE_LIMIT,
+            'remaining':   max(0, FREE_IMAGE_LIMIT - total_count),
+            'shadow_rank': _shadow_rank,
+            'shadow_tier': _shadow_tier,
         }
 
     # -- POTY top-6 tracker --------------------------------------------------
