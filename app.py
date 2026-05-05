@@ -2155,9 +2155,14 @@ def upload():
                             except Exception as _hive_err:
                                 # Hive failed — log and continue to Claude
                                 # Never let Hive failure block scoring
+                                _err_body = ''
+                                try:
+                                    _err_body = _hive_err.read().decode('utf-8')[:200]
+                                except Exception:
+                                    pass
                                 app.logger.warning(
                                     f'[hive] check failed for image={image_id}: '
-                                    f'{_hive_err} — continuing to Claude Vision'
+                                    f'{_hive_err} body={_err_body} — continuing to Claude Vision'
                                 )
                             finally:
                                 if '_hive_tmp' in dir() and _hive_tmp:
