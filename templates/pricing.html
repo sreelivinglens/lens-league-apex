@@ -43,7 +43,7 @@
   .plan-features li { font-size:16px; color:var(--text-primary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
   .plan-features .check { color:var(--gold); font-weight:700; flex-shrink:0; }
   .plan-features .muted { color:#888888; }
-  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; margin-top:auto; }
+  .plan-cta { display:flex; align-items:center; justify-content:center; width:100%; min-height:64px; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; margin-top:auto; box-sizing:border-box; }
   .plan-cta.primary { background:var(--gold); color:#0D0D0B; }
   .plan-cta.primary:hover { opacity:.85; }
   .plan-cta.secondary { background:transparent; color:#111111; border:1px solid var(--border); }
@@ -302,11 +302,11 @@
     <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
     <div class="faq-item">
       <div class="faq-q">What counts as a scored image?</div>
-      <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 6 scored images in their first month and 3 per month thereafter. Subscribers get unlimited scored images.</div>
+      <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 3 scored images as part of the Initial Assessment Phase. Camera subscribers get 5 scored images per month, Mobile subscribers get 8.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do unused images roll over?</div>
-      <div class="faq-a">Free users get 6 images in their first month and 3 per month thereafter — these reset on the 1st of each month and do not carry forward. Subscribers have no monthly limit.</div>
+      <div class="faq-a">Free users get 3 assessment images — these do not reset or roll over. Camera subscribers get 5 images per month, Mobile subscribers get 8 — these reset on the 1st of each month and do not carry forward.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I switch from Mobile to Camera League?</div>
