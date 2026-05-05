@@ -1936,48 +1936,21 @@ def upload():
                         # Fails safe — if Hive is down or key missing, scoring
                         # continues normally. Never crashes the upload.
                         _hive_key = os.getenv('HIVE_API_KEY', '')
-                        if _hive_key and (_img.thumb_path or _img.thumb_url):
+                        if _hive_key and _img.thumb_url:
                             try:
                                 import urllib.request as _ureq
                                 import json as _hjson
-                                import base64 as _b64
-                                import tempfile as _tmpfile
                                 _exclude = {
                                     'ai_generated', 'not_ai_generated', 'deepfake',
                                     'none', 'inconclusive', 'inconclusive_video',
                                     'not_ai_generated_audio', 'ai_generated_audio',
                                 }
-                                # Get image bytes — local file first, R2 fallback
-                                _hive_img_bytes = None
-                                _hive_tmp = None
-                                if _img.thumb_path and os.path.exists(_img.thumb_path):
-                                    with open(_img.thumb_path, 'rb') as _hf:
-                                        _hive_img_bytes = _hf.read()
-                                elif _img.thumb_url:
-                                    try:
-                                        from storage import get_client, BUCKET
-                                        _tf = _tmpfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-                                        get_client().download_fileobj(
-                                            BUCKET,
-                                            'thumbs/' + _img.thumb_url.split('/thumbs/')[-1],
-                                            _tf
-                                        )
-                                        _tf.close()
-                                        _hive_tmp = _tf.name
-                                        with open(_hive_tmp, 'rb') as _hf:
-                                            _hive_img_bytes = _hf.read()
-                                    except Exception as _r2err:
-                                        app.logger.warning(
-                                            f'[hive] R2 download failed for image={image_id}: {_r2err}'
-                                        )
-                                if not _hive_img_bytes:
-                                    raise ValueError('Could not load image bytes for Hive check')
-                                # V3 API — data URI in media_url field
+                                # V3 API — public R2 URL directly in media_url
                                 # Secret Key only — NOT AccessKeyID:SecretKey
-                                _b64_data = _b64.b64encode(_hive_img_bytes).decode('utf-8')
+                                app.logger.info(f'[hive] sending url={_img.thumb_url[:80]}')
                                 _hive_payload = _hjson.dumps({
                                     'media_metadata': True,
-                                    'input': [{'media_url': f'data:image/jpeg;base64,{_b64_data}'}]
+                                    'input': [{'media_url': _img.thumb_url}]
                                 }).encode('utf-8')
                                 _hive_req = _ureq.Request(
                                     'https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection',
@@ -2153,8 +2126,6 @@ def upload():
                                     # Continue to Claude Vision below
 
                             except Exception as _hive_err:
-                                # Hive failed — log and continue to Claude
-                                # Never let Hive failure block scoring
                                 _err_body = ''
                                 try:
                                     _err_body = _hive_err.read().decode('utf-8')[:200]
@@ -2164,12 +2135,6 @@ def upload():
                                     f'[hive] check failed for image={image_id}: '
                                     f'{_hive_err} body={_err_body} — continuing to Claude Vision'
                                 )
-                            finally:
-                                if '_hive_tmp' in dir() and _hive_tmp:
-                                    try:
-                                        os.unlink(_hive_tmp)
-                                    except Exception:
-                                        pass
                         # ── END Hive check ─────────────────────────────────
 
                         result = auto_score(
