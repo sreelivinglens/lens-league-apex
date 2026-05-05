@@ -1018,15 +1018,6 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
 
     db.session.commit()
 
-    # Sprint 2 — award P2P rating points (+2 per rating, subscribers only)
-    # Points awarded via app.award_points — imported at call time to avoid circular import
-    try:
-        import app as _app_module
-        if rater and rater.is_subscribed:
-            _app_module.award_points(rater, 2.0, 'peer_rating')
-    except Exception:
-        pass  # Never let points failure break the rating flow
-
     _check_rater_bias(assignment.rater_id)
     return rating
 

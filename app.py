@@ -6031,6 +6031,13 @@ def submit_rating():
             aq         = aq,
             time_spent = time_spent,
         )
+        # Sprint 2 — award P2P rating points (+2, subscribers only)
+        try:
+            if current_user.is_subscribed:
+                award_points(current_user, 2.0, 'peer_rating')
+        except Exception as _pe:
+            app.logger.error(f'[points hook] peer_rating error: {_pe}')
+
         flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} . +1 credit earned.', 'success')
         if (current_user.lifetime_ratings_given or 0) % 5 == 0:
             flash(' You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
