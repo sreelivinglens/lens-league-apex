@@ -1945,20 +1945,17 @@ def upload():
                                     'none', 'inconclusive', 'inconclusive_video',
                                     'not_ai_generated_audio', 'ai_generated_audio',
                                 }
-                                with open(_img.thumb_path, 'rb') as _hf:
-                                    _img_bytes = _hf.read()
+                                # V3 API — base64 payload (avoids R2 auth issues)
+                                # Secret Key only — NOT AccessKeyID:SecretKey
                                 import base64 as _b64
-                                _b64_img = _b64.b64encode(_img_bytes).decode('utf-8')
+                                with open(_img.thumb_path, 'rb') as _hf:
+                                    _b64_data = _b64.b64encode(_hf.read()).decode('utf-8')
                                 _hive_payload = _hjson.dumps({
-                                    'model': 'hive/ai-generated-and-deepfake-content-detection',
-                                    'messages': [{'role': 'user', 'content': [
-                                        {'type': 'image_url', 'image_url': {
-                                            'url': f'data:image/jpeg;base64,{_b64_img}'
-                                        }}
-                                    ]}]
+                                    'media_metadata': True,
+                                    'input': [{'media_base64': _b64_data}]
                                 }).encode('utf-8')
                                 _hive_req = _ureq.Request(
-                                    'https://api.thehive.ai/api/v3/chat/completions',
+                                    'https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection',
                                     data=_hive_payload,
                                     headers={
                                         'Authorization': f'Bearer {_hive_key}',
@@ -1968,9 +1965,11 @@ def upload():
                                 )
                                 with _ureq.urlopen(_hive_req, timeout=180) as _hr:
                                     _hive_resp = _hjson.loads(_hr.read().decode('utf-8'))
-                                # Parse response
-                                _classes = (_hive_resp.get('output', [{}])[0]
-                                            .get('classes', []))
+                                # Parse V3 response — output[0].classes
+                                _classes = (
+                                    _hive_resp.get('output', [{}])[0]
+                                    .get('classes', [])
+                                )
                                 _score_map = {c['class']: c['value'] for c in _classes}
                                 _hive_ai_score = float(_score_map.get('ai_generated', 0.0))
                                 # Find generator name — highest value excluding meta-classes
@@ -1996,7 +1995,7 @@ def upload():
                                 )
                                 db.session.commit()
 
-                                if _hive_ai_score >= 0.85:
+                                if _hive_ai_score >= 0.90:
                                     # ── HARD REJECT ───────────────────────
                                     # High confidence AI — reject immediately,
                                     # never call Claude Vision.
