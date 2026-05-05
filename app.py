@@ -1752,7 +1752,35 @@ def upload():
                 if month_count >= free_limit:
                     flash(
                         f'You have used all {free_limit} free scored images for this month. '
-                        'Upgrade to Learning (₹100/mo) for 12 images/month, or Camera/Mobile for unlimited.',
+                        'Subscribe to Mobile (₹99/mo, 8 images) or Camera (₹199/mo, 5 RAW-eligible images).',
+                        'error'
+                    )
+                    return redirect(url_for('pricing'))
+            elif _track == 'dormant':
+                # Dormant mode — rank preserved, 0 uploads
+                flash(
+                    'Your subscription is in Dormant mode (₹19/month). '
+                    'Uploads are paused. Reactivate your Mobile or Camera subscription to resume.',
+                    'error'
+                )
+                return redirect(url_for('pricing'))
+            elif _track == 'mobile':
+                # Mobile tier — 8 images/month
+                MOBILE_IMAGE_LIMIT = 8
+                if month_count >= MOBILE_IMAGE_LIMIT:
+                    flash(
+                        f'You have used all {MOBILE_IMAGE_LIMIT} Mobile tier images for this month. '
+                        'Add a top-up (₹99 for 5 images) or upgrade to Camera track for RAW eligibility.',
+                        'error'
+                    )
+                    return redirect(url_for('pricing'))
+            elif _track == 'camera':
+                # Camera tier — 5 images/month (RAW eligible)
+                CAMERA_IMAGE_LIMIT = 5
+                if month_count >= CAMERA_IMAGE_LIMIT:
+                    flash(
+                        f'You have used all {CAMERA_IMAGE_LIMIT} Camera tier images for this month. '
+                        'Add a top-up (₹99 for 5 images) to continue uploading.',
                         'error'
                     )
                     return redirect(url_for('pricing'))
@@ -1761,11 +1789,11 @@ def upload():
                 if month_count >= LEARNING_IMAGE_LIMIT:
                     flash(
                         f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                        'Upgrade to Camera or Mobile track for unlimited uploads and contest access.',
+                        'Upgrade to Camera or Mobile track for contest access.',
                         'error'
                     )
                     return redirect(url_for('pricing'))
-            # Camera/Mobile/Mentor tracks — unlimited, no check needed
+            # Mentor track — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
         filename  = secure_filename(file.filename)
@@ -5308,8 +5336,8 @@ def subscribe(track):
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 299,  'annual': 2499},
-        'camera':   {'monthly': 599,  'annual': 4999},
+        'mobile':   {'monthly': 99,   'annual': 999},
+        'camera':   {'monthly': 199,  'annual': 1999},
         'learning': {'monthly': 100,  'annual': 999},
         'mentor':   {'monthly': 999,  'annual': 9999},
     }
@@ -5357,7 +5385,30 @@ def subscribe(track):
             flash('Payment verification failed. Please contact support if you were charged.', 'error')
             return redirect(url_for('subscribe', track=track, plan=plan))
 
-    # GET  -  create Razorpay subscription
+    # GET  -  Payment gateway finalisation in progress
+    # Razorpay/PayU onboarding pending — show coming soon wall
+    # Once gateway is confirmed, remove this block and restore subscription creation below
+    PAYMENT_GATEWAY_LIVE = os.getenv('PAYMENT_GATEWAY_LIVE', '0') == '1'
+    if not PAYMENT_GATEWAY_LIVE:
+        track_labels = {
+            'camera':   'Camera Track',
+            'mobile':   'Mobile Track',
+            'learning': 'Learning Only',
+            'mentor':   'Human + AI Mentor',
+        }
+        track_descriptions = {
+            'camera':   '5 scored images/month · RAW eligible · POTY · Contests',
+            'mobile':   '8 scored images/month · POTY · Contests',
+            'learning': '12 scored images/month · AI mentor · Improvement paths',
+            'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
+        }
+        return render_template('subscribe_coming_soon.html',
+            track=track, plan=plan, amount=amount,
+            track_label=track_labels.get(track, track.title()),
+            track_description=track_descriptions.get(track, ''),
+        )
+
+    # GET  -  create Razorpay subscription (live when PAYMENT_GATEWAY_LIVE=1)
     subscription = None
     if razorpay_key and plan_id:
         try:
@@ -5380,8 +5431,8 @@ def subscribe(track):
         'mentor':   'Human + AI Mentor',
     }
     track_descriptions = {
-        'camera':   'Unlimited uploads · POTY · Contests',
-        'mobile':   'Unlimited uploads · POTY · Contests',
+        'camera':   '5 scored images/month · RAW eligible · POTY · Contests',
+        'mobile':   '8 scored images/month · POTY · Contests',
         'learning': '12 scored images/month · AI mentor · Improvement paths',
         'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
     }
@@ -6230,11 +6281,11 @@ def admin_subscriptions():
         db.or_(User.is_subscribed == False, User.is_subscribed == None)
     ).order_by(User.created_at.desc()).all()
     total_mrr = sum(
-        (299 if u.subscription_track == 'mobile' else 599)
+        (99 if u.subscription_track == 'mobile' else 199)
         for u in subscribers if u.subscription_plan == 'monthly'
     )
     total_arr = sum(
-        (2499 if u.subscription_track == 'mobile' else 4999)
+        (999 if u.subscription_track == 'mobile' else 1999)
         for u in subscribers if u.subscription_plan == 'annual'
     )
     return render_template('admin_subscriptions.html',
@@ -6307,8 +6358,8 @@ def admin_export_subscriptions():
         'monthly_value_inr', 'subscribed_at', 'razorpay_sub_id',
     ])
     price_map = {
-        ('mobile', 'monthly'): 299,  ('mobile', 'annual'): 2499,
-        ('camera', 'monthly'): 599,  ('camera', 'annual'): 4999,
+        ('mobile', 'monthly'): 99,   ('mobile', 'annual'): 999,
+        ('camera', 'monthly'): 199,  ('camera', 'annual'): 1999,
     }
     for u in subs:
         price = price_map.get((u.subscription_track, u.subscription_plan), 0)
