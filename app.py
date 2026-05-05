@@ -191,8 +191,7 @@ Enter here: {challenge_url}
     return sent
 
 
-FREE_IMAGE_LIMIT_MONTH1 = 6  # Free images in first calendar month after registration
-FREE_IMAGE_LIMIT_DEFAULT = 3  # Free images per month from month 2 onwards
+FREE_IMAGE_LIMIT = 3  # Lifetime assessment images (Initial Assessment Phase — investor doc)
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
 app = Flask(__name__)
@@ -1442,21 +1441,13 @@ def dashboard():
     # Free tier context for upgrade nudge
     free_tier = None
     if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-        from datetime import date as _date
-        today      = _date.today()
-        reg_date   = current_user.created_at.date() if current_user.created_at else today
-        in_month1  = (today.year == reg_date.year and today.month == reg_date.month)
-        free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
-        month_start = datetime(today.year, today.month, 1)
-        month_count = Image.query.filter(
+        total_count = Image.query.filter(
             Image.user_id == current_user.id,
-            Image.created_at >= month_start,
         ).count()
         free_tier = {
-            'used':      month_count,
-            'limit':     free_limit,
-            'remaining': max(0, free_limit - month_count),
-            'in_month1': in_month1,
+            'used':      total_count,
+            'limit':     FREE_IMAGE_LIMIT,
+            'remaining': max(0, FREE_IMAGE_LIMIT - total_count),
         }
 
     # -- POTY top-6 tracker --------------------------------------------------
@@ -1732,27 +1723,22 @@ def upload():
             flash('File type not supported.', 'error')
             return redirect(request.url)
 
-        # -- Free quota check (6 in month 1, 3/month thereafter) ----------
+        # -- Free quota check (3 lifetime assessment images per investor doc) --
         if current_user.role != 'admin':
             from datetime import date as _date
             today       = _date.today()
-            month_start = datetime(today.year, today.month, 1)
-            month_count = Image.query.filter(
-                Image.user_id == current_user.id,
-                Image.created_at >= month_start,
-            ).count()
             _track = getattr(current_user, 'subscription_track', None) or ''
             _is_sub = getattr(current_user, 'is_subscribed', False)
 
             if not _is_sub:
-                # Free tier
-                reg_date  = current_user.created_at.date() if current_user.created_at else today
-                in_month1 = (today.year == reg_date.year and today.month == reg_date.month)
-                free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
-                if month_count >= free_limit:
+                # Free tier — 3 lifetime images (Initial Assessment Phase)
+                total_count = Image.query.filter(
+                    Image.user_id == current_user.id,
+                ).count()
+                if total_count >= FREE_IMAGE_LIMIT:
                     flash(
-                        f'You have used all {free_limit} free scored images for this month. '
-                        'Subscribe to Mobile (₹99/mo, 8 images) or Camera (₹199/mo, 5 RAW-eligible images).',
+                        f'You have used all {FREE_IMAGE_LIMIT} free assessment images. '
+                        'Subscribe to Mobile (₹99/mo, 8 images) or Camera (₹199/mo, 5 RAW-eligible images) to continue.',
                         'error'
                     )
                     return redirect(url_for('pricing'))
@@ -1764,35 +1750,39 @@ def upload():
                     'error'
                 )
                 return redirect(url_for('pricing'))
-            elif _track == 'mobile':
-                # Mobile tier — 8 images/month
-                MOBILE_IMAGE_LIMIT = 8
-                if month_count >= MOBILE_IMAGE_LIMIT:
-                    flash(
-                        f'You have used all {MOBILE_IMAGE_LIMIT} Mobile tier images for this month. '
-                        'Add a top-up (₹99 for 5 images) or upgrade to Camera track for RAW eligibility.',
-                        'error'
-                    )
-                    return redirect(url_for('pricing'))
-            elif _track == 'camera':
-                # Camera tier — 5 images/month (RAW eligible)
-                CAMERA_IMAGE_LIMIT = 5
-                if month_count >= CAMERA_IMAGE_LIMIT:
-                    flash(
-                        f'You have used all {CAMERA_IMAGE_LIMIT} Camera tier images for this month. '
-                        'Add a top-up (₹99 for 5 images) to continue uploading.',
-                        'error'
-                    )
-                    return redirect(url_for('pricing'))
-            elif _track == 'learning':
-                # ₹100 Learning tier — 12 images/month
-                if month_count >= LEARNING_IMAGE_LIMIT:
-                    flash(
-                        f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                        'Upgrade to Camera or Mobile track for contest access.',
-                        'error'
-                    )
-                    return redirect(url_for('pricing'))
+            elif _track in ('mobile', 'camera', 'learning'):
+                # Subscribed tracks — check monthly count
+                month_start = datetime(today.year, today.month, 1)
+                month_count = Image.query.filter(
+                    Image.user_id == current_user.id,
+                    Image.created_at >= month_start,
+                ).count()
+                if _track == 'mobile':
+                    MOBILE_IMAGE_LIMIT = 8
+                    if month_count >= MOBILE_IMAGE_LIMIT:
+                        flash(
+                            f'You have used all {MOBILE_IMAGE_LIMIT} Mobile tier images for this month. '
+                            'Add a top-up (₹99 for 5 images) or upgrade to Camera track for RAW eligibility.',
+                            'error'
+                        )
+                        return redirect(url_for('pricing'))
+                elif _track == 'camera':
+                    CAMERA_IMAGE_LIMIT = 5
+                    if month_count >= CAMERA_IMAGE_LIMIT:
+                        flash(
+                            f'You have used all {CAMERA_IMAGE_LIMIT} Camera tier images for this month. '
+                            'Add a top-up (₹99 for 5 images) to continue uploading.',
+                            'error'
+                        )
+                        return redirect(url_for('pricing'))
+                elif _track == 'learning':
+                    if month_count >= LEARNING_IMAGE_LIMIT:
+                        flash(
+                            f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
+                            'Upgrade to Camera or Mobile track for contest access.',
+                            'error'
+                        )
+                        return redirect(url_for('pricing'))
             # Mentor track — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
@@ -5545,20 +5535,13 @@ def bulk_upload():
         genre = normalise_genre(raw_genre)
 
         if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-            from datetime import date as _date
-            today      = _date.today()
-            reg_date   = current_user.created_at.date() if current_user.created_at else today
-            in_month1  = (today.year == reg_date.year and today.month == reg_date.month)
-            free_limit = FREE_IMAGE_LIMIT_MONTH1 if in_month1 else FREE_IMAGE_LIMIT_DEFAULT
-            month_start = datetime(today.year, today.month, 1)
-            month_count = Image.query.filter(
+            total_count = Image.query.filter(
                 Image.user_id == current_user.id,
-                Image.created_at >= month_start,
             ).count()
-            if month_count >= free_limit:
+            if total_count >= FREE_IMAGE_LIMIT:
                 flash(
-                    f'You have used all {free_limit} free scored images for this month. '
-                    'Upgrade to Camera or Mobile track for unlimited uploads.',
+                    f'You have used all {FREE_IMAGE_LIMIT} free assessment images. '
+                    'Subscribe to Camera or Mobile track to continue uploading.',
                     'error'
                 )
                 return redirect(url_for('pricing'))
