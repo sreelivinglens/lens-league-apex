@@ -28,23 +28,22 @@
   .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:var(--gold); border-radius:50%; transition:.3s; }
   input:checked + .toggle-slider:before { transform:translateX(24px); }
   .save-badge { font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; color:#0D0D0B; background:var(--gold); padding:3px 8px; border-radius:4px; text-transform:uppercase; }
-  .plans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1200px; margin:0 auto 64px; }
-  .plan-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; }
+  .plans-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1200px; margin:0 auto 64px; align-items:stretch; }
+  .plan-card { background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px 28px; position:relative; transition:border-color .2s; display:flex; flex-direction:column; }
   .plan-card:hover { border-color:var(--gold-dark); }
   .plan-card.featured { border-color:var(--gold); }
-  .featured-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--gold); color:#0D0D0B; font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; padding:4px 16px; border-radius:99px; text-transform:uppercase; white-space:nowrap; }
-  .plan-icon { font-size:36px; margin-bottom:16px; display:block; }
-  .plan-name { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .plan-track { font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; }
-  .plan-price { margin-bottom:24px; }
+  .plan-icon { font-size:36px; margin-bottom:16px; display:block; line-height:1; min-height:44px; }
+  .plan-name { font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px; min-height:30px; }
+  .plan-track { font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:20px; min-height:36px; }
+  .plan-price { margin-bottom:24px; min-height:72px; }
   .plan-amount { font-size:42px; font-weight:700; color:var(--text-primary); line-height:1; }
   .plan-period { font-size:16px; color:#111111; margin-left:4px; }
   .plan-billed { font-size:15px; color:#111111; font-family:var(--font-mono); margin-top:4px; }
-  .plan-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:12px; }
+  .plan-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:12px; flex:1; }
   .plan-features li { font-size:16px; color:var(--text-primary); display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
   .plan-features .check { color:var(--gold); font-weight:700; flex-shrink:0; }
   .plan-features .muted { color:#888888; }
-  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; }
+  .plan-cta { display:block; width:100%; padding:14px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:.2s; cursor:pointer; border:none; margin-top:auto; }
   .plan-cta.primary { background:var(--gold); color:#0D0D0B; }
   .plan-cta.primary:hover { opacity:.85; }
   .plan-cta.secondary { background:transparent; color:#111111; border:1px solid var(--border); }
@@ -158,7 +157,7 @@
         <li><span class="muted">—</span> <span style="color:var(--text-muted)">Ongoing uploads</span></li>
       </ul>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('dashboard') }}" class="plan-cta secondary">Go to Dashboard</a>
+        <a href="{{ url_for('dashboard') }}" class="plan-cta primary">Go to Dashboard</a>
       {% else %}
         <a href="{{ url_for('register') }}" class="plan-cta primary">Start Free</a>
       {% endif %}
@@ -166,8 +165,7 @@
 
     <!-- Camera -->
     <div class="plan-card featured">
-      <div class="featured-badge">📷 Camera Track</div>
-      <span class="plan-icon" style="margin-top:14px;">📷</span>
+      <span class="plan-icon">📷</span>
       <div class="plan-name">Camera</div>
       <div class="plan-track">DSLR · Mirrorless · Film</div>
       <div class="plan-price">
@@ -176,12 +174,12 @@
           <div class="plan-billed">Billed monthly</div>
         </div>
         <div class="annual-price" style="display:none">
-          <span class="plan-amount">₹417</span><span class="plan-period">/month</span>
+          <span class="plan-amount">₹166</span><span class="plan-period">/month</span>
           <div class="plan-billed">₹1,999 billed annually</div>
         </div>
       </div>
       <ul class="plan-features">
-        <li><span class="check">✓</span> 5 scored images / month</li>
+        <li><span class="check">✓</span> <strong>5 scored images / month</strong></li>
         <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#111111;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
@@ -205,12 +203,12 @@
           <div class="plan-billed">Billed monthly</div>
         </div>
         <div class="annual-price" style="display:none">
-          <span class="plan-amount">₹208</span><span class="plan-period">/month</span>
+          <span class="plan-amount">₹83</span><span class="plan-period">/month</span>
           <div class="plan-billed">₹999 billed annually</div>
         </div>
       </div>
       <ul class="plan-features">
-        <li><span class="check">✓</span> 8 scored images / month</li>
+        <li><span class="check">✓</span> <strong>8 scored images / month</strong></li>
         <li><span class="check">✓</span> Full Apex DDI analysis <span style="font-family:var(--font-mono);font-size:14px;color:#111111;letter-spacing:0.5px;">(Dimensional Diagnostic Index — 5 modules)</span></li>
         <li><span class="check">✓</span> Weekly Challenge + POTY qualification</li>
         <li><span class="check">✓</span> Peer-to-peer blind rating</li>
@@ -304,11 +302,11 @@
     <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--text-muted);text-transform:uppercase;margin-bottom:28px;text-align:center;">Common Questions</div>
     <div class="faq-item">
       <div class="faq-q">What counts as a scored image?</div>
-      <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 3 scored images as part of the Initial Assessment Phase. Camera subscribers get 5 scored images per month, Mobile subscribers get 8.</div>
+      <div class="faq-a">Every image you upload that goes through the Apex DDI Engine counts as one scored image. Free users get 6 scored images in their first month and 3 per month thereafter. Subscribers get unlimited scored images.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do unused images roll over?</div>
-      <div class="faq-a">Free users get 3 assessment images — these do not reset or roll over. Camera subscribers get 5 images per month, Mobile subscribers get 8 — these reset on the 1st of each month and do not carry forward.</div>
+      <div class="faq-a">Free users get 6 images in their first month and 3 per month thereafter — these reset on the 1st of each month and do not carry forward. Subscribers have no monthly limit.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I switch from Mobile to Camera League?</div>
