@@ -1947,7 +1947,6 @@ def upload():
                                 }
                                 # V3 API — public R2 URL directly in media_url
                                 # Secret Key only — NOT AccessKeyID:SecretKey
-                                app.logger.info(f'[hive] sending url={_img.thumb_url[:80]}')
                                 _hive_payload = _hjson.dumps({
                                     'media_metadata': True,
                                     'input': [{'media_url': _img.thumb_url}]
