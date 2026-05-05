@@ -8,7 +8,7 @@
 .awards-hero { margin-bottom:52px; text-align:center; }
 .awards-hero-eyebrow {
   font-family:var(--font-mono); font-size:15px; font-weight:700;
-  letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;
+  letter-spacing:3px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;
 }
 .awards-hero h1 {
   font-size:clamp(28px,5vw,44px); font-weight:700; color:var(--text-primary);
@@ -41,7 +41,7 @@
   margin-bottom:10px;
 }
 .poty-honour {
-  font-size:clamp(18px,2.5vw,24px); font-weight:700; color:var(--gold);
+  font-size:clamp(18px,2.5vw,24px); font-weight:700; color:#8B6914;
   line-height:1.2; margin-bottom:6px;
 }
 .poty-honour-label {
@@ -59,7 +59,7 @@
 .track-icon { font-size:28px; margin-bottom:12px; display:block; }
 .track-name { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
 .track-sub {
-  font-family:var(--font-mono); font-size:14px; color:var(--gold);
+  font-family:var(--font-mono); font-size:14px; color:#8B6914;
   letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px;
 }
 .track-honours { display:flex; flex-direction:column; gap:10px; }
@@ -106,7 +106,7 @@
 .tl-row:last-child { border-bottom:none; }
 .tl-month {
   font-family:var(--font-mono); font-size:17px; font-weight:700;
-  letter-spacing:1px; color:var(--gold); min-width:90px; padding-top:2px;
+  letter-spacing:1px; color:#8B6914; min-width:90px; padding-top:2px;
 }
 .tl-desc { font-size:16px; color:var(--text-primary); line-height:1.65; }
 
@@ -197,7 +197,7 @@
       </div>
     </div>
     <p style="font-size:15px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.5px;line-height:1.6;">
-      Recognition and awards — details announced to qualifying participants. See <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Programme Rules</a> for full terms.
+      Recognition and awards — details announced to qualifying participants. See <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a> for full terms.
     </p>
   </div>
 
@@ -296,6 +296,54 @@
         <div class="tl-desc">New calendar year begins. Annual standings reset. Your tier, rank history, and points carry forward. Start building your score again from day one.</div>
       </div>
     </div>
+  </div>
+
+  <!-- ── 6-6-12 Clock ── -->
+  <div class="awards-section">
+    <div class="awards-section-title">The 6-6-12 Rule — Your Professional Credibility Gate</div>
+
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:24px;">
+      Shutter League uses a residency-based ranking system — the same logic as ICC cricket rankings. A single brilliant photograph does not make a rank. Consistent performance over time does. The 6-6-12 rule is the gate that separates casual uploads from a verified professional standing.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">6</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Months Subscribed</div>
+        <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">You must hold an active Camera or Mobile subscription for 6 cumulative months. The clock runs only while subscribed — it pauses if you cancel and resumes from where it stopped when you resubscribe.</div>
+      </div>
+      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">6</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Images Scored</div>
+        <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">You must have at least 6 DDI-scored images in your portfolio in the qualifying genre. Six images is the statistical minimum for a meaningful rank — fewer than this and the data is not reliable enough to place you on the official leaderboard.</div>
+      </div>
+      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">12</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Image Rolling Pool</div>
+        <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">Your rank is calculated from your best or most recent 12 images with a baseline damping factor for empty slots. As you upload more, older images rotate out. Your rank reflects your current form, not a single peak performance years ago.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #8B6914;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;margin-bottom:20px;">
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">Clock Behaviour</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Runs</strong> while you hold an active Camera or Mobile subscription.</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Pauses</strong> if you cancel — your progress is not lost.</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Resumes</strong> from where it stopped when you resubscribe.</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Dormant Mode (₹19/month)</strong> keeps the clock ticking at minimal cost — the rational choice over full cancellation if you need a break.</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #8B6914;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;">
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">What Your Dashboard Will Show</div>
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">
+        Once you are building toward your official rank, your dashboard shows a countdown: <em style="color:#8B6914;">"Official rank unlocks in 3 months and 2 images."</em> After you qualify: <em style="color:#8B6914;">"Officially Ranked — World #142."</em>
+      </div>
+    </div>
+
+    <p style="font-size:15px;color:var(--text-primary);line-height:1.7;margin-top:16px;">
+      <strong>Why does this exist?</strong> Three reasons. First, consistency check — it prevents one-hit wonders dominating the leaderboard on a single lucky upload. Second, anti-gaming — it makes multi-account manipulation economically irrational. Third, retention — the 6-month goal gives subscribers a meaningful milestone to work toward, not just a monthly renewal.
+    </p>
   </div>
 
   <!-- CTA -->
