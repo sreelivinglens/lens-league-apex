@@ -102,7 +102,7 @@
   .img-card-body { padding: 14px 16px; }
   .img-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .img-card-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
-  .img-card-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--gold); margin-top: 6px; }
+  .img-card-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #8B6914; margin-top: 6px; }
 
   /* Banners */
   .zone-banner {
@@ -119,7 +119,7 @@
     border-left: 4px solid var(--gold); border-radius: var(--radius-md);
     padding: 14px 18px; margin-top: 8px; font-size: 14px; color: var(--text-primary);
   }
-  .raw-request-card a { color: var(--gold); font-weight: 600; text-decoration: none; }
+  .raw-request-card a { color: var(--text-primary); font-weight: 700; text-decoration: underline; }
   .raw-request-card a:hover { text-decoration: underline; }
 
   /* RAW pending — card highlight + pill badge */
@@ -221,12 +221,12 @@
   .notif-action {
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 0.5px; text-transform: uppercase;
-    color: var(--gold); text-decoration: none; white-space: nowrap;
-    border: 1px solid var(--gold); padding: 9px 16px; border-radius: 4px;
+    color: #8B6914; text-decoration: none; white-space: nowrap;
+    border: 2px solid #8B6914; padding: 9px 16px; border-radius: 4px;
     flex-shrink: 0; transition: background 0.15s; min-height: 44px;
     display: inline-flex; align-items: center;
   }
-  .notif-action:hover { background: rgba(245,197,24,0.12); }
+  .notif-action:hover { background: rgba(139,105,20,0.10); }
   /* Red action (urgent) */
   .notif-action-urgent {
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
@@ -278,7 +278,7 @@
   .poty-genre { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 110px; flex-shrink: 0; }
   .poty-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; }
   .poty-bar-fill { background: var(--gold); border-radius: 4px; height: 8px; transition: width 0.5s; }
-  .poty-avg { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--gold); width: 52px; text-align: right; flex-shrink: 0; }
+  .poty-avg { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #8B6914; width: 52px; text-align: right; flex-shrink: 0; }
   .poty-count { font-size: 13px; color: var(--text-primary); width: 60px; text-align: right; flex-shrink: 0; }
 
   /* Peer rating widget */
@@ -291,7 +291,7 @@
     letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
   }
   .peer-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
-  .peer-stat-val { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .peer-stat-val { font-size: 28px; font-weight: 700; color: #8B6914; line-height: 1; }
   .peer-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
 
   /* Programme wins */
@@ -594,7 +594,7 @@ function toggleNotifStrip() {
 {% if active_challenge and active_challenge.is_open %}
 <div style="background:rgba(245,197,24,0.15); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
   <div>
-    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
+    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:#8B6914; text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
     <div style="font-size:18px; font-weight:700; color:var(--text-primary); font-style:italic;">{{ active_challenge.prompt_title }}</div>
     <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
   </div>
@@ -623,9 +623,9 @@ function toggleNotifStrip() {
   <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
     <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:13px;">☆ Rate Images</a>
     {% if rating_widget.unlocks_pending > 0 and rating_widget.pool_candidate %}
-    <div style="font-size:14px; color:var(--gold);">
+    <div style="font-size:14px; color:#8B6914; font-weight:600;">
       🔓 You have {{ rating_widget.unlocks_pending }} pool unlock{{ 's' if rating_widget.unlocks_pending > 1 else '' }} available
-      — <a href="#pool-entry-{{ rating_widget.pool_candidate.id }}" style="color:var(--gold); font-weight:600;">use it below</a>
+      — <a href="#pool-entry-{{ rating_widget.pool_candidate.id }}" style="color:#8B6914; font-weight:700; text-decoration:underline;">use it below</a>
     </div>
     {% elif rating_widget.credits_to_next > 0 %}
     <div style="font-size:14px; color:var(--text-primary);">{{ rating_widget.credits_to_next }} more rating{{ 's' if rating_widget.credits_to_next > 1 else '' }} to unlock a pool entry</div>
@@ -643,7 +643,7 @@ function toggleNotifStrip() {
       <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
     </div>
     {% if poty_tracker.best_avg %}
-    <div style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">Best avg: {{ poty_tracker.best_avg }}</div>
+    <div style="font-family:var(--font-mono); font-size:13px; color:#8B6914; font-weight:700;">Best avg: {{ poty_tracker.best_avg }}</div>
     {% endif %}
   </div>
   <div class="poty-tracker">
@@ -681,7 +681,7 @@ function toggleNotifStrip() {
       <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
     </div>
     <div class="win-badge">{{ img.tier }}</div>
-    <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--gold);">{{ img.judge_final_score }}</div>
+    <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:#8B6914;">{{ img.judge_final_score }}</div>
   </div>
   {% endfor %}
 </div>
@@ -745,7 +745,7 @@ function toggleNotifStrip() {
     <span class="raw-request-card" style="display:block;" onclick="event.preventDefault(); event.stopPropagation();">
       📂 <strong>RAW file requested</strong> — score held pending verification.
       <span onclick="event.preventDefault(); event.stopPropagation(); window.location='{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}';"
-            style="color:var(--gold);font-weight:600;cursor:pointer;text-decoration:underline;">Submit RAW →</span>
+            style="color:var(--text-primary);font-weight:700;cursor:pointer;text-decoration:underline;">Submit RAW →</span>
     </span>
     {% elif img.raw_verified %}
     <span class="raw-verified-banner">✓ RAW Verified — score confirmed</span>
@@ -797,7 +797,7 @@ function toggleNotifStrip() {
 <div class="empty-state">
   {% if query %}
     <h3>No images match "{{ query }}"</h3>
-    <p>Try a different search term, or <a href="{{ url_for('dashboard') }}" style="color:var(--gold);">clear the search</a>.</p>
+    <p>Try a different search term, or <a href="{{ url_for('dashboard') }}" style="color:#8B6914;font-weight:700;text-decoration:underline;">clear the search</a>.</p>
   {% else %}
     <h3>No images yet</h3>
     <p>Upload your first photograph to get your DDI score.<br>Every scored image enters the monthly programme automatically.</p>
