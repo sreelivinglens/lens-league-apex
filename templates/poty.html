@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Annual Photography Honours — Shutter League{% endblock %}
+{% block title %}Annual Excellence Award — Photographer of the Year · Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -7,23 +7,23 @@
 
 .awards-hero { margin-bottom:52px; text-align:center; }
 .awards-hero-eyebrow {
-  font-family:var(--font-mono); font-size:12px; font-weight:700;
-  letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;
+  font-family:var(--font-mono); font-size:15px; font-weight:700;
+  letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;
 }
 .awards-hero h1 {
   font-size:clamp(28px,5vw,44px); font-weight:700; color:var(--text-primary);
   margin-bottom:16px; line-height:1.15;
 }
 .awards-hero p {
-  font-size:17px; color:var(--text-primary); max-width:580px;
+  font-size:18px; color:var(--text-primary); max-width:580px;
   margin:0 auto; line-height:1.8;
 }
 
 /* Section headers */
 .awards-section { margin-bottom:52px; }
 .awards-section-title {
-  font-family:var(--font-mono); font-size:13px; font-weight:700;
-  letter-spacing:3px; text-transform:uppercase; color:var(--text-primary);
+  font-family:var(--font-mono); font-size:15px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:var(--text-primary);
   margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border);
 }
 
@@ -36,21 +36,21 @@
 }
 .poty-card.first { border-color:var(--gold); }
 .poty-rank {
-  font-family:var(--font-mono); font-size:11px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase; color:var(--text-muted);
+  font-family:var(--font-mono); font-size:15px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted);
   margin-bottom:10px;
 }
 .poty-honour {
-  font-size:clamp(22px,3vw,32px); font-weight:700; color:var(--gold);
-  line-height:1; margin-bottom:6px;
+  font-size:clamp(18px,2.5vw,24px); font-weight:700; color:var(--gold);
+  line-height:1.2; margin-bottom:6px;
 }
 .poty-honour-label {
-  font-family:var(--font-mono); font-size:11px; color:var(--text-muted);
+  font-family:var(--font-mono); font-size:14px; color:var(--text-muted);
   letter-spacing:1px; text-transform:uppercase; margin-bottom:14px;
 }
-.poty-desc { font-size:14px; color:var(--text-primary); line-height:1.6; }
+.poty-desc { font-size:15px; color:var(--text-primary); line-height:1.6; }
 
-/* Track split */
+/* User split */
 .track-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
 .track-card {
   background:#FFFFFF; border:1px solid var(--border);
@@ -59,31 +59,31 @@
 .track-icon { font-size:28px; margin-bottom:12px; display:block; }
 .track-name { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
 .track-sub {
-  font-family:var(--font-mono); font-size:12px; color:var(--gold);
-  letter-spacing:2px; text-transform:uppercase; margin-bottom:16px;
+  font-family:var(--font-mono); font-size:14px; color:var(--gold);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px;
 }
 .track-honours { display:flex; flex-direction:column; gap:10px; }
 .track-honour-row {
   display:flex; justify-content:space-between; align-items:baseline;
-  padding:8px 0; border-bottom:1px solid var(--border-subtle);
+  padding:10px 0; border-bottom:1px solid var(--border-subtle);
 }
 .track-honour-row:last-child { border-bottom:none; }
 .track-honour-place {
-  font-family:var(--font-mono); font-size:12px; color:var(--text-muted);
+  font-family:var(--font-mono); font-size:15px; color:var(--text-muted);
   letter-spacing:1px; text-transform:uppercase;
 }
-.track-honour-amount { font-size:18px; font-weight:700; color:var(--text-primary); }
+.track-honour-amount { font-size:16px; font-weight:700; color:var(--text-primary); }
 
 /* Genre table */
 .genre-table { width:100%; border-collapse:collapse; }
 .genre-table th {
-  font-family:var(--font-mono); font-size:11px; letter-spacing:2px;
+  font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px;
   text-transform:uppercase; color:var(--text-muted); text-align:left;
-  padding:10px 14px; border-bottom:1px solid var(--border);
+  padding:12px 14px; border-bottom:1px solid var(--border);
   background:var(--surface-3);
 }
 .genre-table td {
-  padding:12px 14px; font-size:15px; color:var(--text-primary);
+  padding:14px; font-size:16px; color:var(--text-primary);
   border-bottom:1px solid var(--border-subtle);
 }
 .genre-table tr:last-child td { border-bottom:none; }
@@ -94,21 +94,21 @@
   background:var(--surface-3); border:1px solid var(--border);
   border-radius:var(--radius-md); padding:18px 16px;
 }
-.elig-check { color:var(--green); font-weight:700; margin-right:6px; }
-.elig-text { font-size:15px; color:var(--text-primary); line-height:1.5; }
+.elig-check { color:var(--green); font-weight:700; margin-right:6px; font-size:17px; }
+.elig-text { font-size:16px; color:var(--text-primary); line-height:1.55; }
 
 /* Timeline */
 .timeline { display:flex; flex-direction:column; gap:0; }
 .tl-row {
-  display:flex; gap:20px; align-items:flex-start; padding:16px 0;
+  display:flex; gap:20px; align-items:flex-start; padding:18px 0;
   border-bottom:1px solid var(--border-subtle);
 }
 .tl-row:last-child { border-bottom:none; }
 .tl-month {
-  font-family:var(--font-mono); font-size:12px; font-weight:700;
-  letter-spacing:1px; color:var(--gold); min-width:80px; padding-top:2px;
+  font-family:var(--font-mono); font-size:17px; font-weight:700;
+  letter-spacing:1px; color:var(--gold); min-width:90px; padding-top:2px;
 }
-.tl-desc { font-size:15px; color:var(--text-primary); line-height:1.6; }
+.tl-desc { font-size:16px; color:var(--text-primary); line-height:1.65; }
 
 /* CTA */
 .awards-cta {
@@ -117,7 +117,11 @@
   margin-top:52px;
 }
 .awards-cta h2 { font-size:26px; font-weight:700; color:#FFFFFF; margin-bottom:10px; }
-.awards-cta p { font-size:16px; color:rgba(255,255,255,0.72); margin-bottom:24px; line-height:1.7; }
+.awards-cta p { font-size:17px; color:rgba(255,255,255,0.80); margin-bottom:8px; line-height:1.7; }
+.awards-cta .cta-note {
+  font-family:var(--font-mono); font-size:14px; color:rgba(255,255,255,0.55);
+  margin-bottom:24px; line-height:1.6;
+}
 
 @media (max-width:768px) {
   .poty-cards { grid-template-columns:1fr; }
@@ -126,6 +130,7 @@
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
+  .tl-month { min-width:70px; font-size:15px; }
 }
 </style>
 {% endblock %}
@@ -135,81 +140,64 @@
 
   <!-- Hero -->
   <div class="awards-hero">
-    <div class="awards-hero-eyebrow">Annual Honours · 2026</div>
-    <h1>Shutter League<br>Photography Honours</h1>
-    <p>Awarded annually on merit. The highest-ranked photographers of the year are recognised across eight genres, evaluated by the Apex DDI Engine and verified by a human jury.</p>
+    <div class="awards-hero-eyebrow">Annual Honours · {{ current_year or '2026' }}</div>
+    <h1>Annual Excellence Award<br>Photographer of the Year</h1>
+    <p>Awarded annually on merit. The highest-ranked photographers of the year are recognised across eight genres, assessed by the Apex DDI Engine and verified by a human jury. Scores accumulate from day one — no entry required.</p>
   </div>
 
-  <!-- Photographer of the Year -->
+  <!-- User Honours -->
   <div class="awards-section">
-    <div class="awards-section-title">Photographer of the Year</div>
-    <div class="poty-cards">
-      <div class="poty-card first">
-        <div class="poty-rank">Grand Champion</div>
-        <div class="poty-honour">&#8377;5,00,000</div>
-        <div class="poty-honour-label">Annual Honour</div>
-        <div class="poty-desc">Awarded to the highest-ranked photographer of the year across Camera League. Jury verified.</div>
-      </div>
-      <div class="poty-card">
-        <div class="poty-rank">Runner Up</div>
-        <div class="poty-honour">&#8377;2,50,000</div>
-        <div class="poty-honour-label">Annual Honour</div>
-        <div class="poty-desc">Second-ranked photographer of the year. Camera League. Jury verified.</div>
-      </div>
-      <div class="poty-card">
-        <div class="poty-rank">Third Place</div>
-        <div class="poty-honour">&#8377;1,00,000</div>
-        <div class="poty-honour-label">Annual Honour</div>
-        <div class="poty-desc">Third-ranked photographer of the year. Camera League. Jury verified.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Track honours -->
-  <div class="awards-section">
-    <div class="awards-section-title">Track Honours</div>
+    <div class="awards-section-title">User Honours</div>
     <div class="track-grid">
       <div class="track-card">
         <span class="track-icon">📷</span>
-        <div class="track-name">Camera Track</div>
+        <div class="track-name">Camera Users</div>
         <div class="track-sub">DSLR · Mirrorless · Film</div>
         <div class="track-honours">
           <div class="track-honour-row">
-            <span class="track-honour-place">Grand Prix</span>
-            <span class="track-honour-amount">&#8377;5,00,000</span>
+            <span class="track-honour-place">Grand Recipient</span>
+            <span class="track-honour-amount">Platform's Highest Honour</span>
           </div>
           <div class="track-honour-row">
-            <span class="track-honour-place">Runner Up</span>
-            <span class="track-honour-amount">&#8377;2,50,000</span>
+            <span class="track-honour-place">Gold × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
           <div class="track-honour-row">
-            <span class="track-honour-place">Third Place</span>
-            <span class="track-honour-amount">&#8377;1,00,000</span>
+            <span class="track-honour-place">Silver × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
+          </div>
+          <div class="track-honour-row">
+            <span class="track-honour-place">Bronze × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
         </div>
       </div>
       <div class="track-card">
         <span class="track-icon">📱</span>
-        <div class="track-name">Mobile Track</div>
+        <div class="track-name">Mobile Users</div>
         <div class="track-sub">iPhone · Android · Smartphone</div>
         <div class="track-honours">
           <div class="track-honour-row">
-            <span class="track-honour-place">Grand Prix</span>
-            <span class="track-honour-amount">&#8377;6,00,000</span>
+            <span class="track-honour-place">Grand Recipient</span>
+            <span class="track-honour-amount">Platform's Highest Honour</span>
           </div>
           <div class="track-honour-row">
-            <span class="track-honour-place">Runner Up</span>
-            <span class="track-honour-amount">&#8377;3,00,000</span>
+            <span class="track-honour-place">Gold × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
           <div class="track-honour-row">
-            <span class="track-honour-place">Third Place</span>
-            <span class="track-honour-amount">&#8377;3,00,000</span>
+            <span class="track-honour-place">Silver × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
+          </div>
+          <div class="track-honour-row">
+            <span class="track-honour-place">Bronze × 8 Genres</span>
+            <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
         </div>
       </div>
     </div>
-    <p style="font-size:13px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.5px;">
-      * Award amounts are subject to the annual programme terms. See <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a> for full details.
+    <p style="font-size:15px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.5px;line-height:1.6;">
+      Recognition and awards — details announced to qualifying participants. See <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Programme Rules</a> for full terms.
     </p>
   </div>
 
@@ -244,11 +232,11 @@
     <div class="eligibility-grid">
       <div class="elig-card">
         <span class="elig-check">✓</span>
-        <span class="elig-text">Active Camera or Mobile subscription required throughout the year</span>
+        <span class="elig-text">Active Camera or Mobile subscription for at least 6 months within the calendar year</span>
       </div>
       <div class="elig-card">
         <span class="elig-check">✓</span>
-        <span class="elig-text">Minimum 6 scored images in the qualifying genre during the year</span>
+        <span class="elig-text">Minimum 24 scored images in the qualifying genre during the calendar year</span>
       </div>
       <div class="elig-card">
         <span class="elig-check">✓</span>
@@ -256,15 +244,15 @@
       </div>
       <div class="elig-card">
         <span class="elig-check">✓</span>
-        <span class="elig-text">Ranking based on top-6 DDI scores in the genre across the year</span>
+        <span class="elig-text">Ranking based on top-6 DDI scores in the genre across the calendar year</span>
       </div>
       <div class="elig-card">
         <span class="elig-check">✓</span>
-        <span class="elig-text">Human jury reviews top-20 finalists per genre before final rankings</span>
+        <span class="elig-text">Human jury reviews top-20 finalists per genre before final rankings are confirmed</span>
       </div>
       <div class="elig-card">
         <span class="elig-check">✓</span>
-        <span class="elig-text">Images must be original work. AI-generated images are not eligible.</span>
+        <span class="elig-text">Images must be original work. AI-generated images are not eligible. Indian residents only for award payments.</span>
       </div>
     </div>
   </div>
@@ -272,55 +260,60 @@
   <!-- How ranking works -->
   <div class="awards-section">
     <div class="awards-section-title">How Rankings Are Determined</div>
-    <p style="font-size:16px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
       Every image uploaded to Shutter League is evaluated by the Apex DDI Engine — a five-dimension scoring framework covering Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are generated automatically and consistently, with no human subjectivity in the initial assessment.
     </p>
-    <p style="font-size:16px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
       A photographer's annual ranking in each genre is calculated from their best six DDI scores in that genre during the calendar year. The top-20 photographers per genre proceed to jury review, where a panel of photography professionals evaluates the work and confirms the final rankings.
     </p>
-    <p style="font-size:16px;color:var(--text-primary);line-height:1.8;">
-      This two-stage process — AI consistency followed by human judgment — is the same standard used by the world's leading photography award programmes.
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;">
+      This two-stage process — AI consistency followed by human judgement — is the same standard used by the world's leading photography award programmes.
     </p>
   </div>
 
   <!-- Timeline -->
   <div class="awards-section">
-    <div class="awards-section-title">2026 Programme Timeline</div>
+    <div class="awards-section-title">{{ current_year or '2026' }} Programme Timeline</div>
     <div class="timeline">
       <div class="tl-row">
-        <div class="tl-month">Jan–Nov</div>
-        <div class="tl-desc">Qualifying period. Upload and score in your genre. Every scored image counts toward your top-6 annual average.</div>
+        <div class="tl-month">Jan – Nov</div>
+        <div class="tl-desc">Qualifying period. Upload and score in your genre. Every scored image counts toward your top-6 annual average. Scores accumulate from your first upload — no separate entry required.</div>
       </div>
       <div class="tl-row">
         <div class="tl-month">Oct</div>
-        <div class="tl-desc">RAW verification requests sent to top-50 photographers per genre. 14-day submission window.</div>
+        <div class="tl-desc">RAW verification requests sent to top-50 photographers per genre. <strong>7-day submission window.</strong> A reminder email is sent 24 hours before the deadline. Failure to submit within the window results in removal from the standings.</div>
       </div>
       <div class="tl-row">
         <div class="tl-month">Nov</div>
-        <div class="tl-desc">Jury review of top-20 finalists per genre. Rankings confirmed.</div>
+        <div class="tl-desc">Jury review of top-20 finalists per genre. Rankings confirmed. No further uploads count toward the annual standings after 30 November.</div>
       </div>
       <div class="tl-row">
         <div class="tl-month">Dec</div>
-        <div class="tl-desc">Annual honours announced. Recipients notified and recognised on the platform.</div>
+        <div class="tl-desc">Annual Excellence Award recipients announced. Honourees notified by email and recognised on the platform. Award payments processed after PAN and bank verification.</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-month">1 Jan</div>
+        <div class="tl-desc">New calendar year begins. Annual standings reset. Your tier, rank history, and points carry forward. Start building your score again from day one.</div>
       </div>
     </div>
   </div>
 
   <!-- CTA -->
   <div class="awards-cta">
-    <h2>Start Building Your Ranking</h2>
-    <p>Upload your photographs, improve your DDI score, and qualify for the annual honours. Eligibility requires a Camera or Mobile subscription.</p>
+    <h2>Start Building Your Standing</h2>
+    <p>Upload your photographs, build your DDI score, and qualify for the Annual Excellence Award.</p>
+    <p class="cta-note">Requires an active Camera or Mobile subscription for at least 6 months within the calendar year to qualify for awards.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}"
-         class="btn btn-solid" style="font-size:14px;letter-spacing:2px;">
-        Upload Your Photo
+         class="btn btn-solid" style="font-size:16px;padding:13px 28px;">
+        Upload Your Photo →
       </a>
       <a href="{{ url_for('pricing') }}"
-         style="display:inline-block;font-family:var(--font-mono);font-size:13px;font-weight:700;
-                letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.72);
-                border:1px solid rgba(255,255,255,0.25);padding:12px 24px;border-radius:var(--radius-sm);
-                text-decoration:none;">
-        View Pricing
+         style="display:inline-block;font-family:var(--font-mono);font-size:15px;font-weight:700;
+                letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.80);
+                border:1px solid rgba(255,255,255,0.30);padding:13px 28px;border-radius:var(--radius-sm);
+                text-decoration:none;min-height:44px;display:inline-flex;align-items:center;">
+        View Pricing →
       </a>
     </div>
   </div>
