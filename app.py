@@ -9167,7 +9167,7 @@ def admin_notify_winners():
     contest_type  = request.form.get('contest_type', 'weekly')
     top_n         = request.form.get('top_n', 3, type=int)   # top N per genre to notify
     manual_ids    = request.form.get('winner_image_ids', '').strip()
-    raw_hours     = request.form.get('raw_hours', 48, type=int)
+    raw_hours     = request.form.get('raw_hours', 168, type=int)  # 168h = 7 days — investor doc
 
     if not contest_ref:
         flash('Contest reference is required.', 'error')
