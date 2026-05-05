@@ -75,6 +75,17 @@ class User(db.Model, UserMixin):
     rating_bias_note       = db.Column(db.Text, nullable=True)
     razorpay_sub_id        = db.Column(db.String(64), nullable=True)
 
+    # v33 — Points / Loyalty Engine
+    points_balance         = db.Column(db.Float,   default=0.0,  nullable=False)
+    points_lifetime_earned = db.Column(db.Float,   default=0.0,  nullable=False)
+    points_last_expiry     = db.Column(db.Date,    nullable=True)
+    # 6-6-12 residency clock — increments monthly while subscribed or dormant
+    residency_months       = db.Column(db.Integer, default=0,    nullable=False)
+    residency_started_at   = db.Column(db.DateTime, nullable=True)
+    # Tier jump tracking — last tier seen, used to detect tier-up on each score
+    tier_jump_last_tier    = db.Column(db.String(60), nullable=True)
+    tier_jump_last_checked_at = db.Column(db.DateTime, nullable=True)
+
     images = db.relationship('Image', backref='author', lazy=True)
 
     def __repr__(self):
@@ -1006,6 +1017,16 @@ def submit_peer_rating(assignment, dod, disruption, dm, wonder, aq, time_spent):
     rater.lifetime_ratings_given = (rater.lifetime_ratings_given or 0) + 1
 
     db.session.commit()
+
+    # Sprint 2 — award P2P rating points (+2 per rating, subscribers only)
+    # Points awarded via app.award_points — imported at call time to avoid circular import
+    try:
+        import app as _app_module
+        if rater and rater.is_subscribed:
+            _app_module.award_points(rater, 2.0, 'peer_rating')
+    except Exception:
+        pass  # Never let points failure break the rating flow
+
     _check_rater_bias(assignment.rater_id)
     return rating
 

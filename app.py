@@ -436,6 +436,14 @@ with app.app_context():
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+                # v33 - Points/Loyalty Engine (Sprint 1)
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_last_expiry DATE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_months INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_started_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_tier VARCHAR(60)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
             ]
             for sql in _migrations:
                 try:
@@ -890,6 +898,152 @@ def auto_title(filename, genre=None, archetype=None, location=None, subject=None
     if name and len(name) > 2:
         return name.title()[:60]
     return 'Untitled'
+
+
+# ── Points Engine (Sprint 1+2) ────────────────────────────────────────────────
+#
+# Investor doc spec:
+#   Earning: score×10 (exact, no rounding) · P2P +2 · challenge participation +10
+#            challenge 3rd +20 · 2nd +30 · 1st +50 · referral +100
+#   Tier jump bonuses (lifetime unique, after image 6):
+#     Mobile:  standard +50 · double +125 · triple +225 · elite_entry +150
+#     Camera:  standard +125 · double +250 · triple +450 · elite_entry +300
+#   Annual cycle: Dec 31 → 20% expires, Jan 1 → 80% carries forward
+#
+# Points reasons (audit trail): 'image_scored' | 'peer_rating' | 'challenge_entry'
+#   | 'challenge_place_3' | 'challenge_place_2' | 'challenge_place_1'
+#   | 'tier_jump_standard' | 'tier_jump_double' | 'tier_jump_triple'
+#   | 'tier_jump_elite_entry' | 'referral_conversion' | 'mentor_session'
+
+_TIER_ORDER = [
+    'Rookie', 'Shooter', 'Contender', 'Craftsman',
+    'Maverick', 'Master', 'Grandmaster', 'Legend'
+]
+_MASTER_PLUS = {'Master', 'Grandmaster', 'Legend'}
+
+# Tier jump bonus amounts — investor doc v1 tables
+_TIER_JUMP_POINTS = {
+    'mobile': {'standard': 50,  'double': 125, 'triple': 225, 'elite_entry': 150},
+    'camera': {'standard': 125, 'double': 250, 'triple': 450, 'elite_entry': 300},
+}
+
+
+def award_points(user, amount, reason, commit=True):
+    """
+    Credit points to user.points_balance and update lifetime total.
+    amount: float, exact (no rounding)
+    reason: string audit label
+    commit: whether to call db.session.commit() — pass False when caller commits
+    """
+    if amount <= 0:
+        return
+    user.points_balance         = (user.points_balance         or 0.0) + amount
+    user.points_lifetime_earned = (user.points_lifetime_earned or 0.0) + amount
+    app.logger.info(
+        f'[points] user={user.id} +{amount} ({reason}) '
+        f'balance={user.points_balance:.1f}'
+    )
+    if commit:
+        db.session.commit()
+
+
+def check_tier_jump_bonus(user, new_tier, image_count, commit=True):
+    """
+    Called after every scored image for a subscribed user.
+    Investor doc trigger logic:
+      Images 1-5:  qualifying phase — no bonuses.
+      Images 6-11: trigger on cumulative average of all images to date.
+      Images 12+:  trigger on 12-image weighted moving average.
+    Bonus is lifetime unique per account — once a tier is passed it is never
+    rewarded again even if the user's score drops and climbs back.
+
+    new_tier:    the tier of the just-scored image (string)
+    image_count: total scored images for this user (including this one)
+    """
+    if image_count < 6:
+        return  # qualifying phase — no bonuses
+
+    prev_tier = user.tier_jump_last_tier
+    if not prev_tier:
+        # First time we are evaluating — record current tier, no bonus yet
+        user.tier_jump_last_tier = new_tier
+        user.tier_jump_last_checked_at = datetime.utcnow()
+        if commit:
+            db.session.commit()
+        return
+
+    if new_tier not in _TIER_ORDER or prev_tier not in _TIER_ORDER:
+        return
+
+    prev_idx = _TIER_ORDER.index(prev_tier)
+    new_idx  = _TIER_ORDER.index(new_tier)
+    tiers_jumped = new_idx - prev_idx
+
+    if tiers_jumped <= 0:
+        # No upward movement — still update last_checked
+        user.tier_jump_last_checked_at = datetime.utcnow()
+        if commit:
+            db.session.commit()
+        return
+
+    track = user.subscription_track or 'mobile'
+    bonuses = _TIER_JUMP_POINTS.get(track, _TIER_JUMP_POINTS['mobile'])
+
+    # Determine jump type
+    # Elite entry bonus: entering Master or above for the first time
+    is_elite_entry = (new_tier in _MASTER_PLUS and prev_tier not in _MASTER_PLUS)
+
+    if is_elite_entry:
+        pts = bonuses['elite_entry']
+        reason = 'tier_jump_elite_entry'
+    elif tiers_jumped >= 3:
+        pts = bonuses['triple']
+        reason = 'tier_jump_triple'
+    elif tiers_jumped == 2:
+        pts = bonuses['double']
+        reason = 'tier_jump_double'
+    else:
+        pts = bonuses['standard']
+        reason = 'tier_jump_standard'
+
+    award_points(user, pts, reason, commit=False)
+    user.tier_jump_last_tier        = new_tier
+    user.tier_jump_last_checked_at  = datetime.utcnow()
+    app.logger.info(
+        f'[tier_jump] user={user.id} {prev_tier}→{new_tier} '
+        f'({tiers_jumped} tier(s)) +{pts}pts [{reason}]'
+    )
+    if commit:
+        db.session.commit()
+
+
+def run_annual_points_expiry():
+    """
+    Dec 31 job: expire 20% of each user's points balance.
+    Jan 1 job: 80% carries forward automatically (this is the residual after Dec 31 run).
+    Investor doc: Dec 31 → 20% expires, Jan 1 → 80% carry forward.
+    Scheduled as a cron job — called by APScheduler at 23:55 IST on Dec 31.
+    """
+    with app.app_context():
+        users = User.query.filter(User.points_balance > 0).all()
+        today = date.today()
+        expired_count = 0
+        for u in users:
+            if u.points_last_expiry and u.points_last_expiry.year >= today.year:
+                continue  # Already ran expiry this year
+            expiry_amount = round(u.points_balance * 0.20, 1)
+            if expiry_amount > 0:
+                u.points_balance    = round(u.points_balance - expiry_amount, 1)
+                u.points_last_expiry = today
+                expired_count += 1
+        db.session.commit()
+        app.logger.info(
+            f'[points_expiry] Annual 20% expiry run. '
+            f'{expired_count} users affected. Date: {today}'
+        )
+
+
+# ── End of Points Engine ──────────────────────────────────────────────────────
 
 
 @app.route('/')
@@ -2249,6 +2403,25 @@ def upload():
                             _img.scored_at        = datetime.utcnow()
                             audit = build_audit_data(result, _img)
                             _img.set_audit(audit)
+                            db.session.commit()
+
+                            # Sprint 2 — award points for scored image (subscribers only)
+                            try:
+                                _pts_user = User.query.get(_img.user_id)
+                                if (_pts_user and _pts_user.is_subscribed
+                                        and _img.score and not _img.is_flagged):
+                                    _pts_earned = _img.score * 10  # exact, no rounding
+                                    award_points(_pts_user, _pts_earned, 'image_scored', commit=False)
+                                    # Check tier jump bonus
+                                    _img_count = Image.query.filter_by(
+                                        user_id=_pts_user.id, status='scored'
+                                    ).count()
+                                    check_tier_jump_bonus(
+                                        _pts_user, _img.tier, _img_count, commit=False
+                                    )
+                                    db.session.commit()
+                            except Exception as _pe:
+                                app.logger.error(f'[points hook] image_scored error: {_pe}')
 
                             # TIER 2 — needs human review
                             if ai_suspicion >= 0.4 or _img.score >= 9.0:
@@ -2481,6 +2654,18 @@ def retry_score(image_id):
         audit = build_audit_data(result, img)
         img.set_audit(audit)
         db.session.commit()
+
+        # Sprint 2 — award points for scored image (subscribers only)
+        try:
+            _su = User.query.get(img.user_id)
+            if _su and _su.is_subscribed and img.score and not img.is_flagged:
+                _sp = img.score * 10
+                award_points(_su, _sp, 'image_scored', commit=False)
+                _sc = Image.query.filter_by(user_id=_su.id, status='scored').count()
+                check_tier_jump_bonus(_su, img.tier, _sc, commit=False)
+                db.session.commit()
+        except Exception as _spe:
+            app.logger.error(f'[points hook] score_image error: {_spe}')
 
         try:
             uid       = str(uuid.uuid4())
@@ -5078,6 +5263,13 @@ def challenge_submit():
         db.session.add(sub)
         db.session.commit()
 
+        # Sprint 2 — award challenge participation points (+10, subscribers only)
+        try:
+            if current_user.is_subscribed:
+                award_points(current_user, 10.0, 'challenge_entry')
+        except Exception as _cp:
+            app.logger.error(f'[points hook] challenge_entry error: {_cp}')
+
         flash(f'Image submitted to the challenge! {slot_limit - slots_used - 1} slot{"s" if slot_limit - slots_used - 1 != 1 else ""} remaining this week.', 'success')
         return redirect(url_for('weekly_challenge'))
 
@@ -5238,7 +5430,26 @@ def admin_weekly_challenge():
                     sub = WeeklySubmission.query.get(sub_id)
                     if sub and sub.challenge_id == challenge_id:
                         sub.result_note = value.strip() or None
-            db.session.commit()
+            # Sprint 2 — award challenge placement points to winners
+            try:
+                _place_pts = {1: 50.0, 2: 30.0, 3: 20.0}
+                _place_rsn = {1: 'challenge_place_1', 2: 'challenge_place_2', 3: 'challenge_place_3'}
+                for _k, _v in request.form.items():
+                    if _k.startswith('rank_') and _v in ('1', '2', '3'):
+                        _sid = int(_k.split('_')[1])
+                        _ws  = WeeklySubmission.query.get(_sid)
+                        if _ws and _ws.challenge_id == challenge_id:
+                            _wu = User.query.get(_ws.user_id)
+                            if _wu and _wu.is_subscribed:
+                                award_points(
+                                    _wu,
+                                    _place_pts[int(_v)],
+                                    _place_rsn[int(_v)],
+                                    commit=False
+                                )
+                db.session.commit()
+            except Exception as _rpe:
+                app.logger.error(f'[points hook] challenge_results error: {_rpe}')
             flash(f'Results published for {ch.week_ref}.', 'success')
             return redirect(url_for('admin_weekly_challenge'))
 
@@ -10186,6 +10397,14 @@ if True:
         trigger          = CronTrigger(day_of_week='mon', hour=13, minute=30, timezone='UTC'),
         id               = 'weekly_results',
         name             = 'Auto-publish weekly challenge results',
+        replace_existing = True,
+    )
+    # Sprint 1 — annual 20% points expiry — 23:55 IST (18:25 UTC) on Dec 31
+    _scheduler.add_job(
+        func             = run_annual_points_expiry,
+        trigger          = CronTrigger(month=12, day=31, hour=18, minute=25, timezone='UTC'),
+        id               = 'annual_points_expiry',
+        name             = 'Annual 20% points balance expiry (Dec 31)',
         replace_existing = True,
     )
     _scheduler.start()
