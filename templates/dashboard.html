@@ -162,102 +162,110 @@
   }
   .notif-strip-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 18px; cursor: pointer; user-select: none;
+    padding: 16px 20px; cursor: pointer; user-select: none;
     background: var(--surface-2); transition: background 0.15s;
+    min-height: 56px;
   }
   .notif-strip-header:hover { background: var(--surface-3); }
-  .notif-strip-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .notif-strip-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .notif-lbl {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
   }
   .notif-lbl.urgent { color: #c0392b; }
   .notif-lbl.normal { color: var(--text-primary); }
-  .notif-lbl-dot { color: var(--border); font-size: 10px; margin: 0 2px; }
+  .notif-lbl-dot { color: var(--border); font-size: 14px; margin: 0 4px; }
   .notif-badge {
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    padding: 2px 7px; border-radius: 99px; letter-spacing: 1px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    padding: 3px 9px; border-radius: 99px; letter-spacing: 0.5px;
   }
   .notif-badge.urgent { background: #c0392b; color: #fff; }
   .notif-badge.normal { background: #4a4840; color: #F5F0E8; }
+  /* Expand/collapse: clear text button, not a tiny arrow */
   .notif-strip-chevron {
-    font-size: 10px; color: var(--text-primary);
-    transition: transform 0.2s; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase;
+    flex-shrink: 0; padding: 6px 14px; border: 1px solid var(--border);
+    border-radius: 4px; background: transparent; white-space: nowrap;
   }
-  .notif-strip-chevron.open { transform: rotate(180deg); }
+  .notif-strip-chevron::after { content: " ▼"; font-size: 11px; }
+  .notif-strip-chevron.open::after { content: " ▲"; font-size: 11px; }
   .notif-strip-body { border-top: 1px solid var(--border); }
   .notif-strip-body.collapsed { display: none; }
   /* Section divider headers inside strip */
   .notif-sec-hdr {
-    padding: 6px 18px 5px; border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
+    padding: 8px 20px 7px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
   }
   .notif-sec-hdr.urgent { background: #fff5f5; color: #c0392b; border-bottom-color: #f5c6c6; }
   .notif-sec-hdr.normal { background: var(--surface-3); color: var(--text-primary); }
   /* Rows */
   .notif-row {
-    display: flex; align-items: center; gap: 14px;
-    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
   }
   .notif-row:last-child { border-bottom: none; }
   .notif-row.urgent-row {
     background: rgba(192,57,43,0.04); border-left: 2px solid #c0392b;
   }
-  .notif-icon { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
+  .notif-icon { font-size: 20px; flex-shrink: 0; width: 24px; text-align: center; }
   .notif-text { flex: 1; min-width: 0; }
   .notif-title {
-    font-size: 14px; font-weight: 600; color: var(--text-primary);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 16px; font-weight: 700; color: var(--text-primary);
+    overflow: hidden; text-overflow: ellipsis;
   }
-  .notif-sub { font-size: 13px; color: var(--text-primary); margin-top: 1px; }
-  /* Gold action (announcements / pricing) */
+  .notif-sub { font-size: 15px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; }
+  /* Gold action */
   .notif-action {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
     color: var(--gold); text-decoration: none; white-space: nowrap;
-    border: 1px solid var(--gold); padding: 5px 12px; border-radius: 4px;
-    flex-shrink: 0; transition: background 0.15s;
+    border: 1px solid var(--gold); padding: 9px 16px; border-radius: 4px;
+    flex-shrink: 0; transition: background 0.15s; min-height: 44px;
+    display: inline-flex; align-items: center;
   }
   .notif-action:hover { background: rgba(245,197,24,0.12); }
-  /* Red action (urgent — RAW deadline etc.) */
+  /* Red action (urgent) */
   .notif-action-urgent {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
     color: #c0392b; text-decoration: none; white-space: nowrap;
-    border: 1px solid #c0392b; padding: 5px 12px; border-radius: 4px;
-    flex-shrink: 0; transition: background 0.15s;
+    border: 1px solid #c0392b; padding: 9px 16px; border-radius: 4px;
+    flex-shrink: 0; transition: background 0.15s; min-height: 44px;
+    display: inline-flex; align-items: center;
   }
   .notif-action-urgent:hover { background: rgba(192,57,43,0.08); }
   /* Announcement tag pill */
   .ann-tag {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
     background: #1a1a18; color: var(--gold);
-    padding: 2px 7px; border-radius: 3px;
+    padding: 3px 9px; border-radius: 3px;
     display: inline-block; margin-bottom: 3px; flex-shrink: 0;
   }
   /* Rank badge next to username */
   .rank-badge {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 8px;
     background: #1a1a18; border: 1px solid var(--gold);
-    border-radius: 4px; padding: 4px 10px; margin-top: 6px;
+    border-radius: 4px; padding: 6px 14px; margin-top: 8px;
   }
   .rank-badge-num {
-    font-family: var(--font-mono); font-size: 12px;
+    font-family: var(--font-mono); font-size: 15px;
     font-weight: 700; color: var(--gold);
   }
-  .rank-badge-sep { color: rgba(245,197,24,0.3); font-size: 10px; }
+  .rank-badge-sep { color: rgba(245,197,24,0.3); font-size: 14px; }
   .rank-badge-tier {
-    font-family: var(--font-mono); font-size: 11px;
-    color: rgba(255,255,255,0.65);
+    font-family: var(--font-mono); font-size: 14px;
+    color: rgba(255,255,255,0.75);
   }
   @media (max-width: 520px) {
-    .notif-row { gap: 10px; }
-    .notif-action, .notif-action-urgent { width: 100%; text-align: center; margin-top: 4px; }
-    .notif-lbl { font-size: 10px; letter-spacing: 1px; }
-    .notif-strip-left { gap: 6px; }
+    .notif-row { gap: 12px; }
+    .notif-action, .notif-action-urgent { width: 100%; text-align: center; margin-top: 6px; justify-content: center; }
+    .notif-lbl { font-size: 13px; letter-spacing: 0.5px; }
+    .notif-strip-left { gap: 8px; }
+    .notif-title { white-space: normal; }
   }
 
   /* POTY tracker */
@@ -421,7 +429,7 @@ function dismissPotyBanner() {
         <span class="notif-badge normal">{{ _ann_count }}</span>
       {% endif %}
     </div>
-    <span class="notif-strip-chevron" id="notif-chevron">▼</span>
+    <span class="notif-strip-chevron" id="notif-chevron">Show Details</span>
   </div>
 
   <div class="notif-strip-body collapsed" id="notif-strip-body">
@@ -438,7 +446,7 @@ function dismissPotyBanner() {
         <div class="notif-title">RAW file required — {{ raw_pending|length }} image{{ 's' if raw_pending|length != 1 else '' }}</div>
         <div class="notif-sub">Score held pending verification · Time-bound — submit before deadline</div>
       </div>
-      <a href="#raw-card-{{ raw_pending[0].id }}" class="notif-action-urgent">Submit Now →</a>
+      <a href="{{ url_for('raw_submit', contest_type='weekly', image_id=raw_pending[0].id) }}" class="notif-action-urgent">Submit Now →</a>
     </div>
     {% endif %}
 
@@ -493,6 +501,7 @@ function toggleNotifStrip() {
   var isCollapsed = body.classList.contains('collapsed');
   body.classList.toggle('collapsed', !isCollapsed);
   chev.classList.toggle('open', isCollapsed);
+  chev.childNodes[0].textContent = isCollapsed ? 'Hide Details' : 'Show Details';
 }
 </script>
 {% endif %}
@@ -567,12 +576,12 @@ function toggleNotifStrip() {
 
 
 {# ── Mentor nudge (non-mentor subscribers only) ─────────────────────────── #}
-{% if not current_user.has_mentor_subscription %}
+{% if true %}
 <div class="mentor-nudge">
   <div class="mentor-nudge-left">
-    <div class="mentor-nudge-eyebrow">Human + AI Mentor · 1-on-1 · Weekly</div>
-    <div class="mentor-nudge-title">Get Better. Fast.</div>
-    <div class="mentor-nudge-sub">₹999/mo · Personal score analysis every week · Cancel anytime</div>
+    <div class="mentor-nudge-eyebrow">Human Mentor Review · Pay Per Session · No Subscription</div>
+    <div class="mentor-nudge-title">Get Expert Eyes on Your Work.</div>
+    <div class="mentor-nudge-sub">Legend ₹100 · Expert ₹75 · Senior ₹50 · Structured feedback from experienced photographers</div>
   </div>
   <a href="{{ url_for('learning') }}" class="btn btn-solid"
      style="font-size:13px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
