@@ -26,14 +26,12 @@
   .score-main { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
   .score-number { font-family: var(--font-mono); font-size: 56px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .score-tier-badge {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 3px; text-transform: uppercase;
     padding: 4px 12px; border-radius: var(--radius-sm);
     background: #000000; color: #F5C518; border: 1px solid #F5C518;
   }
   .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
-  .score-tier-img-wrap { width: 80px; height: 80px; flex-shrink: 0; background: #0a0a0a; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245,197,24,0.25); }
-  .score-tier-img { width: 76px; height: 76px; object-fit: contain; }
 
   .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
@@ -60,7 +58,7 @@
   .meta-value { font-size: 15px; color: var(--text-primary); word-break: break-word; line-height: 1.5; }
 
   .exif-block { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
-  .exif-warning { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--amber); margin-top: 10px; line-height: 1.6; }
+  .exif-warning { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 14px; color: var(--amber); margin-top: 10px; line-height: 1.6; }
 
   .percentile-bar-track { background: var(--border); border-radius: 6px; height: 10px; margin: 8px 0 4px; }
   .percentile-bar-fill { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 6px; height: 10px; }
@@ -89,7 +87,7 @@
       <h1>{{ image.asset_name or image.original_filename }}</h1>
       <p>
         {{ image.genre }}
-        {% if image.camera_track %}&nbsp;·&nbsp;{{ image.camera_track|title }} League{% endif %}
+        {% if image.camera_track %}&nbsp;·&nbsp;{{ image.camera_track|title }} Users{% endif %}
         {% if image.photographer_name %}&nbsp;·&nbsp;{{ image.photographer_name }}{% endif %}
       </p>
     </div>
@@ -112,7 +110,7 @@
   <div class="status-banner flagged">
     <strong>⚠ Image Flagged</strong> — {{ image.flagged_reason or 'This image has been flagged and is not publicly visible.' }}
     {% if image.ai_suspicion and image.ai_suspicion >= 0.7 %}
-    <br><span style="font-size:13px; opacity:0.8;">AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}. If you believe this is incorrect, contact <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> with your original file.</span>
+    <br><span style="font-size: 14px; opacity:0.8;">AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}. If you believe this is incorrect, contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span> with your original file.</span>
     {% endif %}
   </div>
   {% elif image.needs_review %}
@@ -121,12 +119,12 @@
       <strong>📂 RAW File Requested — Score Held</strong><br>
       Your image has been selected as a finalist. Submit your original RAW file to confirm your result.
       <br><br>
-      <a href="{{ url_for('raw_status', image_id=image.id) }}" class="btn btn-solid" style="font-size:13px;">Submit RAW File →</a>
-      <span style="font-size:13px; color:var(--text-muted); margin-left:12px;">or go to <a href="{{ url_for('raw_status', image_id=image.id) }}" style="color:var(--gold);">RAW Status</a></span>
+      <a href="{{ url_for('raw_status', image_id=image.id) }}" class="btn btn-solid" style="font-size: 14px;">Submit RAW File →</a>
+      <span style="font-size: 14px; color:var(--text-muted); margin-left:12px;">or go to <a href="{{ url_for('raw_status', image_id=image.id) }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">RAW Status</a></span>
     </div>
     {% else %}
     <div class="status-banner review">
-      <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span>
+      <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
     </div>
     {% endif %}
   {% endif %}
@@ -157,7 +155,7 @@
     {% set audit_ht = image.get_audit() %}
     {% if audit_ht and audit_ht.hard_truth %}
     <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;margin-bottom:20px;">
-      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
+      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
       <div style="font-size:17px;color:#ffffff;line-height:1.65;font-style:italic;">{{ audit_ht.hard_truth }}</div>
     </div>
     {% endif %}
@@ -196,18 +194,18 @@
     {# Percentile #}
     {% if percentile and percentile.percentile %}
     <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Percentile — {{ image.genre }}</div>
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:4px;">Percentile — {{ image.genre }}</div>
       <div class="percentile-bar-track">
         <div class="percentile-bar-fill" style="width:{{ percentile.percentile|int }}%;"></div>
       </div>
-      <div style="font-size:14px; color:var(--text-secondary);">Top <strong>{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
+      <div style="font-size:14px; color:var(--text-secondary);">Top <strong style="color:var(--text-primary);">{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
     </div>
     {% endif %}
   </div>
 
   {# ── DDI qualifier note ────────────────────────────────────────── #}
   {% if image.status == 'scored' and image.score %}
-  <div style="font-size:13px; color:var(--text-muted); line-height:1.6;
+  <div style="font-size: 14px; color:var(--text-muted); line-height:1.6;
               padding:10px 14px; margin-bottom:20px;
               border-left:3px solid var(--border);
               font-family:var(--font-mono);">
@@ -221,7 +219,7 @@
   {% set audit = image.get_audit() %}
   {% if audit and audit.rows %}
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;">DDI Analysis</div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">DDI Analysis</div>
     {% for row in audit.rows %}
     {% if row[1] %}
     <div class="audit-row">
@@ -232,7 +230,7 @@
     {% endfor %}
     {% if audit.byline_2_body or audit.byline_2 %}
     <div style="margin-top:20px;padding:16px 20px;background:#2C3E6B;border-radius:var(--radius-md);">
-      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">The One Improvement</div>
+      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">The One Improvement</div>
       <div style="font-size:16px;color:#ffffff;line-height:1.7;">{{ audit.byline_2_body or audit.byline_2 }}</div>
     </div>
     {% endif %}
@@ -282,7 +280,7 @@
   {# ── EXIF block ──────────────────────────────────────────────────── #}
   {% if image.exif_camera or image.exif_settings or image.exif_date_taken %}
   <div class="exif-block">
-    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">EXIF Data</div>
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">EXIF Data</div>
     {% if image.exif_camera %}<div>📷 {{ image.exif_camera }}{% if image.exif_lens %} · {{ image.exif_lens }}{% endif %}</div>{% endif %}
     {% if image.exif_settings %}<div>⚙ {{ image.exif_settings }}</div>{% endif %}
     {% if image.exif_date_taken %}<div>📅 {{ image.exif_date_taken }}</div>{% endif %}
@@ -295,7 +293,7 @@
   {# ── Judge/contest info ──────────────────────────────────────────── #}
   {% if image.contest_result_status == 'published' and image.judge_final_score %}
   <div style="background:rgba(200,168,75,0.06); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;">
-    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:8px;">🏆 Programme Result — Published</div>
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:8px;">🏆 Programme Result — Published</div>
     <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--gold);">{{ image.judge_final_score }}</div>
     <div style="font-size:14px; color:var(--text-muted); margin-top:4px;">Final score · {{ image.genre }}</div>
   </div>
@@ -316,35 +314,35 @@
       {% endif %}
     </div>
     {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
-    <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size:13px;">Share →</a>
+    <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
     {% endif %}
   </div>
 
   {# ── Admin section ───────────────────────────────────────────────── #}
   {% if current_user.role == 'admin' %}
   <div style="background:rgba(200,168,75,0.04); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       {% if image.needs_review and not image.is_flagged %}
       <form method="POST" action="{{ url_for('admin_approve_review', image_id=image.id) }}" style="display:inline;">
-        <button type="submit" class="btn btn-solid" style="font-size:13px;">✓ Approve for Public</button>
+        <button type="submit" class="btn btn-solid" style="font-size: 14px;">✓ Approve for Public</button>
       </form>
       {% endif %}
       {% if not image.is_flagged %}
       <form method="POST" action="{{ url_for('admin_flag_image', image_id=image.id) }}" style="display:inline;">
-        <button type="submit" class="btn btn-danger" style="font-size:13px;">Flag as AI / Remove</button>
+        <button type="submit" class="btn btn-danger" style="font-size: 14px;">Flag as AI / Remove</button>
       </form>
       {% else %}
       <form method="POST" action="{{ url_for('admin_unflag_image', image_id=image.id) }}" style="display:inline;">
-        <button type="submit" class="btn" style="font-size:13px;">Unflag / Restore</button>
+        <button type="submit" class="btn" style="font-size: 14px;">Unflag / Restore</button>
       </form>
       {% endif %}
-      <a href="{{ url_for('admin_raw_detail', image_id=image.id) }}" class="btn" style="font-size:13px;">RAW Detail →</a>
+      <a href="{{ url_for('admin_raw_detail', image_id=image.id) }}" class="btn" style="font-size: 14px;">RAW Detail →</a>
     </div>
 
     {# Admin feedback form #}
     <details style="margin-top:20px;">
-      <summary style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted); cursor:pointer; letter-spacing:1px; text-transform:uppercase;">Calibration Feedback</summary>
+      <summary style="font-family:var(--font-mono); font-size: 14px; color:var(--text-muted); cursor:pointer; letter-spacing:1px; text-transform:uppercase;">Calibration Feedback</summary>
       <form method="POST" action="{{ url_for('admin_feedback', image_id=image.id) }}" style="margin-top:16px;">
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
           <select name="module" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:14px; background:#fff;">
@@ -359,7 +357,7 @@
           <input type="number" name="corrected_score" step="0.1" min="0" max="10" placeholder="Corrected" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px;">
         </div>
         <input type="text" name="reason" required placeholder="Reason for correction" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px;">
-        <button type="submit" class="btn btn-solid" style="font-size:13px;">Save Calibration Note</button>
+        <button type="submit" class="btn btn-solid" style="font-size: 14px;">Save Calibration Note</button>
       </form>
     </details>
   </div>
@@ -385,7 +383,7 @@
                 onclick="var b=this; b.textContent='Deleting\u2026'; document.getElementById('deleteWaitMsg').style.display='block'; setTimeout(function(){b.disabled=true;},50); return true;">
           Yes, Delete Permanently
         </button>
-        <p id="deleteWaitMsg" style="display:none; margin-top:10px; font-size:13px; color:var(--text-muted); text-align:center;">
+        <p id="deleteWaitMsg" style="display:none; margin-top:10px; font-size: 14px; color:var(--text-muted); text-align:center;">
           Please wait — do not close this tab.
         </p>
       </form>
