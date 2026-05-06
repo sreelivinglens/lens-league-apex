@@ -151,8 +151,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 @media (max-width:768px) {
-  .sl-hero { min-height:400px; max-height:500px; }
-  .sl-hero-img { object-fit: cover; object-position: center center; }
+  .sl-hero { 
+    height: auto !important; 
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9; 
+  }
+  .sl-hero-img { object-fit: contain; object-position: center center; }
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
 }
 @media (max-width:480px) {
