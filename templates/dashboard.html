@@ -618,10 +618,7 @@ function toggleNotifStrip() {
   {# Three stat blocks #}
   <div class="wallet-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; min-width:0;">
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
-        <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#2C3E6B;text-decoration:none;border:1px solid #2C3E6B;padding:4px 10px;border-radius:3px;white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;">Redeem →</a>
-      </div>
+      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Your Points</div>
       <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
     </div>
@@ -654,9 +651,8 @@ function toggleNotifStrip() {
   ] %}
 
   <div style="margin-bottom:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="margin-bottom:14px;">
       <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text-primary);">Your rewards journey</div>
-      <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);">{{ _bal | round(1) }} pts</div>
     </div>
 
     {# Milestone cards — filled blue=reached, blue outline=next, grey=future #}
@@ -745,6 +741,14 @@ function toggleNotifStrip() {
     </div>
   </div>
   {% endif %}
+
+  {# Redeem button — bottom of wallet HUD #}
+  <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div style="font-size:15px;color:var(--text-primary);line-height:1.5;">
+      Points can be redeemed for programme entries, top-ups, free months and mentor sessions.
+    </div>
+    <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
+  </div>
 
 </div>
 {% endif %}

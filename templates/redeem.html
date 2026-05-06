@@ -134,9 +134,21 @@
   <div class="redeem-grid">
 
     <div class="redeem-card">
+      <div class="redeem-card-pts">50 pts</div>
+      <div class="redeem-card-label">Weekly Challenge Entry</div>
+      <div class="redeem-card-desc">Free for subscribers. Non-subscribers redeem 50 pts per weekly challenge entry.</div>
+      {% if wallet_hud and wallet_hud.balance >= 50 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (50 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
       <div class="redeem-card-pts">100 pts</div>
       <div class="redeem-card-label">Open Submission Entry</div>
-      <div class="redeem-card-desc">Free entry into the annual Open Programme — one image, one genre. Subscribers only.</div>
+      <div class="redeem-card-desc">Annual Open Programme entry — one image, one genre. Subscribers only. ₹50 cash for non-subscribers.</div>
       {% if wallet_hud and wallet_hud.balance >= 100 %}
       <span class="redeem-card-status can">✓ You have enough points</span>
       {% else %}
@@ -148,11 +160,23 @@
     <div class="redeem-card">
       <div class="redeem-card-pts">350 pts</div>
       <div class="redeem-card-label">Body of Work Entry</div>
-      <div class="redeem-card-desc">Free entry into the annual Body of Work programme — curated series of 6–12 images. Subscribers only.</div>
+      <div class="redeem-card-desc">Annual Body of Work submission — curated series of 6–12 images. Subscribers only. ₹999 cash for non-subscribers.</div>
       {% if wallet_hud and wallet_hud.balance >= 350 %}
       <span class="redeem-card-status can">✓ You have enough points</span>
       {% else %}
       <span class="redeem-card-status cant">{{ (350 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
+      <div class="redeem-card-pts">500 pts</div>
+      <div class="redeem-card-label">POTY Entry</div>
+      <div class="redeem-card-desc">Annual Photographer of the Year entry. Subscribers only.</div>
+      {% if wallet_hud and wallet_hud.balance >= 500 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (500 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
       {% endif %}
       <span class="redeem-card-status soon">Coming soon</span>
     </div>
@@ -164,9 +188,21 @@
   <div class="redeem-grid">
 
     <div class="redeem-card">
+      <div class="redeem-card-pts">10 pts</div>
+      <div class="redeem-card-label">Single Upload</div>
+      <div class="redeem-card-desc">One additional scored image above your monthly allocation. Rank eligible, POTY eligible, earns points. Subscribers only.</div>
+      {% if wallet_hud and wallet_hud.balance >= 10 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (10 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
       <div class="redeem-card-pts">1,000 pts</div>
       <div class="redeem-card-label">Top-up Pack — 5 Images</div>
-      <div class="redeem-card-desc">Redeem for 5 additional scored images above your monthly allocation. Any track.</div>
+      <div class="redeem-card-desc">5 additional scored images. Same as ₹99 cash top-up. Any track. Subscribers earn full points on these images.</div>
       {% if wallet_hud and wallet_hud.balance >= 1000 %}
       <span class="redeem-card-status can">✓ You have enough points</span>
       {% else %}
@@ -176,9 +212,21 @@
     </div>
 
     <div class="redeem-card">
+      <div class="redeem-card-pts">2,500 pts</div>
+      <div class="redeem-card-label">Monthly Subscription Offset</div>
+      <div class="redeem-card-desc">Covers one month of your Mobile (₹99) or Camera (₹199) subscription. Subscribers only.</div>
+      {% if wallet_hud and wallet_hud.balance >= 2500 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (2500 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
       <div class="redeem-card-pts">{% if current_user.subscription_track == 'camera' %}2,000{% else %}1,000{% endif %} pts</div>
       <div class="redeem-card-label">One Free Month</div>
-      <div class="redeem-card-desc">Redeem for one free month of your {{ current_user.subscription_track | title }} subscription.</div>
+      <div class="redeem-card-desc">Redeem for one free month of your {{ current_user.subscription_track | title }} subscription — Camera: 2,000 pts · Mobile: 1,000 pts.</div>
       {% set _free_month_pts = 2000 if current_user.subscription_track == 'camera' else 1000 %}
       {% if wallet_hud and wallet_hud.balance >= _free_month_pts %}
       <span class="redeem-card-status can">✓ You have enough points</span>
@@ -217,7 +265,7 @@
   </div>
 
   <div class="redeem-note">
-    <strong>Points never expire.</strong> Every point earned from today accumulates and carries forward. Redemption opens once payment infrastructure is live — you will be notified by email. Questions? <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>
+    <strong>Annual point cycle:</strong> 20% of your points balance expires on 31 December each year — this prevents hoarding and keeps the wallet active. 80% carry forward to the new year. Tier badges are permanent regardless of your points balance. Redemption opens once payment infrastructure is live — you will be notified by email. Questions? <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>
   </div>
 
   <div style="display:flex;gap:12px;flex-wrap:wrap;">
