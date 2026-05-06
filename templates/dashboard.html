@@ -337,6 +337,10 @@
     .mentor-nudge { flex-direction: column; align-items: flex-start; }
     .mentor-nudge-left { min-width: 0; width: 100%; }
     .mentor-nudge-eyebrow { white-space: normal; }
+    .wallet-grid { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 900px) and (min-width: 521px) {
+    .wallet-grid { grid-template-columns: repeat(2, 1fr) !important; }
   }
   /* POTY welcome banner */
   .poty-step-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 24px 0; }
@@ -555,7 +559,7 @@ function toggleNotifStrip() {
 
 {# ── Wallet HUD (Sprint 4 — investor doc 16d) ───────────────────────────── #}
 {% if wallet_hud %}
-<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px; overflow:hidden;">
 
   {# Header row #}
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
@@ -572,7 +576,7 @@ function toggleNotifStrip() {
   </div>
 
   {# Three stat blocks #}
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
+  <div class="wallet-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; min-width:0;">
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
       <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Points Balance</div>
@@ -656,13 +660,13 @@ function toggleNotifStrip() {
 {% if true %}
 <div class="mentor-nudge">
   <div class="mentor-nudge-left">
-    <div class="mentor-nudge-eyebrow">Human Mentor Review · Pay Per Session · No Subscription</div>
-    <div class="mentor-nudge-title">Get Expert Eyes on Your Work.</div>
-    <div class="mentor-nudge-sub">Legend ₹100 · Expert ₹75 · Senior ₹50 · Structured feedback from experienced photographers</div>
+    <div class="mentor-nudge-eyebrow">Human Mentor Review · Pay Per Session</div>
+    <div class="mentor-nudge-title">Get Your Images Reviewed by Experts.</div>
+    <div class="mentor-nudge-sub">Experienced photographers. Structured, actionable feedback. Legend ₹100 · Expert ₹75 · Senior ₹50</div>
   </div>
   <a href="{{ url_for('learning') }}" class="btn btn-solid"
      style="font-size: 15px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
-    Learn More →
+    See Mentor Packages →
   </a>
 </div>
 {% endif %}
