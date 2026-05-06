@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Redeem Points — {{ platform_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .redeem-wrap { max-width: 760px; margin: 0 auto; }
+
+  .redeem-balance {
+    background: #2C3E6B; border-radius: var(--radius-md);
+    padding: 32px 36px; margin-bottom: 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .redeem-balance-pts {
+    font-family: var(--font-mono); font-size: 56px; font-weight: 700;
+    color: #F5C518; line-height: 1;
+  }
+  .redeem-balance-label {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.65); margin-top: 6px;
+  }
+  .redeem-balance-lifetime {
+    font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 4px;
+  }
+  .redeem-coming-soon {
+    background: #EAF3DE; border: 1px solid #C0DD97;
+    border-radius: var(--radius-md); padding: 18px 22px;
+    margin-bottom: 32px; display: flex; align-items: center; gap: 14px;
+  }
+  .redeem-coming-icon { font-size: 24px; flex-shrink: 0; }
+  .redeem-coming-text { font-size: 16px; color: #27500A; line-height: 1.6; }
+  .redeem-coming-text strong { color: #173404; }
+
+  .redeem-section-title {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-primary); margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+
+  .redeem-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 32px; }
+  @media (max-width: 560px) { .redeem-grid { grid-template-columns: 1fr; } }
+
+  .redeem-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 8px;
+    opacity: 0.75;
+  }
+  .redeem-card-pts {
+    font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+    color: #2C3E6B; line-height: 1;
+  }
+  .redeem-card-label {
+    font-size: 17px; font-weight: 700; color: var(--text-primary);
+  }
+  .redeem-card-desc {
+    font-size: 15px; color: var(--text-primary); line-height: 1.6;
+  }
+  .redeem-card-status {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-top: 8px; display: inline-block;
+  }
+  .redeem-card-status.can { color: #27500A; }
+  .redeem-card-status.cant { color: var(--text-primary); }
+  .redeem-card-status.soon { color: #888; }
+
+  .redeem-mentor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
+  @media (max-width: 560px) { .redeem-mentor-grid { grid-template-columns: 1fr; } }
+
+  .redeem-mentor-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 20px;
+    text-align: center; opacity: 0.75;
+  }
+  .redeem-mentor-tier {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-primary); margin-bottom: 8px;
+  }
+  .redeem-mentor-pts {
+    font-family: var(--font-mono); font-size: 24px; font-weight: 700;
+    color: #2C3E6B;
+  }
+  .redeem-mentor-cash {
+    font-size: 14px; color: var(--text-primary); margin-top: 4px;
+  }
+
+  .redeem-note {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 4px solid #2C3E6B; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 16px 20px; font-size: 15px; color: var(--text-primary); line-height: 1.7;
+    margin-bottom: 28px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="redeem-wrap">
+
+  <div class="page-header">
+    <h1>Redeem Points</h1>
+    <p>Use your points for entries, top-ups, free months, and mentor sessions.</p>
+  </div>
+
+  {# Balance banner #}
+  {% if wallet_hud %}
+  <div class="redeem-balance">
+    <div>
+      <div class="redeem-balance-pts">{{ wallet_hud.balance | round(1) }}</div>
+      <div class="redeem-balance-label">Your Points Balance</div>
+      <div class="redeem-balance-lifetime">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:var(--font-mono);font-size:15px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Keep uploading to earn more</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.85);">50–90 pts per scored image</div>
+      <a href="{{ url_for('upload') }}" style="display:inline-block;margin-top:12px;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;border-radius:4px;text-decoration:none;">Upload Now →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Coming soon banner #}
+  <div class="redeem-coming-soon">
+    <div class="redeem-coming-icon">🔒</div>
+    <div class="redeem-coming-text">
+      <strong>Redemption is coming soon.</strong> Points are accumulating now and will be redeemable once our payment infrastructure is live. Every point you earn today is locked in — nothing expires.
+    </div>
+  </div>
+
+  {# Programme entries #}
+  <div class="redeem-section-title">Programme Entries</div>
+  <div class="redeem-grid">
+
+    <div class="redeem-card">
+      <div class="redeem-card-pts">100 pts</div>
+      <div class="redeem-card-label">Open Submission Entry</div>
+      <div class="redeem-card-desc">Free entry into the annual Open Programme — one image, one genre. Subscribers only.</div>
+      {% if wallet_hud and wallet_hud.balance >= 100 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (100 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
+      <div class="redeem-card-pts">350 pts</div>
+      <div class="redeem-card-label">Body of Work Entry</div>
+      <div class="redeem-card-desc">Free entry into the annual Body of Work programme — curated series of 6–12 images. Subscribers only.</div>
+      {% if wallet_hud and wallet_hud.balance >= 350 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (350 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+  </div>
+
+  {# Upload top-ups #}
+  <div class="redeem-section-title">Upload Credits</div>
+  <div class="redeem-grid">
+
+    <div class="redeem-card">
+      <div class="redeem-card-pts">1,000 pts</div>
+      <div class="redeem-card-label">Top-up Pack — 5 Images</div>
+      <div class="redeem-card-desc">Redeem for 5 additional scored images above your monthly allocation. Any track.</div>
+      {% if wallet_hud and wallet_hud.balance >= 1000 %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (1000 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+    <div class="redeem-card">
+      <div class="redeem-card-pts">{% if current_user.subscription_track == 'camera' %}2,000{% else %}1,000{% endif %} pts</div>
+      <div class="redeem-card-label">One Free Month</div>
+      <div class="redeem-card-desc">Redeem for one free month of your {{ current_user.subscription_track | title }} subscription.</div>
+      {% set _free_month_pts = 2000 if current_user.subscription_track == 'camera' else 1000 %}
+      {% if wallet_hud and wallet_hud.balance >= _free_month_pts %}
+      <span class="redeem-card-status can">✓ You have enough points</span>
+      {% else %}
+      <span class="redeem-card-status cant">{{ (_free_month_pts - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
+      {% endif %}
+      <span class="redeem-card-status soon">Coming soon</span>
+    </div>
+
+  </div>
+
+  {# Mentor sessions #}
+  <div class="redeem-section-title">Mentor Sessions — Subscribers</div>
+  <div class="redeem-mentor-grid">
+    <div class="redeem-mentor-card">
+      <div class="redeem-mentor-tier">Tier 1</div>
+      <div class="redeem-mentor-pts">500 pts</div>
+      <div class="redeem-mentor-cash">or ₹50 cash</div>
+      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Community mentor review</div>
+      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
+    </div>
+    <div class="redeem-mentor-card">
+      <div class="redeem-mentor-tier">Tier 3</div>
+      <div class="redeem-mentor-pts">750 pts</div>
+      <div class="redeem-mentor-cash">or ₹75 cash</div>
+      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Experienced mentor review</div>
+      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
+    </div>
+    <div class="redeem-mentor-card">
+      <div class="redeem-mentor-tier">Tier 5</div>
+      <div class="redeem-mentor-pts">1,000 pts</div>
+      <div class="redeem-mentor-cash">or ₹100 cash</div>
+      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Master mentor review</div>
+      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
+    </div>
+  </div>
+
+  <div class="redeem-note">
+    <strong>Points never expire.</strong> Every point earned from today accumulates and carries forward. Redemption opens once payment infrastructure is live — you will be notified by email. Questions? <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="{{ url_for('dashboard') }}" class="btn">← Back to Dashboard</a>
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Now — Earn Points →</a>
+  </div>
+
+</div>
+{% endblock %}

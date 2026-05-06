@@ -343,6 +343,17 @@
   @media (max-width: 900px) and (min-width: 521px) {
     .wallet-grid { grid-template-columns: repeat(2, 1fr) !important; }
   }
+  /* Next reward callout — inline on desktop, stacked on mobile */
+  .next-reward-callout {
+    margin-top: 16px; background: #2C3E6B;
+    border-radius: var(--radius-md); padding: 18px 20px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 16px;
+  }
+  @media (max-width: 520px) {
+    .next-reward-callout { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .next-reward-callout a { width: 100%; text-align: center; box-sizing: border-box; }
+  }
   /* Milestone labels — 6-col desktop, 3-col tablet, 2-col mobile */
   .milestone-labels { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:8px; }
   @media (max-width: 600px) { .milestone-labels { grid-template-columns:repeat(3,1fr); gap:8px; } }
@@ -607,7 +618,10 @@ function toggleNotifStrip() {
   {# Three stat blocks #}
   <div class="wallet-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; min-width:0;">
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
-      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
+        <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#2C3E6B;text-decoration:none;border:1px solid #2C3E6B;padding:4px 10px;border-radius:3px;white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;">Redeem →</a>
+      </div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Your Points</div>
       <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
     </div>
@@ -681,13 +695,13 @@ function toggleNotifStrip() {
       {% endif %}
     {% endfor %}
     {% if _next.ms %}
-    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div class="next-reward-callout">
       <div style="flex:1;min-width:0;">
         <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
         <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;line-height:1.4;">{{ _next.ms.label }}</div>
         <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
       </div>
-      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;align-self:flex-end;">Upload Now →</a>
     </div>
     {% else %}
     <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
