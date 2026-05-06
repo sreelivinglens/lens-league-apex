@@ -681,11 +681,13 @@ function toggleNotifStrip() {
       {% endif %}
     {% endfor %}
     {% if _next.ms %}
-    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 20px;">
-      <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
-      <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:6px;line-height:1.4;">{{ _next.ms.label }}</div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.80);margin-bottom:14px;line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
-      <a href="{{ url_for('upload') }}" style="display:inline-block;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;">Upload Now →</a>
+    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
+        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;line-height:1.4;">{{ _next.ms.label }}</div>
+        <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
+      </div>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
     </div>
     {% else %}
     <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
