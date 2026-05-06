@@ -71,9 +71,9 @@
   <div class="redeem-table">
     {% set prog_items = [
       {'pts': 50,  'label': 'Weekly Challenge entry',  'desc': 'Free for subscribers &middot; non-subscribers redeem pts per entry'},
-      {'pts': 100, 'label': 'Open Submission entry',   'desc': 'Annual Open Programme &middot; one image, one genre &middot; &#8377;50 cash for non-subscribers'},
-      {'pts': 350, 'label': 'Body of Work entry',      'desc': 'Annual BOW &middot; curated series 6&#8209;12 images &middot; &#8377;999 cash for non-subscribers'},
-      {'pts': 500, 'label': 'POTY entry',              'desc': 'Annual Photographer of the Year &middot; subscribers only'},
+      {'pts': 100, 'label': 'Open Submission entry',   'desc': 'Annual Open Programme &middot; one image, one genre &middot; ₹50 cash for non-subscribers'},
+      {'pts': 350, 'label': 'Body of Work entry',      'desc': 'Annual BOW &middot; curated series 6&#8209;12 images &middot; ₹999 cash for non-subscribers'},
+      {'pts': 500, 'label': 'Annual Excellence Award — Photographer of the Year entry',              'desc': 'Subscribers only'},
     ] %}
     {% for item in prog_items %}
     {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
@@ -95,9 +95,9 @@
   <div class="redeem-section-label">Upload Credits</div>
   <div class="redeem-table">
     {% set upload_items = [
-      {'pts': 10,   'label': 'Single upload',               'desc': 'One additional scored image &middot; rank eligible &middot; POTY eligible &middot; earns pts'},
-      {'pts': 1000, 'label': 'Top-up pack &#8212; 5 images','desc': 'Same as &#8377;99 cash top-up &middot; any track &middot; subscribers earn full points'},
-      {'pts': 2500, 'label': 'Monthly subscription offset', 'desc': 'Covers one month &middot; Mobile &#8377;99 or Camera &#8377;199'},
+      {'pts': 10,   'label': 'Single upload',               'desc': 'One additional scored image &middot; rank eligible &middot; Annual Excellence Award eligible &middot; earns pts'},
+      {'pts': 1000, 'label': 'Top-up pack &#8212; 5 images','desc': 'Same as ₹99 cash top-up &middot; Camera or Mobile League &middot; subscribers earn full points'},
+      {'pts': 2500, 'label': 'Monthly subscription offset', 'desc': 'Covers one month &middot; Mobile ₹99 or Camera ₹199'},
     ] %}
     {% for item in upload_items %}
     {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
@@ -123,8 +123,8 @@
     <div class="redeem-row">
       <div class="redeem-row-pts">{{ '{:,}'.format(_fmp) }} pts</div>
       <div>
-        <div class="redeem-row-label">One free month &#8212; {{ current_user.subscription_track | title }} Users</div>
-        <div class="redeem-row-desc">Camera Users: 2,000 pts &middot; Mobile Users: 1,000 pts &middot; subscribers only</div>
+        <div class="redeem-row-label">One free month &#8212; {{ 'Camera League' if current_user.subscription_track == 'camera' else ('Mobile League' if current_user.subscription_track == 'mobile' else (current_user.subscription_track | title)) }}</div>
+        <div class="redeem-row-desc">Camera League: 2,000 pts &middot; Mobile League: 1,000 pts &middot; subscribers only</div>
       </div>
       <div class="redeem-row-status">
         {% if bal >= _fmp %}<span class="status-can">&#10003; Enough pts</span>
@@ -137,9 +137,9 @@
   <div class="redeem-section-label">Mentor Sessions</div>
   <div class="redeem-table">
     {% set mentor_items = [
-      {'pts': 500,  'label': 'Senior Mentor session', 'desc': 'or &#8377;50 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
-      {'pts': 750,  'label': 'Expert Mentor session',  'desc': 'or &#8377;75 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
-      {'pts': 1000, 'label': 'Legend Mentor session',  'desc': 'or &#8377;100 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+      {'pts': 500,  'label': 'Senior Mentor session', 'desc': 'or ₹50 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+      {'pts': 750,  'label': 'Expert Mentor session',  'desc': 'or ₹75 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+      {'pts': 1000, 'label': 'Legend Mentor session',  'desc': 'or ₹100 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
     ] %}
     {% for item in mentor_items %}
     {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
@@ -166,7 +166,7 @@
       <li><strong>Tier badges are permanent.</strong> Earning a tier badge (Rookie through Legend) is a lifetime achievement and does not expire regardless of your points balance.</li>
       <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions are available to all registered users via cash payment.</li>
       <li><strong>Non-reversible.</strong> Once points are redeemed, the transaction cannot be undone. Redeemed points are deducted immediately from your balance.</li>
-      <li><strong>Subject to availability.</strong> Programme entries (Open, BOW, POTY) are only redeemable during the relevant entry window. Mentor sessions are subject to mentor availability.</li>
+      <li><strong>Subject to availability.</strong> Programme entries (Open, BOW, Annual Excellence Award) are only redeemable during the relevant entry window. Mentor sessions are subject to mentor availability.</li>
       <li><strong>Rate changes.</strong> {{ platform_name }} may adjust redemption rates or add new redemption options at any time with a minimum of 14 days&#39; notice to active subscribers.</li>
       <li><strong>Payment infrastructure.</strong> Points redemption for cash-equivalent items is subject to payment infrastructure being operational. {{ platform_name }}&#39;s obligation is to activate redemption within 30 days of payment infrastructure going live.</li>
       <li><strong>Disputes.</strong> Any dispute regarding points balances or redemptions must be raised within 30 days of the transaction by contacting <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>.</li>
