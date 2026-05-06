@@ -436,6 +436,8 @@ with app.app_context():
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+                # v34 - Scoring flash notification
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
                 # v33 - Points/Loyalty Engine (Sprint 1)
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
@@ -802,6 +804,13 @@ with app.app_context():
                 print('Admin account updated.')
             conn.commit()
         print('Database ready.')
+
+        # Sprint 3 — one-time residency backfill for existing subscribers
+        try:
+            backfill_residency_months()
+        except Exception as _bf_err:
+            print(f'[residency_backfill] Error: {_bf_err}')
+
     except Exception as e:
         print(f'Admin init warning: {e}')
 
@@ -1044,6 +1053,75 @@ def run_annual_points_expiry():
 
 
 # ── End of Points Engine ──────────────────────────────────────────────────────
+
+# ── Sprint 3 — 6-6-12 Residency Clock ────────────────────────────────────────
+
+def run_monthly_residency_clock():
+    """
+    Runs on the 1st of every month at 00:05 IST (18:35 UTC prev day).
+    Increments residency_months for every user who:
+      - is_subscribed = True (camera, mobile, learning)
+      - OR subscription_track = 'dormant' (clock ticks in dormant mode too)
+    Free users and cancelled users: no increment (clock pauses).
+    Sets residency_started_at on first increment.
+    """
+    with app.app_context():
+        active_tracks = ('camera', 'mobile', 'learning', 'dormant')
+        users = User.query.filter(
+            db.or_(
+                db.and_(User.is_subscribed == True,
+                        User.subscription_track.in_(active_tracks)),
+                User.subscription_track == 'dormant'
+            )
+        ).all()
+        now = datetime.utcnow()
+        incremented = 0
+        for u in users:
+            if not u.residency_started_at:
+                u.residency_started_at = now
+            u.residency_months = (u.residency_months or 0) + 1
+            incremented += 1
+        db.session.commit()
+        app.logger.info(
+            f'[residency_clock] Monthly increment complete. '
+            f'{incremented} users incremented. Date: {now.date()}'
+        )
+
+
+def backfill_residency_months():
+    """
+    One-time backfill — called at startup if any subscribed user has
+    residency_months = 0 and subscribed_at is set.
+    Calculates months from subscribed_at to today and sets residency_months.
+    Safe to run multiple times — skips users who already have residency_months > 0.
+    """
+    with app.app_context():
+        from datetime import date as _date
+        today = _date.today()
+        users = User.query.filter(
+            User.is_subscribed == True,
+            User.subscribed_at.isnot(None),
+            db.or_(User.residency_months == None, User.residency_months == 0)
+        ).all()
+        backfilled = 0
+        for u in users:
+            sub_date = u.subscribed_at.date() if hasattr(u.subscribed_at, 'date') else u.subscribed_at
+            months = (today.year - sub_date.year) * 12 + (today.month - sub_date.month)
+            months = max(0, months)
+            if months > 0:
+                u.residency_months = months
+                if not u.residency_started_at:
+                    u.residency_started_at = u.subscribed_at
+                backfilled += 1
+        db.session.commit()
+        app.logger.info(
+            f'[residency_backfill] Backfill complete. '
+            f'{backfilled} users updated. Date: {today}'
+        )
+
+
+# ── End of Sprint 3 ───────────────────────────────────────────────────────────
+
 
 
 @app.route('/')
@@ -1760,6 +1838,26 @@ def dashboard():
         Image.raw_disqualified == False
     ).all() if current_user.role != 'admin' else []
 
+    # ── Scoring flash notifications ──────────────────────────────────────────
+    # Pick up any pending scoring flash messages and clear them
+    if current_user.is_subscribed:
+        try:
+            _flash_imgs = Image.query.filter(
+                Image.user_id == current_user.id,
+                Image.scoring_flash.isnot(None)
+            ).all()
+            for _fi in _flash_imgs:
+                flash(
+                    f'Your image "{_fi.asset_name or _fi.original_filename}" '
+                    f'scored {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}!',
+                    'success'
+                )
+                _fi.scoring_flash = None
+            if _flash_imgs:
+                db.session.commit()
+        except Exception as _fle:
+            app.logger.error(f'[scoring_flash] {_fle}')
+
     # ── Wallet HUD (Sprint 4) ─────────────────────────────────────────────
     # Investor doc 16d: points balance + progress + 6-6-12 clock
     wallet_hud = None
@@ -2462,6 +2560,8 @@ def upload():
                                     check_tier_jump_bonus(
                                         _pts_user, _img.tier, _img_count, commit=False
                                     )
+                                    # Store flash for dashboard pickup
+                                    _img.scoring_flash = f'+{_pts_earned:.1f} points earned'
                                     db.session.commit()
                             except Exception as _pe:
                                 app.logger.error(f'[points hook] image_scored error: {_pe}')
@@ -10475,6 +10575,14 @@ if True:
         trigger          = CronTrigger(month=12, day=31, hour=18, minute=25, timezone='UTC'),
         id               = 'annual_points_expiry',
         name             = 'Annual 20% points balance expiry (Dec 31)',
+        replace_existing = True,
+    )
+    # Sprint 3 — monthly residency clock — 00:05 IST = 18:35 UTC on last day of month
+    _scheduler.add_job(
+        func             = run_monthly_residency_clock,
+        trigger          = CronTrigger(day=1, hour=18, minute=35, timezone='UTC'),
+        id               = 'monthly_residency_clock',
+        name             = 'Monthly 6-6-12 residency clock increment',
         replace_existing = True,
     )
     _scheduler.start()
