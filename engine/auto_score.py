@@ -171,6 +171,13 @@ genre rules (STEP 1). If detected, technique overrides genre DoD criteria.
 
 Score all five modules. Apply all Apex layer rules. Calculate final weighted score.
 
+WRITING STYLE FOR ALL TEXT FIELDS:
+Write as an experienced photographer and mentor — direct, specific, no hedging.
+Reference what you actually see in this specific image. No generic statements.
+Never say "the image demonstrates" or "this photograph shows" — speak directly.
+Examples of BAD output: "The technical execution demonstrates strong awareness of peak action."
+Examples of GOOD output: "The motion-frozen wingbeat at the top of the arc is the shot — everything else in the frame supports that instant."
+
 Return this exact JSON structure:
 {{
   "dod": <float 0-10>,
@@ -183,15 +190,16 @@ Return this exact JSON structure:
   "archetype": "<archetype name>",
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
-  "row_technical": "<2-3 sentence DoD analysis — technical execution AND situational difficulty of capture>",
-  "row_geometric": "<2-3 sentence VD analysis — how the image breaks visual convention, compositional originality>",
-  "row_dm": "<2-3 sentence DM analysis — decisive moment, timing, irreversibility of the captured instant>",
-  "row_wonder": "<2-3 sentence WF analysis — wonder factor, unseen truth, capacity to arrest attention>",
-  "row_aq": "<2-3 sentence AQ soul analysis — emotional truth, human resonance, affective quotient>",
-  "byline_1": "<gap analysis — what holds this from next tier>",
-  "byline_2": "<THE ONE IMPROVEMENT: specific, physical, actionable. No brand names.>",
-  "badges_g": ["<strength 1>", "<strength 2>", "<strength 3>"],
-  "badges_w": ["<gap 1>", "<gap 2>", "<gap 3>"],
+  "hard_truth": "<One punchy sentence — what this image IS. Written as a photographer would say it to a peer. No hedging. Start with what makes or breaks it. Example: 'The subtraction works — white background forces the eye to the rhythm of repeated forms, but the incoming bird is a beat too early to anchor the geometry.' Never start with 'This image' or 'The photograph'.>",
+  "row_technical": "<2-3 sentences. Speak directly about what you see — specific technical decisions, not categories. Name the actual technique. Example: 'High-key exposure held just below blowout — feather detail survives in the wings. Shallow depth collapses the background to white without losing subject separation.'  >",
+  "row_geometric": "<2-3 sentences. Name the actual compositional structure visible in this specific image. Reference real elements. Example: 'Vertical post anchors the left third. The perched birds stack into a diagonal that pulls toward the incoming bird in the upper right — the composition is unresolved until that gap closes.'  >",
+  "row_dm": "<2-3 sentences. Was this the right moment or not? Be direct. Example: 'Mid-flight approach captured cleanly. The decisive version of this shot is a half-second later when the incoming bird reaches the stack — that frame does not exist yet.'  >",
+  "row_wonder": "<2-3 sentences. What is genuinely surprising or rare here, if anything? Be honest if nothing is. Example: 'Colony behaviour in high-key monochrome is uncommon — most bird photography reaches for colour and drama. The restraint is the wonder.'  >",
+  "row_aq": "<2-3 sentences. What does this image feel like? Name the emotion precisely. Example: 'Serene but kinetic — stillness and motion in the same frame. The motion blur on the foreground bird creates unresolved tension against the sharp perched group.'  >",
+  "byline_1": "<One sentence — what specifically holds this image from the next tier. Name the exact gap. Example: 'The incoming bird placement is slightly too high — it floats outside the geometric connection to the perched group rather than completing it.'  >",
+  "byline_2": "<THE ONE IMPROVEMENT. Physical, specific, actionable. What to do differently next time — in the field or in processing. Example: 'Wait for the incoming bird to drop closer to the perched group before firing — the geometric connection that makes this composition complete is half a second away.'  >",
+  "badges_g": ["<specific strength visible in this image>", "<specific strength>", "<specific strength>"],
+  "badges_w": ["<specific gap in this image>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>"
@@ -508,6 +516,7 @@ def build_audit_data(result, image_obj):
         "genre_tag":   f"{genre.upper()}  ·  {fmt.upper()}",
         "soul_bonus":  result.get("soul_bonus", False),
         "iucn_tag":    result.get("iucn_tag"),
+        "hard_truth":  result.get("hard_truth", ""),
         "modules": [
             ("DoD",        result.get("dod", 0)),
             ("Disruption", result.get("disruption", 0)),
