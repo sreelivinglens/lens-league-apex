@@ -92,7 +92,8 @@
     <div class="detail-actions">
       <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
       {% if image.status == 'scored' and image.score and not image.is_flagged %}
-        <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn" target="_blank">Download Card</a>
+        <a href="{{ url_for('download_card', image_id=image.id) }}?watermark=diagonal" class="btn" target="_blank">Card — Diagonal</a>
+        <a href="{{ url_for('download_card', image_id=image.id) }}?watermark=corner" class="btn" target="_blank">Card — Corner</a>
       {% endif %}
       {% if image.status != 'scored' %}
         <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
