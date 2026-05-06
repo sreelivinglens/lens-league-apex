@@ -343,6 +343,10 @@
   @media (max-width: 900px) and (min-width: 521px) {
     .wallet-grid { grid-template-columns: repeat(2, 1fr) !important; }
   }
+  /* Milestone labels — 6-col desktop, 3-col tablet, 2-col mobile */
+  .milestone-labels { display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin-top:8px; }
+  @media (max-width: 600px) { .milestone-labels { grid-template-columns:repeat(3,1fr); gap:8px; } }
+  @media (max-width: 360px) { .milestone-labels { grid-template-columns:repeat(2,1fr); gap:8px; } }
   /* POTY welcome banner */
   .poty-step-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 24px 0; }
   .poty-banner-heading { color:#F5C518; font-size:22px; font-weight:800; margin:0 0 14px 0; line-height:1.2; padding-right:44px; }
@@ -632,14 +636,14 @@ function toggleNotifStrip() {
       {% endfor %}
     </div>
 
-    {# Milestone labels #}
-    <div style="display:flex;justify-content:space-between;gap:4px;">
+    {# Milestone labels — desktop: row, mobile: 2-col grid #}
+    <div class="milestone-labels">
       {% for ms in _milestones %}
       {% set _reached = _bal >= ms.pts %}
-      <div style="flex:1;text-align:center;min-width:0;">
+      <div style="text-align:center;min-width:0;padding:4px;">
         <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:{% if _reached %}#2C3E6B{% else %}var(--text-primary){% endif %};">{{ ms.pts }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ms.label }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:1px;">{% if _reached %}✓{% else %}{{ (ms.pts - _bal) | int }} to go{% endif %}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:2px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:2px;">{% if _reached %}✓{% else %}{{ (ms.pts - _bal) | int }} to go{% endif %}</div>
       </div>
       {% endfor %}
     </div>
@@ -653,13 +657,11 @@ function toggleNotifStrip() {
       {% endif %}
     {% endfor %}
     {% if _next.ms %}
-    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:4px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
-        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;">{{ _next.ms.label }}: {{ _next.ms.desc }}</div>
-        <div style="font-size:15px;color:rgba(255,255,255,0.80);">Upload one image now — earn 50 to 90 points instantly.</div>
-      </div>
-      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
+    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 20px;">
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
+      <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:6px;line-height:1.4;">{{ _next.ms.label }}</div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.80);margin-bottom:14px;line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
+      <a href="{{ url_for('upload') }}" style="display:inline-block;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;">Upload Now →</a>
     </div>
     {% else %}
     <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
