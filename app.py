@@ -809,7 +809,13 @@ with app.app_context():
 
         # Sprint 3 — one-time residency backfill for existing subscribers
         try:
-            backfill_residency_months()
+            # Import after full module load to avoid forward-reference error
+            import sys as _sys
+            _backfill = getattr(_sys.modules[__name__], 'backfill_residency_months', None)
+            if _backfill:
+                _backfill()
+            else:
+                print('[residency_backfill] Skipped — function not yet defined at startup')
         except Exception as _bf_err:
             print(f'[residency_backfill] Error: {_bf_err}')
 
