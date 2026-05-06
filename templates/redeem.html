@@ -4,96 +4,37 @@
 {% block extra_css %}
 <style>
   .redeem-wrap { max-width: 760px; margin: 0 auto; }
-
   .redeem-balance {
     background: #2C3E6B; border-radius: var(--radius-md);
-    padding: 32px 36px; margin-bottom: 36px;
+    padding: 24px 28px; margin-bottom: 28px;
     display: flex; align-items: center; justify-content: space-between;
-    gap: 24px; flex-wrap: wrap;
+    gap: 20px; flex-wrap: wrap;
   }
-  .redeem-balance-pts {
-    font-family: var(--font-mono); font-size: 56px; font-weight: 700;
-    color: #F5C518; line-height: 1;
+  .redeem-balance-pts { font-family: var(--font-mono); font-size: 48px; font-weight: 700; color: #F5C518; line-height: 1; }
+  .redeem-balance-label { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-top: 6px; }
+  .redeem-balance-sub { font-size: 14px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+  .redeem-balance-note { background: rgba(234,243,222,0.15); border: 1px solid rgba(192,221,151,0.3); border-radius: var(--radius-sm); padding: 10px 16px; text-align: right; }
+  .redeem-balance-note div { font-size: 14px; color: #C0DD97; line-height: 1.6; }
+  .redeem-coming-soon { background: #EAF3DE; border: 1px solid #C0DD97; border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
+  .redeem-coming-soon div { font-size: 15px; color: #27500A; line-height: 1.6; }
+  .redeem-section-label { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; padding: 0 4px; }
+  .redeem-table { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
+  .redeem-row { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; padding: 16px 20px; gap: 16px; border-bottom: 1px solid var(--border-subtle); }
+  .redeem-row:last-child { border-bottom: none; }
+  @media (max-width: 520px) {
+    .redeem-row { grid-template-columns: 70px 1fr; }
+    .redeem-row-status { grid-column: 2; margin-top: -4px; }
   }
-  .redeem-balance-label {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(255,255,255,0.65); margin-top: 6px;
-  }
-  .redeem-balance-lifetime {
-    font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 4px;
-  }
-  .redeem-coming-soon {
-    background: #EAF3DE; border: 1px solid #C0DD97;
-    border-radius: var(--radius-md); padding: 18px 22px;
-    margin-bottom: 32px; display: flex; align-items: center; gap: 14px;
-  }
-  .redeem-coming-icon { font-size: 24px; flex-shrink: 0; }
-  .redeem-coming-text { font-size: 16px; color: #27500A; line-height: 1.6; }
-  .redeem-coming-text strong { color: #173404; }
-
-  .redeem-section-title {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: var(--text-primary); margin-bottom: 16px;
-    padding-bottom: 10px; border-bottom: 1px solid var(--border);
-  }
-
-  .redeem-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 32px; }
-  @media (max-width: 560px) { .redeem-grid { grid-template-columns: 1fr; } }
-
-  .redeem-card {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 20px 22px;
-    display: flex; flex-direction: column; gap: 8px;
-    opacity: 0.75;
-  }
-  .redeem-card-pts {
-    font-family: var(--font-mono); font-size: 28px; font-weight: 700;
-    color: #2C3E6B; line-height: 1;
-  }
-  .redeem-card-label {
-    font-size: 17px; font-weight: 700; color: var(--text-primary);
-  }
-  .redeem-card-desc {
-    font-size: 15px; color: var(--text-primary); line-height: 1.6;
-  }
-  .redeem-card-status {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    margin-top: 8px; display: inline-block;
-  }
-  .redeem-card-status.can { color: #27500A; }
-  .redeem-card-status.cant { color: var(--text-primary); }
-  .redeem-card-status.soon { color: #888; }
-
-  .redeem-mentor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
-  @media (max-width: 560px) { .redeem-mentor-grid { grid-template-columns: 1fr; } }
-
-  .redeem-mentor-card {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 18px 20px;
-    text-align: center; opacity: 0.75;
-  }
-  .redeem-mentor-tier {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--text-primary); margin-bottom: 8px;
-  }
-  .redeem-mentor-pts {
-    font-family: var(--font-mono); font-size: 24px; font-weight: 700;
-    color: #2C3E6B;
-  }
-  .redeem-mentor-cash {
-    font-size: 14px; color: var(--text-primary); margin-top: 4px;
-  }
-
-  .redeem-note {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-left: 4px solid #2C3E6B; border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 16px 20px; font-size: 15px; color: var(--text-primary); line-height: 1.7;
-    margin-bottom: 28px;
-  }
+  .redeem-row-pts { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #2C3E6B; line-height: 1; white-space: nowrap; }
+  .redeem-row-label { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .redeem-row-desc { font-size: 14px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; }
+  .status-can { background: #EAF3DE; color: #27500A; border: 1px solid #C0DD97; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; padding: 5px 10px; border-radius: 3px; white-space: nowrap; display: inline-block; }
+  .status-need { font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); white-space: nowrap; }
+  .redeem-tnc { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid #2C3E6B; border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 18px 22px; margin-bottom: 28px; }
+  .redeem-tnc-title { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 12px; }
+  .redeem-tnc ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .redeem-tnc li { font-size: 15px; color: var(--text-primary); line-height: 1.6; }
+  .redeem-tnc li strong { color: var(--text-primary); }
 </style>
 {% endblock %}
 
@@ -105,172 +46,136 @@
     <p>Use your points for entries, top-ups, free months, and mentor sessions.</p>
   </div>
 
-  {# Balance banner #}
   {% if wallet_hud %}
   <div class="redeem-balance">
     <div>
       <div class="redeem-balance-pts">{{ wallet_hud.balance | round(1) }}</div>
       <div class="redeem-balance-label">Your Points Balance</div>
-      <div class="redeem-balance-lifetime">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
+      <div class="redeem-balance-sub">{{ wallet_hud.lifetime | round(1) }} earned lifetime &nbsp;·&nbsp; 20% expires 31 Dec</div>
     </div>
-    <div style="text-align:right;">
-      <div style="font-family:var(--font-mono);font-size:15px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Keep uploading to earn more</div>
-      <div style="font-size:15px;color:rgba(255,255,255,0.85);">50–90 pts per scored image</div>
-      <a href="{{ url_for('upload') }}" style="display:inline-block;margin-top:12px;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;border-radius:4px;text-decoration:none;">Upload Now →</a>
+    <div class="redeem-balance-note">
+      <div>80% carry forward each Jan 1</div>
+      <div>Tier badges are permanent</div>
+      <a href="{{ url_for('upload') }}" style="display:inline-block;margin-top:10px;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 18px;border-radius:3px;text-decoration:none;">Upload Now →</a>
     </div>
   </div>
   {% endif %}
 
-  {# Coming soon banner #}
   <div class="redeem-coming-soon">
-    <div class="redeem-coming-icon">🔒</div>
-    <div class="redeem-coming-text">
-      <strong>Redemption is coming soon.</strong> Points are accumulating now and will be redeemable once our payment infrastructure is live. Every point you earn today is locked in — nothing expires.
+    <div style="font-size:20px;flex-shrink:0;">🔒</div>
+    <div><strong>Redemption is coming soon.</strong> Points are accumulating now and will be redeemable once our payment infrastructure is live. Every point you earn today counts.</div>
+  </div>
+
+  {# Programme Entries #}
+  <div class="redeem-section-label">Programme Entries</div>
+  <div class="redeem-table">
+    {% set prog_items = [
+      {'pts': 50,  'label': 'Weekly Challenge entry',  'desc': 'Free for subscribers &middot; non-subscribers redeem pts per entry'},
+      {'pts': 100, 'label': 'Open Submission entry',   'desc': 'Annual Open Programme &middot; one image, one genre &middot; &#8377;50 cash for non-subscribers'},
+      {'pts': 350, 'label': 'Body of Work entry',      'desc': 'Annual BOW &middot; curated series 6&#8209;12 images &middot; &#8377;999 cash for non-subscribers'},
+      {'pts': 500, 'label': 'POTY entry',              'desc': 'Annual Photographer of the Year &middot; subscribers only'},
+    ] %}
+    {% for item in prog_items %}
+    {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
+    <div class="redeem-row">
+      <div class="redeem-row-pts">{{ item.pts }} pts</div>
+      <div>
+        <div class="redeem-row-label">{{ item.label }}</div>
+        <div class="redeem-row-desc">{{ item.desc }}</div>
+      </div>
+      <div class="redeem-row-status">
+        {% if bal >= item.pts %}<span class="status-can">&#10003; Enough pts</span>
+        {% else %}<span class="status-need">{{ (item.pts - bal) | int }} to go</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Upload Credits #}
+  <div class="redeem-section-label">Upload Credits</div>
+  <div class="redeem-table">
+    {% set upload_items = [
+      {'pts': 10,   'label': 'Single upload',               'desc': 'One additional scored image &middot; rank eligible &middot; POTY eligible &middot; earns pts'},
+      {'pts': 1000, 'label': 'Top-up pack &#8212; 5 images','desc': 'Same as &#8377;99 cash top-up &middot; any track &middot; subscribers earn full points'},
+      {'pts': 2500, 'label': 'Monthly subscription offset', 'desc': 'Covers one month &middot; Mobile &#8377;99 or Camera &#8377;199'},
+    ] %}
+    {% for item in upload_items %}
+    {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
+    <div class="redeem-row">
+      <div class="redeem-row-pts">{{ '{:,}'.format(item.pts) }} pts</div>
+      <div>
+        <div class="redeem-row-label">{{ item.label }}</div>
+        <div class="redeem-row-desc">{{ item.desc }}</div>
+      </div>
+      <div class="redeem-row-status">
+        {% if bal >= item.pts %}<span class="status-can">&#10003; Enough pts</span>
+        {% else %}<span class="status-need">{{ '{:,}'.format((item.pts - bal) | int) }} to go</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Free Month #}
+  <div class="redeem-section-label">Free Month</div>
+  <div class="redeem-table">
+    {% set _fmp = 2000 if current_user.subscription_track == 'camera' else 1000 %}
+    {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
+    <div class="redeem-row">
+      <div class="redeem-row-pts">{{ '{:,}'.format(_fmp) }} pts</div>
+      <div>
+        <div class="redeem-row-label">One free month &#8212; {{ current_user.subscription_track | title }} Users</div>
+        <div class="redeem-row-desc">Camera Users: 2,000 pts &middot; Mobile Users: 1,000 pts &middot; subscribers only</div>
+      </div>
+      <div class="redeem-row-status">
+        {% if bal >= _fmp %}<span class="status-can">&#10003; Enough pts</span>
+        {% else %}<span class="status-need">{{ '{:,}'.format((_fmp - bal) | int) }} to go</span>{% endif %}
+      </div>
     </div>
   </div>
 
-  {# Programme entries #}
-  <div class="redeem-section-title">Programme Entries</div>
-  <div class="redeem-grid">
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">50 pts</div>
-      <div class="redeem-card-label">Weekly Challenge Entry</div>
-      <div class="redeem-card-desc">Free for subscribers. Non-subscribers redeem 50 pts per weekly challenge entry.</div>
-      {% if wallet_hud and wallet_hud.balance >= 50 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (50 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
+  {# Mentor Sessions #}
+  <div class="redeem-section-label">Mentor Sessions</div>
+  <div class="redeem-table">
+    {% set mentor_items = [
+      {'pts': 500,  'label': 'Senior Mentor session', 'desc': 'or &#8377;50 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+      {'pts': 750,  'label': 'Expert Mentor session',  'desc': 'or &#8377;75 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+      {'pts': 1000, 'label': 'Legend Mentor session',  'desc': 'or &#8377;100 cash &middot; subscribers: pts or cash &middot; non-subscribers: cash only'},
+    ] %}
+    {% for item in mentor_items %}
+    {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
+    <div class="redeem-row">
+      <div class="redeem-row-pts">{{ '{:,}'.format(item.pts) }} pts</div>
+      <div>
+        <div class="redeem-row-label">{{ item.label }}</div>
+        <div class="redeem-row-desc">{{ item.desc }}</div>
+      </div>
+      <div class="redeem-row-status">
+        {% if bal >= item.pts %}<span class="status-can">&#10003; Enough pts</span>
+        {% else %}<span class="status-need">{{ '{:,}'.format((item.pts - bal) | int) }} to go</span>{% endif %}
+      </div>
     </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">100 pts</div>
-      <div class="redeem-card-label">Open Submission Entry</div>
-      <div class="redeem-card-desc">Annual Open Programme entry — one image, one genre. Subscribers only. ₹50 cash for non-subscribers.</div>
-      {% if wallet_hud and wallet_hud.balance >= 100 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (100 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">350 pts</div>
-      <div class="redeem-card-label">Body of Work Entry</div>
-      <div class="redeem-card-desc">Annual Body of Work submission — curated series of 6–12 images. Subscribers only. ₹999 cash for non-subscribers.</div>
-      {% if wallet_hud and wallet_hud.balance >= 350 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (350 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">500 pts</div>
-      <div class="redeem-card-label">POTY Entry</div>
-      <div class="redeem-card-desc">Annual Photographer of the Year entry. Subscribers only.</div>
-      {% if wallet_hud and wallet_hud.balance >= 500 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (500 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
+    {% endfor %}
   </div>
 
-  {# Upload top-ups #}
-  <div class="redeem-section-title">Upload Credits</div>
-  <div class="redeem-grid">
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">10 pts</div>
-      <div class="redeem-card-label">Single Upload</div>
-      <div class="redeem-card-desc">One additional scored image above your monthly allocation. Rank eligible, POTY eligible, earns points. Subscribers only.</div>
-      {% if wallet_hud and wallet_hud.balance >= 10 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (10 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">1,000 pts</div>
-      <div class="redeem-card-label">Top-up Pack — 5 Images</div>
-      <div class="redeem-card-desc">5 additional scored images. Same as ₹99 cash top-up. Any track. Subscribers earn full points on these images.</div>
-      {% if wallet_hud and wallet_hud.balance >= 1000 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (1000 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">2,500 pts</div>
-      <div class="redeem-card-label">Monthly Subscription Offset</div>
-      <div class="redeem-card-desc">Covers one month of your Mobile (₹99) or Camera (₹199) subscription. Subscribers only.</div>
-      {% if wallet_hud and wallet_hud.balance >= 2500 %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (2500 - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-    <div class="redeem-card">
-      <div class="redeem-card-pts">{% if current_user.subscription_track == 'camera' %}2,000{% else %}1,000{% endif %} pts</div>
-      <div class="redeem-card-label">One Free Month</div>
-      <div class="redeem-card-desc">Redeem for one free month of your {{ current_user.subscription_track | title }} subscription — Camera: 2,000 pts · Mobile: 1,000 pts.</div>
-      {% set _free_month_pts = 2000 if current_user.subscription_track == 'camera' else 1000 %}
-      {% if wallet_hud and wallet_hud.balance >= _free_month_pts %}
-      <span class="redeem-card-status can">✓ You have enough points</span>
-      {% else %}
-      <span class="redeem-card-status cant">{{ (_free_month_pts - (wallet_hud.balance if wallet_hud else 0)) | int }} pts to go</span>
-      {% endif %}
-      <span class="redeem-card-status soon">Coming soon</span>
-    </div>
-
-  </div>
-
-  {# Mentor sessions #}
-  <div class="redeem-section-title">Mentor Sessions — Subscribers</div>
-  <div class="redeem-mentor-grid">
-    <div class="redeem-mentor-card">
-      <div class="redeem-mentor-tier">Tier 1</div>
-      <div class="redeem-mentor-pts">500 pts</div>
-      <div class="redeem-mentor-cash">or ₹50 cash</div>
-      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Community mentor review</div>
-      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
-    </div>
-    <div class="redeem-mentor-card">
-      <div class="redeem-mentor-tier">Tier 3</div>
-      <div class="redeem-mentor-pts">750 pts</div>
-      <div class="redeem-mentor-cash">or ₹75 cash</div>
-      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Experienced mentor review</div>
-      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
-    </div>
-    <div class="redeem-mentor-card">
-      <div class="redeem-mentor-tier">Tier 5</div>
-      <div class="redeem-mentor-pts">1,000 pts</div>
-      <div class="redeem-mentor-cash">or ₹100 cash</div>
-      <div style="font-size:13px;color:var(--text-primary);margin-top:6px;">Master mentor review</div>
-      <div class="redeem-card-status soon" style="display:block;margin-top:8px;">Coming soon</div>
-    </div>
-  </div>
-
-  <div class="redeem-note">
-    <strong>Annual point cycle:</strong> 20% of your points balance expires on 31 December each year — this prevents hoarding and keeps the wallet active. 80% carry forward to the new year. Tier badges are permanent regardless of your points balance. Redemption opens once payment infrastructure is live — you will be notified by email. Questions? <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>
+  {# T&C #}
+  <div class="redeem-tnc">
+    <div class="redeem-tnc-title">Points Terms &amp; Conditions</div>
+    <ul>
+      <li><strong>No cash value.</strong> Points cannot be exchanged for cash, transferred between accounts, or sold.</li>
+      <li><strong>Annual expiry.</strong> 20% of your total point balance expires on 31 December each year. 80% carries forward automatically to 1 January. You will receive an email reminder in December.</li>
+      <li><strong>Tier badges are permanent.</strong> Earning a tier badge (Rookie through Legend) is a lifetime achievement and does not expire regardless of your points balance.</li>
+      <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions are available to all registered users via cash payment.</li>
+      <li><strong>Non-reversible.</strong> Once points are redeemed, the transaction cannot be undone. Redeemed points are deducted immediately from your balance.</li>
+      <li><strong>Subject to availability.</strong> Programme entries (Open, BOW, POTY) are only redeemable during the relevant entry window. Mentor sessions are subject to mentor availability.</li>
+      <li><strong>Rate changes.</strong> {{ platform_name }} may adjust redemption rates or add new redemption options at any time with a minimum of 14 days&#39; notice to active subscribers.</li>
+      <li><strong>Payment infrastructure.</strong> Points redemption for cash-equivalent items is subject to payment infrastructure being operational. {{ platform_name }}&#39;s obligation is to activate redemption within 30 days of payment infrastructure going live.</li>
+      <li><strong>Disputes.</strong> Any dispute regarding points balances or redemptions must be raised within 30 days of the transaction by contacting <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>.</li>
+    </ul>
   </div>
 
   <div style="display:flex;gap:12px;flex-wrap:wrap;">
-    <a href="{{ url_for('dashboard') }}" class="btn">← Back to Dashboard</a>
-    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Now — Earn Points →</a>
+    <a href="{{ url_for('dashboard') }}" class="btn">&#8592; Back to Dashboard</a>
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Now &#8212; Earn Points &#8594;</a>
   </div>
 
 </div>
