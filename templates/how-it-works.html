@@ -66,6 +66,8 @@
   }
   .ddi-dims { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
   @media (max-width: 600px) { .ddi-dims { grid-template-columns: repeat(3,1fr); } }
+  .ddi-dim-labels { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-top: 16px; text-align: center; }
+  @media (max-width: 600px) { .ddi-dim-labels { display: none; } }
   .ddi-dim-card {
     text-align: center; padding: 16px 8px;
     background: var(--surface-3); border-radius: var(--radius-sm);
@@ -281,12 +283,12 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:16px; text-align:center;">
-        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
-        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
-        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
-        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
-        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
+      <div class="ddi-dim-labels">
+        <div style="font-size: 14px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
+        <div style="font-size: 14px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
+        <div style="font-size: 14px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
+        <div style="font-size: 14px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
+        <div style="font-size: 14px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
       </div>
     </div>
   </div>
