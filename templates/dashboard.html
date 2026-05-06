@@ -603,7 +603,7 @@ function toggleNotifStrip() {
   {% set _track = current_user.subscription_track or 'mobile' %}
   {% set _bal = wallet_hud.balance | float %}
   {% set _milestones = [
-      {'pts': 50,   'label': 'First steps',   'desc': 'You're on your way'},
+      {'pts': 50,   'label': 'First steps',   'desc': 'You are on your way'},
       {'pts': 100,  'label': 'Open entry',     'desc': 'Open Submission fee waived'},
       {'pts': 200,  'label': 'Peer rater',     'desc': 'Peer rating milestone'},
       {'pts': 350,  'label': 'BOW entry',      'desc': 'Body of Work fee waived'},
