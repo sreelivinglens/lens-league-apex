@@ -77,6 +77,10 @@
   .ddi-dim-bar { height: 4px; border-radius: 2px; background: var(--border); margin: 6px auto 8px; max-width: 48px; }
   .ddi-dim-fill { height: 4px; border-radius: 2px; }
   .ddi-dim-name { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+  @media (max-width: 600px) { 
+    .ddi-dim-name { font-size: 14px; letter-spacing: 0px; } 
+    .ddi-dim-card { padding: 12px 4px; }
+  }
 
   /* dim colours */
   .dod-col   { color: #4A90D9; } .dod-bar   { background: #4A90D9; }
