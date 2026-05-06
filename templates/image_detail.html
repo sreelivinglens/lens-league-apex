@@ -37,8 +37,6 @@
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .ddi-bar-track { background: var(--border); border-radius: 4px; height: 5px; margin: 6px auto 5px; max-width: 60px; }
-  .ddi-bar-fill { background: var(--gold); border-radius: 4px; height: 5px; }
   .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: #FFFFFF; text-transform: uppercase; }
 
   .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
@@ -173,9 +171,6 @@
       {% for lbl, val in dims %}
       <div class="ddi-dim">
         <div class="ddi-val">{{ val or '—' }}</div>
-        <div class="ddi-bar-track">
-          <div class="ddi-bar-fill" style="width:{{ ((val or 0) / 10 * 100)|int }}%;"></div>
-        </div>
         <div class="ddi-lbl">{{ lbl }}</div>
       </div>
       {% endfor %}
