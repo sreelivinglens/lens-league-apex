@@ -722,7 +722,7 @@ img {
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
-        <a href="{{ url_for('contests') }}" class="{% if request.endpoint == 'contests' %}nav-active{% endif %}">Programmes</a>
+        <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
         <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
@@ -818,7 +818,7 @@ img {
     <a href="/contact">Contact Us</a>
     <a href="/faq">FAQ</a>
     <a href="/poty">Awards</a>
-    <a href="/contest-rules">Programme Rules</a>
+    <a href="/programme-rules">Programme Rules</a>
   </div>
   <div style="margin-top:18px; padding-top:14px; border-top:1px solid rgba(0,0,0,0.08);
               font-family:var(--font-mono); font-size: 15px; color:rgba(26,26,24,0.45);

@@ -11,12 +11,12 @@
   }
   .faq-section h2 span {
     font-family: var(--font-mono); font-size: 14px;
-    color: var(--gold); margin-right: 10px; font-weight: 600;
+    color: var(--text-primary); margin-right: 10px; font-weight: 600;
   }
   .faq-item      { margin-bottom: 24px; }
   .faq-q         { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .faq-a         { font-size: 16px; color: var(--text-secondary); line-height: 1.8; }
-  .faq-a a       { color: var(--gold); }
+  .faq-a a       { color: var(--text-primary); font-weight:600; text-decoration:underline; }
   .faq-a strong  { color: var(--text-primary); }
   .terms-highlight {
     background: var(--surface-3); border: 1px solid var(--border);
@@ -25,7 +25,7 @@
     padding: 16px 20px; margin: 16px 0;
     font-size: 16px; color: var(--text-secondary); line-height: 1.7;
   }
-  .terms-highlight strong { color: var(--gold); }
+  .terms-highlight strong { color: var(--text-primary); font-weight:700; }
 </style>
 {% endblock %}
 
@@ -48,7 +48,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">How many free images do I get?</div>
-      <div class="faq-a"><strong>3 free scored images</strong> — no credit card required. After that, subscribe to the Camera or Mobile track to continue uploading and competing.</div>
+      <div class="faq-a"><strong>3 free scored images</strong> — no credit card required. After that, subscribe to the Camera or Mobile Users to continue uploading and competing.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to use a camera? Can I use my phone?</div>
@@ -91,8 +91,8 @@
       <div class="faq-q">What plans are available?</div>
       <div class="faq-a">
         <strong>Free</strong> — 3 lifetime scored images, full DDI analysis, shareable rating card.<br>
-        <strong>Camera Track</strong> — ₹199/month or ₹1,999/year. 5 scored images per month, full programme access, peer rating, POTY eligibility.<br>
-        <strong>Mobile Track</strong> — ₹99/month or ₹999/year. 8 scored images per month. Same features as Camera, dedicated Mobile league.
+        <strong>Camera Users</strong> — ₹199/month or ₹1,999/year. 5 scored images per month, full programme access, peer rating, POTY eligibility.<br>
+        <strong>Mobile Users</strong> — ₹99/month or ₹999/year. 8 scored images per month. Same features as Camera, dedicated Mobile league.
       </div>
     </div>
     <div class="faq-item">
@@ -104,7 +104,7 @@
       <div class="faq-a">Go to your Dashboard and select <strong>Manage Subscription</strong>, or visit the <a href="/subscription/cancel">cancellation page</a> directly. Cancellation takes effect at the end of your current billing period. No cancellation fee.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Can I switch from Mobile to Camera track?</div>
+      <div class="faq-q">Can I switch from Mobile to Camera Users?</div>
       <div class="faq-a">Yes — cancel your current subscription and subscribe to the other track. Your scored images, scores, and history are retained.</div>
     </div>
     <div class="faq-item">
@@ -127,7 +127,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">What is POTY?</div>
-      <div class="faq-a">Photographer of the Year. Your POTY score is the average of your top-6 DDI scores per genre, tracked across the full platform year. You must be active across at least 6 months to qualify. Camera and Mobile compete separately. Annual honours fund: ₹50,00,000.</div>
+      <div class="faq-a">Photographer of the Year. Your POTY score is the average of your top-6 DDI scores in your strongest genre — you compete in one genre, the one where your scores are highest. A wildlife-only photographer qualifies on wildlife alone. You need at least 6 months of active subscription within the calendar year, and a minimum of 24 scored images in your qualifying genre. Camera Users and Mobile Users compete separately. Recognition and awards announced to qualifying participants.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What is the Open Programme?</div>
@@ -147,7 +147,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I download my images back?</div>
-      <div class="faq-a">Your original uploaded images are stored on our platform. Contact us at <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span> if you need access to your original files.</div>
+      <div class="faq-a">Your original uploaded images are stored on our platform. Contact us at <span style="color:var(--text-primary); font-weight:600;">{{ contact_email }}</span> if you need access to your original files.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What happens if my image is flagged as AI-generated?</div>
@@ -200,7 +200,7 @@
 
   <div class="terms-highlight">
     Still have a question? &nbsp;<a href="/contact">Contact us</a>
-    &nbsp;or email <span style="color:var(--gold); font-weight:600;">{{ contact_email }}</span>
+    &nbsp;or email <span style="color:var(--text-primary); font-weight:600;">{{ contact_email }}</span>
   </div>
 
 </div>

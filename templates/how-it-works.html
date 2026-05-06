@@ -8,8 +8,8 @@
   /* Section spacing */
   .hiw-section { margin-bottom: 72px; }
   .hiw-section-label {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    letter-spacing: 3px; color: var(--text-primary); text-transform: uppercase;
     margin-bottom: 10px;
   }
   .hiw-section-title {
@@ -30,7 +30,7 @@
   }
   .step-num {
     font-family: var(--font-mono); font-size: 40px; font-weight: 700;
-    color: var(--gold); opacity: 0.25; line-height: 1; margin-bottom: 12px;
+    color: var(--text-primary); opacity: 0.25; line-height: 1; margin-bottom: 12px;
   }
   .step-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .step-body { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
@@ -48,7 +48,7 @@
   }
   .ddi-score-big {
     font-family: var(--font-mono); font-size: 72px; font-weight: 700;
-    color: var(--gold); line-height: 1; margin-bottom: 4px;
+    color: var(--text-primary); line-height: 1; margin-bottom: 4px;
   }
   .ddi-tier-label {
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
@@ -65,14 +65,14 @@
   .ddi-dim-val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
   .ddi-dim-bar { height: 4px; border-radius: 2px; background: var(--border); margin: 6px auto 8px; max-width: 48px; }
   .ddi-dim-fill { height: 4px; border-radius: 2px; }
-  .ddi-dim-name { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+  .ddi-dim-name { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
 
   /* dim colours */
   .dod-col   { color: #4A90D9; } .dod-bar   { background: #4A90D9; }
   .dis-col   { color: #E84393; } .dis-bar   { background: #E84393; }
   .dm-col    { color: #F5A623; } .dm-bar    { background: #F5A623; }
   .won-col   { color: #7ED321; } .won-bar   { background: #7ED321; }
-  .aq-col    { color: var(--gold); } .aq-bar { background: var(--gold); }
+  .aq-col    { color: var(--text-primary); } .aq-bar { background: var(--gold); }
 
   /* ── Section 3: Tiers ── */
   .tiers-strip { display: flex; flex-direction: column; gap: 0; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
@@ -80,7 +80,7 @@
   .tier-block:last-child { border-bottom: none; }
   .tier-block.tier-gm { background: #1a1a18; }
   .tier-block.tier-legend { background: #0D0D0B; border-top: 2px solid #F5C518; }
-  .tier-name { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .tier-name { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
   .tier-range { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text-primary); }
   .tier-range.dark { color: #FFFFFF; }
   .tier-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
@@ -98,15 +98,15 @@
     gap: 24px; flex-wrap: wrap;
   }
   .challenge-card-left { flex: 1; min-width: 260px; }
-  .challenge-week { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; }
+  .challenge-week { font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 6px; }
   .challenge-title { font-size: 26px; font-weight: 700; font-style: italic; color: var(--text-primary); margin-bottom: 16px; line-height: 1.2; }
   .slot-row { display: flex; gap: 16px; flex-wrap: wrap; }
   .slot-pill {
     padding: 8px 16px; border-radius: 20px; font-family: var(--font-mono);
-    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    font-size: 15px; font-weight: 600; letter-spacing: 1px;
   }
   .slot-free     { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
-  .slot-sub      { background: rgba(200,168,75,0.12); border: 1px solid var(--gold-dark); color: var(--gold); }
+  .slot-sub      { background: rgba(200,168,75,0.12); border: 1px solid var(--gold-dark); color: var(--text-primary); }
 
   /* ── Section 5: Pricing ── */
   .pricing-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
@@ -117,12 +117,12 @@
     display: flex; flex-direction: column;
   }
   .pricing-card.featured { border-color: var(--gold-dark); background: linear-gradient(135deg, var(--surface-2), rgba(200,168,75,0.04)); }
-  .pricing-track { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .pricing-track { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 8px; }
   .pricing-price { font-family: var(--font-mono); font-size: 38px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .pricing-period { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
   .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
   .pricing-features li { font-size: 15px; color: var(--text-secondary); padding-left: 20px; position: relative; line-height: 1.5; }
-  .pricing-features li::before { content: '✓'; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+  .pricing-features li::before { content: '✓'; position: absolute; left: 0; color: var(--text-primary); font-weight: 700; }
 
   /* ── Section 6: POTY ── */
   .poty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
@@ -131,10 +131,10 @@
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
   }
-  .poty-genre-name { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .poty-genre-name { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 8px; }
   .poty-genre-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 6px; }
-  .poty-genre-fill { height: 4px; background: var(--gold); border-radius: 2px; }
-  .poty-genre-score { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gold); }
+  .poty-genre-fill { height: 4px; background: #2C3E6B; border-radius: 2px; }
+  .poty-genre-score { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text-primary); }
 
   .poty-rule-box {
     background: rgba(200,168,75,0.06); border: 1px solid var(--gold-dark);
@@ -142,8 +142,8 @@
     display: flex; gap: 24px; flex-wrap: wrap; align-items: center;
   }
   .poty-rule-stat { text-align: center; }
-  .poty-rule-val { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .poty-rule-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+  .poty-rule-val { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .poty-rule-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
   .poty-rule-text { flex: 1; min-width: 200px; font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
 
   /* ── Section 7: RAW ── */
@@ -222,7 +222,7 @@
           <div style="font-size:15px; font-style:italic; color:var(--text-secondary);">Sovereign Momentum</div>
         </div>
       </div>
-      <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); letter-spacing:1px; margin-bottom:24px;">WILDLIFE · CAMERA LEAGUE</div>
+      <div style="font-family:var(--font-mono); font-size: 15px; color:var(--text-muted); letter-spacing:1px; margin-bottom:24px;">WILDLIFE · CAMERA LEAGUE</div>
 
       <div class="ddi-dims">
         <div class="ddi-dim-card">
@@ -253,11 +253,11 @@
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:16px; text-align:center;">
-        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
-        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
-        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
-        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
-        <div style="font-size:13px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
+        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
+        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
+        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
+        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
+        <div style="font-size: 15px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
       </div>
     </div>
   </div>
@@ -394,8 +394,8 @@
       </div>
     </div>
 
-    <div style="margin-top:12px; font-size:13px; color:var(--text-muted); text-align:center;">
-      Cancel anytime from your dashboard. Access continues to end of billing period. <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Full pricing details →</a>
+    <div style="margin-top:12px; font-size: 15px; color:var(--text-muted); text-align:center;">
+      Cancel anytime from your dashboard. Access continues to end of billing period. <a href="{{ url_for('pricing') }}" style="color: var(--text-primary);">Full pricing details →</a>
     </div>
   </div>
 
@@ -405,7 +405,7 @@
   <div class="hiw-section">
     <div class="hiw-section-label">Annual</div>
     <div class="hiw-section-title">Photographer of the Year</div>
-    <div class="hiw-section-sub">The POTY ranking runs year-round across 8 genres and 2 Leagues. Your top-6 average determines your standing. Prize pool: ₹50,00,000.</div>
+    <div class="hiw-section-sub">The POTY ranking runs year-round across 8 genres and 2 Leagues. Your top-6 average in any genre determines your standing — a wildlife-only photographer qualifies on wildlife alone. Recognition and awards announced to qualifying participants.</div>
 
     <div class="poty-grid">
       {% set genres = [
@@ -441,7 +441,7 @@
         <div class="poty-rule-lbl">Competitions per year</div>
       </div>
       <div class="poty-rule-text">
-        Your POTY score is the average of your top 6 DDI scores in a genre, across all images uploaded during the year. Upload more — only your best 6 count.
+        Your POTY score is the average of your top 6 DDI scores in your strongest genre. You compete in one genre — the one where your scores are highest. Upload more — only your best 6 count. A specialist always qualifies.
       </div>
     </div>
   </div>
@@ -473,7 +473,7 @@
     </div>
 
     <div style="margin-top:16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; font-size:14px; color:var(--text-muted); line-height:1.7;">
-      Random spot-check verification may be conducted on any image at any time, regardless of competition standing. See the <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Contest Rules</a> for full details.
+      Random spot-check verification may be conducted on any image at any time, regardless of competition standing. See the <a href="{{ url_for('contest_rules') }}" style="color: var(--text-primary);">Contest Rules</a> for full details.
     </div>
   </div>
 

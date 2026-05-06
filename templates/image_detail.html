@@ -24,7 +24,7 @@
     border-radius: var(--radius-md); padding: 28px 32px; margin-bottom: 28px;
   }
   .score-main { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
-  .score-number { font-family: var(--font-mono); font-size: 56px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .score-number { font-family: var(--font-mono); font-size: 56px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .score-tier-badge {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 3px; text-transform: uppercase;
@@ -41,7 +41,7 @@
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .ddi-bar-track { background: var(--border); border-radius: 4px; height: 5px; margin: 6px auto 5px; max-width: 60px; }
   .ddi-bar-fill { background: var(--gold); border-radius: 4px; height: 5px; }
-  .ddi-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: #FFFFFF; text-transform: uppercase; }
+  .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: #FFFFFF; text-transform: uppercase; }
 
   .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
   .peer-item { font-size: 14px; color: var(--text-muted); }
@@ -56,7 +56,7 @@
   .meta-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 28px; }
   @media (max-width: 600px) { .meta-grid { grid-template-columns: 1fr; } }
   .meta-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
-  .meta-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+  .meta-label { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 5px; }
   .meta-value { font-size: 15px; color: var(--text-primary); word-break: break-word; line-height: 1.5; }
 
   .exif-block { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-family: var(--font-mono); font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
@@ -67,7 +67,7 @@
 
   .audit-row { padding: 14px 0; border-bottom: 1px solid var(--border-subtle); display: flex; gap: 20px; }
   .audit-row:last-child { border-bottom: none; }
-  .audit-row-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; width: 130px; flex-shrink: 0; padding-top: 2px; }
+  .audit-row-label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; width: 140px; flex-shrink: 0; padding-top: 2px; }
   .audit-row-text { font-size: 15px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
   @media (max-width: 520px) { .audit-row { flex-direction: column; gap: 6px; } .audit-row-label { width: auto; } }
 
@@ -143,21 +143,23 @@
   <div class="score-card">
     <div class="score-main">
       <div class="score-number">{{ "%.2f"|format(image.score) }}</div>
-      {% if image.tier %}
-      <div class="score-tier-img-wrap">
-        <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
-             alt="{{ image.tier }} badge"
-             class="score-tier-img"
-             onerror="this.parentElement.style.display='none'">
-      </div>
-      {% endif %}
+
       <div>
         <div class="score-tier-badge">{{ image.tier or 'Scored' }}</div>
-        {% if image.soul_bonus %}<div style="font-family:var(--font-mono); font-size:12px; color:var(--gold); margin-top:4px; letter-spacing:1px;">✦ SOUL BONUS</div>{% endif %}
+        {% if image.soul_bonus %}<div style="font-family:var(--font-mono); font-size:14px; color:var(--gold); margin-top:4px; letter-spacing:1px;">✦ SOUL BONUS</div>{% endif %}
       </div>
     </div>
     {% if image.archetype %}
     <div class="score-archetype">{{ image.archetype }}</div>
+    {% endif %}
+
+    {# Hard Truth — photographer voice verdict #}
+    {% set audit_ht = image.get_audit() %}
+    {% if audit_ht and audit_ht.hard_truth %}
+    <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;margin-bottom:20px;">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
+      <div style="font-size:17px;color:#ffffff;line-height:1.65;font-style:italic;">{{ audit_ht.hard_truth }}</div>
+    </div>
     {% endif %}
 
     {# DDI dimensions #}
@@ -198,7 +200,7 @@
       <div class="percentile-bar-track">
         <div class="percentile-bar-fill" style="width:{{ percentile.percentile|int }}%;"></div>
       </div>
-      <div style="font-size:14px; color:var(--text-secondary);">Top <strong style="color:var(--gold);">{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
+      <div style="font-size:14px; color:var(--text-secondary);">Top <strong>{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
     </div>
     {% endif %}
   </div>
@@ -228,11 +230,14 @@
     </div>
     {% endif %}
     {% endfor %}
-    {% if audit.byline_1 %}
-    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-subtle); font-size:15px; font-weight:600; color:var(--text-primary);">{{ audit.byline_1 }}</div>
-    {% endif %}
     {% if audit.byline_2_body or audit.byline_2 %}
-    <div style="font-size:15px; color:var(--text-secondary); line-height:1.7; margin-top:8px;">{{ audit.byline_2_body or audit.byline_2 }}</div>
+    <div style="margin-top:20px;padding:16px 20px;background:#2C3E6B;border-radius:var(--radius-md);">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">The One Improvement</div>
+      <div style="font-size:16px;color:#ffffff;line-height:1.7;">{{ audit.byline_2_body or audit.byline_2 }}</div>
+    </div>
+    {% endif %}
+    {% if audit.byline_1 %}
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     {% endif %}
   </div>
   {% endif %}
