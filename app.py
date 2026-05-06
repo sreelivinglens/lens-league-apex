@@ -2210,7 +2210,7 @@ def upload():
                     if month_count >= LEARNING_IMAGE_LIMIT:
                         flash(
                             f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                            'Upgrade to Camera or Mobile track for contest access.',
+                            'Upgrade to Camera or Mobile League for programme access.',
                             'error'
                         )
                         return redirect(url_for('pricing'))
@@ -2342,8 +2342,8 @@ def upload():
             elif strike == 2:
                 flash(
                     ' Second league mismatch. This image has been held for review and '
-                    'your contest entries for this month have been removed pending admin review. '
-                    'One more mismatch will suspend your contest access.',
+                    'your programme entries for this month have been removed pending admin review. '
+                    'One more mismatch will suspend your programme access.',
                     'warning'
                 )
                 _month = datetime.utcnow().strftime('%Y-%m')
@@ -2351,8 +2351,8 @@ def upload():
                 db.session.commit()
             elif strike >= 3:
                 flash(
-                    ' Three league mismatches detected. Your contest access has been suspended '
-                    'and this month\'s contest entries have been removed. '
+                    ' Three league mismatches detected. Your programme access has been suspended '
+                    'and this month\'s programme entries have been removed. '
                     'Contact '+CONTACT_EMAIL+' to resolve.',
                     'error'
                 )
@@ -5176,7 +5176,7 @@ def contest_enter_monthly(genre):
         return redirect(url_for('pricing'))
 
     if getattr(current_user, 'league_suspended', False):
-        flash(' Your contest access is suspended due to league mismatches. Contact '+CONTACT_EMAIL+' to resolve.', 'error')
+        flash(' Your programme access is suspended due to league mismatches. Contact '+CONTACT_EMAIL+' to resolve.', 'error')
         return redirect(url_for('poty'))
 
     genre = normalise_genre(genre)
@@ -5903,8 +5903,8 @@ def subscribe(track):
             db.session.commit()
 
             track_names = {
-                'camera':   'Camera Track',
-                'mobile':   'Mobile Track',
+                'camera':   'Camera League',
+                'mobile':   'Mobile League',
                 'learning': 'Learning — ₹100/mo',
                 'mentor':   'Human + AI Mentor',
             }
@@ -5921,14 +5921,14 @@ def subscribe(track):
     PAYMENT_GATEWAY_LIVE = os.getenv('PAYMENT_GATEWAY_LIVE', '0') == '1'
     if not PAYMENT_GATEWAY_LIVE:
         track_labels = {
-            'camera':   'Camera Track',
-            'mobile':   'Mobile Track',
+            'camera':   'Camera League',
+            'mobile':   'Mobile League',
             'learning': 'Learning Only',
             'mentor':   'Human + AI Mentor',
         }
         track_descriptions = {
-            'camera':   '5 scored images/month · RAW eligible · POTY · Contests',
-            'mobile':   '8 scored images/month · POTY · Contests',
+            'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
+            'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
             'learning': '12 scored images/month · AI mentor · Improvement paths',
             'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
         }
@@ -5955,14 +5955,14 @@ def subscribe(track):
             flash('Could not initialise payment. Please try again.', 'error')
 
     track_labels = {
-        'camera':   'Camera Track',
-        'mobile':   'Mobile Track',
+        'camera':   'Camera League',
+        'mobile':   'Mobile League',
         'learning': 'Learning Only',
         'mentor':   'Human + AI Mentor',
     }
     track_descriptions = {
-        'camera':   '5 scored images/month · RAW eligible · POTY · Contests',
-        'mobile':   '8 scored images/month · POTY · Contests',
+        'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
+        'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
         'learning': '12 scored images/month · AI mentor · Improvement paths',
         'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
     }
@@ -6081,7 +6081,7 @@ def bulk_upload():
             if total_count >= FREE_IMAGE_LIMIT:
                 flash(
                     f'You have used all {FREE_IMAGE_LIMIT} free assessment images. '
-                    'Subscribe to Camera or Mobile track to continue uploading.',
+                    'Subscribe to Camera or Mobile League to continue uploading.',
                     'error'
                 )
                 return redirect(url_for('pricing'))
