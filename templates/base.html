@@ -725,6 +725,7 @@ img {
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
         <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+        <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
         <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}" style="color:#F5C518; font-weight:700;">Learn</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
@@ -772,6 +773,7 @@ img {
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
+      <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
       <a href="{{ url_for('upload') }}" onclick="toggleNav()">Upload</a>
       {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" onclick="toggleNav()">Bulk Upload</a>{% endif %}
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:rgba(255,100,80,0.85); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
