@@ -603,12 +603,12 @@ function toggleNotifStrip() {
   {% set _track = current_user.subscription_track or 'mobile' %}
   {% set _bal = wallet_hud.balance | float %}
   {% set _milestones = [
-      {'pts': 50,   'label': 'First steps',   'desc': 'You are on your way'},
-      {'pts': 100,  'label': 'Open entry',     'desc': 'Open Submission fee waived'},
-      {'pts': 200,  'label': 'Peer rater',     'desc': 'Peer rating milestone'},
-      {'pts': 350,  'label': 'BOW entry',      'desc': 'Body of Work fee waived'},
-      {'pts': 1000, 'label': 'Top-up free',    'desc': '5 images top-up redeemed'},
-      {'pts': 2000 if _track == 'camera' else 1000, 'label': 'Free month', 'desc': 'One free month of your ' ~ (_track | title) ~ ' subscription'},
+      {'pts': 50,   'label': 'Account active', 'desc': 'You are on your way'},
+      {'pts': 100,  'label': 'Open Submission free', 'desc': 'Open Submission entry fee waived'},
+      {'pts': 200,  'label': 'Peer rating badge', 'desc': 'Peer rating milestone reached'},
+      {'pts': 350,  'label': 'Body of Work free', 'desc': 'Body of Work entry fee waived'},
+      {'pts': 1000, 'label': '5 images free',  'desc': 'Top-up pack redeemed via points'},
+      {'pts': 2000 if _track == 'camera' else 1000, 'label': '1 month free', 'desc': 'One free month of your ' ~ (_track | title) ~ ' subscription'},
   ] %}
   {% set _max_pts = _milestones[-1].pts %}
   {% set _bar_pct = [(_bal / _max_pts * 100) | int, 100] | min %}
@@ -653,17 +653,21 @@ function toggleNotifStrip() {
       {% endif %}
     {% endfor %}
     {% if _next.ms %}
-    <div style="margin-top:16px;background:var(--surface-3);border-radius:var(--radius-md);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:15px;font-weight:700;color:var(--text-primary);">Next: {{ _next.ms.label }} — {{ _next.ms.pts }} pts</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:3px;">{{ _next.ms.desc }} · {{ (_next.ms.pts - _bal) | int }} more points to go</div>
+    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:4px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
+        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;">{{ _next.ms.label }}: {{ _next.ms.desc }}</div>
+        <div style="font-size:15px;color:rgba(255,255,255,0.80);">Upload one image now — earn 50 to 90 points instantly.</div>
       </div>
-      <a href="{{ url_for('pricing') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;white-space:nowrap;">Coming Soon</a>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
     </div>
     {% else %}
-    <div style="margin-top:16px;background:var(--surface-3);border-radius:var(--radius-md);padding:14px 18px;">
-      <div style="font-size:15px;font-weight:700;color:var(--text-primary);">All milestones reached — rewards available</div>
-      <a href="{{ url_for('pricing') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;display:inline-block;margin-top:8px;">Redeem Points — Coming Soon</a>
+    <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;">All milestones reached</div>
+        <div style="font-size:15px;color:rgba(255,255,255,0.80);">Rewards redemption coming soon.</div>
+      </div>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
     </div>
     {% endif %}
   </div>
