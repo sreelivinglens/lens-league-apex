@@ -4957,6 +4957,16 @@ def contest_rules():
     return render_template('contest_rules.html')
 
 
+@app.route('/redeem')
+@login_required
+def redeem():
+    from engine.points import get_wallet_hud
+    wallet_hud = get_wallet_hud(current_user)
+    return render_template('redeem.html',
+                           wallet_hud=wallet_hud,
+                           platform_name=PLATFORM_NAME,
+                           contact_email=CONTACT_EMAIL)
+
 @app.route('/notify-me', methods=['POST'])
 def notify_me():
     email   = request.form.get('email', '').strip()
