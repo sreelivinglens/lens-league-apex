@@ -101,7 +101,7 @@
 
   .img-card-body { padding: 14px 16px; }
   .img-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .img-card-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
+  .img-card-meta { font-family: var(--font-mono); font-size: 15px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
   .img-card-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #8B6914; margin-top: 6px; }
 
   /* Banners */
@@ -133,23 +133,23 @@
   .raw-pill {
     position: absolute; top: 10px; right: 10px;
     background: #F5C518; color: #000;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 3px 8px; border-radius: 3px; z-index: 2;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 3px; z-index: 2;
     pointer-events: none;
   }
   .raw-verified-pill {
     position: absolute; top: 10px; right: 10px;
     background: #2e7d32; color: #fff;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 3px 8px; border-radius: 3px; z-index: 2;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 3px; z-index: 2;
     pointer-events: none;
   }
   .raw-verified-banner {
     display: block; padding: 10px 16px;
     background: rgba(46,125,50,0.08); border-top: 1px solid rgba(46,125,50,0.3);
-    font-size: 13px; color: #2e7d32; font-weight: 600;
+    font-size: 15px; color: #2e7d32; font-weight: 600;
   }
 
   /* Notification strip */
@@ -176,26 +176,26 @@
   .notif-lbl.normal { color: var(--text-primary); }
   .notif-lbl-dot { color: var(--border); font-size: 14px; margin: 0 4px; }
   .notif-badge {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     padding: 3px 9px; border-radius: 99px; letter-spacing: 0.5px;
   }
   .notif-badge.urgent { background: #c0392b; color: #fff; }
   .notif-badge.normal { background: #4a4840; color: #F5F0E8; }
   /* Expand/collapse: clear text button, not a tiny arrow */
   .notif-strip-chevron {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase;
     flex-shrink: 0; padding: 6px 14px; border: 1px solid var(--border);
     border-radius: 4px; background: transparent; white-space: nowrap;
   }
-  .notif-strip-chevron::after { content: " ▼"; font-size: 11px; }
-  .notif-strip-chevron.open::after { content: " ▲"; font-size: 11px; }
+  .notif-strip-chevron::after { content: " ▼"; font-size: 15px; }
+  .notif-strip-chevron.open::after { content: " ▲"; font-size: 15px; }
   .notif-strip-body { border-top: 1px solid var(--border); }
   .notif-strip-body.collapsed { display: none; }
   /* Section divider headers inside strip */
   .notif-sec-hdr {
     padding: 8px 20px 7px; border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
   }
   .notif-sec-hdr.urgent { background: #fff5f5; color: #c0392b; border-bottom-color: #f5c6c6; }
@@ -239,10 +239,10 @@
   .notif-action-urgent:hover { background: rgba(192,57,43,0.08); }
   /* Announcement tag pill */
   .ann-tag {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     background: #1a1a18; color: var(--gold);
-    padding: 3px 9px; border-radius: 3px;
+    padding: 4px 10px; border-radius: 3px;
     display: inline-block; margin-bottom: 3px; flex-shrink: 0;
   }
   /* Rank badge next to username */
@@ -263,7 +263,7 @@
   @media (max-width: 520px) {
     .notif-row { gap: 12px; }
     .notif-action, .notif-action-urgent { width: 100%; text-align: center; margin-top: 6px; justify-content: center; }
-    .notif-lbl { font-size: 13px; letter-spacing: 0.5px; }
+    .notif-lbl { font-size: 15px; letter-spacing: 0.5px; }
     .notif-strip-left { gap: 8px; }
     .notif-title { white-space: normal; }
   }
@@ -275,11 +275,11 @@
     border-bottom: 1px solid var(--border-subtle);
   }
   .poty-row:last-child { border-bottom: none; }
-  .poty-genre { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 110px; flex-shrink: 0; }
+  .poty-genre { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 120px; flex-shrink: 0; }
   .poty-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; }
   .poty-bar-fill { background: var(--gold); border-radius: 4px; height: 8px; transition: width 0.5s; }
   .poty-avg { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #8B6914; width: 52px; text-align: right; flex-shrink: 0; }
-  .poty-count { font-size: 13px; color: var(--text-primary); width: 60px; text-align: right; flex-shrink: 0; }
+  .poty-count { font-size: 15px; color: var(--text-primary); width: 70px; text-align: right; flex-shrink: 0; }
 
   /* Peer rating widget */
   .peer-widget {
@@ -287,12 +287,12 @@
     border-radius: var(--radius-md); padding: 24px; margin-bottom: 28px;
   }
   .peer-widget-title {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
-    letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
   }
   .peer-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
   .peer-stat-val { font-size: 28px; font-weight: 700; color: #8B6914; line-height: 1; }
-  .peer-stat-lbl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
+  .peer-stat-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
 
   /* Programme wins */
   .win-card {
@@ -300,7 +300,7 @@
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
-  .win-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #000; background: var(--gold); text-transform: uppercase; padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+  .win-badge { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); text-transform: uppercase; padding: 4px 10px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
   @media (max-width: 480px) {
     .win-card { flex-wrap: wrap; }
     .win-card > div { min-width: 0; }
@@ -321,7 +321,7 @@
   }
   .mentor-nudge-left { flex: 1; min-width: 200px; }
   .mentor-nudge-eyebrow {
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     letter-spacing: 2px; color: #F5C518; text-transform: uppercase;
     margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -356,7 +356,7 @@
 <div id="poty-welcome-banner" class="poty-banner-inner" style="background:#000; border:2px solid #F5C518; border-radius:10px; padding:28px 32px; margin-bottom:28px; position:relative;">
   <button onclick="dismissPotyBanner()" aria-label="Dismiss" class="poty-banner-dismiss-btn" style="position:absolute; top:14px; right:16px; background:none; border:none; color:#F5C518; font-size:26px; line-height:1; cursor:pointer; padding:4px 8px; min-width:44px; min-height:44px;">&times;</button>
 
-  <div style="font-family:var(--font-mono,monospace); font-size:11px; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:10px;">Welcome to Shutter League</div>
+  <div style="font-family:var(--font-mono,monospace); font-size:15px; letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:10px;">Welcome to Shutter League</div>
 
   <h2 class="poty-banner-heading">What is Photographer of the Year (POTY)?</h2>
 
@@ -369,17 +369,17 @@
   <div class="poty-step-grid">
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#128247;</div>
-      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 1</div>
+      <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 1</div>
       <div style="color:#ffffff; font-size:14px; line-height:1.4;">Upload your best photo to the Weekly Challenge</div>
     </div>
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#127775;</div>
-      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 2</div>
+      <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 2</div>
       <div style="color:#ffffff; font-size:14px; line-height:1.4;">Receive your DDI score — usually within minutes</div>
     </div>
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#127942;</div>
-      <div style="color:#F5C518; font-weight:700; font-size:15px; margin-bottom:4px;">Step 3</div>
+      <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 3</div>
       <div style="color:#ffffff; font-size:14px; line-height:1.4;">Build your top&#8209;6 average and climb the POTY leaderboard</div>
     </div>
   </div>
@@ -520,7 +520,7 @@ function toggleNotifStrip() {
     {%- elif current_user.is_subscribed %}
     {%- set _best_tier = stats.best_score | float | round(2) %}
     <div class="rank-badge">
-      <span class="rank-badge-num">{{ current_user.subscription_track | title }} League</span>
+      <span class="rank-badge-num">{{ current_user.subscription_track | title }} Users</span>
       <span class="rank-badge-sep">·</span>
       <span class="rank-badge-tier">Active</span>
     </div>
@@ -567,7 +567,7 @@ function toggleNotifStrip() {
     </div>
   </div>
   <a href="{{ url_for('set_password') }}" class="btn btn-solid"
-     style="font-size:13px; white-space:nowrap; flex-shrink:0;">
+     style="font-size: 15px; white-space:nowrap; flex-shrink:0;">
     Set Password &#8594;
   </a>
 </div>
@@ -584,7 +584,7 @@ function toggleNotifStrip() {
     <div class="mentor-nudge-sub">Legend ₹100 · Expert ₹75 · Senior ₹50 · Structured feedback from experienced photographers</div>
   </div>
   <a href="{{ url_for('learning') }}" class="btn btn-solid"
-     style="font-size:13px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
+     style="font-size: 15px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
     Learn More →
   </a>
 </div>
@@ -594,11 +594,11 @@ function toggleNotifStrip() {
 {% if active_challenge and active_challenge.is_open %}
 <div style="background:rgba(245,197,24,0.15); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
   <div>
-    <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:#8B6914; text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
+    <div style="font-family:var(--font-mono); font-size: 15px; letter-spacing:2px; color:#8B6914; text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
     <div style="font-size:18px; font-weight:700; color:var(--text-primary); font-style:italic;">{{ active_challenge.prompt_title }}</div>
     <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
   </div>
-  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:13px;">Enter Challenge →</a>
+  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size: 15px;">Enter Challenge →</a>
 </div>
 {% endif %}
 
@@ -621,7 +621,7 @@ function toggleNotifStrip() {
     </div>
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:13px;">☆ Rate Images</a>
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size: 15px;">☆ Rate Images</a>
     {% if rating_widget.unlocks_pending > 0 and rating_widget.pool_candidate %}
     <div style="font-size:14px; color:#8B6914; font-weight:600;">
       🔓 You have {{ rating_widget.unlocks_pending }} pool unlock{{ 's' if rating_widget.unlocks_pending > 1 else '' }} available
@@ -639,11 +639,11 @@ function toggleNotifStrip() {
 <div style="margin-bottom:36px;">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
     <div>
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase;">POTY Tracker</div>
+      <div style="font-family:var(--font-mono); font-size: 15px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase;">POTY Tracker</div>
       <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
     </div>
     {% if poty_tracker.best_avg %}
-    <div style="font-family:var(--font-mono); font-size:13px; color:#8B6914; font-weight:700;">Best avg: {{ poty_tracker.best_avg }}</div>
+    <div style="font-family:var(--font-mono); font-size: 15px; color:#8B6914; font-weight:700;">Best avg: {{ poty_tracker.best_avg }}</div>
     {% endif %}
   </div>
   <div class="poty-tracker">
@@ -663,14 +663,14 @@ function toggleNotifStrip() {
     </div>
     {% endfor %}
   </div>
-  <a href="{{ url_for('contests') }}" class="btn" style="font-size:13px;">View Contests →</a>
+  <a href="{{ url_for('contests') }}" class="btn" style="font-size:15px;">View Programmes →</a>
 </div>
 {% endif %}
 
 {# ── Programme wins ─────────────────────────────────────────────────────────── #}
 {% if contest_wins %}
 <div style="margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Programme Results</div>
+  <div style="font-family:var(--font-mono); font-size: 15px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Programme Results</div>
   {% for img in contest_wins %}
   <div class="win-card">
     {% if img.thumb_url %}
@@ -678,7 +678,7 @@ function toggleNotifStrip() {
     {% endif %}
     <div style="flex:1; min-width:0;">
       <div style="font-weight:700; color:var(--text-primary); font-size:15px;">{{ img.asset_name or img.original_filename }}</div>
-      <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
+      <div style="font-family:var(--font-mono); font-size: 15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
     </div>
     <div class="win-badge">{{ img.tier }}</div>
     <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:#8B6914;">{{ img.judge_final_score }}</div>
@@ -714,7 +714,7 @@ function toggleNotifStrip() {
       {% if img.thumb_url %}
         <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or img.original_filename }}" loading="lazy">
       {% else %}
-        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-disabled);font-size:13px;">No image</div>
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-disabled);font-size: 15px;">No image</div>
       {% endif %}
 
       {% if img.score %}
@@ -750,7 +750,7 @@ function toggleNotifStrip() {
     {% elif img.raw_verified %}
     <span class="raw-verified-banner">✓ RAW Verified — score confirmed</span>
     {% elif img.raw_disqualified %}
-    <span style="display:block;padding:10px 16px;background:rgba(192,57,43,0.08);border-top:1px solid rgba(192,57,43,0.3);font-size:13px;color:#c0392b;font-weight:600;">✗ RAW Disqualified</span>
+    <span style="display:block;padding:10px 16px;background:rgba(192,57,43,0.08);border-top:1px solid rgba(192,57,43,0.3);font-size: 15px;color:#c0392b;font-weight:600;">✗ RAW Disqualified</span>
     {% endif %}
 
     {# Pool entry unlock #}
@@ -758,13 +758,13 @@ function toggleNotifStrip() {
     <div id="pool-entry-{{ img.id }}" style="padding:12px 16px; background:rgba(245,197,24,0.15); border-top:1px solid var(--border);" onclick="event.preventDefault();">
       <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
         <input type="hidden" name="image_id" value="{{ img.id }}">
-        <button type="submit" class="btn btn-solid" style="font-size:13px; width:100%;">🔓 Enter Peer Pool</button>
+        <button type="submit" class="btn btn-solid" style="font-size: 15px; width:100%;">🔓 Enter Peer Pool</button>
       </form>
     </div>
     {% endif %}
 
     {% if img.is_in_peer_pool %}
-    <div style="padding:8px 16px; background:rgba(46,125,79,0.07); border-top:1px solid var(--border); font-family:var(--font-mono); font-size:12px; color:var(--green); letter-spacing:1px; text-transform:uppercase;">
+    <div style="padding:8px 16px; background:rgba(46,125,79,0.07); border-top:1px solid var(--border); font-family:var(--font-mono); font-size: 15px; color:var(--green); letter-spacing:1px; text-transform:uppercase;">
       ✓ In Peer Pool{% if img.peer_rating_count %} · {{ img.peer_rating_count }} rating{{ 's' if img.peer_rating_count != 1 else '' }}{% endif %}
     </div>
     {% endif %}
