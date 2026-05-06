@@ -53,6 +53,7 @@
   .plan-cta.gold:hover { opacity: .85; }
   .plan-cta.secondary { background: transparent; color: var(--slate); border: 1px solid var(--slate); }
   .plan-cta.secondary:hover { background: rgba(44, 62, 107, 0.05); }
+  .plan-mobile-meta { display: none; font-size: 14px; color: var(--text-primary); margin-top: 6px; font-weight: 600; }
 
   /* What You Can Enter */
   .compete-section { margin-bottom: 48px; }
@@ -86,11 +87,14 @@
   @media (max-width: 768px) {
     .plan-row { grid-template-columns: 32px 1fr; gap: 12px; padding: 16px 18px; }
     .plan-images, .plan-price { display: none; }
-    .plan-cta { grid-column: 2; margin-top: 8px; width: 100%; text-align: center; }
+    .plan-mobile-meta { display: block; }
+    .plan-cta { grid-column: 2; margin-top: 12px; width: 100%; text-align: center; }
     .compete-grid { grid-template-columns: 1fr; }
     .topup-grid { grid-template-columns: 1fr; }
     .pricing-hero { padding: 32px 0 24px; }
     .pricing-toggle { margin-bottom: 32px; }
+    .toggle-label { font-size: 13px; letter-spacing: 1px; }
+    .save-badge { font-size: 12px; padding: 2px 6px; }
   }
 </style>
 {% endblock %}
@@ -122,6 +126,7 @@
         <div class="plan-for">For the</div>
         <div class="plan-name">DSLR / Mirrorless photographer</div>
         <div class="plan-sub">Camera · Film · All dedicated cameras</div>
+        <div class="plan-mobile-meta">5 images/mo · <span class="monthly-content">₹199/month</span><span class="annual-content" style="display:none;">₹166/month</span></div>
       </div>
       <div class="plan-images">
         <strong>5</strong>
@@ -148,6 +153,7 @@
         <div class="plan-for">For the</div>
         <div class="plan-name">Mobile photographer</div>
         <div class="plan-sub">iPhone · Android · Smartphone</div>
+        <div class="plan-mobile-meta">8 images/mo · <span class="monthly-content">₹99/month</span><span class="annual-content" style="display:none;">₹83/month</span></div>
       </div>
       <div class="plan-images">
         <strong>8</strong>
@@ -174,6 +180,7 @@
         <div class="plan-for">Want to improve without competing?</div>
         <div class="plan-name">Learning Only</div>
         <div class="plan-sub">AI Mentor · Improvement Paths</div>
+        <div class="plan-mobile-meta">12 images/mo · ₹100/month</div>
       </div>
       <div class="plan-images">
         <strong>12</strong>
@@ -193,6 +200,7 @@
         <div class="plan-for">Free Assessment</div>
         <div class="plan-name">Free</div>
         <div class="plan-sub">Initial Assessment · Leaderboard · Science</div>
+        <div class="plan-mobile-meta">3 images lifetime · ₹0 forever</div>
       </div>
       <div class="plan-images">
         <strong>3</strong>
@@ -254,23 +262,12 @@
   <!-- Top-up -->
   <div class="topup-section">
     <div class="section-label">Need More Images?</div>
-    <div class="topup-grid">
+    <div style="max-width:600px;margin:0 auto;">
       
       <div class="topup-card">
         <div>
-          <div class="topup-name">Camera Top-up</div>
-          <div class="topup-desc">+5 images · ₹99 cash or 1,000 points</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          <div class="topup-price">₹99</div>
-          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:14px;">Purchase →</a>
-        </div>
-      </div>
-
-      <div class="topup-card">
-        <div>
-          <div class="topup-name">Mobile Top-up</div>
-          <div class="topup-desc">+5 images · ₹99 cash or 1,000 points</div>
+          <div class="topup-name">Image Top-up</div>
+          <div class="topup-desc">+5 scored images · Any League · ₹99 cash or 1,000 points</div>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
           <div class="topup-price">₹99</div>
