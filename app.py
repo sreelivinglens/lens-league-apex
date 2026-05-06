@@ -2186,8 +2186,8 @@ def upload():
                     MOBILE_IMAGE_LIMIT = 8
                     if month_count >= MOBILE_IMAGE_LIMIT:
                         flash(
-                            f'You have used all {MOBILE_IMAGE_LIMIT} Mobile tier images for this month. '
-                            'Add a top-up (₹99 for 5 images) or upgrade to Camera track for RAW eligibility.',
+                            f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
+                            'Your subscription resets on the 1st. Add a top-up (₹99 for 5 images) to upload now.',
                             'error'
                         )
                         return redirect(url_for('pricing'))
@@ -2195,8 +2195,8 @@ def upload():
                     CAMERA_IMAGE_LIMIT = 5
                     if month_count >= CAMERA_IMAGE_LIMIT:
                         flash(
-                            f'You have used all {CAMERA_IMAGE_LIMIT} Camera tier images for this month. '
-                            'Add a top-up (₹99 for 5 images) to continue uploading.',
+                            f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
+                            'Your subscription resets on the 1st. Add a top-up (₹99 for 5 images) to upload now.',
                             'error'
                         )
                         return redirect(url_for('pricing'))
@@ -4990,6 +4990,10 @@ def pricing():
 # ---------------------------------------------------------------------------
 
 @app.route('/contests')
+def contests_redirect():
+    return redirect(url_for('contests'), 301)
+
+@app.route('/programmes')
 def contests():
     now         = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
