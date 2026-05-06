@@ -627,15 +627,15 @@ function toggleNotifStrip() {
       {% set _reached = _bal >= ms.pts %}
       {% set _is_next = not _reached and (_bal >= _milestones[loop.index0 - 1].pts if loop.index0 > 0 else true) %}
       {% if _reached %}
-      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:#2C3E6B;">
-        <div style="font-family:var(--font-mono);font-size:13px;color:rgba(255,255,255,0.65);">{{ ms.pts }}</div>
-        <div style="font-size:14px;color:#fff;margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
-        <div style="font-size:15px;color:#F5C518;margin-top:4px;">✓</div>
+      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:#EAF3DE;border:1px solid #C0DD97;">
+        <div style="font-family:var(--font-mono);font-size:13px;color:#3B6D11;">{{ ms.pts }}</div>
+        <div style="font-size:14px;font-weight:700;color:#27500A;margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:15px;color:#3B6D11;margin-top:4px;">✓</div>
       </div>
       {% elif _is_next %}
-      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:2px solid #2C3E6B;">
+      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:2px solid #F5C518;">
         <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);">{{ ms.pts }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
         <div style="font-size:13px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
       </div>
       {% else %}
