@@ -58,7 +58,7 @@ WHITE   = (255, 255, 255)
 # ── Watermark config ─────────────────────────────────────────────────────────
 # WATERMARK_MODE: 'diagonal' | 'corner' | 'none'
 # WATERMARK_OPACITY: 0-255 (18 = ~7%, sweet spot for JPEG survival + invisibility)
-WATERMARK_MODE    = 'diagonal'   # change to 'corner' to test corner badge
+WATERMARK_MODE    = 'corner'     # corner watermark — confirmed
 WATERMARK_OPACITY = 18           # ~7% opacity
 WATERMARK_TEXT    = '© SHUTTERLEAGUE.COM'
 
@@ -121,16 +121,8 @@ def draw_footer(canvas, draw, stamp, canvas_h=None):
     h = canvas_h or CH
     draw.rectangle([0,h-FOOTER_H,CW,h], fill=SLATE)
     draw.rectangle([0,h-FOOTER_H,CW,h-FOOTER_H+1], fill=(60,75,115))
-    ftr_logo, flw = _load_logo(FOOTER_H - 16)
-    if ftr_logo:
-        canvas.paste(ftr_logo, (PAD, h - FOOTER_H + 8), ftr_logo.split()[3])
-        draw.text((PAD + flw + 16, h-FOOTER_H+26),
-                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
-                  font=fnt(24,mono=True), fill=(160,175,200))
-    else:
-        draw.text((PAD, h-FOOTER_H+26),
-                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
-                  font=fnt(28,mono=True), fill=(160,175,200))
+    left = f'SHUTTER LEAGUE  ·  APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}'
+    draw.text((PAD, h-FOOTER_H+26), left, font=fnt(26,mono=True), fill=(160,175,200))
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
     draw.text((CW-PAD-sw, h-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 
