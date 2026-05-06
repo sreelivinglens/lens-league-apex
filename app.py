@@ -4966,8 +4966,20 @@ def contest_rules():
 @app.route('/redeem')
 @login_required
 def redeem():
-    from engine.points import get_wallet_hud
-    wallet_hud = get_wallet_hud(current_user)
+    wallet_hud = None
+    if current_user.is_subscribed:
+        _pts_bal  = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+        _pts_life = round(getattr(current_user, 'points_lifetime_earned', 0.0) or 0.0, 1)
+        _res_mo   = getattr(current_user, 'residency_months', 0) or 0
+        _total_scored = Image.query.filter_by(
+            user_id=current_user.id, status='scored'
+        ).filter(Image.score.isnot(None)).count()
+        wallet_hud = {
+            'balance':          _pts_bal,
+            'lifetime':         _pts_life,
+            'residency_months': _res_mo,
+            'total_scored':     _total_scored,
+        }
     return render_template('redeem.html',
                            wallet_hud=wallet_hud,
                            platform_name=PLATFORM_NAME,
