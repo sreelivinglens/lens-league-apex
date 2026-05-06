@@ -599,6 +599,75 @@ function toggleNotifStrip() {
     </div>
   </div>
 
+  {# Milestone bar #}
+  {% set _track = current_user.subscription_track or 'mobile' %}
+  {% set _bal = wallet_hud.balance | float %}
+  {% set _milestones = [
+      {'pts': 50,   'label': 'First steps',   'desc': 'You're on your way'},
+      {'pts': 100,  'label': 'Open entry',     'desc': 'Open Submission fee waived'},
+      {'pts': 200,  'label': 'Peer rater',     'desc': 'Peer rating milestone'},
+      {'pts': 350,  'label': 'BOW entry',      'desc': 'Body of Work fee waived'},
+      {'pts': 1000, 'label': 'Top-up free',    'desc': '5 images top-up redeemed'},
+      {'pts': 2000 if _track == 'camera' else 1000, 'label': 'Free month', 'desc': 'One free month of your ' ~ (_track | title) ~ ' subscription'},
+  ] %}
+  {% set _max_pts = _milestones[-1].pts %}
+  {% set _bar_pct = [(_bal / _max_pts * 100) | int, 100] | min %}
+
+  <div style="margin-bottom:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text-primary);">Your rewards journey</div>
+      <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);">{{ _bal | round(1) }} pts</div>
+    </div>
+
+    {# Bar track #}
+    <div style="position:relative;height:8px;background:var(--border);border-radius:4px;margin-bottom:32px;">
+      <div style="height:8px;width:{{ _bar_pct }}%;background:#2C3E6B;border-radius:4px;max-width:100%;"></div>
+      {# Current position dot #}
+      <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:{{ _bar_pct }}%;width:14px;height:14px;background:#2C3E6B;border-radius:50%;border:2px solid #fff;"></div>
+      {# Milestone markers #}
+      {% for ms in _milestones %}
+      {% set _ms_pct = [(ms.pts / _max_pts * 100) | int, 100] | min %}
+      {% set _reached = _bal >= ms.pts %}
+      <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:{{ _ms_pct }}%;width:10px;height:10px;background:{% if _reached %}#2C3E6B{% else %}var(--border){% endif %};border-radius:50%;border:2px solid #fff;"></div>
+      {% endfor %}
+    </div>
+
+    {# Milestone labels #}
+    <div style="display:flex;justify-content:space-between;gap:4px;">
+      {% for ms in _milestones %}
+      {% set _reached = _bal >= ms.pts %}
+      <div style="flex:1;text-align:center;min-width:0;">
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:{% if _reached %}#2C3E6B{% else %}var(--text-primary){% endif %};">{{ ms.pts }}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ms.label }}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:1px;">{% if _reached %}✓{% else %}{{ (ms.pts - _bal) | int }} to go{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# Next milestone callout #}
+    {% set _next = namespace(found=false, ms=none) %}
+    {% for ms in _milestones %}
+      {% if not _next.found and _bal < ms.pts %}
+        {% set _next.found = true %}
+        {% set _next.ms = ms %}
+      {% endif %}
+    {% endfor %}
+    {% if _next.ms %}
+    <div style="margin-top:16px;background:var(--surface-3);border-radius:var(--radius-md);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);">Next: {{ _next.ms.label }} — {{ _next.ms.pts }} pts</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:3px;">{{ _next.ms.desc }} · {{ (_next.ms.pts - _bal) | int }} more points to go</div>
+      </div>
+      <a href="{{ url_for('subscribe_coming_soon') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;white-space:nowrap;">Coming Soon</a>
+    </div>
+    {% else %}
+    <div style="margin-top:16px;background:var(--surface-3);border-radius:var(--radius-md);padding:14px 18px;">
+      <div style="font-size:15px;font-weight:700;color:var(--text-primary);">All milestones reached — rewards available</div>
+      <a href="{{ url_for('subscribe_coming_soon') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;display:inline-block;margin-top:8px;">Redeem Points — Coming Soon</a>
+    </div>
+    {% endif %}
+  </div>
+
   {# Progress bar #}
   <div style="margin-bottom:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
