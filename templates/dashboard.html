@@ -574,9 +574,9 @@ function toggleNotifStrip() {
   {# Three stat blocks #}
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
-      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | int }}</div>
+      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
       <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Points Balance</div>
-      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | int }} earned lifetime</div>
+      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
     </div>
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
       <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.residency_months }}</div>
