@@ -3077,12 +3077,7 @@ def download_card(image_id):
         t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
         t1.close(); t2.close()
 
-        # Watermark mode — passed via ?watermark= query param for A/B testing
-        import engine.compositor as _comp
-        _wm = request.args.get('watermark', 'diagonal')
-        _comp.WATERMARK_MODE = _wm if _wm in ('diagonal','corner','none') else 'diagonal'
         build_card1(photo_path, card_data, t1.name)
-        _comp.WATERMARK_MODE = 'diagonal'  # reset to default after build
         build_card2(card_data, t2.name)
 
         import re as _re
