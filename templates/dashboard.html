@@ -658,12 +658,12 @@ function toggleNotifStrip() {
         <div style="font-size:15px;font-weight:700;color:var(--text-primary);">Next: {{ _next.ms.label }} — {{ _next.ms.pts }} pts</div>
         <div style="font-size:14px;color:var(--text-primary);margin-top:3px;">{{ _next.ms.desc }} · {{ (_next.ms.pts - _bal) | int }} more points to go</div>
       </div>
-      <a href="{{ url_for('subscribe_coming_soon') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;white-space:nowrap;">Coming Soon</a>
+      <a href="{{ url_for('pricing') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;white-space:nowrap;">Coming Soon</a>
     </div>
     {% else %}
     <div style="margin-top:16px;background:var(--surface-3);border-radius:var(--radius-md);padding:14px 18px;">
       <div style="font-size:15px;font-weight:700;color:var(--text-primary);">All milestones reached — rewards available</div>
-      <a href="{{ url_for('subscribe_coming_soon') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;display:inline-block;margin-top:8px;">Redeem Points — Coming Soon</a>
+      <a href="{{ url_for('pricing') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);border:1px solid var(--border);padding:8px 16px;border-radius:4px;text-decoration:none;display:inline-block;margin-top:8px;">Redeem Points — Coming Soon</a>
     </div>
     {% endif %}
   </div>
