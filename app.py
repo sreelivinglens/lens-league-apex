@@ -4949,6 +4949,10 @@ def contact():
     return render_template('contact.html')
 
 @app.route('/contest-rules')
+def contest_rules_redirect():
+    return redirect('/programme-rules', 301)
+
+@app.route('/programme-rules')
 def contest_rules():
     return render_template('contest_rules.html')
 
