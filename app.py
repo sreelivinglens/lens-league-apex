@@ -3424,6 +3424,26 @@ def admin_bulk_delete():
                 db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': img.id})
             except Exception:
                 pass
+            try:
+                db.session.execute(db.text("DELETE FROM weekly_submissions WHERE image_id = :iid"), {'iid': img.id})
+            except Exception:
+                pass
+            try:
+                db.session.execute(db.text("DELETE FROM judge_assignments WHERE image_id = :iid"), {'iid': img.id})
+            except Exception:
+                pass
+            try:
+                db.session.execute(db.text("DELETE FROM judge_scores WHERE image_id = :iid"), {'iid': img.id})
+            except Exception:
+                pass
+            try:
+                db.session.execute(db.text("DELETE FROM contest_entries WHERE image_id = :iid"), {'iid': img.id})
+            except Exception:
+                pass
+            try:
+                db.session.execute(db.text("DELETE FROM open_contest_entries WHERE image_id = :iid"), {'iid': img.id})
+            except Exception:
+                pass
             db.session.delete(img)
             deleted += 1
         except Exception as e:
