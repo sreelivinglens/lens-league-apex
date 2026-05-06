@@ -603,48 +603,48 @@ function toggleNotifStrip() {
     </div>
   </div>
 
-  {# Milestone bar #}
+  {# Milestone cards — Option A: reached=blue filled, next=blue outlined, rest=grey #}
   {% set _track = current_user.subscription_track or 'mobile' %}
   {% set _bal = wallet_hud.balance | float %}
   {% set _milestones = [
-      {'pts': 50,   'label': 'Account active', 'desc': 'You are on your way'},
-      {'pts': 100,  'label': 'Open Submission free', 'desc': 'Open Submission entry fee waived'},
-      {'pts': 200,  'label': 'Peer rating badge', 'desc': 'Peer rating milestone reached'},
-      {'pts': 350,  'label': 'Body of Work free', 'desc': 'Body of Work entry fee waived'},
-      {'pts': 1000, 'label': '5 images free',  'desc': 'Top-up pack redeemed via points'},
-      {'pts': 2000 if _track == 'camera' else 1000, 'label': '1 month free', 'desc': 'One free month of your ' ~ (_track | title) ~ ' subscription'},
+      {'pts': 50,   'label': 'Active',     'desc': 'You are on your way'},
+      {'pts': 100,  'label': 'Open entry', 'desc': 'Open Submission entry fee waived'},
+      {'pts': 200,  'label': 'Peer badge', 'desc': 'Peer rating milestone reached'},
+      {'pts': 350,  'label': 'BOW entry',  'desc': 'Body of Work entry fee waived'},
+      {'pts': 1000, 'label': 'Top-up',     'desc': 'Top-up pack redeemed via points'},
+      {'pts': 2000 if _track == 'camera' else 1000, 'label': 'Free month', 'desc': 'One free month of your ' ~ (_track | title) ~ ' subscription'},
   ] %}
-  {% set _max_pts = _milestones[-1].pts %}
-  {% set _bar_pct = [(_bal / _max_pts * 100) | int, 100] | min %}
 
   <div style="margin-bottom:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text-primary);">Your rewards journey</div>
       <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);">{{ _bal | round(1) }} pts</div>
     </div>
 
-    {# Bar track #}
-    <div style="position:relative;height:8px;background:var(--border);border-radius:4px;margin-bottom:32px;">
-      <div style="height:8px;width:{{ _bar_pct }}%;background:#2C3E6B;border-radius:4px;max-width:100%;"></div>
-      {# Current position dot #}
-      <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:{{ _bar_pct }}%;width:14px;height:14px;background:#2C3E6B;border-radius:50%;border:2px solid #fff;"></div>
-      {# Milestone markers #}
-      {% for ms in _milestones %}
-      {% set _ms_pct = [(ms.pts / _max_pts * 100) | int, 100] | min %}
-      {% set _reached = _bal >= ms.pts %}
-      <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:{{ _ms_pct }}%;width:10px;height:10px;background:{% if _reached %}#2C3E6B{% else %}var(--border){% endif %};border-radius:50%;border:2px solid #fff;"></div>
-      {% endfor %}
-    </div>
-
-    {# Milestone labels — desktop: row, mobile: 2-col grid #}
+    {# Milestone cards — filled blue=reached, blue outline=next, grey=future #}
     <div class="milestone-labels">
       {% for ms in _milestones %}
       {% set _reached = _bal >= ms.pts %}
-      <div style="text-align:center;min-width:0;padding:4px;">
-        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:{% if _reached %}#2C3E6B{% else %}var(--text-primary){% endif %};">{{ ms.pts }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:2px;line-height:1.3;">{{ ms.label }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:2px;">{% if _reached %}✓{% else %}{{ (ms.pts - _bal) | int }} to go{% endif %}</div>
+      {% set _is_next = not _reached and (_bal >= _milestones[loop.index0 - 1].pts if loop.index0 > 0 else true) %}
+      {% if _reached %}
+      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:#2C3E6B;">
+        <div style="font-family:var(--font-mono);font-size:13px;color:rgba(255,255,255,0.65);">{{ ms.pts }}</div>
+        <div style="font-size:14px;color:#fff;margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:15px;color:#F5C518;margin-top:4px;">✓</div>
       </div>
+      {% elif _is_next %}
+      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:2px solid #2C3E6B;">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);">{{ ms.pts }}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:13px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);">{{ ms.pts }}</div>
+        <div style="font-size:14px;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:13px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
+      </div>
+      {% endif %}
       {% endfor %}
     </div>
 
