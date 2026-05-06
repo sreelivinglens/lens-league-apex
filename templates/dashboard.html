@@ -552,6 +552,83 @@ function toggleNotifStrip() {
   </div>
 </div>
 
+
+{# ── Wallet HUD (Sprint 4 — investor doc 16d) ───────────────────────────── #}
+{% if wallet_hud %}
+<div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
+
+  {# Header row #}
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-primary);">Points &amp; Rank</div>
+    {% if wallet_hud.officially_ranked %}
+    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary); background:#000; border:1px solid var(--gold); padding:5px 14px; border-radius:4px;">
+      ✓ Officially Ranked
+    </div>
+    {% else %}
+    <div style="font-family:var(--font-mono); font-size:14px; color:var(--text-primary);">
+      Official rank unlocks after 6 months + 6 images
+    </div>
+    {% endif %}
+  </div>
+
+  {# Three stat blocks #}
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
+    <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
+      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | int }}</div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Points Balance</div>
+      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | int }} earned lifetime</div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
+      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.residency_months }}</div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Months Active</div>
+      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">
+        {% if wallet_hud.months_to_gate > 0 %}{{ wallet_hud.months_to_gate }} month{{ 's' if wallet_hud.months_to_gate != 1 }} to rank gate{% else %}6-month gate cleared ✓{% endif %}
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
+      <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.total_scored }}</div>
+      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Scored Images</div>
+      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">
+        {% if wallet_hud.imgs_to_gate > 0 %}{{ wallet_hud.imgs_to_gate }} more to appear on standings{% else %}Standings eligible ✓{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# 6-6-12 clock progress bar #}
+  <div style="margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div style="font-family:var(--font-mono); font-size:15px; font-weight:600; color:var(--text-primary);">6-6-12 Residency Clock</div>
+      <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary);">{{ wallet_hud.residency_months }}/6 months</div>
+    </div>
+    <div style="background:var(--border); border-radius:4px; height:10px;">
+      <div style="background:#000; border-radius:4px; height:10px; width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
+    </div>
+    <div style="font-size:14px; color:var(--text-primary); margin-top:6px; line-height:1.5;">
+      {% if wallet_hud.officially_ranked %}
+        You are officially ranked. Your rank is live on the leaderboard.
+      {% elif wallet_hud.months_to_gate > 0 and wallet_hud.imgs_to_gate > 0 %}
+        Official rank unlocks in <strong>{{ wallet_hud.months_to_gate }} month{{ 's' if wallet_hud.months_to_gate != 1 }}</strong> and <strong>{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }}</strong>.
+      {% elif wallet_hud.months_to_gate > 0 %}
+        Official rank unlocks in <strong>{{ wallet_hud.months_to_gate }} more month{{ 's' if wallet_hud.months_to_gate != 1 }}</strong>. Keep uploading.
+      {% elif wallet_hud.imgs_to_gate > 0 %}
+        Almost there — <strong>{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }}</strong> to appear on standings.
+      {% endif %}
+    </div>
+  </div>
+
+  {# Next tier jump nudge #}
+  {% if wallet_hud.next_tier %}
+  <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--border); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:12px 16px;">
+    <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+      Next milestone: reach <strong>{{ wallet_hud.next_tier }}</strong> tier to earn a bonus points reward.
+      {% if wallet_hud.last_tier %}Currently at <strong>{{ wallet_hud.last_tier }}</strong>.{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
 {# ── Set password nudge (Google OAuth users without a password) ─────────── #}
 {% if not current_user.password_hash %}
 <div style="background:rgba(245,197,24,0.08); border:1px solid var(--gold-dark);
