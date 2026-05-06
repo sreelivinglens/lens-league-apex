@@ -22,23 +22,32 @@
   }
 
   /* ── Section 1: Upload & Score ── */
-  .steps-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
-  @media (max-width: 640px) { .steps-row { grid-template-columns: 1fr; gap: 16px; } }
+  .steps-row { display: flex; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto; }
   .step-card {
     background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 28px 24px; position: relative;
+    border-radius: var(--radius-md); padding: 24px 20px;
+    display: flex; align-items: center; gap: 16px;
   }
+  .step-icon {
+    font-size: 32px; flex-shrink: 0;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface-3); border-radius: 50%;
+  }
+  .step-content { flex: 1; }
   .step-num {
-    font-family: var(--font-mono); font-size: 40px; font-weight: 700;
-    color: var(--text-primary); opacity: 0.25; line-height: 1; margin-bottom: 12px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 4px;
   }
-  .step-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-  .step-body { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
-  .step-connector {
-    display: none;
+  .step-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .step-body { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
+  .step-arrow {
+    text-align: center; font-size: 24px; color: var(--text-secondary);
+    margin: -8px 0; opacity: 0.4;
   }
   @media (min-width: 641px) {
-    .steps-row { position: relative; }
+    .steps-row { max-width: 900px; }
   }
 
   /* ── Section 2: Score Card ── */
@@ -110,7 +119,11 @@
 
   /* ── Section 5: Pricing ── */
   .pricing-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-  @media (max-width: 600px) { .pricing-cards { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { 
+    .pricing-cards { grid-template-columns: 1fr; }
+    .pricing-features { display: none; }
+    .pricing-mobile-summary { display: block !important; }
+  }
   .pricing-card {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 28px 24px;
@@ -123,6 +136,7 @@
   .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
   .pricing-features li { font-size: 15px; color: var(--text-secondary); padding-left: 20px; position: relative; line-height: 1.5; }
   .pricing-features li::before { content: '✓'; position: absolute; left: 0; color: var(--text-primary); font-weight: 700; }
+  .pricing-mobile-summary { display: none; font-size: 14px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
 
   /* ── Section 6: POTY ── */
   .poty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
@@ -189,19 +203,34 @@
 
     <div class="steps-row">
       <div class="step-card">
-        <div class="step-num">01</div>
-        <div class="step-title">Upload your photograph</div>
-        <div class="step-body">Upload any JPEG up to 20MB. Mobile or camera. Any genre — Wildlife, Street, Landscape, People, Wedding, Macro, Drone, or Creative.</div>
+        <div class="step-icon">📤</div>
+        <div class="step-content">
+          <div class="step-num">Step 01</div>
+          <div class="step-title">Upload your photograph</div>
+          <div class="step-body">Any JPEG up to 20MB · Mobile or camera · All genres</div>
+        </div>
       </div>
+      
+      <div class="step-arrow">↓</div>
+      
       <div class="step-card">
-        <div class="step-num">02</div>
-        <div class="step-title">AI scores it instantly</div>
-        <div class="step-body">The Apex DDI Engine analyses your image across 5 dimensions in seconds. No waiting. No human subjectivity in the initial score.</div>
+        <div class="step-icon">🎯</div>
+        <div class="step-content">
+          <div class="step-num">Step 02</div>
+          <div class="step-title">Get scored instantly</div>
+          <div class="step-body">Apex DDI Engine rates across 5 dimensions in seconds</div>
+        </div>
       </div>
+      
+      <div class="step-arrow">↓</div>
+      
       <div class="step-card">
-        <div class="step-num">03</div>
-        <div class="step-title">Download your score card</div>
-        <div class="step-body">Get a shareable score card showing your DDI breakdown, tier, and archetype. Every scored image automatically enters the monthly programme.</div>
+        <div class="step-icon">🏆</div>
+        <div class="step-content">
+          <div class="step-num">Step 03</div>
+          <div class="step-title">Compete & rank</div>
+          <div class="step-body">Weekly Challenge · Annual Excellence Award · Leaderboard</div>
+        </div>
       </div>
     </div>
   </div>
@@ -358,6 +387,7 @@
         <div class="pricing-track">📱 Mobile League</div>
         <div class="pricing-price">₹99</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; ₹999/year</div>
+        <div class="pricing-mobile-summary">8 images/mo · Annual Excellence Award qualification · Weekly Challenge access · Peer rating pool</div>
         <ul class="pricing-features">
           <li>Unlimited scored uploads</li>
           <li>Monthly Programme — Mobile League</li>
@@ -377,6 +407,7 @@
         <div class="pricing-track">📷 Camera League</div>
         <div class="pricing-price">₹199</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; ₹1,999/year</div>
+        <div class="pricing-mobile-summary">5 images/mo · Annual Excellence Award qualification · Weekly Challenge access · Jury programme eligible</div>
         <ul class="pricing-features">
           <li>Unlimited scored uploads</li>
           <li>Monthly Programme — Camera League</li>
