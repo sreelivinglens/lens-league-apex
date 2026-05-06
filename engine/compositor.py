@@ -1,8 +1,10 @@
 """
-Apex Rating Cards — v22
+Apex Rating Cards — v23
 Two landscape cards at A4 300dpi (2480x1754px).
 Card 1: Photo + Score + Modules  
 Card 2: Full Analysis (2 columns)
+Site palette: cream bg, slate blue accents, dark text, gold for highlights only.
+No shield badge. No bars under module scores.
 """
 
 from PIL import Image as PilImage, ImageDraw, ImageFont
@@ -39,28 +41,27 @@ def fnt(size, bold=False, mono=False):
             except: pass
     return ImageFont.load_default()
 
-# ── Palette ───────────────────────────────────────────────────────────────────
-BLACK  = (13,  13,  11)
-S1     = (20,  20,  18)
-S2     = (28,  28,  26)
-S3     = (36,  36,  34)
-BORDER = (56,  56,  54)
-T1     = (240, 239, 232)
-T2     = (184, 182, 174)
-T3     = (122, 120, 112)
-GOLD   = (200, 168,  75)
-GOLD_D = (139, 105,  20)
-GREEN  = (76,  175, 115)
-RED    = (224,  85,  85)
+# ── Site Palette ──────────────────────────────────────────────────────────────
+CREAM   = (253, 252, 248)   # site bg #FDFCF8
+SURFACE = (241, 239, 232)   # surface-3 #F1EFE8
+BORDER  = (210, 208, 200)   # border #D3D1C7
+SLATE   = ( 44,  62, 107)   # #2C3E6B — slate blue
+T1      = ( 26,  26,  24)   # dark text #1A1A18
+T2      = ( 74,  72,  64)   # muted text #4A4840
+T3      = (136, 135, 128)   # hint text #888780
+GOLD    = (200, 168,  75)   # gold accent — scores/highlights only
+GOLD_D  = (139, 105,  20)   # dark gold
+GREEN   = ( 59, 109,  17)   # #3B6D11
+RED     = (160,  45,  45)   # #A02D2D
+WHITE   = (255, 255, 255)
 
-CW, CH   = 2480, 1754   # A4 landscape 300dpi
+CW, CH   = 2480, 1754
 PAD      = 80
 HEADER_H = 100
 FOOTER_H = 80
 
 SITE_URL   = 'shutterleague.com'
 LOGO_PATH  = os.path.join(FONT_DIR, 'shutterleague-logo-cropped.png')
-# Fallback paths in case FONT_DIR resolution differs on Railway
 _LOGO_FALLBACKS = [
     LOGO_PATH,
     os.path.join(os.path.dirname(FONT_DIR), 'engine', 'shutterleague-logo-cropped.png'),
@@ -104,32 +105,32 @@ def draw_text(draw, text, font, color, x, y, max_w, sp=12):
     return y
 
 def draw_header(canvas, draw, left, right):
-    draw.rectangle([0,0,CW,HEADER_H], fill=GOLD)
-    # Text only in header — logo appears in right panel and footer only
-    draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=BLACK)
+    draw.rectangle([0,0,CW,HEADER_H], fill=SLATE)
+    draw.text((PAD,28), left, font=fnt(36,bold=True,mono=True), fill=WHITE)
     rw = tw(draw,right,fnt(26,mono=True))
-    draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(40,30,5))
+    draw.text((CW-PAD-rw,34), right, font=fnt(26,mono=True), fill=(180,190,210))
 
-def draw_footer(canvas, draw, stamp):
-    """Footer with Shutter League logo and branding."""
-    draw.rectangle([0,CH-FOOTER_H,CW,CH], fill=S1)
-    draw.rectangle([0,CH-FOOTER_H,CW,CH-FOOTER_H+1], fill=BORDER)
-    # Try to paste logo
+def draw_footer(canvas, draw, stamp, canvas_h=None):
+    h = canvas_h or CH
+    draw.rectangle([0,h-FOOTER_H,CW,h], fill=SLATE)
+    draw.rectangle([0,h-FOOTER_H,CW,h-FOOTER_H+1], fill=(60,75,115))
     ftr_logo, flw = _load_logo(FOOTER_H - 16)
     if ftr_logo:
-        canvas.paste(ftr_logo, (PAD, CH - FOOTER_H + 8), ftr_logo.split()[3])
-        draw.text((PAD + flw + 16, CH-FOOTER_H+26),
+        canvas.paste(ftr_logo, (PAD, h - FOOTER_H + 8), ftr_logo.split()[3])
+        draw.text((PAD + flw + 16, h-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
-                  font=fnt(24,mono=True), fill=T3)
+                  font=fnt(24,mono=True), fill=(160,175,200))
     else:
-        draw.text((PAD, CH-FOOTER_H+26),
+        draw.text((PAD, h-FOOTER_H+26),
                   f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
-                  font=fnt(28,mono=True), fill=T3)
+                  font=fnt(28,mono=True), fill=(160,175,200))
     sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
-    draw.text((CW-PAD-sw, CH-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
+    draw.text((CW-PAD-sw, h-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
+
+
 def build_card1(photo_path, data, out_path):
     """Card 1 — Photo + Score + Modules (landscape brag card)"""
-    canvas = PilImage.new('RGB',(CW,CH),BLACK)
+    canvas = PilImage.new('RGB',(CW,CH),CREAM)
     draw   = ImageDraw.Draw(canvas)
 
     INNER_H = CH - HEADER_H - FOOTER_H
@@ -145,31 +146,25 @@ def build_card1(photo_path, data, out_path):
         cx,cy = (nw-PHOTO_W)//2,(nh-INNER_H)//2
         ph = ph.crop((cx,cy,cx+PHOTO_W,cy+INNER_H))
         canvas.paste(ph,(0,HEADER_H))
-
     except:
-        draw.rectangle([0,HEADER_H,PHOTO_W,HEADER_H+INNER_H],fill=S3)
+        draw.rectangle([0,HEADER_H,PHOTO_W,HEADER_H+INNER_H],fill=BORDER)
 
-    # Right panel content
+    # Right panel — cream background
     RX = PHOTO_W + PAD
     RW = CW - RX - PAD
     RY = HEADER_H + PAD
 
-    # Score
+    # Score number — dark text
     score = str(data.get('score','—'))
     tier  = data.get('tier','').upper()
-    draw.text((RX,RY), score, font=fnt(260,bold=True), fill=GOLD)
-    # Logo — right panel, top right, aligned with score top
-    rp_logo, rp_lw = _load_logo(240)
-    if rp_logo:
-        lg_x = CW - PAD - rp_lw
-        lg_y = HEADER_H + PAD + 54
-        canvas.paste(rp_logo, (lg_x, lg_y), rp_logo.split()[3])
+    draw.text((RX,RY), score, font=fnt(260,bold=True), fill=T1)
     RY += lh(fnt(260,bold=True)) + 10
-    draw.text((RX,RY), tier, font=fnt(72,bold=True,mono=True), fill=GOLD)
+
+    # Tier — slate blue
+    draw.text((RX,RY), tier, font=fnt(72,bold=True,mono=True), fill=SLATE)
     RY += lh(fnt(72,bold=True,mono=True)) + 16
 
-    # Tier pips
-    # Current 8-tier ladder mapped to 5 pip slots
+    # Tier pips — gold for active, border for inactive
     tier_map = {
         'ROOKIE':1, 'SHOOTER':1,
         'CONTENDER':2, 'CRAFTSMAN':2,
@@ -179,11 +174,11 @@ def build_card1(photo_path, data, out_path):
     active = tier_map.get(tier,1)
     for i in range(5):
         px = RX+i*44
-        draw.rectangle([px,RY,px+32,RY+18], fill=GOLD if i<active else (56,56,54))
+        draw.rectangle([px,RY,px+32,RY+18], fill=GOLD if i<active else BORDER)
     RY += 44
 
     # Divider
-    draw.rectangle([RX,RY,CW-PAD,RY+2], fill=GOLD_D)
+    draw.rectangle([RX,RY,CW-PAD,RY+2], fill=BORDER)
     RY += 20
 
     # Title + meta
@@ -197,13 +192,13 @@ def build_card1(photo_path, data, out_path):
         RY += 14
         draw_text(draw,'★  SOUL BONUS ACTIVE  —  AQ ≥ 8.0',fnt(36,mono=True),GOLD,RX,RY,RW)
 
-    # Module scores — pinned to bottom
+    # Module scores — pinned to bottom, slate blue panel
     modules = data.get('modules',[])
     n = max(len(modules),1)
-    MOD_BLOCK_H = PAD + lh(fnt(36,mono=True)) + 10 + lh(fnt(80,bold=True)) + 18 + 10 + PAD
+    MOD_BLOCK_H = PAD + lh(fnt(36,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
     MOD_Y = CH - FOOTER_H - MOD_BLOCK_H
 
-    draw.rectangle([PHOTO_W,MOD_Y,CW,CH-FOOTER_H], fill=S2)
+    draw.rectangle([PHOTO_W,MOD_Y,CW,CH-FOOTER_H], fill=SURFACE)
     draw.rectangle([PHOTO_W,MOD_Y,CW,MOD_Y+1], fill=BORDER)
 
     MW = (CW - PHOTO_W - PAD*2) // n
@@ -213,17 +208,11 @@ def build_card1(photo_path, data, out_path):
     for i,(name,mscore) in enumerate(modules):
         mx = PHOTO_W + PAD + i*MW
         top = float(mscore)==max_sc
-        col = GOLD if top else T2
+        col = GOLD if top else T1  # gold for top, dark text for rest
         if i>0:
             draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
         draw.text((mx+12,LBL_Y), name.upper(), font=fnt(36,mono=True), fill=T3)
         draw.text((mx+12,LBL_Y+lh(fnt(36,mono=True))+10), str(mscore), font=fnt(80,bold=True), fill=col)
-        by = LBL_Y+lh(fnt(36,mono=True))+10+lh(fnt(80,bold=True))+12
-        bw2 = MW-28
-        draw.rectangle([mx+12,by,mx+12+bw2,by+10],fill=S3)
-        fw = int(bw2*float(mscore)/10)
-        if fw>0:
-            draw.rectangle([mx+12,by,mx+12+fw,by+10],fill=GOLD if top else GOLD_D)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
     draw_footer(canvas, draw, f"SL · {score} · {tier}")
@@ -251,7 +240,7 @@ def build_card2(data, out_path):
         h += 28 + 1
         return h
 
-    dummy = ImageDraw.Draw(PilImage.new('RGB',(CW,100),BLACK))
+    dummy = ImageDraw.Draw(PilImage.new('RGB',(CW,100),CREAM))
 
     left_h = sum(measure_section(dummy,body,COL_W) for _,body in rows[:3])
     left_h += 10
@@ -273,7 +262,7 @@ def build_card2(data, out_path):
     content_h = max(left_h, right_h)
     DYN_H = HEADER_H + PAD + content_h + PAD*4 + FOOTER_H
 
-    canvas = PilImage.new('RGB',(CW, DYN_H), BLACK)
+    canvas = PilImage.new('RGB',(CW, DYN_H), CREAM)
     draw   = ImageDraw.Draw(canvas)
 
     INNER_Y = HEADER_H + PAD
@@ -281,11 +270,11 @@ def build_card2(data, out_path):
     RY = INNER_Y
 
     def section(x, y, label, body, w, body_color=T2):
-        draw.text((x,y), label.upper(), font=fnt(38,bold=True,mono=True), fill=GOLD)
+        draw.text((x,y), label.upper(), font=fnt(38,bold=True,mono=True), fill=SLATE)
         y += lh(fnt(38,bold=True,mono=True)) + 20
         y = draw_text(draw, body, fnt(44), body_color, x, y, w, 12)
         y += 28
-        draw.rectangle([x, y-14, x+w, y-13], fill=(42,42,40))
+        draw.rectangle([x, y-14, x+w, y-13], fill=BORDER)
         return y
 
     for label,body in rows[:3]:
@@ -305,35 +294,29 @@ def build_card2(data, out_path):
     for label,body in rows[3:]:
         RY = section(RX, RY, label, body, COL_W)
 
+    # The One Improvement section — slate blue panel
     byline_top = RY
-    draw.text((RX,RY), 'APEX BYLINE', font=fnt(38,bold=True,mono=True), fill=GOLD)
+    # Apex Byline (gap analysis) — label + body
+    draw.text((RX,RY), 'GAP ANALYSIS', font=fnt(38,bold=True,mono=True), fill=SLATE)
     RY += lh(fnt(38,bold=True,mono=True)) + 20
     RY = draw_text(draw, b1, fnt(44), T2, RX, RY, COL_W, 12)
     RY += 28
-    draw.text((RX,RY), 'THE ONE IMPROVEMENT', font=fnt(38,bold=True,mono=True), fill=GOLD)
-    RY += lh(fnt(38,bold=True,mono=True)) + 20
-    RY = draw_text(draw, b2, fnt(44,bold=True), T1, RX, RY, COL_W, 12)
 
-    draw.rectangle([RX-24, byline_top, RX-16, RY+20], fill=GOLD_D)
+    # The One Improvement — slate blue box
+    IMPROVE_PAD = 24
+    improve_lines = wrap_lines(draw, b2, fnt(44,bold=True), COL_W - IMPROVE_PAD*2)
+    improve_h = lh(fnt(38,bold=True,mono=True)) + 20 + sum(lh(fnt(44,bold=True))+12 for _ in improve_lines) + IMPROVE_PAD*2
+    draw.rectangle([RX-8, RY, RX+COL_W+8, RY+improve_h], fill=SLATE)
+    iy = RY + IMPROVE_PAD
+    draw.text((RX+IMPROVE_PAD, iy), 'THE ONE IMPROVEMENT', font=fnt(38,bold=True,mono=True), fill=(180,190,210))
+    iy += lh(fnt(38,bold=True,mono=True)) + 20
+    draw_text(draw, b2, fnt(44,bold=True), WHITE, RX+IMPROVE_PAD, iy, COL_W-IMPROVE_PAD*2, 12)
+    RY += improve_h + 20
 
-    # Footer with logo — redrawn at actual dynamic canvas bottom
-    actual_h = DYN_H
-    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h], fill=S1)
-    draw.rectangle([0,actual_h-FOOTER_H,CW,actual_h-FOOTER_H+1], fill=BORDER)
-    c2_logo, c2_lw = _load_logo(FOOTER_H - 16)
-    if c2_logo:
-        canvas.paste(c2_logo, (PAD, actual_h - FOOTER_H + 8), c2_logo.split()[3])
-        draw.text((PAD + c2_lw + 16, actual_h-FOOTER_H+26),
-                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  {SITE_URL}',
-                  font=fnt(24,mono=True), fill=T3)
-    else:
-        draw.text((PAD, actual_h-FOOTER_H+26),
-                  f'APEX DDI ENGINE  ·  RATED BY SCIENCE. NOT OPINION.  ·  SHUTTER LEAGUE  ·  {SITE_URL}',
-                  font=fnt(28,mono=True), fill=T3)
-    stamp = f"SL · {data.get('score','')} · {data.get('tier','').upper()}"
-    sw = tw(draw, stamp, fnt(28,bold=True,mono=True))
-    draw.text((CW-PAD-sw, actual_h-FOOTER_H+24), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
+    # Left border accent
+    draw.rectangle([RX-24, byline_top, RX-16, RY], fill=GOLD_D)
 
+    draw_footer(canvas, draw, f"SL · {data.get('score','')} · {data.get('tier','').upper()}", DYN_H)
     draw_header(canvas, draw,
                 f"FULL EVALUATION  ·  {data.get('asset','')}",
                 'APEX DDI ENGINE  ·  RATED BY SCIENCE')
@@ -342,12 +325,6 @@ def build_card2(data, out_path):
 
 
 def build_card(photo_path, data, out_path):
-    """
-    Legacy entry point — builds both cards and saves as:
-      out_path         = card 1 (score card)
-      out_path_card2   = card 2 (analysis card)
-    Returns (card1_path, card2_path)
-    """
     card2_path = out_path.replace('.jpg','_analysis.jpg').replace('.jpeg','_analysis.jpg')
     build_card1(photo_path, data, out_path)
     build_card2(data, card2_path)
