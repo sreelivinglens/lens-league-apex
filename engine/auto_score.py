@@ -178,6 +178,13 @@ Never say "the image demonstrates" or "this photograph shows" — speak directly
 Examples of BAD output: "The technical execution demonstrates strong awareness of peak action."
 Examples of GOOD output: "The motion-frozen wingbeat at the top of the arc is the shot — everything else in the frame supports that instant."
 
+CRITICAL — EQUIPMENT AND EXIF ACCURACY:
+The EXIF data is provided with the image. Read it carefully before writing any text.
+- If the camera make/model is a smartphone (iPhone, Samsung Galaxy, Pixel, Xiaomi, OnePlus etc.) NEVER describe the capture method as "drone", "aerial vehicle", "UAV", or "shot from a drone". It is a handheld or elevated mobile shot. Only reference drone/aerial if EXIF explicitly confirms a drone camera (DJI, Autel, Parrot etc.).
+- Do not assume subject matter or objects that are not clearly visible. If you see a colour boundary, describe it as a colour boundary — not a road unless you can clearly see it is a road.
+- Do not identify technical flaws (lens flare, dust, noise) unless you can clearly see them. A small coloured element may be part of the scene, not a flare. Describe what you see, not what you assume.
+- Never invent equipment, settings, or techniques not supported by the EXIF or the visible image.
+
 Return this exact JSON structure:
 {{
   "dod": <float 0-10>,
