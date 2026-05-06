@@ -562,6 +562,30 @@ function toggleNotifStrip() {
 </div>
 
 
+{# ── Shadow Rank conversion banner — free tier, all images used ──────────── #}
+{% if free_tier and free_tier.remaining == 0 and free_tier.shadow_rank %}
+<div style="background:#2C3E6B;border-radius:var(--radius-md);padding:28px 32px;margin-bottom:28px;text-align:center;">
+  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:12px;">Your Initial Assessment is Complete</div>
+  <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
+  <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
+  <div style="font-size:16px;color:rgba(255,255,255,0.80);margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
+    This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Official World Ranking.
+  </div>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;">Subscribe &amp; Lock In Your Rank →</a>
+    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);">See Full Leaderboard</a>
+  </div>
+</div>
+{% elif free_tier and free_tier.remaining > 0 %}
+<div style="background:var(--surface-2);border:1px solid var(--border);border-left:4px solid #F5C518;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Initial Assessment — {{ free_tier.remaining }} image{{ 's' if free_tier.remaining != 1 }} remaining</div>
+    <div style="font-size:15px;color:var(--text-primary);">Upload your best work. After {{ free_tier.limit }} images, your shadow rank is revealed.</div>
+  </div>
+  <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
+</div>
+{% endif %}
+
 {# ── Wallet HUD (Sprint 4 — investor doc 16d) ───────────────────────────── #}
 {% if wallet_hud %}
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px; overflow:hidden;">
