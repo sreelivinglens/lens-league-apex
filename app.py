@@ -436,6 +436,8 @@ with app.app_context():
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+                # v35 - Re-engagement email tracking
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
                 # v34 - Scoring flash notification
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
                 # v33 - Points/Loyalty Engine (Sprint 1)
@@ -1121,6 +1123,103 @@ def backfill_residency_months():
 
 
 # ── End of Sprint 3 ───────────────────────────────────────────────────────────
+
+# ── Re-engagement Emailer ─────────────────────────────────────────────────────
+
+def run_reengagement_emailer():
+    """
+    Runs every hour via APScheduler.
+    Finds users whose last scored image was 23-25 hours ago (24hr window)
+    and who have not uploaded since — sends a re-engagement email.
+    Skips users who already received a re-engagement email in the last 48 hours.
+    Sends different copy for subscribed vs free tier users.
+    """
+    with app.app_context():
+        now = datetime.utcnow()
+        window_start = now - timedelta(hours=25)
+        window_end   = now - timedelta(hours=23)
+
+        # Find users with a scored image in the 23-25hr window
+        # who have NOT uploaded anything more recent
+        candidates = db.session.execute(db.text("""
+            SELECT DISTINCT u.id, u.email, u.full_name, u.username,
+                            u.is_subscribed, u.subscription_track,
+                            u.reengagement_sent_at,
+                            i.score, i.tier, i.genre, i.asset_name,
+                            i.scored_at,
+                            u.points_balance
+            FROM users u
+            JOIN images i ON i.user_id = u.id
+            WHERE i.status = 'scored'
+              AND i.scored_at BETWEEN :win_start AND :win_end
+              AND i.is_flagged = false
+              AND NOT EXISTS (
+                  SELECT 1 FROM images i2
+                  WHERE i2.user_id = u.id
+                    AND i2.created_at > i.scored_at
+              )
+              AND (
+                  u.reengagement_sent_at IS NULL
+                  OR u.reengagement_sent_at < :cutoff
+              )
+        """), {
+            'win_start': window_start,
+            'win_end':   window_end,
+            'cutoff':    now - timedelta(hours=48),
+        }).fetchall()
+
+        sent = 0
+        for row in candidates:
+            try:
+                name      = row.full_name or row.username or 'Photographer'
+                score     = row.score
+                tier      = (row.tier or '').title()
+                genre     = row.genre or 'Photography'
+                img_name  = row.asset_name or 'your image'
+                pts       = round((row.points_balance or 0), 1)
+                is_sub    = row.is_subscribed
+                site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+
+                if is_sub:
+                    subject  = f'Your {genre} photo scored {score:.2f} — ready for round two?'
+                    pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
+                    cta_text = 'Upload Your Next Image'
+                else:
+                    subject  = f'Your {genre} photo scored {score:.2f} — keep building'
+                    pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your Official World Ranking.</p>'
+                    cta_text = 'Continue on Shutter League'
+
+                html_body = f"""
+<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+  <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
+  <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
+  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
+  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
+  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Upload your next shot and see how you compare.</p>
+  {pts_line}
+  <div style="margin:28px 0;">
+    <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
+  </div>
+  <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have an account on Shutter League.<br>
+  <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+</div>"""
+
+                ok = send_email(row.email, subject, html_body)
+                if ok:
+                    db.session.execute(db.text(
+                        "UPDATE users SET reengagement_sent_at = :now WHERE id = :uid"
+                    ), {'now': now, 'uid': row.id})
+                    db.session.commit()
+                    sent += 1
+                    app.logger.info(f'[reengagement] Sent to user {row.id} ({row.email})')
+
+            except Exception as _re:
+                app.logger.error(f'[reengagement] Error for user {row.id}: {_re}')
+
+        app.logger.info(f'[reengagement] Run complete. {sent} emails sent.')
+
+# ── End of Re-engagement Emailer ─────────────────────────────────────────────
+
 
 
 
@@ -10583,6 +10682,14 @@ if True:
         trigger          = CronTrigger(day=1, hour=18, minute=35, timezone='UTC'),
         id               = 'monthly_residency_clock',
         name             = 'Monthly 6-6-12 residency clock increment',
+        replace_existing = True,
+    )
+    # Re-engagement emailer — runs every hour
+    _scheduler.add_job(
+        func             = run_reengagement_emailer,
+        trigger          = CronTrigger(minute=15, timezone='UTC'),
+        id               = 'reengagement_emailer',
+        name             = '24hr re-engagement email trigger',
         replace_existing = True,
     )
     _scheduler.start()

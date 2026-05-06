@@ -85,6 +85,8 @@ class User(db.Model, UserMixin):
     # Tier jump tracking — last tier seen, used to detect tier-up on each score
     tier_jump_last_tier    = db.Column(db.String(60), nullable=True)
     tier_jump_last_checked_at = db.Column(db.DateTime, nullable=True)
+    # v35 — re-engagement email tracking
+    reengagement_sent_at      = db.Column(db.DateTime, nullable=True)
 
     images = db.relationship('Image', backref='author', lazy=True)
 
