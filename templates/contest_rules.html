@@ -11,7 +11,7 @@
   }
   .rules-section h2 span {
     font-family: var(--font-mono); font-size: 14px;
-    color: var(--gold); margin-right: 10px; font-weight: 600;
+    color: var(--text-primary); margin-right: 10px; font-weight: 600;
   }
   .rules-section h3 {
     font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
@@ -33,7 +33,7 @@
     padding: 16px 20px; margin: 16px 0;
     font-size: 16px; color: var(--text-secondary); line-height: 1.7;
   }
-  .rules-highlight strong { color: var(--gold); }
+  .rules-highlight strong { color: var(--text-primary); font-weight:700; }
   .rules-highlight.legal   { border-left-color: var(--red);   background: rgba(224,85,85,0.05); }
   .rules-highlight.final   { border-left-color: var(--gold);  background: rgba(200,168,75,0.05); }
   .rules-highlight.warning { border-left-color: var(--amber); background: rgba(224,153,64,0.06); }
@@ -52,18 +52,18 @@
   .toc a:hover { color: var(--gold); }
 
   .comp-table { width: 100%; border-collapse: collapse; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-  .comp-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .comp-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
   .comp-table td { padding: 10px 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
   .comp-table tr:last-child td { border-bottom: none; }
-  .comp-table td:first-child { color: var(--gold); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+  .comp-table td:first-child { color: var(--text-primary); font-family: var(--font-mono); font-weight: 700; white-space: nowrap; }
 
   .award-table { width: 100%; border-collapse: collapse; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-  .award-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
+  .award-table th { background: var(--surface-3); padding: 10px 14px; font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--border); }
   .award-table td { padding: 10px 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
   .award-table tr:last-child td { border-bottom: none; }
-  .award-table .award  { color: var(--gold); font-family: var(--font-mono); font-weight: 600; }
+  .award-table .award  { color: var(--text-primary); font-family: var(--font-mono); font-weight: 700; }
   .award-table .amount { color: var(--text-primary); font-weight: 700; font-family: var(--font-mono); }
-  .award-table tr.section-head td { background: var(--surface-3); font-family: var(--font-mono); font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 8px 14px; }
+  .award-table tr.section-head td { background: var(--surface-3); font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; padding: 8px 14px; }
   .award-total td { background: rgba(200,168,75,0.06); border-top: 1px solid var(--gold-dark) !important; }
   .award-total .amount { color: var(--gold); font-size: 17px; }
 
@@ -73,7 +73,7 @@
     display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 16px;
   }
   .doc-meta-item { font-family: var(--font-mono); font-size: 14px; }
-  .doc-meta-label { color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; font-size: 12px; }
+  .doc-meta-label { color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; font-size: 15px; }
   .doc-meta-value { color: var(--text-primary); font-weight: 600; word-break: break-word; }
 
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-md); margin: 16px 0; }
@@ -105,12 +105,12 @@
     </div>
     <div class="doc-meta-item">
       <div class="doc-meta-label">Contact</div>
-      <div class="doc-meta-value" style="color:var(--gold);">{{ contact_email }}</div>
+      <div class="doc-meta-value">{{ contact_email }}</div>
     </div>
   </div>
 
   <div class="rules-highlight legal">
-    <strong>Legal Notice:</strong> This document constitutes the complete and binding programme rules for all photography programmes operated by {{ platform_name }}. By participating in any programme — including Monthly Programmes, Photographer of the Year (POTY), Body of Work (BOW), and the Open Programme — participants agree unconditionally to these rules. Participation constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--gold);">Terms &amp; Conditions</a>.
+    <strong>Legal Notice:</strong> This document constitutes the complete and binding programme rules for all photography programmes operated by {{ platform_name }}. By participating in any programme — including Monthly Programmes, Photographer of the Year (POTY), Body of Work (BOW), and the Open Programme — participants agree unconditionally to these rules. Participation constitutes acceptance. These rules supplement and should be read alongside the <a href="{{ url_for('terms') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Terms &amp; Conditions</a>.
   </div>
 
   <div class="rules-highlight" style="border-left-color: var(--gold); background: rgba(200,168,75,0.04); margin-bottom: 24px;">
@@ -173,7 +173,7 @@
     <h3>Body of Work — Curated Submission</h3>
     <p>BOW entry requires deliberate submission of a curated series of 6–12 images. Entry is not automatic. All images must have been previously scored by the Apex DDI Engine under the submitting photographer's account.</p>
     <h3>Open Programme — Paid Submission</h3>
-    <p>The Open Programme requires deliberate, paid submission. Submission fees apply per image per genre. See the <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for current amounts. A photographer may submit to multiple genres but may submit only one image per genre.</p>
+    <p>The Open Programme requires deliberate, paid submission. Submission fees apply per image per genre. See the <a href="{{ url_for('poty') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Awards page</a> for current amounts. A photographer may submit to multiple genres but may submit only one image per genre.</p>
   </div>
 
   <!-- 3 -->
@@ -267,7 +267,7 @@
   <div class="rules-section" id="poty">
     <h2><span>08</span> Photographer of the Year (POTY) Rules &amp; awards structure</h2>
     <ul>
-      <li>POTY operates per genre and per League (Camera and Mobile independently) over the platform subscription year. 16 competitions total: 8 genres × 2 Leagues.</li>
+      <li>POTY operates per genre and per League (Camera and Mobile independently) over the platform subscription year. 16 competitions total: 8 genres × 2 Leagues. A photographer qualifies in their strongest genre — specialising in a single genre is fully eligible. Multi-genre participation is not required.</li>
       <li>Minimum eligibility: <strong>24 qualifying images</strong> in the specific genre during the subscription year.</li>
       <li>POTY score: arithmetic mean of the photographer's <strong>top 6 DDI scores</strong> in that genre across all qualifying images for the year.</li>
       <li>Grand POTY Camera and Grand POTY Mobile are awarded separately. The Grand POTY recipient in each League is selected by jury from the 8 category Gold recipients in that League.</li>
