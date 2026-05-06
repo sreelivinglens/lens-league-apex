@@ -1760,6 +1760,48 @@ def dashboard():
         Image.raw_disqualified == False
     ).all() if current_user.role != 'admin' else []
 
+    # ── Wallet HUD (Sprint 4) ─────────────────────────────────────────────
+    # Investor doc 16d: points balance + progress + 6-6-12 clock
+    wallet_hud = None
+    if current_user.is_subscribed:
+        _pts_bal  = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+        _pts_life = round(getattr(current_user, 'points_lifetime_earned', 0.0) or 0.0, 1)
+        _res_mo   = getattr(current_user, 'residency_months', 0) or 0
+        # 6-6-12: need 6 subscribed months + 6 scored images in a genre to appear on standings
+        # need 24 scored images in a genre to qualify for prizes
+        _total_scored = Image.query.filter_by(
+            user_id=current_user.id, status='scored'
+        ).filter(Image.score.isnot(None)).count()
+        # Clock: months remaining to hit 6-month gate
+        _months_to_gate = max(0, 6 - _res_mo)
+        # Images remaining to hit 6-image minimum in best genre
+        _best_genre_count = 0
+        if poty_tracker and poty_tracker.get('genre_rows'):
+            _best_genre_count = max((r['count'] for r in poty_tracker['genre_rows']), default=0)
+        _imgs_to_gate = max(0, 6 - _best_genre_count)
+        # Official rank status
+        _officially_ranked = (_res_mo >= 6 and _best_genre_count >= 6)
+        # Tier jump progress — next bonus threshold
+        _last_tier = getattr(current_user, 'tier_jump_last_tier', None)
+        _tier_order = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
+        _next_tier = None
+        if _last_tier and _last_tier in _tier_order:
+            _idx = _tier_order.index(_last_tier)
+            if _idx < len(_tier_order) - 1:
+                _next_tier = _tier_order[_idx + 1]
+        wallet_hud = {
+            'balance':          _pts_bal,
+            'lifetime':         _pts_life,
+            'residency_months': _res_mo,
+            'months_to_gate':   _months_to_gate,
+            'imgs_to_gate':     _imgs_to_gate,
+            'officially_ranked': _officially_ranked,
+            'total_scored':     _total_scored,
+            'last_tier':        _last_tier,
+            'next_tier':        _next_tier,
+        }
+    # ── End Wallet HUD ────────────────────────────────────────────────────
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -1770,7 +1812,8 @@ def dashboard():
                            contest_wins=contest_wins,
                            show_poty_banner=show_poty_banner,
                            contest_banners=contest_banners,
-                           raw_pending=raw_pending)
+                           raw_pending=raw_pending,
+                           wallet_hud=wallet_hud)
 
 
 # ---------------------------------------------------------------------------
