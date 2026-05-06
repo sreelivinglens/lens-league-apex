@@ -231,13 +231,7 @@
   {% else %}{% set tc = '#F5C518' %}{% endif %}
   <div class="tier-strip">
     <div style="display:flex; align-items:center; gap:14px;">
-      {% if image.tier %}
-      <div class="tier-badge-wrap" style="--tier-color:{{ tc }};">
-        <img src="{{ url_for('static', filename='img/SL-' ~ image.tier|replace(' ','') ~ '.png') }}"
-             style="width:44px;height:44px;object-fit:contain;"
-             alt="{{ image.tier }} badge" onerror="this.parentElement.style.display='none'">
-      </div>
-      {% endif %}
+
       <div>
         <div class="tier-word" style="color:{{ tc }};">{{ image.tier }}</div>
         <div class="tier-sub">DDI ENGINE</div>
@@ -273,10 +267,10 @@
   </div>
   {% endif %}
 
-  <!-- Apex Byline — owner + admin only -->
+  <!-- The One Improvement — owner + admin only -->
   {% if show_score and audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
   <div class="byline-section">
-    <div class="byline-tag">Apex Byline</div>
+    <div class="byline-tag">The One Improvement</div>
     {% if audit.get('byline_1') %}
     <div class="byline-text">{{ audit.byline_1 }}</div>
     {% endif %}
