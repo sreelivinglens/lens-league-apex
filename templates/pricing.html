@@ -190,7 +190,7 @@
     <div class="plan-row">
       <div class="plan-icon">🎯</div>
       <div>
-        <div class="plan-for">Always free</div>
+        <div class="plan-for">Free Assessment</div>
         <div class="plan-name">Free</div>
         <div class="plan-sub">Initial Assessment · Leaderboard · Science</div>
       </div>
@@ -259,17 +259,23 @@
       <div class="topup-card">
         <div>
           <div class="topup-name">Camera Top-up</div>
-          <div class="topup-desc">+5 images for the month</div>
+          <div class="topup-desc">+5 images · ₹99 cash or 1,000 points</div>
         </div>
-        <div class="topup-price">₹199</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="topup-price">₹99</div>
+          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:14px;">Purchase →</a>
+        </div>
       </div>
 
       <div class="topup-card">
         <div>
           <div class="topup-name">Mobile Top-up</div>
-          <div class="topup-desc">+5 images for the month</div>
+          <div class="topup-desc">+5 images · ₹99 cash or 1,000 points</div>
         </div>
-        <div class="topup-price">₹99</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="topup-price">₹99</div>
+          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:14px;">Purchase →</a>
+        </div>
       </div>
 
     </div>
