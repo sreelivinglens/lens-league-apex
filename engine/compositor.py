@@ -55,6 +55,13 @@ GREEN   = ( 59, 109,  17)   # #3B6D11
 RED     = (160,  45,  45)   # #A02D2D
 WHITE   = (255, 255, 255)
 
+# ── Watermark config ─────────────────────────────────────────────────────────
+# WATERMARK_MODE: 'diagonal' | 'corner' | 'none'
+# WATERMARK_OPACITY: 0-255 (18 = ~7%, sweet spot for JPEG survival + invisibility)
+WATERMARK_MODE    = 'diagonal'   # change to 'corner' to test corner badge
+WATERMARK_OPACITY = 18           # ~7% opacity
+WATERMARK_TEXT    = '© SHUTTERLEAGUE.COM'
+
 CW, CH   = 2480, 1754
 PAD      = 80
 HEADER_H = 100
@@ -128,6 +135,53 @@ def draw_footer(canvas, draw, stamp, canvas_h=None):
     draw.text((CW-PAD-sw, h-FOOTER_H+26), stamp, font=fnt(28,bold=True,mono=True), fill=GOLD)
 
 
+def apply_watermark(canvas, x, y, w, h):
+    """Apply watermark to the photo region of the card."""
+    if WATERMARK_MODE == 'none':
+        return
+
+    wm_layer = PilImage.new('RGBA', (w, h), (0, 0, 0, 0))
+    wm_draw  = ImageDraw.Draw(wm_layer)
+
+    if WATERMARK_MODE == 'diagonal':
+        # Diagonal repeating text across the full photo area
+        wm_font = fnt(48, bold=True, mono=True)
+        text    = f'{WATERMARK_TEXT} · EVALUATED · '
+        # Rotate the whole layer by drawing diagonally
+        import math
+        angle   = -35
+        # Draw rows of text across a larger canvas then crop
+        big = PilImage.new('RGBA', (w * 3, h * 3), (0, 0, 0, 0))
+        bd  = ImageDraw.Draw(big)
+        step_y = 120
+        for row in range(-h, h * 3, step_y):
+            bd.text((-w, row), text * 6, font=wm_font,
+                    fill=(255, 255, 255, WATERMARK_OPACITY))
+        big = big.rotate(angle, expand=False)
+        # Crop back to photo size, centred
+        cx = (big.width  - w) // 2
+        cy = (big.height - h) // 2
+        wm_layer = big.crop((cx, cy, cx + w, cy + h))
+
+    elif WATERMARK_MODE == 'corner':
+        # Bottom-right corner badge
+        wm_font  = fnt(40, bold=True, mono=True)
+        text     = WATERMARK_TEXT
+        tw_val   = wm_draw.textbbox((0, 0), text, font=wm_font)[2]
+        th_val   = wm_draw.textbbox((0, 0), text, font=wm_font)[3]
+        pad      = 20
+        bx       = w - tw_val - pad * 2 - 10
+        by       = h - th_val - pad * 2 - 10
+        # Semi-transparent dark pill
+        wm_draw.rectangle([bx - pad, by - pad, bx + tw_val + pad, by + th_val + pad],
+                          fill=(44, 62, 107, int(WATERMARK_OPACITY * 4)))
+        wm_draw.text((bx, by), text, font=wm_font,
+                     fill=(255, 255, 255, min(255, WATERMARK_OPACITY * 5)))
+
+    # Paste watermark onto canvas at photo position
+    canvas.paste(wm_layer, (x, y), wm_layer)
+
+
 def build_card1(photo_path, data, out_path):
     """Card 1 — Photo + Score + Modules (landscape brag card)"""
     canvas = PilImage.new('RGB',(CW,CH),CREAM)
@@ -146,6 +200,7 @@ def build_card1(photo_path, data, out_path):
         cx,cy = (nw-PHOTO_W)//2,(nh-INNER_H)//2
         ph = ph.crop((cx,cy,cx+PHOTO_W,cy+INNER_H))
         canvas.paste(ph,(0,HEADER_H))
+        apply_watermark(canvas, 0, HEADER_H, PHOTO_W, INNER_H)
     except:
         draw.rectangle([0,HEADER_H,PHOTO_W,HEADER_H+INNER_H],fill=BORDER)
 
