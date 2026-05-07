@@ -20,66 +20,64 @@
   .learn-sub { font-size:clamp(17px,2.5vw,20px); color:var(--text-primary); max-width:580px; margin:0 auto; line-height:1.6; }
 
   /* ── Plans table (desktop ≥700px) ──
-     Features run down left column.
-     Mobile / Camera / Mentor run across as columns.
-     Table scrolls horizontally if viewport is too narrow.
+     Plans = rows (Mobile / Camera / Go Further)
+     Features = columns (8 features + CTA)
+     Scrolls horizontally on narrow screens.
   ── */
   .plans-section { margin-bottom:64px; }
   .plans-table-wrap { overflow-x:auto; }
-  .plans-table {
-    width:100%; border-collapse:collapse; min-width:680px;
-    table-layout:fixed;
-  }
-  /* Column widths: feature=30%, three plan cols=23.3% each */
-  .plans-table .col-feature { width:30%; }
-  .plans-table .col-mobile,
-  .plans-table .col-camera,
-  .plans-table .col-mentor  { width:23.3%; }
+  .plans-table { width:100%; border-collapse:collapse; min-width:860px; }
 
-  /* Header row */
+  /* Header: feature labels */
   .plans-table thead th {
-    padding:16px 12px 14px; text-align:center;
+    padding:10px 8px 10px; text-align:center;
     font-family:var(--font-mono); font-size:16px; font-weight:700;
-    letter-spacing:2px; text-transform:uppercase;
+    letter-spacing:0; text-transform:none;
     border-bottom:2px solid var(--border);
+    color:var(--text-primary);
+    line-height:1.3;
   }
-  .plans-table thead th.col-feature { text-align:left; }
-  .plans-table thead th.col-mobile { color:#2C3E6B; background:rgba(44,62,107,0.06); border-radius:8px 8px 0 0; }
-  .plans-table thead th.col-camera { color:#2C3E6B; }
-  .plans-table thead th.col-mentor { color:#FFFFFF; background:#1A2744; border-radius:8px 8px 0 0; }
+  .plans-table thead th.col-plan { text-align:left; width:18%; min-width:140px; }
+  .plans-table thead th.col-feat { width:9%; text-align:center; }
+  .plans-table thead th.col-cta-head { width:13%; }
 
-  .th-plan-name { display:block; margin-bottom:4px; }
-  .th-price { display:block; font-size:28px; font-weight:700; color:#2C3E6B; line-height:1; margin:6px 0 3px; }
-  .th-price-mentor { display:block; font-size:18px; font-weight:700; color:#F5C518; line-height:1.3; margin:6px 0 3px; }
-  .th-sub { display:block; font-size:16px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--text-primary); }
-  .th-sub-mentor { display:block; font-size:16px; font-weight:400; letter-spacing:0; text-transform:none; color:rgba(255,255,255,0.7); }
-  .th-badge { display:inline-block; background:#F5C518; color:#000; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; margin-top:6px; white-space:nowrap; letter-spacing:0; }
-  .th-badge-mentor { display:inline-block; background:rgba(245,197,24,0.2); color:#F5C518; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; margin-top:6px; letter-spacing:0; line-height:1.4; text-align:center; }
+  /* Plan name column */
+  .col-plan { vertical-align:middle; padding:18px 16px 18px 0; border-bottom:1px solid var(--border-subtle); }
+  .col-plan-mentor { background:rgba(26,39,68,0.04); border-radius:8px 0 0 8px; padding-left:12px; }
+  .plan-row-name { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2C3E6B; margin-bottom:4px; }
+  .plan-row-price { font-size:28px; font-weight:700; color:#2C3E6B; line-height:1; margin:4px 0 3px; }
+  .plan-row-price-mentor { font-size:18px; color:#1A2744; line-height:1.3; }
+  .plan-row-sub { font-size:16px; color:var(--text-primary); margin-bottom:8px; }
+  .plan-row-sub-mentor { color:var(--text-primary); }
+  .th-badge { display:inline-block; background:#F5C518; color:#000; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; white-space:nowrap; letter-spacing:0; }
+  .th-badge-mentor { display:inline-block; background:rgba(245,197,24,0.15); color:#1A2744; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0; line-height:1.4; }
 
-  /* Body rows */
-  .plans-table tbody td {
-    padding:11px 12px; font-size:16px; color:var(--text-primary);
-    border-bottom:1px solid var(--border-subtle); vertical-align:middle;
+  /* Feature cells */
+  .col-feat {
+    text-align:center; padding:18px 8px;
+    border-bottom:1px solid var(--border-subtle);
+    border-left:1px solid var(--border-subtle);
+    font-size:18px; vertical-align:middle;
   }
-  .plans-table tbody td.col-feature { font-weight:600; }
-  .plans-table tbody td.col-mobile  { text-align:center; background:rgba(44,62,107,0.03); }
-  .plans-table tbody td.col-camera  { text-align:center; }
-  .plans-table tbody td.col-mentor  { text-align:center; background:rgba(26,39,68,0.05); }
+  .col-feat-mentor { background:rgba(26,39,68,0.04); }
+  .col-cta { padding:12px 10px; min-width:110px; }
   .plans-table tbody tr:last-child td { border-bottom:none; }
+
+  /* Alternating row tint */
+  .plan-row-mobile { background:rgba(44,62,107,0.02); }
+  .plan-row-camera { background:rgba(44,62,107,0.05); }
+  .plan-row-mentor { background:rgba(26,39,68,0.03); }
 
   .check        { color:#1A5C2A; font-weight:700; font-size:18px; }
   .cross        { color:#bbb;    font-weight:700; font-size:18px; }
   .check-mentor { color:#4acba0; font-weight:700; font-size:18px; }
 
-  /* CTA row */
-  .plan-cta-row td { padding:16px 12px !important; }
-  .plan-cta-row td.col-mentor { background:rgba(26,39,68,0.05); }
-  .plans-btn { display:block; padding:11px 16px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; transition:.2s; }
+  .plans-btn { display:block; padding:10px 12px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:.2s; }
   .plans-btn.outline { border:1.5px solid #2C3E6B; color:#2C3E6B; }
   .plans-btn.outline:hover { background:#2C3E6B; color:#FFFFFF; }
   .plans-btn.gold { background:#F5C518; color:#000; }
   .plans-btn.gold:hover { opacity:.88; }
-  .plans-soon { font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.6); text-align:center; margin-top:8px; letter-spacing:1px; }
+  .plans-soon { font-family:var(--font-mono); font-size:16px; text-align:center; margin-top:8px; letter-spacing:0.5px; }
 
   /* ── Mobile plan cards (≤699px) ── */
   .plan-cards { display:none; }
@@ -181,92 +179,79 @@
   <!-- ── Plans ── -->
   <div class="plans-section">
 
-    <!-- Desktop table (features = rows, plans = columns) -->
+    <!-- Desktop table: plans = rows, features = columns -->
     <div class="plans-table-wrap">
       <table class="plans-table">
         <thead>
           <tr>
-            <th class="col-feature"></th>
-            <th class="col-mobile">
-              <span class="th-plan-name">Mobile League</span>
-              <span class="th-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></span>
-              <span class="th-sub">or ₹999/year</span>
-              <span class="th-badge">8 images / month</span>
-            </th>
-            <th class="col-camera">
-              <span class="th-plan-name">Camera League</span>
-              <span class="th-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></span>
-              <span class="th-sub">or ₹1,999/year</span>
-              <span class="th-badge">5 images / month</span>
-            </th>
-            <th class="col-mentor">
-              <span class="th-plan-name">Go Further</span>
-              <span class="th-price-mentor">Pay Per Session</span>
-              <span class="th-sub-mentor">No subscription</span>
-              <span class="th-badge-mentor">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
-            </th>
+            <th class="col-plan"></th>
+            <th class="col-feat">DDI Score</th>
+            <th class="col-feat">Voice Critique</th>
+            <th class="col-feat">Challenge &amp; POTY</th>
+            <th class="col-feat">Leaderboard</th>
+            <th class="col-feat">RAW Verify</th>
+            <th class="col-feat">Points</th>
+            <th class="col-feat">Human Mentor</th>
+            <th class="col-feat">72hr Turnaround</th>
+            <th class="col-feat col-cta-head"></th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="col-feature">Full DDI score on every upload</td>
-            <td class="col-mobile"><span class="check">✓</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor"><span class="check-mentor">✓</span></td>
-          </tr>
-          <tr>
-            <td class="col-feature">Photographer voice critique</td>
-            <td class="col-mobile"><span class="check">✓</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor"><span class="check-mentor">✓</span></td>
-          </tr>
-          <tr>
-            <td class="col-feature">Weekly Challenge &amp; POTY eligibility</td>
-            <td class="col-mobile"><span class="check">✓</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor">—</td>
-          </tr>
-          <tr>
-            <td class="col-feature">Leaderboard ranking &amp; peer rating</td>
-            <td class="col-mobile"><span class="check">✓</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor">—</td>
-          </tr>
-          <tr>
-            <td class="col-feature">RAW verification eligible for prizes</td>
-            <td class="col-mobile"><span class="cross">✗</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor">—</td>
-          </tr>
-          <tr>
-            <td class="col-feature">Points earned on every scored image</td>
-            <td class="col-mobile"><span class="check">✓</span></td>
-            <td class="col-camera"><span class="check">✓</span></td>
-            <td class="col-mentor">—</td>
-          </tr>
-          <tr>
-            <td class="col-feature">Human mentor — structured review</td>
-            <td class="col-mobile"><span class="cross">✗</span></td>
-            <td class="col-camera"><span class="cross">✗</span></td>
-            <td class="col-mentor"><span class="check-mentor">✓</span></td>
-          </tr>
-          <tr>
-            <td class="col-feature">72-hour turnaround guaranteed</td>
-            <td class="col-mobile"><span class="cross">✗</span></td>
-            <td class="col-camera"><span class="cross">✗</span></td>
-            <td class="col-mentor"><span class="check-mentor">✓</span></td>
-          </tr>
-          <tr class="plan-cta-row">
-            <td class="col-feature"></td>
-            <td class="col-mobile">
-              <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
+          <!-- Mobile League row -->
+          <tr class="plan-row plan-row-mobile">
+            <td class="col-plan">
+              <div class="plan-row-name">Mobile League</div>
+              <div class="plan-row-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></div>
+              <div class="plan-row-sub">or ₹999/year</div>
+              <span class="th-badge">8 images / month</span>
             </td>
-            <td class="col-camera">
-              <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="cross">✗</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="cross">✗</span></td>
+            <td class="col-feat"><span class="cross">✗</span></td>
+            <td class="col-feat col-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></td>
+          </tr>
+          <!-- Camera League row -->
+          <tr class="plan-row plan-row-camera">
+            <td class="col-plan">
+              <div class="plan-row-name">Camera League</div>
+              <div class="plan-row-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></div>
+              <div class="plan-row-sub">or ₹1,999/year</div>
+              <span class="th-badge">5 images / month</span>
             </td>
-            <td class="col-mentor">
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="check">✓</span></td>
+            <td class="col-feat"><span class="cross">✗</span></td>
+            <td class="col-feat"><span class="cross">✗</span></td>
+            <td class="col-feat col-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></td>
+          </tr>
+          <!-- Go Further row -->
+          <tr class="plan-row plan-row-mentor">
+            <td class="col-plan col-plan-mentor">
+              <div class="plan-row-name">Go Further</div>
+              <div class="plan-row-price plan-row-price-mentor">Pay Per Session</div>
+              <div class="plan-row-sub plan-row-sub-mentor">No subscription</div>
+              <span class="th-badge-mentor">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
+            </td>
+            <td class="col-feat col-feat-mentor"><span class="check-mentor">✓</span></td>
+            <td class="col-feat col-feat-mentor"><span class="check-mentor">✓</span></td>
+            <td class="col-feat col-feat-mentor">—</td>
+            <td class="col-feat col-feat-mentor">—</td>
+            <td class="col-feat col-feat-mentor">—</td>
+            <td class="col-feat col-feat-mentor">—</td>
+            <td class="col-feat col-feat-mentor"><span class="check-mentor">✓</span></td>
+            <td class="col-feat col-feat-mentor"><span class="check-mentor">✓</span></td>
+            <td class="col-feat col-feat-mentor col-cta">
               <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
-              <div class="plans-soon">Payments opening soon</div>
+              <div class="plans-soon" style="color:rgba(44,62,107,0.6);">Payments opening soon</div>
             </td>
           </tr>
         </tbody>
