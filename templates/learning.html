@@ -8,6 +8,8 @@
     --text-secondary: var(--text-primary) !important;
     --text-muted: var(--text-primary) !important;
   }
+
+  /* ── Wrap ── */
   .learn-wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--page-pad) 80px; }
 
   /* ── Hero ── */
@@ -17,80 +19,103 @@
   .learn-title em { font-style:italic; color:#2C3E6B; }
   .learn-sub { font-size:clamp(17px,2.5vw,20px); color:var(--text-primary); max-width:580px; margin:0 auto; line-height:1.6; }
 
-  /* ── Plans — horizontal table layout ── */
-  .plans-wrap { margin-bottom:64px; }
-  /* Mobile: hide table, show cards */
-  @media (max-width:699px) { .plans-wrap { overflow-x:visible; } }
-  @media (min-width:700px) { .plans-wrap { overflow-x:auto; } }
-  .plans-table { width:100%; border-collapse:collapse; min-width:740px; }
-  /* Mobile plan cards */
+  /* ── Plans table (desktop ≥700px) ──
+     Features run down left column.
+     Mobile / Camera / Mentor run across as columns.
+     Table scrolls horizontally if viewport is too narrow.
+  ── */
+  .plans-section { margin-bottom:64px; }
+  .plans-table-wrap { overflow-x:auto; }
+  .plans-table {
+    width:100%; border-collapse:collapse; min-width:680px;
+    table-layout:fixed;
+  }
+  /* Column widths: feature=30%, three plan cols=23.3% each */
+  .plans-table .col-feature { width:30%; }
+  .plans-table .col-mobile,
+  .plans-table .col-camera,
+  .plans-table .col-mentor  { width:23.3%; }
+
+  /* Header row */
+  .plans-table thead th {
+    padding:16px 12px 14px; text-align:center;
+    font-family:var(--font-mono); font-size:16px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    border-bottom:2px solid var(--border);
+  }
+  .plans-table thead th.col-feature { text-align:left; }
+  .plans-table thead th.col-mobile { color:#2C3E6B; background:rgba(44,62,107,0.06); border-radius:8px 8px 0 0; }
+  .plans-table thead th.col-camera { color:#2C3E6B; }
+  .plans-table thead th.col-mentor { color:#FFFFFF; background:#1A2744; border-radius:8px 8px 0 0; }
+
+  .th-plan-name { display:block; margin-bottom:4px; }
+  .th-price { display:block; font-size:28px; font-weight:700; color:#2C3E6B; line-height:1; margin:6px 0 3px; }
+  .th-price-mentor { display:block; font-size:18px; font-weight:700; color:#F5C518; line-height:1.3; margin:6px 0 3px; }
+  .th-sub { display:block; font-size:16px; font-weight:400; letter-spacing:0; text-transform:none; color:var(--text-primary); }
+  .th-sub-mentor { display:block; font-size:16px; font-weight:400; letter-spacing:0; text-transform:none; color:rgba(255,255,255,0.7); }
+  .th-badge { display:inline-block; background:#F5C518; color:#000; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; margin-top:6px; white-space:nowrap; letter-spacing:0; }
+  .th-badge-mentor { display:inline-block; background:rgba(245,197,24,0.2); color:#F5C518; font-size:16px; font-weight:700; padding:3px 8px; border-radius:4px; margin-top:6px; letter-spacing:0; line-height:1.4; text-align:center; }
+
+  /* Body rows */
+  .plans-table tbody td {
+    padding:11px 12px; font-size:16px; color:var(--text-primary);
+    border-bottom:1px solid var(--border-subtle); vertical-align:middle;
+  }
+  .plans-table tbody td.col-feature { font-weight:600; }
+  .plans-table tbody td.col-mobile  { text-align:center; background:rgba(44,62,107,0.03); }
+  .plans-table tbody td.col-camera  { text-align:center; }
+  .plans-table tbody td.col-mentor  { text-align:center; background:rgba(26,39,68,0.05); }
+  .plans-table tbody tr:last-child td { border-bottom:none; }
+
+  .check        { color:#1A5C2A; font-weight:700; font-size:18px; }
+  .cross        { color:#bbb;    font-weight:700; font-size:18px; }
+  .check-mentor { color:#4acba0; font-weight:700; font-size:18px; }
+
+  /* CTA row */
+  .plan-cta-row td { padding:16px 12px !important; }
+  .plan-cta-row td.col-mentor { background:rgba(26,39,68,0.05); }
+  .plans-btn { display:block; padding:11px 16px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; transition:.2s; }
+  .plans-btn.outline { border:1.5px solid #2C3E6B; color:#2C3E6B; }
+  .plans-btn.outline:hover { background:#2C3E6B; color:#FFFFFF; }
+  .plans-btn.gold { background:#F5C518; color:#000; }
+  .plans-btn.gold:hover { opacity:.88; }
+  .plans-soon { font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.6); text-align:center; margin-top:8px; letter-spacing:1px; }
+
+  /* ── Mobile plan cards (≤699px) ── */
   .plan-cards { display:none; }
   @media (max-width:699px) {
-    .plans-table { display:none; }
-    .plan-cards { display:flex; flex-direction:column; gap:16px; margin-bottom:64px; }
+    .plans-table-wrap { display:none; }
+    .plan-cards { display:flex; flex-direction:column; gap:16px; }
     .plan-card-m { border-radius:var(--radius-lg); border:1px solid rgba(44,62,107,0.2); overflow:hidden; }
     .plan-card-m.mentor { border-color:#1A2744; }
     .plan-card-m-head { padding:20px; text-align:center; background:rgba(44,62,107,0.05); }
     .plan-card-m.mentor .plan-card-m-head { background:#1A2744; }
-    .plan-card-m-name { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2C3E6B; margin-bottom:8px; }
+    .plan-card-m-name { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2C3E6B; margin-bottom:8px; }
     .plan-card-m.mentor .plan-card-m-name { color:#F5C518; }
     .plan-card-m-price { font-size:36px; font-weight:700; color:#2C3E6B; line-height:1; }
-    .plan-card-m.mentor .plan-card-m-price { font-size:22px; color:#F5C518; }
-    .plan-card-m-sub { font-size:16px; color:var(--text-primary); margin-top:4px; }
+    .plan-card-m.mentor .plan-card-m-price { font-size:22px; color:#F5C518; line-height:1.3; }
+    .plan-card-m-sub { font-size:16px; color:var(--text-primary); margin-top:6px; }
     .plan-card-m.mentor .plan-card-m-sub { color:rgba(255,255,255,0.7); }
     .plan-card-m-badge { display:inline-block; background:#F5C518; color:#000; font-size:16px; font-weight:700; padding:4px 10px; border-radius:4px; margin-top:10px; }
     .plan-card-m.mentor .plan-card-m-badge { background:rgba(245,197,24,0.2); color:#F5C518; }
     .plan-card-m-features { padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
     .plan-card-m-feature { display:flex; align-items:center; gap:10px; font-size:16px; color:var(--text-primary); }
-    .plan-card-m-feature .check { color:#1A5C2A; font-weight:700; font-size:18px; flex-shrink:0; }
-    .plan-card-m-feature .cross { color:#aaa; font-weight:700; font-size:18px; flex-shrink:0; }
-    .plan-card-m-feature .check-mentor { color:#4acba0; font-weight:700; font-size:18px; flex-shrink:0; }
+    .plan-card-m-feature .check { flex-shrink:0; }
+    .plan-card-m-feature .cross { flex-shrink:0; }
+    .plan-card-m-feature .check-mentor { flex-shrink:0; }
     .plan-card-m-cta { padding:0 20px 20px; }
+    .plan-card-m.mentor .plans-soon { color:#2C3E6B; }
   }
-  .plans-table th {
-    padding:14px 10px 12px;
-    font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px;
-    text-transform:uppercase; text-align:center; border-bottom:2px solid var(--border);
-  }
-  .plans-table th.col-feature { text-align:left; color:var(--text-primary); width:28%; }
-  .plans-table th.col-mobile  { color:#2C3E6B; background:rgba(44,62,107,0.05); border-radius:8px 8px 0 0; width:24%; }
-  .plans-table th.col-camera  { color:#2C3E6B; width:24%; }
-  .plans-table th.col-mentor  { color:#FFFFFF; background:#1A2744; border-radius:8px 8px 0 0; width:24%; }
-  .plans-table .th-price { font-size:26px; font-weight:700; color:#2C3E6B; line-height:1; display:block; margin:6px 0 3px; }
-  .plans-table .th-price-mentor { font-size:17px; font-weight:700; color:#F5C518; line-height:1.3; display:block; margin:6px 0 3px; }
-  .plans-table .th-sub { font-size:16px; font-weight:400; color:var(--text-primary); letter-spacing:0; text-transform:none; display:block; }
-  .plans-table .th-sub-mentor { font-size:16px; font-weight:400; color:rgba(255,255,255,0.7); letter-spacing:0; text-transform:none; display:block; }
-  .plans-table .th-badge { display:inline-block; background:#F5C518; color:#000000; font-size:16px; font-weight:700; letter-spacing:0.5px; padding:3px 8px; border-radius:4px; margin-top:6px; white-space:nowrap; }
-  .plans-table .th-badge-mentor { display:inline-block; background:rgba(245,197,24,0.2); color:#F5C518; font-size:16px; font-weight:700; letter-spacing:0; padding:3px 7px; border-radius:4px; margin-top:6px; line-height:1.4; }
-  .plans-table td {
-    padding:10px 10px; font-size:16px; color:var(--text-primary);
-    border-bottom:1px solid var(--border-subtle); vertical-align:middle;
-  }
-  .plans-table td.col-feature { font-weight:600; color:var(--text-primary); font-size:16px; }
-  .plans-table td.col-mobile  { text-align:center; background:rgba(44,62,107,0.04); }
-  .plans-table td.col-camera  { text-align:center; }
-  .plans-table td.col-mentor  { text-align:center; background:rgba(26,39,68,0.06); }
-  .plans-table tr:last-child td { border-bottom:none; }
-  .plans-table .check { color:#1A5C2A; font-weight:700; font-size:18px; }
-  .plans-table .cross { color:#aaa; font-weight:700; font-size:18px; }
-  .plans-table .check-mentor { color:#4acba0; font-weight:700; font-size:18px; }
-  .plan-cta-row td { padding:20px !important; }
-  .plan-cta-row td.col-mentor { background:rgba(26,39,68,0.06); }
-  .plans-btn { display:block; padding:12px 20px; text-align:center; border-radius:var(--radius-md); font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; transition:.2s; }
-  .plans-btn.outline { border:1.5px solid #2C3E6B; color:#2C3E6B; }
-  .plans-btn.outline:hover { background:#2C3E6B; color:#FFFFFF; }
-  .plans-btn.gold { background:#F5C518; color:#000000; }
-  .plans-btn.gold:hover { opacity:.88; }
-  .plans-soon { font-family:var(--font-mono); font-size:16px; color:#2C3E6B; text-align:center; margin-top:8px; letter-spacing:1px; }
 
-  /* ── Graph proof ── */
+  /* ── Proof graph ── */
   .proof { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; margin-bottom:64px; }
-  @media (max-width:700px) { .proof { grid-template-columns:1fr; gap:32px; } }
-  .proof-graph { background:#0d1f1a; border-radius:var(--radius-lg); padding:24px; aspect-ratio:4/3; display:flex; flex-direction:column; overflow:hidden; }
-  .proof-graph canvas { flex:1; width:100%; height:0; min-height:0; display:block; }
+  @media (max-width:699px) { .proof { grid-template-columns:1fr; gap:32px; } }
+  .proof-graph { background:#0d1f1a; border-radius:var(--radius-lg); padding:24px; overflow:hidden; }
+  .proof-canvas-wrap { width:100%; position:relative; padding-bottom:75%; /* 4:3 */ }
+  .proof-canvas-wrap canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
   .proof-legend { display:flex; gap:20px; justify-content:center; margin-top:12px; }
   .proof-leg-item { display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:16px; font-weight:700; color:#FFFFFF; }
-  .proof-leg-line { width:24px; height:3px; border-radius:2px; }
+  .proof-leg-line { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
   .proof-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:16px; }
   .proof-title { font-size:clamp(26px,4vw,40px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.2; margin-bottom:16px; }
   .proof-stat { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
@@ -101,67 +126,45 @@
   .how { margin-bottom:64px; }
   .section-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:12px; text-align:center; }
   .section-title { font-size:clamp(26px,4vw,40px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.2; margin-bottom:32px; text-align:center; }
-  /* Desktop: 4 cards in a row */
+  /* Desktop: 4 equal cards */
   .how-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:24px 20px; text-align:center; }
-  .how-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:#2C3E6B; line-height:1; margin-bottom:14px; }
-  .how-card-title { font-size:19px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
+  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:24px 16px; text-align:center; }
+  .how-num { font-family:var(--font-mono); font-size:40px; font-weight:700; color:#2C3E6B; line-height:1; margin-bottom:10px; }
+  .how-card-title { font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
   .how-card-body { font-size:16px; color:var(--text-primary); line-height:1.6; }
-  /* Mobile: single animated block */
+  /* Mobile: animated single block */
   .how-anim { display:none; }
   @media (max-width:699px) {
     .how-grid { display:none; }
     .how-anim { display:block; }
     .how-anim-box {
-      background:#1A2744; border-radius:12px;
-      padding:32px 24px; text-align:center;
-      min-height:220px; display:flex; flex-direction:column;
-      align-items:center; justify-content:center; gap:12px;
+      background:#1A2744; border-radius:12px; padding:36px 24px;
+      text-align:center; display:flex; flex-direction:column;
+      align-items:center; gap:12px;
     }
-    .how-anim-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:rgba(245,197,24,0.7); line-height:1; }
+    .how-anim-num { font-family:var(--font-mono); font-size:40px; font-weight:700; color:rgba(245,197,24,0.75); line-height:1; }
     .how-anim-title { font-size:22px; font-weight:700; color:#FFFFFF; }
     .how-anim-body { font-size:16px; color:rgba(255,255,255,0.8); line-height:1.7; max-width:280px; }
-    .how-anim-dots { display:flex; gap:6px; justify-content:center; margin-top:4px; }
+    .how-anim-dots { display:flex; gap:7px; justify-content:center; margin-top:4px; }
     .how-anim-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background 0.3s; }
     .how-anim-dot.active { background:#F5C518; }
   }
 
-  /* ── Loop — single animated block ── */
+  /* ── Loop animated block ── */
   .loop { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:48px 40px; margin-bottom:64px; text-align:center; }
   @media (max-width:600px) { .loop { padding:32px 20px; } }
   .loop-display {
-    margin:32px auto 28px;
-    max-width:340px;
-    background:#1A2744;
-    border-radius:12px;
-    padding:28px 24px;
-    position:relative;
-    min-height:100px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
+    margin:28px auto 24px; max-width:340px;
+    background:#1A2744; border-radius:12px; padding:28px 24px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    min-height:110px;
   }
-  .loop-step-num {
-    font-family:var(--font-mono); font-size:16px; font-weight:700;
-    color:rgba(245,197,24,0.6); letter-spacing:2px;
-  }
-  .loop-step-label {
-    font-family:var(--font-mono); font-size:clamp(20px,3vw,28px); font-weight:700;
-    color:#FFFFFF; letter-spacing:1px; text-transform:uppercase;
-  }
-  .loop-progress {
-    display:flex; gap:6px; justify-content:center; margin-top:6px;
-  }
-  .loop-dot {
-    width:8px; height:8px; border-radius:50%;
-    background:rgba(255,255,255,0.2); transition:background 0.3s;
-  }
+  .loop-step-num { font-family:var(--font-mono); font-size:16px; font-weight:700; color:rgba(245,197,24,0.6); letter-spacing:2px; }
+  .loop-step-label { font-family:var(--font-mono); font-size:clamp(20px,3vw,28px); font-weight:700; color:#FFFFFF; letter-spacing:1px; text-transform:uppercase; }
+  .loop-progress { display:flex; gap:6px; justify-content:center; margin-top:4px; }
+  .loop-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background 0.3s; }
   .loop-dot.active { background:#F5C518; }
-  .loop-sub-text {
-    font-size:18px; color:var(--text-primary); max-width:500px; margin:0 auto; line-height:1.7;
-  }
+  .loop-sub-text { font-size:18px; color:var(--text-primary); max-width:500px; margin:0 auto; line-height:1.7; }
 </style>
 {% endblock %}
 
@@ -175,160 +178,166 @@
 
 <div class="learn-wrap">
 
-  <!-- Plans — horizontal table (desktop) / cards (mobile) -->
-  <div class="plans-wrap">
-    <table class="plans-table">
-      <thead>
-        <tr>
-          <th class="col-feature"></th>
-          <th class="col-mobile">
-            Mobile Users
-            <span class="th-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></span>
-            <span class="th-sub">or ₹999/year</span>
-            <span class="th-badge">8 images / month</span>
-          </th>
-          <th class="col-camera">
-            Camera Users
-            <span class="th-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></span>
-            <span class="th-sub">or ₹1,999/year</span>
-            <span class="th-badge">5 images / month</span>
-          </th>
-          <th class="col-mentor">
-            Go Further
-            <span class="th-price-mentor">Pay Per Session</span>
-            <span class="th-sub-mentor">No subscription</span>
-            <span class="th-badge-mentor">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="col-feature">Full DDI score on every upload</td>
-          <td class="col-mobile"><span class="check">✓</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor"><span class="check-mentor">✓</span></td>
-        </tr>
-        <tr>
-          <td class="col-feature">Photographer voice critique</td>
-          <td class="col-mobile"><span class="check">✓</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor"><span class="check-mentor">✓</span></td>
-        </tr>
-        <tr>
-          <td class="col-feature">Weekly Challenge &amp; POTY eligibility</td>
-          <td class="col-mobile"><span class="check">✓</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor">—</td>
-        </tr>
-        <tr>
-          <td class="col-feature">Leaderboard ranking &amp; peer rating</td>
-          <td class="col-mobile"><span class="check">✓</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor">—</td>
-        </tr>
-        <tr>
-          <td class="col-feature">RAW verification eligible for prizes</td>
-          <td class="col-mobile"><span class="cross">✗</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor">—</td>
-        </tr>
-        <tr>
-          <td class="col-feature">Points earned on every scored image</td>
-          <td class="col-mobile"><span class="check">✓</span></td>
-          <td class="col-camera"><span class="check">✓</span></td>
-          <td class="col-mentor">—</td>
-        </tr>
-        <tr>
-          <td class="col-feature">Human mentor — structured review</td>
-          <td class="col-mobile"><span class="cross">✗</span></td>
-          <td class="col-camera"><span class="cross">✗</span></td>
-          <td class="col-mentor"><span class="check-mentor">✓</span></td>
-        </tr>
-        <tr>
-          <td class="col-feature">72-hour turnaround guaranteed</td>
-          <td class="col-mobile"><span class="cross">✗</span></td>
-          <td class="col-camera"><span class="cross">✗</span></td>
-          <td class="col-mentor"><span class="check-mentor">✓</span></td>
-        </tr>
-        <tr class="plan-cta-row">
-          <td class="col-feature"></td>
-          <td class="col-mobile">
-            <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
-          </td>
-          <td class="col-camera">
-            <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
-          </td>
-          <td class="col-mentor">
-            <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
-            <div class="plans-soon">Payments opening soon</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div><!-- /plans-wrap -->
+  <!-- ── Plans ── -->
+  <div class="plans-section">
 
-  <!-- Mobile plan cards (shown below 700px, table hidden) -->
-  <div class="plan-cards">
-
-    <div class="plan-card-m">
-      <div class="plan-card-m-head">
-        <div class="plan-card-m-name">Mobile League</div>
-        <div class="plan-card-m-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></div>
-        <div class="plan-card-m-sub">or ₹999/year</div>
-        <span class="plan-card-m-badge">8 images / month</span>
-      </div>
-      <div class="plan-card-m-features">
-        <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
-        <div class="plan-card-m-feature"><span class="cross">✗</span> RAW verification not applicable</div>
-      </div>
-      <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
+    <!-- Desktop table (features = rows, plans = columns) -->
+    <div class="plans-table-wrap">
+      <table class="plans-table">
+        <thead>
+          <tr>
+            <th class="col-feature"></th>
+            <th class="col-mobile">
+              <span class="th-plan-name">Mobile League</span>
+              <span class="th-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></span>
+              <span class="th-sub">or ₹999/year</span>
+              <span class="th-badge">8 images / month</span>
+            </th>
+            <th class="col-camera">
+              <span class="th-plan-name">Camera League</span>
+              <span class="th-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></span>
+              <span class="th-sub">or ₹1,999/year</span>
+              <span class="th-badge">5 images / month</span>
+            </th>
+            <th class="col-mentor">
+              <span class="th-plan-name">Go Further</span>
+              <span class="th-price-mentor">Pay Per Session</span>
+              <span class="th-sub-mentor">No subscription</span>
+              <span class="th-badge-mentor">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-feature">Full DDI score on every upload</td>
+            <td class="col-mobile"><span class="check">✓</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor"><span class="check-mentor">✓</span></td>
+          </tr>
+          <tr>
+            <td class="col-feature">Photographer voice critique</td>
+            <td class="col-mobile"><span class="check">✓</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor"><span class="check-mentor">✓</span></td>
+          </tr>
+          <tr>
+            <td class="col-feature">Weekly Challenge &amp; POTY eligibility</td>
+            <td class="col-mobile"><span class="check">✓</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor">—</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Leaderboard ranking &amp; peer rating</td>
+            <td class="col-mobile"><span class="check">✓</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor">—</td>
+          </tr>
+          <tr>
+            <td class="col-feature">RAW verification eligible for prizes</td>
+            <td class="col-mobile"><span class="cross">✗</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor">—</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Points earned on every scored image</td>
+            <td class="col-mobile"><span class="check">✓</span></td>
+            <td class="col-camera"><span class="check">✓</span></td>
+            <td class="col-mentor">—</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Human mentor — structured review</td>
+            <td class="col-mobile"><span class="cross">✗</span></td>
+            <td class="col-camera"><span class="cross">✗</span></td>
+            <td class="col-mentor"><span class="check-mentor">✓</span></td>
+          </tr>
+          <tr>
+            <td class="col-feature">72-hour turnaround guaranteed</td>
+            <td class="col-mobile"><span class="cross">✗</span></td>
+            <td class="col-camera"><span class="cross">✗</span></td>
+            <td class="col-mentor"><span class="check-mentor">✓</span></td>
+          </tr>
+          <tr class="plan-cta-row">
+            <td class="col-feature"></td>
+            <td class="col-mobile">
+              <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
+            </td>
+            <td class="col-camera">
+              <a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a>
+            </td>
+            <td class="col-mentor">
+              <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
+              <div class="plans-soon">Payments opening soon</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div class="plan-card-m">
-      <div class="plan-card-m-head">
-        <div class="plan-card-m-name">Camera League</div>
-        <div class="plan-card-m-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></div>
-        <div class="plan-card-m-sub">or ₹1,999/year</div>
-        <span class="plan-card-m-badge">5 images / month</span>
+    <!-- Mobile cards (≤699px) -->
+    <div class="plan-cards">
+      <div class="plan-card-m">
+        <div class="plan-card-m-head">
+          <div class="plan-card-m-name">Mobile League</div>
+          <div class="plan-card-m-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></div>
+          <div class="plan-card-m-sub">or ₹999/year</div>
+          <span class="plan-card-m-badge">8 images / month</span>
+        </div>
+        <div class="plan-card-m-features">
+          <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
+          <div class="plan-card-m-feature"><span class="cross">✗</span> RAW verification not applicable</div>
+        </div>
+        <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
       </div>
-      <div class="plan-card-m-features">
-        <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> RAW verification eligible for prizes</div>
-        <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
+
+      <div class="plan-card-m">
+        <div class="plan-card-m-head">
+          <div class="plan-card-m-name">Camera League</div>
+          <div class="plan-card-m-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></div>
+          <div class="plan-card-m-sub">or ₹1,999/year</div>
+          <span class="plan-card-m-badge">5 images / month</span>
+        </div>
+        <div class="plan-card-m-features">
+          <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> RAW verification eligible for prizes</div>
+          <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
+        </div>
+        <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
       </div>
-      <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
+
+      <div class="plan-card-m mentor">
+        <div class="plan-card-m-head">
+          <div class="plan-card-m-name">Go Further</div>
+          <div class="plan-card-m-price">Pay Per Session</div>
+          <div class="plan-card-m-sub">No subscription · Legend ₹100 · Expert ₹75 · Senior ₹50</div>
+        </div>
+        <div class="plan-card-m-features">
+          <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Full DDI score on every upload</div>
+          <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Photographer voice critique</div>
+          <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Human mentor — structured review</div>
+          <div class="plan-card-m-feature"><span class="check-mentor">✓</span> 72-hour turnaround guaranteed</div>
+        </div>
+        <div class="plan-card-m-cta">
+          <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
+          <div class="plans-soon" style="color:#2C3E6B;margin-top:8px;">Payments opening soon</div>
+        </div>
+      </div>
     </div>
 
-    <div class="plan-card-m mentor">
-      <div class="plan-card-m-head">
-        <div class="plan-card-m-name">Go Further</div>
-        <div class="plan-card-m-price">Pay Per Session</div>
-        <div class="plan-card-m-sub">No subscription</div>
-        <span class="plan-card-m-badge">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
-      </div>
-      <div class="plan-card-m-features">
-        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Full DDI score on every upload</div>
-        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Photographer voice critique</div>
-        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Human mentor — structured review</div>
-        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> 72-hour turnaround guaranteed</div>
-      </div>
-      <div class="plan-card-m-cta">
-        <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
-        <div class="plans-soon" style="margin-top:8px;">Payments opening soon</div>
-      </div>
-    </div>
+  </div><!-- /plans-section -->
 
-  </div><!-- /plan-cards -->
+  <!-- ── Proof graph ── -->
   <div class="proof">
     <div class="proof-graph">
-      <canvas id="learnChart"></canvas>
+      <div class="proof-canvas-wrap">
+        <canvas id="learnChart"></canvas>
+      </div>
       <div class="proof-legend">
         <div class="proof-leg-item"><div class="proof-leg-line" style="background:#FFFFFF;"></div>WITHOUT MENTOR</div>
         <div class="proof-leg-item"><div class="proof-leg-line" style="background:#4acba0;"></div>WITH MENTOR</div>
@@ -342,7 +351,7 @@
     </div>
   </div>
 
-  <!-- How it works -->
+  <!-- ── How it works ── -->
   <div class="how">
     <div class="section-eyebrow">How It Works</div>
     <div class="section-title">Simple. Personal. Weekly.</div>
@@ -355,7 +364,7 @@
       <div class="how-card"><div class="how-num">04</div><div class="how-card-title">Shoot Again</div><div class="how-card-body">Apply the fix. Upload again. See if the score moved. The loop repeats. The improvement compounds.</div></div>
     </div>
 
-    <!-- Mobile: single animated block -->
+    <!-- Mobile: animated block -->
     <div class="how-anim">
       <div class="how-anim-box">
         <div class="how-anim-num" id="howNum">01</div>
@@ -366,122 +375,165 @@
     </div>
   </div>
 
-  <!-- Loop — animated single block -->
+  <!-- ── Loop ── -->
   <div class="loop">
     <div class="section-eyebrow">The Loop</div>
     <div class="section-title">This is how you get better.</div>
-    <div class="loop-display" id="loopDisplay">
+    <div class="loop-display">
       <div class="loop-step-num" id="loopNum">01 / 06</div>
       <div class="loop-step-label" id="loopLabel">Upload</div>
       <div class="loop-progress" id="loopDots"></div>
     </div>
     <p class="loop-sub-text">
       Ready to participate? Upgrade to Camera or Mobile League when you are.
-      <a href="{{ url_for('pricing') }}" style="color:#2C3E6B; font-weight:700;"> See all plans →</a>
+      <a href="{{ url_for('pricing') }}" style="color:#2C3E6B;font-weight:700;"> See all plans →</a>
     </p>
   </div>
 
-</div>
+</div><!-- /learn-wrap -->
 
 <script>
-(function(){
-  /* ── Proof chart ── */
-  var c=document.getElementById('learnChart'); if(!c)return;
-  var ctx=c.getContext('2d');
-  function resize(){c.width=c.offsetWidth;c.height=c.offsetHeight;} resize();
-  window.addEventListener('resize',resize);
-  var wo=[5.2,5.4,5.3,5.6,5.5,5.7,5.6,5.8,5.7,5.9];
-  var wi=[5.2,5.8,6.3,6.9,7.4,7.8,8.1,8.5,8.8,9.1];
-  var pad={l:44,r:16,t:16,b:36},phase=0,prog=0,pause=0;
-  function grid(){
-    var W=c.width,H=c.height,gw=W-pad.l-pad.r,gh=H-pad.t-pad.b;
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
-    for(var i=0;i<=5;i++){var y=pad.t+(gh/5)*i;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle='#FFFFFF';ctx.font='bold 13px Courier New';ctx.textAlign='right';ctx.fillText(10-i*2,pad.l-6,y+4);}
-    for(var j=0;j<wo.length;j++){var x=pad.l+(gw/(wo.length-1))*j;ctx.fillStyle='#FFFFFF';ctx.font='bold 12px Courier New';ctx.textAlign='center';ctx.fillText('W'+(j+1),x,H-pad.b+16);}
-  }
-  function line(data,color,p){
-    var W=c.width,H=c.height,gw=W-pad.l-pad.r,gh=H-pad.t-pad.b;
-    var pts=Math.floor(p*(data.length-1)),frac=(p*(data.length-1))-pts;
-    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=3;ctx.shadowColor=color;ctx.shadowBlur=8;
-    for(var i=0;i<=pts&&i<data.length;i++){var x=pad.l+(gw/(data.length-1))*i,y=pad.t+gh-((data[i]-4)/6)*gh;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
-    if(pts<data.length-1&&frac>0){var x0=pad.l+(gw/(data.length-1))*pts,x1=pad.l+(gw/(data.length-1))*(pts+1),y0=pad.t+gh-((data[pts]-4)/6)*gh,y1=pad.t+gh-((data[pts+1]-4)/6)*gh;ctx.lineTo(x0+(x1-x0)*frac,y0+(y1-y0)*frac);}
-    ctx.stroke();ctx.shadowBlur=0;
-  }
-  function anim(){
-    grid();
-    if(phase===0){prog+=0.008;line(wo,'#FFFFFF',Math.min(prog,1));if(prog>=1){phase=1;pause=0;prog=0;}}
-    else if(phase===1){line(wo,'#FFFFFF',1);pause++;if(pause>60)phase=2;}
-    else if(phase===2){line(wo,'#FFFFFF',1);prog+=0.010;line(wi,'#4acba0',Math.min(prog,1));if(prog>=1){phase=3;pause=0;prog=0;}}
-    else if(phase===3){line(wo,'#FFFFFF',1);line(wi,'#4acba0',1);pause++;if(pause>120){phase=0;prog=0;}}
-    requestAnimationFrame(anim);
-  }
-  anim();
+/* ── ALL animations initialised after DOM paint ── */
+window.addEventListener('DOMContentLoaded', function() {
 
-  /* ── Loop animator ── */
-  var steps=['Upload','Get Scored','See What to Fix','Shoot Again','Score Moves','Repeat'];
-  var numEl=document.getElementById('loopNum');
-  var lblEl=document.getElementById('loopLabel');
-  var dotsEl=document.getElementById('loopDots');
-  if(!numEl||!lblEl||!dotsEl)return;
+  /* ── 1. Proof chart ── */
+  (function() {
+    var canvas = document.getElementById('learnChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var wo = [5.2,5.4,5.3,5.6,5.5,5.7,5.6,5.8,5.7,5.9];
+    var wi = [5.2,5.8,6.3,6.9,7.4,7.8,8.1,8.5,8.8,9.1];
+    var pad = {l:44,r:16,t:16,b:36};
+    var phase = 0, prog = 0, pause = 0;
 
-  /* Build dots */
-  steps.forEach(function(_,i){
-    var d=document.createElement('div');
-    d.className='loop-dot'+(i===0?' active':'');
-    dotsEl.appendChild(d);
-  });
-
-  var cur=0;
-  function showStep(i){
-    numEl.textContent='0'+(i+1)+' / 0'+steps.length;
-    /* Fade out/in */
-    lblEl.style.opacity='0';
-    lblEl.style.transform='translateY(6px)';
-    setTimeout(function(){
-      lblEl.textContent=steps[i];
-      lblEl.style.transition='opacity 0.3s, transform 0.3s';
-      lblEl.style.opacity='1';
-      lblEl.style.transform='translateY(0)';
-    },200);
-    /* Update dots */
-    dotsEl.querySelectorAll('.loop-dot').forEach(function(d,j){
-      d.classList.toggle('active',j===i);
-    });
-    cur=i;
-  }
-
-  /* ── How it works animator (mobile only) ── */
-  var howSteps=[
-    {num:'01',title:'Upload',body:'Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.'},
-    {num:'02',title:'Get Analysed',body:'AI identifies your weakest dimension. Not in general — for your specific image, your specific genre.'},
-    {num:'03',title:'One Fix',body:'You get one specific thing to work on. Not a list. Not a course. One thing.'},
-    {num:'04',title:'Shoot Again',body:'Apply the fix. Upload again. See if the score moved. The loop repeats. The improvement compounds.'},
-  ];
-  var howNum=document.getElementById('howNum');
-  var howTitle=document.getElementById('howTitle');
-  var howBody=document.getElementById('howBody');
-  var howDots=document.getElementById('howDots');
-  if(howNum&&howDots){
-    howSteps.forEach(function(_,i){
-      var d=document.createElement('div');
-      d.className='how-anim-dot'+(i===0?' active':'');
-      howDots.appendChild(d);
-    });
-    var howCur=0;
-    function showHow(i){
-      howNum.style.opacity='0'; howTitle.style.opacity='0'; howBody.style.opacity='0';
-      setTimeout(function(){
-        howNum.textContent=howSteps[i].num;
-        howTitle.textContent=howSteps[i].title;
-        howBody.textContent=howSteps[i].body;
-        [howNum,howTitle,howBody].forEach(function(el){el.style.transition='opacity 0.35s';el.style.opacity='1';});
-        howDots.querySelectorAll('.how-anim-dot').forEach(function(d,j){d.classList.toggle('active',j===i);});
-        howCur=i;
-      },200);
+    function resize() {
+      var wrap = canvas.parentElement;
+      var w = wrap.clientWidth;
+      var h = Math.round(w * 0.75);
+      if (w > 0 && (canvas.width !== w || canvas.height !== h)) {
+        canvas.width = w; canvas.height = h;
+      }
     }
-    setInterval(function(){ showHow((howCur+1)%howSteps.length); },2200);
-  }
+
+    function grid() {
+      var W = canvas.width, H = canvas.height;
+      var gw = W - pad.l - pad.r, gh = H - pad.t - pad.b;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+      for (var i = 0; i <= 5; i++) {
+        var y = pad.t + (gh/5)*i;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+        ctx.fillStyle = '#FFF'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'right';
+        ctx.fillText(10 - i*2, pad.l-6, y+4);
+      }
+      for (var j = 0; j < wo.length; j++) {
+        var x = pad.l + (gw/(wo.length-1))*j;
+        ctx.fillStyle = '#FFF'; ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'center';
+        ctx.fillText('W'+(j+1), x, H-pad.b+16);
+      }
+    }
+
+    function drawLine(data, color, p) {
+      var W = canvas.width, H = canvas.height;
+      var gw = W - pad.l - pad.r, gh = H - pad.t - pad.b;
+      var pts = Math.floor(p * (data.length-1));
+      var frac = (p * (data.length-1)) - pts;
+      ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 3;
+      ctx.shadowColor = color; ctx.shadowBlur = 8;
+      for (var i = 0; i <= pts && i < data.length; i++) {
+        var x = pad.l + (gw/(data.length-1))*i;
+        var y = pad.t + gh - ((data[i]-4)/6)*gh;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      if (pts < data.length-1 && frac > 0) {
+        var x0 = pad.l+(gw/(data.length-1))*pts;
+        var x1 = pad.l+(gw/(data.length-1))*(pts+1);
+        var y0 = pad.t+gh-((data[pts]-4)/6)*gh;
+        var y1 = pad.t+gh-((data[pts+1]-4)/6)*gh;
+        ctx.lineTo(x0+(x1-x0)*frac, y0+(y1-y0)*frac);
+      }
+      ctx.stroke(); ctx.shadowBlur = 0;
+    }
+
+    function tick() {
+      resize();
+      if (canvas.width === 0) { requestAnimationFrame(tick); return; }
+      grid();
+      if (phase===0) { prog+=0.008; drawLine(wo,'#FFF',Math.min(prog,1)); if(prog>=1){phase=1;pause=0;prog=0;} }
+      else if (phase===1) { drawLine(wo,'#FFF',1); pause++; if(pause>60) phase=2; }
+      else if (phase===2) { drawLine(wo,'#FFF',1); prog+=0.010; drawLine(wi,'#4acba0',Math.min(prog,1)); if(prog>=1){phase=3;pause=0;prog=0;} }
+      else if (phase===3) { drawLine(wo,'#FFF',1); drawLine(wi,'#4acba0',1); pause++; if(pause>120){phase=0;prog=0;} }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    window.addEventListener('resize', resize);
+  })();
+
+  /* ── 2. Loop animator ── */
+  (function() {
+    var steps = ['Upload','Get Scored','See What to Fix','Shoot Again','Score Moves','Repeat'];
+    var numEl = document.getElementById('loopNum');
+    var lblEl = document.getElementById('loopLabel');
+    var dotsEl = document.getElementById('loopDots');
+    if (!numEl || !lblEl || !dotsEl) return;
+
+    steps.forEach(function(_, i) {
+      var d = document.createElement('div');
+      d.className = 'loop-dot' + (i===0 ? ' active' : '');
+      dotsEl.appendChild(d);
+    });
+
+    var cur = 0;
+    function showStep(i) {
+      lblEl.style.opacity = '0'; lblEl.style.transform = 'translateY(6px)';
+      setTimeout(function() {
+        numEl.textContent = '0'+(i+1)+' / 0'+steps.length;
+        lblEl.textContent = steps[i];
+        lblEl.style.transition = 'opacity 0.3s, transform 0.3s';
+        lblEl.style.opacity = '1'; lblEl.style.transform = 'translateY(0)';
+        dotsEl.querySelectorAll('.loop-dot').forEach(function(d,j){ d.classList.toggle('active',j===i); });
+        cur = i;
+      }, 200);
+    }
+    setInterval(function(){ showStep((cur+1) % steps.length); }, 1800);
+  })();
+
+  /* ── 3. How it works animator (mobile only) ── */
+  (function() {
+    var steps = [
+      {num:'01', title:'Upload', body:'Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.'},
+      {num:'02', title:'Get Analysed', body:'AI identifies your weakest dimension — for your specific image, your specific genre.'},
+      {num:'03', title:'One Fix', body:'You get one specific thing to work on. Not a list. Not a course. One thing.'},
+      {num:'04', title:'Shoot Again', body:'Apply the fix. Upload again. See if the score moved. The loop repeats. The improvement compounds.'},
+    ];
+    var numEl = document.getElementById('howNum');
+    var titleEl = document.getElementById('howTitle');
+    var bodyEl = document.getElementById('howBody');
+    var dotsEl = document.getElementById('howDots');
+    if (!numEl || !titleEl || !bodyEl || !dotsEl) return;
+
+    steps.forEach(function(_, i) {
+      var d = document.createElement('div');
+      d.className = 'how-anim-dot' + (i===0 ? ' active' : '');
+      dotsEl.appendChild(d);
+    });
+
+    var cur = 0;
+    function showStep(i) {
+      [numEl, titleEl, bodyEl].forEach(function(el){ el.style.opacity='0'; });
+      setTimeout(function() {
+        numEl.textContent = steps[i].num;
+        titleEl.textContent = steps[i].title;
+        bodyEl.textContent = steps[i].body;
+        [numEl, titleEl, bodyEl].forEach(function(el){ el.style.transition='opacity 0.35s'; el.style.opacity='1'; });
+        dotsEl.querySelectorAll('.how-anim-dot').forEach(function(d,j){ d.classList.toggle('active',j===i); });
+        cur = i;
+      }, 220);
+    }
+    setInterval(function(){ showStep((cur+1) % steps.length); }, 2200);
+  })();
+
+});
 </script>
 
 {% endblock %}
