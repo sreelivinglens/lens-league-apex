@@ -96,7 +96,7 @@
   </div>
 
   <!-- 1 -->
-    <details class="sl-accordion" id="nature-of-services">
+    <details class="sl-accordion" open id="nature-of-services">
       <summary class="sl-accordion-trigger">00 — Nature of Services <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
       <p>Shutter League is a software-as-a-service (SaaS) platform providing AI-powered photography skill assessment tools as a digital subscription service. Subscribers pay a recurring fee for access to platform features including automated image scoring, dimensional analysis, personalised improvement recommendations, and community rankings.</p>
@@ -331,14 +331,4 @@
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-  if(window.innerWidth > 520){
-    document.querySelectorAll(".sl-accordion").forEach(function(el){ el.setAttribute("open",""); });
-  }
-})();
-</script>
 {% endblock %}

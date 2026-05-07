@@ -122,7 +122,7 @@
     </div>
   </div>
 
-  <details class="sl-accordion">
+  <details class="sl-accordion" open>
       <summary class="sl-accordion-trigger">How to Request a Refund <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
       <p>To request a refund, contact us at <a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a> with the following information:</p>
@@ -183,14 +183,4 @@
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-  if(window.innerWidth > 520){
-    document.querySelectorAll(".sl-accordion").forEach(function(el){ el.setAttribute("open",""); });
-  }
-})();
-</script>
 {% endblock %}

@@ -52,7 +52,7 @@
   </div>
 
   
-    <details class="sl-accordion">
+    <details class="sl-accordion" open>
       <summary class="sl-accordion-trigger">01 — Who We Are <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
       <p>{{ platform_name }} is a photography scoring and skill assessment platform operated from India. Contact: <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span></p>
@@ -200,14 +200,4 @@
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-  if(window.innerWidth > 520){
-    document.querySelectorAll(".sl-accordion").forEach(function(el){ el.setAttribute("open",""); });
-  }
-})();
-</script>
 {% endblock %}
