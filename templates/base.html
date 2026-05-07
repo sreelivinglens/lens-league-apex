@@ -724,6 +724,7 @@ img {
         <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
+        <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Awards</a>
         <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
         <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
         <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
@@ -772,6 +773,7 @@ img {
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
       <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
+      <a href="{{ url_for('poty') }}" onclick="toggleNav()">Awards</a>
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
@@ -814,6 +816,7 @@ img {
   </div>
   <div class="footer-links">
     <a href="/about">About Us</a>
+    <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
     <a href="/terms">Terms &amp; Conditions</a>
     <a href="/privacy">Privacy Policy</a>
     <a href="/refund-policy">Refund Policy</a>

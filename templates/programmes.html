@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Photography Programmes — Shutter League{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  .contests-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
+
+  .page-eyebrow {
+    font-family: var(--font-mono); font-size:1rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-primary);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
+
+  .page-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
+    color: var(--text-primary); margin-bottom: 0.75rem;
+  }
+  .page-headline em { font-style: italic; color: #8B6914; }
+
+  .page-intro {
+    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8;
+    margin-bottom: 3rem; max-width: 580px;
+  }
+
+  .comp-block {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--comp-color, var(--gold-dark));
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .comp-block.monthly { --comp-color: #C8A84B; }
+  .comp-block.poty    { --comp-color: #E8D4A0; }
+  .comp-block.open    { --comp-color: #6BAED6; }
+  .comp-block.bow     { --comp-color: #A89BCE; }
+
+  .comp-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .comp-freq {
+    font-family: var(--font-mono); font-size:1rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 5px;
+  }
+  .comp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;
+  }
+  .comp-dates {
+    font-family: var(--font-mono); font-size:1rem; font-weight: 700;
+    color: var(--text-primary); text-align: right; flex-shrink: 0;
+    line-height: 1.5; white-space: nowrap;
+  }
+  .comp-dates small {
+    display: block; font-family: var(--font-mono); font-size:1rem;
+    font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-muted); margin-top: 4px; text-align: right;
+  }
+  .comp-desc { font-size: 1.05rem; color: var(--text-secondary); line-height: 1.85; margin-bottom: 16px; }
+  .comp-honours {
+    background: var(--surface-3); border-radius: var(--radius-sm);
+    padding: 14px 18px; margin-bottom: 20px;
+    display: flex; flex-wrap: wrap; gap: 8px 24px;
+  }
+  .comp-honour-item {
+    font-family: var(--font-mono); font-size:1rem; color: var(--text-secondary);
+    padding-left: 12px; border-left: 3px solid var(--gold-dark);
+  }
+  .comp-honour-item strong { color: var(--text-primary); font-weight: 700; }
+  .comp-note {
+    font-size:1rem; color: var(--text-primary); line-height: 1.7;
+    padding: 12px 16px; background: var(--surface-3);
+    border-left: 3px solid var(--gold-dark); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 20px; font-style: italic;
+  }
+  .comp-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .comp-actions .btn { padding: 11px 28px; font-size: 1rem; }
+  .comp-actions .comp-action-note {
+    font-size:1rem; color: var(--text-muted); line-height: 1.5;
+  }
+  .divider { height: 1px; background: var(--border); margin: 2.5rem 0; }
+
+  /* Eligibility callout */
+  .eligibility-box {
+    background: var(--surface-3); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 28px;
+  }
+  .eligibility-box h3 {
+    font-family: var(--font-mono); font-size:1rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .eligibility-box ul {
+    margin: 0; padding: 0 0 0 20px; list-style: disc;
+  }
+  .eligibility-box ul li {
+    font-size: 1rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .comp-block { padding: 20px 18px; }
+    .comp-title { font-size: 1.25rem; }
+    .comp-dates { text-align: left; }
+    .comp-header { gap: 10px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contests-wrap">
+
+  <div class="page-eyebrow">Photography Programmes</div>
+  <h1 class="page-headline">Three ways to go further.<br><em>One scientific standard.</em></h1>
+  <p class="page-intro">
+    Your uploaded images build your Annual Excellence Award standing continuously through the calendar year. The Open Submission is an annual deliberate entry. The Body of Work is the platform&#8217;s most prestigious annual submission.
+  </p>
+
+  <!-- ── ELIGIBILITY ── -->
+  <div class="eligibility-box">
+    <h3>Who Can Participate</h3>
+    <ul>
+      <li>All registered Shutter League members — Camera Users and Mobile Users.</li>
+      <li>Prize eligibility restricted to Indian residents with a valid PAN card and an operational Indian bank account. Participation is open to all; prize payments are governed by Indian law (TDS applicable under Section 194B).</li>
+      <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Scores, standings, and qualifying history reset on 1 January each year.</li>
+      <li>Images must be the photographer's original work. AI-generated images, composites, and stolen images are disqualified. RAW file verification applies to all programme recipients.</li>
+      <li>Full submission rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
+    </ul>
+  </div>
+
+  <!-- ── POTY ── -->
+  <div class="comp-block poty" id="poty">
+    <div class="comp-header">
+      <div>
+        <div class="comp-freq">Annual · Jan 1 – Dec 31</div>
+        <div class="comp-title">Annual Excellence Award — Photographer of the Year</div>
+      </div>
+      <div class="comp-dates">Year-round<small>Assessed Continuously</small></div>
+    </div>
+    <div class="comp-desc">
+      Your monthly scores are your Annual Excellence Award currency. At the end of the platform year, your best 6 images per genre determine your standing — quality over volume. Camera Users and Mobile Users are assessed in separate leagues, with their own Gold, Silver, and Bronze recognition across all 8 genres.
+      <br><br>
+      The Grand Recipient — one Camera User, one Mobile User — is selected by jury from the 8 category Gold recipients in each league. These are the platform's highest annual honours.
+    </div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>Minimum 6 scored images</strong> per genre to appear on standings</div>
+      <div class="comp-honour-item"><strong>Minimum 24 scored images</strong> in your qualifying genre — one genre qualifies, you do not need images in every genre</div>
+      <div class="comp-honour-item"><strong>6 months active subscription</strong> required within the calendar year to qualify for awards</div>
+      <div class="comp-honour-item"><strong>Gold, Silver, Bronze</strong> recognition across 8 genres per league</div>
+      <div class="comp-honour-item"><strong>Grand Recipient</strong> Camera Users and Mobile Users — platform's highest annual honour</div>
+      <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
+    </div>
+    <div class="comp-actions">
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_subscribed %}
+          <a href="{{ url_for('dashboard') }}" class="btn btn-solid">View My Dashboard →</a>
+          <span class="comp-action-note">Your scores build automatically each month</span>
+        {% else %}
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Qualify →</a>
+          <span class="comp-action-note">You need 6 months of active subscription within the calendar year to qualify for the Annual Excellence Award.</span>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Start Building Your Score →</a>
+        <span class="comp-action-note">Subscription required · 6 months within the calendar year to qualify for awards</span>
+      {% endif %}
+      <a href="{{ url_for('poty') }}" class="btn" style="padding:11px 28px; font-size:1rem;">Annual Excellence Award →</a>
+    </div>
+  </div>
+
+  <!-- ── OPEN ── -->
+  <div class="comp-block open" id="open">
+    <div class="comp-header">
+      <div>
+        <div class="comp-freq">Annual · Submissions Open Sep · Close Nov</div>
+        <div class="comp-title">Open Submission Programme</div>
+      </div>
+      <div class="comp-dates">Sep – Nov<small>Submission Window</small></div>
+    </div>
+    <div class="comp-desc">
+      The Open Submission is a single-entry annual programme with no league split — Camera Users and Mobile Users are evaluated in the same pool. You select one image per genre, pay &#8377;50 per submission, and participate for genre recognition. The Grand Open Recipient is selected by jury from all 8 genre recipients.
+      <br><br>
+      Unlike the Monthly Programme and Annual Excellence Award, the Open has no automatic entry — you choose your best image deliberately and submit it during the September to November window each calendar year.
+    </div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>Genre Recipient × 8 genres</strong> Badge and Certificate</div>
+      <div class="comp-honour-item"><strong>Grand Open Recipient</strong> Platform recognition</div>
+      <div class="comp-honour-item"><strong>&#8377;50 per submission</strong> per genre</div>
+      <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
+    </div>
+    <div class="comp-note">
+      Submissions open in September and close in November each calendar year. Results announced 1 February the following year. You will be notified when the submission window opens.
+    </div>
+    <div class="comp-actions">
+      {% if open_contest_active %}
+        {% if current_user.is_authenticated and current_user.is_subscribed %}
+          <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid">Submit to Open Programme →</a>
+        {% elif current_user.is_authenticated %}
+          <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Participate →</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-solid">Join to Participate →</a>
+        {% endif %}
+      {% else %}
+        <span style="font-family:var(--font-mono); font-size:1rem; color:var(--text-muted); letter-spacing:1px;">OPENS SEPTEMBER · SUBMISSIONS CLOSE NOVEMBER</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── BOW ── -->
+  <div class="comp-block bow" id="bow">
+    <div class="comp-header">
+      <div>
+        <div class="comp-freq">Annual · Submission Window December</div>
+        <div class="comp-title">Body of Work</div>
+      </div>
+      <div class="comp-dates">December<small>Submission Window</small></div>
+    </div>
+    <div class="comp-desc">
+      The Body of Work is the platform's most prestigious programme — and the hardest to enter. You submit 6 to 12 images as a single unified thematic series in one genre or subject of your choice. Not a collection. A series with a narrative arc, a visual language, a point of view.
+      <br><br>
+      Your chosen genre or subject does not need to match the platform's standard categories — submissions in Environment, Conservation, Humanity, Water, Street, or any cohesive photographic subject are welcome. Evaluated exclusively by Jury Legends. No peer rating.
+    </div>
+    <div class="comp-honours">
+      <div class="comp-honour-item"><strong>Gold Honour</strong> Jury's highest recognition</div>
+      <div class="comp-honour-item"><strong>Silver Honour</strong></div>
+      <div class="comp-honour-item"><strong>Bronze Honour</strong></div>
+      <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
+    </div>
+    <div class="comp-actions">
+      <a href="/bow" class="btn btn-solid">Know More →</a>
+      <span class="comp-action-note">Qualifying criteria and submission details</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── FOOTER NOTE ── -->
+  <div style="text-align:center; padding: 0 0 1rem;">
+    <p style="font-size:1rem; color:var(--text-muted); margin-bottom:1.25rem; line-height:1.7;">
+      All programmes are governed by the Apex DDI Engine and the three-tier assessment framework.<br>
+      Full rules, recognition structure, IP rights, rejection grounds, and legal terms in the Programme Rules.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{{ url_for('contest_rules') }}" class="btn" style="padding:10px 24px; font-size:1rem;">Programme Rules</a>
+      <a href="{{ url_for('science') }}" class="btn" style="padding:10px 24px; font-size:1rem;">The Science</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
