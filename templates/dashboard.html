@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "glossary_links.html" import glink, glink_dark %}
 {% block title %}Dashboard — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
@@ -100,14 +101,14 @@
   .img-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-color: var(--gold-dark); }
 
   .img-card-body { padding: 14px 16px; }
-  .img-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .img-card-meta { font-family: var(--font-mono); font-size: 15px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
+  .img-card-title { font-size:16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .img-card-meta { font-family: var(--font-mono); font-size:16px; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
   .img-card-score { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-primary); margin-top: 6px; }
 
   /* Banners */
   .zone-banner {
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px;
-    font-size: 15px; line-height: 1.6;
+    font-size:16px; line-height: 1.6;
   }
   .zone-banner.amber { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-left: 4px solid var(--amber); }
   .zone-banner.red   { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
@@ -117,7 +118,7 @@
   .raw-request-card {
     background: rgba(180,130,0,0.06); border: 1px solid var(--gold-dark);
     border-left: 4px solid var(--gold); border-radius: var(--radius-md);
-    padding: 14px 18px; margin-top: 8px; font-size: 14px; color: var(--text-primary);
+    padding: 14px 18px; margin-top: 8px; font-size:16px; color: var(--text-primary);
   }
   .raw-request-card a { color: var(--text-primary); font-weight: 700; text-decoration: underline; }
   .raw-request-card a:hover { text-decoration: underline; }
@@ -133,7 +134,7 @@
   .raw-pill {
     position: absolute; top: 10px; right: 10px;
     background: #F5C518; color: #000;
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     padding: 4px 10px; border-radius: 3px; z-index: 2;
     pointer-events: none;
@@ -141,7 +142,7 @@
   .raw-verified-pill {
     position: absolute; top: 10px; right: 10px;
     background: #2e7d32; color: #fff;
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     padding: 4px 10px; border-radius: 3px; z-index: 2;
     pointer-events: none;
@@ -149,7 +150,7 @@
   .raw-verified-banner {
     display: block; padding: 10px 16px;
     background: rgba(46,125,50,0.08); border-top: 1px solid rgba(46,125,50,0.3);
-    font-size: 15px; color: #2e7d32; font-weight: 600;
+    font-size:16px; color: #2e7d32; font-weight: 600;
   }
 
   /* Notification strip */
@@ -169,33 +170,33 @@
   .notif-strip-header:hover { background: var(--surface-3); }
   .notif-strip-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .notif-lbl {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
   }
   .notif-lbl.urgent { color: #c0392b; }
   .notif-lbl.normal { color: var(--text-primary); }
-  .notif-lbl-dot { color: var(--border); font-size: 14px; margin: 0 4px; }
+  .notif-lbl-dot { color: var(--border); font-size:16px; margin: 0 4px; }
   .notif-badge {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     padding: 3px 9px; border-radius: 99px; letter-spacing: 0.5px;
   }
   .notif-badge.urgent { background: #c0392b; color: #fff; }
   .notif-badge.normal { background: #4a4840; color: #F5F0E8; }
   /* Expand/collapse: clear text button, not a tiny arrow */
   .notif-strip-chevron {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase;
     flex-shrink: 0; padding: 6px 14px; border: 1px solid var(--border);
     border-radius: 4px; background: transparent; white-space: nowrap;
   }
-  .notif-strip-chevron::after { content: " ▼"; font-size: 15px; }
-  .notif-strip-chevron.open::after { content: " ▲"; font-size: 15px; }
+  .notif-strip-chevron::after { content: " ▼"; font-size:16px; }
+  .notif-strip-chevron.open::after { content: " ▲"; font-size:16px; }
   .notif-strip-body { border-top: 1px solid var(--border); }
   .notif-strip-body.collapsed { display: none; }
   /* Section divider headers inside strip */
   .notif-sec-hdr {
     padding: 8px 20px 7px; border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
   }
   .notif-sec-hdr.urgent { background: #fff5f5; color: #c0392b; border-bottom-color: #f5c6c6; }
@@ -216,10 +217,10 @@
     font-size: 16px; font-weight: 700; color: var(--text-primary);
     overflow: hidden; text-overflow: ellipsis;
   }
-  .notif-sub { font-size: 15px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; }
+  .notif-sub { font-size:16px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; }
   /* Gold action */
   .notif-action {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 0.5px; text-transform: uppercase;
     color: var(--text-primary); text-decoration: none; white-space: nowrap;
     border: 2px solid var(--text-primary); padding: 9px 16px; border-radius: 4px;
@@ -229,7 +230,7 @@
   .notif-action:hover { background: rgba(139,105,20,0.10); }
   /* Red action (urgent) */
   .notif-action-urgent {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 0.5px; text-transform: uppercase;
     color: #c0392b; text-decoration: none; white-space: nowrap;
     border: 1px solid #c0392b; padding: 9px 16px; border-radius: 4px;
@@ -239,7 +240,7 @@
   .notif-action-urgent:hover { background: rgba(192,57,43,0.08); }
   /* Announcement tag pill */
   .ann-tag {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     background: #1a1a18; color: var(--gold);
     padding: 4px 10px; border-radius: 3px;
@@ -252,18 +253,18 @@
     border-radius: 4px; padding: 6px 14px; margin-top: 8px;
   }
   .rank-badge-num {
-    font-family: var(--font-mono); font-size: 15px;
+    font-family: var(--font-mono); font-size:16px;
     font-weight: 700; color: var(--gold);
   }
-  .rank-badge-sep { color: rgba(245,197,24,0.3); font-size: 14px; }
+  .rank-badge-sep { color: rgba(245,197,24,0.3); font-size:16px; }
   .rank-badge-tier {
-    font-family: var(--font-mono); font-size: 14px;
+    font-family: var(--font-mono); font-size:16px;
     color: rgba(255,255,255,0.75);
   }
   @media (max-width: 520px) {
     .notif-row { gap: 12px; }
     .notif-action, .notif-action-urgent { width: 100%; text-align: center; margin-top: 6px; justify-content: center; }
-    .notif-lbl { font-size: 15px; letter-spacing: 0.5px; }
+    .notif-lbl { font-size:16px; letter-spacing: 0.5px; }
     .notif-strip-left { gap: 8px; }
     .notif-title { white-space: normal; }
   }
@@ -275,11 +276,11 @@
     border-bottom: 1px solid var(--border-subtle);
   }
   .poty-row:last-child { border-bottom: none; }
-  .poty-genre { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 120px; flex-shrink: 0; }
+  .poty-genre { font-family: var(--font-mono); font-size:16px; font-weight: 600; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; width: 120px; flex-shrink: 0; }
   .poty-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; }
   .poty-bar-fill { background: var(--gold); border-radius: 4px; height: 8px; transition: width 0.5s; }
   .poty-avg { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text-primary); width: 52px; text-align: right; flex-shrink: 0; }
-  .poty-count { font-size: 15px; color: var(--text-primary); width: 70px; text-align: right; flex-shrink: 0; }
+  .poty-count { font-size:16px; color: var(--text-primary); width: 70px; text-align: right; flex-shrink: 0; }
 
   /* Peer rating widget */
   .peer-widget {
@@ -287,12 +288,12 @@
     border-radius: var(--radius-md); padding: 24px; margin-bottom: 28px;
   }
   .peer-widget-title {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
+    font-family: var(--font-mono); font-size:16px; font-weight: 600;
     letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
   }
   .peer-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
   .peer-stat-val { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .peer-stat-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
+  .peer-stat-lbl { font-family: var(--font-mono); font-size:16px; letter-spacing: 1px; color: var(--text-primary); text-transform: uppercase; margin-top: 4px; }
 
   /* Programme wins */
   .win-card {
@@ -300,7 +301,7 @@
     border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
-  .win-badge { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); text-transform: uppercase; padding: 4px 10px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+  .win-badge { font-family: var(--font-mono); font-size:16px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); text-transform: uppercase; padding: 4px 10px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
   @media (max-width: 480px) {
     .win-card { flex-wrap: wrap; }
     .win-card > div { min-width: 0; }
@@ -322,7 +323,7 @@
   }
   .mentor-nudge-left { flex: 1; min-width: 200px; }
   .mentor-nudge-eyebrow {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 2px; color: #F5C518; text-transform: uppercase;
     margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -331,7 +332,7 @@
     margin-bottom: 4px; line-height: 1.3;
   }
   .mentor-nudge-sub {
-    font-size: 15px; color: rgba(255,255,255,0.85);
+    font-size:16px; color: rgba(255,255,255,0.85);
     font-family: var(--font-mono);
   }
   @media (max-width: 520px) {
@@ -376,13 +377,13 @@
 <div id="poty-welcome-banner" class="poty-banner-inner" style="background:#000; border:2px solid #F5C518; border-radius:10px; padding:28px 32px; margin-bottom:28px; position:relative;">
   <button onclick="dismissPotyBanner()" aria-label="Dismiss" class="poty-banner-dismiss-btn" style="position:absolute; top:14px; right:16px; background:none; border:none; color:#F5C518; font-size:26px; line-height:1; cursor:pointer; padding:4px 8px; min-width:44px; min-height:44px;">&times;</button>
 
-  <div style="font-family:var(--font-mono,monospace); font-size:15px; letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:10px;">Welcome to Shutter League</div>
+  <div style="font-family:var(--font-mono,monospace); font-size:16px; letter-spacing:2px; color:#F5C518; text-transform:uppercase; margin-bottom:10px;">Welcome to Shutter League</div>
 
   <h2 class="poty-banner-heading">What is Photographer of the Year (POTY)?</h2>
 
   <p style="color:#ffffff; font-size:17px; line-height:1.65; margin:0 0 16px 0;">
     Every photo you upload is scored by our AI engine on a scale of 0&#8209;100.
-    Your <strong style="color:#F5C518;">top 6 scores</strong> in each genre are averaged to build your POTY standing.
+    Your <strong style="color:#F5C518;">top 6 scores</strong> in each genre are averaged to build your {{ glink_dark("POTY")|safe }} standing.
     The photographers with the highest averages at year&#39;s end win the title.
   </p>
 
@@ -390,21 +391,21 @@
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#128247;</div>
       <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 1</div>
-      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Upload your best photo to the Weekly Challenge</div>
+      <div style="color:#ffffff; font-size:16px; line-height:1.4;">Upload your best photo to the {{ glink_dark("Weekly Challenge")|safe }}</div>
     </div>
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#127775;</div>
       <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 2</div>
-      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Receive your DDI score — usually within minutes</div>
+      <div style="color:#ffffff; font-size:16px; line-height:1.4;">Receive your {{ glink_dark("DDI")|safe }} score — usually within minutes</div>
     </div>
     <div style="background:#111; border:1px solid #F5C518; border-radius:8px; padding:16px 14px; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">&#127942;</div>
       <div style="color:#F5C518; font-weight:700; font-size:16px; margin-bottom:4px;">Step 3</div>
-      <div style="color:#ffffff; font-size:14px; line-height:1.4;">Build your top&#8209;6 average and climb the POTY leaderboard</div>
+      <div style="color:#ffffff; font-size:16px; line-height:1.4;">Build your top&#8209;6 average and climb the {{ glink_dark("POTY")|safe }} leaderboard</div>
     </div>
   </div>
 
-  <p style="color:#cccccc; font-size:15px; line-height:1.6; margin:0 0 20px 0;">
+  <p style="color:#cccccc; font-size:16px; line-height:1.6; margin:0 0 20px 0;">
     <strong style="color:#ffffff;">Tiers</strong> — as your average climbs you earn ranks: Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman &#8594; Maverick &#8594; Master &#8594; Grandmaster &#8594; Legend. You need at least <strong style="color:#F5C518;">6 scored images</strong> in a genre before an average is shown, and <strong style="color:#F5C518;">24 scored images</strong> to qualify for prizes.
   </p>
 
@@ -414,7 +415,7 @@
     {% else %}
     <a href="/upload" style="display:inline-block; background:#F5C518; color:#000; font-weight:800; font-size:16px; padding:13px 28px; border-radius:6px; text-decoration:none;">Upload a Photo &rarr;</a>
     {% endif %}
-    <button onclick="dismissPotyBanner()" style="background:none; border:1px solid rgba(255,255,255,0.3); color:#cccccc; font-size:15px; padding:13px 20px; border-radius:6px; cursor:pointer;">I&#39;ve got it, dismiss</button>
+    <button onclick="dismissPotyBanner()" style="background:none; border:1px solid rgba(255,255,255,0.3); color:#cccccc; font-size:16px; padding:13px 20px; border-radius:6px; cursor:pointer;">I&#39;ve got it, dismiss</button>
   </div>
 
 </div>
@@ -576,24 +577,24 @@ function toggleNotifStrip() {
 {# ── Shadow Rank conversion banner — free tier, all images used ──────────── #}
 {% if free_tier and free_tier.remaining == 0 and free_tier.shadow_rank %}
 <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:28px 32px;margin-bottom:28px;text-align:center;">
-  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:12px;">Your Initial Assessment is Complete</div>
+  <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:12px;">Your Initial Assessment is Complete</div>
   <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
   <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
   <div style="font-size:16px;color:rgba(255,255,255,0.80);margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
     This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Official World Ranking.
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;">Subscribe &amp; Lock In Your Rank →</a>
-    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);">See Full Leaderboard</a>
+    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;">Subscribe &amp; Lock In Your Rank →</a>
+    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);">See Full Leaderboard</a>
   </div>
 </div>
 {% elif free_tier and free_tier.remaining > 0 %}
 <div style="background:var(--surface-2);border:1px solid var(--border);border-left:4px solid #F5C518;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
   <div>
     <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Initial Assessment — {{ free_tier.remaining }} image{{ 's' if free_tier.remaining != 1 }} remaining</div>
-    <div style="font-size:15px;color:var(--text-primary);">Upload your best work. After {{ free_tier.limit }} images, your shadow rank is revealed.</div>
+    <div style="font-size:16px;color:var(--text-primary);">Upload your best work. After {{ free_tier.limit }} images, your shadow rank is revealed.</div>
   </div>
-  <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
+  <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
 </div>
 {% endif %}
 
@@ -603,13 +604,13 @@ function toggleNotifStrip() {
 
   {# Header row #}
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-primary);">Points &amp; Rank</div>
+    <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-primary);">Points &amp; Rank</div>
     {% if wallet_hud.officially_ranked %}
-    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary); background:#000; border:1px solid var(--gold); padding:5px 14px; border-radius:4px;">
+    <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary); background:#000; border:1px solid var(--gold); padding:5px 14px; border-radius:4px;">
       ✓ Official World Ranking — Live
     </div>
     {% else %}
-    <div style="font-size:15px; color:var(--text-primary);">
+    <div style="font-size:16px; color:var(--text-primary);">
       Your ranking journey — every upload counts.
     </div>
     {% endif %}
@@ -619,20 +620,20 @@ function toggleNotifStrip() {
   <div class="wallet-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; min-width:0;">
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
       <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.balance | round(1) }}</div>
-      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Your Points</div>
-      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Your Points</div>
+      <div style="font-size:16px; color:var(--text-primary); margin-top:4px;">{{ wallet_hud.lifetime | round(1) }} earned lifetime</div>
     </div>
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
       <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.residency_months }}</div>
-      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Months on Platform</div>
-      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Months on Platform</div>
+      <div style="font-size:16px; color:var(--text-primary); margin-top:4px;">
         {% if wallet_hud.months_to_gate > 0 %}Keep uploading — ranking builds with you{% else %}6-month milestone reached ✓{% endif %}
       </div>
     </div>
     <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 16px;">
       <div style="font-size:32px; font-weight:700; color:var(--text-primary); line-height:1; margin-bottom:6px;">{{ wallet_hud.total_scored }}</div>
-      <div style="font-family:var(--font-mono); font-size:15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Images Scored</div>
-      <div style="font-size:14px; color:var(--text-primary); margin-top:4px;">
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Images Scored</div>
+      <div style="font-size:16px; color:var(--text-primary); margin-top:4px;">
         {% if wallet_hud.imgs_to_gate > 0 %}{{ wallet_hud.imgs_to_gate }} more images to appear on the leaderboard{% else %}Leaderboard eligible ✓{% endif %}
       </div>
     </div>
@@ -652,7 +653,7 @@ function toggleNotifStrip() {
 
   <div style="margin-bottom:24px;">
     <div style="margin-bottom:14px;">
-      <div style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text-primary);">Your rewards journey</div>
+      <div style="font-family:var(--font-mono);font-size:16px;font-weight:600;color:var(--text-primary);">Your rewards journey</div>
     </div>
 
     {# Milestone cards — filled blue=reached, blue outline=next, grey=future #}
@@ -662,21 +663,21 @@ function toggleNotifStrip() {
       {% set _is_next = not _reached and (_bal >= _milestones[loop.index0 - 1].pts if loop.index0 > 0 else true) %}
       {% if _reached %}
       <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:#EAF3DE;border:1px solid #C0DD97;">
-        <div style="font-family:var(--font-mono);font-size:13px;color:#3B6D11;">{{ ms.pts }}</div>
-        <div style="font-size:14px;font-weight:700;color:#27500A;margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
-        <div style="font-size:15px;color:#3B6D11;margin-top:4px;">✓</div>
+        <div style="font-family:var(--font-mono);font-size:16px;color:#3B6D11;">{{ ms.pts }}</div>
+        <div style="font-size:16px;font-weight:700;color:#27500A;margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:16px;color:#3B6D11;margin-top:4px;">✓</div>
       </div>
       {% elif _is_next %}
       <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:2px solid #F5C518;">
-        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);">{{ ms.pts }}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
-        <div style="font-size:13px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
+        <div style="font-family:var(--font-mono);font-size:16px;color:var(--text-primary);">{{ ms.pts }}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:16px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
       </div>
       {% else %}
       <div style="text-align:center;padding:12px 4px;border-radius:var(--radius-md);background:var(--surface-2);border:1px solid var(--border);">
-        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);">{{ ms.pts }}</div>
-        <div style="font-size:14px;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
-        <div style="font-size:13px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
+        <div style="font-family:var(--font-mono);font-size:16px;color:var(--text-primary);">{{ ms.pts }}</div>
+        <div style="font-size:16px;color:var(--text-primary);margin-top:4px;line-height:1.3;">{{ ms.label }}</div>
+        <div style="font-size:16px;color:var(--text-primary);margin-top:4px;">{{ (ms.pts - _bal) | int }} to go</div>
       </div>
       {% endif %}
       {% endfor %}
@@ -693,19 +694,19 @@ function toggleNotifStrip() {
     {% if _next.ms %}
     <div class="next-reward-callout">
       <div style="flex:1;min-width:0;">
-        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:6px;">Next reward — {{ (_next.ms.pts - _bal) | int }} points away</div>
         <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;line-height:1.4;">{{ _next.ms.label }}</div>
-        <div style="font-size:15px;color:rgba(255,255,255,0.80);line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
+        <div style="font-size:16px;color:rgba(255,255,255,0.80);line-height:1.5;">{{ _next.ms.desc }} · Upload one image now to get there.</div>
       </div>
-      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;align-self:flex-end;">Upload Now →</a>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;align-self:flex-end;">Upload Now →</a>
     </div>
     {% else %}
     <div style="margin-top:16px;background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
       <div>
         <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:4px;">All milestones reached</div>
-        <div style="font-size:15px;color:rgba(255,255,255,0.80);">Rewards redemption coming soon.</div>
+        <div style="font-size:16px;color:rgba(255,255,255,0.80);">Rewards redemption coming soon.</div>
       </div>
-      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
+      <a href="{{ url_for('upload') }}" style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000;background:#F5C518;border:none;padding:12px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Upload Now →</a>
     </div>
     {% endif %}
   </div>
@@ -713,13 +714,13 @@ function toggleNotifStrip() {
   {# Progress bar #}
   <div style="margin-bottom:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <div style="font-family:var(--font-mono); font-size:15px; font-weight:600; color:var(--text-primary);">Your path to an Official World Ranking</div>
-      <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary);">{{ wallet_hud.residency_months }}/6 months</div>
+      <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; color:var(--text-primary);">Your path to an Official World Ranking</div>
+      <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary);">{{ wallet_hud.residency_months }}/6 months</div>
     </div>
     <div style="background:var(--border); border-radius:4px; height:10px;">
       <div style="background:#2C3E6B; border-radius:4px; height:10px; width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
     </div>
-    <div style="font-size:15px; color:var(--text-primary); margin-top:8px; line-height:1.6;">
+    <div style="font-size:16px; color:var(--text-primary); margin-top:8px; line-height:1.6;">
       {% if wallet_hud.officially_ranked %}
         You have an Official World Ranking. Your ranking is live on the leaderboard.
       {% elif wallet_hud.months_to_gate > 0 and wallet_hud.imgs_to_gate > 0 %}
@@ -735,7 +736,7 @@ function toggleNotifStrip() {
   {# Next tier nudge #}
   {% if wallet_hud.next_tier %}
   <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--border); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px;">
-    <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+    <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
       Next scoring milestone: reach <strong>{{ wallet_hud.next_tier }}</strong> tier and earn bonus points.
       {% if wallet_hud.last_tier %} You are currently at <strong>{{ wallet_hud.last_tier }}</strong> — one strong image away.{% endif %}
     </div>
@@ -744,10 +745,10 @@ function toggleNotifStrip() {
 
   {# Redeem button — bottom of wallet HUD #}
   <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-    <div style="font-size:15px;color:var(--text-primary);line-height:1.5;">
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.5;">
       Points can be redeemed for programme entries, top-ups, free months and mentor sessions.
     </div>
-    <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
+    <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
   </div>
 
 </div>
@@ -760,15 +761,15 @@ function toggleNotifStrip() {
             display:flex; align-items:center; justify-content:space-between;
             gap:16px; flex-wrap:wrap;">
   <div>
-    <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">
+    <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">
       &#x1F512; Add a password to your account
     </div>
-    <div style="font-size:14px; color:var(--text-primary);">
+    <div style="font-size:16px; color:var(--text-primary);">
       Sign in without Google &#8212; useful if Google is unavailable.
     </div>
   </div>
   <a href="{{ url_for('set_password') }}" class="btn btn-solid"
-     style="font-size: 15px; white-space:nowrap; flex-shrink:0;">
+     style="font-size:16px; white-space:nowrap; flex-shrink:0;">
     Set Password &#8594;
   </a>
 </div>
@@ -785,7 +786,7 @@ function toggleNotifStrip() {
     <div class="mentor-nudge-sub">Experienced photography Mentors. Genuine feedback.</div>
   </div>
   <a href="{{ url_for('learning') }}" class="btn btn-solid"
-     style="font-size: 15px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
+     style="font-size:16px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
     Choose your Mentor →
   </a>
 </div>
@@ -795,11 +796,11 @@ function toggleNotifStrip() {
 {% if active_challenge and active_challenge.is_open %}
 <div style="background:rgba(245,197,24,0.15); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
   <div>
-    <div style="font-family:var(--font-mono); font-size: 15px; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
+    <div style="font-family:var(--font-mono); font-size:16px; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
     <div style="font-size:18px; font-weight:700; color:var(--text-primary); font-style:italic;">{{ active_challenge.prompt_title }}</div>
-    <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
+    <div style="font-size:16px; color:var(--text-primary); margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
   </div>
-  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size: 15px;">Enter Challenge →</a>
+  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:16px;">Enter Challenge →</a>
 </div>
 {% endif %}
 
@@ -822,14 +823,14 @@ function toggleNotifStrip() {
     </div>
   </div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size: 15px;">☆ Rate Images</a>
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:16px;">☆ Rate Images</a>
     {% if rating_widget.unlocks_pending > 0 and rating_widget.pool_candidate %}
-    <div style="font-size:14px; color:var(--text-primary); font-weight:600;">
+    <div style="font-size:16px; color:var(--text-primary); font-weight:600;">
       🔓 You have {{ rating_widget.unlocks_pending }} pool unlock{{ 's' if rating_widget.unlocks_pending > 1 else '' }} available
       — <a href="#pool-entry-{{ rating_widget.pool_candidate.id }}" style="color:var(--text-primary); font-weight:700; text-decoration:underline;">use it below</a>
     </div>
     {% elif rating_widget.credits_to_next > 0 %}
-    <div style="font-size:14px; color:var(--text-primary);">{{ rating_widget.credits_to_next }} more rating{{ 's' if rating_widget.credits_to_next > 1 else '' }} to unlock a pool entry</div>
+    <div style="font-size:16px; color:var(--text-primary);">{{ rating_widget.credits_to_next }} more rating{{ 's' if rating_widget.credits_to_next > 1 else '' }} to unlock a pool entry</div>
     {% endif %}
   </div>
 </div>
@@ -840,11 +841,11 @@ function toggleNotifStrip() {
 <div style="margin-bottom:36px;">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
     <div>
-      <div style="font-family:var(--font-mono); font-size: 15px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase;">POTY Tracker</div>
-      <div style="font-size:14px; color:var(--text-primary); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
+      <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase;">{{ glink("POTY", label="POTY Tracker")|safe }}</div>
+      <div style="font-size:16px; color:var(--text-primary); margin-top:2px;">Top-6 average per genre · min {{ poty_tracker.min_images }} images to qualify</div>
     </div>
     {% if poty_tracker.best_avg %}
-    <div style="font-family:var(--font-mono); font-size: 15px; color:var(--text-primary); font-weight:700;">Best avg: {{ poty_tracker.best_avg }}</div>
+    <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); font-weight:700;">Best avg: {{ poty_tracker.best_avg }}</div>
     {% endif %}
   </div>
   <div class="poty-tracker">
@@ -864,22 +865,22 @@ function toggleNotifStrip() {
     </div>
     {% endfor %}
   </div>
-  <a href="{{ url_for('contests') }}" class="btn" style="font-size:15px;">View Programmes →</a>
+  <a href="{{ url_for('contests') }}" class="btn" style="font-size:16px;">View Programmes →</a>
 </div>
 {% endif %}
 
 {# ── Programme wins ─────────────────────────────────────────────────────────── #}
 {% if contest_wins %}
 <div style="margin-bottom:36px;">
-  <div style="font-family:var(--font-mono); font-size: 15px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Programme Results</div>
+  <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">🏆 Programme Results</div>
   {% for img in contest_wins %}
   <div class="win-card">
     {% if img.thumb_url %}
     <img src="{{ img.thumb_url }}" alt="{{ img.asset_name }}" style="width:56px; height:56px; object-fit:cover; border-radius:var(--radius-sm); flex-shrink:0;">
     {% endif %}
     <div style="flex:1; min-width:0;">
-      <div style="font-weight:700; color:var(--text-primary); font-size:15px;">{{ img.asset_name or img.original_filename }}</div>
-      <div style="font-family:var(--font-mono); font-size: 15px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
+      <div style="font-weight:700; color:var(--text-primary); font-size:16px;">{{ img.asset_name or img.original_filename }}</div>
+      <div style="font-family:var(--font-mono); font-size:16px; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">{{ img.genre }}</div>
     </div>
     <div class="win-badge">{{ img.tier }}</div>
     <div style="font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--text-primary);">{{ img.judge_final_score }}</div>
@@ -915,7 +916,7 @@ function toggleNotifStrip() {
       {% if img.thumb_url %}
         <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or img.original_filename }}" loading="lazy">
       {% else %}
-        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-disabled);font-size: 15px;">No image</div>
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-disabled);font-size:16px;">No image</div>
       {% endif %}
 
       {% if img.score %}
@@ -951,7 +952,7 @@ function toggleNotifStrip() {
     {% elif img.raw_verified %}
     <span class="raw-verified-banner">✓ RAW Verified — score confirmed</span>
     {% elif img.raw_disqualified %}
-    <span style="display:block;padding:10px 16px;background:rgba(192,57,43,0.08);border-top:1px solid rgba(192,57,43,0.3);font-size: 15px;color:#c0392b;font-weight:600;">✗ RAW Disqualified</span>
+    <span style="display:block;padding:10px 16px;background:rgba(192,57,43,0.08);border-top:1px solid rgba(192,57,43,0.3);font-size:16px;color:#c0392b;font-weight:600;">✗ RAW Disqualified</span>
     {% endif %}
 
     {# Pool entry unlock #}
@@ -959,13 +960,13 @@ function toggleNotifStrip() {
     <div id="pool-entry-{{ img.id }}" style="padding:12px 16px; background:rgba(245,197,24,0.15); border-top:1px solid var(--border);" onclick="event.preventDefault();">
       <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
         <input type="hidden" name="image_id" value="{{ img.id }}">
-        <button type="submit" class="btn btn-solid" style="font-size: 15px; width:100%;">🔓 Enter Peer Pool</button>
+        <button type="submit" class="btn btn-solid" style="font-size:16px; width:100%;">🔓 Enter Peer Pool</button>
       </form>
     </div>
     {% endif %}
 
     {% if img.is_in_peer_pool %}
-    <div style="padding:8px 16px; background:rgba(46,125,79,0.07); border-top:1px solid var(--border); font-family:var(--font-mono); font-size: 15px; color:var(--green); letter-spacing:1px; text-transform:uppercase;">
+    <div style="padding:8px 16px; background:rgba(46,125,79,0.07); border-top:1px solid var(--border); font-family:var(--font-mono); font-size:16px; color:var(--green); letter-spacing:1px; text-transform:uppercase;">
       ✓ In Peer Pool{% if img.peer_rating_count %} · {{ img.peer_rating_count }} rating{{ 's' if img.peer_rating_count != 1 else '' }}{% endif %}
     </div>
     {% endif %}
@@ -1001,7 +1002,7 @@ function toggleNotifStrip() {
     <p>Try a different search term, or <a href="{{ url_for('dashboard') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">clear the search</a>.</p>
   {% else %}
     <h3>No images yet</h3>
-    <p>Upload your first photograph to get your DDI score.<br>Every scored image enters the monthly programme automatically.</p>
+    <p>Upload your first photograph to get your {{ glink("DDI")|safe }} score.<br>Every scored image enters the monthly programme automatically.</p>
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload Your First Image →</a>
       <a href="/how-it-works" class="btn">How It Works</a>
