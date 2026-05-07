@@ -14,20 +14,40 @@
   .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
   .policy-section ul li { margin-bottom:8px; }
   .policy-meta { font-size:16px; color:var(--text-muted); margin-bottom:32px; }
-  .refund-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  .refund-table { width:100%; border-collapse:collapse; margin-bottom:20px; table-layout:fixed; }
   .refund-table th { padding:12px 14px; font-size:16px; font-weight:700; color:var(--text-secondary); border-bottom:2px solid var(--border); text-align:left; background:var(--surface-3); }
-  .refund-table td { padding:12px 14px; font-size:16px; color:var(--text-primary); border-bottom:1px solid var(--border-subtle); vertical-align:top; line-height:1.5; }
+  .refund-table th:nth-child(1) { width:42%; }
+  .refund-table th:nth-child(2) { width:22%; }
+  .refund-table th:nth-child(3) { width:36%; }
+  .refund-table td { padding:12px 14px; font-size:16px; color:var(--text-primary); border-bottom:1px solid var(--border-subtle); vertical-align:top; line-height:1.6; word-wrap:break-word; }
   .refund-table tr:last-child td { border-bottom:none; }
-  .eligible { color:#66cc66; font-weight:700; }
-  .not-eligible { color:#cc4444; font-weight:700; }
+  .eligible     { color:#1A5C2A; font-weight:700; }
+  .not-eligible { color:#7A1A1A; font-weight:700; }
+
+  /* Mobile: stack table rows as cards */
+  @media (max-width:600px) {
+    .refund-table, .refund-table thead, .refund-table tbody,
+    .refund-table th, .refund-table td, .refund-table tr { display:block; }
+    .refund-table thead { display:none; }
+    .refund-table tr {
+      border:1px solid var(--border); border-radius:6px;
+      margin-bottom:12px; padding:14px 16px;
+      background:var(--surface-2);
+    }
+    .refund-table td {
+      border:none; padding:4px 0;
+      font-size:16px; line-height:1.6;
+    }
+    .refund-table td:nth-child(1) { font-weight:700; margin-bottom:4px; }
+    .refund-table td:nth-child(2) { font-size:16px; margin-bottom:4px; }
+    .refund-table td:nth-child(3) { color:var(--text-primary); opacity:0.85; }
+  }
   .highlight-box { background:rgba(245,197,24,0.08); border:1px solid var(--gold); border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:16px; color:var(--text-primary); line-height:1.6; }
   .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
   .policy-links a { font-size:16px; color:#2C3E6B; text-decoration:none; }
   .policy-links a:hover { text-decoration:underline; }
   @media (max-width:600px) {
     .policy-hero h1 { font-size:28px; }
-
-    .refund-table th, .refund-table td { padding:10px; }
   }
 </style>
 {% endblock %}
