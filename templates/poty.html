@@ -171,6 +171,8 @@
   .track-grid { grid-template-columns:1fr; }
   .sh-cell, .flip-text { font-size:16px; }
   .track-card { padding:0; }
+  .why-diff-row { grid-template-columns:1fr !important; }
+  .why-diff-label { border-right:none !important; border-bottom:1px solid var(--border) !important; }
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
@@ -202,22 +204,30 @@
   <!-- Why different -->
   <div class="awards-section">
     <div class="awards-section-title">Why This Is Different</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px;">
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
-        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">No Entry Fee. Ever.</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Every scored image automatically enters POTY for its genre. Other awards charge per submission. Here, uploading is enough.</div>
+    <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
+      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
+        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">No Entry Fee. Ever.</span>
+        </div>
+        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Every scored image automatically enters POTY for its genre. Other awards charge per submission. Here, uploading is enough.</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
-        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Rank Updates Live</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Your standing isn&#39;t calculated at year end. It moves every time you score a new image. You can watch your rank climb in real time.</div>
+      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
+        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Rank Updates Live</span>
+        </div>
+        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Your standing isn&#39;t calculated at year end. It moves every time you score a new image. You can watch your rank climb in real time.</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
-        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Two-Stage Verification</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">AI scores every image with zero subjectivity. A human jury verifies the top finalists. Consistency first, then judgement.</div>
+      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
+        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Two-Stage Verification</span>
+        </div>
+        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">AI scores every image with zero subjectivity. A human jury verifies the top finalists. Consistency first, then judgement.</div>
       </div>
-      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
-        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Gear Does Not Decide</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Camera and Mobile leagues are separate. A smartphone photographer is never competing against a medium-format camera. The engine scores the image, not the equipment.</div>
+      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;">
+        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Gear Does Not Decide</span>
+        </div>
+        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Camera and Mobile leagues are separate. A smartphone photographer is never competing against a medium-format camera. The engine scores the image, not the equipment.</div>
       </div>
     </div>
   </div>
