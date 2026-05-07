@@ -20,7 +20,7 @@
     font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary);
     margin-bottom:14px; line-height:1.1;
   }
-  .sci-hero h1 em { font-style:normal; color:#2C3E6B; display:block; }
+  .sci-hero h1 em { font-style:normal; color:#2C3E6B; }
   .sci-hero p {
     font-size:clamp(16px,2vw,18px); color:var(--text-secondary);
     line-height:1.8; max-width:580px; margin:0 auto;
@@ -56,7 +56,7 @@
   /* ── FIXED STAGE ── */
   .stage {
     position:relative;
-    height:220px;
+    height:260px;
     overflow:hidden;
   }
   .slide {
@@ -174,10 +174,14 @@
     .sci-section { grid-template-columns:1fr; }
     .sci-meta { border-right:none; border-bottom:1px solid #E0D8C8; padding:18px 16px; }
     .sci-body { padding:16px; }
-    .stage { height:240px; }
+    .stage { height:280px; }
     .pillar-grid { grid-template-columns:1fr; }
     .sg-grid { grid-template-columns:1fr; }
     .arch-grid { grid-template-columns:1fr 1fr; }
+    .sci-hero h1 { white-space:normal; }
+    .score-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .pillar-grid { gap:8px; }
+    .sg-grid { gap:8px; }
     .tc-name { width:90px; font-size:16px; }
     .tc-range { width:70px; font-size:16px; }
     .tc-desc { font-size:16px; }
@@ -192,7 +196,7 @@
   <!-- HERO -->
   <div class="sci-hero">
     <div class="sci-hero-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
-    <h1>The Science<em>of Imaging.</em></h1>
+    <h1 style="white-space:nowrap;">The Science <em style="font-style:normal;color:#2C3E6B;">of Imaging.</em></h1>
     <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
   </div>
 
@@ -308,19 +312,19 @@
     <div class="sci-body" style="background:#EDF0F7;">
       <div class="stage" id="s4">
         <div class="slide active">
-          <table class="score-table">
+          <div class="score-table-wrap"><table class="score-table">
             <tr><td class="tc-name" style="color:#8898AA;">Apprentice</td><td class="tc-range">0 – 5.0</td><td class="tc-desc">Learning the fundamentals</td></tr>
             <tr><td class="tc-name" style="color:#6B7FA8;">Contender</td><td class="tc-range">5.0 – 5.9</td><td class="tc-desc">Craft is developing</td></tr>
             <tr><td class="tc-name" style="color:#5470A0;">Craftsman</td><td class="tc-range">6.0 – 6.9</td><td class="tc-desc">Consistent execution</td></tr>
             <tr><td class="tc-name" style="color:#3D5B90;">Maverick</td><td class="tc-range">7.0 – 7.9</td><td class="tc-desc">Distinctive style emerging</td></tr>
-          </table>
+          </table></div>
         </div>
         <div class="slide">
-          <table class="score-table">
+          <div class="score-table-wrap"><table class="score-table">
             <tr><td class="tc-name" style="color:#2C3E6B;">Master</td><td class="tc-range">8.0 – 8.9</td><td class="tc-desc">Intentional vision, technical command</td></tr>
             <tr><td class="tc-name" style="color:#1E2D52;">Grandmaster</td><td class="tc-range">9.0 – 9.6</td><td class="tc-desc">Rare — frontier of the discipline</td></tr>
             <tr style="background:#FFF8DC;"><td class="tc-name" style="color:#7A5800; padding-left:6px;">Legend</td><td class="tc-range" style="color:#7A5800;">9.7 – 9.9</td><td class="tc-desc" style="color:#7A5800;">Images that redefine the genre</td></tr>
-          </table>
+          </table></div>
         </div>
         <div class="slide">
           <div class="stmt-head">Boundaries never move.</div>
@@ -338,7 +342,7 @@
       <div class="sci-title">Four safeguards.<br><em>Zero bias.</em></div>
     </div>
     <div class="sci-body" style="background:#F2F0ED;">
-      <div class="stage" id="s5">
+      <div class="stage" id="s5" style="height:300px;">
         <div class="slide active">
           <div class="sg-grid">
             <div class="sg-card">
@@ -379,7 +383,7 @@
       <div class="sci-title">Three-tier<br><em>judging.</em></div>
     </div>
     <div class="sci-body" style="background:#F5F0E8;">
-      <div class="stage" id="s6">
+      <div class="stage" id="s6" style="height:300px;">
         <div class="slide active">
           <div class="vt-wrap">
             <div class="vt-spine">
