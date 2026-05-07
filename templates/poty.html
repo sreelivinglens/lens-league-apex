@@ -2,9 +2,9 @@
 {% block title %}Annual Excellence Award — Photographer of the Year · Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="The Shutter League Annual Excellence Award — Photographer of the Year. Scored by the Apex DDI Engine across 8 genres. Camera and Mobile leagues. Year-round qualification, jury-verified results.">
-<meta property="og:title" content="Annual Excellence Award — Photographer of the Year · Shutter League">
-<meta property="og:description" content="Compete year-round. Your top-6 DDI scores in your strongest genre determine your standing. Camera and Mobile leagues. Jury-verified.">
+<meta name="description" content="India&#39;s only continuously-updated photography ranking system. Scored by the Apex DDI Engine across 8 genres, verified by jury. No entry fee — every upload counts. Camera and Mobile leagues.">
+<meta property="og:title" content="POTY — India&#39;s Photography Ranking System · Shutter League">
+<meta property="og:description" content="Your rank updates every time you upload. No entry fee, no submission window. AI scores every image. Jury verifies the top finalists. Two leagues — Camera and Mobile.">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://shutterleague.com/poty">
 {% endblock %}
@@ -194,20 +194,43 @@
 
   <!-- Hero -->
   <div class="awards-hero">
-    <div class="awards-hero-eyebrow">Annual Honours · {{ current_year or '2026' }}</div>
-    <h1>Annual Excellence Award<br>Photographer of the Year</h1>
-    <p>Awarded annually on merit. The highest-ranked photographers of the year are recognised across eight genres, assessed by the Apex DDI Engine and verified by a human jury. You compete in your strongest genre — a wildlife-only photographer qualifies on wildlife alone. Scores accumulate from day one — no entry required.</p>
+    <div class="awards-hero-eyebrow">Annual Excellence Award · {{ current_year or '2026' }}</div>
+    <h1>India&#39;s Photography<br>Ranking System</h1>
+    <p>Most awards judge you once, at the end. Your POTY standing updates every time you upload. The Apex DDI Engine scores every image automatically — no entry fee, no submission window, no human bias. A jury verifies the top finalists. Your strongest genre determines your rank.</p>
+  </div>
+
+  <!-- Why different -->
+  <div class="awards-section">
+    <div class="awards-section-title">Why This Is Different</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px;">
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">No Entry Fee. Ever.</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Every scored image automatically enters POTY for its genre. Other awards charge per submission. Here, uploading is enough.</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Rank Updates Live</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Your standing isn&#39;t calculated at year end. It moves every time you score a new image. You can watch your rank climb in real time.</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Two-Stage Verification</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">AI scores every image with zero subjectivity. A human jury verifies the top finalists. Consistency first, then judgement.</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 20px;">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Gear Does Not Decide</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">Camera and Mobile leagues are separate. A smartphone photographer is never competing against a medium-format camera. The engine scores the image, not the equipment.</div>
+      </div>
+    </div>
   </div>
 
   <!-- User Honours -->
   <div class="awards-section">
-    <div class="awards-section-title">User Honours</div>
+    <div class="awards-section-title">Recognition &amp; Honours</div>
     <div class="track-grid">
       <div class="track-card camera">
         <div class="track-card-header">
           <span class="track-icon">📷</span>
           <div>
-            <div class="track-name">Camera Users</div>
+            <div class="track-name">Camera League</div>
             <div class="track-sub">DSLR · Mirrorless · Film</div>
           </div>
         </div>
@@ -236,7 +259,7 @@
         <div class="track-card-header">
           <span class="track-icon">📱</span>
           <div>
-            <div class="track-name">Mobile Users</div>
+            <div class="track-name">Mobile League</div>
             <div class="track-sub">iPhone · Android · Smartphone</div>
           </div>
         </div>
@@ -262,8 +285,8 @@
         </div>
       </div>
     </div>
-    <p style="font-size:16px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.5px;line-height:1.6;">
-      Recognition and awards — details announced to qualifying participants. See <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a> for full terms.
+    <p style="font-size:16px;color:var(--text-primary);font-family:Georgia,serif;line-height:1.7;margin-top:20px;">
+      Recognition is communicated directly to honourees. Qualifying participants are notified by email. See <a href="{{ url_for('contest_rules') }}" style="color:#2C3E6B;font-weight:700;text-decoration:underline;">Programme Rules</a> for full eligibility terms.
     </p>
   </div>
 
@@ -299,7 +322,7 @@
         <div class="sh-cell narrow">Status</div>
       </div>
     </div>
-    <details class="sl-accordion" open>
+    <details class="sl-accordion">
       <summary class="sl-accordion-trigger">How the timeline works <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <div class="board-desc-list">
@@ -326,9 +349,9 @@
 
   <!-- 6-6-12 -->
   <div class="awards-section">
-    <div class="awards-section-title">The 6-6-12 Rule — Your Professional Credibility Gate</div>
+    <div class="awards-section-title">The 6-6-12 Rule — Why Your Rank Means Something</div>
     <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:24px;">
-      Shutter League uses a residency-based ranking system — the same logic as ICC cricket rankings. A single brilliant photograph does not make a rank. Consistent performance over time does.
+      A single brilliant photograph doesn&#39;t make a rank. Neither does a single great month. Shutter League uses a residency-based system — the same logic as ICC cricket rankings and ATP tennis points. You have to show up consistently, across time, before the ranking is yours.
     </p>
     <div class="solari-board" id="rule-board">
       <div class="solari-header">
@@ -419,13 +442,13 @@
       <summary class="sl-accordion-trigger">The scoring and jury process <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-          Every image uploaded to Shutter League is evaluated by the Apex DDI Engine — a five-dimension scoring framework covering Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. Scores are generated automatically and consistently, with no human subjectivity in the initial assessment.
+          Most photography awards are judged by a panel of humans who see your image once, in a batch, against thousands of others. Shutter League works differently. The Apex DDI Engine evaluates every image individually, immediately, across five dimensions — Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. The score is generated the same way for every photographer, every time, with no human subjectivity in the initial assessment.
         </p>
         <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-          A photographer's annual ranking is calculated from their best six DDI scores in their strongest genre during the calendar year. You qualify in one genre — the one where your best six scores average highest. The top-20 photographers per genre proceed to jury review, where a panel of photography professionals evaluates the work and confirms the final rankings.
+          Your annual POTY ranking is calculated from your best six DDI scores in your strongest genre. You compete in one genre — the one where your scores are highest. A wildlife photographer qualifies on wildlife alone. The top-20 photographers per genre then proceed to jury review, where photography professionals verify the work and confirm the final rankings.
         </p>
         <p style="font-size:17px;color:var(--text-primary);line-height:1.8;">
-          This two-stage process — AI consistency followed by human judgement — is the same standard used by the world's leading photography award programmes.
+          AI consistency first. Human judgement second. This two-stage process means your rank is both scientifically defensible and professionally validated — not a matter of who a judge happened to notice on a given day.
         </p>
       </div>
     </details>
@@ -433,9 +456,9 @@
 
   <!-- CTA -->
   <div class="awards-cta">
-    <h2>Start Building Your Standing</h2>
-    <p>Upload your photographs, build your DDI score, and qualify for the Annual Excellence Award.</p>
-    <p class="cta-note">Requires an active Camera or Mobile subscription for at least 6 months within the calendar year to qualify for awards.</p>
+    <h2>Your Ranking Has Already Started</h2>
+    <p>Every image you&#39;ve scored is already counting toward your POTY standing. You don&#39;t enter — you just keep shooting.</p>
+    <p class="cta-note">Active Camera or Mobile League subscription for 6+ months required to qualify. 24 scored images in your genre required for full eligibility.</p>
     <div class="awards-cta-btns" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}"
          class="btn btn-solid" style="font-size:16px;padding:13px 28px;">
