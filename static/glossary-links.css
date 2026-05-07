@@ -1,0 +1,74 @@
+/*
+  glossary-links.css — ShutterLeague Glossary Link Styles
+  =========================================================
+  Session 7
+
+  INCLUDE: Add this block to base.html inside the <style> block,
+  or import into your main stylesheet.
+
+  CONTRAST RATIOS (AAA = 7.0:1 minimum):
+    .glossary-link--light  → Slate blue #2C3E6B on white  = 10.46:1 ✅
+    .glossary-link--dark   → Gold #F5C518 on #1a1a2e      = 10.2:1  ✅
+                           → Gold #F5C518 on #2C3E6B      = 5.74:1  (AA only — avoid gold on slate)
+    NEVER use .glossary-link--dark on cream/light backgrounds.
+*/
+
+/* ── Shared base ─────────────────────────────────────────────────────────── */
+.glossary-link {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, text-decoration-style 0.15s ease;
+  font-weight: inherit;          /* don't disrupt surrounding weight */
+}
+
+.glossary-link:hover,
+.glossary-link:focus-visible {
+  text-decoration-style: solid;
+  opacity: 0.82;
+  outline: none;
+}
+
+.glossary-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ── Light background variant (slate blue) ───────────────────────────────── */
+.glossary-link--light {
+  color: #2C3E6B;               /* 10.46:1 on white — AAA ✅ */
+  text-decoration-color: #2C3E6B80;
+}
+
+.glossary-link--light:hover,
+.glossary-link--light:focus-visible {
+  color: #1f2d4f;               /* slightly darker on hover */
+  text-decoration-color: #1f2d4f;
+}
+
+/* ── Dark background variant (gold) ─────────────────────────────────────── */
+.glossary-link--dark {
+  color: #F5C518;               /* gold — AAA on dark bg ✅ */
+  text-decoration-color: #F5C51880;
+}
+
+.glossary-link--dark:hover,
+.glossary-link--dark:focus-visible {
+  color: #f7cf45;               /* slightly lighter on hover */
+  text-decoration-color: #f7cf45;
+}
+
+/* ── Nowrap helper (used by glink_inline macro) ──────────────────────────── */
+.nowrap {
+  white-space: nowrap;
+}
+
+/*
+  AAA AUDIT REMINDER:
+  If you ever change these colours, re-run the audit script.
+  Minimum ratio for ALL text: 7.0:1 (WCAG AAA).
+  Do NOT use gold (#F5C518) on any background lighter than #555.
+*/
