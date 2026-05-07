@@ -4,15 +4,13 @@
 {% block extra_css %}
 <style>
   body:has(.sci-page) main { padding:0 !important; max-width:none !important; }
-
   .sci-page { background:#FEFCF8; }
-  .sci-wrap { max-width:1200px; margin:0 auto; padding:0 var(--page-pad); }
 
   /* ── HERO ── */
   .sci-hero {
-    text-align:center; padding:clamp(40px,7vw,72px) var(--page-pad) clamp(36px,5vw,56px);
+    text-align:center;
+    padding:clamp(40px,7vw,72px) var(--page-pad) clamp(32px,5vw,52px);
     border-bottom:1px solid #E0D8C8; background:#FEFCF8;
-    max-width:none;
   }
   .sci-hero-eyebrow {
     font-family:var(--font-mono); font-size:16px; font-weight:600;
@@ -25,109 +23,141 @@
   .sci-hero h1 em { font-style:normal; color:#2C3E6B; display:block; }
   .sci-hero p {
     font-size:clamp(16px,2vw,18px); color:var(--text-secondary);
-    line-height:1.8; max-width:600px; margin:0 auto;
+    line-height:1.8; max-width:580px; margin:0 auto;
   }
 
   /* ── SECTION LAYOUT ── */
   .sci-section {
     display:grid;
-    grid-template-columns:240px 1fr;
-    min-height:220px;
+    grid-template-columns:220px 1fr;
     border-bottom:1px solid #E0D8C8;
   }
-  .sci-section-meta {
-    padding:clamp(24px,3vw,36px) clamp(20px,2vw,28px);
+  .sci-meta {
+    padding:clamp(24px,3vw,36px) clamp(18px,2vw,28px);
     border-right:1px solid #E0D8C8;
     display:flex; flex-direction:column; justify-content:center;
     background:#FEFCF8;
   }
-  .sci-section-label {
+  .sci-label {
     font-family:var(--font-mono); font-size:16px; font-weight:700;
     letter-spacing:3px; color:#2C3E6B; text-transform:uppercase;
     margin-bottom:10px; display:block;
   }
-  .sci-section-title {
-    font-size:clamp(18px,2.5vw,26px); font-weight:700;
-    color:var(--text-primary); line-height:1.2;
+  .sci-title {
+    font-size:clamp(18px,2.2vw,24px); font-weight:700;
+    color:var(--text-primary); line-height:1.25;
   }
-  .sci-section-title em { font-style:normal; color:#2C3E6B; }
-  .sci-section-body {
+  .sci-title em { font-style:normal; color:#2C3E6B; }
+  .sci-body {
     padding:clamp(20px,3vw,32px) clamp(20px,3vw,36px);
-    display:flex; align-items:center; background:#F5F2EC;
+    display:flex; flex-direction:column; justify-content:center;
   }
 
-  /* ── ANIMATED CARD STACK ── */
-  .anim-stack {
-    width:100%; position:relative; min-height:180px;
+  /* ── FIXED STAGE ── */
+  .stage {
+    position:relative;
+    height:220px;
+    overflow:hidden;
   }
-  .anim-slide {
+  .slide {
     position:absolute; inset:0;
-    opacity:0; transition:opacity 0.5s ease;
-    display:flex; align-items:center;
+    opacity:0; transition:opacity 0.45s ease;
+    display:flex; flex-direction:column; justify-content:center;
     pointer-events:none;
   }
-  .anim-slide.active {
-    opacity:1; pointer-events:auto; position:relative;
-  }
-  .anim-card {
-    width:100%; border-radius:12px; padding:clamp(16px,2.5vw,24px);
-  }
+  .slide.active { opacity:1; pointer-events:auto; }
 
-  /* ── PROGRESS DOTS ── */
-  .prog-dots {
-    display:flex; gap:6px; margin-top:14px; align-items:center;
+  /* ── DOTS ── */
+  .s-dots { display:flex; gap:7px; margin-top:14px; }
+  .s-dot {
+    width:7px; height:7px; border-radius:50%;
+    background:#D0D8EC; cursor:pointer;
+    transition:background 0.3s; flex-shrink:0;
+    border:none; padding:0;
   }
-  .prog-dot {
-    width:6px; height:6px; border-radius:50%;
-    transition:all 0.3s; cursor:pointer; flex-shrink:0;
-  }
+  .s-dot.on { background:#2C3E6B; }
 
-  /* ── TIER BARS ── */
-  .tier-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .tier-bar-row:last-child { margin-bottom:0; }
-  .tier-bar-label { font-family:var(--font-mono); font-size:16px; font-weight:700; width:100px; letter-spacing:0.5px; }
-  .tier-bar-track { flex:1; height:5px; border-radius:3px; overflow:hidden; }
-  .tier-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
-  .tier-bar-score { font-family:var(--font-mono); font-size:16px; width:38px; text-align:right; }
+  /* ── SCORE TABLE ── */
+  .score-table { width:100%; border-collapse:collapse; }
+  .score-table tr { border-bottom:1px solid #D8DFF0; }
+  .score-table tr:last-child { border-bottom:none; }
+  .score-table td { padding:10px 8px; vertical-align:middle; }
+  .tc-name { font-family:var(--font-mono); font-size:16px; font-weight:700; width:115px; white-space:nowrap; }
+  .tc-range { font-family:var(--font-mono); font-size:16px; color:#5a7aaa; width:80px; white-space:nowrap; }
+  .tc-desc { font-size:16px; color:#555; line-height:1.4; }
+
+  /* ── STAT CARD ── */
+  .stat-card {
+    background:#D0DCF0; border-radius:10px;
+    padding:16px 20px; text-align:center; flex-shrink:0;
+  }
+  .stat-num { font-size:clamp(36px,5vw,54px); font-weight:700; color:#2C3E6B; line-height:1; }
+  .stat-lbl { font-family:var(--font-mono); font-size:16px; color:#5a7aaa; letter-spacing:1.5px; margin-top:5px; font-weight:700; }
+
+  /* ── PILLAR CARDS ── */
+  .pillar-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pillar-card {
+    background:#fff; border-radius:8px; padding:16px;
+    border-top:3px solid #2C3E6B;
+  }
+  .pillar-title { font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px; }
+  .pillar-body { font-size:16px; color:#555; line-height:1.5; }
 
   /* ── SAFEGUARD GRID ── */
-  .safeguard-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; }
-  .safeguard-card {
+  .sg-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .sg-card {
     background:#fff; border-radius:8px; padding:14px 16px;
     border-left:3px solid #2C3E6B;
   }
-  .safeguard-card-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
-  .safeguard-card-body { font-size:16px; color:#555; line-height:1.5; }
+  .sg-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
+  .sg-body { font-size:16px; color:#555; line-height:1.5; }
 
-  /* ── VERIFICATION TIMELINE ── */
-  .verify-timeline { display:flex; gap:0; align-items:stretch; width:100%; }
-  .verify-steps { display:flex; flex-direction:column; align-items:center; margin-right:16px; }
-  .verify-node {
+  /* ── VERIFY TIMELINE ── */
+  .vt-wrap { display:flex; gap:16px; align-items:stretch; }
+  .vt-spine { display:flex; flex-direction:column; align-items:center; }
+  .vt-node {
     width:30px; height:30px; border-radius:50%;
     border:2px solid #2C3E6B; background:#D0DCF0;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
     font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
   }
-  .verify-line { width:2px; flex:1; background:#C5D0E8; margin:4px 0; }
-  .verify-content { flex:1; display:flex; flex-direction:column; gap:10px; }
-  .verify-item {
+  .vt-line { width:2px; flex:1; background:#C5D0E8; margin:4px 0; }
+  .vt-items { flex:1; display:flex; flex-direction:column; gap:10px; }
+  .vt-item {
     background:#fff; border-radius:8px; padding:12px 16px;
     border-left:3px solid #C5D0E8;
   }
-  .verify-item-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
-  .verify-item-body { font-size:16px; color:#555; line-height:1.5; }
+  .vt-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
+  .vt-body { font-size:16px; color:#555; line-height:1.5; }
+
+  /* ── ARCHETYPE GRID ── */
+  .arch-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .arch-card {
+    background:#fff; border-radius:8px; padding:14px;
+  }
+  .arch-title { font-size:17px; font-weight:700; margin-bottom:4px; }
+  .arch-body { font-size:16px; color:#555; }
+
+  /* ── STATEMENT SLIDE ── */
+  .stmt-head { font-size:clamp(18px,2.5vw,24px); font-weight:700; color:#1E2D52; line-height:1.3; margin-bottom:10px; }
+  .stmt-body { font-size:16px; color:#4a5e80; line-height:1.75; }
 
   /* ── IP NOTICE ── */
-  .ip-notice {
-    background:#FEFCF8; border:1px solid #C5D0E8;
-    border-left:4px solid #2C3E6B;
-    border-radius:0 8px 8px 0; padding:24px 28px;
+  .ip-section {
+    padding:clamp(32px,5vw,56px) var(--page-pad);
+    background:#FEFCF8; border-top:1px solid #E0D8C8;
   }
-  .ip-notice h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
-  .ip-notice p { font-size:16px; color:#444; line-height:1.8; }
+  .ip-wrap { max-width:860px; margin:0 auto; }
+  .ip-box {
+    background:#EDF0F7; border:1px solid #C5D0E8;
+    border-left:4px solid #2C3E6B;
+    border-radius:0 8px 8px 0; padding:22px 26px; margin-top:18px;
+  }
+  .ip-box h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
+  .ip-box p { font-size:16px; color:#444; line-height:1.8; }
 
-  /* ── BOTTOM CTA ── */
+  /* ── CTA ── */
   .sci-cta {
     text-align:center; padding:clamp(40px,6vw,64px) var(--page-pad);
     background:#EDF0F7; border-top:1px solid #C5D0E8;
@@ -142,13 +172,16 @@
   /* ── MOBILE ── */
   @media (max-width:768px) {
     .sci-section { grid-template-columns:1fr; }
-    .sci-section-meta {
-      border-right:none; border-bottom:1px solid #E0D8C8;
-      padding:20px 16px 16px;
-    }
-    .sci-section-body { padding:16px; }
-    .safeguard-grid { grid-template-columns:1fr; }
-    .tier-bar-label { width:80px; font-size:16px; }
+    .sci-meta { border-right:none; border-bottom:1px solid #E0D8C8; padding:18px 16px; }
+    .sci-body { padding:16px; }
+    .stage { height:240px; }
+    .pillar-grid { grid-template-columns:1fr; }
+    .sg-grid { grid-template-columns:1fr; }
+    .arch-grid { grid-template-columns:1fr 1fr; }
+    .tc-name { width:90px; font-size:16px; }
+    .tc-range { width:70px; font-size:16px; }
+    .tc-desc { font-size:16px; }
+    .stat-num { font-size:36px; }
   }
 </style>
 {% endblock %}
@@ -160,434 +193,281 @@
   <div class="sci-hero">
     <div class="sci-hero-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
     <h1>The Science<em>of Imaging.</em></h1>
-    <p>Photography has always been judged — but never measured. Five dimensions. One honest score. A precise answer to what would make your image better.</p>
+    <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
   </div>
 
   <!-- S1: THE PROBLEM -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">The Problem</span>
-      <div class="sci-section-title">Opinion is not<br><em>a standard.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">The Problem</span>
+      <div class="sci-title">Opinion is not<br><em>a standard.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s1">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
-            <div style="display:flex; align-items:center; gap:clamp(16px,3vw,28px); flex-wrap:wrap;">
-              <div style="text-align:center; background:#D0DCF0; border-radius:10px; padding:16px 20px; flex-shrink:0;">
-                <div style="font-size:clamp(36px,6vw,56px); font-weight:700; color:#2C3E6B; line-height:1;" id="s1counter">0</div>
-                <div style="font-family:var(--font-mono); font-size:16px; color:#5a7aaa; letter-spacing:1.5px; margin-top:4px; font-weight:700;">JUDGES</div>
-              </div>
-              <div style="flex:1; min-width:160px;">
-                <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:8px;">Same photo. Different verdict.</div>
-                <div style="font-size:16px; color:#4a5e80; line-height:1.65;">Subjectivity isn't a feature — it's the problem the DDI Engine was built to eliminate.</div>
-                <div style="margin-top:14px; height:4px; background:#C5D0E8; border-radius:2px;">
-                  <div style="width:0%; height:4px; background:#2C3E6B; border-radius:2px; transition:width 2s ease;" id="s1bar"></div>
-                </div>
-              </div>
+    <div class="sci-body" style="background:#F0F3F9;">
+      <div class="stage" id="s1">
+        <div class="slide active">
+          <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+            <div class="stat-card">
+              <div class="stat-num" id="s1n">0</div>
+              <div class="stat-lbl">JUDGES</div>
             </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
+            <div style="flex:1; min-width:140px;">
+              <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:8px;">Same photo. Different verdict.</div>
+              <div style="font-size:16px; color:#4a5e80; line-height:1.65;">Subjectivity isn't a feature — it's the problem the DDI Engine was built to eliminate.</div>
             </div>
           </div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
-            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">Assessment juries change every year.</div>
-            <div style="font-size:16px; color:#4a5e80; line-height:1.7;">Social media rewards familiarity, not craft. Workshop feedback reflects the teacher's aesthetic preferences — not the image's objective properties.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">The DDI answers one question.</div>
+          <div class="stmt-body" style="font-style:italic;">"What does this photograph actually do, independent of who is looking at it?"</div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
-            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">The DDI answers one question.</div>
-            <div style="font-size:16px; color:#4a5e80; line-height:1.7; font-style:italic;">"What does this photograph actually do, independent of who is looking at it?"</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
-              <div class="prog-dot" style="background:#C5D0E8;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">Built on perceptual science.</div>
+          <div class="stmt-body">Visual psychology and documented principles of photographic craft — calibrated per genre, not a single homogenised rubric.</div>
         </div>
       </div>
+      <div class="s-dots" id="s1d"></div>
     </div>
   </div>
 
   <!-- S2: THE FRAMEWORK -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">The Framework</span>
-      <div class="sci-section-title">Five dimensions.<br><em>One score.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">The Framework</span>
+      <div class="sci-title">Five dimensions.<br><em>One score.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s2">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#E4F0EC; border:1px solid #B8D9CC;">
-            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-              <svg width="120" height="120" viewBox="0 0 130 130" style="flex-shrink:0;">
-                <circle cx="65" cy="65" r="28" fill="none" stroke="#B8D9CC" stroke-width="1.5"/>
-                <circle cx="65" cy="65" r="8" fill="#2E7D5A"/>
-                <text x="65" y="69" text-anchor="middle" font-size="6" fill="#fff" font-weight="700" font-family="monospace">DDI</text>
-                <circle cx="65" cy="24" r="15" fill="#C8E4D8"/><text x="65" y="21" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DoD</text><text x="65" y="30" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Difficulty</text>
-                <circle cx="106" cy="47" r="15" fill="#C8E4D8"/><text x="106" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">VD</text><text x="106" y="53" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Disruption</text>
-                <circle cx="90" cy="98" r="15" fill="#C8E4D8"/><text x="90" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DM</text><text x="90" y="104" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Moment</text>
-                <circle cx="40" cy="98" r="15" fill="#C8E4D8"/><text x="40" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">WF</text><text x="40" y="104" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Wonder</text>
-                <circle cx="24" cy="47" r="15" fill="#C8E4D8"/><text x="24" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">AQ</text><text x="24" y="53" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Aesthetic</text>
-              </svg>
-              <div style="flex:1; min-width:140px;">
-                <div style="background:#C8E4D8; border-radius:8px; padding:14px; border-left:3px solid #2E7D5A;" id="s2desc">
-                  <div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">DoD — Depth of Difficulty</div>
-                  <div style="font-size:16px; color:#2E7D5A; line-height:1.6;">Technical and situational difficulty of capturing the image.</div>
-                </div>
+    <div class="sci-body" style="background:#EDF5F0;">
+      <div class="stage" id="s2">
+        <div class="slide active">
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <svg width="110" height="110" viewBox="0 0 130 130" style="flex-shrink:0;">
+              <circle cx="65" cy="65" r="28" fill="none" stroke="#B8D9CC" stroke-width="1.5"/>
+              <circle cx="65" cy="65" r="8" fill="#2E7D5A"/>
+              <text x="65" y="69" text-anchor="middle" font-size="6" fill="#fff" font-weight="700" font-family="monospace">DDI</text>
+              <circle cx="65" cy="24" r="15" fill="#C8E4D8"/><text x="65" y="21" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DoD</text>
+              <circle cx="106" cy="47" r="15" fill="#C8E4D8"/><text x="106" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">VD</text>
+              <circle cx="90" cy="98" r="15" fill="#C8E4D8"/><text x="90" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DM</text>
+              <circle cx="40" cy="98" r="15" fill="#C8E4D8"/><text x="40" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">WF</text>
+              <circle cx="24" cy="47" r="15" fill="#C8E4D8"/><text x="24" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">AQ</text>
+            </svg>
+            <div style="flex:1; min-width:140px;" id="s2desc">
+              <div style="background:#C8E4D8; border-radius:8px; padding:14px; border-left:3px solid #2E7D5A;">
+                <div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">DoD — Depth of Difficulty</div>
+                <div style="font-size:16px; color:#2E7D5A; line-height:1.6;">Technical and situational difficulty of capturing the image.</div>
               </div>
-            </div>
-            <div class="prog-dots" id="s2dots">
-              <div class="prog-dot" style="background:#2E7D5A;"></div>
-              <div class="prog-dot" style="background:#B8D9CC;"></div>
-              <div class="prog-dot" style="background:#B8D9CC;"></div>
-              <div class="prog-dot" style="background:#B8D9CC;"></div>
-              <div class="prog-dot" style="background:#B8D9CC;"></div>
             </div>
           </div>
         </div>
       </div>
+      <div class="s-dots" id="s2d"></div>
     </div>
   </div>
 
   <!-- S3: THREE PILLARS -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">Design Principles</span>
-      <div class="sci-section-title">Built on<br><em>three pillars.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">Design Principles</span>
+      <div class="sci-title">Built on<br><em>three pillars.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s3">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;">
-              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
-                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Objectivity</div>
-                <div style="font-size:16px; color:#555; line-height:1.5;">Same image scores the same, always</div>
-              </div>
-              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
-                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Repeatability</div>
-                <div style="font-size:16px; color:#555; line-height:1.5;">Grounded in documented principle, not mood</div>
-              </div>
-              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
-                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Genre aware</div>
-                <div style="font-size:16px; color:#555; line-height:1.5;">Wildlife and Portrait use different rubrics</div>
-              </div>
+    <div class="sci-body" style="background:#F5F2EC;">
+      <div class="stage" id="s3">
+        <div class="slide active">
+          <div class="pillar-grid">
+            <div class="pillar-card">
+              <div class="pillar-title">Objectivity</div>
+              <div class="pillar-body">Same image scores the same — always</div>
             </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            <div class="pillar-card">
+              <div class="pillar-title">Repeatability</div>
+              <div class="pillar-body">Grounded in principle, not mood</div>
+            </div>
+            <div class="pillar-card">
+              <div class="pillar-title">Genre aware</div>
+              <div class="pillar-body">Wildlife ≠ Portrait rubric</div>
             </div>
           </div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">No preferences. No agenda.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">The engine has no awareness of who took the photograph. It responds to what is in the frame — nothing else. A name cannot influence a score.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">No preferences. No agenda.</div>
+          <div class="stmt-body">The engine has no awareness of who took the photograph. It responds only to what is in the frame. A name cannot influence a score.</div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Excellence in Landscape ≠ excellence in Street.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">Each genre carries its own calibrated weight profile, built from the documented standards of that discipline. There is no single universal rubric.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">Excellence is genre-specific.</div>
+          <div class="stmt-body">Each genre carries its own calibrated weight profile, built from the documented standards of that discipline. There is no single universal rubric.</div>
         </div>
       </div>
+      <div class="s-dots" id="s3d"></div>
     </div>
   </div>
 
   <!-- S4: TIERS -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">Tier Classification</span>
-      <div class="sci-section-title">Eight tiers.<br><em>One honest position.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">Tier Classification</span>
+      <div class="sci-title">Eight tiers.<br><em>One honest position.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s4">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#EDF0F7; border:1px solid #C8D0E4; padding:20px 24px;">
-            <div id="tier-bars">
-              <div class="tier-bar-row" data-tier="APPRENTICE" data-w="18" data-col="#8898AA" data-sc="#8898AA" data-range="0–5.0">
-                <span class="tier-bar-label" style="color:#8898AA;">APPRENTICE</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#8898AA;"></div></div>
-                <span class="tier-bar-score" style="color:#8898AA;">0–5.0</span>
-              </div>
-              <div class="tier-bar-row" data-tier="CONTENDER" data-w="30" data-col="#6B7FA8" data-sc="#6B7FA8" data-range="5.0–5.9">
-                <span class="tier-bar-label" style="color:#6B7FA8;">CONTENDER</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#6B7FA8;"></div></div>
-                <span class="tier-bar-score" style="color:#6B7FA8;">5.0–5.9</span>
-              </div>
-              <div class="tier-bar-row" data-tier="CRAFTSMAN" data-w="44" data-col="#5470A0" data-sc="#5470A0" data-range="6.0–6.9">
-                <span class="tier-bar-label" style="color:#5470A0;">CRAFTSMAN</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#5470A0;"></div></div>
-                <span class="tier-bar-score" style="color:#5470A0;">6.0–6.9</span>
-              </div>
-              <div class="tier-bar-row" data-tier="MAVERICK" data-w="58" data-col="#3D5B90" data-sc="#3D5B90" data-range="7.0–7.9">
-                <span class="tier-bar-label" style="color:#3D5B90;">MAVERICK</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#3D5B90;"></div></div>
-                <span class="tier-bar-score" style="color:#3D5B90;">7.0–7.9</span>
-              </div>
-              <div class="tier-bar-row" data-tier="MASTER" data-w="72" data-col="#2C3E6B" data-sc="#2C3E6B" data-range="8.0–8.9">
-                <span class="tier-bar-label" style="color:#2C3E6B;">MASTER</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#2C3E6B;"></div></div>
-                <span class="tier-bar-score" style="color:#2C3E6B;">8.0–8.9</span>
-              </div>
-              <div class="tier-bar-row" data-tier="GRANDMASTER" data-w="85" data-col="#1E2D52" data-sc="#1E2D52" data-range="9.0–9.6">
-                <span class="tier-bar-label" style="color:#1E2D52;">GRANDMASTER</span>
-                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#1E2D52;"></div></div>
-                <span class="tier-bar-score" style="color:#1E2D52;">9.0–9.6</span>
-              </div>
-              <div class="tier-bar-row" data-tier="LEGEND" data-w="97" data-col="#7A5800" data-sc="#7A5800" data-range="9.7–9.9" style="background:#FFF8DC; border-radius:6px; padding:4px;">
-                <span class="tier-bar-label" style="color:#7A5800;">LEGEND</span>
-                <div class="tier-bar-track" style="background:#F0E4A0;"><div class="tier-bar-fill" style="width:0%; background:#7A5800;"></div></div>
-                <span class="tier-bar-score" style="color:#7A5800;">9.7–9.9</span>
-              </div>
-            </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8D0E4;"></div>
-            </div>
-          </div>
+    <div class="sci-body" style="background:#EDF0F7;">
+      <div class="stage" id="s4">
+        <div class="slide active">
+          <table class="score-table">
+            <tr><td class="tc-name" style="color:#8898AA;">Apprentice</td><td class="tc-range">0 – 5.0</td><td class="tc-desc">Learning the fundamentals</td></tr>
+            <tr><td class="tc-name" style="color:#6B7FA8;">Contender</td><td class="tc-range">5.0 – 5.9</td><td class="tc-desc">Craft is developing</td></tr>
+            <tr><td class="tc-name" style="color:#5470A0;">Craftsman</td><td class="tc-range">6.0 – 6.9</td><td class="tc-desc">Consistent execution</td></tr>
+            <tr><td class="tc-name" style="color:#3D5B90;">Maverick</td><td class="tc-range">7.0 – 7.9</td><td class="tc-desc">Distinctive style emerging</td></tr>
+          </table>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EDF0F7; border:1px solid #C8D0E4;">
-            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">Tier boundaries are fixed.</div>
-            <div style="font-size:16px; color:#4a5e80; line-height:1.7;">They do not drift with the platform population. An Apprentice-tier image today means the same thing it will mean in five years. Your progress is real — not relative.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8D0E4;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <table class="score-table">
+            <tr><td class="tc-name" style="color:#2C3E6B;">Master</td><td class="tc-range">8.0 – 8.9</td><td class="tc-desc">Intentional vision, technical command</td></tr>
+            <tr><td class="tc-name" style="color:#1E2D52;">Grandmaster</td><td class="tc-range">9.0 – 9.6</td><td class="tc-desc">Rare — frontier of the discipline</td></tr>
+            <tr style="background:#FFF8DC;"><td class="tc-name" style="color:#7A5800; padding-left:6px;">Legend</td><td class="tc-range" style="color:#7A5800;">9.7 – 9.9</td><td class="tc-desc" style="color:#7A5800;">Images that redefine the genre</td></tr>
+          </table>
+        </div>
+        <div class="slide">
+          <div class="stmt-head">Boundaries never move.</div>
+          <div class="stmt-body">Tiers don't drift with platform population. A Master-tier image today means exactly the same thing in five years. Your progress is real — not relative.</div>
         </div>
       </div>
+      <div class="s-dots" id="s4d"></div>
     </div>
   </div>
 
   <!-- S5: SCORING INTEGRITY -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">Scoring Integrity</span>
-      <div class="sci-section-title">Four safeguards.<br><em>Zero bias.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">Scoring Integrity</span>
+      <div class="sci-title">Four safeguards.<br><em>Zero bias.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s5">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
-            <div class="safeguard-grid">
-              <div class="safeguard-card">
-                <div class="safeguard-card-title">Soul Bonus</div>
-                <div class="safeguard-card-body">Exceptional emotional resonance protects from technical deductions.</div>
-              </div>
-              <div class="safeguard-card">
-                <div class="safeguard-card-title">Humanity Check</div>
-                <div class="safeguard-card-body">Technically competent but emotionally hollow images are corrected.</div>
-              </div>
-              <div class="safeguard-card">
-                <div class="safeguard-card-title">Plateau Penalty</div>
-                <div class="safeguard-card-body">Technical perfection without creative ambition is capped.</div>
-              </div>
-              <div class="safeguard-card">
-                <div class="safeguard-card-title">Iconic Wall</div>
-                <div class="safeguard-card-body">The highest tier requires disruption and authenticity together.</div>
-              </div>
+    <div class="sci-body" style="background:#F2F0ED;">
+      <div class="stage" id="s5">
+        <div class="slide active">
+          <div class="sg-grid">
+            <div class="sg-card">
+              <div class="sg-title">Soul Bonus</div>
+              <div class="sg-body">Exceptional emotional resonance protects against technical deductions</div>
             </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            <div class="sg-card">
+              <div class="sg-title">Humanity Check</div>
+              <div class="sg-body">Technically competent but emotionally hollow images are corrected</div>
+            </div>
+            <div class="sg-card">
+              <div class="sg-title">Plateau Penalty</div>
+              <div class="sg-body">Technical perfection without creative ambition is capped</div>
+            </div>
+            <div class="sg-card">
+              <div class="sg-title">Iconic Wall</div>
+              <div class="sg-body">The highest tier requires disruption and authenticity together</div>
             </div>
           </div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Genre-calibrated weights.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">Scoring weights adjust per genre — Wildlife demands different priorities than Wedding or Macro. Not a single universal rubric applied to everything.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">Genre-calibrated weights.</div>
+          <div class="stmt-body">Wildlife demands different priorities than Wedding or Macro. Not a single rubric applied to everything — each genre scored against its own standards.</div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Peer divergence flagging.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">When peer rating and DDI score diverge significantly, the system flags automatically. No score goes unchallenged when the signals conflict.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">RAW verification.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">All top-placed finalists must submit the original RAW file. This is what keeps competition results honest. No RAW — no placement.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">Peer divergence flagging.</div>
+          <div class="stmt-body">When peer rating and DDI score diverge significantly, the system flags automatically. No score goes unchallenged when the signals conflict.</div>
         </div>
       </div>
+      <div class="s-dots" id="s5d"></div>
     </div>
   </div>
 
   <!-- S6: VERIFICATION LAYER -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">Verification Layer</span>
-      <div class="sci-section-title">Three-tier<br><em>judging.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">Verification Layer</span>
+      <div class="sci-title">Three-tier<br><em>judging.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s6">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
-            <div class="verify-timeline">
-              <div class="verify-steps">
-                <div class="verify-node">1</div>
-                <div class="verify-line"></div>
-                <div class="verify-node">2</div>
-                <div class="verify-line"></div>
-                <div class="verify-node">3</div>
-              </div>
-              <div class="verify-content">
-                <div class="verify-item">
-                  <div class="verify-item-title">DDI Engine</div>
-                  <div class="verify-item-body">Instant, automatic, consistent — every image, every time.</div>
-                </div>
-                <div class="verify-item">
-                  <div class="verify-item-title">Blind peer rating</div>
-                  <div class="verify-item-body">Five independent raters, no names or scores visible.</div>
-                </div>
-                <div class="verify-item">
-                  <div class="verify-item-title">Jury Legends</div>
-                  <div class="verify-item-body">Triggered on divergence or formal dispute. Decisions final.</div>
-                </div>
-              </div>
+    <div class="sci-body" style="background:#F5F0E8;">
+      <div class="stage" id="s6">
+        <div class="slide active">
+          <div class="vt-wrap">
+            <div class="vt-spine">
+              <div class="vt-node">1</div>
+              <div class="vt-line"></div>
+              <div class="vt-node">2</div>
+              <div class="vt-line"></div>
+              <div class="vt-node">3</div>
             </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
+            <div class="vt-items">
+              <div class="vt-item">
+                <div class="vt-title">DDI Engine</div>
+                <div class="vt-body">Instant, automatic, consistent — every image, every time</div>
+              </div>
+              <div class="vt-item">
+                <div class="vt-title">Blind peer rating</div>
+                <div class="vt-body">Five independent raters, no names or scores visible</div>
+              </div>
+              <div class="vt-item">
+                <div class="vt-title">Jury Legends</div>
+                <div class="vt-body">Triggered on divergence or formal dispute — decisions final</div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">The engine is the start, not the end.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">This three-tier structure combines machine objectivity with the perceptual authority of trained human evaluators. Neither alone is sufficient.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">The engine is the start, not the end.</div>
+          <div class="stmt-body">Machine objectivity combined with the perceptual authority of trained human evaluators. Neither alone is sufficient.</div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Outlier ratings excluded automatically.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">Rater identity is concealed during blind review. Outliers are removed before aggregation. The result reflects genuine human perception — not one strong opinion.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
-              <div class="prog-dot" style="background:#C8C0B0;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">Outlier ratings excluded automatically.</div>
+          <div class="stmt-body">Rater identity is concealed. Outliers removed before aggregation. The result reflects genuine human perception — not one strong opinion.</div>
         </div>
       </div>
+      <div class="s-dots" id="s6d"></div>
     </div>
   </div>
 
   <!-- S7: EMOTIONAL CLASSIFICATION -->
   <div class="sci-section">
-    <div class="sci-section-meta">
-      <span class="sci-section-label">Emotional Classification</span>
-      <div class="sci-section-title">Beyond<br><em>the score.</em></div>
+    <div class="sci-meta">
+      <span class="sci-label">Emotional Classification</span>
+      <div class="sci-title">Beyond<br><em>the score.</em></div>
     </div>
-    <div class="sci-section-body">
-      <div class="anim-stack" id="s7">
-        <div class="anim-slide active">
-          <div class="anim-card" style="background:#F0EEEA; border:1px solid #D8D4CC;">
-            <div style="font-family:var(--font-mono); font-size:16px; color:#888; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; font-weight:700;">DDI auto-classifies every image</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #2C3E6B;">
-                <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:4px;">Kinetic</div>
-                <div style="font-size:16px; color:#555;">Motion &amp; energy</div>
-              </div>
-              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #3B6D11;">
-                <div style="font-size:17px; font-weight:700; color:#27500A; margin-bottom:4px;">Serene</div>
-                <div style="font-size:16px; color:#555;">Stillness &amp; calm</div>
-              </div>
-              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #844821;">
-                <div style="font-size:17px; font-weight:700; color:#633806; margin-bottom:4px;">Dramatic</div>
-                <div style="font-size:16px; color:#555;">Tension &amp; conflict</div>
-              </div>
-              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #7A5800;">
-                <div style="font-size:17px; font-weight:700; color:#7A5800; margin-bottom:4px;">Sublime</div>
-                <div style="font-size:16px; color:#555;">Awe &amp; wonder</div>
-              </div>
+    <div class="sci-body" style="background:#F3F1EE;">
+      <div class="stage" id="s7">
+        <div class="slide active">
+          <div class="arch-grid">
+            <div class="arch-card" style="border-top:3px solid #2C3E6B;">
+              <div class="arch-title" style="color:#1E2D52;">Kinetic</div>
+              <div class="arch-body">Motion &amp; energy</div>
             </div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            <div class="arch-card" style="border-top:3px solid #3B6D11;">
+              <div class="arch-title" style="color:#27500A;">Serene</div>
+              <div class="arch-body">Stillness &amp; calm</div>
+            </div>
+            <div class="arch-card" style="border-top:3px solid #844821;">
+              <div class="arch-title" style="color:#633806;">Dramatic</div>
+              <div class="arch-body">Tension &amp; conflict</div>
+            </div>
+            <div class="arch-card" style="border-top:3px solid #7A5800;">
+              <div class="arch-title" style="color:#7A5800;">Sublime</div>
+              <div class="arch-body">Awe &amp; wonder</div>
             </div>
           </div>
         </div>
-        <div class="anim-slide">
-          <div class="anim-card" style="background:#F0EEEA; border:1px solid #D8D4CC;">
-            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">The Archetype is not a label you choose.</div>
-            <div style="font-size:16px; color:#555; line-height:1.7;">It is a recognition of what the image itself communicates — derived from the combination of module scores, particularly Wonder and AQ. It appears on your rating card and image detail.</div>
-            <div class="prog-dots">
-              <div class="prog-dot" style="background:#C8C4BC;"></div>
-              <div class="prog-dot" style="background:#2C3E6B;"></div>
-            </div>
-          </div>
+        <div class="slide">
+          <div class="stmt-head">The Archetype is not a label you choose.</div>
+          <div class="stmt-body">It is a recognition of what the image itself communicates — derived from Wonder and AQ module scores. It appears on your rating card and image detail.</div>
         </div>
       </div>
+      <div class="s-dots" id="s7d"></div>
     </div>
   </div>
 
   <!-- IP NOTICE -->
-  <div style="padding:clamp(32px,5vw,56px) var(--page-pad); background:#FEFCF8; border-top:1px solid #E0D8C8;">
-    <div style="max-width:900px; margin:0 auto;">
-      <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; display:block; margin-bottom:12px;">Intellectual Property</span>
-      <h2 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:#1a1a18; margin-bottom:20px;">What is disclosed. <span style="color:#2C3E6B;">What is protected.</span></h2>
-      <div class="ip-notice">
+  <div class="ip-section">
+    <div class="ip-wrap">
+      <span class="sci-label">Intellectual Property</span>
+      <h2 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:#1a1a18; margin-bottom:0;">What is disclosed. <em style="font-style:normal; color:#2C3E6B;">What is protected.</em></h2>
+      <div class="ip-box">
         <h3>Proprietary Technology Notice</h3>
         <p>The Apex DDI Engine — including its genre-calibrated weight tables, tier boundary parameters, safeguard trigger logic, archetype taxonomy, calibration benchmarks, and all associated AI prompt architecture — constitutes original intellectual property exclusively owned by Shutter League. Reverse engineering, reproduction, or use of any element of this methodology as the basis of a competing scoring system is strictly prohibited. Full legal terms in the <a href="{{ url_for('terms') }}" style="color:#2C3E6B; text-decoration:underline;">Terms &amp; Conditions</a>.</p>
       </div>
     </div>
   </div>
 
-  <!-- BOTTOM CTA -->
+  <!-- CTA -->
   <div class="sci-cta">
     <div class="sci-cta-eyebrow">See it applied to your work</div>
     <h2>Your image. Measured honestly.</h2>
@@ -610,121 +490,120 @@
 <script>
 (function(){
 
-  // Generic section auto-cycler
-  function initCycler(stackId, intervalMs) {
-    var stack = document.getElementById(stackId);
-    if (!stack) return;
-    var slides = stack.querySelectorAll('.anim-slide');
-    if (slides.length < 2) return;
+  var modules = [
+    { abbr:'DoD', name:'Depth of Difficulty',  desc:'Technical and situational difficulty of capturing the image.' },
+    { abbr:'VD',  name:'Visual Disruption',    desc:'How strongly the image breaks from visual convention intentionally.' },
+    { abbr:'DM',  name:'Decisive Moment',      desc:'Timing, irreversibility, and completeness of the captured moment.' },
+    { abbr:'WF',  name:'Wonder Factor',        desc:'Capacity to arrest attention, provoke curiosity, sustain engagement.' },
+    { abbr:'AQ',  name:'Affective Quotient',   desc:'Emotional truth and human resonance — the soul of the score.' }
+  ];
+
+  /* ── Build dots and wire up a cycler for a section ── */
+  function initSection(stageId, dotsId, interval) {
+    var stage = document.getElementById(stageId);
+    var dotsEl = document.getElementById(dotsId);
+    if (!stage || !dotsEl) return;
+    var slides = stage.querySelectorAll('.slide');
+    var n = slides.length;
+    if (n === 0) return;
     var cur = 0;
-    function show(idx) {
+
+    /* build dots */
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('button');
+      d.className = 's-dot' + (i === 0 ? ' on' : '');
+      d.setAttribute('aria-label', 'Slide ' + (i+1));
+      d.dataset.idx = i;
+      dotsEl.appendChild(d);
+    }
+    var dotEls = dotsEl.querySelectorAll('.s-dot');
+
+    function goTo(idx) {
       slides[cur].classList.remove('active');
+      dotEls[cur].classList.remove('on');
       cur = idx;
       slides[cur].classList.add('active');
+      dotEls[cur].classList.add('on');
     }
-    return setInterval(function(){
-      show((cur + 1) % slides.length);
-    }, intervalMs);
+
+    dotEls.forEach(function(d) {
+      d.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); });
+    });
+
+    if (n > 1) {
+      setInterval(function(){ goTo((cur + 1) % n); }, interval);
+    }
   }
 
-  // S1 — counter animation on load
-  var s1bar = document.getElementById('s1bar');
-  var s1counter = document.getElementById('s1counter');
-  if (s1counter) {
-    var val = 0;
-    var t = setInterval(function(){
-      val += 4;
-      if (val > 247) val = 247;
-      s1counter.textContent = val;
-      if (s1bar) s1bar.style.width = Math.round(val / 247 * 60) + '%';
-      if (val >= 247) clearInterval(t);
+  /* ── S1 counter ── */
+  var s1n = document.getElementById('s1n');
+  if (s1n) {
+    var v = 0;
+    var ct = setInterval(function(){
+      v += 5;
+      if (v > 247) { v = 247; clearInterval(ct); }
+      s1n.textContent = v;
     }, 25);
   }
 
-  // S2 — module wheel cycles through descriptions
-  var s2modules = [
-    { abbr: 'DoD', name: 'Depth of Difficulty', desc: 'Technical and situational difficulty of capturing the image.' },
-    { abbr: 'VD',  name: 'Visual Disruption',   desc: 'How strongly the image breaks from visual convention intentionally.' },
-    { abbr: 'DM',  name: 'Decisive Moment',     desc: 'Timing, irreversibility, and completeness of the captured moment.' },
-    { abbr: 'WF',  name: 'Wonder Factor',       desc: 'Capacity to arrest attention, provoke curiosity, sustain engagement.' },
-    { abbr: 'AQ',  name: 'Affective Quotient',  desc: 'Emotional truth and human resonance — the soul of the score.' }
-  ];
+  /* ── S2 module wheel — single slide, description swaps ── */
   var s2desc = document.getElementById('s2desc');
-  var s2dots = document.getElementById('s2dots');
-  if (s2desc && s2dots) {
-    var s2i = 0;
-    var s2dotEls = s2dots.querySelectorAll('.prog-dot');
-    setInterval(function(){
-      s2i = (s2i + 1) % s2modules.length;
-      var m = s2modules[s2i];
+  var s2dotsEl = document.getElementById('s2d');
+  if (s2desc && s2dotsEl) {
+    var mi = 0;
+    for (var i = 0; i < modules.length; i++) {
+      var d = document.createElement('button');
+      d.className = 's-dot' + (i === 0 ? ' on' : '');
+      d.setAttribute('aria-label', modules[i].abbr);
+      d.dataset.mi = i;
+      s2dotsEl.appendChild(d);
+    }
+    var mdots = s2dotsEl.querySelectorAll('.s-dot');
+
+    function setModule(idx) {
+      mdots[mi].classList.remove('on');
+      mi = idx;
+      mdots[mi].classList.add('on');
+      var m = modules[mi];
       s2desc.style.opacity = '0';
       setTimeout(function(){
-        s2desc.innerHTML = '<div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div><div style="font-size:16px; color:#2E7D5A; line-height:1.6;">' + m.desc + '</div>';
+        s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
+          + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
+          + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
+        s2desc.style.transition = 'opacity 0.4s';
         s2desc.style.opacity = '1';
-      }, 300);
-      s2dotEls.forEach(function(d, idx){ d.style.background = idx === s2i ? '#2E7D5A' : '#B8D9CC'; });
-    }, 2000);
+      }, 220);
+    }
+
+    mdots.forEach(function(d){ d.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); }); });
+    setInterval(function(){ setModule((mi + 1) % modules.length); }, 2200);
   }
 
-  // S3, S4 (slide 2 only), S5, S6, S7
-  initCycler('s3', 2200);
-  initCycler('s5', 2200);
-  initCycler('s6', 2200);
-  initCycler('s7', 2500);
+  /* ── Init all other sections ── */
+  initSection('s1', 's1d', 3000);
+  initSection('s3', 's3d', 3000);
+  initSection('s4', 's4d', 3000);
+  initSection('s5', 's5d', 3000);
+  initSection('s6', 's6d', 3000);
+  initSection('s7', 's7d', 3500);
 
-  // S4 — tier bar animation + slide cycle
-  var s4 = document.getElementById('s4');
-  if (s4) {
-    // Animate bars in
-    setTimeout(function(){
-      var bars = document.querySelectorAll('#tier-bars .tier-bar-fill');
-      var rows = document.querySelectorAll('#tier-bars .tier-bar-row');
-      bars.forEach(function(bar, idx){
-        var row = rows[idx];
-        var w = row ? row.getAttribute('data-w') : '50';
-        setTimeout(function(){ bar.style.width = w + '%'; }, idx * 120);
-      });
-    }, 400);
-
-    // Highlight cycle through tiers
-    var tierRows = document.querySelectorAll('#tier-bars .tier-bar-row');
-    var hlIdx = 0;
-    function highlightTier(idx) {
-      tierRows.forEach(function(r, i){
-        r.style.opacity = i === idx ? '1' : '0.45';
-        r.style.transition = 'opacity 0.4s';
-      });
-    }
-    highlightTier(0);
-    setInterval(function(){
-      hlIdx = (hlIdx + 1) % tierRows.length;
-      highlightTier(hlIdx);
-    }, 800);
-
-    // Slide 2 cycle
-    var s4slides = s4.querySelectorAll('.anim-slide');
-    if (s4slides.length > 1) {
-      setTimeout(function(){
-        setInterval(function(){
-          s4slides[0].classList.toggle('active');
-          s4slides[1].classList.toggle('active');
-        }, 4000);
-      }, 3000);
-    }
-  }
-
-  // Intersection observer — trigger animations when section scrolls in
-  var animCards = document.querySelectorAll('.anim-card');
+  /* ── Scroll-triggered fade-in ── */
   if ('IntersectionObserver' in window) {
+    var els = document.querySelectorAll('.sci-section, .ip-section');
     var obs = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
-        if (e.isIntersecting) e.target.style.opacity = '1';
+        if (e.isIntersecting) {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+          obs.unobserve(e.target);
+        }
       });
-    }, { threshold: 0.2 });
-    animCards.forEach(function(c){
-      c.style.opacity = '0';
-      c.style.transition = 'opacity 0.6s ease';
-      obs.observe(c);
+    }, { threshold: 0.1 });
+    els.forEach(function(el){
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      obs.observe(el);
     });
   }
 
