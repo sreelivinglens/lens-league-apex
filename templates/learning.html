@@ -18,8 +18,35 @@
   .learn-sub { font-size:clamp(17px,2.5vw,20px); color:var(--text-primary); max-width:580px; margin:0 auto; line-height:1.6; }
 
   /* ── Plans — horizontal table layout ── */
-  .plans-wrap { margin-bottom:64px; overflow-x:auto; }
+  .plans-wrap { margin-bottom:64px; }
+  /* Mobile: hide table, show cards */
+  @media (max-width:699px) { .plans-wrap { overflow-x:visible; } }
+  @media (min-width:700px) { .plans-wrap { overflow-x:auto; } }
   .plans-table { width:100%; border-collapse:collapse; min-width:560px; }
+  /* Mobile plan cards */
+  .plan-cards { display:none; }
+  @media (max-width:699px) {
+    .plans-table { display:none; }
+    .plan-cards { display:flex; flex-direction:column; gap:16px; margin-bottom:64px; }
+    .plan-card-m { border-radius:var(--radius-lg); border:1px solid rgba(44,62,107,0.2); overflow:hidden; }
+    .plan-card-m.mentor { border-color:#1A2744; }
+    .plan-card-m-head { padding:20px; text-align:center; background:rgba(44,62,107,0.05); }
+    .plan-card-m.mentor .plan-card-m-head { background:#1A2744; }
+    .plan-card-m-name { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#2C3E6B; margin-bottom:8px; }
+    .plan-card-m.mentor .plan-card-m-name { color:#F5C518; }
+    .plan-card-m-price { font-size:36px; font-weight:700; color:#2C3E6B; line-height:1; }
+    .plan-card-m.mentor .plan-card-m-price { font-size:22px; color:#F5C518; }
+    .plan-card-m-sub { font-size:16px; color:var(--text-primary); margin-top:4px; }
+    .plan-card-m.mentor .plan-card-m-sub { color:rgba(255,255,255,0.7); }
+    .plan-card-m-badge { display:inline-block; background:#F5C518; color:#000; font-size:16px; font-weight:700; padding:4px 10px; border-radius:4px; margin-top:10px; }
+    .plan-card-m.mentor .plan-card-m-badge { background:rgba(245,197,24,0.2); color:#F5C518; }
+    .plan-card-m-features { padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+    .plan-card-m-feature { display:flex; align-items:center; gap:10px; font-size:16px; color:var(--text-primary); }
+    .plan-card-m-feature .check { color:#1A5C2A; font-weight:700; font-size:18px; flex-shrink:0; }
+    .plan-card-m-feature .cross { color:#aaa; font-weight:700; font-size:18px; flex-shrink:0; }
+    .plan-card-m-feature .check-mentor { color:#4acba0; font-weight:700; font-size:18px; flex-shrink:0; }
+    .plan-card-m-cta { padding:0 20px 20px; }
+  }
   .plans-table th {
     padding:20px 20px 16px;
     font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px;
@@ -59,8 +86,8 @@
   /* ── Graph proof ── */
   .proof { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; margin-bottom:64px; }
   @media (max-width:700px) { .proof { grid-template-columns:1fr; gap:32px; } }
-  .proof-graph { background:#0d1f1a; border-radius:var(--radius-lg); padding:24px; aspect-ratio:4/3; display:flex; flex-direction:column; }
-  .proof-graph canvas { flex:1; width:100%; }
+  .proof-graph { background:#0d1f1a; border-radius:var(--radius-lg); padding:24px; aspect-ratio:4/3; display:flex; flex-direction:column; overflow:hidden; }
+  .proof-graph canvas { flex:1; width:100%; height:0; min-height:0; display:block; }
   .proof-legend { display:flex; gap:20px; justify-content:center; margin-top:12px; }
   .proof-leg-item { display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:16px; font-weight:700; color:#FFFFFF; }
   .proof-leg-line { width:24px; height:3px; border-radius:2px; }
@@ -78,7 +105,8 @@
   .how-scroll::-webkit-scrollbar { height:4px; }
   .how-scroll::-webkit-scrollbar-track { background:var(--border-subtle); border-radius:2px; }
   .how-scroll::-webkit-scrollbar-thumb { background:#2C3E6B; border-radius:2px; }
-  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:28px 24px; text-align:center; flex:0 0 220px; scroll-snap-align:start; }
+  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:24px 20px; text-align:center; flex:0 0 200px; scroll-snap-align:start; display:flex; flex-direction:column; justify-content:flex-start; }
+  @media (max-width:699px) { .how-card { flex:0 0 72vw; max-width:280px; } }
   .how-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:#2C3E6B; line-height:1; margin-bottom:14px; }
   .how-card-title { font-size:19px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
   .how-card-body { font-size:16px; color:var(--text-primary); line-height:1.6; }
@@ -136,7 +164,7 @@
 
 <div class="learn-wrap">
 
-  <!-- Plans — horizontal table -->
+  <!-- Plans — horizontal table (desktop) / cards (mobile) -->
   <div class="plans-wrap">
     <table class="plans-table">
       <thead>
@@ -226,9 +254,67 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </div><!-- /plans-wrap -->
 
-  <!-- Proof -->
+  <!-- Mobile plan cards (shown below 700px, table hidden) -->
+  <div class="plan-cards">
+
+    <div class="plan-card-m">
+      <div class="plan-card-m-head">
+        <div class="plan-card-m-name">Mobile League</div>
+        <div class="plan-card-m-price">₹99<span style="font-size:16px;font-weight:400;">/mo</span></div>
+        <div class="plan-card-m-sub">or ₹999/year</div>
+        <span class="plan-card-m-badge">8 images / month</span>
+      </div>
+      <div class="plan-card-m-features">
+        <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
+        <div class="plan-card-m-feature"><span class="cross">✗</span> RAW verification not applicable</div>
+      </div>
+      <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
+    </div>
+
+    <div class="plan-card-m">
+      <div class="plan-card-m-head">
+        <div class="plan-card-m-name">Camera League</div>
+        <div class="plan-card-m-price">₹199<span style="font-size:16px;font-weight:400;">/mo</span></div>
+        <div class="plan-card-m-sub">or ₹1,999/year</div>
+        <span class="plan-card-m-badge">5 images / month</span>
+      </div>
+      <div class="plan-card-m-features">
+        <div class="plan-card-m-feature"><span class="check">✓</span> Full DDI score on every upload</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Photographer voice critique</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Weekly Challenge &amp; POTY eligibility</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Leaderboard ranking &amp; peer rating</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> RAW verification eligible for prizes</div>
+        <div class="plan-card-m-feature"><span class="check">✓</span> Points earned on every scored image</div>
+      </div>
+      <div class="plan-card-m-cta"><a href="{{ url_for('pricing') }}" class="plans-btn outline">See Pricing →</a></div>
+    </div>
+
+    <div class="plan-card-m mentor">
+      <div class="plan-card-m-head">
+        <div class="plan-card-m-name">Go Further</div>
+        <div class="plan-card-m-price">Pay Per Session</div>
+        <div class="plan-card-m-sub">No subscription</div>
+        <span class="plan-card-m-badge">Legend ₹100 · Expert ₹75 · Senior ₹50</span>
+      </div>
+      <div class="plan-card-m-features">
+        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Full DDI score on every upload</div>
+        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Photographer voice critique</div>
+        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> Human mentor — structured review</div>
+        <div class="plan-card-m-feature"><span class="check-mentor">✓</span> 72-hour turnaround guaranteed</div>
+      </div>
+      <div class="plan-card-m-cta">
+        <a href="{{ url_for('learning') }}" class="plans-btn gold">Choose Mentor →</a>
+        <div class="plans-soon" style="margin-top:8px;">Payments opening soon</div>
+      </div>
+    </div>
+
+  </div><!-- /plan-cards -->
   <div class="proof">
     <div class="proof-graph">
       <canvas id="learnChart"></canvas>
