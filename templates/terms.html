@@ -61,18 +61,6 @@
   .toc a:hover { color: #2C3E6B; }
 </style>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-  if(window.innerWidth > 520){
-    document.querySelectorAll(".sl-accordion").forEach(function(el){
-      el.setAttribute("open","");
-    });
-  }
-})();
-</script>
-{% endblock %}
 {% block content %}
 <div class="terms-wrap">
 
