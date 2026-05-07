@@ -51,11 +51,18 @@
     for any privacy questions.
   </div>
 
-  <h2><span>01</span> Who We Are</h2>
-  <p>{{ platform_name }} is a photography scoring and skill assessment platform operated from India. Contact: <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span></p>
-
-  <h2><span>02</span> What We Collect</h2>
-  <ul>
+  
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">01 — Who We Are <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>{{ platform_name }} is a photography scoring and skill assessment platform operated from India. Contact: <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span></p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">02 — What We Collect <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <ul>
     <li><strong>Account information</strong> — email address, username, password (hashed, never stored in plain text)</li>
     <li><strong>Profile information</strong> — country, state, city, declared camera or phone brand</li>
     <li><strong>Images you upload</strong> — the photograph, title, genre, location, and subject notes you provide</li>
@@ -63,9 +70,13 @@
     <li><strong>Payment information</strong> — processed entirely by our RBI-authorised payment gateway provider. We store only the subscription or order ID. <strong>We do not collect, store, or have access to your card number, CVV, UPI PIN, net banking credentials, or any other payment authentication data.</strong></li>
     <li><strong>Usage data</strong> — pages visited, images scored, challenge submissions.</li>
   </ul>
-
-  <h2><span>03</span> How We Use Your Data</h2>
-  <p><strong>We never sell your data.</strong> {{ platform_name }} does not serve advertising in its core platform. However, programme sponsors — such as photography brands (e.g. Fujifilm) or equipment partners — may be featured within sponsored programmes. In those cases, only aggregate participation data (e.g. number of entries, programme themes) may be shared with the sponsor. No personal data, images, or individual scores are shared with sponsors without your explicit consent.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">03 — How We Use Your Data <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p><strong>We never sell your data.</strong> {{ platform_name }} does not serve advertising in its core platform. However, programme sponsors — such as photography brands (e.g. Fujifilm) or equipment partners — may be featured within sponsored programmes. In those cases, only aggregate participation data (e.g. number of entries, programme themes) may be shared with the sponsor. No personal data, images, or individual scores are shared with sponsors without your explicit consent.</p>
   <ul>
     <li>To score your images using the Apex DDI Engine</li>
     <li>To display your portfolio and scores on your dashboard and the leaderboard</li>
@@ -75,9 +86,13 @@
     <li>To operate photography programmes, challenges, and POTY tracking</li>
     <li>To facilitate sponsored programmes where photography brands or equipment partners are involved, subject to the data sharing limits described above</li>
   </ul>
-
-  <h2><span>04</span> Data Sharing</h2>
-  <p>We share data only with the following service providers, strictly for the purpose of operating the platform:</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">04 — Data Sharing <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>We share data only with the following service providers, strictly for the purpose of operating the platform:</p>
   <ul>
     <li><strong>Payment Gateway Provider</strong> — payment processing. Governed by the gateway provider's Privacy Policy.</li>
     <li><strong>Brevo</strong> — transactional email delivery.</li>
@@ -86,9 +101,13 @@
     <li><strong>Anthropic Claude API</strong> — AI-powered image scoring. Images are sent for analysis and are not stored by Anthropic beyond their standard API data handling policies.</li>
   </ul>
   <p>We do not share your data with advertisers, data brokers, or any third party for marketing purposes.</p>
-
-  <h2><span>05</span> Leaderboard &amp; Public Data</h2>
-  <p>The following information is visible publicly on the leaderboard and image share pages:</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">05 — Leaderboard &amp; Public Data <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>The following information is visible publicly on the leaderboard and image share pages:</p>
   <ul>
     <li>Your username and display name</li>
     <li>Your city and state (if provided in your profile)</li>
@@ -96,28 +115,52 @@
     <li>Your peer rating count (not individual peer scores)</li>
   </ul>
   <p>Your exact DDI score is private and visible only on your personal dashboard. Only tier classifications are shown publicly.</p>
-
-  <h2><span>06</span> Image Storage &amp; Retention</h2>
-  <p>Images you upload are stored permanently on Cloudflare R2 unless you delete them. Deleting an image from your dashboard removes it from the platform and from public display. Thumbnails and score cards are also deleted.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">06 — Image Storage &amp; Retention <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>Images you upload are stored permanently on Cloudflare R2 unless you delete them. Deleting an image from your dashboard removes it from the platform and from public display. Thumbnails and score cards are also deleted.</p>
   <p>RAW files submitted for verification are stored for 90 days after the competition result is published, then deleted.</p>
-
-  <h2><span>07</span> Cookies</h2>
-  <p>We use a single session cookie to keep you logged in. We do not use tracking cookies, advertising cookies, or third-party analytics cookies. No cookie consent banner is required as we use only strictly necessary cookies.</p>
-
-  <h2><span>08</span> Data Security</h2>
-  <p>Passwords are hashed using industry-standard algorithms and are never stored in plain text. All data is transmitted over HTTPS. Payment data is handled entirely by our payment gateway provider and never passes through our servers.</p>
-
-  <h2><span>09</span> Your Rights</h2>
-  <p>You have the right to access, correct, or delete your personal data at any time. You can delete your account and all associated data from your profile settings. For data export or other requests, contact us directly.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">07 — Cookies <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>We use a single session cookie to keep you logged in. We do not use tracking cookies, advertising cookies, or third-party analytics cookies. No cookie consent banner is required as we use only strictly necessary cookies.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">08 — Data Security <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>Passwords are hashed using industry-standard algorithms and are never stored in plain text. All data is transmitted over HTTPS. Payment data is handled entirely by our payment gateway provider and never passes through our servers.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">09 — Your Rights <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>You have the right to access, correct, or delete your personal data at any time. You can delete your account and all associated data from your profile settings. For data export or other requests, contact us directly.</p>
   <p>To exercise any of these rights, email
     <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span>
     with subject line <strong>Privacy Request — [your username]</strong>.</p>
-
-  <h2><span>10</span> Changes to This Policy</h2>
-  <p>We may update this Privacy Policy from time to time. We will notify you of material changes by posting a notice on the platform. Continued use of the platform after changes are posted constitutes acceptance of the updated policy.</p>
-
-  <h2><span>10a</span> DPDP Act &amp; Your Rights Under Indian Law</h2>
-  <p>{{ platform_name }} processes personal data in accordance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong> of India. As a Data Fiduciary, we process your personal data only for the lawful purposes described in this policy and only to the extent necessary for those purposes.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">10 — Changes to This Policy <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>We may update this Privacy Policy from time to time. We will notify you of material changes by posting a notice on the platform. Continued use of the platform after changes are posted constitutes acceptance of the updated policy.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">10a — DPDP Act &amp; Your Rights Under Indian Law <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>{{ platform_name }} processes personal data in accordance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong> of India. As a Data Fiduciary, we process your personal data only for the lawful purposes described in this policy and only to the extent necessary for those purposes.</p>
   <ul>
     <li><strong>Consent:</strong> By registering on {{ platform_name }}, you provide consent to the collection and processing of your personal data as described in this policy. You may withdraw consent at any time by deleting your account.</li>
     <li><strong>Right to access:</strong> You have the right to obtain a summary of the personal data we hold about you and details of the processing activities carried out.</li>
@@ -127,10 +170,13 @@
   </ul>
   <p><strong>Grievance Officer:</strong> For any data protection concerns, contact <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span> with subject line <strong>DPDP Grievance — [your username]</strong>.</p>
   <p>We do not transfer personal data outside India except to the service providers listed in Section 04, each of whom processes data under appropriate contractual safeguards. We retain personal data only for as long as necessary for the purposes described in this policy or as required by applicable law.</p>
-
-  
-  <h2><span>11</span> International Users</h2>
-  <p>{{ platform_name }} is operated from India. If you access the platform from outside India, your data is processed and stored in India. By using the platform, you consent to this transfer.</p>
+      </div>
+    </details>
+    
+    <details class="sl-accordion">
+      <summary class="sl-accordion-trigger">11 — International Users <span class="sl-accordion-icon">▾</span></summary>
+      <div class="sl-accordion-body">
+      <p>{{ platform_name }} is operated from India. If you access the platform from outside India, your data is processed and stored in India. By using the platform, you consent to this transfer.</p>
 
   <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:20px 0 10px;">European Union &amp; United Kingdom (GDPR / UK GDPR)</h3>
   <p>If you are located in the EU or UK, you have rights under GDPR / UK GDPR including: right of access, rectification, erasure, restriction of processing, data portability, and the right to object. To exercise these rights email <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span> with subject <strong>GDPR Request — [username]</strong>. We will respond within 30 days. Our lawful basis for processing is your consent (given at registration) and legitimate interests (platform operation).</p>
@@ -145,12 +191,23 @@
   <p>Canadian users have rights under the Personal Information Protection and Electronic Documents Act (PIPEDA). You may withdraw consent and request access to or deletion of your personal data at any time.</p>
 
   <p>For all international privacy requests: email <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span> with subject <strong>Privacy Request — [your country] — [username]</strong>. We aim to respond within 30 days.</p>
-
-  <div class="terms-highlight">
+      </div>
+    </details>
+    <div class="terms-highlight">
     Questions about your privacy?
     &nbsp;<a href="/contact" style="color:#2C3E6B;">Contact us</a>
     &nbsp;or email <span style="color:#2C3E6B; font-weight:600;">{{ contact_email }}</span>
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  if(window.innerWidth > 520){
+    document.querySelectorAll(".sl-accordion").forEach(function(el){ el.setAttribute("open",""); });
+  }
+})();
+</script>
 {% endblock %}
