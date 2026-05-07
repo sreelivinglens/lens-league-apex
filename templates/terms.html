@@ -22,8 +22,8 @@
     margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
   }
   .terms-section h2 span {
-    font-family: var(--font-mono); font-size: 14px;
-    color: var(--gold); margin-right: 10px; font-weight: 600;
+    font-family: var(--font-mono); font-size: 16px;
+    color: #2C3E6B; margin-right: 10px; font-weight: 600;
   }
   .terms-section h3 {
     font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
@@ -44,7 +44,7 @@
     padding: 16px 20px; margin: 16px 0;
     font-size: 16px; color: var(--text-primary); line-height: 1.7;
   }
-  .terms-highlight strong { color: var(--gold); }
+  .terms-highlight strong { color: #2C3E6B; }
   .terms-highlight.ip { border-left-color: var(--gold); background: rgba(245,197,24,0.15); }
   .terms-highlight.legal { border-left-color: var(--red); background: rgba(224,85,85,0.05); }
   .terms-highlight.warning { border-left-color: var(--amber); background: rgba(224,153,64,0.06); }
@@ -53,13 +53,12 @@
     border-radius: var(--radius-md); padding: 24px; margin-bottom: 40px;
   }
   .toc-title {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
-    letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;
+    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
   }
   .toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
   .toc li { font-size: 16px; }
   .toc a { color: var(--text-primary); text-decoration: none; transition: color 0.2s; }
-  .toc a:hover { color: var(--gold); }
+  .toc a:hover { color: #2C3E6B; }
 </style>
 {% endblock %}
 
@@ -130,7 +129,7 @@
     <h2><span>03</span> Subscriptions &amp; Payments</h2>
     <p>Subscriptions are billed in advance via our payment gateway provider. By subscribing, you authorise {{ platform_name }} to charge the applicable fee to your payment method on a recurring basis.</p>
     <ul>
-      <li>Subscription fees are non-refundable except as set out in our <a href="{{ url_for('refund_policy') }}" style="color:var(--gold);">Refund Policy</a>.</li>
+      <li>Subscription fees are non-refundable except as set out in our <a href="{{ url_for('refund_policy') }}" style="color:#2C3E6B;">Refund Policy</a>.</li>
       <li>You may cancel at any time from your dashboard. Access continues to the end of the current billing period.</li>
       <li>{{ platform_name }} reserves the right to change subscription pricing with 30 days' notice.</li>
       <li>Taxes applicable under Indian law (GST) will be added where required.</li>
@@ -157,7 +156,7 @@
     <h3>Your Content</h3>
     <p>You retain full copyright in all images you upload. Uploading an image to {{ platform_name }} does not transfer ownership or copyright to {{ platform_name }}.</p>
     <p>By uploading, you grant {{ platform_name }} a <strong>non-exclusive, royalty-free, worldwide licence</strong> to display, reproduce, and use your image for platform operation, including displaying it to other Members, using it in promotional materials, and including it in annual showcases. Attribution will always be given. This licence does not permit {{ platform_name }} to sell your images or sublicense them to third parties.</p>
-    <p>You may revoke this licence at any time by deleting your image from the platform or by writing to <span style="color:var(--gold);">{{ contact_email }}</span>. Removal from promotional materials will be completed within 30 days.</p>
+    <p>You may revoke this licence at any time by deleting your image from the platform or by writing to <span style="color:#2C3E6B;">{{ contact_email }}</span>. Removal from promotional materials will be completed within 30 days.</p>
     <h3>Platform IP</h3>
     <div class="terms-highlight ip">
       <strong>Proprietary Technology:</strong> The Apex DDI Engine, its scoring methodology, weighting systems, DDI dimensions (DoD, Disruption, DM, Wonder, AQ), all platform software, and all competition structures are the exclusive intellectual property of {{ platform_name }}. Reverse engineering, scraping, or reproducing any part of the scoring system is strictly prohibited.
@@ -206,7 +205,7 @@
   <!-- 8 -->
   <div class="terms-section" id="contests">
     <h2><span>08</span> Programme Participation</h2>
-    <p>All competitions on {{ platform_name }} are governed by the <a href="{{ url_for('contest_rules') }}" style="color:var(--gold);">Programme Rules &amp; Legal Framework</a>, which form part of these Terms &amp; Conditions. In the event of conflict, the Programme Rules prevail in respect of programme matters.</p>
+    <p>All competitions on {{ platform_name }} are governed by the <a href="{{ url_for('contest_rules') }}" style="color:#2C3E6B;">Programme Rules &amp; Legal Framework</a>, which form part of these Terms &amp; Conditions. In the event of conflict, the Programme Rules prevail in respect of programme matters.</p>
     <ul>
       <li>An active subscription is required to participate in Monthly Programmes, POTY, and BOW.</li>
       <li>{{ platform_name }} reserves the right to disqualify any entry, withhold any award, and permanently suspend any account found to have violated these terms or the Programme Rules.</li>
@@ -223,7 +222,7 @@
       <li>Systematic bias, manipulation, or coordinated rating of specific photographers may result in account suspension and forfeiture of all credits and pool entries.</li>
       <li>{{ platform_name }} may audit peer rating patterns and flag accounts exhibiting abnormal behaviour.</li>
     </ul>
-      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; margin:16px 0; font-size:15px; color:var(--text-secondary); line-height:1.7;">
+      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; margin:16px 0; font-size:16px; color:var(--text-secondary); line-height:1.7;">
       <strong style="color:var(--text-primary);">Third-party outage remedy:</strong> In the event of platform unavailability exceeding 72 consecutive hours caused solely by third-party infrastructure failure (including authentication providers, cloud hosting, or payment processors), subscribers may request a pro-rata credit applied to their next billing cycle. This credit is the sole remedy for third-party-caused unavailability and does not constitute a right to a cash refund.
     </div>
   </div>
@@ -243,7 +242,7 @@
   <div class="terms-section" id="termination">
     <h2><span>11</span> Termination</h2>
     <p>{{ platform_name }} reserves the right to suspend or permanently terminate any account at any time for violation of these Terms &amp; Conditions, the Programme Rules, or applicable law, without prior notice and without refund.</p>
-    <p>You may close your account at any time by contacting <span style="color:var(--gold);">{{ contact_email }}</span>. Upon closure, your images and data will be deleted within 30 days, except where retention is required by law.</p>
+    <p>You may close your account at any time by contacting <span style="color:#2C3E6B;">{{ contact_email }}</span>. Upon closure, your images and data will be deleted within 30 days, except where retention is required by law.</p>
   </div>
 
   <!-- 12 -->
@@ -260,7 +259,7 @@
 
     <h2><span>14</span> Payments &amp; Card Security</h2>
     <p>All payments on {{ platform_name }} are processed exclusively through RBI-authorised third-party payment gateways. <strong>{{ platform_name }} does not collect, process, or store your card number, CVV, UPI PIN, net banking credentials, or any other payment authentication data.</strong> All such data is handled directly and securely by the relevant payment gateway under their own PCI-DSS compliance framework.</p>
-    <p>By making a payment, you agree to the terms and privacy policy of the relevant payment gateway. Subscription fees are charged at the start of each billing period and are non-refundable except as expressly stated in the <a href="{{ url_for('refund_policy') }}" style="color:var(--gold);">Refund Policy</a>.</p>
+    <p>By making a payment, you agree to the terms and privacy policy of the relevant payment gateway. Subscription fees are charged at the start of each billing period and are non-refundable except as expressly stated in the <a href="{{ url_for('refund_policy') }}" style="color:#2C3E6B;">Refund Policy</a>.</p>
 
     <h2><span>15</span> Prohibited Use &amp; Anti-Fraud</h2>
     <p>You must not use {{ platform_name }} or its payment infrastructure for any unlawful, fraudulent, or prohibited purpose including but not limited to:</p>
@@ -278,14 +277,14 @@
     <p><strong>Grievance Officer</strong><br>
     Shutter League<br>
     Bengaluru, Karnataka, India<br>
-    Email: <span style="color:var(--gold);">{{ contact_email }}</span><br>
+    Email: <span style="color:#2C3E6B;">{{ contact_email }}</span><br>
     Subject line: <strong>Grievance — [your username]</strong></p>
     <p>All grievances will be acknowledged within <strong>48 hours</strong> of receipt and resolved within <strong>30 days</strong>. If you are not satisfied with the resolution, you may approach the relevant consumer forum or regulatory authority.</p>
   </div>
 
   <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
     <p style="font-size:16px; color:var(--text-muted); margin-bottom:16px;">
-      Questions? Email <span style="color:var(--gold);">{{ contact_email }}</span>
+      Questions? Email <span style="color:#2C3E6B;">{{ contact_email }}</span>
     </p>
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       <a href="{{ url_for('contest_rules') }}" class="btn btn-solid">Programme Rules &rarr;</a>

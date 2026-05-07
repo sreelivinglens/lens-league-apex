@@ -21,8 +21,8 @@
     .contact-card { padding: 20px 18px; }
   }
   .contact-label {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px;
+    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+    letter-spacing: 2px; color: #2C3E6B; text-transform: uppercase; margin-bottom: 8px;
   }
   .contact-title {
     font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;
@@ -31,11 +31,11 @@
     font-size: 16px; color: var(--text-primary); line-height: 1.7; margin-bottom: 20px;
   }
   .contact-email-display {
-    font-family: var(--font-mono); font-size: 15px; font-weight: 600;
-    color: var(--gold); margin-bottom: 20px; letter-spacing: 0.5px;
+    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+    color: #2C3E6B; margin-bottom: 20px; letter-spacing: 0.5px;
   }
   .contact-response {
-    font-size: 14px; color: var(--text-primary); margin-top: 12px;
+    font-size: 16px; color: var(--text-primary); margin-top: 12px;
   }
   .contact-divider {
     border: none; border-top: 1px solid var(--border); margin: 32px 0;
@@ -50,8 +50,8 @@
     .contact-form .form-row { grid-template-columns: 1fr; }
   }
   .contact-form label {
-    display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-    letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+    display: block; font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+    letter-spacing: 2px; color: #2C3E6B; text-transform: uppercase; margin-bottom: 6px;
   }
   .contact-form input,
   .contact-form select,
@@ -66,7 +66,7 @@
   .contact-form textarea:focus { border-color: var(--gold); }
   .contact-form textarea { min-height: 130px; resize: vertical; line-height: 1.6; }
   .contact-form .char-count {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-primary);
+    font-family: var(--font-mono); font-size: 16px; color: var(--text-primary);
     text-align: right; margin-top: 4px;
   }
   .contact-form .char-count.warn { color: var(--amber); }
@@ -75,14 +75,14 @@
     flex-wrap: wrap; gap: 12px;
   }
   .contact-form .submit-note {
-    font-size: 14px; color: var(--text-primary);
+    font-size: 16px; color: var(--text-primary);
   }
 
   /* FAQ */
   .faq-item { margin-bottom: 24px; }
   .faq-q { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
   .faq-a { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-  .faq-a a { color: var(--gold); }
+  .faq-a a { color: #2C3E6B; }
 </style>
 {% endblock %}
 
@@ -149,9 +149,9 @@
     </form>
 
     <hr class="contact-divider" style="margin:28px 0 20px;">
-    <div style="font-size:14px; color:var(--text-primary); line-height:1.7;">
+    <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">
       Prefer email directly?
-      <span class="contact-email-display" style="font-size:14px;">{{ contact_email }}</span>
+      <span class="contact-email-display" style="font-size:16px;">{{ contact_email }}</span>
     </div>
   </div>
 
@@ -161,30 +161,30 @@
     <div style="display:flex; flex-direction:column; gap:16px;">
 
       <div style="border-left:3px solid #F5C518; padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Billing or refund request</div>
-        <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Billing or refund request</div>
+        <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
           Include your registered email address and the date of charge.
-          See our <a href="/refund-policy" style="color:var(--gold);">Refund Policy</a> for full details.
+          See our <a href="/refund-policy" style="color:#2C3E6B;">Refund Policy</a> for full details.
         </div>
       </div>
 
       <div style="border-left:3px solid #F5C518; padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Image integrity appeal</div>
-        <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Image integrity appeal</div>
+        <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
           Include your username and image ID. If you have your original RAW file or camera roll metadata, attach it. We review within 14 days.
         </div>
       </div>
 
       <div style="border-left:3px solid #F5C518; padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Technical issue or bug</div>
-        <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Technical issue or bug</div>
+        <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
           Include your browser, device, and a screenshot if possible. We take platform issues seriously and respond fast.
         </div>
       </div>
 
       <div style="border-left:3px solid #F5C518; padding-left:16px;">
-        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Brand sponsorship enquiry</div>
-        <div style="font-size:15px; color:var(--text-primary); line-height:1.6;">
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Brand sponsorship enquiry</div>
+        <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
           Tell us about your brand and the kind of challenge or competition you would like to sponsor. We will respond with our media pack.
         </div>
       </div>
@@ -195,7 +195,7 @@
   <hr class="contact-divider">
 
   {# ── Quick FAQs ────────────────────────────────────────────────────────── #}
-  <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:20px;">
+  <div style="font-family:var(--font-mono); font-size:16px; font-weight:600; letter-spacing:2px; color:var(--text-primary); text-transform:uppercase; margin-bottom:20px;">
     Common questions
   </div>
 
