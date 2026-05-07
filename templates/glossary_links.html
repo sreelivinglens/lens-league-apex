@@ -1,0 +1,80 @@
+{#
+  glossary_links.html — ShutterLeague Glossary Link Macros
+  =========================================================
+  Session 7 | AAA-compliant link colours:
+    Dark background  → Gold  #F5C518  (on slate, navy, charcoal etc.)
+    Light background → Slate #2C3E6B  (on cream, white, light grey etc.)
+
+  USAGE:
+    {% from "glossary_links.html" import glink, glink_dark, glink_light %}
+
+    Light context (default):
+      {{ glink("DDI") }}
+      {{ glink("Body of Work", label="see Body of Work") }}
+
+    Dark context:
+      {{ glink("POTY", dark=true) }}
+
+    Explicit helpers (no need to pass dark=):
+      {{ glink_light("Shadow rank") }}
+      {{ glink_dark("Apex DDI Engine") }}
+
+  TERM REGISTRY:
+    Any term not in the registry is returned as plain text (no crash).
+#}
+
+{%- macro glink(term, label=None, dark=false) -%}
+  {#- Master macro. dark=true → gold link; dark=false → slate link -#}
+  {%- set registry = {
+    "DDI":              "/science",
+    "Apex DDI Engine":  "/science",
+    "DoD":              "/science#dimensions",
+    "Depth of Detail":  "/science#dimensions",
+    "DM":               "/science#dimensions",
+    "Decisive Moment":  "/science#dimensions",
+    "AQ":               "/science#dimensions",
+    "Aesthetic Quality":"/science#dimensions",
+    "Wonder":           "/science#dimensions",
+    "Disruption":       "/science#dimensions",
+    "Visual Disruption":"/science#dimensions",
+    "POTY":             "/poty",
+    "Annual Excellence Award": "/poty",
+    "Body of Work":     "/bow_info",
+    "Weekly Challenge": "/programmes",
+    "Open Programme":   "/programmes",
+    "Shadow rank":      "/how-it-works",
+    "Shadow Rank":      "/how-it-works",
+    "Peer rating":      "/how-it-works",
+    "Peer Rating":      "/how-it-works",
+    "Tier":             "/how-it-works"
+  } -%}
+  {%- set href = registry.get(term) -%}
+  {%- set display = label if label else term -%}
+  {%- if href -%}
+    {%- if dark -%}
+      <a href="{{ href }}" class="glossary-link glossary-link--dark">{{ display }}</a>
+    {%- else -%}
+      <a href="{{ href }}" class="glossary-link glossary-link--light">{{ display }}</a>
+    {%- endif -%}
+  {%- else -%}
+    {{ display }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro glink_light(term, label=None) -%}
+  {{ glink(term, label=label, dark=false) }}
+{%- endmacro -%}
+
+{%- macro glink_dark(term, label=None) -%}
+  {{ glink(term, label=label, dark=true) }}
+{%- endmacro -%}
+
+
+{#
+  glink_inline — for flowing prose where you want to embed the term
+  inline with surrounding text. Wraps in <span class="nowrap"> so the
+  link never splits mid-word on a line break.
+#}
+{%- macro glink_inline(term, label=None, dark=false) -%}
+  <span class="nowrap">{{ glink(term, label=label, dark=dark) }}</span>
+{%- endmacro -%}
