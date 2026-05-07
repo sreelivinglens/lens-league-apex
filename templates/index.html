@@ -243,7 +243,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
           <div class="sl-hero-id-info">
             <div class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</div>
             {% if hero.genre %}<div class="sl-hero-id-meta">{{ hero.genre | upper }}</div>{% endif %}
-            <div class="sl-hero-id-by">Shot by @{{ hero.author.username }}</div>
+            <div class="sl-hero-id-by">Shot by {{ hero.author.username }}</div>
           </div>
         </div>
       {% endif %}
@@ -257,7 +257,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
         <div class="sl-hero-id-info">
           <div class="sl-hero-id-score">8.7</div>
           <div class="sl-hero-id-meta">WILDLIFE</div>
-          <div class="sl-hero-id-by">Shot by @sri</div>
+          <div class="sl-hero-id-by">Shot by sri</div>
         </div>
       </div>
     {% endif %}
