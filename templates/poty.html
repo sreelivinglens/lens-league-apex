@@ -164,10 +164,19 @@
 @media (max-width:768px) {
   .track-grid { grid-template-columns:1fr; }
   .sh-cell, .flip-text { font-size:16px; }
+  .track-card { padding:20px 16px; }
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
   .sh-cell.narrow, .sl-cell.narrow { display:none; }
+  .solari-board { max-width:100%; box-sizing:border-box; }
+}
+@media (max-width:480px) {
+  .awards-cta { padding:28px 18px; }
+  .awards-cta-btns { flex-direction:column; align-items:stretch; }
+  .awards-cta-btns a { width:100%; text-align:center; box-sizing:border-box; }
+  .board-desc-row { flex-direction:column; gap:4px; }
+  .board-desc-label { min-width:auto; }
 }
 </style>
 {% endblock %}
@@ -241,6 +250,7 @@
   <!-- Genres -->
   <div class="awards-section">
     <div class="awards-section-title">Eight Genres</div>
+    <div style="overflow-x:auto;">
     <table class="genre-table">
       <thead>
         <tr><th>Genre</th><th>Description</th></tr>
@@ -256,6 +266,7 @@
         <tr><td>Abstract</td><td>Non-representational. Shape, colour, form without literal subject.</td></tr>
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- Timeline -->
@@ -358,7 +369,7 @@
     <h2>Start Building Your Standing</h2>
     <p>Upload your photographs, build your DDI score, and qualify for the Annual Excellence Award.</p>
     <p class="cta-note">Requires an active Camera or Mobile subscription for at least 6 months within the calendar year to qualify for awards.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <div class="awards-cta-btns" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}"
          class="btn btn-solid" style="font-size:16px;padding:13px 28px;">
         Upload Your Photo →
