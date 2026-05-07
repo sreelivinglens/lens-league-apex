@@ -3,392 +3,731 @@
 
 {% block extra_css %}
 <style>
-  /* ── HERO ──────────────────────────────────────────────────────── */
-  .sci-hero { text-align:center; padding:clamp(48px,8vw,80px) 0 56px; max-width:680px; margin:0 auto; }
-  .sci-hero h1 { font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary); margin-bottom:12px; line-height:1.1; }
+  body:has(.sci-page) main { padding:0 !important; max-width:none !important; }
+
+  .sci-page { background:#FEFCF8; }
+  .sci-wrap { max-width:1200px; margin:0 auto; padding:0 var(--page-pad); }
+
+  /* ── HERO ── */
+  .sci-hero {
+    text-align:center; padding:clamp(40px,7vw,72px) var(--page-pad) clamp(36px,5vw,56px);
+    border-bottom:1px solid #E0D8C8; background:#FEFCF8;
+    max-width:none;
+  }
+  .sci-hero-eyebrow {
+    font-family:var(--font-mono); font-size:16px; font-weight:600;
+    letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:14px;
+  }
+  .sci-hero h1 {
+    font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary);
+    margin-bottom:14px; line-height:1.1;
+  }
   .sci-hero h1 em { font-style:normal; color:#2C3E6B; display:block; }
-  .sci-hero p { font-size:clamp(16px,2vw,18px); color:var(--text-secondary); line-height:1.8; margin-bottom:0; }
+  .sci-hero p {
+    font-size:clamp(16px,2vw,18px); color:var(--text-secondary);
+    line-height:1.8; max-width:600px; margin:0 auto;
+  }
 
-  /* ── SECTION WRAPPER ───────────────────────────────────────────── */
-  .sci-wrap { max-width:var(--max-width); margin:0 auto; padding:0 var(--page-pad); }
-  .sci-section { margin-bottom:72px; }
+  /* ── SECTION LAYOUT ── */
+  .sci-section {
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:220px;
+    border-bottom:1px solid #E0D8C8;
+  }
+  .sci-section-meta {
+    padding:clamp(24px,3vw,36px) clamp(20px,2vw,28px);
+    border-right:1px solid #E0D8C8;
+    display:flex; flex-direction:column; justify-content:center;
+    background:#FEFCF8;
+  }
   .sci-section-label {
-    font-family:var(--font-mono); font-size:16px; font-weight:600;
-    letter-spacing:4px; color:#2C3E6B; text-transform:uppercase;
-    margin-bottom:14px; display:block;
-  }
-  .sci-section h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:var(--text-primary); margin-bottom:16px; line-height:1.2; }
-  .sci-section h2 em { font-style:normal; color:#2C3E6B; }
-  .sci-section p { font-size:17px; color:var(--text-secondary); line-height:1.85; margin-bottom:14px; max-width:760px; text-align:left; }
-  .sci-section p:last-child { margin-bottom:0; }
-
-  /* ── HIGHLIGHT BOX ─────────────────────────────────────────────── */
-  .sci-callout {
-    background:#FFFFFF; border:1px solid var(--border);
-    border-left:3px solid var(--gold-dark);
-    border-radius:0 var(--radius-md) var(--radius-md) 0;
-    padding:20px 24px; margin:24px 0;
-    font-size:17px; color:var(--text-secondary); line-height:1.8;
-  }
-  .sci-callout strong { color:#2C3E6B; }
-
-  /* ── DIVIDER ───────────────────────────────────────────────────── */
-  .sci-divider { height:1px; background:var(--border); margin:0 0 72px; }
-
-  /* ── 5 MODULE CARDS ────────────────────────────────────────────── */
-  .modules-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:40px; }
-  .module-card {
-    background:#FFFFFF; border:1px solid var(--border);
-    border-radius:var(--radius-lg); padding:24px 18px;
-    transition:border-color .2s;
-  }
-  .module-card:hover { border-color:var(--gold-dark); }
-  .module-num {
-    font-family:var(--font-mono); font-size:16px; font-weight:600;
-    letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;
-    margin-bottom:10px;
-  }
-  .module-abbr {
-    font-family:var(--font-mono); font-size:22px; font-weight:700;
-    color:#2C3E6B; line-height:1; margin-bottom:8px;
-  }
-  .module-name { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
-  .module-desc { font-size:16px; color:var(--text-secondary); line-height:1.7; }
-
-  /* ── TIER TABLE ────────────────────────────────────────────────── */
-  .tier-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:32px; }
-  .tier-item {
-    background:#FFFFFF; border:1px solid var(--border);
-    border-radius:var(--radius-md); padding:16px 14px; text-align:center;
-  }
-  .tier-item.legend { border-color:var(--gold); }
-  .tier-name { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .tier-range { font-family:var(--font-mono); font-size:16px; color:#2C3E6B; letter-spacing:1px; }
-  .tier-desc { font-size:16px; color:var(--text-muted); margin-top:6px; line-height:1.5; }
-
-  /* ── THREE PILLAR CARDS ────────────────────────────────────────── */
-  .pillars-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:32px; }
-  .pillar-card {
-    background:#FFFFFF; border:1px solid var(--border);
-    border-radius:var(--radius-lg); padding:28px 24px;
-  }
-  .pillar-icon { font-size:28px; margin-bottom:14px; display:block; }
-  .pillar-title { font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
-  .pillar-body { font-size:16px; color:var(--text-secondary); line-height:1.75; }
-
-  /* ── SAFEGUARDS ────────────────────────────────────────────────── */
-  .safeguards-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:32px; }
-  .safeguard-item {
-    background:#FFFFFF; border:1px solid var(--border);
-    border-radius:var(--radius-md); padding:20px 22px;
-    display:flex; gap:16px; align-items:flex-start;
-  }
-  .safeguard-label {
     font-family:var(--font-mono); font-size:16px; font-weight:700;
-    letter-spacing:1.5px; color:#2C3E6B; text-transform:uppercase;
-    margin-bottom:6px; white-space:nowrap;
+    letter-spacing:3px; color:#2C3E6B; text-transform:uppercase;
+    margin-bottom:10px; display:block;
   }
-  .safeguard-desc { font-size:16px; color:var(--text-secondary); line-height:1.7; }
-  .safeguard-dot {
-    width:8px; height:8px; border-radius:50%;
-    background:var(--gold-dark); flex-shrink:0; margin-top:5px;
+  .sci-section-title {
+    font-size:clamp(18px,2.5vw,26px); font-weight:700;
+    color:var(--text-primary); line-height:1.2;
+  }
+  .sci-section-title em { font-style:normal; color:#2C3E6B; }
+  .sci-section-body {
+    padding:clamp(20px,3vw,32px) clamp(20px,3vw,36px);
+    display:flex; align-items:center; background:#F5F2EC;
   }
 
-  /* ── IP NOTICE ─────────────────────────────────────────────────── */
+  /* ── ANIMATED CARD STACK ── */
+  .anim-stack {
+    width:100%; position:relative; min-height:180px;
+  }
+  .anim-slide {
+    position:absolute; inset:0;
+    opacity:0; transition:opacity 0.5s ease;
+    display:flex; align-items:center;
+    pointer-events:none;
+  }
+  .anim-slide.active {
+    opacity:1; pointer-events:auto; position:relative;
+  }
+  .anim-card {
+    width:100%; border-radius:12px; padding:clamp(16px,2.5vw,24px);
+  }
+
+  /* ── PROGRESS DOTS ── */
+  .prog-dots {
+    display:flex; gap:6px; margin-top:14px; align-items:center;
+  }
+  .prog-dot {
+    width:6px; height:6px; border-radius:50%;
+    transition:all 0.3s; cursor:pointer; flex-shrink:0;
+  }
+
+  /* ── TIER BARS ── */
+  .tier-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .tier-bar-row:last-child { margin-bottom:0; }
+  .tier-bar-label { font-family:var(--font-mono); font-size:16px; font-weight:700; width:100px; letter-spacing:0.5px; }
+  .tier-bar-track { flex:1; height:5px; border-radius:3px; overflow:hidden; }
+  .tier-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+  .tier-bar-score { font-family:var(--font-mono); font-size:16px; width:38px; text-align:right; }
+
+  /* ── SAFEGUARD GRID ── */
+  .safeguard-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; }
+  .safeguard-card {
+    background:#fff; border-radius:8px; padding:14px 16px;
+    border-left:3px solid #2C3E6B;
+  }
+  .safeguard-card-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
+  .safeguard-card-body { font-size:16px; color:#555; line-height:1.5; }
+
+  /* ── VERIFICATION TIMELINE ── */
+  .verify-timeline { display:flex; gap:0; align-items:stretch; width:100%; }
+  .verify-steps { display:flex; flex-direction:column; align-items:center; margin-right:16px; }
+  .verify-node {
+    width:30px; height:30px; border-radius:50%;
+    border:2px solid #2C3E6B; background:#D0DCF0;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
+  }
+  .verify-line { width:2px; flex:1; background:#C5D0E8; margin:4px 0; }
+  .verify-content { flex:1; display:flex; flex-direction:column; gap:10px; }
+  .verify-item {
+    background:#fff; border-radius:8px; padding:12px 16px;
+    border-left:3px solid #C5D0E8;
+  }
+  .verify-item-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
+  .verify-item-body { font-size:16px; color:#555; line-height:1.5; }
+
+  /* ── IP NOTICE ── */
   .ip-notice {
-    background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.05));
-    border:1px solid var(--gold-dark); border-radius:var(--radius-lg);
-    padding:32px 36px; margin-top:32px;
+    background:#FEFCF8; border:1px solid #C5D0E8;
+    border-left:4px solid #2C3E6B;
+    border-radius:0 8px 8px 0; padding:24px 28px;
   }
-  .ip-notice h3 { font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:10px; }
-  .ip-notice p { font-size:16px; color:var(--text-secondary); line-height:1.8; margin-bottom:0; }
+  .ip-notice h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
+  .ip-notice p { font-size:16px; color:#444; line-height:1.8; }
 
-  /* ── BOTTOM CTA ────────────────────────────────────────────────── */
+  /* ── BOTTOM CTA ── */
   .sci-cta {
-    text-align:center; padding:clamp(40px,6vw,64px);
-    background:linear-gradient(135deg, var(--surface-2), rgba(200,168,75,.06));
-    border:1px solid var(--gold-dark); border-radius:var(--radius-lg);
-    margin-bottom:64px;
+    text-align:center; padding:clamp(40px,6vw,64px) var(--page-pad);
+    background:#EDF0F7; border-top:1px solid #C5D0E8;
   }
-  .sci-cta h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:var(--text-primary); margin-bottom:12px; }
-  .sci-cta p { font-size:17px; color:var(--text-secondary); max-width:480px; margin:0 auto 28px; line-height:1.8; }
+  .sci-cta-eyebrow {
+    font-family:var(--font-mono); font-size:16px; font-weight:600;
+    letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:14px;
+  }
+  .sci-cta h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:#1a1a18; margin-bottom:12px; }
+  .sci-cta p { font-size:17px; color:#555; max-width:480px; margin:0 auto 28px; line-height:1.8; }
 
-  /* ── RESPONSIVE ────────────────────────────────────────────────── */
-  @media(max-width:1024px) {
-    .modules-grid { grid-template-columns:repeat(3,1fr); }
-    .tier-strip { grid-template-columns:repeat(3,1fr); }
-  }
-  @media(max-width:768px) {
-    .modules-grid { grid-template-columns:1fr 1fr; }
-    .pillars-grid { grid-template-columns:1fr; }
-    .safeguards-grid { grid-template-columns:1fr; }
-    .tier-strip { grid-template-columns:1fr 1fr; }
-  }
-  @media(max-width:480px) {
-    .modules-grid { grid-template-columns:1fr; }
-    .tier-strip { grid-template-columns:1fr; }
+  /* ── MOBILE ── */
+  @media (max-width:768px) {
+    .sci-section { grid-template-columns:1fr; }
+    .sci-section-meta {
+      border-right:none; border-bottom:1px solid #E0D8C8;
+      padding:20px 16px 16px;
+    }
+    .sci-section-body { padding:16px; }
+    .safeguard-grid { grid-template-columns:1fr; }
+    .tier-bar-label { width:80px; font-size:16px; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="sci-wrap">
+<div class="sci-page">
 
-  <!-- ── HERO ──────────────────────────────────────────────────────── -->
+  <!-- HERO -->
   <div class="sci-hero">
-    <div style="font-family:var(--font-mono);font-size:16px;font-weight:600;letter-spacing:4px;color:#2C3E6B;text-transform:uppercase;margin-bottom:16px;">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
+    <div class="sci-hero-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
     <h1>The Science<em>of Imaging.</em></h1>
-    <p>Photography has always been judged — but never measured. The Apex DDI Engine — the <strong style="color:var(--text-primary);">Dimensional Diagnostic Index</strong> — changes that. Five dimensions. One honest score. And a precise answer to the question every photographer has asked but never been able to answer: <em>exactly</em> what would make this image better?</p>
+    <p>Photography has always been judged — but never measured. Five dimensions. One honest score. A precise answer to what would make your image better.</p>
   </div>
 
-  <!-- ── WHY MEASUREMENT MATTERS ───────────────────────────────────── -->
+  <!-- S1: THE PROBLEM -->
   <div class="sci-section">
-    <span class="sci-section-label">The Problem</span>
-    <h2>Opinion is not a standard.</h2>
-    <p>For as long as photography has been practised, its evaluation has depended entirely on who is in the room. Assessment juries change year to year. Social media rewards familiarity, not craft. Workshop feedback reflects the teacher's aesthetic preferences, not the image's objective properties.</p>
-    <p>This creates a system where the same photograph can be celebrated by one judge and ignored by another — not because the image changed, but because the evaluator did. Talented photographers plateau not because their work stopped improving, but because the feedback stopped being useful.</p>
-    <div class="sci-callout">
-      <strong>The DDI Engine was built to answer one question:</strong> what does this photograph actually do, independent of who is looking at it?
+    <div class="sci-section-meta">
+      <span class="sci-section-label">The Problem</span>
+      <div class="sci-section-title">Opinion is not<br><em>a standard.</em></div>
     </div>
-    <p>The answer required building a scoring framework grounded in perceptual science, visual psychology, and the documented principles of photographic craft — then calibrating it per genre, so a Wildlife image and a Street image are each measured against the standards that apply to them, not a single homogenised rubric.</p>
-  </div>
-
-  <div class="sci-divider"></div>
-
-  <!-- ── THE 5 MODULES ─────────────────────────────────────────────── -->
-  <div class="sci-section">
-    <span class="sci-section-label">The Framework</span>
-    <h2>Five dimensions.<br><em>One score.</em></h2>
-    <p style="font-family:var(--font-mono); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:1rem;">DDI — Dimensional Diagnostic Index</p>
-    <p>Every image submitted to Shutter League is evaluated across five independently-weighted modules. Each module addresses a distinct dimension of photographic achievement. Together they form the DDI — the Dimensional Diagnostic Index.</p>
-    <p>The five modules are not arbitrary categories. Each is rooted in documented principles of visual perception, compositional theory, and the established criteria of photographic excellence as practised across genres and traditions.</p>
-
-    <div class="modules-grid">
-
-      <div class="module-card">
-        <div class="module-num">Module 01</div>
-        <div class="module-abbr">DoD</div>
-        <div class="module-name">Depth of Difficulty</div>
-        <div class="module-desc">Measures the inherent technical and situational difficulty of capturing the image. Considers subject accessibility, environmental constraints, timing precision, and the complexity of the photographic challenge posed.</div>
-      </div>
-
-      <div class="module-card">
-        <div class="module-num">Module 02</div>
-        <div class="module-abbr">VD</div>
-        <div class="module-name">Visual Disruption</div>
-        <div class="module-desc">Evaluates how strongly the image breaks from visual convention. Disruption is not chaos — it is intentional deviation from the expected that creates a more powerful or unexpected visual statement.</div>
-      </div>
-
-      <div class="module-card">
-        <div class="module-num">Module 03</div>
-        <div class="module-abbr">DM</div>
-        <div class="module-name">Decisive Moment</div>
-        <div class="module-desc">Assesses the timing, irreversibility, and completeness of the captured moment. Rooted in Cartier-Bresson's principle: whether the shutter was released at the precise instant where all elements align.</div>
-      </div>
-
-      <div class="module-card">
-        <div class="module-num">Module 04</div>
-        <div class="module-abbr">WF</div>
-        <div class="module-name">Wonder Factor</div>
-        <div class="module-desc">Measures the image's capacity to arrest attention, provoke curiosity, and sustain engagement. Draws on research in aesthetic response and the documented psychology of visual awe.</div>
-      </div>
-
-      <div class="module-card">
-        <div class="module-num">Module 05</div>
-        <div class="module-abbr">AQ</div>
-        <div class="module-name">Affective Quotient</div>
-        <div class="module-desc">Evaluates the emotional truth and human resonance of the image — its capacity to communicate a felt experience rather than merely a recorded one. AQ is the soul of the score.</div>
-      </div>
-
-    </div>
-
-    <div class="sci-callout" style="margin-top:32px;">
-      <strong>Genre calibration:</strong> The relative weight of each module is calibrated per genre. A Wildlife image demands different priorities than a Wedding portrait or a Macro study. The engine adjusts its expectations accordingly — scoring each image against the standards that apply to its discipline, not a single universal rubric.
-    </div>
-  </div>
-
-  <div class="sci-divider"></div>
-
-  <!-- ── THREE PILLARS ─────────────────────────────────────────────── -->
-  <div class="sci-section">
-    <span class="sci-section-label">Design Principles</span>
-    <h2>Built on three pillars.</h2>
-    <p>The engine was designed around three non-negotiable principles that define how it evaluates images and how its results should be interpreted.</p>
-
-    <div class="pillars-grid">
-      <div class="pillar-card">
-        <span class="pillar-icon">⚖️</span>
-        <div class="pillar-title">Objectivity</div>
-        <div class="pillar-body">The same image, submitted twice, should produce the same result. The engine has no preferences, no aesthetic agenda, and no awareness of who took the photograph. It responds to what is in the frame — nothing else.</div>
-      </div>
-      <div class="pillar-card">
-        <span class="pillar-icon">🎯</span>
-        <div class="pillar-title">Repeatability</div>
-        <div class="pillar-body">Scores are not impressionistic. They are the product of a structured, documented framework applied consistently. A photographer can submit work over years and trust that their scores reflect genuine progress, not shifting standards.</div>
-      </div>
-      <div class="pillar-card">
-        <span class="pillar-icon">🔬</span>
-        <div class="pillar-title">Genre awareness</div>
-        <div class="pillar-body">Excellence in Landscape photography is not excellence in Street photography. The engine does not force them onto the same scale. Each genre carries its own calibrated weight profile, built from the documented standards of that discipline.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sci-divider"></div>
-
-  <!-- ── TIER SYSTEM ────────────────────────────────────────────────── -->
-  <div class="sci-section">
-    <span class="sci-section-label">Tier Classification</span>
-    <h2>Five tiers.<br><em>One honest position.</em></h2>
-    <p>Every DDI score maps to a tier classification. Tiers represent qualitative bands of photographic achievement — each one meaningful, each one earned. They are the language the platform uses to communicate where a photographer stands without reducing their work to a single decimal.</p>
-    <p>Tier boundaries are fixed. They do not drift with the platform population or adjust for the volume of submissions. An Apprentice-tier image today means the same thing it will mean in five years.</p>
-
-    <div class="tier-strip">
-      <div class="tier-item">
-        <div class="tier-name">Apprentice</div>
-        <div class="tier-range">0 — 5.0</div>
-        <div class="tier-desc">Learning the fundamentals. Every expert begins here.</div>
-      </div>
-      <div class="tier-item">
-        <div class="tier-name">Practitioner</div>
-        <div class="tier-range">5.1 — 7.5</div>
-        <div class="tier-desc">Consistent craft. Genre awareness is developing.</div>
-      </div>
-      <div class="tier-item">
-        <div class="tier-name">Master</div>
-        <div class="tier-range">7.6 — 8.9</div>
-        <div class="tier-desc">Intentional vision. Technical and expressive command.</div>
-      </div>
-      <div class="tier-item">
-        <div class="tier-name">Grandmaster</div>
-        <div class="tier-range">9.0 — 9.6</div>
-        <div class="tier-desc">Rare. Sustained excellence at the frontier of the discipline.</div>
-      </div>
-      <div class="tier-item legend">
-        <div class="tier-name" style="color:#2C3E6B;">Legend</div>
-        <div class="tier-range">9.7 — 9.9</div>
-        <div class="tier-desc">Exceptional. Images that redefine what the genre can be.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sci-divider"></div>
-
-  <!-- ── SCORING SAFEGUARDS ─────────────────────────────────────────── -->
-  <div class="sci-section">
-    <span class="sci-section-label">Scoring Integrity</span>
-    <h2>Safeguards against<br><em>gaming and distortion.</em></h2>
-    <p>A scoring engine is only as trustworthy as the integrity mechanisms that prevent it from being exploited or producing misleading results. The DDI Engine contains several built-in safeguards — each designed to catch a specific class of distortion and correct for it automatically.</p>
-    <p>These mechanisms are named, documented, and disclosed — because photographers deserve to understand the principles that govern their scores, even if the precise implementation remains proprietary.</p>
-
-    <div class="safeguards-grid">
-
-      <div class="safeguard-item">
-        <div class="safeguard-dot"></div>
-        <div>
-          <div class="safeguard-label">Soul Bonus</div>
-          <div class="safeguard-desc">Images with exceptional emotional resonance — where the Affective Quotient signals genuine human truth — are protected from technical deductions. Craft matters, but soul matters more. A technically imperfect image that moves people should not be penalised out of recognition.</div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s1">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
+            <div style="display:flex; align-items:center; gap:clamp(16px,3vw,28px); flex-wrap:wrap;">
+              <div style="text-align:center; background:#D0DCF0; border-radius:10px; padding:16px 20px; flex-shrink:0;">
+                <div style="font-size:clamp(36px,6vw,56px); font-weight:700; color:#2C3E6B; line-height:1;" id="s1counter">0</div>
+                <div style="font-family:var(--font-mono); font-size:16px; color:#5a7aaa; letter-spacing:1.5px; margin-top:4px; font-weight:700;">JUDGES</div>
+              </div>
+              <div style="flex:1; min-width:160px;">
+                <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:8px;">Same photo. Different verdict.</div>
+                <div style="font-size:16px; color:#4a5e80; line-height:1.65;">Subjectivity isn't a feature — it's the problem the DDI Engine was built to eliminate.</div>
+                <div style="margin-top:14px; height:4px; background:#C5D0E8; border-radius:2px;">
+                  <div style="width:0%; height:4px; background:#2C3E6B; border-radius:2px; transition:width 2s ease;" id="s1bar"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
+            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">Assessment juries change every year.</div>
+            <div style="font-size:16px; color:#4a5e80; line-height:1.7;">Social media rewards familiarity, not craft. Workshop feedback reflects the teacher's aesthetic preferences — not the image's objective properties.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#E8EEF7; border:1px solid #C5D0E8;">
+            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">The DDI answers one question.</div>
+            <div style="font-size:16px; color:#4a5e80; line-height:1.7; font-style:italic;">"What does this photograph actually do, independent of who is looking at it?"</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+              <div class="prog-dot" style="background:#C5D0E8;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="safeguard-item">
-        <div class="safeguard-dot"></div>
-        <div>
-          <div class="safeguard-label">Humanity Check</div>
-          <div class="safeguard-desc">Scores with very low emotional resonance trigger an additional correction. An image that reads as technically competent but emotionally hollow is not a high-scoring photograph. The Humanity Check ensures the AQ dimension carries real consequence.</div>
+  <!-- S2: THE FRAMEWORK -->
+  <div class="sci-section">
+    <div class="sci-section-meta">
+      <span class="sci-section-label">The Framework</span>
+      <div class="sci-section-title">Five dimensions.<br><em>One score.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s2">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#E4F0EC; border:1px solid #B8D9CC;">
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+              <svg width="120" height="120" viewBox="0 0 130 130" style="flex-shrink:0;">
+                <circle cx="65" cy="65" r="28" fill="none" stroke="#B8D9CC" stroke-width="1.5"/>
+                <circle cx="65" cy="65" r="8" fill="#2E7D5A"/>
+                <text x="65" y="69" text-anchor="middle" font-size="6" fill="#fff" font-weight="700" font-family="monospace">DDI</text>
+                <circle cx="65" cy="24" r="15" fill="#C8E4D8"/><text x="65" y="21" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DoD</text><text x="65" y="30" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Difficulty</text>
+                <circle cx="106" cy="47" r="15" fill="#C8E4D8"/><text x="106" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">VD</text><text x="106" y="53" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Disruption</text>
+                <circle cx="90" cy="98" r="15" fill="#C8E4D8"/><text x="90" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DM</text><text x="90" y="104" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Moment</text>
+                <circle cx="40" cy="98" r="15" fill="#C8E4D8"/><text x="40" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">WF</text><text x="40" y="104" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Wonder</text>
+                <circle cx="24" cy="47" r="15" fill="#C8E4D8"/><text x="24" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">AQ</text><text x="24" y="53" text-anchor="middle" font-size="5" fill="#2E7D5A" font-family="monospace">Aesthetic</text>
+              </svg>
+              <div style="flex:1; min-width:140px;">
+                <div style="background:#C8E4D8; border-radius:8px; padding:14px; border-left:3px solid #2E7D5A;" id="s2desc">
+                  <div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">DoD — Depth of Difficulty</div>
+                  <div style="font-size:16px; color:#2E7D5A; line-height:1.6;">Technical and situational difficulty of capturing the image.</div>
+                </div>
+              </div>
+            </div>
+            <div class="prog-dots" id="s2dots">
+              <div class="prog-dot" style="background:#2E7D5A;"></div>
+              <div class="prog-dot" style="background:#B8D9CC;"></div>
+              <div class="prog-dot" style="background:#B8D9CC;"></div>
+              <div class="prog-dot" style="background:#B8D9CC;"></div>
+              <div class="prog-dot" style="background:#B8D9CC;"></div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="safeguard-item">
-        <div class="safeguard-dot"></div>
-        <div>
-          <div class="safeguard-label">Plateau Penalty</div>
-          <div class="safeguard-desc">Technical perfection without creative ambition is not mastery — it is stasis. Images that score very high on technical difficulty but demonstrate no visual disruption or compositional risk are capped. The engine rewards growth, not the repetition of competence.</div>
+  <!-- S3: THREE PILLARS -->
+  <div class="sci-section">
+    <div class="sci-section-meta">
+      <span class="sci-section-label">Design Principles</span>
+      <div class="sci-section-title">Built on<br><em>three pillars.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s3">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;">
+              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
+                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Objectivity</div>
+                <div style="font-size:16px; color:#555; line-height:1.5;">Same image scores the same, always</div>
+              </div>
+              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
+                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Repeatability</div>
+                <div style="font-size:16px; color:#555; line-height:1.5;">Grounded in documented principle, not mood</div>
+              </div>
+              <div style="background:#fff; border-radius:8px; padding:16px; border-top:3px solid #2C3E6B;">
+                <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px;">Genre aware</div>
+                <div style="font-size:16px; color:#555; line-height:1.5;">Wildlife and Portrait use different rubrics</div>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">No preferences. No agenda.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">The engine has no awareness of who took the photograph. It responds to what is in the frame — nothing else. A name cannot influence a score.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EEECE8; border:1px solid #D8D4CC;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Excellence in Landscape ≠ excellence in Street.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">Each genre carries its own calibrated weight profile, built from the documented standards of that discipline. There is no single universal rubric.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="safeguard-item">
-        <div class="safeguard-dot"></div>
-        <div>
-          <div class="safeguard-label">Iconic Wall</div>
-          <div class="safeguard-desc">The highest score tier is protected by a gate. To reach it, an image must demonstrate not just technical excellence but genuine creative disruption and emotional authenticity together. It cannot be reached by optimising one dimension alone. This preserves the meaning of the highest tier.</div>
+  <!-- S4: TIERS -->
+  <div class="sci-section">
+    <div class="sci-section-meta">
+      <span class="sci-section-label">Tier Classification</span>
+      <div class="sci-section-title">Eight tiers.<br><em>One honest position.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s4">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#EDF0F7; border:1px solid #C8D0E4; padding:20px 24px;">
+            <div id="tier-bars">
+              <div class="tier-bar-row" data-tier="APPRENTICE" data-w="18" data-col="#8898AA" data-sc="#8898AA" data-range="0–5.0">
+                <span class="tier-bar-label" style="color:#8898AA;">APPRENTICE</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#8898AA;"></div></div>
+                <span class="tier-bar-score" style="color:#8898AA;">0–5.0</span>
+              </div>
+              <div class="tier-bar-row" data-tier="CONTENDER" data-w="30" data-col="#6B7FA8" data-sc="#6B7FA8" data-range="5.0–5.9">
+                <span class="tier-bar-label" style="color:#6B7FA8;">CONTENDER</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#6B7FA8;"></div></div>
+                <span class="tier-bar-score" style="color:#6B7FA8;">5.0–5.9</span>
+              </div>
+              <div class="tier-bar-row" data-tier="CRAFTSMAN" data-w="44" data-col="#5470A0" data-sc="#5470A0" data-range="6.0–6.9">
+                <span class="tier-bar-label" style="color:#5470A0;">CRAFTSMAN</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#5470A0;"></div></div>
+                <span class="tier-bar-score" style="color:#5470A0;">6.0–6.9</span>
+              </div>
+              <div class="tier-bar-row" data-tier="MAVERICK" data-w="58" data-col="#3D5B90" data-sc="#3D5B90" data-range="7.0–7.9">
+                <span class="tier-bar-label" style="color:#3D5B90;">MAVERICK</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#3D5B90;"></div></div>
+                <span class="tier-bar-score" style="color:#3D5B90;">7.0–7.9</span>
+              </div>
+              <div class="tier-bar-row" data-tier="MASTER" data-w="72" data-col="#2C3E6B" data-sc="#2C3E6B" data-range="8.0–8.9">
+                <span class="tier-bar-label" style="color:#2C3E6B;">MASTER</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#2C3E6B;"></div></div>
+                <span class="tier-bar-score" style="color:#2C3E6B;">8.0–8.9</span>
+              </div>
+              <div class="tier-bar-row" data-tier="GRANDMASTER" data-w="85" data-col="#1E2D52" data-sc="#1E2D52" data-range="9.0–9.6">
+                <span class="tier-bar-label" style="color:#1E2D52;">GRANDMASTER</span>
+                <div class="tier-bar-track" style="background:#D8DFF0;"><div class="tier-bar-fill" style="width:0%; background:#1E2D52;"></div></div>
+                <span class="tier-bar-score" style="color:#1E2D52;">9.0–9.6</span>
+              </div>
+              <div class="tier-bar-row" data-tier="LEGEND" data-w="97" data-col="#7A5800" data-sc="#7A5800" data-range="9.7–9.9" style="background:#FFF8DC; border-radius:6px; padding:4px;">
+                <span class="tier-bar-label" style="color:#7A5800;">LEGEND</span>
+                <div class="tier-bar-track" style="background:#F0E4A0;"><div class="tier-bar-fill" style="width:0%; background:#7A5800;"></div></div>
+                <span class="tier-bar-score" style="color:#7A5800;">9.7–9.9</span>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8D0E4;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EDF0F7; border:1px solid #C8D0E4;">
+            <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:10px;">Tier boundaries are fixed.</div>
+            <div style="font-size:16px; color:#4a5e80; line-height:1.7;">They do not drift with the platform population. An Apprentice-tier image today means the same thing it will mean in five years. Your progress is real — not relative.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8D0E4;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <div class="sci-divider"></div>
-
-  <!-- ── THREE-TIER JUDGING ─────────────────────────────────────────── -->
+  <!-- S5: SCORING INTEGRITY -->
   <div class="sci-section">
-    <span class="sci-section-label">Verification Layer</span>
-    <h2>The engine is the start,<br><em>not the end.</em></h2>
-    <p>The DDI Engine provides the first and most consistent layer of evaluation. But for competition purposes, it is validated — and where necessary, corrected — by two further layers of human judgment.</p>
-    <p>This three-tier structure is not a concession to the limitations of AI. It is a deliberate architecture that combines the objectivity of the machine with the perceptual authority of trained human evaluators.</p>
-
-    <div class="pillars-grid">
-      <div class="pillar-card">
-        <span class="pillar-icon">🤖</span>
-        <div class="pillar-title">Tier 1 — DDI Engine</div>
-        <div class="pillar-body">Instant, automatic, consistent. Every image scored the same way, every time. Establishes the initial position and provides the five-module breakdown visible to the photographer.</div>
-      </div>
-      <div class="pillar-card">
-        <span class="pillar-icon">👁️</span>
-        <div class="pillar-title">Tier 2 — Blind peer rating</div>
-        <div class="pillar-body">Five independent peer raters per image, fully blind — no names, no scores visible. Rater identity is concealed. Outlier ratings are excluded automatically. Human perception validates the machine's assessment.</div>
-      </div>
-      <div class="pillar-card">
-        <span class="pillar-icon">⚖️</span>
-        <div class="pillar-title">Tier 3 — Jury</div>
-        <div class="pillar-body">Triggered when peer rating and DDI score diverge significantly, or when a photographer raises a formal dispute. Conducted by appointed Jury Legends. Decisions are final. Required for all Open Programme Grand Recipient selections.</div>
+    <div class="sci-section-meta">
+      <span class="sci-section-label">Scoring Integrity</span>
+      <div class="sci-section-title">Four safeguards.<br><em>Zero bias.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s5">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
+            <div class="safeguard-grid">
+              <div class="safeguard-card">
+                <div class="safeguard-card-title">Soul Bonus</div>
+                <div class="safeguard-card-body">Exceptional emotional resonance protects from technical deductions.</div>
+              </div>
+              <div class="safeguard-card">
+                <div class="safeguard-card-title">Humanity Check</div>
+                <div class="safeguard-card-body">Technically competent but emotionally hollow images are corrected.</div>
+              </div>
+              <div class="safeguard-card">
+                <div class="safeguard-card-title">Plateau Penalty</div>
+                <div class="safeguard-card-body">Technical perfection without creative ambition is capped.</div>
+              </div>
+              <div class="safeguard-card">
+                <div class="safeguard-card-title">Iconic Wall</div>
+                <div class="safeguard-card-body">The highest tier requires disruption and authenticity together.</div>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Genre-calibrated weights.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">Scoring weights adjust per genre — Wildlife demands different priorities than Wedding or Macro. Not a single universal rubric applied to everything.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Peer divergence flagging.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">When peer rating and DDI score diverge significantly, the system flags automatically. No score goes unchallenged when the signals conflict.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#EDECEA; border:1px solid #D4D0C8;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">RAW verification.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">All top-placed finalists must submit the original RAW file. This is what keeps competition results honest. No RAW — no placement.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="sci-divider"></div>
-
-  <!-- ── ARCHETYPE SYSTEM ───────────────────────────────────────────── -->
+  <!-- S6: VERIFICATION LAYER -->
   <div class="sci-section">
-    <span class="sci-section-label">Emotional Classification</span>
-    <h2>Every image has<br><em>a felt dimension.</em></h2>
-    <p>Alongside its numerical score, every image is assigned an Archetype — a classification of its primary emotional and psychological register. Archetypes are derived from the combination of module scores, particularly Wonder and AQ, and reflect the dominant emotional experience the image communicates.</p>
-    <p>The Archetype system draws on documented frameworks in affective psychology and the study of aesthetic emotion. It is not a label assigned by the photographer — it is a recognition of what the image itself communicates.</p>
-    <div class="sci-callout">
-      <strong>Examples include:</strong> Wonder / Transcendence, Sovereign Momentum, Compressed Tension, Forlorn Transcendence, Joyful Disruption, Primal Dread — and nine others. The Archetype appears on your rating card and in your image detail, providing a qualitative lens on what your score means emotionally.
+    <div class="sci-section-meta">
+      <span class="sci-section-label">Verification Layer</span>
+      <div class="sci-section-title">Three-tier<br><em>judging.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s6">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
+            <div class="verify-timeline">
+              <div class="verify-steps">
+                <div class="verify-node">1</div>
+                <div class="verify-line"></div>
+                <div class="verify-node">2</div>
+                <div class="verify-line"></div>
+                <div class="verify-node">3</div>
+              </div>
+              <div class="verify-content">
+                <div class="verify-item">
+                  <div class="verify-item-title">DDI Engine</div>
+                  <div class="verify-item-body">Instant, automatic, consistent — every image, every time.</div>
+                </div>
+                <div class="verify-item">
+                  <div class="verify-item-title">Blind peer rating</div>
+                  <div class="verify-item-body">Five independent raters, no names or scores visible.</div>
+                </div>
+                <div class="verify-item">
+                  <div class="verify-item-title">Jury Legends</div>
+                  <div class="verify-item-body">Triggered on divergence or formal dispute. Decisions final.</div>
+                </div>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">The engine is the start, not the end.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">This three-tier structure combines machine objectivity with the perceptual authority of trained human evaluators. Neither alone is sufficient.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#F2EDE4; border:1px solid #DDD5C4;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">Outlier ratings excluded automatically.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">Rater identity is concealed during blind review. Outliers are removed before aggregation. The result reflects genuine human perception — not one strong opinion.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+              <div class="prog-dot" style="background:#C8C0B0;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="sci-divider"></div>
-
-  <!-- ── PROPRIETARY NOTICE ─────────────────────────────────────────── -->
+  <!-- S7: EMOTIONAL CLASSIFICATION -->
   <div class="sci-section">
-    <span class="sci-section-label">Intellectual Property</span>
-    <h2>What is disclosed.<br><em>What is protected.</em></h2>
-    <p>Shutter League believes photographers deserve to understand the framework that evaluates their work. The five modules, the tier structure, the safeguard names and their intent, and the three-tier judging architecture are all disclosed here and in the platform's legal documentation.</p>
-    <p>What is not disclosed — and what is protected as proprietary intellectual property — is the implementation: the specific weight values assigned to each module per genre, the precise threshold parameters of the scoring safeguards, the calibration data derived from the REF example library, and the prompt architecture that drives the AI engine.</p>
-
-    <div class="ip-notice">
-      <h3>Proprietary Technology Notice</h3>
-      <p>The Apex DDI Engine — including its genre-calibrated weight tables, tier boundary parameters, safeguard trigger logic, archetype taxonomy, calibration benchmarks, and all associated AI prompt architecture — constitutes original intellectual property exclusively owned by Shutter League. Reverse engineering, reproduction, or use of any element of this methodology as the basis of a competing scoring system is strictly prohibited. Score outputs and module breakdowns may not be used to train or calibrate any competing photography rating product. Full legal terms in the <a href="{{ url_for('terms') }}" style="color:#2C3E6B; text-decoration:underline;">Terms &amp; Conditions</a>.</p>
+    <div class="sci-section-meta">
+      <span class="sci-section-label">Emotional Classification</span>
+      <div class="sci-section-title">Beyond<br><em>the score.</em></div>
+    </div>
+    <div class="sci-section-body">
+      <div class="anim-stack" id="s7">
+        <div class="anim-slide active">
+          <div class="anim-card" style="background:#F0EEEA; border:1px solid #D8D4CC;">
+            <div style="font-family:var(--font-mono); font-size:16px; color:#888; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; font-weight:700;">DDI auto-classifies every image</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #2C3E6B;">
+                <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:4px;">Kinetic</div>
+                <div style="font-size:16px; color:#555;">Motion &amp; energy</div>
+              </div>
+              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #3B6D11;">
+                <div style="font-size:17px; font-weight:700; color:#27500A; margin-bottom:4px;">Serene</div>
+                <div style="font-size:16px; color:#555;">Stillness &amp; calm</div>
+              </div>
+              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #844821;">
+                <div style="font-size:17px; font-weight:700; color:#633806; margin-bottom:4px;">Dramatic</div>
+                <div style="font-size:16px; color:#555;">Tension &amp; conflict</div>
+              </div>
+              <div style="background:#fff; border-radius:8px; padding:14px; border-top:3px solid #7A5800;">
+                <div style="font-size:17px; font-weight:700; color:#7A5800; margin-bottom:4px;">Sublime</div>
+                <div style="font-size:16px; color:#555;">Awe &amp; wonder</div>
+              </div>
+            </div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="anim-slide">
+          <div class="anim-card" style="background:#F0EEEA; border:1px solid #D8D4CC;">
+            <div style="font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:10px;">The Archetype is not a label you choose.</div>
+            <div style="font-size:16px; color:#555; line-height:1.7;">It is a recognition of what the image itself communicates — derived from the combination of module scores, particularly Wonder and AQ. It appears on your rating card and image detail.</div>
+            <div class="prog-dots">
+              <div class="prog-dot" style="background:#C8C4BC;"></div>
+              <div class="prog-dot" style="background:#2C3E6B;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ── BOTTOM CTA ─────────────────────────────────────────────────── -->
+  <!-- IP NOTICE -->
+  <div style="padding:clamp(32px,5vw,56px) var(--page-pad); background:#FEFCF8; border-top:1px solid #E0D8C8;">
+    <div style="max-width:900px; margin:0 auto;">
+      <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; display:block; margin-bottom:12px;">Intellectual Property</span>
+      <h2 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:#1a1a18; margin-bottom:20px;">What is disclosed. <span style="color:#2C3E6B;">What is protected.</span></h2>
+      <div class="ip-notice">
+        <h3>Proprietary Technology Notice</h3>
+        <p>The Apex DDI Engine — including its genre-calibrated weight tables, tier boundary parameters, safeguard trigger logic, archetype taxonomy, calibration benchmarks, and all associated AI prompt architecture — constitutes original intellectual property exclusively owned by Shutter League. Reverse engineering, reproduction, or use of any element of this methodology as the basis of a competing scoring system is strictly prohibited. Full legal terms in the <a href="{{ url_for('terms') }}" style="color:#2C3E6B; text-decoration:underline;">Terms &amp; Conditions</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
   <div class="sci-cta">
-    <div style="font-family:var(--font-mono);font-size:16px;font-weight:600;letter-spacing:4px;color:#2C3E6B;text-transform:uppercase;margin-bottom:16px;">See it applied to your work</div>
+    <div class="sci-cta-eyebrow">See it applied to your work</div>
     <h2>Your image. Measured honestly.</h2>
-    <p>6 free scored images in your first month · 3 free every month after. Full five-module DDI breakdown. No credit card. No human bias. Just the truth about your photography.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <p>Up to 3 free scored images. Full five-module DDI breakdown. No credit card. No human bias.</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('upload') }}" class="btn btn-solid">Upload an Image &rarr;</a>
-        <a href="{{ url_for('dashboard') }}" class="btn">My Dashboard</a>
+        <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px; padding:14px 28px;">Upload an Image &rarr;</a>
+        <a href="{{ url_for('dashboard') }}" class="btn" style="font-size:16px; padding:14px 28px;">My Dashboard</a>
       {% else %}
-        <a href="{{ url_for('register') }}" class="btn btn-solid">Get My Free Score &rarr;</a>
-        <a href="{{ url_for('pricing') }}" class="btn">View Pricing</a>
+        <a href="{{ url_for('register') }}" class="btn btn-solid" style="font-size:16px; padding:14px 28px;">Get My Free Score &rarr;</a>
+        <a href="{{ url_for('pricing') }}" class="btn" style="font-size:16px; padding:14px 28px;">View Pricing</a>
       {% endif %}
     </div>
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+
+  // Generic section auto-cycler
+  function initCycler(stackId, intervalMs) {
+    var stack = document.getElementById(stackId);
+    if (!stack) return;
+    var slides = stack.querySelectorAll('.anim-slide');
+    if (slides.length < 2) return;
+    var cur = 0;
+    function show(idx) {
+      slides[cur].classList.remove('active');
+      cur = idx;
+      slides[cur].classList.add('active');
+    }
+    return setInterval(function(){
+      show((cur + 1) % slides.length);
+    }, intervalMs);
+  }
+
+  // S1 — counter animation on load
+  var s1bar = document.getElementById('s1bar');
+  var s1counter = document.getElementById('s1counter');
+  if (s1counter) {
+    var val = 0;
+    var t = setInterval(function(){
+      val += 4;
+      if (val > 247) val = 247;
+      s1counter.textContent = val;
+      if (s1bar) s1bar.style.width = Math.round(val / 247 * 60) + '%';
+      if (val >= 247) clearInterval(t);
+    }, 25);
+  }
+
+  // S2 — module wheel cycles through descriptions
+  var s2modules = [
+    { abbr: 'DoD', name: 'Depth of Difficulty', desc: 'Technical and situational difficulty of capturing the image.' },
+    { abbr: 'VD',  name: 'Visual Disruption',   desc: 'How strongly the image breaks from visual convention intentionally.' },
+    { abbr: 'DM',  name: 'Decisive Moment',     desc: 'Timing, irreversibility, and completeness of the captured moment.' },
+    { abbr: 'WF',  name: 'Wonder Factor',       desc: 'Capacity to arrest attention, provoke curiosity, sustain engagement.' },
+    { abbr: 'AQ',  name: 'Affective Quotient',  desc: 'Emotional truth and human resonance — the soul of the score.' }
+  ];
+  var s2desc = document.getElementById('s2desc');
+  var s2dots = document.getElementById('s2dots');
+  if (s2desc && s2dots) {
+    var s2i = 0;
+    var s2dotEls = s2dots.querySelectorAll('.prog-dot');
+    setInterval(function(){
+      s2i = (s2i + 1) % s2modules.length;
+      var m = s2modules[s2i];
+      s2desc.style.opacity = '0';
+      setTimeout(function(){
+        s2desc.innerHTML = '<div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div><div style="font-size:16px; color:#2E7D5A; line-height:1.6;">' + m.desc + '</div>';
+        s2desc.style.opacity = '1';
+      }, 300);
+      s2dotEls.forEach(function(d, idx){ d.style.background = idx === s2i ? '#2E7D5A' : '#B8D9CC'; });
+    }, 2000);
+  }
+
+  // S3, S4 (slide 2 only), S5, S6, S7
+  initCycler('s3', 2200);
+  initCycler('s5', 2200);
+  initCycler('s6', 2200);
+  initCycler('s7', 2500);
+
+  // S4 — tier bar animation + slide cycle
+  var s4 = document.getElementById('s4');
+  if (s4) {
+    // Animate bars in
+    setTimeout(function(){
+      var bars = document.querySelectorAll('#tier-bars .tier-bar-fill');
+      var rows = document.querySelectorAll('#tier-bars .tier-bar-row');
+      bars.forEach(function(bar, idx){
+        var row = rows[idx];
+        var w = row ? row.getAttribute('data-w') : '50';
+        setTimeout(function(){ bar.style.width = w + '%'; }, idx * 120);
+      });
+    }, 400);
+
+    // Highlight cycle through tiers
+    var tierRows = document.querySelectorAll('#tier-bars .tier-bar-row');
+    var hlIdx = 0;
+    function highlightTier(idx) {
+      tierRows.forEach(function(r, i){
+        r.style.opacity = i === idx ? '1' : '0.45';
+        r.style.transition = 'opacity 0.4s';
+      });
+    }
+    highlightTier(0);
+    setInterval(function(){
+      hlIdx = (hlIdx + 1) % tierRows.length;
+      highlightTier(hlIdx);
+    }, 800);
+
+    // Slide 2 cycle
+    var s4slides = s4.querySelectorAll('.anim-slide');
+    if (s4slides.length > 1) {
+      setTimeout(function(){
+        setInterval(function(){
+          s4slides[0].classList.toggle('active');
+          s4slides[1].classList.toggle('active');
+        }, 4000);
+      }, 3000);
+    }
+  }
+
+  // Intersection observer — trigger animations when section scrolls in
+  var animCards = document.querySelectorAll('.anim-card');
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) e.target.style.opacity = '1';
+      });
+    }, { threshold: 0.2 });
+    animCards.forEach(function(c){
+      c.style.opacity = '0';
+      c.style.transition = 'opacity 0.6s ease';
+      obs.observe(c);
+    });
+  }
+
+})();
+</script>
 {% endblock %}
