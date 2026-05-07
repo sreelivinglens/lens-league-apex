@@ -38,18 +38,26 @@
 .track-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
 .track-card {
   background:#FFFFFF; border:1px solid var(--border);
-  border-radius:var(--radius-lg); padding:28px 24px;
+  border-radius:var(--radius-lg); overflow:hidden; padding:0;
 }
-.track-card.camera { border-top:3px solid #8B6914; }
-.track-card.mobile  { border-top:3px solid #2C3E6B; }
-.track-icon { font-size:28px; margin-bottom:12px; display:block; }
-.track-name { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+.track-card.camera { border:1.5px solid #2C3E6B; }
+.track-card.mobile  { border:1.5px solid #004D40; }
+.track-card-header {
+  padding:16px 20px; display:flex; align-items:center; gap:12px;
+}
+.track-card.camera .track-card-header { background:#2C3E6B; }
+.track-card.mobile  .track-card-header { background:#004D40; }
+.track-card-body { padding:20px 20px; }
+.track-icon { font-size:24px; flex-shrink:0; }
+.track-name { font-size:18px; font-weight:700; margin-bottom:2px; }
+.track-card.camera .track-name { color:#FFFFFF; }
+.track-card.mobile  .track-name { color:#FFFFFF; }
 .track-sub {
   font-family:var(--font-mono); font-size:16px;
-  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px;
+  letter-spacing:1px; text-transform:uppercase;
 }
-.track-card.camera .track-sub { color:#8B6914; }
-.track-card.mobile  .track-sub { color:#2C3E6B; }
+.track-card.camera .track-sub { color:rgba(255,255,255,0.70); }
+.track-card.mobile  .track-sub { color:rgba(255,255,255,0.70); }
 .track-honours { display:flex; flex-direction:column; gap:10px; }
 .track-honour-row {
   display:flex; justify-content:space-between; align-items:baseline;
@@ -57,9 +65,13 @@
 }
 .track-honour-row:last-child { border-bottom:none; }
 .track-honour-place {
-  font-family:var(--font-mono); font-size:16px; color:var(--text-muted);
+  font-family:var(--font-mono); font-size:16px;
   letter-spacing:1px; text-transform:uppercase;
 }
+.track-card.camera .track-honour-place { color:#2C3E6B; }
+.track-card.mobile  .track-honour-place { color:#004D40; }
+.track-card.camera .track-honour-row { border-bottom-color:#C5CEDF; }
+.track-card.mobile  .track-honour-row { border-bottom-color:#B2CECA; }
 .track-honour-amount { font-size:16px; font-weight:700; color:var(--text-primary); }
 
 /* Genre table */
@@ -158,14 +170,7 @@
 @media (max-width:768px) {
   .track-grid { grid-template-columns:1fr; }
   .sh-cell, .flip-text { font-size:16px; }
-  .track-card { padding:20px 16px; }
-  /* Camera = Slate blue, Mobile = Deep teal — mobile view only */
-  .track-card.camera { border-top:3px solid #2C3E6B !important; border-left:3px solid #2C3E6B; }
-  .track-card.camera .track-sub { color:#2C3E6B !important; }
-  .track-card.camera .track-name { color:#2C3E6B !important; }
-  .track-card.mobile  { border-top:3px solid #004D40 !important; border-left:3px solid #004D40; }
-  .track-card.mobile  .track-sub { color:#004D40 !important; }
-  .track-card.mobile  .track-name { color:#004D40 !important; }
+  .track-card { padding:0; }
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
@@ -199,9 +204,14 @@
     <div class="awards-section-title">User Honours</div>
     <div class="track-grid">
       <div class="track-card camera">
-        <span class="track-icon">📷</span>
-        <div class="track-name">Camera Users</div>
-        <div class="track-sub">DSLR · Mirrorless · Film</div>
+        <div class="track-card-header">
+          <span class="track-icon">📷</span>
+          <div>
+            <div class="track-name">Camera Users</div>
+            <div class="track-sub">DSLR · Mirrorless · Film</div>
+          </div>
+        </div>
+        <div class="track-card-body">
         <div class="track-honours">
           <div class="track-honour-row">
             <span class="track-honour-place">Grand Recipient</span>
@@ -220,11 +230,17 @@
             <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
         </div>
+        </div>
       </div>
       <div class="track-card mobile">
-        <span class="track-icon">📱</span>
-        <div class="track-name">Mobile Users</div>
-        <div class="track-sub">iPhone · Android · Smartphone</div>
+        <div class="track-card-header">
+          <span class="track-icon">📱</span>
+          <div>
+            <div class="track-name">Mobile Users</div>
+            <div class="track-sub">iPhone · Android · Smartphone</div>
+          </div>
+        </div>
+        <div class="track-card-body">
         <div class="track-honours">
           <div class="track-honour-row">
             <span class="track-honour-place">Grand Recipient</span>
@@ -242,6 +258,7 @@
             <span class="track-honour-place">Bronze × 8 Genres</span>
             <span class="track-honour-amount">Badge &amp; Certificate</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
