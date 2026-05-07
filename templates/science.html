@@ -4,7 +4,7 @@
 {% block extra_css %}
 <style>
   body:has(.sci-page) main { padding:0 !important; max-width:none !important; }
-  .sci-page { background:#FEFCF8; }
+  .sci-page { background:#FEFCF8; overflow-x:hidden; }
 
   /* ── HERO ── */
   .sci-hero {
@@ -18,7 +18,7 @@
   }
   .sci-hero h1 {
     font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary);
-    margin-bottom:14px; line-height:1.1;
+    margin-bottom:14px; line-height:1.1; white-space:nowrap;
   }
   .sci-hero h1 em { font-style:normal; color:#2C3E6B; }
   .sci-hero p {
@@ -36,7 +36,7 @@
     padding:clamp(24px,3vw,36px) clamp(18px,2vw,28px);
     border-right:1px solid #E0D8C8;
     display:flex; flex-direction:column; justify-content:center;
-    background:#FEFCF8;
+    background:#FEFCF8; min-width:0;
   }
   .sci-label {
     font-family:var(--font-mono); font-size:16px; font-weight:700;
@@ -196,7 +196,7 @@
   <!-- HERO -->
   <div class="sci-hero">
     <div class="sci-hero-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
-    <h1 style="white-space:nowrap;">The Science <em style="font-style:normal;color:#2C3E6B;">of Imaging.</em></h1>
+    <h1>The Science <em style="font-style:normal;color:#2C3E6B;">of Imaging.</em></h1>
     <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
   </div>
 
@@ -494,6 +494,8 @@
 <script>
 (function(){
 
+  if (!('IntersectionObserver' in window)) return;
+
   var modules = [
     { abbr:'DoD', name:'Depth of Difficulty',  desc:'Technical and situational difficulty of capturing the image.' },
     { abbr:'VD',  name:'Visual Disruption',    desc:'How strongly the image breaks from visual convention intentionally.' },
@@ -502,25 +504,25 @@
     { abbr:'AQ',  name:'Affective Quotient',   desc:'Emotional truth and human resonance — the soul of the score.' }
   ];
 
-  if (!('IntersectionObserver' in window)) return;
+  /* registry: each entry = { sectionEl, start } */
+  var registry = [];
 
-  /* ── Build dots + return a start() function, but don't start yet ── */
-  function prepSection(stageId, dotsId, interval) {
+  /* ── Generic slide cycler: builds dots, returns { sectionEl, start } ── */
+  function prepSlider(stageId, dotsId, interval) {
     var stage = document.getElementById(stageId);
     var dotsEl = document.getElementById(dotsId);
-    if (!stage || !dotsEl) return null;
+    if (!stage || !dotsEl) return;
     var slides = stage.querySelectorAll('.slide');
     var n = slides.length;
-    if (n === 0) return null;
-    var cur = 0;
-    var started = false;
+    if (n < 2) return;
+    var cur = 0, started = false;
 
     for (var i = 0; i < n; i++) {
-      var d = document.createElement('button');
-      d.className = 's-dot' + (i === 0 ? ' on' : '');
-      d.setAttribute('aria-label', 'Slide ' + (i+1));
-      d.dataset.idx = i;
-      dotsEl.appendChild(d);
+      var btn = document.createElement('button');
+      btn.className = 's-dot' + (i === 0 ? ' on' : '');
+      btn.setAttribute('aria-label', 'Slide ' + (i+1));
+      btn.dataset.idx = i;
+      dotsEl.appendChild(btn);
     }
     var dotEls = dotsEl.querySelectorAll('.s-dot');
 
@@ -531,116 +533,113 @@
       slides[cur].classList.add('active');
       dotEls[cur].classList.add('on');
     }
-
-    dotEls.forEach(function(d) {
-      d.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); });
+    dotEls.forEach(function(btn){
+      btn.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); });
     });
 
-    return {
-      el: stage.closest('.sci-section') || stage,
-      start: function() {
-        if (started || n < 2) return;
+    var sectionEl = stage.closest('.sci-section');
+    registry.push({
+      sectionEl: sectionEl,
+      start: function(){
+        if (started) return;
         started = true;
         setInterval(function(){ goTo((cur + 1) % n); }, interval);
       }
-    };
-  }
-
-  /* ── S1 counter — prep only, start on scroll ── */
-  var s1n = document.getElementById('s1n');
-  var s1Started = false;
-  function startS1() {
-    if (s1Started || !s1n) return;
-    s1Started = true;
-    var v = 0;
-    var ct = setInterval(function(){
-      v += 5;
-      if (v > 247) { v = 247; clearInterval(ct); }
-      s1n.textContent = v;
-    }, 25);
-  }
-
-  /* ── S2 module wheel — prep only, start on scroll ── */
-  var s2desc = document.getElementById('s2desc');
-  var s2dotsEl = document.getElementById('s2d');
-  var s2started = false;
-  var mi = 0;
-  var mdots = [];
-
-  if (s2desc && s2dotsEl) {
-    for (var i = 0; i < modules.length; i++) {
-      var d = document.createElement('button');
-      d.className = 's-dot' + (i === 0 ? ' on' : '');
-      d.setAttribute('aria-label', modules[i].abbr);
-      d.dataset.mi = i;
-      s2dotsEl.appendChild(d);
-    }
-    mdots = s2dotsEl.querySelectorAll('.s-dot');
-
-    mdots.forEach(function(d){
-      d.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); });
     });
   }
 
-  function setModule(idx) {
-    mdots[mi].classList.remove('on');
-    mi = idx;
-    mdots[mi].classList.add('on');
-    var m = modules[mi];
-    s2desc.style.opacity = '0';
-    setTimeout(function(){
-      s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
-        + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
-        + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
-      s2desc.style.transition = 'opacity 0.4s';
-      s2desc.style.opacity = '1';
-    }, 220);
-  }
+  /* ── S1: counter animation ── */
+  (function(){
+    var s1n = document.getElementById('s1n');
+    var stage = document.getElementById('s1');
+    if (!s1n || !stage) return;
+    var started = false;
+    var sectionEl = stage.closest('.sci-section');
+    registry.push({
+      sectionEl: sectionEl,
+      start: function(){
+        if (started) return;
+        started = true;
+        var v = 0;
+        var ct = setInterval(function(){
+          v += 5;
+          if (v > 247) { v = 247; clearInterval(ct); }
+          s1n.textContent = v;
+        }, 25);
+      }
+    });
+  })();
 
-  function startS2() {
-    if (s2started) return;
-    s2started = true;
-    setInterval(function(){ setModule((mi + 1) % modules.length); }, 2200);
-  }
+  /* ── S2: module wheel — dots cycle description, no slide change ── */
+  (function(){
+    var s2desc = document.getElementById('s2desc');
+    var s2dotsEl = document.getElementById('s2d');
+    var stage = document.getElementById('s2');
+    if (!s2desc || !s2dotsEl || !stage) return;
 
-  /* ── Prep all sections (builds dots, returns start handle) ── */
-  var sections = [
-    { id:'s1', handler: { el: document.getElementById('s1'), start: startS1 } },
-    { id:'s2', handler: { el: document.getElementById('s2'), start: startS2 } },
-    prepSection('s1', 's1d', 3000),
-    prepSection('s3', 's3d', 3000),
-    prepSection('s4', 's4d', 3000),
-    prepSection('s5', 's5d', 3000),
-    prepSection('s6', 's6d', 3000),
-    prepSection('s7', 's7d', 3500),
-  ].filter(Boolean);
+    /* build 5 dots */
+    for (var i = 0; i < modules.length; i++) {
+      var btn = document.createElement('button');
+      btn.className = 's-dot' + (i === 0 ? ' on' : '');
+      btn.setAttribute('aria-label', modules[i].abbr);
+      btn.dataset.mi = i;
+      s2dotsEl.appendChild(btn);
+    }
+    var mdots = s2dotsEl.querySelectorAll('.s-dot');
+    var mi = 0;
 
-  /* ── Single IntersectionObserver — fires start() once per section ── */
-  var animObs = new IntersectionObserver(function(entries){
+    function setModule(idx) {
+      mdots[mi].classList.remove('on');
+      mi = idx;
+      mdots[mi].classList.add('on');
+      var m = modules[mi];
+      s2desc.style.opacity = '0';
+      setTimeout(function(){
+        s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
+          + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
+          + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
+        s2desc.style.transition = 'opacity 0.4s';
+        s2desc.style.opacity = '1';
+      }, 220);
+    }
+
+    mdots.forEach(function(btn){
+      btn.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); });
+    });
+
+    var started = false;
+    var sectionEl = stage.closest('.sci-section');
+    registry.push({
+      sectionEl: sectionEl,
+      start: function(){
+        if (started) return;
+        started = true;
+        setInterval(function(){ setModule((mi + 1) % modules.length); }, 2200);
+      }
+    });
+  })();
+
+  /* ── Prep all other slide sections ── */
+  prepSlider('s1', 's1d', 3000);
+  prepSlider('s3', 's3d', 3000);
+  prepSlider('s4', 's4d', 3000);
+  prepSlider('s5', 's5d', 3000);
+  prepSlider('s6', 's6d', 3000);
+  prepSlider('s7', 's7d', 3500);
+
+  /* ── Single observer watches .sci-section wrappers ── */
+  /* On enter: fade in + fire start() for any registered handler in that section */
+  var obs = new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if (!e.isIntersecting) return;
-      sections.forEach(function(s){
-        if (s.el && (s.el === e.target || s.el.contains(e.target) || e.target.contains(s.el))) {
-          s.start();
-        }
+      /* fade in */
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+      /* start animations belonging to this section */
+      registry.forEach(function(r){
+        if (r.sectionEl === e.target) r.start();
       });
-    });
-  }, { threshold: 0.25 });
-
-  /* ── Scroll fade-in observer (separate, fires once) ── */
-  var fadeObs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
-        fadeObs.unobserve(e.target);
-        /* trigger animation for this section */
-        sections.forEach(function(s){
-          if (s.el && (s.el === e.target || e.target.contains(s.el) || s.el.contains(e.target))) {
-            s.start();
-          }
-        });
-      }
+      obs.unobserve(e.target);
     });
   }, { threshold: 0.2 });
 
@@ -648,8 +647,7 @@
     el.style.opacity = '0';
     el.style.transform = 'translateY(16px)';
     el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    fadeObs.observe(el);
-    animObs.observe(el);
+    obs.observe(el);
   });
 
 })();
