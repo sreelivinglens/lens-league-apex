@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='glossary-links.css') }}">
 <style>
   /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
   :root {
@@ -106,7 +107,7 @@ nav {
 }
 .nav-brand {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 3px;
   color: var(--gold);
@@ -165,7 +166,7 @@ nav {
 }
 .nav-mobile-login a {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: 1px;
   font-weight: 700;
   padding: 8px 14px;
@@ -221,7 +222,7 @@ nav {
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -348,7 +349,7 @@ main {
 .form-group label {
   display: block;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 2px;
   color: var(--gold);
@@ -397,7 +398,7 @@ main {
 }
 .stat-lbl {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: 1.5px;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -431,7 +432,7 @@ main {
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   border-radius: 50%;
   backdrop-filter: blur(4px);
@@ -442,7 +443,7 @@ main {
   left: 10px;
   padding: 3px 10px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -473,7 +474,7 @@ main {
 /* ── Section Label ───────────────────────────────────────────────────────── */
 .section-label {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 3px;
   color: var(--text-muted);
@@ -499,7 +500,7 @@ hr.divider {
   padding: 8px 16px;
   border: 1px solid var(--border);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-secondary);
   text-decoration: none;
   border-radius: var(--radius-sm);
@@ -535,7 +536,7 @@ thead tr { background: #F5F0E8; }
 th {
   padding: 12px 16px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 2px;
   color: var(--text-muted);
@@ -564,7 +565,7 @@ footer {
   margin-top: 80px;
 }
 .footer-brand {
-  font-size: 14px;
+  font-size: 16px;
   letter-spacing: 1.5px;
   color: var(--text-secondary);
   margin-bottom: 14px;
@@ -573,7 +574,7 @@ footer {
   line-height: 1.7;
 }
 @media (max-width: 480px) {
-  .footer-brand { font-size: 15px; letter-spacing: 0.5px; }
+  .footer-brand { font-size: 16px; letter-spacing: 0.5px; }
 }
 .footer-brand strong {
   color: var(--gold);
@@ -585,7 +586,7 @@ footer {
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px 28px;
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: 0.5px;
 }
 .footer-links a {
@@ -616,12 +617,12 @@ footer {
   .stat-val { font-size: 32px; }
   .page-header h1 { font-size: 22px; }
 
-  .btn { padding: 10px 18px; font-size: 14px; }
-  footer { font-size: 14px; letter-spacing: 1px; }
+  .btn { padding: 10px 18px; font-size: 16px; }
+  footer { font-size: 16px; letter-spacing: 1px; }
 }
 
 @media (max-width: 480px) {
-  .nav-brand { font-size: 14px; letter-spacing: 2px; }
+  .nav-brand { font-size: 16px; letter-spacing: 2px; }
   .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-val { font-size: 28px; }
 }
@@ -653,7 +654,7 @@ img {
 #cookie-banner.cb-visible { display: flex; }
 .cb-text {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   color: #cccccc;
   line-height: 1.6;
   flex: 1;
@@ -669,7 +670,7 @@ img {
   border: none;
   color: #0D0D0B;
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -697,7 +698,7 @@ img {
 #cb-dismiss:hover { border-color: rgba(255,255,255,0.4); color: #ffffff; }
 @media (max-width: 480px) {
   #cookie-banner { padding: 14px 16px; }
-  .cb-text { font-size: 15px; }
+  .cb-text { font-size: 16px; }
 }
 
 </style>
@@ -822,7 +823,7 @@ img {
     <a href="/poty">Awards</a>
     <a href="/programme-rules">Programme Rules</a>
   </div>
-  <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.08);font-family:var(--font-mono);font-size:15px;color:rgba(26,26,24,0.45);text-align:center;line-height:2.0;">
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.08);font-family:var(--font-mono);font-size:16px;color:rgba(26,26,24,0.45);text-align:center;line-height:2.0;">
     <strong style="color:rgba(26,26,24,0.6);">Shutter League</strong> &mdash; Sole Proprietorship
     &nbsp;&middot;&nbsp; Bengaluru, Karnataka, India<br>
     <a href="mailto:info@shutterleague.com" style="color:rgba(26,26,24,0.45);text-decoration:none;">info@shutterleague.com</a>
