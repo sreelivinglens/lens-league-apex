@@ -12,19 +12,20 @@
 
   /* Hero */
   .learn-hero { text-align:center; padding:64px var(--page-pad) 56px; border-bottom:1px solid rgba(245,197,24,0.2); margin-bottom:56px; }
-  .learn-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:4px; color:#F5C518; text-transform:uppercase; margin-bottom:20px; }
+  .learn-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:20px; }
   .learn-title { font-size:clamp(36px,6vw,64px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.1; margin-bottom:16px; }
-  .learn-title em { font-style:italic; color:#F5C518; }
+  .learn-title em { font-style:italic; color:#2C3E6B; }
   .learn-sub { font-size:clamp(17px,2.5vw,20px); color:var(--text-primary); max-width:580px; margin:0 auto; line-height:1.6; }
 
   /* Plans */
-  .plans { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:64px; }
-  @media (max-width:680px) { .plans { grid-template-columns:1fr; } }
+  .plans { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-bottom:64px; }
+  @media (max-width:900px) { .plans { grid-template-columns:1fr 1fr; } }
+  @media (max-width:600px) { .plans { grid-template-columns:1fr; } }
   .plan-card { border-radius:var(--radius-lg); padding:36px 32px; border:1px solid rgba(245,197,24,0.25); background:var(--surface-2); display:flex; flex-direction:column; }
   .plan-card.featured { border:2px solid #F5C518; background:#000000; }
-  .plan-tag { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:16px; }
+  .plan-tag { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:16px; }
   .plan-name { font-size:28px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
-  .plan-price { font-size:56px; font-weight:700; color:#F5C518; line-height:1; margin:16px 0 4px; }
+  .plan-price { font-size:56px; font-weight:700; color:#2C3E6B; line-height:1; margin:16px 0 4px; }
   .plan-price span { font-size:20px; font-weight:400; color:var(--text-primary); }
   .plan-cancel { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:2px; color:var(--text-primary); margin-bottom:24px; }
   .plan-divider { height:1px; background:rgba(245,197,24,0.2); margin:20px 0; }
@@ -47,19 +48,19 @@
   .proof-legend { display:flex; gap:20px; justify-content:center; margin-top:12px; }
   .proof-leg-item { display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:16px; font-weight:700; color:#FFFFFF; }
   .proof-leg-line { width:24px; height:3px; border-radius:2px; }
-  .proof-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:16px; }
+  .proof-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:16px; }
   .proof-title { font-size:clamp(26px,4vw,40px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.2; margin-bottom:16px; }
   .proof-stat { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
-  .proof-stat-num { font-size:48px; font-weight:700; color:#F5C518; font-family:var(--font-mono); line-height:1; }
+  .proof-stat-num { font-size:48px; font-weight:700; color:#2C3E6B; font-family:var(--font-mono); line-height:1; }
   .proof-stat-label { font-size:17px; color:var(--text-primary); line-height:1.4; }
 
   /* How it works */
   .how { margin-bottom:64px; }
-  .section-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#F5C518; text-transform:uppercase; margin-bottom:12px; text-align:center; }
+  .section-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:12px; text-align:center; }
   .section-title { font-size:clamp(26px,4vw,40px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.2; margin-bottom:40px; text-align:center; }
   .how-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
   .how-card { background:var(--surface-2); border:1px solid rgba(245,197,24,0.2); border-radius:var(--radius-lg); padding:28px 24px; text-align:center; }
-  .how-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:#F5C518; line-height:1; margin-bottom:14px; }
+  .how-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:#2C3E6B; line-height:1; margin-bottom:14px; }
   .how-card-title { font-size:19px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
   .how-card-body { font-size:16px; color:var(--text-primary); line-height:1.6; }
 
@@ -68,7 +69,7 @@
   @media (max-width:600px) { .loop { padding:32px 20px; } }
   .loop-steps { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin:28px 0; }
   .loop-step { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#000000; background:#F5C518; padding:8px 14px; border-radius:99px; white-space:nowrap; }
-  .loop-arrow { font-size:18px; color:#F5C518; font-weight:700; }
+  .loop-arrow { font-size:18px; color:#2C3E6B; font-weight:700; }
 </style>
 {% endblock %}
 
@@ -84,6 +85,24 @@
 
   <!-- Plans -->
   <div class="plans">
+
+    <!-- Mobile Users -->
+    <div class="plan-card">
+      <div class="plan-tag">Mobile Users</div>
+      <div class="plan-name">Mobile League</div>
+      <div class="plan-price">₹99<span>/mo</span></div>
+      <div class="plan-cancel">OR ₹999/YEAR</div>
+      <div class="plan-uploads">8 scored images / month</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Full DDI score on every upload</li>
+        <li><span class="check">✓</span> Photographer voice critique — specific, actionable</li>
+        <li><span class="check">✓</span> Weekly Challenge and POTY eligibility</li>
+        <li><span class="check">✓</span> Leaderboard ranking and peer rating</li>
+        <li><span class="check">✓</span> Points earned on every scored image</li>
+        <li><span class="cross">✗</span> RAW verification not applicable</li>
+      </ul>
+      <a href="{{ url_for('pricing') }}" class="plan-cta secondary">SEE PRICING →</a>
+    </div>
 
     <!-- Camera Users -->
     <div class="plan-card">
@@ -166,8 +185,8 @@
       <div class="loop-step">Repeat</div>
     </div>
     <p style="font-size:18px; color:var(--text-primary); max-width:500px; margin:0 auto; line-height:1.7;">
-      Ready to participate? Upgrade to Camera or Mobile track when you are.
-      <a href="{{ url_for('pricing') }}" style="color:#F5C518; font-weight:700;"> See all plans →</a>
+      Ready to participate? Upgrade to Camera or Mobile League when you are.
+      <a href="{{ url_for('pricing') }}" style="color:#2C3E6B; font-weight:700;"> See all plans →</a>
     </p>
   </div>
 
