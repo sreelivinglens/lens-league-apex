@@ -5061,7 +5061,7 @@ def contests():
                 'mobile': mobile_top,
             }
 
-    return render_template('contests.html',
+    return render_template('programmes.html',
         monthly_top        = monthly_top,
         days_left          = days_left,
         month_name         = now.strftime('%B %Y'),
