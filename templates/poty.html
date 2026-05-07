@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Annual Excellence Award — Photographer of the Year · Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="The Shutter League Annual Excellence Award — Photographer of the Year. Scored by the Apex DDI Engine across 8 genres. Camera and Mobile leagues. Year-round qualification, jury-verified results.">
+<meta property="og:title" content="Annual Excellence Award — Photographer of the Year · Shutter League">
+<meta property="og:description" content="Compete year-round. Your top-6 DDI scores in your strongest genre determine your standing. Camera and Mobile leagues. Jury-verified.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://shutterleague.com/poty">
+{% endblock %}
+
 {% block extra_css %}
 <style>
 .awards-wrap { max-width:860px; margin:0 auto; padding:48px var(--page-pad) 80px; }
@@ -19,7 +27,6 @@
   margin:0 auto; line-height:1.8;
 }
 
-/* Section headers */
 .awards-section { margin-bottom:52px; }
 .awards-section-title {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
@@ -27,41 +34,22 @@
   margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border);
 }
 
-/* POTY honour cards */
-.poty-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.poty-card {
-  background:#FFFFFF; border:1px solid var(--border);
-  border-radius:var(--radius-lg); padding:24px 20px; text-align:center;
-  position:relative;
-}
-.poty-card.first { border-color:var(--gold); }
-.poty-rank {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted);
-  margin-bottom:10px;
-}
-.poty-honour {
-  font-size:clamp(18px,2.5vw,24px); font-weight:700; color:#8B6914;
-  line-height:1.2; margin-bottom:6px;
-}
-.poty-honour-label {
-  font-family:var(--font-mono); font-size:16px; color:var(--text-muted);
-  letter-spacing:1px; text-transform:uppercase; margin-bottom:14px;
-}
-.poty-desc { font-size:16px; color:var(--text-primary); line-height:1.6; }
-
-/* User split */
+/* Track grid */
 .track-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
 .track-card {
   background:#FFFFFF; border:1px solid var(--border);
   border-radius:var(--radius-lg); padding:28px 24px;
 }
+.track-card.camera { border-top:3px solid #8B6914; }
+.track-card.mobile  { border-top:3px solid #2C3E6B; }
 .track-icon { font-size:28px; margin-bottom:12px; display:block; }
 .track-name { font-size:20px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
 .track-sub {
-  font-family:var(--font-mono); font-size:16px; color:#8B6914;
+  font-family:var(--font-mono); font-size:16px;
   letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px;
 }
+.track-card.camera .track-sub { color:#8B6914; }
+.track-card.mobile  .track-sub { color:#2C3E6B; }
 .track-honours { display:flex; flex-direction:column; gap:10px; }
 .track-honour-row {
   display:flex; justify-content:space-between; align-items:baseline;
@@ -88,27 +76,77 @@
 }
 .genre-table tr:last-child td { border-bottom:none; }
 
-/* Eligibility */
-.eligibility-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
-.elig-card {
-  background:var(--surface-3); border:1px solid var(--border);
-  border-radius:var(--radius-md); padding:18px 16px;
+/* ── Solari Board ── */
+.solari-board {
+  background:#2C3E6B; border-radius:8px;
+  padding:16px; overflow:hidden; margin-bottom:8px;
 }
-.elig-check { color:var(--green); font-weight:700; margin-right:6px; font-size:17px; }
-.elig-text { font-size:16px; color:var(--text-primary); line-height:1.55; }
+.solari-header {
+  display:flex; gap:0; margin-bottom:10px;
+}
+.sh-cell {
+  font-family:var(--font-mono); font-size:16px; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(255,255,255,0.30); padding:0 12px 8px;
+}
+.sh-cell.wide { flex:2; }
+.sh-cell.narrow { flex:1; }
+.sl-row {
+  display:flex; align-items:stretch; gap:2px; margin-bottom:2px;
+  opacity:0; transform:translateY(4px); transition:opacity 0.3s, transform 0.3s;
+}
+.sl-row.visible { opacity:1; transform:translateY(0); }
+.sl-cell {
+  display:flex; align-items:center; padding:0 12px; min-height:44px; overflow:hidden;
+}
+.sl-cell.wide { flex:2; }
+.sl-cell.narrow { flex:1; }
+.sl-cell.gold-bg { background:rgba(245,197,24,0.15); }
+.sl-cell.light-bg { background:rgba(255,255,255,0.07); }
+.sl-cell.mid-bg { background:rgba(255,255,255,0.04); }
+.flip-text {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; display:flex; gap:2px; flex-wrap:wrap; align-items:center;
+}
+.fl-char { display:inline-block; overflow:hidden; line-height:1; }
+.fl-char span { display:block; }
+.fl-char.flipping span { animation:slflip 0.06s linear forwards; }
+@keyframes slflip {
+  0%  { transform:rotateX(0deg); opacity:1; }
+  50% { transform:rotateX(90deg); opacity:0; }
+  100%{ transform:rotateX(0deg); opacity:1; }
+}
+.sl-gold  { color:#F5C518; }
+.sl-white { color:rgba(255,255,255,0.92); }
+.sl-muted { color:rgba(255,255,255,0.45); }
+.sl-pill {
+  font-family:var(--font-mono); font-size:16px; letter-spacing:1.5px;
+  font-weight:700; padding:3px 8px; border-radius:3px;
+  text-transform:uppercase; white-space:nowrap;
+}
+.pill-gold   { background:#F5C518; color:#1a1200; }
+.pill-dim    { background:rgba(255,255,255,0.10); color:rgba(255,255,255,0.60); }
+.pill-green  { background:rgba(74,222,128,0.15); color:#4ade80; }
 
-/* Timeline */
-.timeline { display:flex; flex-direction:column; gap:0; }
-.tl-row {
-  display:flex; gap:20px; align-items:flex-start; padding:18px 0;
-  border-bottom:1px solid var(--border-subtle);
+.board-replay {
+  font-family:var(--font-mono); font-size:16px; letter-spacing:1px;
+  text-transform:uppercase; color:var(--text-muted); background:none;
+  border:1px solid var(--border); border-radius:4px; padding:7px 18px;
+  cursor:pointer; margin-top:10px;
 }
-.tl-row:last-child { border-bottom:none; }
-.tl-month {
-  font-family:var(--font-mono); font-size:17px; font-weight:700;
-  letter-spacing:1px; color:#8B6914; min-width:90px; padding-top:2px;
+.board-replay:hover { color:var(--text-primary); }
+
+/* Board description text beneath each board row */
+.board-desc-list { display:flex; flex-direction:column; gap:0; margin-top:12px; }
+.board-desc-row {
+  display:flex; gap:20px; padding:14px 0;
+  border-bottom:1px solid var(--border-subtle); font-size:16px;
+  color:var(--text-primary); line-height:1.7;
 }
-.tl-desc { font-size:16px; color:var(--text-primary); line-height:1.65; }
+.board-desc-row:last-child { border-bottom:none; }
+.board-desc-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  min-width:100px; color:#2C3E6B; flex-shrink:0; padding-top:2px;
+}
 
 /* CTA */
 .awards-cta {
@@ -124,13 +162,12 @@
 }
 
 @media (max-width:768px) {
-  .poty-cards { grid-template-columns:1fr; }
   .track-grid { grid-template-columns:1fr; }
-  .eligibility-grid { grid-template-columns:1fr; }
+  .sh-cell, .flip-text { font-size:16px; }
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
-  .tl-month { min-width:70px; font-size:16px; }
+  .sh-cell.narrow, .sl-cell.narrow { display:none; }
 }
 </style>
 {% endblock %}
@@ -149,7 +186,7 @@
   <div class="awards-section">
     <div class="awards-section-title">User Honours</div>
     <div class="track-grid">
-      <div class="track-card">
+      <div class="track-card camera">
         <span class="track-icon">📷</span>
         <div class="track-name">Camera Users</div>
         <div class="track-sub">DSLR · Mirrorless · Film</div>
@@ -172,7 +209,7 @@
           </div>
         </div>
       </div>
-      <div class="track-card">
+      <div class="track-card mobile">
         <span class="track-icon">📱</span>
         <div class="track-name">Mobile Users</div>
         <div class="track-sub">iPhone · Android · Smartphone</div>
@@ -204,127 +241,82 @@
   <!-- Genres -->
   <div class="awards-section">
     <div class="awards-section-title">Eight Genres</div>
-    <div class="table-wrap">
-      <table class="genre-table">
-        <thead>
-          <tr>
-            <th>Genre</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Wildlife</td><td>Animals in their natural habitat. Behaviour, interaction, environment.</td></tr>
-          <tr><td>Street</td><td>Candid life in public spaces. People, culture, urban moments.</td></tr>
-          <tr><td>People &amp; Portrait</td><td>Individuals and groups. Expression, character, identity.</td></tr>
-          <tr><td>Landscape</td><td>Natural environments. Light, scale, atmosphere.</td></tr>
-          <tr><td>Architecture</td><td>Built structures. Form, geometry, context.</td></tr>
-          <tr><td>Macro</td><td>Close-up detail. Scale, texture, abstraction.</td></tr>
-          <tr><td>Drone / Aerial</td><td>Images captured from above. Perspective, pattern, scale.</td></tr>
-          <tr><td>Abstract</td><td>Non-representational. Shape, colour, form without literal subject.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Eligibility -->
-  <div class="awards-section">
-    <div class="awards-section-title">Eligibility</div>
-    <div class="eligibility-grid">
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">Active Camera or Mobile subscription for at least 6 months within the calendar year</span>
-      </div>
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">Minimum 24 scored images in your chosen qualifying genre during the calendar year — you do not need images in every genre</span>
-      </div>
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">RAW file verification required for all finalists prior to jury review</span>
-      </div>
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">Ranking based on top-6 DDI scores in the genre across the calendar year</span>
-      </div>
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">Human jury reviews top-20 finalists per genre before final rankings are confirmed</span>
-      </div>
-      <div class="elig-card">
-        <span class="elig-check">✓</span>
-        <span class="elig-text">Images must be original work. AI-generated images are not eligible. Indian residents only for award payments.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- How ranking works -->
-  <div class="awards-section">
-    <div class="awards-section-title">How Rankings Are Determined</div>
-    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-      Every image uploaded to Shutter League is evaluated by the Apex DDI Engine — a five-dimension scoring framework covering Degree of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are generated automatically and consistently, with no human subjectivity in the initial assessment.
-    </p>
-    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-      A photographer's annual ranking is calculated from their best six DDI scores in their strongest genre during the calendar year. You qualify in one genre — the one where your best six scores average highest. Competing in multiple genres is not required and does not disadvantage specialists. The top-20 photographers per genre proceed to jury review, where a panel of photography professionals evaluates the work and confirms the final rankings.
-    </p>
-    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;">
-      This two-stage process — AI consistency followed by human judgement — is the same standard used by the world's leading photography award programmes.
-    </p>
+    <table class="genre-table">
+      <thead>
+        <tr><th>Genre</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Wildlife</td><td>Animals in their natural habitat. Behaviour, interaction, environment.</td></tr>
+        <tr><td>Street</td><td>Candid life in public spaces. People, culture, urban moments.</td></tr>
+        <tr><td>People &amp; Portrait</td><td>Individuals and groups. Expression, character, identity.</td></tr>
+        <tr><td>Landscape</td><td>Natural environments. Light, scale, atmosphere.</td></tr>
+        <tr><td>Architecture</td><td>Built structures. Form, geometry, context.</td></tr>
+        <tr><td>Macro</td><td>Close-up detail. Scale, texture, abstraction.</td></tr>
+        <tr><td>Drone / Aerial</td><td>Images captured from above. Perspective, pattern, scale.</td></tr>
+        <tr><td>Abstract</td><td>Non-representational. Shape, colour, form without literal subject.</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- Timeline -->
   <div class="awards-section">
     <div class="awards-section-title">{{ current_year or '2026' }} Programme Timeline</div>
-    <div class="timeline">
-      <div class="tl-row">
-        <div class="tl-month">Jan – Nov</div>
-        <div class="tl-desc">Qualifying period. Upload and score in your genre. Every scored image counts toward your top-6 annual average. Scores accumulate from your first upload — no separate entry required.</div>
+    <div class="solari-board" id="tl-board">
+      <div class="solari-header">
+        <div class="sh-cell narrow">Period</div>
+        <div class="sh-cell wide">Event</div>
+        <div class="sh-cell narrow">Status</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-month">Oct</div>
-        <div class="tl-desc">RAW verification requests sent to top-50 photographers per genre. <strong>7-day submission window.</strong> A reminder email is sent 24 hours before the deadline. Failure to submit within the window results in removal from the standings.</div>
+    </div>
+    <button class="board-replay" onclick="replayAll()">↺ Replay</button>
+    <div class="board-desc-list">
+      <div class="board-desc-row">
+        <div class="board-desc-label">Jan – Dec 31</div>
+        <div>Qualifying period. Upload and score in your genre. Every scored image counts toward your top-6 annual average. Scores accumulate from your first upload — no separate entry required.</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-month">Nov</div>
-        <div class="tl-desc">Jury review of top-20 finalists per genre. Rankings confirmed. No further uploads count toward the annual standings after 30 November.</div>
+      <div class="board-desc-row">
+        <div class="board-desc-label">Jan 1 – 7</div>
+        <div>RAW verification requests sent to top-50 photographers per genre. <strong>7-day submission window.</strong> A reminder email is sent 24 hours before the deadline. Failure to submit within the window results in removal from standings. New calendar year begins — annual standings reset. Start building your score for this year's POTY.</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-month">Dec</div>
-        <div class="tl-desc">Annual Excellence Award recipients announced. Honourees notified by email and recognised on the platform. Award payments processed after PAN and bank verification.</div>
+      <div class="board-desc-row">
+        <div class="board-desc-label">Jan 8 – 31</div>
+        <div>Jury review of top-20 finalists per genre. Rankings confirmed.</div>
       </div>
-      <div class="tl-row">
-        <div class="tl-month">1 Jan</div>
-        <div class="tl-desc">New calendar year begins. Annual standings reset. Your tier, rank history, and points carry forward. Start building your score again from day one.</div>
+      <div class="board-desc-row">
+        <div class="board-desc-label">February</div>
+        <div>Annual Excellence Award recipients announced. Honourees notified by email and recognised on the platform. Award payments processed after PAN and bank verification.</div>
       </div>
     </div>
   </div>
 
-  <!-- ── 6-6-12 Clock ── -->
+  <!-- 6-6-12 -->
   <div class="awards-section">
     <div class="awards-section-title">The 6-6-12 Rule — Your Professional Credibility Gate</div>
-
     <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:24px;">
-      Shutter League uses a residency-based ranking system — the same logic as ICC cricket rankings. A single brilliant photograph does not make a rank. Consistent performance over time does. The 6-6-12 rule is the gate that separates casual uploads from a verified professional standing.
+      Shutter League uses a residency-based ranking system — the same logic as ICC cricket rankings. A single brilliant photograph does not make a rank. Consistent performance over time does.
     </p>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
-      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
-        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">6</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Months Subscribed</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">You must hold an active Camera or Mobile subscription for 6 cumulative months. The clock runs only while subscribed — it pauses if you cancel and resumes from where it stopped when you resubscribe.</div>
-      </div>
-      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
-        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">6</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Images Scored</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">You must have at least 6 DDI-scored images in your portfolio in the qualifying genre. Six images is the statistical minimum for a meaningful rank — fewer than this and the data is not reliable enough to place you on the official leaderboard.</div>
-      </div>
-      <div style="background:var(--surface-3);border:1px solid var(--border);border-top:3px solid #8B6914;border-radius:var(--radius-md);padding:20px 18px;">
-        <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#8B6914;margin-bottom:8px;">12</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Image Rolling Pool</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">Your rank is calculated from your best or most recent 12 images with a baseline damping factor for empty slots. As you upload more, older images rotate out. Your rank reflects your current form, not a single peak performance years ago.</div>
+    <div class="solari-board" id="rule-board">
+      <div class="solari-header">
+        <div class="sh-cell narrow">Number</div>
+        <div class="sh-cell wide">Rule</div>
+        <div class="sh-cell narrow">Gate</div>
       </div>
     </div>
-
-    <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #8B6914;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;margin-bottom:20px;">
+    <div class="board-desc-list">
+      <div class="board-desc-row">
+        <div class="board-desc-label">6 Months</div>
+        <div>You must hold an active Camera or Mobile subscription for 6 cumulative months. The clock runs only while subscribed — it pauses if you cancel and resumes from where it stopped when you resubscribe.</div>
+      </div>
+      <div class="board-desc-row">
+        <div class="board-desc-label">6 Images</div>
+        <div>You must have at least 6 DDI-scored images in your qualifying genre. Six images is the statistical minimum for a meaningful rank — fewer and the data is not reliable enough to place you on the official leaderboard.</div>
+      </div>
+      <div class="board-desc-row">
+        <div class="board-desc-label">12 Pool</div>
+        <div>Your rank is calculated from your best or most recent 12 images. As you upload more, older images rotate out. Your rank reflects your current form, not a single peak performance years ago.</div>
+      </div>
+    </div>
+    <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;margin-top:20px;">
       <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">Clock Behaviour</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Runs</strong> while you hold an active Camera or Mobile subscription.</div>
@@ -333,16 +325,31 @@
         <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Dormant Mode (₹19/month)</strong> keeps the clock ticking at minimal cost — the rational choice over full cancellation if you need a break.</div>
       </div>
     </div>
+  </div>
 
-    <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #8B6914;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;">
-      <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">What Your Dashboard Will Show</div>
-      <div style="font-size:16px;color:var(--text-primary);line-height:1.7;">
-        Once you are building toward your official rank, your dashboard shows a countdown: <em style="color:#8B6914;">"Official rank unlocks in 3 months and 2 images."</em> After you qualify: <em style="color:#8B6914;">"Officially Ranked — World #142."</em>
+  <!-- Eligibility -->
+  <div class="awards-section">
+    <div class="awards-section-title">Eligibility</div>
+    <div class="solari-board" id="elig-board">
+      <div class="solari-header">
+        <div class="sh-cell narrow">Check</div>
+        <div class="sh-cell wide">Requirement</div>
+        <div class="sh-cell narrow">Result</div>
       </div>
     </div>
+  </div>
 
-    <p style="font-size:16px;color:var(--text-primary);line-height:1.7;margin-top:16px;">
-      <strong>Why does this exist?</strong> Three reasons. First, consistency check — it prevents one-hit wonders dominating the leaderboard on a single lucky upload. Second, anti-gaming — it makes multi-account manipulation economically irrational. Third, retention — the 6-month goal gives subscribers a meaningful milestone to work toward, not just a monthly renewal.
+  <!-- How rankings work -->
+  <div class="awards-section">
+    <div class="awards-section-title">How Rankings Are Determined</div>
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
+      Every image uploaded to Shutter League is evaluated by the Apex DDI Engine — a five-dimension scoring framework covering Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. Scores are generated automatically and consistently, with no human subjectivity in the initial assessment.
+    </p>
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
+      A photographer's annual ranking is calculated from their best six DDI scores in their strongest genre during the calendar year. You qualify in one genre — the one where your best six scores average highest. The top-20 photographers per genre proceed to jury review, where a panel of photography professionals evaluates the work and confirms the final rankings.
+    </p>
+    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;">
+      This two-stage process — AI consistency followed by human judgement — is the same standard used by the world's leading photography award programmes.
     </p>
   </div>
 
@@ -367,4 +374,131 @@
   </div>
 
 </div>
+
+<script>
+(function(){
+  var CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·–';
+
+  function makeFlipText(finalText,colorClass,delay){
+    var wrap=document.createElement('div');
+    wrap.className='flip-text';
+    finalText.split(' ').forEach(function(word,wi){
+      var wdiv=document.createElement('span');
+      wdiv.style.cssText='display:inline-flex;gap:1px;margin-right:4px;';
+      word.split('').forEach(function(ch,ci){
+        var span=document.createElement('span');
+        span.className='fl-char '+colorClass;
+        var inner=document.createElement('span');
+        inner.textContent=ch===' '?'\u00A0':ch;
+        span.appendChild(inner);
+        setTimeout(function(){animateChar(span,inner,ch);},delay+wi*40+ci*18);
+        wdiv.appendChild(span);
+      });
+      wrap.appendChild(wdiv);
+    });
+    return wrap;
+  }
+
+  function animateChar(span,inner,finalChar){
+    var flips=0;
+    var total=4+Math.floor(Math.random()*4);
+    function tick(){
+      span.classList.add('flipping');
+      setTimeout(function(){
+        inner.textContent=flips<total-1?CHARS[Math.floor(Math.random()*CHARS.length)]:(finalChar===' '?'\u00A0':finalChar);
+        span.classList.remove('flipping');
+        flips++;
+        if(flips<total)setTimeout(tick,55+Math.random()*30);
+      },35);
+    }
+    tick();
+  }
+
+  function makeRow(cells,rowDelay){
+    var row=document.createElement('div');
+    row.className='sl-row';
+    cells.forEach(function(c){
+      var cell=document.createElement('div');
+      cell.className='sl-cell '+c.size+(c.bg?' '+c.bg:' mid-bg');
+      if(c.type==='flip'){
+        cell.appendChild(makeFlipText(c.text,c.color||'sl-white',rowDelay+80));
+      } else if(c.type==='pill'){
+        var pill=document.createElement('span');
+        pill.className='sl-pill '+c.pillClass;
+        pill.textContent=c.text;
+        setTimeout(function(){cell.appendChild(pill);},rowDelay+200);
+      }
+      row.appendChild(cell);
+    });
+    setTimeout(function(){row.classList.add('visible');},rowDelay);
+    return row;
+  }
+
+  var tlData=[
+    {period:'JAN – DEC 31',event:'QUALIFYING PERIOD · UPLOAD AND SCORE',status:'ACTIVE',   pc:'sl-gold', pb:'gold-bg'},
+    {period:'JAN 1 – 7',   event:'RAW VERIFICATION + NEW YEAR BEGINS', status:'UPCOMING', pc:'sl-white',pb:'light-bg'},
+    {period:'JAN 8 – 31',  event:'JURY REVIEW · TOP 20 PER GENRE',     status:'UPCOMING', pc:'sl-gold', pb:'gold-bg'},
+    {period:'FEBRUARY',    event:'RECIPIENTS ANNOUNCED · AWARDS',       status:'UPCOMING', pc:'sl-white',pb:'light-bg'},
+  ];
+
+  var ruleData=[
+    {num:'6', rule:'MONTHS SUBSCRIBED',      gate:'REQUIRED',nc:'sl-gold', nb:'gold-bg'},
+    {num:'6', rule:'IMAGES SCORED IN GENRE', gate:'REQUIRED',nc:'sl-white',nb:'light-bg'},
+    {num:'12',rule:'IMAGE ROLLING POOL',     gate:'REQUIRED',nc:'sl-gold', nb:'gold-bg'},
+  ];
+
+  var eligData=[
+    {check:'01',req:'6 MONTHS ACTIVE SUBSCRIPTION', cc:'sl-gold', cb:'gold-bg'},
+    {check:'02',req:'24 SCORED IMAGES IN GENRE',     cc:'sl-white',cb:'light-bg'},
+    {check:'03',req:'RAW VERIFICATION SUBMITTED',    cc:'sl-gold', cb:'gold-bg'},
+    {check:'04',req:'TOP-6 DDI SCORES QUALIFY',      cc:'sl-white',cb:'light-bg'},
+    {check:'05',req:'JURY REVIEW CLEARED',           cc:'sl-gold', cb:'gold-bg'},
+    {check:'06',req:'ORIGINAL WORK CONFIRMED',       cc:'sl-white',cb:'light-bg'},
+  ];
+
+  function buildBoards(){
+    ['tl-board','rule-board','elig-board'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(!b)return;
+      while(b.children.length>1)b.removeChild(b.lastChild);
+    });
+
+    var tlBoard=document.getElementById('tl-board');
+    if(tlBoard){
+      tlData.forEach(function(d,i){
+        tlBoard.appendChild(makeRow([
+          {size:'narrow',bg:d.pb,     type:'flip',text:d.period,color:d.pc},
+          {size:'wide',  bg:'mid-bg', type:'flip',text:d.event, color:'sl-white'},
+          {size:'narrow',bg:'mid-bg', type:'pill',text:d.status,pillClass:d.status==='ACTIVE'?'pill-gold':'pill-dim'},
+        ],300+i*420));
+      });
+    }
+
+    var ruleBoard=document.getElementById('rule-board');
+    if(ruleBoard){
+      ruleData.forEach(function(d,i){
+        ruleBoard.appendChild(makeRow([
+          {size:'narrow',bg:d.nb,    type:'flip',text:d.num, color:d.nc},
+          {size:'wide',  bg:'mid-bg',type:'flip',text:d.rule,color:'sl-white'},
+          {size:'narrow',bg:'mid-bg',type:'pill',text:d.gate,pillClass:'pill-dim'},
+        ],2100+i*380));
+      });
+    }
+
+    var eligBoard=document.getElementById('elig-board');
+    if(eligBoard){
+      eligData.forEach(function(d,i){
+        eligBoard.appendChild(makeRow([
+          {size:'narrow',bg:d.cb,    type:'flip',text:d.check,color:d.cc},
+          {size:'wide',  bg:'mid-bg',type:'flip',text:d.req,  color:'sl-white'},
+          {size:'narrow',bg:'mid-bg',type:'pill',text:'REQUIRED',pillClass:'pill-dim'},
+        ],3300+i*340));
+      });
+    }
+  }
+
+  window.replayAll=function(){buildBoards();};
+  buildBoards();
+})();
+</script>
 {% endblock %}
