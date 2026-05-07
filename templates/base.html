@@ -701,6 +701,53 @@ img {
   .cb-text { font-size: 16px; }
 }
 
+/* ── Accordion (sl-accordion) ───────────────────────────────────────────── */
+.sl-accordion {
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+  padding: 0;
+}
+.sl-accordion:first-of-type { border-top: 1px solid var(--border); }
+.sl-accordion summary.sl-accordion-trigger {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  user-select: none;
+  -webkit-user-select: none;
+  gap: 12px;
+}
+.sl-accordion summary.sl-accordion-trigger::-webkit-details-marker { display: none; }
+.sl-accordion summary.sl-accordion-trigger::marker { display: none; }
+.sl-accordion-icon {
+  font-size: 18px;
+  font-weight: 400;
+  color: #2C3E6B;
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+  line-height: 1;
+}
+.sl-accordion[open] .sl-accordion-icon { transform: rotate(45deg); }
+.sl-accordion-body {
+  padding: 0 0 18px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.75;
+}
+
+/* Desktop — all open */
+@media (min-width: 521px) {
+  .sl-accordion-mobile-only { display: contents; }
+}
+/* Mobile — first open, rest closed handled via HTML open attribute */
+
 </style>
 {% block extra_css %}{% endblock %}
 {% block extra_head %}{% endblock %}
