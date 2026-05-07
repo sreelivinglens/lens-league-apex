@@ -160,12 +160,12 @@
   .sh-cell, .flip-text { font-size:16px; }
   .track-card { padding:20px 16px; }
   /* Camera = Slate blue, Mobile = Deep teal — mobile view only */
-  .track-card.camera { border-top:3px solid #2C3E6B; border-left:3px solid #2C3E6B; }
-  .track-card.camera .track-sub { color:#2C3E6B; }
-  .track-card.camera .track-name { color:#2C3E6B; }
-  .track-card.mobile  { border-top:3px solid #004D40; border-left:3px solid #004D40; }
-  .track-card.mobile  .track-sub { color:#004D40; }
-  .track-card.mobile  .track-name { color:#004D40; }
+  .track-card.camera { border-top:3px solid #2C3E6B !important; border-left:3px solid #2C3E6B; }
+  .track-card.camera .track-sub { color:#2C3E6B !important; }
+  .track-card.camera .track-name { color:#2C3E6B !important; }
+  .track-card.mobile  { border-top:3px solid #004D40 !important; border-left:3px solid #004D40; }
+  .track-card.mobile  .track-sub { color:#004D40 !important; }
+  .track-card.mobile  .track-name { color:#004D40 !important; }
 }
 @media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
@@ -282,7 +282,7 @@
         <div class="sh-cell narrow">Status</div>
       </div>
     </div>
-    <details class="sl-accordion" open>
+    <details class="sl-accordion">
       <summary class="sl-accordion-trigger">How the timeline works <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <div class="board-desc-list">
@@ -320,7 +320,7 @@
         <div class="sh-cell narrow">Gate</div>
       </div>
     </div>
-    <details class="sl-accordion" open>
+    <details class="sl-accordion">
       <summary class="sl-accordion-trigger">The three gates explained <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <div class="board-desc-list">
@@ -362,7 +362,7 @@
         <div class="sh-cell narrow">Result</div>
       </div>
     </div>
-    <details class="sl-accordion" open>
+    <details class="sl-accordion">
       <summary class="sl-accordion-trigger">All eligibility requirements <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <div class="board-desc-list">
@@ -398,7 +398,7 @@
   <!-- How rankings work -->
   <div class="awards-section">
     <div class="awards-section-title">How Rankings Are Determined</div>
-    <details class="sl-accordion" open>
+    <details class="sl-accordion">
       <summary class="sl-accordion-trigger">The scoring and jury process <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
         <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
