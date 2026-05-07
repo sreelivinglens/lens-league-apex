@@ -247,7 +247,10 @@ for _var, _hint in _REQUIRED_ENV_VARS:
         import logging
         logging.warning(f'[config] ENV VAR NOT SET: {_var} — {_hint}')
 
+from glossary_filter import register_glossary_filter
+register_glossary_filter(app)
 db.init_app(app)
+
 
 oauth = OAuth(app)
 google = oauth.register(
