@@ -146,12 +146,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   background:rgba(0,0,0,0.82); border:1px solid #F5C518; color:#F5C518;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1px; padding:4px 8px; border-radius:2px;
+  white-space:nowrap;
 }
 .sl-gimg-genre {
   position:absolute; top:6px; right:6px;
   background:rgba(0,0,0,0.62); color:rgba(255,255,255,0.90);
   font-family:var(--font-mono); font-size:16px; font-weight:600;
   letter-spacing:1px; padding:4px 8px; border-radius:2px; text-transform:uppercase;
+  white-space:nowrap;
 }
 
 /* MOBILE REDESIGN */
@@ -217,6 +219,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   }
   
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
+  .sl-gimg { aspect-ratio:3/2; }
+  .sl-gimg-badge {
+    white-space:nowrap;
+    font-size:16px;
+    padding:3px 7px;
+  }
+  .sl-gimg-genre {
+    white-space:nowrap;
+    font-size:16px;
+    padding:3px 7px;
+  }
 }
 @media (max-width:480px) {
   .sl-below { padding:18px 14px 32px; }
