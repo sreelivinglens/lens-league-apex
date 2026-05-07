@@ -97,22 +97,33 @@
   .proof-stat-num { font-size:48px; font-weight:700; color:#2C3E6B; font-family:var(--font-mono); line-height:1; }
   .proof-stat-label { font-size:17px; color:var(--text-primary); line-height:1.4; }
 
-  /* ── How it works — horizontal scroll on mobile ── */
+  /* ── How it works ── */
   .how { margin-bottom:64px; }
   .section-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:3px; color:#2C3E6B; text-transform:uppercase; margin-bottom:12px; text-align:center; }
   .section-title { font-size:clamp(26px,4vw,40px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.2; margin-bottom:32px; text-align:center; }
-  .how-scroll { display:flex; gap:16px; overflow-x:auto; padding-bottom:16px; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
-  .how-scroll::-webkit-scrollbar { height:4px; }
-  .how-scroll::-webkit-scrollbar-track { background:var(--border-subtle); border-radius:2px; }
-  .how-scroll::-webkit-scrollbar-thumb { background:#2C3E6B; border-radius:2px; }
-  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:24px 20px; text-align:center; flex:0 0 200px; scroll-snap-align:start; display:flex; flex-direction:column; justify-content:flex-start; }
-  @media (max-width:699px) { .how-card { flex:0 0 72vw; max-width:280px; } }
+  /* Desktop: 4 cards in a row */
+  .how-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .how-card { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:24px 20px; text-align:center; }
   .how-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:#2C3E6B; line-height:1; margin-bottom:14px; }
   .how-card-title { font-size:19px; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
   .how-card-body { font-size:16px; color:var(--text-primary); line-height:1.6; }
-  @media (min-width:700px) {
-    .how-scroll { overflow-x:visible; flex-wrap:nowrap; }
-    .how-card { flex:1; }
+  /* Mobile: single animated block */
+  .how-anim { display:none; }
+  @media (max-width:699px) {
+    .how-grid { display:none; }
+    .how-anim { display:block; }
+    .how-anim-box {
+      background:#1A2744; border-radius:12px;
+      padding:32px 24px; text-align:center;
+      min-height:220px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:12px;
+    }
+    .how-anim-num { font-family:var(--font-mono); font-size:44px; font-weight:700; color:rgba(245,197,24,0.7); line-height:1; }
+    .how-anim-title { font-size:22px; font-weight:700; color:#FFFFFF; }
+    .how-anim-body { font-size:16px; color:rgba(255,255,255,0.8); line-height:1.7; max-width:280px; }
+    .how-anim-dots { display:flex; gap:6px; justify-content:center; margin-top:4px; }
+    .how-anim-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background 0.3s; }
+    .how-anim-dot.active { background:#F5C518; }
   }
 
   /* ── Loop — single animated block ── */
@@ -331,15 +342,27 @@
     </div>
   </div>
 
-  <!-- How it works — horizontal scroll -->
+  <!-- How it works -->
   <div class="how">
     <div class="section-eyebrow">How It Works</div>
     <div class="section-title">Simple. Personal. Weekly.</div>
-    <div class="how-scroll">
+
+    <!-- Desktop: 4 cards -->
+    <div class="how-grid">
       <div class="how-card"><div class="how-num">01</div><div class="how-card-title">Upload</div><div class="how-card-body">Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.</div></div>
       <div class="how-card"><div class="how-num">02</div><div class="how-card-title">Get Analysed</div><div class="how-card-body">AI identifies your weakest dimension. Not in general — for your specific image, your specific genre.</div></div>
       <div class="how-card"><div class="how-num">03</div><div class="how-card-title">One Fix</div><div class="how-card-body">You get one specific thing to work on this week. Not a list. Not a course. One thing.</div></div>
       <div class="how-card"><div class="how-num">04</div><div class="how-card-title">Shoot Again</div><div class="how-card-body">Apply the fix. Upload again. See if the score moved. The loop repeats. The improvement compounds.</div></div>
+    </div>
+
+    <!-- Mobile: single animated block -->
+    <div class="how-anim">
+      <div class="how-anim-box">
+        <div class="how-anim-num" id="howNum">01</div>
+        <div class="how-anim-title" id="howTitle">Upload</div>
+        <div class="how-anim-body" id="howBody">Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.</div>
+        <div class="how-anim-dots" id="howDots"></div>
+      </div>
     </div>
   </div>
 
@@ -428,10 +451,37 @@
     cur=i;
   }
 
-  setInterval(function(){
-    showStep((cur+1)%steps.length);
-  },1800);
-})();
+  /* ── How it works animator (mobile only) ── */
+  var howSteps=[
+    {num:'01',title:'Upload',body:'Shoot anything. Upload it. Get your DDI score across all 5 dimensions instantly.'},
+    {num:'02',title:'Get Analysed',body:'AI identifies your weakest dimension. Not in general — for your specific image, your specific genre.'},
+    {num:'03',title:'One Fix',body:'You get one specific thing to work on. Not a list. Not a course. One thing.'},
+    {num:'04',title:'Shoot Again',body:'Apply the fix. Upload again. See if the score moved. The loop repeats. The improvement compounds.'},
+  ];
+  var howNum=document.getElementById('howNum');
+  var howTitle=document.getElementById('howTitle');
+  var howBody=document.getElementById('howBody');
+  var howDots=document.getElementById('howDots');
+  if(howNum&&howDots){
+    howSteps.forEach(function(_,i){
+      var d=document.createElement('div');
+      d.className='how-anim-dot'+(i===0?' active':'');
+      howDots.appendChild(d);
+    });
+    var howCur=0;
+    function showHow(i){
+      howNum.style.opacity='0'; howTitle.style.opacity='0'; howBody.style.opacity='0';
+      setTimeout(function(){
+        howNum.textContent=howSteps[i].num;
+        howTitle.textContent=howSteps[i].title;
+        howBody.textContent=howSteps[i].body;
+        [howNum,howTitle,howBody].forEach(function(el){el.style.transition='opacity 0.35s';el.style.opacity='1';});
+        howDots.querySelectorAll('.how-anim-dot').forEach(function(d,j){d.classList.toggle('active',j===i);});
+        howCur=i;
+      },200);
+    }
+    setInterval(function(){ showHow((howCur+1)%howSteps.length); },2200);
+  }
 </script>
 
 {% endblock %}
