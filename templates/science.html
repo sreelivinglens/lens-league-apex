@@ -502,17 +502,19 @@
     { abbr:'AQ',  name:'Affective Quotient',   desc:'Emotional truth and human resonance — the soul of the score.' }
   ];
 
-  /* ── Build dots and wire up a cycler for a section ── */
-  function initSection(stageId, dotsId, interval) {
+  if (!('IntersectionObserver' in window)) return;
+
+  /* ── Build dots + return a start() function, but don't start yet ── */
+  function prepSection(stageId, dotsId, interval) {
     var stage = document.getElementById(stageId);
     var dotsEl = document.getElementById(dotsId);
-    if (!stage || !dotsEl) return;
+    if (!stage || !dotsEl) return null;
     var slides = stage.querySelectorAll('.slide');
     var n = slides.length;
-    if (n === 0) return;
+    if (n === 0) return null;
     var cur = 0;
+    var started = false;
 
-    /* build dots */
     for (var i = 0; i < n; i++) {
       var d = document.createElement('button');
       d.className = 's-dot' + (i === 0 ? ' on' : '');
@@ -534,14 +536,22 @@
       d.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); });
     });
 
-    if (n > 1) {
-      setInterval(function(){ goTo((cur + 1) % n); }, interval);
-    }
+    return {
+      el: stage.closest('.sci-section') || stage,
+      start: function() {
+        if (started || n < 2) return;
+        started = true;
+        setInterval(function(){ goTo((cur + 1) % n); }, interval);
+      }
+    };
   }
 
-  /* ── S1 counter ── */
+  /* ── S1 counter — prep only, start on scroll ── */
   var s1n = document.getElementById('s1n');
-  if (s1n) {
+  var s1Started = false;
+  function startS1() {
+    if (s1Started || !s1n) return;
+    s1Started = true;
     var v = 0;
     var ct = setInterval(function(){
       v += 5;
@@ -550,11 +560,14 @@
     }, 25);
   }
 
-  /* ── S2 module wheel — single slide, description swaps ── */
+  /* ── S2 module wheel — prep only, start on scroll ── */
   var s2desc = document.getElementById('s2desc');
   var s2dotsEl = document.getElementById('s2d');
+  var s2started = false;
+  var mi = 0;
+  var mdots = [];
+
   if (s2desc && s2dotsEl) {
-    var mi = 0;
     for (var i = 0; i < modules.length; i++) {
       var d = document.createElement('button');
       d.className = 's-dot' + (i === 0 ? ' on' : '');
@@ -562,54 +575,82 @@
       d.dataset.mi = i;
       s2dotsEl.appendChild(d);
     }
-    var mdots = s2dotsEl.querySelectorAll('.s-dot');
+    mdots = s2dotsEl.querySelectorAll('.s-dot');
 
-    function setModule(idx) {
-      mdots[mi].classList.remove('on');
-      mi = idx;
-      mdots[mi].classList.add('on');
-      var m = modules[mi];
-      s2desc.style.opacity = '0';
-      setTimeout(function(){
-        s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
-          + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
-          + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
-        s2desc.style.transition = 'opacity 0.4s';
-        s2desc.style.opacity = '1';
-      }, 220);
-    }
+    mdots.forEach(function(d){
+      d.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); });
+    });
+  }
 
-    mdots.forEach(function(d){ d.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); }); });
+  function setModule(idx) {
+    mdots[mi].classList.remove('on');
+    mi = idx;
+    mdots[mi].classList.add('on');
+    var m = modules[mi];
+    s2desc.style.opacity = '0';
+    setTimeout(function(){
+      s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
+        + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
+        + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
+      s2desc.style.transition = 'opacity 0.4s';
+      s2desc.style.opacity = '1';
+    }, 220);
+  }
+
+  function startS2() {
+    if (s2started) return;
+    s2started = true;
     setInterval(function(){ setModule((mi + 1) % modules.length); }, 2200);
   }
 
-  /* ── Init all other sections ── */
-  initSection('s1', 's1d', 3000);
-  initSection('s3', 's3d', 3000);
-  initSection('s4', 's4d', 3000);
-  initSection('s5', 's5d', 3000);
-  initSection('s6', 's6d', 3000);
-  initSection('s7', 's7d', 3500);
+  /* ── Prep all sections (builds dots, returns start handle) ── */
+  var sections = [
+    { id:'s1', handler: { el: document.getElementById('s1'), start: startS1 } },
+    { id:'s2', handler: { el: document.getElementById('s2'), start: startS2 } },
+    prepSection('s1', 's1d', 3000),
+    prepSection('s3', 's3d', 3000),
+    prepSection('s4', 's4d', 3000),
+    prepSection('s5', 's5d', 3000),
+    prepSection('s6', 's6d', 3000),
+    prepSection('s7', 's7d', 3500),
+  ].filter(Boolean);
 
-  /* ── Scroll-triggered fade-in ── */
-  if ('IntersectionObserver' in window) {
-    var els = document.querySelectorAll('.sci-section, .ip-section');
-    var obs = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting) {
-          e.target.style.opacity = '1';
-          e.target.style.transform = 'translateY(0)';
-          obs.unobserve(e.target);
+  /* ── Single IntersectionObserver — fires start() once per section ── */
+  var animObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (!e.isIntersecting) return;
+      sections.forEach(function(s){
+        if (s.el && (s.el === e.target || s.el.contains(e.target) || e.target.contains(s.el))) {
+          s.start();
         }
       });
-    }, { threshold: 0.1 });
-    els.forEach(function(el){
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(16px)';
-      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-      obs.observe(el);
     });
-  }
+  }, { threshold: 0.25 });
+
+  /* ── Scroll fade-in observer (separate, fires once) ── */
+  var fadeObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        fadeObs.unobserve(e.target);
+        /* trigger animation for this section */
+        sections.forEach(function(s){
+          if (s.el && (s.el === e.target || e.target.contains(s.el) || s.el.contains(e.target))) {
+            s.start();
+          }
+        });
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.sci-section, .ip-section').forEach(function(el){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    fadeObs.observe(el);
+    animObs.observe(el);
+  });
 
 })();
 </script>
