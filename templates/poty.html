@@ -323,7 +323,7 @@
       </div>
     </div>
     <div style="background:var(--surface-3);border:1px solid var(--border);border-left:3px solid #2C3E6B;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:18px 22px;margin-top:20px;">
-      <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">Clock Behaviour</div>
+      <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px;">Pausing or Cancelling — What Happens to Your Rank?</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Runs</strong> while you hold an active Camera or Mobile subscription.</div>
         <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Pauses</strong> if you cancel — your progress is not lost.</div>
@@ -506,20 +506,24 @@
   window.replayAll=function(){buildBoards();};
 
   // Auto-play when first board scrolls into view — fires once only
+  // Skip entirely on mobile where boards are hidden (display:none)
   var _hasPlayed = false;
+  var _isMobile = window.innerWidth <= 520;
   var _trigger = document.getElementById('tl-board');
-  if(_trigger && 'IntersectionObserver' in window){
-    var _obs = new IntersectionObserver(function(entries){
-      if(entries[0].isIntersecting && !_hasPlayed){
-        _hasPlayed = true;
-        buildBoards();
-        _obs.disconnect();
-      }
-    }, {threshold: 0.2});
-    _obs.observe(_trigger);
-  } else {
-    // Fallback for browsers without IntersectionObserver
-    buildBoards();
+
+  if(!_isMobile && _trigger){
+    if('IntersectionObserver' in window){
+      var _obs = new IntersectionObserver(function(entries){
+        if(entries[0].isIntersecting && !_hasPlayed){
+          _hasPlayed = true;
+          buildBoards();
+          _obs.disconnect();
+        }
+      }, {threshold: 0, rootMargin: '0px 0px -10% 0px'});
+      _obs.observe(_trigger);
+    } else {
+      buildBoards();
+    }
   }
 })();
 </script>
