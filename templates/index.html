@@ -132,28 +132,36 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .sl-gimg {
-  position:relative; aspect-ratio:4/3;
-  border-radius:var(--radius-md); overflow:hidden; background:var(--surface-4);
-  display:block; text-decoration:none;
+  border-radius:var(--radius-md); overflow:hidden; background:#1a1a18;
+  display:flex; flex-direction:column; text-decoration:none;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.sl-gimg-photo {
+  position:relative; aspect-ratio:4/3; overflow:hidden;
 }
 .sl-gimg img {
   width:100%; height:100%; object-fit:cover; display:block;
   transition:transform 0.3s ease;
 }
 .sl-gimg:hover img { transform:scale(1.04); }
-.sl-gimg-badge {
-  position:absolute; bottom:6px; left:6px;
-  background:rgba(0,0,0,0.82); border:1px solid #F5C518; color:#F5C518;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; padding:4px 8px; border-radius:2px;
-  white-space:nowrap;
+.sl-gbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 10px; background:#1a1a18;
+  border-top:1px solid rgba(255,255,255,0.07);
 }
-.sl-gimg-genre {
-  position:absolute; top:6px; right:6px;
-  background:rgba(0,0,0,0.62); color:rgba(255,255,255,0.90);
+.sl-gbar-left { display:flex; align-items:center; gap:6px; }
+.sl-gbar-score {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
+}
+.sl-gbar-dot { color:rgba(255,255,255,0.25); font-size:12px; }
+.sl-gbar-tier {
   font-family:var(--font-mono); font-size:16px; font-weight:600;
-  letter-spacing:1px; padding:4px 8px; border-radius:2px; text-transform:uppercase;
-  white-space:nowrap;
+  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+}
+.sl-gbar-genre {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
 }
 
 /* MOBILE REDESIGN */
@@ -219,17 +227,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   }
   
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
-  .sl-gimg { aspect-ratio:3/2; }
-  .sl-gimg-badge {
-    white-space:nowrap;
-    font-size:16px;
-    padding:3px 7px;
-  }
-  .sl-gimg-genre {
-    white-space:nowrap;
-    font-size:16px;
-    padding:3px 7px;
-  }
+  .sl-gimg-photo { aspect-ratio:3/2; }
+
 }
 @media (max-width:480px) {
   .sl-below { padding:18px 14px 32px; }
@@ -302,9 +301,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <div class="sl-gallery">
       {% for img in gallery_imgs %}{% if img.thumb_url %}
       <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
-        <div class="sl-gimg-badge">{{ "%.2f"|format(img.score) }} &middot; {{ img.tier }}</div>
-        {% if img.genre %}<div class="sl-gimg-genre">{{ img.genre }}</div>{% endif %}
+        <div class="sl-gimg-photo">
+          <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
+        </div>
+        <div class="sl-gbar">
+          <div class="sl-gbar-left">
+            <span class="sl-gbar-score">{{ "%.2f"|format(img.score) }}</span>
+            <span class="sl-gbar-dot">·</span>
+            <span class="sl-gbar-tier">{{ img.tier }}</span>
+          </div>
+          {% if img.genre %}<span class="sl-gbar-genre">{{ img.genre }}</span>{% endif %}
+        </div>
       </a>
       {% endif %}{% endfor %}
     </div>
