@@ -1241,7 +1241,7 @@ def index():
                                  Image.is_public==True, Image.is_flagged==False)
                          .order_by(Image.scored_at.desc())
                          .limit(6).all())
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
         carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
@@ -2175,19 +2175,19 @@ def upload():
                 ).count()
                 if total_count >= FREE_IMAGE_LIMIT:
                     flash(
-                        f'You have used all {FREE_IMAGE_LIMIT} free assessment images. '
-                        'Subscribe to Mobile (₹99/mo, 8 images) or Camera (₹199/mo, 5 RAW-eligible images) to continue.',
-                        'error'
+                        f'You have used all {FREE_IMAGE_LIMIT} free scored images. '
+                        'Upgrade to Mobile (₹99/mo) or Camera (₹599/mo) to keep uploading.',
+                        'warning'
                     )
-                    return redirect(url_for('pricing'))
+                    return redirect(url_for('dashboard'))
             elif _track == 'dormant':
                 # Dormant mode — rank preserved, 0 uploads
                 flash(
-                    'Your subscription is in Dormant mode (₹19/month). '
-                    'Uploads are paused. Reactivate your Mobile or Camera subscription to resume.',
-                    'error'
+                    'Your subscription is in Dormant mode. Uploads are paused. '
+                    'Reactivate your Mobile or Camera subscription to resume.',
+                    'warning'
                 )
-                return redirect(url_for('pricing'))
+                return redirect(url_for('dashboard'))
             elif _track in ('mobile', 'camera', 'learning'):
                 # Subscribed tracks — check monthly count
                 month_start = datetime(today.year, today.month, 1)
@@ -2200,27 +2200,27 @@ def upload():
                     if month_count >= MOBILE_IMAGE_LIMIT:
                         flash(
                             f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
-                            'Your subscription resets on the 1st. Add a top-up (₹99 for 5 images) to upload now.',
-                            'error'
+                            'Your quota resets on the 1st of next month.',
+                            'warning'
                         )
-                        return redirect(url_for('pricing'))
+                        return redirect(url_for('dashboard'))
                 elif _track == 'camera':
                     CAMERA_IMAGE_LIMIT = 5
                     if month_count >= CAMERA_IMAGE_LIMIT:
                         flash(
                             f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
-                            'Your subscription resets on the 1st. Add a top-up (₹99 for 5 images) to upload now.',
-                            'error'
+                            'Your quota resets on the 1st of next month.',
+                            'warning'
                         )
-                        return redirect(url_for('pricing'))
+                        return redirect(url_for('dashboard'))
                 elif _track == 'learning':
                     if month_count >= LEARNING_IMAGE_LIMIT:
                         flash(
                             f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                            'Upgrade to Camera or Mobile League for programme access.',
-                            'error'
+                            'Upgrade to Mobile or Camera to upload more.',
+                            'warning'
                         )
-                        return redirect(url_for('pricing'))
+                        return redirect(url_for('dashboard'))
             # Mentor track — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
