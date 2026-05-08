@@ -1,26 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Shutter League — Become a better photographer{% endblock %}
+{% block title %}Shutter League — How good is your photograph, really?{% endblock %}
 
 {% block extra_head %}
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="description" content="We cracked the Wow factor in an image mathematically. Find out if your photo has it. Free AI scoring across 5 dimensions including emotional resonance.">
 {% endblock %}
 
 {% block extra_css %}
 <style>
+/* ━━ BASE OVERRIDES ━━ */
 body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
-/* ── Hero Container ── */
-.sl-hero {
-  position:relative; width:100%;
-  overflow:hidden; background:#2C3E6B;
-}
-
-/* ── Hero Image ── */
+/* ━━ HERO ━━ */
+.sl-hero { position:relative; width:100%; overflow:hidden; background:#0D0D0B; }
 .sl-hero-img-wrap {
   position:relative; width:100%;
-  height:calc(100svh - 64px); min-height:460px; max-height:900px;
+  height:calc(100svh - 64px); min-height:480px; max-height:900px;
 }
 .sl-hero-img {
   position:absolute; inset:0; width:100%; height:100%;
@@ -29,703 +26,746 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-grad {
   position:absolute; inset:0;
   background:linear-gradient(to bottom,
-    rgba(0,0,0,0.05) 0%,
-    rgba(0,0,0,0.05) 25%,
-    rgba(0,0,0,0.55) 58%,
-    rgba(0,0,0,0.88) 100%);
+    rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.04) 20%,
+    rgba(0,0,0,0.52) 58%, rgba(0,0,0,0.88) 100%);
 }
 
-/* ── Badge Bar ── */
-.sl-hero-id {
+/* Composition overlays */
+.sl-comp-overlay {
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:2;
+}
+.sl-spiral-path {
+  stroke-dasharray:1200; stroke-dashoffset:1200; fill:none;
+  animation:spiral-draw 1.8s cubic-bezier(0.4,0,0.2,1) 0.6s forwards;
+}
+@keyframes spiral-draw { to { stroke-dashoffset:0; } }
+.sl-ll-line {
+  stroke-dasharray:600; stroke-dashoffset:600;
+  animation:line-draw 1.4s cubic-bezier(0.4,0,0.2,1) 0.5s forwards;
+}
+.sl-diag-line {
+  stroke-dasharray:900; stroke-dashoffset:900;
+  animation:line-draw 1.2s cubic-bezier(0.4,0,0.2,1) 0.5s forwards;
+}
+@keyframes line-draw { to { stroke-dashoffset:0; } }
+.sl-thirds-line { opacity:0; animation:fade-in 0.5s ease forwards; }
+.sl-thirds-pulse { opacity:0; animation:pulse-dot 1.2s ease forwards; }
+@keyframes pulse-dot { 0%{opacity:0;r:4} 50%{opacity:1;r:8} 100%{opacity:0.7;r:6} }
+.sl-sym-line {
+  stroke-dasharray:600; stroke-dashoffset:600;
+  animation:line-draw 1.4s ease 0.5s forwards;
+}
+.sl-neg-glow { opacity:0; animation:neg-glow 1.5s ease 0.5s forwards; }
+@keyframes neg-glow { 0%{opacity:0} 60%{opacity:0.55} 100%{opacity:0.35} }
+.sl-fif-rect {
+  stroke-dasharray:1600; stroke-dashoffset:1600; fill:none;
+  animation:line-draw 1.6s ease 0.5s forwards;
+}
+@keyframes fade-in { to { opacity:1; } }
+
+/* Hero badge bar */
+.sl-hero-badge {
   position:absolute; bottom:0; right:0; z-index:3;
-  display:inline-flex; align-items:center; gap:10px;
-  background:rgba(0,0,0,0.18);
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(0,0,0,0.22);
   border-top:1px solid rgba(255,255,255,0.08);
   border-left:1px solid rgba(255,255,255,0.08);
-  border-radius:8px 0 0 0;
-  padding:8px 16px;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
+  border-radius:6px 0 0 0;
+  padding:7px 14px;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
 }
 .sl-tier-badge {
-  background:rgba(245,197,24,0.72); color:#0D0D0B;
+  background:rgba(245,197,24,0.80); color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1px; text-transform:uppercase;
-  padding:3px 8px; border-radius:2px; white-space:nowrap;
-  flex-shrink:0;
+  padding:2px 8px; border-radius:2px; white-space:nowrap; flex-shrink:0;
 }
-.sl-hero-id-score {
+.sl-badge-score {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:rgba(255,255,255,0.85); line-height:1; letter-spacing:1px;
-  white-space:nowrap;
+  color:rgba(255,255,255,0.88); letter-spacing:1px; white-space:nowrap;
 }
-.sl-hero-id-dot {
-  color:rgba(255,255,255,0.25); font-size:16px;
-}
-.sl-hero-id-meta {
+.sl-badge-dot { color:rgba(255,255,255,0.25); font-size:14px; }
+.sl-badge-meta {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(255,255,255,0.5); letter-spacing:1px; text-transform:uppercase;
-  white-space:nowrap;
+  color:rgba(255,255,255,0.48); letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
 }
-.sl-hero-id-by {
+.sl-badge-by {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(245,197,24,0.65); letter-spacing:0.5px; text-transform:uppercase;
-  max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:rgba(245,197,24,0.60); letter-spacing:0.5px;
+  max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-.sl-hero-id-info { display:contents; }
-.sl-hero-sub { white-space:nowrap; }
 
-/* ── Bottom content overlay ── */
+/* Hero content */
 .sl-hero-content {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(40px,5vw,64px);
+  position:absolute; bottom:0; left:0; right:0; z-index:4;
+  padding:clamp(32px,5vw,64px) clamp(20px,5vw,64px) clamp(52px,6vw,80px);
 }
 .sl-hero-h1 {
-  font-family:var(--font-mono); font-weight:700;
-  color:#FFFFFF;
-  line-height:1.2; font-size:clamp(22px,3vw,42px);
-  text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
-  margin-bottom:2px;
+  font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
+  font-size:clamp(22px,3.2vw,44px); line-height:1.18;
+  text-shadow:0 2px 16px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.95);
+  margin-bottom:6px; max-width:640px;
 }
-.sl-hero-h2 {
-  font-family:var(--font-mono); font-size:clamp(16px,1.8vw,22px);
-  font-weight:400; color:rgba(255,255,255,0.65); display:block; line-height:1.3;
-  text-shadow:0 2px 8px rgba(0,0,0,0.95);
-  margin-bottom:0;
+.sl-hero-sub {
+  font-family:var(--font-mono); font-size:clamp(16px,1.6vw,20px); font-weight:400;
+  color:rgba(255,255,255,0.62); text-shadow:0 1px 8px rgba(0,0,0,0.9);
+  max-width:480px; line-height:1.4; display:block;
 }
-.sl-hero-cta-wrap {
-  margin-top:clamp(14px,2.5vw,22px);
-  display:flex; align-items:center; justify-content:space-between;
-  gap:24px;
+.sl-hero-cta {
+  margin-top:clamp(16px,2.5vw,24px);
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
 }
 .sl-hero-btn {
   display:inline-block; background:#F5C518; color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1.5px; text-transform:uppercase;
-  padding:13px 28px; border-radius:4px; text-decoration:none;
+  padding:14px 28px; border-radius:4px; text-decoration:none;
   transition:opacity 0.2s; white-space:nowrap;
 }
 .sl-hero-btn:hover { opacity:0.88; }
-.sl-hero-sub {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#FFFFFF; letter-spacing:0.5px;
-  text-shadow:0 1px 4px rgba(0,0,0,0.8);
-  text-align:right;
+.sl-hero-micro {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.35); text-shadow:0 1px 4px rgba(0,0,0,0.8); white-space:nowrap;
+}
+.sl-hero-caption {
+  position:absolute; bottom:14px; left:clamp(20px,5vw,64px); z-index:5;
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.22); letter-spacing:0.5px; text-shadow:0 1px 4px rgba(0,0,0,0.8);
 }
 
-/* ── Below fold ── */
-.sl-below {
-  background:#FEFCF8;
-  padding:clamp(22px,4vw,48px) clamp(18px,5vw,48px) clamp(32px,5vw,56px);
-}
+/* ━━ BELOW FOLD ━━ */
+.sl-below { background:#FEFCF8; }
 .sl-below-inner {
   max-width:880px; margin:0 auto;
+  padding:clamp(28px,4vw,52px) clamp(20px,5vw,48px) clamp(40px,5vw,60px);
 }
 
-/* ── Statement ── */
+/* ━━ STATEMENT ━━ */
 .sl-statement {
-  background:#1A2744; border:none;
-  border-left:3px solid #F5C518; border-radius:0 var(--radius-md) var(--radius-md) 0;
-  padding:28px 32px; margin-bottom:24px;
-}
-.sl-statement-quote {
-  font-family:var(--font-mono); font-size:48px; color:rgba(255,255,255,0.2);
-  line-height:0.5; margin-bottom:0; display:inline;
+  background:#1A2744; border-left:3px solid #F5C518;
+  border-radius:0 6px 6px 0; padding:24px 28px; margin-bottom:28px;
 }
 .sl-statement-text {
-  font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.92);
-  line-height:1.8; margin-bottom:12px; font-style:italic; display:inline;
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.75); line-height:1.75; font-style:italic;
 }
-.sl-statement-res {
-  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#F5C518;
-  display:block; margin-top:14px;
+.sl-statement-punch {
+  font-family:var(--font-mono); font-size:20px; font-weight:700;
+  color:#F5C518; display:block; margin-top:12px;
 }
 
-/* ── Scanner strip ── */
-.sl-scan {
-  display:flex; flex-direction:column; gap:0;
-  border:1px solid var(--border); border-radius:var(--radius-md);
-  overflow:hidden; margin-bottom:32px;
-}
-.sl-scan-row {
-  display:flex; align-items:center; gap:14px;
-  padding:16px 18px; background:#FFFFFF;
-  border-bottom:1px solid var(--border);
-  position:relative; overflow:hidden;
-}
-.sl-scan-row:last-child { border-bottom:none; }
-.sl-scan-beam {
-  position:absolute; top:0; left:-120%; width:120%; height:100%;
-  background:linear-gradient(90deg,
-    transparent 0%,
-    rgba(0,180,255,0.04) 30%,
-    rgba(0,200,255,0.22) 48%,
-    rgba(120,230,255,0.55) 50%,
-    rgba(0,200,255,0.22) 52%,
-    rgba(0,180,255,0.04) 70%,
-    transparent 100%
-  );
-  pointer-events:none;
-}
-.sl-scan-beam::after {
-  content:''; position:absolute; top:0; right:20%;
-  width:2px; height:100%;
-  background:rgba(160,240,255,0.9);
-  box-shadow:0 0 8px 2px rgba(100,220,255,0.7);
-}
-.sl-scan-arrow {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#D8D0C0; flex-shrink:0; position:relative; z-index:1;
-  transition:color 0.2s;
-}
-.sl-scan-text {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#C0B8B0; line-height:1.3; position:relative; z-index:1;
-  transition:color 0.2s; flex:1;
-}
-.sl-scan-row.sl-scanning .sl-scan-arrow,
-.sl-scan-row.sl-scanned  .sl-scan-arrow { color:#2C3E6B; }
-.sl-scan-row.sl-scanning .sl-scan-text,
-.sl-scan-row.sl-scanned  .sl-scan-text  { color:#1a1a18; }
-
-/* ── Three Pillars Bar ── */
+/* ━━ BEAT 1 — THREE PILLARS ━━ */
 .sl-pillars {
   display:grid; grid-template-columns:repeat(3,1fr);
-  border:1px solid rgba(44,62,107,0.14);
-  border-radius:var(--radius-md);
-  overflow:hidden; background:#FFFFFF;
-  margin-bottom:40px;
+  border:1px solid rgba(44,62,107,0.13); border-radius:8px;
+  overflow:hidden; background:#FFFFFF; margin-bottom:32px;
 }
 .sl-pillar {
-  padding:18px 20px;
-  border-right:1px solid rgba(44,62,107,0.12);
+  padding:20px 22px 22px;
+  border-right:1px solid rgba(44,62,107,0.10);
   position:relative;
 }
-.sl-pillar:last-child { border-right:none; }
-.sl-pillar--new { background:rgba(44,62,107,0.04); }
-.sl-pillar--new::after {
-  content:''; position:absolute; bottom:0; left:0; right:0;
-  height:2px; background:#2C3E6B;
+.sl-pillar:last-child { border-right:none; background:rgba(44,62,107,0.03); }
+.sl-pillar:last-child::after {
+  content:'NEW'; position:absolute; top:14px; right:14px;
+  font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px;
+  background:#2C3E6B; color:#FFFFFF; padding:2px 6px; border-radius:2px;
 }
 .sl-pillar-num {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:rgba(44,62,107,0.3); letter-spacing:1px;
-  margin-bottom:6px;
+  color:rgba(44,62,107,0.28); letter-spacing:1px; margin-bottom:7px;
 }
-.sl-pillar-label {
+.sl-pillar-q {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#1a1a18; margin-bottom:4px;
+  color:#F5C518; background:#1A2744;
+  display:inline-block; padding:3px 8px; border-radius:2px;
+  margin-bottom:10px; line-height:1.35;
 }
-.sl-pillar-desc {
+.sl-pillar-ans {
   font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.5); line-height:1.5;
+  color:rgba(26,26,24,0.65); line-height:1.6; margin-bottom:12px;
+}
+.sl-pillar-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.sl-pillar-tag {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:#2C3E6B; background:rgba(44,62,107,0.07);
+  border-radius:2px; padding:2px 7px; white-space:nowrap;
 }
 
-/* ── Mentor Section ── */
-.sl-mentors {
-  margin-bottom:40px;
+/* ━━ BEAT 2 — WOW EQUATION ━━ */
+.sl-wow {
+  background:#1A2744; border-radius:8px;
+  padding:28px 28px 24px; margin-bottom:32px;
 }
-.sl-mentors-eyebrow {
+.sl-wow-eyebrow {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:2px; text-transform:uppercase;
-  color:#2C3E6B; margin-bottom:10px;
+  color:rgba(245,197,24,0.65); margin-bottom:10px;
+}
+.sl-wow-h2 {
+  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,22px); font-weight:700;
+  color:#FFFFFF; line-height:1.3; margin-bottom:8px;
+}
+.sl-wow-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:22px; max-width:560px;
+}
+.sl-scorecard {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:6px; padding:18px 20px; margin-bottom:18px;
+}
+.sl-scorecard-dims { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+.sl-dim { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.sl-dim-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.38); letter-spacing:0.5px; text-transform:uppercase; text-align:center;
+}
+.sl-dim-bar { width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden; }
+.sl-dim-fill { height:100%; border-radius:2px; background:#F5C518; }
+.sl-dim-score {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; line-height:1;
+}
+.sl-dim-aq { background:rgba(245,197,24,0.08); border-radius:4px; padding:6px 4px 4px; border:1px solid rgba(245,197,24,0.2); }
+.sl-dim-aq .sl-dim-label { color:rgba(245,197,24,0.75); }
+.sl-dim-aq .sl-dim-fill { background:#FFFFFF; }
+.sl-dim-aq .sl-dim-score { color:#FFFFFF; }
+.sl-soul-bonus {
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(245,197,24,0.07); border:1px solid rgba(245,197,24,0.18);
+  border-radius:4px; padding:10px 14px;
+}
+.sl-soul-icon { font-size:16px; color:#F5C518; flex-shrink:0; margin-top:1px; }
+.sl-soul-text {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.52); line-height:1.6;
+}
+.sl-soul-text strong { color:rgba(245,197,24,0.85); font-weight:400; }
+.sl-heart-line {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(255,255,255,0.55);
+  border-top:1px solid rgba(255,255,255,0.07); padding-top:14px;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px;
+}
+.sl-heart-line em { color:#F5C518; font-style:normal; }
+.sl-science-link {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(245,197,24,0.5); text-decoration:none; letter-spacing:0.5px; white-space:nowrap;
+}
+.sl-science-link:hover { color:rgba(245,197,24,0.8); }
+
+/* ━━ BEAT 3 — LEARNING ARC ━━ */
+.sl-arc { margin-bottom:32px; }
+.sl-arc-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:#2C3E6B; margin-bottom:14px;
+}
+.sl-arc-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.sl-arc-step {
+  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
+  border-radius:6px; padding:16px 18px;
+}
+.sl-arc-step.sl-arc-final { background:#1A2744; border-color:rgba(245,197,24,0.18); }
+.sl-arc-num {
+  font-family:var(--font-mono); font-size:22px; font-weight:700;
+  color:rgba(44,62,107,0.14); margin-bottom:4px; line-height:1;
+}
+.sl-arc-final .sl-arc-num { color:rgba(245,197,24,0.18); }
+.sl-arc-title {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#1a1a18; margin-bottom:5px;
+}
+.sl-arc-final .sl-arc-title { color:#F5C518; }
+.sl-arc-desc {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.52); line-height:1.55;
+}
+.sl-arc-final .sl-arc-desc { color:rgba(255,255,255,0.45); }
+
+/* ━━ MENTOR SECTION ━━ */
+.sl-mentors { margin-bottom:36px; }
+.sl-mentors-eyebrow {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:#2C3E6B; margin-bottom:8px;
 }
 .sl-mentors-h2 {
-  font-family:var(--font-mono); font-size:clamp(18px,2.5vw,26px); font-weight:700;
+  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,24px); font-weight:700;
   color:#1a1a18; line-height:1.25; margin-bottom:8px;
 }
 .sl-mentors-sub {
   font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.55); line-height:1.65;
-  max-width:560px; margin-bottom:24px;
+  color:rgba(26,26,24,0.52); line-height:1.65; max-width:540px; margin-bottom:20px;
 }
-
-/* DDI callout bar */
 .sl-ddi-bar {
-  background:#1A2744;
-  border-left:3px solid rgba(245,197,24,0.5);
-  border-radius:0 var(--radius-md) var(--radius-md) 0;
-  padding:18px 22px;
-  display:flex; align-items:flex-start; gap:16px;
-  margin-bottom:28px;
+  background:#1A2744; border-left:3px solid rgba(245,197,24,0.45);
+  border-radius:0 6px 6px 0; padding:16px 20px;
+  display:flex; align-items:flex-start; gap:14px; margin-bottom:24px;
 }
-.sl-ddi-icon {
-  font-family:var(--font-mono); font-size:20px;
-  color:#F5C518; flex-shrink:0; margin-top:1px;
-}
+.sl-ddi-icon { font-size:18px; color:#F5C518; flex-shrink:0; margin-top:1px; }
 .sl-ddi-head {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   color:#FFFFFF; margin-bottom:4px;
 }
 .sl-ddi-body {
   font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.52); line-height:1.6;
+  color:rgba(255,255,255,0.48); line-height:1.6;
 }
-.sl-ddi-body strong {
-  color:#F5C518; font-weight:400;
-}
-
-/* Mentor cards grid */
-.sl-mentor-grid {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:16px; margin-bottom:24px;
-}
+.sl-ddi-body strong { color:#F5C518; font-weight:400; }
+.sl-mentor-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
 .sl-mcard {
-  background:#FFFFFF;
-  border:1px solid rgba(44,62,107,0.13);
-  border-radius:var(--radius-md);
-  overflow:hidden; text-decoration:none;
+  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
+  border-radius:8px; overflow:hidden; text-decoration:none;
   display:flex; flex-direction:column;
   transition:transform 0.18s, box-shadow 0.18s;
 }
-.sl-mcard:hover {
-  transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(26,39,68,0.09);
-}
+.sl-mcard:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,39,68,0.09); }
 .sl-mcard-photo {
-  aspect-ratio:4/3; position:relative;
-  background:#1A2744; overflow:hidden;
-  display:flex; align-items:center; justify-content:center;
+  aspect-ratio:4/3; position:relative; background:#1A2744;
+  overflow:hidden; display:flex; align-items:center; justify-content:center;
 }
-.sl-mcard-photo img {
-  width:100%; height:100%; object-fit:cover; display:block;
-}
+.sl-mcard-photo img { width:100%; height:100%; object-fit:cover; display:block; }
 .sl-mcard-initials {
-  font-family:var(--font-mono); font-size:32px; font-weight:700;
-  color:rgba(255,255,255,0.12); letter-spacing:2px;
-  user-select:none;
+  font-family:var(--font-mono); font-size:28px; font-weight:700;
+  color:rgba(255,255,255,0.10); letter-spacing:2px;
 }
 .sl-mcard-tier {
   position:absolute; top:10px; left:10px;
   background:#F5C518; color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase;
-  padding:2px 8px; border-radius:2px;
+  letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:2px;
 }
 .sl-mcard-score {
   position:absolute; bottom:10px; right:10px;
-  background:rgba(0,0,0,0.65);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:4px; padding:5px 9px; text-align:right;
+  background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.10);
+  border-radius:4px; padding:4px 8px; text-align:right;
 }
 .sl-mcard-score-val {
-  display:block; font-family:var(--font-mono); font-size:18px; font-weight:700;
+  display:block; font-family:var(--font-mono); font-size:16px; font-weight:700;
   color:#F5C518; line-height:1;
 }
 .sl-mcard-score-lbl {
   display:block; font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.38); letter-spacing:0.5px;
-  text-transform:uppercase; margin-top:2px;
+  color:rgba(255,255,255,0.35); letter-spacing:0.5px; text-transform:uppercase; margin-top:2px;
 }
-.sl-mcard-body { padding:14px 14px 12px; flex:1; display:flex; flex-direction:column; }
-.sl-mcard-name {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#1a1a18; margin-bottom:2px;
-}
-.sl-mcard-title {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.5); margin-bottom:10px; line-height:1.4;
-}
-.sl-mcard-tags {
-  display:flex; flex-wrap:wrap; gap:5px;
-  margin-bottom:12px; flex:1;
-}
-.sl-mcard-tag {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:#2C3E6B; background:rgba(44,62,107,0.07);
-  border-radius:2px; padding:2px 7px;
-}
-.sl-mcard-footer {
-  display:flex; align-items:center; justify-content:space-between;
-  padding-top:10px; border-top:1px solid rgba(44,62,107,0.09);
-}
-.sl-mcard-price {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#1a1a18;
-}
-.sl-mcard-price span {
-  font-weight:400; color:rgba(26,26,24,0.45);
-}
+.sl-mcard-body { padding:13px 14px 12px; flex:1; display:flex; flex-direction:column; }
+.sl-mcard-name { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
+.sl-mcard-tagline { font-family:var(--font-mono); font-size:16px; font-weight:400; color:rgba(26,26,24,0.48); margin-bottom:10px; line-height:1.4; }
+.sl-mcard-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; flex:1; }
+.sl-mcard-tag { font-family:var(--font-mono); font-size:16px; font-weight:400; color:#2C3E6B; background:rgba(44,62,107,0.07); border-radius:2px; padding:2px 6px; }
+.sl-mcard-footer { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid rgba(44,62,107,0.08); }
+.sl-mcard-price { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; }
+.sl-mcard-price span { font-weight:400; color:rgba(26,26,24,0.42); }
 .sl-mcard-btn {
-  background:#1A2744; color:#FFFFFF;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:0.5px; border:none; border-radius:4px;
-  padding:6px 14px; cursor:pointer; text-decoration:none;
-  display:inline-block;
+  background:#1A2744; color:#FFFFFF; font-family:var(--font-mono);
+  font-size:16px; font-weight:700; letter-spacing:0.5px;
+  border:none; border-radius:4px; padding:5px 13px; cursor:pointer;
+  text-decoration:none; display:inline-block;
 }
 .sl-mcard-btn:hover { opacity:0.88; }
-
-/* Mentor section CTA row */
-.sl-mentors-cta {
-  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
-}
+.sl-mentors-cta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
 .sl-mentors-cta-btn {
   display:inline-block; background:#2C3E6B; color:#FFFFFF;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1px; text-transform:uppercase;
-  padding:12px 24px; border-radius:4px; text-decoration:none;
-  transition:opacity 0.18s;
+  padding:12px 22px; border-radius:4px; text-decoration:none; transition:opacity 0.18s;
 }
 .sl-mentors-cta-btn:hover { opacity:0.88; }
 .sl-mentors-cta-note {
   font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.45);
+  color:rgba(26,26,24,0.42);
 }
 
-/* Divider between mentor section and gallery */
-.sl-section-divider {
-  border:none; border-top:1px solid rgba(44,62,107,0.1);
-  margin:0 0 32px;
-}
+/* ━━ DIVIDER ━━ */
+.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.09); margin:0 0 32px; }
 
-/* ── Gallery ── */
+/* ━━ BEAT 4 — CLOSE ━━ */
+.sl-close { background:#F5C518; border-radius:8px; padding:28px 28px 26px; margin-bottom:32px; }
+.sl-close-h2 {
+  font-family:var(--font-mono); font-size:clamp(18px,2.4vw,26px); font-weight:700;
+  color:#0D0D0B; line-height:1.25; margin-bottom:8px;
+}
+.sl-close-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(13,13,11,0.58); line-height:1.65; margin-bottom:20px; max-width:520px;
+}
+.sl-close-btns { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.sl-close-btn {
+  display:inline-block; background:#0D0D0B; color:#F5C518;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:13px 26px; border-radius:4px; text-decoration:none; transition:opacity 0.2s;
+}
+.sl-close-btn:hover { opacity:0.88; }
+.sl-close-micro { font-family:var(--font-mono); font-size:16px; font-weight:400; color:rgba(13,13,11,0.42); }
+
+/* ━━ GALLERY ━━ */
 .sl-gallery-label {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:2px; text-transform:uppercase; color:#1a1a18; margin-bottom:12px;
 }
 .sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .sl-gimg {
-  border-radius:var(--radius-md); overflow:hidden; background:#1a1a18;
+  border-radius:6px; overflow:hidden; background:#1a1a18;
   display:flex; flex-direction:column; text-decoration:none;
-  border:1px solid rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.05);
 }
-.sl-gimg-photo {
-  position:relative; aspect-ratio:4/3; overflow:hidden;
-}
-.sl-gimg img {
-  width:100%; height:100%; object-fit:cover; display:block;
-  transition:transform 0.3s ease;
-}
+.sl-gimg-photo { position:relative; aspect-ratio:4/3; overflow:hidden; }
+.sl-gimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease; }
 .sl-gimg:hover img { transform:scale(1.04); }
 .sl-gbar {
   display:flex; align-items:center; justify-content:space-between;
-  padding:7px 10px; background:#1a1a18;
-  border-top:1px solid rgba(255,255,255,0.07);
+  padding:6px 9px; background:#1a1a18; border-top:1px solid rgba(255,255,255,0.06);
 }
-.sl-gbar-left { display:flex; align-items:center; gap:6px; }
-.sl-gbar-score {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
-}
-.sl-gbar-dot { color:rgba(255,255,255,0.25); font-size:16px; }
-.sl-gbar-tier {
-  font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
-}
-.sl-gbar-genre {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
-  padding-left:4px;
-}
+.sl-gbar-left { display:flex; align-items:center; gap:5px; }
+.sl-gbar-score { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#F5C518; letter-spacing:0.5px; white-space:nowrap; }
+.sl-gbar-dot { color:rgba(255,255,255,0.22); font-size:14px; }
+.sl-gbar-tier { font-family:var(--font-mono); font-size:16px; font-weight:600; color:rgba(255,255,255,0.52); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
+.sl-gbar-genre { font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.32); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
 
-/* ── MOBILE ── */
+/* ━━ MOBILE 768px ━━ */
 @media (max-width:768px) {
-  /* Hero image */
-  .sl-hero-img-wrap {
-    height:auto !important; min-height:0 !important;
-    max-height:none !important; aspect-ratio:16/9;
-  }
+  .sl-hero-img-wrap { height:auto !important; min-height:0 !important; max-height:none !important; aspect-ratio:16/9; }
   .sl-hero-img { opacity:1; }
   .sl-hero-grad { display:none; }
-
-  /* Badge bar */
-  .sl-hero-id {
-    position:static; width:100%;
-    background:#FEFCF8; border:none; border-radius:0; border-bottom:none;
-    padding:10px 16px; gap:8px; flex-wrap:wrap;
-    backdrop-filter:none; -webkit-backdrop-filter:none;
+  .sl-comp-overlay { display:none; }
+  .sl-hero-badge {
+    position:static; width:100%; background:#FEFCF8; border:none; border-radius:0;
+    padding:9px 16px; gap:7px; flex-wrap:wrap; backdrop-filter:none; -webkit-backdrop-filter:none;
   }
-  .sl-tier-badge {
-    font-size:16px; padding:4px 8px; letter-spacing:1px;
-    background:#2C3E6B !important; color:#FFFFFF !important;
-  }
-  .sl-hero-id-score { font-size:16px !important; white-space:nowrap; color:#1a1a18 !important; }
-  .sl-hero-id-dot { font-size:16px; color:#C0B8B0 !important; }
-  .sl-hero-id-meta { font-size:16px; letter-spacing:0.5px; white-space:nowrap; color:#666 !important; }
-  .sl-hero-id-by {
-    font-size:16px; letter-spacing:0.5px; color:#888 !important;
-    max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-
-  /* Hero content */
-  .sl-hero-content {
-    position:static; background:#FEFCF8;
-    padding:20px 16px 24px; border-top:none;
-  }
-  .sl-hero-h1 { font-size:20px; font-weight:700; color:#1a1a18; text-shadow:none; }
-  .sl-hero-h2 { font-size:17px; font-weight:400; color:rgba(44,62,107,0.65); margin-top:4px; text-shadow:none; }
-  .sl-hero-cta-wrap { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
-  .sl-hero-btn { width:100%; font-size:16px; padding:13px 24px; text-align:center; }
-  .sl-hero-sub {
-    font-size:16px; font-weight:700; color:#2C3E6B;
-    text-align:center; text-shadow:none; white-space:normal; letter-spacing:0.5px;
-  }
-
-  /* Statement mobile */
-  .sl-statement { padding:18px 16px; margin-bottom:18px; }
-  .sl-statement-quote { font-size:36px; }
-  .sl-statement-text { font-size:16px; }
-  .sl-statement-res { font-size:18px; }
-
-  /* Scanner mobile */
-  .sl-scan-row { padding:14px 14px; gap:10px; }
-  .sl-scan-text { font-size:16px; }
-
-  /* Three Pillars — stack on mobile */
-  .sl-pillars { grid-template-columns:1fr; border-radius:var(--radius-md); }
-  .sl-pillar { border-right:none; border-bottom:1px solid rgba(44,62,107,0.12); }
+  .sl-tier-badge { background:#2C3E6B !important; color:#FFFFFF !important; font-size:16px; }
+  .sl-badge-score { font-size:16px !important; color:#1a1a18 !important; }
+  .sl-badge-dot { color:#C0B8B0 !important; }
+  .sl-badge-meta { font-size:16px !important; color:#666 !important; }
+  .sl-badge-by { font-size:16px !important; color:#888 !important; max-width:140px; }
+  .sl-hero-content { position:static; background:#FEFCF8; padding:18px 16px 22px; }
+  .sl-hero-h1 { font-size:20px; font-weight:700; color:#1a1a18; text-shadow:none; max-width:100%; }
+  .sl-hero-sub { font-size:16px; color:rgba(44,62,107,0.65); text-shadow:none; max-width:100%; margin-top:4px; }
+  .sl-hero-cta { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
+  .sl-hero-btn { width:100%; text-align:center; font-size:16px; padding:14px 24px; }
+  .sl-hero-micro { font-size:16px; color:rgba(44,62,107,0.42); text-shadow:none; text-align:center; }
+  .sl-hero-caption { display:none; }
+  .sl-statement { padding:16px; margin-bottom:18px; }
+  .sl-pillars { grid-template-columns:1fr; }
+  .sl-pillar { border-right:none; border-bottom:1px solid rgba(44,62,107,0.10); padding:16px; }
   .sl-pillar:last-child { border-bottom:none; }
-  .sl-pillar--new::after { width:2px; height:auto; top:0; bottom:0; left:0; right:auto; }
-  .sl-pillar-num { font-size:16px; }
-  .sl-pillar-label { font-size:16px; }
-  .sl-pillar-desc { font-size:16px; }
-
-  /* Mentor section mobile */
-  .sl-mentors-eyebrow { font-size:16px; }
-  .sl-mentors-h2 { font-size:18px; }
-  .sl-mentors-sub { font-size:16px; }
-  .sl-ddi-bar { padding:16px; gap:12px; }
-  .sl-ddi-head { font-size:16px; }
-  .sl-ddi-body { font-size:16px; }
-
-  /* Mentor grid — 1 col on mobile */
-  .sl-mentor-grid { grid-template-columns:1fr; gap:14px; }
+  .sl-wow { padding:20px 16px; margin-bottom:22px; }
+  .sl-wow-h2 { font-size:17px; }
+  .sl-scorecard-dims { grid-template-columns:repeat(5,1fr); gap:5px; }
+  .sl-arc-steps { grid-template-columns:1fr; gap:10px; }
+  .sl-mentor-grid { grid-template-columns:1fr; gap:12px; }
   .sl-mcard-photo { aspect-ratio:16/7; }
-  .sl-mcard-name { font-size:16px; }
-  .sl-mcard-title { font-size:16px; }
-  .sl-mcard-tag { font-size:16px; }
-  .sl-mcard-price { font-size:16px; }
-  .sl-mcard-btn { font-size:16px; }
-  .sl-mcard-score-val { font-size:16px; }
-  .sl-mcard-score-lbl { font-size:16px; }
-  .sl-mentors-cta-btn { width:100%; text-align:center; font-size:16px; padding:13px 24px; }
-  .sl-mentors-cta-note { font-size:16px; text-shadow:none; }
-
-  /* Gallery mobile */
+  .sl-mentors-cta-btn { width:100%; text-align:center; }
+  .sl-close { padding:22px 16px; }
+  .sl-close-btn { width:100%; text-align:center; }
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
   .sl-gimg-photo { aspect-ratio:3/2; }
 }
 @media (max-width:480px) {
-  .sl-below { padding:18px 14px 32px; }
-  .sl-mentor-grid { gap:12px; }
+  .sl-below-inner { padding:16px 14px 32px; }
+  .sl-scorecard-dims { gap:3px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+{% set hero = carousel_images[0] if carousel_images else none %}
+{% if hero and hero.get_audit %}
+  {% set _audit = hero.get_audit() %}
+  {% set comp_tech = _audit.get('composition_technique', 'NONE') %}
+{% else %}
+  {% set comp_tech = 'NONE' %}
+{% endif %}
+
 <div class="sl-home">
 
-  {# ── HERO ── #}
-  <div class="sl-hero">
-    {% if carousel_images %}
-      {% set hero = carousel_images[0] %}
-      {% if hero.thumb_url %}
-        <div class="sl-hero-img-wrap">
-          <img class="sl-hero-img" src="{{ hero.thumb_url }}"
-               alt="{{ hero.genre or 'Photography' }}" loading="eager" fetchpriority="high">
-          <div class="sl-hero-grad"></div>
-        </div>
-        <div class="sl-hero-id">
-          <div class="sl-tier-badge">{{ hero.tier }}</div>
-          <span class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</span>
-          <span class="sl-hero-id-dot">·</span>
-          {% if hero.genre %}<span class="sl-hero-id-meta">{{ hero.genre | upper }}</span><span class="sl-hero-id-dot">·</span>{% endif %}
-          <span class="sl-hero-id-by">Shot by {{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
-        </div>
-      {% endif %}
-    {% else %}
-      <div class="sl-hero-img-wrap">
-        <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a1a18,#2d2d28);"></div>
-        <div class="sl-hero-grad"></div>
-      </div>
-      <div class="sl-hero-id">
-        <div class="sl-tier-badge">Grandmaster</div>
-        <span class="sl-hero-id-score">8.70</span>
-        <span class="sl-hero-id-dot">·</span>
-        <span class="sl-hero-id-meta">WILDLIFE</span>
-        <span class="sl-hero-id-dot">·</span>
-        <span class="sl-hero-id-by">Shot by Sri</span>
-      </div>
-    {% endif %}
+{# ━━━━━━━━ HERO ━━━━━━━━ #}
+<div class="sl-hero">
 
-    <div class="sl-hero-content">
-      <div class="sl-hero-h1">How good is your photo?</div>
-      <span class="sl-hero-h2">Find out in minutes.</span>
-      <div class="sl-hero-cta-wrap">
-        <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-           class="sl-hero-btn">Score My Photo Now &rarr;</a>
-        <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
+  {% if hero and hero.thumb_url %}
+  <div class="sl-hero-img-wrap">
+    <img class="sl-hero-img"
+         src="{{ hero.thumb_url }}"
+         alt="{{ hero.genre or 'Photography' }}"
+         loading="eager" fetchpriority="high">
+    <div class="sl-hero-grad"></div>
+
+    {# ── Composition overlay — technique-specific SVG ── #}
+    {% if comp_tech == 'GOLDEN_SPIRAL' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="sl-spiral-path"
+        d="M62,50 A12,12 0 1,0 50,62 A19.5,19.5 0 1,0 30.5,50 A31.5,31.5 0 1,0 50,18.5 A50,50 0 1,0 100,50"
+        stroke="rgba(245,197,24,0.55)" stroke-width="0.5"/>
+    </svg>
+    {% elif comp_tech == 'LEADING_LINES' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <line class="sl-ll-line" x1="0" y1="100" x2="50" y2="42" stroke="rgba(245,197,24,0.5)" stroke-width="0.5"/>
+      <line class="sl-ll-line" x1="100" y1="100" x2="50" y2="42" stroke="rgba(245,197,24,0.5)" stroke-width="0.5" style="animation-delay:0.9s"/>
+    </svg>
+    {% elif comp_tech == 'DIAGONAL' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <line class="sl-diag-line" x1="5" y1="5" x2="95" y2="95" stroke="rgba(245,197,24,0.5)" stroke-width="0.5"/>
+    </svg>
+    {% elif comp_tech == 'RULE_OF_THIRDS' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <line class="sl-thirds-line" x1="33.3" y1="0" x2="33.3" y2="100" stroke="rgba(245,197,24,0.35)" stroke-width="0.4" style="animation-delay:0.6s"/>
+      <line class="sl-thirds-line" x1="66.6" y1="0" x2="66.6" y2="100" stroke="rgba(245,197,24,0.35)" stroke-width="0.4" style="animation-delay:0.8s"/>
+      <line class="sl-thirds-line" x1="0" y1="33.3" x2="100" y2="33.3" stroke="rgba(245,197,24,0.35)" stroke-width="0.4" style="animation-delay:1.0s"/>
+      <line class="sl-thirds-line" x1="0" y1="66.6" x2="100" y2="66.6" stroke="rgba(245,197,24,0.35)" stroke-width="0.4" style="animation-delay:1.2s"/>
+      <circle class="sl-thirds-pulse" cx="33.3" cy="33.3" r="4" fill="none" stroke="rgba(245,197,24,0.8)" stroke-width="0.6" style="animation-delay:1.4s"/>
+      <circle class="sl-thirds-pulse" cx="66.6" cy="66.6" r="4" fill="none" stroke="rgba(245,197,24,0.8)" stroke-width="0.6" style="animation-delay:1.6s"/>
+    </svg>
+    {% elif comp_tech == 'SYMMETRY' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <line class="sl-sym-line" x1="50" y1="0" x2="50" y2="100" stroke="rgba(245,197,24,0.5)" stroke-width="0.5"/>
+    </svg>
+    {% elif comp_tech == 'NEGATIVE_SPACE' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <ellipse class="sl-neg-glow" cx="50" cy="55" rx="18" ry="18" fill="none" stroke="rgba(245,197,24,0.6)" stroke-width="0.6"/>
+    </svg>
+    {% elif comp_tech == 'FRAME_IN_FRAME' %}
+    <svg class="sl-comp-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <rect class="sl-fif-rect" x="15" y="15" width="70" height="70" rx="1"
+            stroke="rgba(245,197,24,0.5)" stroke-width="0.5"/>
+    </svg>
+    {% endif %}
+    {# NONE — no overlay, score badge fade is sufficient #}
+
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">{{ hero.tier }}</div>
+      <span class="sl-badge-score">{{ "%.2f"|format(hero.score) }}</span>
+      <span class="sl-badge-dot">·</span>
+      {% if hero.genre %}<span class="sl-badge-meta">{{ hero.genre | upper }}</span><span class="sl-badge-dot">·</span>{% endif %}
+      <span class="sl-badge-by">Shot by {{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
+    </div>
+  </div>
+
+  {% else %}
+  {# Fallback when no images scored yet #}
+  <div class="sl-hero-img-wrap">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a1a18,#2d2d28);"></div>
+    <div class="sl-hero-grad"></div>
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">Grandmaster</div>
+      <span class="sl-badge-score">8.74</span>
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-meta">Wildlife</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sl-hero-content">
+    <div class="sl-hero-h1">How good is your photograph, really?</div>
+    <span class="sl-hero-sub">We cracked the Wow factor. Find out if your photo has it.</span>
+    <div class="sl-hero-cta">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+         class="sl-hero-btn">Score mine — free →</a>
+      <span class="sl-hero-micro">Free &nbsp;·&nbsp; 46 seconds &nbsp;·&nbsp; No card required</span>
+    </div>
+  </div>
+  <span class="sl-hero-caption">Art is the Question. Math is the Verification.</span>
+
+</div>{# end sl-hero #}
+
+{# ━━━━━━━━ BELOW FOLD ━━━━━━━━ #}
+<div class="sl-below">
+<div class="sl-below-inner">
+
+  {# Statement #}
+  <div class="sl-statement">
+    <span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer. Chess has ELO. Wine has Parker Points. Photography has likes.</span>
+    <span class="sl-statement-punch">Until now.</span>
+  </div>
+
+  {# ━━ BEAT 1 — THREE PILLARS ━━ #}
+  <div class="sl-pillars">
+    <div class="sl-pillar">
+      <div class="sl-pillar-num">01</div>
+      <div class="sl-pillar-q">Is my work actually good?</div>
+      <p class="sl-pillar-ans">Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.</p>
+      <div class="sl-pillar-tags">
+        <span class="sl-pillar-tag">Decisive Moment</span>
+        <span class="sl-pillar-tag">Wonder</span>
+        <span class="sl-pillar-tag">AQ</span>
+        <span class="sl-pillar-tag">Disruption</span>
+        <span class="sl-pillar-tag">DoD</span>
+      </div>
+    </div>
+    <div class="sl-pillar">
+      <div class="sl-pillar-num">02</div>
+      <div class="sl-pillar-q">Where do I actually stand?</div>
+      <p class="sl-pillar-ans">Blind ranking — nobody knows whose photo they are rating. Your score reflects your photography, not your followers.</p>
+      <div class="sl-pillar-tags">
+        <span class="sl-pillar-tag">Blind peer rating</span>
+        <span class="sl-pillar-tag">India rankings</span>
+        <span class="sl-pillar-tag">POTY</span>
+      </div>
+    </div>
+    <div class="sl-pillar">
+      <div class="sl-pillar-num">03</div>
+      <div class="sl-pillar-q">How do I get better?</div>
+      <p class="sl-pillar-ans">Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.</p>
+      <div class="sl-pillar-tags">
+        <span class="sl-pillar-tag">AI mentor</span>
+        <span class="sl-pillar-tag">Human expert</span>
+        <span class="sl-pillar-tag">From &#x20B9;50</span>
       </div>
     </div>
   </div>
 
-  {# ── BELOW FOLD ── #}
-  <div class="sl-below">
-  <div class="sl-below-inner">
+  {# ━━ BEAT 2 — THE WOW EQUATION ━━ #}
+  <div class="sl-wow">
+    <div class="sl-wow-eyebrow">The Honest Mirror</div>
+    <div class="sl-wow-h2">Can an AI really score something as personal as a photograph?</div>
+    <p class="sl-wow-sub">Yes — because one of the five dimensions measures emotional resonance specifically. A technically perfect but emotionally empty photograph scores lower than an imperfect one that stops you breathing. That is by design.</p>
 
-    {# ── Statement ── #}
-    <div class="sl-statement">
-      <span class="sl-statement-quote">"</span><span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer.</span>
-      <div class="sl-statement-res">Until now.</div>
-    </div>
-
-    {# ── Scanner strip ── #}
-    <div class="sl-scan" id="slScan">
-      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Get feedback on your photo — right now.</span></div>
-      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">See yourself get better, photo by photo.</span></div>
-      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Where do you rank amongst everyone else?</span></div>
-      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Earn points every time you upload or rate.</span></div>
-    </div>
-
-    {# ── Three Pillars Bar ── #}
-    <div class="sl-pillars">
-      <div class="sl-pillar">
-        <div class="sl-pillar-num">01</div>
-        <div class="sl-pillar-label">Score</div>
-        <div class="sl-pillar-desc">Instant AI evaluation across 5 dimensions</div>
+    {# Score card — live from hero image if available, else illustrative mock #}
+    <div class="sl-scorecard">
+      <div class="sl-scorecard-dims">
+        {% if hero and hero.get_audit %}
+          {% set _a = hero.get_audit() %}
+          {% for mname, mval in _a.get('modules', []) %}
+          <div class="sl-dim {% if mname == 'AQ' %}sl-dim-aq{% endif %}">
+            <div class="sl-dim-label">{{ mname }}</div>
+            <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:{{ (mval / 10 * 100)|int }}%"></div></div>
+            <div class="sl-dim-score">{{ "%.1f"|format(mval) }}{% if mname == 'AQ' %} ✦{% endif %}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="sl-dim"><div class="sl-dim-label">DoD</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:82%"></div></div><div class="sl-dim-score">8.2</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Disruption</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:77%"></div></div><div class="sl-dim-score">7.7</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Dec.Moment</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:90%"></div></div><div class="sl-dim-score">9.0</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Wonder</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:85%"></div></div><div class="sl-dim-score">8.5</div></div>
+          <div class="sl-dim sl-dim-aq"><div class="sl-dim-label">AQ / Soul</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8 ✦</div></div>
+        {% endif %}
       </div>
-      <div class="sl-pillar">
-        <div class="sl-pillar-num">02</div>
-        <div class="sl-pillar-label">Rank</div>
-        <div class="sl-pillar-desc">See where you stand against every photographer</div>
-      </div>
-      <div class="sl-pillar sl-pillar--new">
-        <div class="sl-pillar-num">03</div>
-        <div class="sl-pillar-label">Learn from the best</div>
-        <div class="sl-pillar-desc">Get your specific image reviewed by a master photographer</div>
+      <div class="sl-soul-bonus">
+        <span class="sl-soul-icon">✦</span>
+        <span class="sl-soul-text">
+          <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition. Technical perfection without emotional truth is not a high score.
+        </span>
       </div>
     </div>
 
-    {# ── Mentor Marketplace Section ── #}
-    {# Show only when at least 3 active approved mentors exist #}
-    {% if active_mentors and active_mentors|length >= 3 %}
-    <div class="sl-mentors">
+    <div class="sl-heart-line">
+      <span>The brands rated your gear. <em>We rate your heart.</em></span>
+      <a href="{{ url_for('science') }}" class="sl-science-link">How the scoring works →</a>
+    </div>
+  </div>
 
-      <div class="sl-mentors-eyebrow">Mentor Marketplace</div>
-      <h2 class="sl-mentors-h2">Get your photo reviewed by a master photographer.</h2>
-      <p class="sl-mentors-sub">Pick your mentor. They see your full DDI score before they begin — no guesswork, just precise feedback on exactly what to fix. Written response within 72 hours.</p>
+  {# ━━ BEAT 3 — LEARNING ARC ━━ #}
+  <div class="sl-arc">
+    <div class="sl-arc-label">The learning arc</div>
+    <div class="sl-arc-steps">
+      <div class="sl-arc-step">
+        <div class="sl-arc-num">1</div>
+        <div class="sl-arc-title">Get your score</div>
+        <p class="sl-arc-desc">46 seconds. 5 dimensions. One specific improvement. No flattery.</p>
+      </div>
+      <div class="sl-arc-step">
+        <div class="sl-arc-num">10</div>
+        <div class="sl-arc-title">See the pattern</div>
+        <p class="sl-arc-desc">Consistently low on Decisive Moment? High AQ but weak DoD? The data shows you exactly where to focus.</p>
+      </div>
+      <div class="sl-arc-step sl-arc-final">
+        <div class="sl-arc-num">50</div>
+        <div class="sl-arc-title">Compete when ready</div>
+        <p class="sl-arc-desc">You upgrade because you feel ready. Not because of a sales pitch. Readiness, not persuasion.</p>
+      </div>
+    </div>
+  </div>
 
-      <div class="sl-ddi-bar">
-        <div class="sl-ddi-icon">◈</div>
-        <div>
-          <div class="sl-ddi-head">Your mentor already knows where you stand</div>
-          <div class="sl-ddi-body">Before reading your submission, your mentor sees your full DDI breakdown — <strong>Decisive Moment, Wonder, DoD, Disruption, AQ</strong> — and exactly where you are weak. No other platform does this.</div>
+  {# ━━ MENTOR MARKETPLACE ━━ #}
+  {% if active_mentors and active_mentors|length >= 3 %}
+  <div class="sl-mentors">
+    <div class="sl-mentors-eyebrow">Mentor Marketplace</div>
+    <h2 class="sl-mentors-h2">Get your photo reviewed by a master photographer.</h2>
+    <p class="sl-mentors-sub">Pick your mentor. They see your full DDI score before they begin — no guesswork, just precise feedback on exactly what to fix. Written response within 72 hours.</p>
+    <div class="sl-ddi-bar">
+      <span class="sl-ddi-icon">✦</span>
+      <div>
+        <div class="sl-ddi-head">Your mentor already knows where you stand</div>
+        <div class="sl-ddi-body">Before reading your submission, your mentor sees your full DDI breakdown — <strong>Decisive Moment, Wonder, DoD, Disruption, AQ</strong> — and exactly where you are weak. No other platform does this.</div>
+      </div>
+    </div>
+    <div class="sl-mentor-grid">
+      {% for mentor in active_mentors[:3] %}
+      <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
+        <div class="sl-mcard-photo">
+          {% if mentor.photo_url %}
+            <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
+          {% else %}
+            <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
+          {% endif %}
+          <div class="sl-mcard-tier">{{ mentor.tier | title }}</div>
+          {% if mentor.avg_ddi_score %}
+          <div class="sl-mcard-score">
+            <span class="sl-mcard-score-val">{{ "%.2f"|format(mentor.avg_ddi_score) }}</span>
+            <span class="sl-mcard-score-lbl">DDI avg</span>
+          </div>
+          {% endif %}
         </div>
-      </div>
-
-      <div class="sl-mentor-grid">
-        {% for mentor in active_mentors[:3] %}
-        <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
-          <div class="sl-mcard-photo">
-            {% if mentor.photo_url %}
-              <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
-            {% else %}
-              <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
-            {% endif %}
-            <div class="sl-mcard-tier">{{ mentor.tier | title }}</div>
-            {% if mentor.avg_ddi_score %}
-            <div class="sl-mcard-score">
-              <span class="sl-mcard-score-val">{{ "%.2f"|format(mentor.avg_ddi_score) }}</span>
-              <span class="sl-mcard-score-lbl">DDI avg</span>
-            </div>
-            {% endif %}
+        <div class="sl-mcard-body">
+          <div class="sl-mcard-name">{{ mentor.display_name }}</div>
+          <div class="sl-mcard-tagline">{{ mentor.tagline or '' }}</div>
+          <div class="sl-mcard-tags">
+            {% for genre in mentor.specialisms_list[:3] %}
+              <span class="sl-mcard-tag">{{ genre }}</span>
+            {% endfor %}
           </div>
-          <div class="sl-mcard-body">
-            <div class="sl-mcard-name">{{ mentor.display_name }}</div>
-            <div class="sl-mcard-title">{{ mentor.tagline or '' }}</div>
-            <div class="sl-mcard-tags">
-              {% for genre in mentor.specialisms_list[:3] %}
-                <span class="sl-mcard-tag">{{ genre }}</span>
-              {% endfor %}
-            </div>
-            <div class="sl-mcard-footer">
-              <div class="sl-mcard-price">&#x20B9;{{ mentor.session_price }} <span>/ review</span></div>
-              <span class="sl-mcard-btn">Book</span>
-            </div>
+          <div class="sl-mcard-footer">
+            <div class="sl-mcard-price">&#x20B9;{{ mentor.session_price }} <span>/ review</span></div>
+            <span class="sl-mcard-btn">Book</span>
           </div>
-        </a>
-        {% endfor %}
-      </div>
-
-      <div class="sl-mentors-cta">
-        <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet All Mentors &rarr;</a>
-        <span class="sl-mentors-cta-note">From &#x20B9;50 &nbsp;&middot;&nbsp; No subscription required &nbsp;&middot;&nbsp; 72-hr written feedback</span>
-      </div>
-
-    </div>
-    <hr class="sl-section-divider">
-    {% endif %}
-
-    {# ── Gallery ── #}
-    {% set gallery_imgs = carousel_images[1:] %}
-    {% if gallery_imgs %}
-    <div class="sl-gallery-label">Top scores this week</div>
-    <div class="sl-gallery">
-      {% for img in gallery_imgs %}{% if img.thumb_url %}
-      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
-        <div class="sl-gimg-photo">
-          <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
-        </div>
-        <div class="sl-gbar">
-          <div class="sl-gbar-left">
-            <span class="sl-gbar-score">{{ "%.2f"|format(img.score) }}</span>
-            <span class="sl-gbar-dot">·</span>
-            <span class="sl-gbar-tier">{{ img.tier }}</span>
-          </div>
-          {% if img.genre %}<span class="sl-gbar-genre">{{ img.genre }}</span>{% endif %}
         </div>
       </a>
-      {% endif %}{% endfor %}
+      {% endfor %}
     </div>
-    {% endif %}
+    <div class="sl-mentors-cta">
+      <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet all mentors →</a>
+      <span class="sl-mentors-cta-note">From &#x20B9;50 &nbsp;·&nbsp; No subscription required &nbsp;·&nbsp; 72-hr written feedback</span>
+    </div>
+  </div>
+  <hr class="sl-divider">
+  {% endif %}
 
-  </div>{# end sl-below-inner #}
-  </div>{# end sl-below #}
+  {# ━━ BEAT 4 — EMOTIONAL CLOSE ━━ #}
+  <div class="sl-close">
+    <div class="sl-close-h2">We take your work as seriously as you do.</div>
+    <p class="sl-close-sub">Every serious photographer deserves an honest answer. Not likes. Not club politics. A score with a reason — and a path to get better.</p>
+    <div class="sl-close-btns">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+         class="sl-close-btn">Start free →</a>
+      <span class="sl-close-micro">Free &nbsp;·&nbsp; First 3 scored free &nbsp;·&nbsp; No card required</span>
+    </div>
+  </div>
+
+  {# ━━ GALLERY ━━ #}
+  {% set gallery_imgs = carousel_images[1:] %}
+  {% if gallery_imgs %}
+  <div class="sl-gallery-label">Top scores this week</div>
+  <div class="sl-gallery">
+    {% for img in gallery_imgs %}{% if img.thumb_url %}
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
+      <div class="sl-gimg-photo">
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
+      </div>
+      <div class="sl-gbar">
+        <div class="sl-gbar-left">
+          <span class="sl-gbar-score">{{ "%.2f"|format(img.score) }}</span>
+          <span class="sl-gbar-dot">·</span>
+          <span class="sl-gbar-tier">{{ img.tier }}</span>
+        </div>
+        {% if img.genre %}<span class="sl-gbar-genre">{{ img.genre }}</span>{% endif %}
+      </div>
+    </a>
+    {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+
+</div>{# end sl-below-inner #}
+</div>{# end sl-below #}
 
 </div>{# end sl-home #}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-  if(!('requestAnimationFrame' in window)) return;
-  var rows = document.querySelectorAll('#slScan .sl-scan-row');
-  if(!rows.length) return;
-  var cur = 0;
-  var sweepDuration = 1800;
-  var pauseAfter = 600;
-
-  function scanRow(idx){
-    var row = rows[idx];
-    var beam = row.querySelector('.sl-scan-beam');
-    row.classList.add('sl-scanning');
-    beam.style.transition = 'none';
-    beam.style.left = '-120%';
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        beam.style.transition = 'left ' + sweepDuration + 'ms linear';
-        beam.style.left = '120%';
-      });
-    });
-    setTimeout(function(){
-      row.classList.remove('sl-scanning');
-      row.classList.add('sl-scanned');
-      setTimeout(function(){
-        cur = (cur + 1) % rows.length;
-        if(cur === 0){
-          rows.forEach(function(r){
-            r.classList.remove('sl-scanned');
-            var b = r.querySelector('.sl-scan-beam');
-            b.style.transition = 'none';
-            b.style.left = '-120%';
-          });
-        }
-        scanRow(cur);
-      }, pauseAfter);
-    }, sweepDuration + 80);
-  }
-
-  setTimeout(function(){ scanRow(0); }, 600);
-})();
-</script>
 {% endblock %}
