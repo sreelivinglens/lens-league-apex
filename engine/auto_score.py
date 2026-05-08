@@ -185,6 +185,17 @@ The EXIF data is provided with the image. Read it carefully before writing any t
 - Do not identify technical flaws (lens flare, dust, noise) unless you can clearly see them. A small coloured element may be part of the scene, not a flare. Describe what you see, not what you assume.
 - Never invent equipment, settings, or techniques not supported by the EXIF or the visible image.
 
+COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure used in this image.
+Return exactly one value from the list below. If two apply equally, return the more visually dominant one.
+GOLDEN_SPIRAL: subject or key elements follow a Fibonacci / golden ratio spiral path
+LEADING_LINES: lines (road, river, fence, shadow, corridor, gaze direction) draw the eye to the subject
+DIAGONAL: dominant diagonal tension sweeps across the frame — subject or elements on a diagonal axis
+RULE_OF_THIRDS: subject placed on a thirds intersection or along a thirds line
+SYMMETRY: bilateral symmetry, mirror image, or strong reflection creating an axis
+NEGATIVE_SPACE: subject isolated in large empty area — the empty space IS the composition
+FRAME_IN_FRAME: subject enclosed or framed by a natural or architectural element within the scene
+NONE: no single dominant compositional structure identifiable
+
 Return this exact JSON structure:
 {{
   "dod": <float 0-10>,
@@ -197,6 +208,7 @@ Return this exact JSON structure:
   "archetype": "<archetype name>",
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
+  "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
   "hard_truth": "<One punchy sentence — what this image IS. Written as a photographer would say it to a peer. No hedging. Start with what makes or breaks it. Example: 'The subtraction works — white background forces the eye to the rhythm of repeated forms, but the incoming bird is a beat too early to anchor the geometry.' Never start with 'This image' or 'The photograph'.>",
   "row_technical": "<2-3 sentences. Speak directly about what you see — specific technical decisions, not categories. Name the actual technique. Example: 'High-key exposure held just below blowout — feather detail survives in the wings. Shallow depth collapses the background to white without losing subject separation.'  >",
   "row_geometric": "<2-3 sentences. Name the actual compositional structure visible in this specific image. Reference real elements. Example: 'Vertical post anchors the left third. The perched birds stack into a diagonal that pulls toward the incoming bird in the upper right — the composition is unresolved until that gap closes.'  >",
@@ -514,16 +526,17 @@ def build_audit_data(result, image_obj):
     location = image_obj.location or ""
 
     return {
-        "asset":       image_obj.asset_name or "Untitled",
-        "meta":        f"{genre}  ·  {fmt}  ·  {subject}  ·  {location}",
-        "score":       str(result.get("score", 0)),
-        "tier":        result.get("tier", "Practitioner"),
-        "dec":         result.get("archetype", "Sovereign Momentum"),
-        "credit":      image_obj.photographer_name or "",
-        "genre_tag":   f"{genre.upper()}  ·  {fmt.upper()}",
-        "soul_bonus":  result.get("soul_bonus", False),
-        "iucn_tag":    result.get("iucn_tag"),
-        "hard_truth":  result.get("hard_truth", ""),
+        "asset":                image_obj.asset_name or "Untitled",
+        "meta":                 f"{genre}  ·  {fmt}  ·  {subject}  ·  {location}",
+        "score":                str(result.get("score", 0)),
+        "tier":                 result.get("tier", "Practitioner"),
+        "dec":                  result.get("archetype", "Sovereign Momentum"),
+        "credit":               image_obj.photographer_name or "",
+        "genre_tag":            f"{genre.upper()}  ·  {fmt.upper()}",
+        "soul_bonus":           result.get("soul_bonus", False),
+        "composition_technique": result.get("composition_technique", "NONE"),
+        "iucn_tag":             result.get("iucn_tag"),
+        "hard_truth":           result.get("hard_truth", ""),
         "modules": [
             ("DoD",        result.get("dod", 0)),
             ("Disruption", result.get("disruption", 0)),
