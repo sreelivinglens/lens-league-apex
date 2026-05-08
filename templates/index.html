@@ -35,7 +35,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     rgba(0,0,0,0.88) 100%);
 }
 
-/* ── Badge Bar (below image on mobile, overlay on desktop) ── */
+/* ── Badge Bar ── */
 .sl-hero-id {
   position:absolute; bottom:0; right:0; z-index:3;
   display:inline-flex; align-items:center; gap:10px;
@@ -121,6 +121,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-below-inner {
   max-width:880px; margin:0 auto;
 }
+
 /* ── Statement ── */
 .sl-statement {
   background:#1A2744; border:none;
@@ -187,6 +188,197 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-scan-row.sl-scanning .sl-scan-text,
 .sl-scan-row.sl-scanned  .sl-scan-text  { color:#1a1a18; }
 
+/* ── Three Pillars Bar ── */
+.sl-pillars {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  border:1px solid rgba(44,62,107,0.14);
+  border-radius:var(--radius-md);
+  overflow:hidden; background:#FFFFFF;
+  margin-bottom:40px;
+}
+.sl-pillar {
+  padding:18px 20px;
+  border-right:1px solid rgba(44,62,107,0.12);
+  position:relative;
+}
+.sl-pillar:last-child { border-right:none; }
+.sl-pillar--new { background:rgba(44,62,107,0.04); }
+.sl-pillar--new::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:2px; background:#2C3E6B;
+}
+.sl-pillar-num {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(44,62,107,0.3); letter-spacing:1px;
+  margin-bottom:6px;
+}
+.sl-pillar-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#1a1a18; margin-bottom:4px;
+}
+.sl-pillar-desc {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.5); line-height:1.5;
+}
+
+/* ── Mentor Section ── */
+.sl-mentors {
+  margin-bottom:40px;
+}
+.sl-mentors-eyebrow {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:#2C3E6B; margin-bottom:10px;
+}
+.sl-mentors-h2 {
+  font-family:var(--font-mono); font-size:clamp(18px,2.5vw,26px); font-weight:700;
+  color:#1a1a18; line-height:1.25; margin-bottom:8px;
+}
+.sl-mentors-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.55); line-height:1.65;
+  max-width:560px; margin-bottom:24px;
+}
+
+/* DDI callout bar */
+.sl-ddi-bar {
+  background:#1A2744;
+  border-left:3px solid rgba(245,197,24,0.5);
+  border-radius:0 var(--radius-md) var(--radius-md) 0;
+  padding:18px 22px;
+  display:flex; align-items:flex-start; gap:16px;
+  margin-bottom:28px;
+}
+.sl-ddi-icon {
+  font-family:var(--font-mono); font-size:20px;
+  color:#F5C518; flex-shrink:0; margin-top:1px;
+}
+.sl-ddi-head {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#FFFFFF; margin-bottom:4px;
+}
+.sl-ddi-body {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.52); line-height:1.6;
+}
+.sl-ddi-body strong {
+  color:#F5C518; font-weight:400;
+}
+
+/* Mentor cards grid */
+.sl-mentor-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:16px; margin-bottom:24px;
+}
+.sl-mcard {
+  background:#FFFFFF;
+  border:1px solid rgba(44,62,107,0.13);
+  border-radius:var(--radius-md);
+  overflow:hidden; text-decoration:none;
+  display:flex; flex-direction:column;
+  transition:transform 0.18s, box-shadow 0.18s;
+}
+.sl-mcard:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(26,39,68,0.09);
+}
+.sl-mcard-photo {
+  aspect-ratio:4/3; position:relative;
+  background:#1A2744; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.sl-mcard-photo img {
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+.sl-mcard-initials {
+  font-family:var(--font-mono); font-size:32px; font-weight:700;
+  color:rgba(255,255,255,0.12); letter-spacing:2px;
+  user-select:none;
+}
+.sl-mcard-tier {
+  position:absolute; top:10px; left:10px;
+  background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border-radius:2px;
+}
+.sl-mcard-score {
+  position:absolute; bottom:10px; right:10px;
+  background:rgba(0,0,0,0.65);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:4px; padding:5px 9px; text-align:right;
+}
+.sl-mcard-score-val {
+  display:block; font-family:var(--font-mono); font-size:18px; font-weight:700;
+  color:#F5C518; line-height:1;
+}
+.sl-mcard-score-lbl {
+  display:block; font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.38); letter-spacing:0.5px;
+  text-transform:uppercase; margin-top:2px;
+}
+.sl-mcard-body { padding:14px 14px 12px; flex:1; display:flex; flex-direction:column; }
+.sl-mcard-name {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#1a1a18; margin-bottom:2px;
+}
+.sl-mcard-title {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.5); margin-bottom:10px; line-height:1.4;
+}
+.sl-mcard-tags {
+  display:flex; flex-wrap:wrap; gap:5px;
+  margin-bottom:12px; flex:1;
+}
+.sl-mcard-tag {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:#2C3E6B; background:rgba(44,62,107,0.07);
+  border-radius:2px; padding:2px 7px;
+}
+.sl-mcard-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top:10px; border-top:1px solid rgba(44,62,107,0.09);
+}
+.sl-mcard-price {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#1a1a18;
+}
+.sl-mcard-price span {
+  font-weight:400; color:rgba(26,26,24,0.45);
+}
+.sl-mcard-btn {
+  background:#1A2744; color:#FFFFFF;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:0.5px; border:none; border-radius:4px;
+  padding:6px 14px; cursor:pointer; text-decoration:none;
+  display:inline-block;
+}
+.sl-mcard-btn:hover { opacity:0.88; }
+
+/* Mentor section CTA row */
+.sl-mentors-cta {
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.sl-mentors-cta-btn {
+  display:inline-block; background:#2C3E6B; color:#FFFFFF;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:12px 24px; border-radius:4px; text-decoration:none;
+  transition:opacity 0.18s;
+}
+.sl-mentors-cta-btn:hover { opacity:0.88; }
+.sl-mentors-cta-note {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.45);
+}
+
+/* Divider between mentor section and gallery */
+.sl-section-divider {
+  border:none; border-top:1px solid rgba(44,62,107,0.1);
+  margin:0 0 32px;
+}
+
+/* ── Gallery ── */
 .sl-gallery-label {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:2px; text-transform:uppercase; color:#1a1a18; margin-bottom:12px;
@@ -226,9 +418,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   padding-left:4px;
 }
 
-/* MOBILE REDESIGN */
+/* ── MOBILE ── */
 @media (max-width:768px) {
-  /* Hero image — 16:9, full opacity, no gradient */
+  /* Hero image */
   .sl-hero-img-wrap {
     height:auto !important; min-height:0 !important;
     max-height:none !important; aspect-ratio:16/9;
@@ -236,11 +428,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-hero-img { opacity:1; }
   .sl-hero-grad { display:none; }
 
-  /* Badge — cream bar below image */
+  /* Badge bar */
   .sl-hero-id {
     position:static; width:100%;
-    background:#FEFCF8; border:none; border-radius:0;
-    border-bottom:none;
+    background:#FEFCF8; border:none; border-radius:0; border-bottom:none;
     padding:10px 16px; gap:8px; flex-wrap:wrap;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
@@ -256,11 +447,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
 
-  /* Hero content — cream, dark text */
+  /* Hero content */
   .sl-hero-content {
     position:static; background:#FEFCF8;
-    padding:20px 16px 24px;
-    border-top:none;
+    padding:20px 16px 24px; border-top:none;
   }
   .sl-hero-h1 { font-size:20px; font-weight:700; color:#1a1a18; text-shadow:none; }
   .sl-hero-h2 { font-size:17px; font-weight:400; color:rgba(44,62,107,0.65); margin-top:4px; text-shadow:none; }
@@ -268,12 +458,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-hero-btn { width:100%; font-size:16px; padding:13px 24px; text-align:center; }
   .sl-hero-sub {
     font-size:16px; font-weight:700; color:#2C3E6B;
-    text-align:center; text-shadow:none; white-space:normal;
-    letter-spacing:0.5px;
+    text-align:center; text-shadow:none; white-space:normal; letter-spacing:0.5px;
   }
-
-  .sl-gallery { grid-template-columns:repeat(2,1fr); }
-  .sl-gimg-photo { aspect-ratio:3/2; }
 
   /* Statement mobile */
   .sl-statement { padding:18px 16px; margin-bottom:18px; }
@@ -284,9 +470,44 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* Scanner mobile */
   .sl-scan-row { padding:14px 14px; gap:10px; }
   .sl-scan-text { font-size:16px; }
+
+  /* Three Pillars — stack on mobile */
+  .sl-pillars { grid-template-columns:1fr; border-radius:var(--radius-md); }
+  .sl-pillar { border-right:none; border-bottom:1px solid rgba(44,62,107,0.12); }
+  .sl-pillar:last-child { border-bottom:none; }
+  .sl-pillar--new::after { width:2px; height:auto; top:0; bottom:0; left:0; right:auto; }
+  .sl-pillar-num { font-size:16px; }
+  .sl-pillar-label { font-size:16px; }
+  .sl-pillar-desc { font-size:16px; }
+
+  /* Mentor section mobile */
+  .sl-mentors-eyebrow { font-size:16px; }
+  .sl-mentors-h2 { font-size:18px; }
+  .sl-mentors-sub { font-size:16px; }
+  .sl-ddi-bar { padding:16px; gap:12px; }
+  .sl-ddi-head { font-size:16px; }
+  .sl-ddi-body { font-size:16px; }
+
+  /* Mentor grid — 1 col on mobile */
+  .sl-mentor-grid { grid-template-columns:1fr; gap:14px; }
+  .sl-mcard-photo { aspect-ratio:16/7; }
+  .sl-mcard-name { font-size:16px; }
+  .sl-mcard-title { font-size:16px; }
+  .sl-mcard-tag { font-size:16px; }
+  .sl-mcard-price { font-size:16px; }
+  .sl-mcard-btn { font-size:16px; }
+  .sl-mcard-score-val { font-size:16px; }
+  .sl-mcard-score-lbl { font-size:16px; }
+  .sl-mentors-cta-btn { width:100%; text-align:center; font-size:16px; padding:13px 24px; }
+  .sl-mentors-cta-note { font-size:16px; text-shadow:none; }
+
+  /* Gallery mobile */
+  .sl-gallery { grid-template-columns:repeat(2,1fr); }
+  .sl-gimg-photo { aspect-ratio:3/2; }
 }
 @media (max-width:480px) {
   .sl-below { padding:18px 14px 32px; }
+  .sl-mentor-grid { gap:12px; }
 }
 </style>
 {% endblock %}
@@ -304,7 +525,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
                alt="{{ hero.genre or 'Photography' }}" loading="eager" fetchpriority="high">
           <div class="sl-hero-grad"></div>
         </div>
-        
         <div class="sl-hero-id">
           <div class="sl-tier-badge">{{ hero.tier }}</div>
           <span class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</span>
@@ -343,11 +563,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-below">
   <div class="sl-below-inner">
 
+    {# ── Statement ── #}
     <div class="sl-statement">
       <span class="sl-statement-quote">"</span><span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer.</span>
       <div class="sl-statement-res">Until now.</div>
     </div>
 
+    {# ── Scanner strip ── #}
     <div class="sl-scan" id="slScan">
       <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Get feedback on your photo — right now.</span></div>
       <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">See yourself get better, photo by photo.</span></div>
@@ -355,6 +577,86 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Earn points every time you upload or rate.</span></div>
     </div>
 
+    {# ── Three Pillars Bar ── #}
+    <div class="sl-pillars">
+      <div class="sl-pillar">
+        <div class="sl-pillar-num">01</div>
+        <div class="sl-pillar-label">Score</div>
+        <div class="sl-pillar-desc">Instant AI evaluation across 5 dimensions</div>
+      </div>
+      <div class="sl-pillar">
+        <div class="sl-pillar-num">02</div>
+        <div class="sl-pillar-label">Rank</div>
+        <div class="sl-pillar-desc">See where you stand against every photographer</div>
+      </div>
+      <div class="sl-pillar sl-pillar--new">
+        <div class="sl-pillar-num">03</div>
+        <div class="sl-pillar-label">Learn from the best</div>
+        <div class="sl-pillar-desc">Get your specific image reviewed by a master photographer</div>
+      </div>
+    </div>
+
+    {# ── Mentor Marketplace Section ── #}
+    {# Show only when at least 3 active approved mentors exist #}
+    {% if active_mentors and active_mentors|length >= 3 %}
+    <div class="sl-mentors">
+
+      <div class="sl-mentors-eyebrow">Mentor Marketplace</div>
+      <h2 class="sl-mentors-h2">Get your photo reviewed by a master photographer.</h2>
+      <p class="sl-mentors-sub">Pick your mentor. They see your full DDI score before they begin — no guesswork, just precise feedback on exactly what to fix. Written response within 72 hours.</p>
+
+      <div class="sl-ddi-bar">
+        <div class="sl-ddi-icon">◈</div>
+        <div>
+          <div class="sl-ddi-head">Your mentor already knows where you stand</div>
+          <div class="sl-ddi-body">Before reading your submission, your mentor sees your full DDI breakdown — <strong>Decisive Moment, Wonder, DoD, Disruption, AQ</strong> — and exactly where you are weak. No other platform does this.</div>
+        </div>
+      </div>
+
+      <div class="sl-mentor-grid">
+        {% for mentor in active_mentors[:3] %}
+        <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
+          <div class="sl-mcard-photo">
+            {% if mentor.photo_url %}
+              <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
+            {% else %}
+              <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
+            {% endif %}
+            <div class="sl-mcard-tier">{{ mentor.tier | title }}</div>
+            {% if mentor.avg_ddi_score %}
+            <div class="sl-mcard-score">
+              <span class="sl-mcard-score-val">{{ "%.2f"|format(mentor.avg_ddi_score) }}</span>
+              <span class="sl-mcard-score-lbl">DDI avg</span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="sl-mcard-body">
+            <div class="sl-mcard-name">{{ mentor.display_name }}</div>
+            <div class="sl-mcard-title">{{ mentor.tagline or '' }}</div>
+            <div class="sl-mcard-tags">
+              {% for genre in mentor.specialisms_list[:3] %}
+                <span class="sl-mcard-tag">{{ genre }}</span>
+              {% endfor %}
+            </div>
+            <div class="sl-mcard-footer">
+              <div class="sl-mcard-price">&#x20B9;{{ mentor.session_price }} <span>/ review</span></div>
+              <span class="sl-mcard-btn">Book</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="sl-mentors-cta">
+        <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet All Mentors &rarr;</a>
+        <span class="sl-mentors-cta-note">From &#x20B9;50 &nbsp;&middot;&nbsp; No subscription required &nbsp;&middot;&nbsp; 72-hr written feedback</span>
+      </div>
+
+    </div>
+    <hr class="sl-section-divider">
+    {% endif %}
+
+    {# ── Gallery ── #}
     {% set gallery_imgs = carousel_images[1:] %}
     {% if gallery_imgs %}
     <div class="sl-gallery-label">Top scores this week</div>
