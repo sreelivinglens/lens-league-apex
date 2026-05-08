@@ -533,3 +533,29 @@
 
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+
+  if (!('IntersectionObserver' in window)) return;
+
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (!e.isIntersecting) return;
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+      obs.unobserve(e.target);
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.hiw-section, .cta-strip').forEach(function(el){
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    obs.observe(el);
+  });
+
+})();
+</script>
+{% endblock %}
