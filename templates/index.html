@@ -110,22 +110,70 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   padding:clamp(22px,4vw,48px) clamp(18px,5vw,48px) clamp(32px,5vw,56px);
   max-width:var(--max-width); margin:0 auto;
 }
-.sl-ticker-wrap {
+/* ── Statement ── */
+.sl-statement {
+  background:#FEFCF8; border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:24px 28px; margin-bottom:24px;
+}
+.sl-statement-quote {
+  font-family:var(--font-mono); font-size:48px; color:var(--border);
+  line-height:0.6; margin-bottom:12px;
+}
+.sl-statement-text {
+  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
+  line-height:1.8; margin-bottom:12px; font-style:italic;
+}
+.sl-statement-res {
+  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#2C3E6B;
+}
+
+/* ── Scanner strip ── */
+.sl-scan {
+  display:flex; flex-direction:column; gap:0;
+  border:1px solid var(--border); border-radius:var(--radius-md);
+  overflow:hidden; margin-bottom:32px;
+}
+.sl-scan-row {
   display:flex; align-items:center; gap:14px;
-  background:#FFFFFF; border:1px solid var(--border);
-  border-radius:var(--radius-md); padding:16px 20px;
-  margin-bottom:32px; min-height:56px;
+  padding:16px 18px; background:#FFFFFF;
+  border-bottom:1px solid var(--border);
+  position:relative; overflow:hidden;
 }
-.sl-ticker-num {
+.sl-scan-row:last-child { border-bottom:none; }
+.sl-scan-beam {
+  position:absolute; top:0; left:-120%; width:120%; height:100%;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,180,255,0.04) 30%,
+    rgba(0,200,255,0.22) 48%,
+    rgba(120,230,255,0.55) 50%,
+    rgba(0,200,255,0.22) 52%,
+    rgba(0,180,255,0.04) 70%,
+    transparent 100%
+  );
+  pointer-events:none;
+}
+.sl-scan-beam::after {
+  content:''; position:absolute; top:0; right:20%;
+  width:2px; height:100%;
+  background:rgba(160,240,255,0.9);
+  box-shadow:0 0 8px 2px rgba(100,220,255,0.7);
+}
+.sl-scan-arrow {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; color:#0D0D0B; background:#F5C518;
-  padding:4px 9px; border-radius:3px; flex-shrink:0;
-  min-width:30px; text-align:center;
+  color:#D8D0C0; flex-shrink:0; position:relative; z-index:1;
+  transition:color 0.2s;
 }
-.sl-ticker-text {
-  font-family:var(--font-mono); font-size:clamp(16px,2vw,18px);
-  font-weight:600; color:#1a1a18; line-height:1.4;
+.sl-scan-text {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#C0B8B0; line-height:1.3; position:relative; z-index:1;
+  transition:color 0.2s; flex:1;
 }
+.sl-scan-row.sl-scanning .sl-scan-arrow,
+.sl-scan-row.sl-scanned  .sl-scan-arrow { color:#2C3E6B; }
+.sl-scan-row.sl-scanning .sl-scan-text,
+.sl-scan-row.sl-scanned  .sl-scan-text  { color:#1a1a18; }
+
 .sl-gallery-label {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:2px; text-transform:uppercase; color:#1a1a18; margin-bottom:12px;
@@ -154,7 +202,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
 }
-.sl-gbar-dot { color:rgba(255,255,255,0.25); font-size:12px; }
+.sl-gbar-dot { color:rgba(255,255,255,0.25); font-size:16px; }
 .sl-gbar-tier {
   font-family:var(--font-mono); font-size:16px; font-weight:600;
   color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
@@ -229,6 +277,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
   .sl-gimg-photo { aspect-ratio:3/2; }
 
+  /* Statement mobile */
+  .sl-statement { padding:18px 16px; margin-bottom:18px; }
+  .sl-statement-quote { font-size:36px; }
+  .sl-statement-text { font-size:16px; }
+  .sl-statement-res { font-size:18px; }
+
+  /* Scanner mobile */
+  .sl-scan-row { padding:14px 14px; gap:10px; }
+  .sl-scan-text { font-size:16px; }
+
 }
 @media (max-width:480px) {
   .sl-below { padding:18px 14px 32px; }
@@ -290,9 +348,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   {# ── BELOW FOLD ── #}
   <div class="sl-below">
 
-    <div class="sl-ticker-wrap">
-      <span class="sl-ticker-num" id="slTickNum" style="transition:opacity 0.2s">01</span>
-      <span class="sl-ticker-text" id="slTickText" style="transition:opacity 0.2s">Upload your photo</span>
+    <div class="sl-statement">
+      <div class="sl-statement-quote">"</div>
+      <div class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer.</div>
+      <div class="sl-statement-res">Until now.</div>
+    </div>
+
+    <div class="sl-scan" id="slScan">
+      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Get feedback on your photo — right now.</span></div>
+      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">See yourself get better, photo by photo.</span></div>
+      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Where do you rank amongst everyone else?</span></div>
+      <div class="sl-scan-row"><div class="sl-scan-beam"></div><span class="sl-scan-arrow">→</span><span class="sl-scan-text">Earn points every time you upload or rate.</span></div>
     </div>
 
     {% set gallery_imgs = carousel_images[1:] %}
@@ -324,22 +390,45 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 {% block extra_js %}
 <script>
-var slSteps=[
-  {num:'01',text:'Upload your photo'},
-  {num:'02',text:'Get scored instantly across 5 dimensions'},
-  {num:'03',text:'See exactly what to improve next time'}
-];
-var slI=0, slN=document.getElementById('slTickNum'), slT=document.getElementById('slTickText');
-if(slN&&slT){
-  setInterval(function(){
-    slI=(slI+1)%3;
-    slN.style.opacity=slT.style.opacity='0';
+(function(){
+  if(!('requestAnimationFrame' in window)) return;
+  var rows = document.querySelectorAll('#slScan .sl-scan-row');
+  if(!rows.length) return;
+  var cur = 0;
+  var sweepDuration = 1800;
+  var pauseAfter = 600;
+
+  function scanRow(idx){
+    var row = rows[idx];
+    var beam = row.querySelector('.sl-scan-beam');
+    row.classList.add('sl-scanning');
+    beam.style.transition = 'none';
+    beam.style.left = '-120%';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        beam.style.transition = 'left ' + sweepDuration + 'ms linear';
+        beam.style.left = '120%';
+      });
+    });
     setTimeout(function(){
-      slN.textContent=slSteps[slI].num;
-      slT.textContent=slSteps[slI].text;
-      slN.style.opacity=slT.style.opacity='1';
-    },220);
-  },2800);
-}
+      row.classList.remove('sl-scanning');
+      row.classList.add('sl-scanned');
+      setTimeout(function(){
+        cur = (cur + 1) % rows.length;
+        if(cur === 0){
+          rows.forEach(function(r){
+            r.classList.remove('sl-scanned');
+            var b = r.querySelector('.sl-scan-beam');
+            b.style.transition = 'none';
+            b.style.left = '-120%';
+          });
+        }
+        scanRow(cur);
+      }, pauseAfter);
+    }, sweepDuration + 80);
+  }
+
+  setTimeout(function(){ scanRow(0); }, 600);
+})();
 </script>
 {% endblock %}
