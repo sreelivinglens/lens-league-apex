@@ -70,7 +70,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-id-by {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
   color:rgba(245,197,24,0.65); letter-spacing:0.5px; text-transform:uppercase;
-  white-space:nowrap;
+  max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .sl-hero-id-info { display:contents; }
 .sl-hero-sub { white-space:nowrap; }
@@ -235,16 +235,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-hero-img { opacity:1; }
   .sl-hero-grad { display:none; }
 
-  /* Badge — full width bar below image */
+  /* Badge — full width bar below image, allow wrap */
   .sl-hero-id {
     position:static; width:100%;
     background:#2C3E6B; border:none; border-radius:0;
-    padding:14px 16px; gap:12px;
+    padding:10px 16px; gap:8px; flex-wrap:wrap;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   .sl-tier-badge { font-size:16px; padding:4px 8px; letter-spacing:1px; }
-  .sl-hero-id-score { font-size:16px !important; }
-  .sl-hero-id-meta, .sl-hero-id-by { font-size:16px; letter-spacing:0.5px; }
+  .sl-hero-id-score { font-size:16px !important; white-space:nowrap; }
+  .sl-hero-id-dot { font-size:16px; }
+  .sl-hero-id-meta { font-size:16px; letter-spacing:0.5px; white-space:nowrap; }
+  .sl-hero-id-by {
+    font-size:16px; letter-spacing:0.5px; color:rgba(255,255,255,0.75);
+    max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
 
   /* Hero content — static below badge bar */
   .sl-hero-content {
@@ -252,13 +257,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     padding:20px 16px 24px;
     border-top:1px solid rgba(255,255,255,0.08);
   }
-  .sl-hero-h1 { font-size:22px; color:rgba(255,255,255,0.62); }
-  .sl-hero-h2 { font-size:22px; color:#FFFFFF; }
-  .sl-hero-cta-wrap { flex-direction:column; align-items:stretch; gap:10px; margin-top:16px; }
-  .sl-hero-btn { width:100%; font-size:16px; padding:12px 24px; text-align:center; }
+  /* Question smaller, answer larger — clear hierarchy */
+  .sl-hero-h1 { font-size:18px; color:rgba(255,255,255,0.58); }
+  .sl-hero-h2 { font-size:24px; color:#FFFFFF; margin-top:2px; }
+  .sl-hero-cta-wrap { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
+  .sl-hero-btn { width:100%; font-size:16px; padding:13px 24px; text-align:center; }
+  /* Free line — wrap gracefully, no orphan dot */
   .sl-hero-sub {
-    font-size:16px; font-weight:700; color:#FFFFFF;
-    text-align:center; text-shadow:none;
+    font-size:16px; font-weight:700; color:rgba(255,255,255,0.85);
+    text-align:center; text-shadow:none; white-space:normal;
+    letter-spacing:0.5px;
   }
 
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
@@ -299,7 +307,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
           <span class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</span>
           <span class="sl-hero-id-dot">·</span>
           {% if hero.genre %}<span class="sl-hero-id-meta">{{ hero.genre | upper }}</span><span class="sl-hero-id-dot">·</span>{% endif %}
-          <span class="sl-hero-id-by">Shot by {{ hero.author.username }}</span>
+          <span class="sl-hero-id-by">Shot by {{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
         </div>
       {% endif %}
     {% else %}
