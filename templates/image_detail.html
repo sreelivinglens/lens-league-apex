@@ -38,6 +38,14 @@
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: #FFFFFF; text-transform: uppercase; }
+  /* glink_inline — glossary links on dark backgrounds */
+  .glink-inline {
+    color: #FFFFFF; text-decoration: underline; text-decoration-color: rgba(245,197,24,0.55);
+    text-underline-offset: 2px; font-family: inherit; font-size: inherit;
+    font-weight: inherit; letter-spacing: inherit; text-transform: inherit;
+    transition: text-decoration-color 0.15s;
+  }
+  .glink-inline:hover { text-decoration-color: #F5C518; }
 
   .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
   .peer-item { font-size: 14px; color: var(--text-muted); }
@@ -162,16 +170,16 @@
     {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
     <div class="ddi-grid">
       {% set dims = [
-        ('DoD', image.dod_score),
-        ('Disruption', image.disruption_score),
-        ('DM', image.dm_score),
-        ('Wonder', image.wonder_score),
-        ('AQ', image.aq_score),
+        ('DoD', image.dod_score, 'Depth of Detail'),
+        ('Disruption', image.disruption_score, 'Visual Disruption'),
+        ('DM', image.dm_score, 'Decisive Moment'),
+        ('Wonder', image.wonder_score, 'Wonder'),
+        ('AQ', image.aq_score, 'Aesthetic Quality'),
       ] %}
-      {% for lbl, val in dims %}
+      {% for lbl, val, title in dims %}
       <div class="ddi-dim">
         <div class="ddi-val">{{ val or '—' }}</div>
-        <div class="ddi-lbl">{{ lbl }}</div>
+        <div class="ddi-lbl"><a href="/science#dimensions" class="glink-inline" title="{{ title }}">{{ lbl }}</a></div>
       </div>
       {% endfor %}
     </div>
@@ -204,7 +212,7 @@
               padding:10px 14px; margin-bottom:20px;
               border-left:3px solid var(--border);
               font-family:var(--font-mono);">
-    DDI scores are consistent and science-based. As with any AI assessment,
+    <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-decoration-color:rgba(0,0,0,0.25); text-underline-offset:2px; font-family:inherit; font-size:inherit; letter-spacing:inherit;">DDI</a> scores are consistent and science-based. As with any AI assessment,
     individual scores may vary slightly — your tier reflects performance
     across multiple images, not any single result.
   </div>
@@ -214,11 +222,19 @@
   {% set audit = image.get_audit() %}
   {% if audit and audit.rows %}
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">DDI Analysis</div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;"><a href="/science" class="glink-inline" style="color:var(--text-primary); text-decoration-color:rgba(44,62,107,0.5);" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.5)'">DDI Analysis</a></div>
+    {% set dim_links = {
+      'DoD': '/science#dimensions', 'Depth of Detail': '/science#dimensions',
+      'DM': '/science#dimensions', 'Decisive Moment': '/science#dimensions',
+      'AQ': '/science#dimensions', 'Aesthetic Quality': '/science#dimensions',
+      'Wonder': '/science#dimensions',
+      'Disruption': '/science#dimensions', 'Visual Disruption': '/science#dimensions',
+      'DDI': '/science',
+    } %}
     {% for row in audit.rows %}
     {% if row[1] %}
     <div class="audit-row">
-      <div class="audit-row-label">{{ row[0] }}</div>
+      <div class="audit-row-label">{% if row[0] in dim_links %}<a href="{{ dim_links[row[0]] }}" style="color:var(--text-primary); text-decoration:underline; text-decoration-color:rgba(44,62,107,0.4); text-underline-offset:2px; font-family:inherit; font-size:inherit; font-weight:inherit; letter-spacing:inherit; text-transform:inherit;" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.4)'">{{ row[0] }}</a>{% else %}{{ row[0] }}{% endif %}</div>
       <div class="audit-row-text">{{ row[1] }}</div>
     </div>
     {% endif %}
