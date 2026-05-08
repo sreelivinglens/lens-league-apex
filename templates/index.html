@@ -1,135 +1,1038 @@
-{% extends "base.html" %} {% block title %}Shutter League â€” How good is your photograph, really?{% endblock %} {% block extra_head %} {% endblock %} {% block extra_css %} {% endblock %} {% block content %} {% set hero = carousel_images[0] if carousel_images else none %} {% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else true %}
-{# â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â” HERO â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â” #}
-{% if hero and hero.thumb_url %}
-￼
+{% extends "base.html" %}
+{% block title %}Shutter League — How good is your photograph, really?{% endblock %}
 
-{{ HERO.TIER }}
-{{ "%.2f"|format(hero.score) }} {% if hero.genre %} Â· {{ HERO.GENRE | UPPER }} {% endif %} Â· {{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}â€¦{% endif %}
-{% else %} {# Fallback â€” no images yet #}
+{% block extra_head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="description" content="We cracked the Wow factor. Find out if your photo has it.">
+{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DESIGN TOKENS
+   Gold #F5C518       — dark backgrounds only
+   Slate #2C3E6B      — light/cream backgrounds only (10.46:1 on white)
+   Navy #1A2744       — all dark sections (never black)
+   Cream #FEFCF8      — page bg
+   Dark text #1a1a18
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
-GRANDMASTER
-8.74 Â· WILDLIFE
-{% endif %}
-How good is your photograph, really?
-We cracked the Wow factor. Find out if your photo has it.
-SCORE MINE Â€” FREE Â†’
-Free  Â·  46 seconds  Â·  No card required
-Art is the Question. Math is the Verification.
-{# end sl-hero #} {# â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â” BELOW FOLD â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â” #}
-For 200 years since the first photograph was taken, there has been no standard to rate the photographer. Chess has ELO. Wine has Parker Points. Photography has likes.
-Until now.
-{# â”â” BEAT 1 â€” THREE PILLARS â”â” #}
-WHAT YOU GET
-{# Desktop grid #}
-01
-Is my work actually good?
-Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.
-Decisive Moment
-Wonder
-AQ
-Disruption
-DoD
-02
-Where do I actually stand?
-Blind ranking â€” nobody knows whose photo they rate. Your score reflects your photography, not your followers.
-Blind peer rating
-India rankings
-Photographer of the Year
-03
-How do I get better?
-Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.
-AI mentor
-Human expert
-From ₹50
-{# Mobile carousel #}
-{# â”â” BEAT 2 â€” THE HONEST MIRROR â”â” #}
-THE HONEST MIRROR
-Can an AI really score something as personal as a photograph?
-Yes â€” because AQ, the soul dimension, measures emotional resonance. An emotionally empty photograph scores lower than an imperfect one that stops you breathing. That is by design.
-{% if hero and hero.get_audit %} {% set _a = hero.get_audit() %} {% for mname, mval in _a.get('modules', []) %}
-{{ MNAME }}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HERO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hero { position:relative; width:100%; overflow:hidden; background:#1A2744; }
 
-{{ "%.1f"|format(mval) }}{% if mname == 'AQ' %} âœ¦{% endif %}
-{% endfor %} {% else %}
-DOD
+.sl-hero-img-wrap {
+  position:relative; width:100%;
+  height:calc(100svh - 64px); min-height:480px; max-height:900px;
+}
+.sl-hero-img {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:center; opacity:0.82;
+}
+.sl-hero-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.02) 18%,
+    rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.92) 100%);
+}
 
-8.2
-DISRUPTION
+ 55%{opacity:0.55} 100%{opacity:0.32} }
 
-8.8
-DEC. MOMENT
+/* ── Hero badge
+   Desktop: absolute bottom-right of .sl-hero (image corner)
+   Mobile: static row — see 768px overrides
+── */
+.sl-hero-badge {
+  position:absolute; bottom:0; right:0; z-index:6;
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(0,0,0,0.30);
+  border-top:1px solid rgba(255,255,255,0.09);
+  border-left:1px solid rgba(255,255,255,0.09);
+  border-radius:6px 0 0 0;
+  padding:8px 16px;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+}
+.sl-tier-badge {
+  background:rgba(245,197,24,0.90); color:#0D0D0B;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:3px 9px; border-radius:2px; white-space:nowrap; flex-shrink:0;
+}
+.sl-badge-score {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(255,255,255,0.92); letter-spacing:1px; white-space:nowrap;
+}
+.sl-badge-dot { color:rgba(255,255,255,0.28); font-size:13px; margin:0 1px; }
+.sl-badge-meta {
+  font-family:var(--font-mono); font-size:16px; font-weight:500;
+  color:rgba(255,255,255,0.52); letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
+}
+.sl-badge-by {
+  font-family:var(--font-mono); font-size:16px; font-weight:500;
+  color:rgba(245,197,24,0.72); letter-spacing:0.5px;
+  max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 
-9.0
-WONDER
+/* ── Hero copy — desktop overlay ── */
+.sl-hero-content {
+  position:absolute; bottom:0; left:0; right:0; z-index:5;
+  padding:clamp(32px,5vw,64px) clamp(20px,5vw,64px) clamp(60px,7vw,90px);
+}
+.sl-hero-h1 {
+  font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
+  font-size:clamp(22px,3.2vw,44px); line-height:1.18;
+  text-shadow:0 2px 16px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.95);
+  margin-bottom:6px; max-width:640px;
+}
+.sl-hero-sub {
+  font-family:var(--font-mono); font-size:clamp(16px,1.6vw,20px); font-weight:400;
+  color:rgba(255,255,255,0.65); text-shadow:0 1px 8px rgba(0,0,0,0.9);
+  max-width:480px; line-height:1.4; display:block; margin-bottom:0;
+}
+.sl-hero-cta {
+  margin-top:clamp(16px,2.5vw,24px);
+  display:flex; align-items:center; gap:20px; flex-wrap:nowrap;
+}
+.sl-hero-btn {
+  display:inline-block; background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:14px 28px; border-radius:4px; text-decoration:none;
+  transition:opacity 0.2s; white-space:nowrap; flex-shrink:0;
+}
+.sl-hero-btn:hover { opacity:0.88; }
+.sl-hero-micro {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.40); text-shadow:0 1px 4px rgba(0,0,0,0.8);
+  white-space:nowrap; flex-shrink:0;
+}
+.sl-hero-caption {
+  position:absolute; bottom:16px; left:clamp(20px,5vw,64px); z-index:6;
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.22); letter-spacing:0.5px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.8);
+}
 
-8.5
-AQ / SOUL
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BELOW FOLD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-below { background:#FEFCF8; }
+.sl-below-inner {
+  max-width:880px; margin:0 auto;
+  padding:clamp(24px,4vw,48px) clamp(20px,5vw,48px) clamp(40px,5vw,56px);
+}
 
-8.8 âœ¦
-{% endif %} {% if soul_active %}
-âœ¦
-Soul Bonus active. AQ â‰¥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.
-{% else %}
-â—†
-AQ â€” the soul dimension. Reach AQ â‰¥ 8.0 and the Soul Bonus removes all technical penalties. Emotional truth matters more than technical perfection.
-{% endif %}
-The brands rated your gear. We rate your heart.
-How the scoring works â†’
-{# â”â” BEAT 3 â€” YOUR SCORE GROWS â”â” #}
-YOUR SCORE GROWS
-5.8
-Upload 1 â€” Get your score
-46 seconds. 5 dimensions. One specific improvement. No flattery.
-7.2
-Upload 10 â€” See the pattern
-Low on Decisive Moment? High AQ but weak DoD? The data shows you exactly where to focus.
-8.9
-Upload 50 â€” Compete when ready
-You upgrade because you feel ready. Not because of a sales pitch.
-{# â”â” MENTOR MARKETPLACE â”â” #} {% if active_mentors and active_mentors|length >= 3 %}
-MENTOR MARKETPLACE
-Get your photo reviewed by a master photographer.
-Your mentor sees your full DDI score before they begin. Precise feedback on exactly what to fix. Written response within 72 hours.
-âœ¦
-Your mentor already knows where you stand
-Full DDI breakdown shared before every session â€” Decisive Moment, Wonder, DoD, Disruption, AQ. No other platform does this.
-{% for mentor in active_mentors[:3] %} {% if mentor.photo_url %}
-￼
-{% else %}
-{{ mentor.display_name[:2] | upper }}
-{% endif %}
-{{ MENTOR.TIER | TITLE }}
-{% if mentor.avg_ddi_score %}
-{{ "%.2f"|format(mentor.avg_ddi_score) }}
-DDI AVG
-{% endif %}
-{{ mentor.display_name }}
-{{ mentor.tagline or '' }}
-{% for genre in mentor.specialisms_list[:3] %}
-{{ genre }}
-{% endfor %}
-₹{{ mentor.session_price }} / review
-Book
-{% endfor %}
-MEET ALL MENTORS Â†’
-From ₹50  Â·  No subscription required  Â·  72-hr feedback
+/* ── Statement ── */
+.sl-statement {
+  background:#1A2744; border-left:3px solid #F5C518;
+  border-radius:0 6px 6px 0; padding:22px 26px; margin-bottom:28px;
+}
+.sl-statement-text {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.80); line-height:1.7; font-style:italic;
+}
+.sl-statement-punch {
+  font-family:var(--font-mono); font-size:20px; font-weight:700;
+  color:#F5C518; display:block; margin-top:10px;
+}
 
-{% endif %} {# â”â” BEAT 4 â€” EMOTIONAL CLOSE â”â” #}
-We take your work as seriously as you do.
-Every serious photographer deserves an honest answer. Not likes. Not club politics. A score with a reason.
-START FREE Â†’
-Free  Â·  First 3 scored free  Â·  No card required
-{# â”â” GALLERY â”â” #} {% set gallery_imgs = carousel_images[1:] %} {% if gallery_imgs %}
-TOP SCORES THIS WEEK
-{% for img in gallery_imgs %}{% if img.thumb_url %}
-￼
-{{ "%.2f"|format(img.score) }}
-Â·
-{{ IMG.TIER }}
-{% if img.genre %}
-{{ IMG.GENRE }}
-{% endif %} {% endif %}{% endfor %} {% endif %}
-{# end sl-below-inner #}
-{# end sl-below #}
-{# end sl-home #} {% endblock %} {% block extra_js %} {% endblock %}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 1 — THREE PILLARS
+   Desktop: 3-col grid
+   Mobile: single animated card carousel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pillars-section { margin-bottom:28px; }
+.sl-section-eyebrow {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:#2C3E6B; margin-bottom:14px; /* SLATE BLUE */
+}
+
+/* Desktop grid — hidden on mobile */
+.sl-pillars {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  border:1px solid rgba(44,62,107,0.13); border-radius:8px;
+  overflow:hidden; background:#FFFFFF;
+}
+.sl-pillar {
+  padding:20px 20px 22px;
+  border-right:1px solid rgba(44,62,107,0.10);
+  position:relative;
+}
+.sl-pillar:last-child { border-right:none; background:rgba(44,62,107,0.03); }
+.sl-pillar:last-child::after {
+  content:'NEW'; position:absolute; top:12px; right:12px;
+  font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px;
+  background:#2C3E6B; color:#FFFFFF; padding:2px 6px; border-radius:2px;
+}
+.sl-pillar-num {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(44,62,107,0.28); letter-spacing:1px; margin-bottom:7px;
+}
+.sl-pillar-q {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; background:#1A2744;
+  display:inline-block; padding:3px 8px; border-radius:2px;
+  margin-bottom:10px; line-height:1.35;
+}
+.sl-pillar-ans {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.65); line-height:1.6; margin-bottom:12px;
+}
+.sl-pillar-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.sl-pillar-tag {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:#2C3E6B; background:rgba(44,62,107,0.08); /* SLATE BLUE */
+  border-radius:2px; padding:2px 7px; white-space:nowrap;
+}
+
+/* Mobile carousel — hidden on desktop, shown on mobile */
+.sl-carousel-wrap { display:none; }
+.sl-carousel-viewport { overflow:hidden; border-radius:8px; }
+.sl-carousel-track {
+  display:flex; transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.sl-carousel-slide {
+  min-width:100%; flex-shrink:0;
+  background:#FFFFFF; border:1px solid rgba(44,62,107,0.13);
+  border-radius:8px; padding:20px 20px 22px; position:relative;
+}
+.sl-carousel-slide.last-slide { background:rgba(44,62,107,0.03); }
+.sl-carousel-slide.last-slide::after {
+  content:'NEW'; position:absolute; top:12px; right:12px;
+  font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px;
+  background:#2C3E6B; color:#FFFFFF; padding:2px 6px; border-radius:2px;
+}
+.sl-carousel-dots {
+  display:flex; gap:7px; justify-content:center; margin-top:12px;
+}
+.sl-cdot {
+  width:8px; height:8px; border-radius:50%; cursor:pointer;
+  background:rgba(44,62,107,0.18); border:none; padding:0;
+  transition:background 0.2s, transform 0.2s;
+}
+.sl-cdot.active { background:#2C3E6B; transform:scale(1.2); } /* SLATE BLUE */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 2 — THE HONEST MIRROR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-wow {
+  background:#1A2744; border-radius:8px; /* NAVY not black */
+  padding:26px 26px 22px; margin-bottom:28px;
+}
+.sl-wow-eyebrow {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:rgba(245,197,24,0.72); margin-bottom:8px; /* GOLD on navy */
+}
+.sl-wow-h2 {
+  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,22px); font-weight:700;
+  color:#FFFFFF; line-height:1.3; margin-bottom:6px;
+}
+.sl-wow-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.62); line-height:1.65; margin-bottom:20px; max-width:540px;
+}
+
+/* Score card */
+.sl-scorecard {
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
+  border-radius:6px; padding:18px 18px 16px; margin-bottom:16px;
+}
+
+/* Desktop: 5 columns */
+.sl-scorecard-dims {
+  display:grid; grid-template-columns:repeat(5,1fr);
+  gap:10px; margin-bottom:14px;
+}
+.sl-dim { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.sl-dim-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.45); letter-spacing:0.5px;
+  text-transform:uppercase; text-align:center; white-space:nowrap;
+}
+.sl-dim-bar {
+  width:100%; height:3px; background:rgba(255,255,255,0.12);
+  border-radius:2px; overflow:hidden;
+}
+.sl-dim-fill { height:100%; border-radius:2px; background:#F5C518; }
+.sl-dim-score {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; line-height:1;
+}
+/* AQ — soul dimension highlight */
+.sl-dim-aq {
+  background:rgba(245,197,24,0.10); border-radius:4px;
+  padding:7px 5px 5px; border:1px solid rgba(245,197,24,0.28);
+}
+.sl-dim-aq .sl-dim-label { color:rgba(245,197,24,0.82); }
+.sl-dim-aq .sl-dim-fill  { background:#FFFFFF; }
+.sl-dim-aq .sl-dim-score { color:#FFFFFF; font-size:18px; }
+
+/* Soul bonus — AAA: white text on navy = 15:1 contrast */
+.sl-soul-bonus {
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(245,197,24,0.09); border:1px solid rgba(245,197,24,0.22);
+  border-radius:4px; padding:12px 14px;
+}
+.sl-soul-icon { font-size:16px; color:#F5C518; flex-shrink:0; margin-top:2px; }
+.sl-soul-text {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.90); line-height:1.65; /* AAA on #1A2744 */
+}
+.sl-soul-text strong { color:#F5C518; font-weight:400; }
+
+/* AQ explanation (when soul bonus not active) */
+.sl-aq-explain {
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+  border-radius:4px; padding:12px 14px;
+}
+.sl-aq-explain-text {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.70); line-height:1.65;
+}
+.sl-aq-explain-text strong { color:rgba(245,197,24,0.75); font-weight:400; }
+
+/* Heart line — "We rate your heart" */
+.sl-heart-line {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(255,255,255,0.60);
+  border-top:1px solid rgba(255,255,255,0.08); padding-top:14px;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px;
+}
+.sl-heart-line em { color:#F5C518; font-style:normal; }
+.sl-science-link {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(245,197,24,0.55); text-decoration:none; white-space:nowrap;
+}
+.sl-science-link:hover { color:rgba(245,197,24,0.85); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 3 — YOUR SCORE GROWS
+   (formerly "The Learning Arc" — renamed for clarity)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-arc { margin-bottom:28px; }
+.sl-arc-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.sl-arc-step {
+  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
+  border-radius:6px; padding:18px 18px 16px; position:relative;
+}
+.sl-arc-step.sl-arc-final {
+  background:#1A2744; border-color:rgba(245,197,24,0.20); /* NAVY not black */
+}
+/* Score number — the visual hook */
+.sl-arc-score {
+  font-family:var(--font-mono); font-size:28px; font-weight:700;
+  color:rgba(44,62,107,0.18); letter-spacing:-0.5px;
+  margin-bottom:6px; line-height:1;
+}
+.sl-arc-final .sl-arc-score { color:rgba(245,197,24,0.22); font-size:28px; }
+.sl-arc-title {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#1a1a18; margin-bottom:5px;
+}
+.sl-arc-final .sl-arc-title { color:#F5C518; }
+.sl-arc-desc {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.55); line-height:1.55;
+}
+.sl-arc-final .sl-arc-desc { color:rgba(255,255,255,0.48); }
+/* Progress arrow between cards — desktop only */
+.sl-arc-arrow {
+  display:none; /* shown via JS on desktop */
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MENTOR MARKETPLACE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mentors { margin-bottom:32px; }
+.sl-mentors-h2 {
+  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,24px); font-weight:700;
+  color:#1a1a18; line-height:1.25; margin-bottom:8px;
+}
+.sl-mentors-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.55); line-height:1.65; max-width:540px; margin-bottom:20px;
+}
+.sl-ddi-bar {
+  background:#1A2744; border-left:3px solid rgba(245,197,24,0.50);
+  border-radius:0 6px 6px 0; padding:16px 20px;
+  display:flex; align-items:flex-start; gap:14px; margin-bottom:22px;
+}
+.sl-ddi-icon { font-size:18px; color:#F5C518; flex-shrink:0; margin-top:1px; }
+.sl-ddi-head {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#FFFFFF; margin-bottom:4px;
+}
+.sl-ddi-body {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(255,255,255,0.60); line-height:1.6;
+}
+.sl-ddi-body strong { color:#F5C518; font-weight:400; }
+.sl-mentor-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:14px; margin-bottom:18px;
+}
+.sl-mcard {
+  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
+  border-radius:8px; overflow:hidden; text-decoration:none;
+  display:flex; flex-direction:column;
+  transition:transform 0.18s, box-shadow 0.18s;
+}
+.sl-mcard:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,39,68,0.09); }
+.sl-mcard-photo {
+  aspect-ratio:4/3; position:relative; background:#1A2744; /* NAVY */
+  overflow:hidden; display:flex; align-items:center; justify-content:center;
+}
+.sl-mcard-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+.sl-mcard-initials {
+  font-family:var(--font-mono); font-size:28px; font-weight:700;
+  color:rgba(255,255,255,0.10); letter-spacing:2px; user-select:none;
+}
+.sl-mcard-tier {
+  position:absolute; top:10px; left:10px;
+  background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:2px;
+}
+.sl-mcard-score-badge {
+  position:absolute; bottom:10px; right:10px;
+  background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.10);
+  border-radius:4px; padding:4px 8px; text-align:right;
+}
+.sl-mcard-score-val {
+  display:block; font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; line-height:1;
+}
+.sl-mcard-score-lbl {
+  display:block; font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.38); letter-spacing:0.5px; text-transform:uppercase; margin-top:2px;
+}
+.sl-mcard-body { padding:13px 14px 12px; flex:1; display:flex; flex-direction:column; }
+.sl-mcard-name { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
+.sl-mcard-tagline { font-family:var(--font-mono); font-size:16px; font-weight:400; color:rgba(26,26,24,0.50); margin-bottom:10px; line-height:1.4; }
+.sl-mcard-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; flex:1; }
+.sl-mcard-tag {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:#2C3E6B; background:rgba(44,62,107,0.07); /* SLATE BLUE */
+  border-radius:2px; padding:2px 6px;
+}
+.sl-mcard-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top:10px; border-top:1px solid rgba(44,62,107,0.08);
+}
+.sl-mcard-price { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; }
+.sl-mcard-price span { font-weight:400; color:rgba(26,26,24,0.42); }
+.sl-mcard-btn {
+  background:#1A2744; color:#FFFFFF; /* NAVY */
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:0.5px; border:none; border-radius:4px;
+  padding:5px 13px; cursor:pointer; text-decoration:none; display:inline-block;
+}
+.sl-mcard-btn:hover { opacity:0.88; }
+.sl-mentors-cta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.sl-mentors-cta-btn {
+  display:inline-block; background:#2C3E6B; color:#FFFFFF; /* SLATE BLUE */
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:12px 22px; border-radius:4px; text-decoration:none; transition:opacity 0.18s;
+}
+.sl-mentors-cta-btn:hover { opacity:0.88; }
+.sl-mentors-cta-note {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(26,26,24,0.45);
+}
+
+/* ── Divider ── */
+.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.09); margin:0 0 28px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 4 — EMOTIONAL CLOSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-close {
+  background:#F5C518; border-radius:8px;
+  padding:28px 28px 24px; margin-bottom:32px;
+}
+.sl-close-h2 {
+  font-family:var(--font-mono); font-size:clamp(18px,2.4vw,26px); font-weight:700;
+  color:#0D0D0B; line-height:1.25; margin-bottom:8px;
+}
+.sl-close-sub {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(13,13,11,0.62); line-height:1.65; margin-bottom:20px; max-width:500px;
+}
+.sl-close-btns { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.sl-close-btn {
+  display:inline-block; background:#0D0D0B; color:#F5C518;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:13px 26px; border-radius:4px; text-decoration:none;
+  transition:opacity 0.2s; white-space:nowrap;
+}
+.sl-close-btn:hover { opacity:0.88; }
+.sl-close-micro {
+  font-family:var(--font-mono); font-size:16px; font-weight:400;
+  color:rgba(13,13,11,0.45);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   GALLERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-gallery-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:#2C3E6B; margin-bottom:12px; /* SLATE BLUE */
+}
+.sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.sl-gimg {
+  border-radius:6px; overflow:hidden; background:#1A2744; /* NAVY not black */
+  display:flex; flex-direction:column; text-decoration:none;
+  border:1px solid rgba(44,62,107,0.18);
+}
+.sl-gimg-photo { position:relative; aspect-ratio:4/3; overflow:hidden; }
+.sl-gimg img {
+  width:100%; height:100%; object-fit:cover; display:block;
+  transition:transform 0.3s ease;
+}
+.sl-gimg:hover img { transform:scale(1.04); }
+.sl-gbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 10px; background:#1A2744; /* NAVY */
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.sl-gbar-left { display:flex; align-items:center; gap:5px; }
+.sl-gbar-score {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
+}
+.sl-gbar-dot { color:rgba(255,255,255,0.22); font-size:12px; }
+.sl-gbar-tier {
+  font-family:var(--font-mono); font-size:16px; font-weight:600;
+  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+}
+.sl-gbar-genre {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — 768px
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width:768px) {
+
+  /* Hero — image becomes 16:9, content drops below */
+  /* Mobile hero: flex column so badge appears below image */
+  .sl-hero-img-wrap {
+    height:auto !important; min-height:0 !important;
+    max-height:none !important;
+    display:flex !important; flex-direction:column;
+    overflow:visible !important;
+    position:static !important;
+  }
+  /* Image sits first, natural 16:9 */
+  .sl-hero-img {
+    opacity:1 !important;
+    position:static !important; inset:auto !important;
+    width:100% !important; aspect-ratio:16/9;
+    object-fit:cover; display:block;
+  }
+  .sl-hero-grad { display:none; }
+
+  /* Badge — static row below image */
+  .sl-hero-badge {
+    position:static !important; width:100%;
+    background:#FEFCF8; border:none; border-radius:0;
+    border-bottom:1px solid rgba(44,62,107,0.08);
+    padding:10px 16px; gap:7px; flex-wrap:wrap;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    z-index:auto;
+  }
+  .sl-tier-badge {
+    background:#2C3E6B !important; color:#FFFFFF !important; /* SLATE BLUE on cream */
+    font-size:16px;
+  }
+  .sl-badge-score { font-size:16px !important; color:#1a1a18 !important; }
+  .sl-badge-dot   { color:rgba(44,62,107,0.30) !important; }
+  .sl-badge-meta  { font-size:16px !important; color:rgba(44,62,107,0.55) !important; }
+  .sl-badge-by    { font-size:16px !important; color:#2C3E6B !important; max-width:160px; }
+
+  /* Hero content — static, cream bg */
+  .sl-hero-content {
+    position:static; background:#FEFCF8;
+    padding:20px 16px 24px;
+  }
+  .sl-hero-h1 {
+    font-size:22px; font-weight:700; color:#1a1a18;
+    text-shadow:none; max-width:100%; line-height:1.2;
+  }
+  .sl-hero-sub {
+    font-size:16px; color:#2C3E6B; /* SLATE BLUE on cream */
+    text-shadow:none; max-width:100%; margin-top:5px;
+  }
+  .sl-hero-cta { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
+  .sl-hero-btn  { width:100%; text-align:center; font-size:16px; padding:15px 24px; }
+  /* Micro copy — no overflow, all on one line or wraps gracefully */
+  .sl-hero-micro {
+    font-size:16px; color:rgba(44,62,107,0.50);
+    text-shadow:none; text-align:center;
+    white-space:normal; /* allow wrap on very small screens */
+  }
+  .sl-hero-caption { display:none; }
+
+  /* Statement */
+  .sl-statement { padding:16px 16px; margin-bottom:20px; }
+  .sl-statement-text { font-size:16px; }
+  .sl-statement-punch { font-size:18px; }
+
+  /* Pillars — hide desktop grid, show carousel */
+  .sl-pillars { display:none; }
+  .sl-carousel-wrap { display:block; }
+
+  /* Score card — 2-row layout on mobile */
+  .sl-scorecard-dims {
+    grid-template-columns:repeat(3,1fr); gap:8px;
+  }
+  /* AQ goes full width on row 2 */
+  .sl-dim-aq {
+    grid-column: span 1; /* stays in grid naturally */
+  }
+
+  /* Wow section */
+  .sl-wow { padding:20px 16px 18px; margin-bottom:20px; }
+  .sl-wow-h2 { font-size:17px; }
+  .sl-wow-sub { font-size:16px; margin-bottom:16px; }
+  .sl-soul-text { font-size:16px; }
+  .sl-aq-explain-text { font-size:16px; }
+  .sl-heart-line { font-size:16px; flex-direction:column; align-items:flex-start; gap:8px; }
+
+  /* Arc steps — stack on mobile */
+  .sl-arc-steps { grid-template-columns:1fr; gap:10px; }
+  .sl-arc-score { font-size:24px; }
+  .sl-arc-title { font-size:16px; }
+  .sl-arc-desc  { font-size:16px; }
+
+  /* Mentor */
+  .sl-mentors-h2 { font-size:17px; }
+  .sl-mentors-sub { font-size:16px; }
+  .sl-ddi-head { font-size:16px; }
+  .sl-ddi-body { font-size:16px; }
+  .sl-mentor-grid { grid-template-columns:1fr; gap:12px; }
+  .sl-mcard-photo { aspect-ratio:16/7; }
+  .sl-mcard-name    { font-size:16px; }
+  .sl-mcard-tagline { font-size:16px; }
+  .sl-mcard-tag     { font-size:16px; }
+  .sl-mcard-price   { font-size:16px; }
+  .sl-mcard-btn     { font-size:16px; }
+  .sl-mcard-score-val { font-size:16px; }
+  .sl-mcard-score-lbl { font-size:16px; }
+  .sl-mentors-cta-btn { width:100%; text-align:center; font-size:16px; }
+  .sl-mentors-cta-note { font-size:16px; }
+
+  /* Close */
+  .sl-close { padding:22px 16px 20px; margin-bottom:24px; }
+  .sl-close-h2  { font-size:19px; }
+  .sl-close-sub { font-size:16px; }
+  .sl-close-btns { flex-direction:column; align-items:stretch; gap:10px; }
+  .sl-close-btn  { width:100%; text-align:center; }
+  .sl-close-micro { font-size:16px; text-align:center; }
+
+  /* Gallery */
+  .sl-gallery { grid-template-columns:repeat(2,1fr); }
+  .sl-gimg-photo { aspect-ratio:3/2; }
+  .sl-gbar-score { font-size:16px; }
+  .sl-gbar-tier  { font-size:16px; }
+  .sl-gbar-genre { display:none; } /* hide genre on mobile gallery — too crowded */
+}
+
+@media (max-width:480px) {
+  .sl-below-inner { padding:16px 14px 32px; }
+  .sl-scorecard { padding:14px 12px 12px; }
+  .sl-scorecard-dims { gap:6px; }
+  .sl-dim-label { font-size:16px; letter-spacing:0; }
+  .sl-dim-score { font-size:16px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set hero = carousel_images[0] if carousel_images else none %}
+{% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else true %}
+
+<div class="sl-home">
+
+{# ━━━━━━━━━━━━━━━━━━ HERO ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-hero">
+
+  {% if hero and hero.thumb_url %}
+  <div class="sl-hero-img-wrap">
+    <img class="sl-hero-img"
+         src="{{ hero.thumb_url }}"
+         alt="{{ hero.genre or 'Photography' }}"
+         loading="eager" fetchpriority="high">
+    <div class="sl-hero-grad"></div>
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">{{ hero.tier }}</div>
+      <span class="sl-badge-score">{{ "%.2f"|format(hero.score) }}</span>
+      {% if hero.genre %}
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-meta">{{ hero.genre | upper }}</span>
+      {% endif %}
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-by">{{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
+    </div>
+  </div>
+
+  {% else %}
+  {# Fallback — no images yet #}
+  <div class="sl-hero-img-wrap">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1A2744,#0D0D0B);"></div>
+    <div class="sl-hero-grad"></div>
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">Grandmaster</div>
+      <span class="sl-badge-score">8.74</span>
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-meta">Wildlife</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sl-hero-content">
+    <div class="sl-hero-h1">How good is your photograph, really?</div>
+    <span class="sl-hero-sub">We cracked the Wow factor. Find out if your photo has it.</span>
+    <div class="sl-hero-cta">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+         class="sl-hero-btn">Score mine — free →</a>
+      <span class="sl-hero-micro">Free &nbsp;·&nbsp; 46 seconds &nbsp;·&nbsp; No card required</span>
+    </div>
+  </div>
+  <span class="sl-hero-caption">Art is the Question. Math is the Verification.</span>
+
+</div>{# end sl-hero #}
+
+{# ━━━━━━━━━━━━━━━━━━ BELOW FOLD ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-below">
+<div class="sl-below-inner">
+
+  <div class="sl-statement">
+    <span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer. Chess has ELO. Wine has Parker Points. Photography has likes.</span>
+    <span class="sl-statement-punch">Until now.</span>
+  </div>
+
+  {# ━━ BEAT 1 — THREE PILLARS ━━ #}
+  <div class="sl-pillars-section">
+    <div class="sl-section-eyebrow">What you get</div>
+
+    {# Desktop grid #}
+    <div class="sl-pillars">
+      <div class="sl-pillar">
+        <div class="sl-pillar-num">01</div>
+        <div class="sl-pillar-q">Is my work actually good?</div>
+        <p class="sl-pillar-ans">Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.</p>
+        <div class="sl-pillar-tags">
+          <span class="sl-pillar-tag">Decisive Moment</span>
+          <span class="sl-pillar-tag">Wonder</span>
+          <span class="sl-pillar-tag">AQ</span>
+          <span class="sl-pillar-tag">Disruption</span>
+          <span class="sl-pillar-tag">DoD</span>
+        </div>
+      </div>
+      <div class="sl-pillar">
+        <div class="sl-pillar-num">02</div>
+        <div class="sl-pillar-q">Where do I actually stand?</div>
+        <p class="sl-pillar-ans">Blind ranking — nobody knows whose photo they rate. Your score reflects your photography, not your followers.</p>
+        <div class="sl-pillar-tags">
+          <span class="sl-pillar-tag">Blind peer rating</span>
+          <span class="sl-pillar-tag">India rankings</span>
+          <span class="sl-pillar-tag">Photographer of the Year</span>
+        </div>
+      </div>
+      <div class="sl-pillar">
+        <div class="sl-pillar-num">03</div>
+        <div class="sl-pillar-q">How do I get better?</div>
+        <p class="sl-pillar-ans">Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.</p>
+        <div class="sl-pillar-tags">
+          <span class="sl-pillar-tag">AI mentor</span>
+          <span class="sl-pillar-tag">Human expert</span>
+          <span class="sl-pillar-tag">From &#x20B9;50</span>
+        </div>
+      </div>
+    </div>
+
+    {# Mobile carousel #}
+    <div class="sl-carousel-wrap" id="slCarousel">
+      <div class="sl-carousel-viewport">
+        <div class="sl-carousel-track" id="slCarouselTrack">
+          <div class="sl-carousel-slide">
+            <div class="sl-pillar-num">01</div>
+            <div class="sl-pillar-q">Is my work actually good?</div>
+            <p class="sl-pillar-ans">Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.</p>
+            <div class="sl-pillar-tags">
+              <span class="sl-pillar-tag">Decisive Moment</span>
+              <span class="sl-pillar-tag">Wonder</span>
+              <span class="sl-pillar-tag">AQ</span>
+              <span class="sl-pillar-tag">Disruption</span>
+              <span class="sl-pillar-tag">DoD</span>
+            </div>
+          </div>
+          <div class="sl-carousel-slide">
+            <div class="sl-pillar-num">02</div>
+            <div class="sl-pillar-q">Where do I actually stand?</div>
+            <p class="sl-pillar-ans">Blind ranking — nobody knows whose photo they rate. Your score reflects your photography, not your followers.</p>
+            <div class="sl-pillar-tags">
+              <span class="sl-pillar-tag">Blind peer rating</span>
+              <span class="sl-pillar-tag">India rankings</span>
+              <span class="sl-pillar-tag">Photographer of the Year</span>
+            </div>
+          </div>
+          <div class="sl-carousel-slide last-slide">
+            <div class="sl-pillar-num">03</div>
+            <div class="sl-pillar-q">How do I get better?</div>
+            <p class="sl-pillar-ans">Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.</p>
+            <div class="sl-pillar-tags">
+              <span class="sl-pillar-tag">AI mentor</span>
+              <span class="sl-pillar-tag">Human expert</span>
+              <span class="sl-pillar-tag">From &#x20B9;50</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-carousel-dots" id="slCarouselDots">
+        <button class="sl-cdot active" data-idx="0" aria-label="Pillar 1"></button>
+        <button class="sl-cdot" data-idx="1" aria-label="Pillar 2"></button>
+        <button class="sl-cdot" data-idx="2" aria-label="Pillar 3"></button>
+      </div>
+    </div>
+  </div>
+
+  {# ━━ BEAT 2 — THE HONEST MIRROR ━━ #}
+  <div class="sl-wow">
+    <div class="sl-wow-eyebrow">The Honest Mirror</div>
+    <div class="sl-wow-h2">Can an AI really score something as personal as a photograph?</div>
+    <p class="sl-wow-sub">Yes — because AQ, the soul dimension, measures emotional resonance. An emotionally empty photograph scores lower than an imperfect one that stops you breathing. That is by design.</p>
+
+    <div class="sl-scorecard">
+      <div class="sl-scorecard-dims" id="slScoreCardDims">
+        {% if hero and hero.get_audit %}
+          {% set _a = hero.get_audit() %}
+          {% for mname, mval in _a.get('modules', []) %}
+          <div class="sl-dim {% if mname == 'AQ' %}sl-dim-aq{% endif %}">
+            <div class="sl-dim-label">{{ mname }}</div>
+            <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:{{ (mval / 10 * 100)|int }}%"></div></div>
+            <div class="sl-dim-score">{{ "%.1f"|format(mval) }}{% if mname == 'AQ' %} ✦{% endif %}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="sl-dim"><div class="sl-dim-label">DoD</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:82%"></div></div><div class="sl-dim-score">8.2</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Disruption</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Dec. Moment</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:90%"></div></div><div class="sl-dim-score">9.0</div></div>
+          <div class="sl-dim"><div class="sl-dim-label">Wonder</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:85%"></div></div><div class="sl-dim-score">8.5</div></div>
+          <div class="sl-dim sl-dim-aq"><div class="sl-dim-label">AQ / Soul</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8 ✦</div></div>
+        {% endif %}
+      </div>
+
+      {% if soul_active %}
+      <div class="sl-soul-bonus">
+        <span class="sl-soul-icon">✦</span>
+        <span class="sl-soul-text">
+          <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.
+        </span>
+      </div>
+      {% else %}
+      <div class="sl-aq-explain">
+        <span class="sl-soul-icon" style="color:rgba(255,255,255,0.35);">◆</span>
+        <span class="sl-aq-explain-text">
+          <strong>AQ — the soul dimension.</strong> Reach AQ ≥ 8.0 and the Soul Bonus removes all technical penalties. Emotional truth matters more than technical perfection.
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="sl-heart-line">
+      <span>The brands rated your gear. <em>We rate your heart.</em></span>
+      <a href="{{ url_for('science') }}" class="sl-science-link">How the scoring works →</a>
+    </div>
+  </div>
+
+  {# ━━ BEAT 3 — YOUR SCORE GROWS ━━ #}
+  <div class="sl-arc">
+    <div class="sl-section-eyebrow">Your score grows</div>
+    <div class="sl-arc-steps">
+      <div class="sl-arc-step">
+        <div class="sl-arc-score">5.8</div>
+        <div class="sl-arc-title">Upload 1 — Get your score</div>
+        <p class="sl-arc-desc">46 seconds. 5 dimensions. One specific improvement. No flattery.</p>
+      </div>
+      <div class="sl-arc-step">
+        <div class="sl-arc-score">7.2</div>
+        <div class="sl-arc-title">Upload 10 — See the pattern</div>
+        <p class="sl-arc-desc">Low on Decisive Moment? High AQ but weak DoD? The data shows you exactly where to focus.</p>
+      </div>
+      <div class="sl-arc-step sl-arc-final">
+        <div class="sl-arc-score">8.9</div>
+        <div class="sl-arc-title">Upload 50 — Compete when ready</div>
+        <p class="sl-arc-desc">You upgrade because you feel ready. Not because of a sales pitch.</p>
+      </div>
+    </div>
+  </div>
+
+  {# ━━ MENTOR MARKETPLACE ━━ #}
+  {% if active_mentors and active_mentors|length >= 3 %}
+  <div class="sl-mentors">
+    <div class="sl-section-eyebrow">Mentor Marketplace</div>
+    <h2 class="sl-mentors-h2">Get your photo reviewed by a master photographer.</h2>
+    <p class="sl-mentors-sub">Your mentor sees your full DDI score before they begin. Precise feedback on exactly what to fix. Written response within 72 hours.</p>
+    <div class="sl-ddi-bar">
+      <span class="sl-ddi-icon">✦</span>
+      <div>
+        <div class="sl-ddi-head">Your mentor already knows where you stand</div>
+        <div class="sl-ddi-body">Full DDI breakdown shared before every session — <strong>Decisive Moment, Wonder, DoD, Disruption, AQ</strong>. No other platform does this.</div>
+      </div>
+    </div>
+    <div class="sl-mentor-grid">
+      {% for mentor in active_mentors[:3] %}
+      <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
+        <div class="sl-mcard-photo">
+          {% if mentor.photo_url %}
+            <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
+          {% else %}
+            <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
+          {% endif %}
+          <div class="sl-mcard-tier">{{ mentor.tier | title }}</div>
+          {% if mentor.avg_ddi_score %}
+          <div class="sl-mcard-score-badge">
+            <span class="sl-mcard-score-val">{{ "%.2f"|format(mentor.avg_ddi_score) }}</span>
+            <span class="sl-mcard-score-lbl">DDI avg</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="sl-mcard-body">
+          <div class="sl-mcard-name">{{ mentor.display_name }}</div>
+          <div class="sl-mcard-tagline">{{ mentor.tagline or '' }}</div>
+          <div class="sl-mcard-tags">
+            {% for genre in mentor.specialisms_list[:3] %}
+              <span class="sl-mcard-tag">{{ genre }}</span>
+            {% endfor %}
+          </div>
+          <div class="sl-mcard-footer">
+            <div class="sl-mcard-price">&#x20B9;{{ mentor.session_price }} <span>/ review</span></div>
+            <span class="sl-mcard-btn">Book</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="sl-mentors-cta">
+      <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet all mentors →</a>
+      <span class="sl-mentors-cta-note">From &#x20B9;50 &nbsp;·&nbsp; No subscription required &nbsp;·&nbsp; 72-hr feedback</span>
+    </div>
+  </div>
+  <hr class="sl-divider">
+  {% endif %}
+
+  {# ━━ BEAT 4 — EMOTIONAL CLOSE ━━ #}
+  <div class="sl-close">
+    <div class="sl-close-h2">We take your work as seriously as you do.</div>
+    <p class="sl-close-sub">Every serious photographer deserves an honest answer. Not likes. Not club politics. A score with a reason.</p>
+    <div class="sl-close-btns">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+         class="sl-close-btn">Start free →</a>
+      <span class="sl-close-micro">Free &nbsp;·&nbsp; First 3 scored free &nbsp;·&nbsp; No card required</span>
+    </div>
+  </div>
+
+  {# ━━ GALLERY ━━ #}
+  {% set gallery_imgs = carousel_images[1:] %}
+  {% if gallery_imgs %}
+  <div class="sl-gallery-label">Top scores this week</div>
+  <div class="sl-gallery">
+    {% for img in gallery_imgs %}{% if img.thumb_url %}
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
+      <div class="sl-gimg-photo">
+        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
+      </div>
+      <div class="sl-gbar">
+        <div class="sl-gbar-left">
+          <span class="sl-gbar-score">{{ "%.2f"|format(img.score) }}</span>
+          <span class="sl-gbar-dot">·</span>
+          <span class="sl-gbar-tier">{{ img.tier }}</span>
+        </div>
+        {% if img.genre %}<span class="sl-gbar-genre">{{ img.genre }}</span>{% endif %}
+      </div>
+    </a>
+    {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+
+</div>{# end sl-below-inner #}
+</div>{# end sl-below #}
+</div>{# end sl-home #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  /* ── Mobile pillar carousel ── */
+  var track = document.getElementById('slCarouselTrack');
+  var dots  = document.querySelectorAll('#slCarouselDots .sl-cdot');
+  if(!track || !dots.length) return;
+
+  var cur = 0;
+  var total = dots.length;
+  var timer = null;
+
+  function goTo(idx){
+    cur = (idx + total) % total;
+    track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+    dots.forEach(function(d,i){
+      d.classList.toggle('active', i === cur);
+    });
+  }
+
+  function startAuto(){
+    clearInterval(timer);
+    timer = setInterval(function(){ goTo(cur + 1); }, 3200);
+  }
+
+  /* Dot clicks */
+  dots.forEach(function(d){
+    d.addEventListener('click', function(){
+      goTo(parseInt(d.dataset.idx));
+      startAuto(); /* reset timer on manual tap */
+    });
+  });
+
+  /* Touch swipe support */
+  var startX = 0;
+  track.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    clearInterval(timer);
+  }, {passive:true});
+  track.addEventListener('touchend', function(e){
+    var diff = startX - e.changedTouches[0].clientX;
+    if(Math.abs(diff) > 40) goTo(diff > 0 ? cur + 1 : cur - 1);
+    startAuto();
+  }, {passive:true});
+
+  startAuto();
+
+  /* ── Score card 2-row on mobile ── */
+  function checkDims(){
+    var dims = document.getElementById('slScoreCardDims');
+    if(!dims) return;
+    if(window.innerWidth <= 768){
+      dims.classList.add('two-row');
+    } else {
+      dims.classList.remove('two-row');
+    }
+  }
+  checkDims();
+  window.addEventListener('resize', checkDims);
+})();
+</script>
+{% endblock %}
