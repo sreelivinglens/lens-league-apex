@@ -29,49 +29,49 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-grad {
   position:absolute; inset:0;
   background:linear-gradient(to bottom,
-    rgba(0,0,0,0.08) 0%,
-    rgba(0,0,0,0.06) 35%,
-    rgba(0,0,0,0.68) 68%,
-    rgba(0,0,0,0.93) 100%);
+    rgba(0,0,0,0.10) 0%,
+    rgba(0,0,0,0.08) 30%,
+    rgba(0,0,0,0.72) 60%,
+    rgba(0,0,0,0.96) 100%);
 }
 
 /* ── Badge Bar (below image on mobile, overlay on desktop) ── */
 .sl-hero-id {
-  position:absolute; top:18px; left:18px; z-index:3;
-  display:inline-flex; align-items:center; gap:12px;
-  background:rgba(0,0,0,0.62);
-  border:1px solid rgba(245,197,24,0.25);
-  border-radius:6px;
-  padding:10px 14px;
+  position:absolute; top:14px; left:14px; z-index:3;
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(245,197,24,0.2);
+  border-radius:4px;
+  padding:7px 10px;
   backdrop-filter:blur(4px);
   -webkit-backdrop-filter:blur(4px);
 }
 .sl-tier-badge {
   background:#F5C518; color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1.5px; text-transform:uppercase;
-  padding:5px 10px; border-radius:3px; white-space:nowrap;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:3px 8px; border-radius:2px; white-space:nowrap;
   flex-shrink:0;
 }
-.sl-hero-id-info { display:flex; flex-direction:column; gap:4px; }
+.sl-hero-id-info { display:flex; flex-direction:column; gap:2px; }
 .sl-hero-id-score {
-  font-family:var(--font-mono); font-size:32px; font-weight:700;
+  font-family:var(--font-mono); font-size:20px; font-weight:700;
   color:#FFFFFF; line-height:1; letter-spacing:1px;
 }
 .sl-hero-id-meta {
   font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(255,255,255,0.72); letter-spacing:1px; text-transform:uppercase;
+  color:rgba(255,255,255,0.65); letter-spacing:1px; text-transform:uppercase;
 }
 .sl-hero-id-by {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; letter-spacing:1px; text-transform:uppercase;
+  font-family:var(--font-mono); font-size:16px; font-weight:600;
+  color:rgba(245,197,24,0.85); letter-spacing:0.5px; text-transform:uppercase;
 }
 .sl-hero-sub { white-space:nowrap; }
 
 /* ── Bottom content ── */
 .sl-hero-content {
   position:absolute; bottom:0; left:0; right:0;
-  padding:clamp(16px,4vw,44px) clamp(18px,5vw,64px) clamp(24px,4vw,48px);
+  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(32px,4vw,56px);
 }
 .sl-hero-h1 {
   font-family:var(--font-mono); font-weight:400; color:rgba(255,255,255,0.62);
@@ -212,6 +212,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-gbar-genre {
   font-family:var(--font-mono); font-size:16px;
   color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+  padding-left:4px;
 }
 
 /* MOBILE REDESIGN */
