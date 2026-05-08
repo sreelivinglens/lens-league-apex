@@ -74,18 +74,18 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   padding:clamp(16px,4vw,44px) clamp(18px,5vw,64px) clamp(24px,4vw,48px);
 }
 .sl-hero-h1 {
-  font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
-  line-height:1.15; font-size:clamp(22px,4vw,50px);
+  font-family:var(--font-mono); font-weight:400; color:rgba(255,255,255,0.62);
+  line-height:1.2; font-size:clamp(22px,4vw,46px);
   text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
-  margin-bottom:3px;
+  margin-bottom:0;
 }
-.sl-hero-h2, .sl-hero-h3 {
-  font-family:var(--font-mono); font-size:clamp(16px,1.8vw,19px);
-  font-weight:600; color:#FFFFFF; display:block;
-  text-shadow:0 2px 8px rgba(0,0,0,0.95); opacity:0.82;
+.sl-hero-h2 {
+  font-family:var(--font-mono); font-size:clamp(22px,4vw,46px);
+  font-weight:700; color:#FFFFFF; display:block;
+  text-shadow:0 2px 8px rgba(0,0,0,0.95);
+  margin-bottom:0;
 }
-.sl-hero-h2 { margin-top:3px; }
-.sl-hero-h3 { margin-top:2px; }
+.sl-hero-h3 { display:none; }
 .sl-hero-cta-wrap {
   margin-top:clamp(16px,3vw,26px);
   display:flex; flex-direction:column; align-items:flex-start; gap:7px;
@@ -263,13 +263,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-hero-h1 {
     font-size:22px;
   }
-  .sl-hero-h2, .sl-hero-h3 {
-    font-size:16px;
+  .sl-hero-h2 {
+    font-size:22px;
   }
   .sl-hero-btn {
     width:100%;
     font-size:16px;
     padding:12px 24px;
+    text-align:center;
   }
   .sl-hero-sub {
     font-size:16px;
@@ -335,14 +336,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     {% endif %}
 
     <div class="sl-hero-content">
-      <div class="sl-hero-h1">Become a better photographer.</div>
-      <span class="sl-hero-h2">Find out your photo score.</span>
-      <span class="sl-hero-h3">Improve as you go.</span>
+      <div class="sl-hero-h1">How good is your photo?</div>
+      <span class="sl-hero-h2">Find out in minutes.</span>
       <div class="sl-hero-cta-wrap">
         <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-           class="sl-hero-btn">Upload Your Photo</a>
+           class="sl-hero-btn">Score My Photo Now &rarr;</a>
         <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
-        <span class="sl-hero-sub" style="margin-top:4px;">Subscribe from &#8377;99/month (Mobile) or &#8377;199/month (Camera) for unlimited uploads and full platform access.</span>
       </div>
     </div>
   </div>
