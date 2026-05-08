@@ -902,12 +902,17 @@ function dismissFlash(btn) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.flash').forEach(function(el) {
+  var flashes = document.querySelectorAll('.flash');
+  flashes.forEach(function(el) {
     setTimeout(function() {
       el.classList.add('hiding');
       setTimeout(() => el.remove(), 300);
     }, 8000);
   });
+  // Scroll flash into view so it's never missed on long pages
+  if (flashes.length > 0) {
+    flashes[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 });
 
 // ── Right-click protection on images — sitewide ────────────────────────────
