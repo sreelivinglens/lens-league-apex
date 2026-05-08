@@ -6,24 +6,10 @@
   body:has(.sci-page) main { padding:0 !important; max-width:none !important; }
   .sci-page { background:#FEFCF8; overflow-x:hidden; }
 
-  /* ── HERO ── */
-  .sci-hero {
-    text-align:center;
-    padding:clamp(40px,7vw,72px) var(--page-pad) clamp(32px,5vw,52px);
-    border-bottom:1px solid #E0D8C8; background:#FEFCF8;
-  }
-  .sci-hero-eyebrow {
-    font-family:var(--font-mono); font-size:16px; font-weight:600;
-    letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:14px;
-  }
-  .sci-hero h1 {
-    font-size:clamp(28px,5vw,52px); font-weight:700; color:var(--text-primary);
-    margin-bottom:14px; line-height:1.1; white-space:nowrap;
-  }
-  .sci-hero h1 em { font-style:normal; color:#2C3E6B; }
-  .sci-hero p {
-    font-size:clamp(16px,2vw,18px); color:var(--text-secondary);
-    line-height:1.8; max-width:580px; margin:0 auto;
+  /* ── PAGE HEADER ── */
+  .sci-page-header {
+    max-width:880px; margin:0 auto;
+    padding:clamp(32px,5vw,48px) var(--page-pad) 0;
   }
 
   /* ── SECTION LAYOUT ── */
@@ -180,7 +166,6 @@
     .pillar-grid { grid-template-columns:1fr; gap:8px; }
     .sg-grid { grid-template-columns:1fr; gap:8px; }
     .arch-grid { grid-template-columns:1fr 1fr; }
-    .sci-hero h1 { white-space:normal; }
     .score-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
     .tc-name { width:90px; font-size:16px; }
     .tc-range { width:70px; font-size:16px; }
@@ -196,10 +181,11 @@
 <div class="sci-page">
 
   <!-- HERO -->
-  <div class="sci-hero">
-    <div class="sci-hero-eyebrow">Apex DDI Engine &nbsp;·&nbsp; Dimensional Diagnostic Index</div>
-    <h1>The Science <em style="font-style:normal;color:#2C3E6B;">of Imaging.</em></h1>
-    <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
+  <div class="sci-page-header">
+    <div class="page-header" style="margin-bottom:48px;">
+      <h1>The Science of Imaging</h1>
+      <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
+    </div>
   </div>
 
   <!-- S1: THE PROBLEM -->
