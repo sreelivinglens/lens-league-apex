@@ -527,21 +527,31 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width:768px) {
 
   /* Hero — image becomes 16:9, content drops below */
+  /* Mobile hero: flex column so badge appears below image */
   .sl-hero-img-wrap {
     height:auto !important; min-height:0 !important;
-    max-height:none !important; aspect-ratio:16/9;
+    max-height:none !important;
+    display:flex !important; flex-direction:column;
+    overflow:visible !important;
+    position:static !important;
   }
-  .sl-hero-img   { opacity:1; }
-  .sl-hero-grad  { display:none; }
-   /* hidden on mobile — too small to see */
+  /* Image sits first, natural 16:9 */
+  .sl-hero-img {
+    opacity:1 !important;
+    position:static !important; inset:auto !important;
+    width:100% !important; aspect-ratio:16/9;
+    object-fit:cover; display:block;
+  }
+  .sl-hero-grad { display:none; }
 
-  /* Badge — static row below image, cream background */
+  /* Badge — static row below image */
   .sl-hero-badge {
-    position:static; width:100%;
+    position:static !important; width:100%;
     background:#FEFCF8; border:none; border-radius:0;
     border-bottom:1px solid rgba(44,62,107,0.08);
     padding:10px 16px; gap:7px; flex-wrap:wrap;
     backdrop-filter:none; -webkit-backdrop-filter:none;
+    z-index:auto;
   }
   .sl-tier-badge {
     background:#2C3E6B !important; color:#FFFFFF !important; /* SLATE BLUE on cream */
@@ -666,17 +676,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
          alt="{{ hero.genre or 'Photography' }}"
          loading="eager" fetchpriority="high">
     <div class="sl-hero-grad"></div>
-  </div>
-  {# Badge — desktop: absolute bottom-right. Mobile: static row below image. #}
-  <div class="sl-hero-badge">
-    <div class="sl-tier-badge">{{ hero.tier }}</div>
-    <span class="sl-badge-score">{{ "%.2f"|format(hero.score) }}</span>
-    {% if hero.genre %}
-    <span class="sl-badge-dot">·</span>
-    <span class="sl-badge-meta">{{ hero.genre | upper }}</span>
-    {% endif %}
-    <span class="sl-badge-dot">·</span>
-    <span class="sl-badge-by">{{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">{{ hero.tier }}</div>
+      <span class="sl-badge-score">{{ "%.2f"|format(hero.score) }}</span>
+      {% if hero.genre %}
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-meta">{{ hero.genre | upper }}</span>
+      {% endif %}
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-by">{{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
+    </div>
   </div>
 
   {% else %}
@@ -684,12 +693,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-hero-img-wrap">
     <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1A2744,#0D0D0B);"></div>
     <div class="sl-hero-grad"></div>
-  </div>
-  <div class="sl-hero-badge">
-    <div class="sl-tier-badge">Grandmaster</div>
-    <span class="sl-badge-score">8.74</span>
-    <span class="sl-badge-dot">·</span>
-    <span class="sl-badge-meta">Wildlife</span>
+    <div class="sl-hero-badge">
+      <div class="sl-tier-badge">Grandmaster</div>
+      <span class="sl-badge-score">8.74</span>
+      <span class="sl-badge-dot">·</span>
+      <span class="sl-badge-meta">Wildlife</span>
+    </div>
   </div>
   {% endif %}
 
