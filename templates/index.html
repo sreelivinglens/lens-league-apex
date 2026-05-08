@@ -123,8 +123,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 /* ── Statement ── */
 .sl-statement {
-  background:#2C3E6B; border:none;
-  border-radius:var(--radius-md); padding:28px 32px; margin-bottom:24px;
+  background:#1A2744; border:none;
+  border-left:3px solid #F5C518; border-radius:0 var(--radius-md) var(--radius-md) 0;
+  padding:28px 32px; margin-bottom:24px;
 }
 .sl-statement-quote {
   font-family:var(--font-mono); font-size:48px; color:rgba(255,255,255,0.2);
@@ -235,27 +236,31 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-hero-img { opacity:1; }
   .sl-hero-grad { display:none; }
 
-  /* Badge — full width bar below image, allow wrap */
+  /* Badge — cream bar below image */
   .sl-hero-id {
     position:static; width:100%;
-    background:#2C3E6B; border:none; border-radius:0;
+    background:#FEFCF8; border:none; border-radius:0;
+    border-bottom:1px solid #E0D8C8;
     padding:10px 16px; gap:8px; flex-wrap:wrap;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
-  .sl-tier-badge { font-size:16px; padding:4px 8px; letter-spacing:1px; }
-  .sl-hero-id-score { font-size:16px !important; white-space:nowrap; }
-  .sl-hero-id-dot { font-size:16px; }
-  .sl-hero-id-meta { font-size:16px; letter-spacing:0.5px; white-space:nowrap; }
+  .sl-tier-badge {
+    font-size:16px; padding:4px 8px; letter-spacing:1px;
+    background:#2C3E6B !important; color:#FFFFFF !important;
+  }
+  .sl-hero-id-score { font-size:16px !important; white-space:nowrap; color:#1a1a18 !important; }
+  .sl-hero-id-dot { font-size:16px; color:#C0B8B0 !important; }
+  .sl-hero-id-meta { font-size:16px; letter-spacing:0.5px; white-space:nowrap; color:#666 !important; }
   .sl-hero-id-by {
-    font-size:16px; letter-spacing:0.5px; color:rgba(255,255,255,0.75);
+    font-size:16px; letter-spacing:0.5px; color:#888 !important;
     max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
 
-  /* Hero content — static below badge bar */
+  /* Hero content — slate blue */
   .sl-hero-content {
     position:static; background:#2C3E6B;
     padding:20px 16px 24px;
-    border-top:1px solid rgba(255,255,255,0.08);
+    border-top:none;
   }
   /* Question smaller, answer larger — clear hierarchy */
   .sl-hero-h1 { font-size:18px; color:rgba(255,255,255,0.58); }
