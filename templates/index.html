@@ -20,13 +20,20 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* ── Hero Image ── */
 .sl-hero-img-wrap {
   position:relative; width:100%;
-  aspect-ratio:16/7; min-height:320px;
+  height:calc(100svh - 64px); min-height:460px; max-height:900px;
 }
 .sl-hero-img {
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:center; opacity:1;
+  object-fit:cover; object-position:center; opacity:0.82;
 }
-.sl-hero-grad { display:none; }
+.sl-hero-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,0.05) 0%,
+    rgba(0,0,0,0.05) 25%,
+    rgba(0,0,0,0.55) 58%,
+    rgba(0,0,0,0.88) 100%);
+}
 
 /* ── Badge Bar (below image on mobile, overlay on desktop) ── */
 .sl-hero-id {
@@ -68,25 +75,28 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-id-info { display:contents; }
 .sl-hero-sub { white-space:nowrap; }
 
-/* ── Copy row below image ── */
-.sl-hero-copy-row {
-  display:flex; align-items:center; justify-content:space-between;
-  gap:24px; padding:24px clamp(18px,5vw,48px) 0;
-  max-width:880px; margin:0 auto;
+/* ── Bottom content overlay ── */
+.sl-hero-content {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(40px,5vw,64px);
 }
-.sl-hero-copy-text { flex:1; }
 .sl-hero-h1 {
-  font-family:var(--font-mono); font-weight:700; color:#2C3E6B;
-  line-height:1.2; font-size:clamp(18px,2vw,24px);
-  margin-bottom:2px;
+  font-family:var(--font-mono); font-weight:400;
+  color:rgba(255,255,255,0.62);
+  line-height:1.2; font-size:clamp(18px,2.2vw,28px);
+  text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
+  margin-bottom:0;
 }
 .sl-hero-h2 {
-  font-family:var(--font-mono); font-size:clamp(18px,2vw,24px);
-  font-weight:700; color:#1a1a18; display:block; line-height:1.2;
+  font-family:var(--font-mono); font-size:clamp(18px,2.2vw,28px);
+  font-weight:700; color:#FFFFFF; display:block; line-height:1.2;
+  text-shadow:0 2px 8px rgba(0,0,0,0.95);
+  margin-bottom:0;
 }
-.sl-hero-btn-wrap {
-  display:flex; flex-direction:column; align-items:flex-end; gap:6px;
-  flex-shrink:0;
+.sl-hero-cta-wrap {
+  margin-top:clamp(14px,2.5vw,22px);
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px;
 }
 .sl-hero-btn {
   display:inline-block; background:#F5C518; color:#0D0D0B;
@@ -98,8 +108,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-btn:hover { opacity:0.88; }
 .sl-hero-sub {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#2C3E6B; letter-spacing:0.5px; text-align:right;
-  white-space:nowrap;
+  color:#FFFFFF; letter-spacing:0.5px;
+  text-shadow:0 1px 4px rgba(0,0,0,0.8);
+  text-align:right;
 }
 
 /* ── Below fold ── */
@@ -218,7 +229,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width:768px) {
   /* Hero image 16:9 on mobile */
   .sl-hero-img-wrap { aspect-ratio:16/9; min-height:0; }
-  .sl-hero-grad { display:none; }
+  .sl-hero-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,0.05) 0%,
+    rgba(0,0,0,0.05) 25%,
+    rgba(0,0,0,0.55) 58%,
+    rgba(0,0,0,0.88) 100%);
+}
 
   /* Badge becomes bar below image on mobile */
   .sl-hero-id {
@@ -296,21 +314,15 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
     {% endif %}
 
-  </div>
-
-  {# ── COPY ROW — below hero image ── #}
-  <div class="sl-below" style="padding-bottom:0;">
-  <div class="sl-hero-copy-row">
-    <div class="sl-hero-copy-text">
+    <div class="sl-hero-content">
       <div class="sl-hero-h1">How good is your photo?</div>
       <span class="sl-hero-h2">Find out in minutes.</span>
+      <div class="sl-hero-cta-wrap">
+        <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+           class="sl-hero-btn">Score My Photo Now &rarr;</a>
+        <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
+      </div>
     </div>
-    <div class="sl-hero-btn-wrap">
-      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-hero-btn">Score My Photo Now &rarr;</a>
-      <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
-    </div>
-  </div>
   </div>
 
   {# ── BELOW FOLD ── #}
