@@ -37,50 +37,57 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── Badge Bar (below image on mobile, overlay on desktop) ── */
 .sl-hero-id {
-  position:absolute; bottom:18px; right:18px; z-index:3;
-  display:inline-flex; align-items:center; gap:8px;
-  background:rgba(0,0,0,0.28);
-  border:1px solid rgba(245,197,24,0.15);
-  border-radius:4px;
-  padding:7px 10px;
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
+  position:absolute; bottom:0; right:0; z-index:3;
+  display:inline-flex; align-items:center; gap:10px;
+  background:rgba(0,0,0,0.18);
+  border-top:1px solid rgba(255,255,255,0.08);
+  border-left:1px solid rgba(255,255,255,0.08);
+  border-radius:8px 0 0 0;
+  padding:8px 16px;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
 }
 .sl-tier-badge {
-  background:#F5C518; color:#0D0D0B;
+  background:rgba(245,197,24,0.72); color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1px; text-transform:uppercase;
   padding:3px 8px; border-radius:2px; white-space:nowrap;
   flex-shrink:0;
 }
-.sl-hero-id-info { display:flex; flex-direction:column; gap:2px; }
 .sl-hero-id-score {
-  font-family:var(--font-mono); font-size:20px; font-weight:700;
-  color:#FFFFFF; line-height:1; letter-spacing:1px;
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:rgba(255,255,255,0.85); line-height:1; letter-spacing:1px;
+  white-space:nowrap;
+}
+.sl-hero-id-dot {
+  color:rgba(255,255,255,0.25); font-size:16px;
 }
 .sl-hero-id-meta {
-  font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(255,255,255,0.65); letter-spacing:1px; text-transform:uppercase;
+  font-family:var(--font-mono); font-size:16px; font-weight:500;
+  color:rgba(255,255,255,0.5); letter-spacing:1px; text-transform:uppercase;
+  white-space:nowrap;
 }
 .sl-hero-id-by {
-  font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(245,197,24,0.85); letter-spacing:0.5px; text-transform:uppercase;
+  font-family:var(--font-mono); font-size:16px; font-weight:500;
+  color:rgba(245,197,24,0.65); letter-spacing:0.5px; text-transform:uppercase;
+  white-space:nowrap;
 }
+.sl-hero-id-info { display:contents; }
 .sl-hero-sub { white-space:nowrap; }
 
 /* ── Bottom content ── */
 .sl-hero-content {
   position:absolute; bottom:0; left:0; right:0;
-  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(32px,4vw,56px);
+  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(40px,5vw,72px);
 }
 .sl-hero-h1 {
   font-family:var(--font-mono); font-weight:400; color:rgba(255,255,255,0.62);
-  line-height:1.2; font-size:clamp(22px,4vw,46px);
+  line-height:1.2; font-size:clamp(20px,3vw,36px);
   text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
   margin-bottom:0;
 }
 .sl-hero-h2 {
-  font-family:var(--font-mono); font-size:clamp(22px,4vw,46px);
+  font-family:var(--font-mono); font-size:clamp(20px,3vw,36px);
   font-weight:700; color:#FFFFFF; display:block;
   text-shadow:0 2px 8px rgba(0,0,0,0.95);
   margin-bottom:0;
@@ -315,11 +322,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
         
         <div class="sl-hero-id">
           <div class="sl-tier-badge">{{ hero.tier }}</div>
-          <div class="sl-hero-id-info">
-            <div class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</div>
-            {% if hero.genre %}<div class="sl-hero-id-meta">{{ hero.genre | upper }}</div>{% endif %}
-            <div class="sl-hero-id-by">Shot by {{ hero.author.username }}</div>
-          </div>
+          <span class="sl-hero-id-score">{{ "%.2f"|format(hero.score) }}</span>
+          <span class="sl-hero-id-dot">·</span>
+          {% if hero.genre %}<span class="sl-hero-id-meta">{{ hero.genre | upper }}</span><span class="sl-hero-id-dot">·</span>{% endif %}
+          <span class="sl-hero-id-by">Shot by {{ hero.author.username }}</span>
         </div>
       {% endif %}
     {% else %}
@@ -329,11 +335,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
       <div class="sl-hero-id">
         <div class="sl-tier-badge">Grandmaster</div>
-        <div class="sl-hero-id-info">
-          <div class="sl-hero-id-score">8.7</div>
-          <div class="sl-hero-id-meta">WILDLIFE</div>
-          <div class="sl-hero-id-by">Shot by sri</div>
-        </div>
+        <span class="sl-hero-id-score">8.70</span>
+        <span class="sl-hero-id-dot">·</span>
+        <span class="sl-hero-id-meta">WILDLIFE</span>
+        <span class="sl-hero-id-dot">·</span>
+        <span class="sl-hero-id-by">Shot by Sri</span>
       </div>
     {% endif %}
 
