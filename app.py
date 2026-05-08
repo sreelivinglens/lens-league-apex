@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from functools import wraps
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   flash, send_file, jsonify, abort, session)
+                   flash, send_file, jsonify, abort, session, make_response)
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1266,12 +1266,16 @@ def index():
         carousel_images = []
         active_challenge = None
         challenge_thumb = None
-    return render_template('index.html',
+    resp = make_response(render_template('index.html',
                            recent_images=recent_images,
                            carousel_images=carousel_images,
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
-                           now=datetime.utcnow())
+                           now=datetime.utcnow()))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma']        = 'no-cache'
+    resp.headers['Expires']       = '0'
+    return resp
 
 
 @app.route('/register', methods=['GET', 'POST'])
