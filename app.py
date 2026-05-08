@@ -1241,12 +1241,12 @@ def index():
                                  Image.is_public==True, Image.is_flagged==False)
                          .order_by(Image.scored_at.desc())
                          .limit(6).all())
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
         carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
                                    Image.tier.in_(['Legend','Grandmaster','Master']),
-                                   Image.score>=8.0)
+                                   Image.score>=8.5)
                            .order_by(db.func.random())
                            .limit(12).all())
         active_challenge = _get_active_challenge()
