@@ -640,12 +640,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
           <div class="sl-dim sl-dim-aq"><div class="sl-dim-label">AQ / Soul</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8 ✦</div></div>
         {% endif %}
       </div>
+      {% if (hero and hero.get_audit and _a.get('soul_bonus')) or not (hero and hero.get_audit) %}
       <div class="sl-soul-bonus">
         <span class="sl-soul-icon">✦</span>
         <span class="sl-soul-text">
           <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition. Technical perfection without emotional truth is not a high score.
         </span>
       </div>
+      {% else %}
+      <div class="sl-soul-bonus" style="border-color:rgba(255,255,255,0.08); background:rgba(255,255,255,0.03);">
+        <span class="sl-soul-icon" style="color:rgba(255,255,255,0.3);">◆</span>
+        <span class="sl-soul-text" style="color:rgba(255,255,255,0.38);">
+          <strong style="color:rgba(255,255,255,0.5); font-weight:400;">AQ — Affective Quotient.</strong> The soul dimension. AQ ≥ 8.0 activates the Soul Bonus — removing all technical penalties. Every score tells you exactly where your emotional resonance stands.
+        </span>
+      </div>
+      {% endif %}
     </div>
 
     <div class="sl-heart-line">
