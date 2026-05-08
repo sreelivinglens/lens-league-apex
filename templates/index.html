@@ -108,12 +108,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-below {
   background:#FEFCF8;
   padding:clamp(22px,4vw,48px) clamp(18px,5vw,48px) clamp(32px,5vw,56px);
-  max-width:var(--max-width); margin:0 auto;
+}
+.sl-below-inner {
+  max-width:880px; margin:0 auto;
 }
 /* ── Statement ── */
 .sl-statement {
-  background:#FEFCF8; border:1px solid var(--border);
-  border-radius:var(--radius-md); padding:24px 28px; margin-bottom:24px;
+  background:#FFFFFF; border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:28px 32px; margin-bottom:24px;
 }
 .sl-statement-quote {
   font-family:var(--font-mono); font-size:48px; color:var(--border);
@@ -347,6 +349,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   {# ── BELOW FOLD ── #}
   <div class="sl-below">
+  <div class="sl-below-inner">
 
     <div class="sl-statement">
       <div class="sl-statement-quote">"</div>
@@ -383,9 +386,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </div>
     {% endif %}
 
-  </div>
+  </div>{# end sl-below-inner #}
+  </div>{# end sl-below #}
 
-</div>
+</div>{# end sl-home #}
 {% endblock %}
 
 {% block extra_js %}
