@@ -37,14 +37,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── Badge Bar (below image on mobile, overlay on desktop) ── */
 .sl-hero-id {
-  position:absolute; top:14px; left:14px; z-index:3;
+  position:absolute; bottom:18px; right:18px; z-index:3;
   display:inline-flex; align-items:center; gap:8px;
-  background:rgba(0,0,0,0.55);
-  border:1px solid rgba(245,197,24,0.2);
+  background:rgba(0,0,0,0.28);
+  border:1px solid rgba(245,197,24,0.15);
   border-radius:4px;
   padding:7px 10px;
-  backdrop-filter:blur(4px);
-  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
 }
 .sl-tier-badge {
   background:#F5C518; color:#0D0D0B;
@@ -114,19 +114,20 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 /* ── Statement ── */
 .sl-statement {
-  background:#FFFFFF; border:1px solid var(--border);
+  background:#2C3E6B; border:none;
   border-radius:var(--radius-md); padding:28px 32px; margin-bottom:24px;
 }
 .sl-statement-quote {
-  font-family:var(--font-mono); font-size:48px; color:var(--border);
-  line-height:0.6; margin-bottom:12px;
+  font-family:var(--font-mono); font-size:48px; color:rgba(255,255,255,0.2);
+  line-height:0.5; margin-bottom:0; display:inline;
 }
 .sl-statement-text {
-  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
-  line-height:1.8; margin-bottom:12px; font-style:italic;
+  font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.92);
+  line-height:1.8; margin-bottom:12px; font-style:italic; display:inline;
 }
 .sl-statement-res {
-  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#2C3E6B;
+  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#F5C518;
+  display:block; margin-top:14px;
 }
 
 /* ── Scanner strip ── */
@@ -352,8 +353,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-below-inner">
 
     <div class="sl-statement">
-      <div class="sl-statement-quote">"</div>
-      <div class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer.</div>
+      <span class="sl-statement-quote">"</span><span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer.</span>
       <div class="sl-statement-res">Until now.</div>
     </div>
 
