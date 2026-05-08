@@ -2,28 +2,10 @@
 {% block title %}Photography Programmes — Shutter League{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  .contests-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
+  .contests-wrap { max-width: 880px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
 
-  .page-eyebrow {
-    font-family: var(--font-mono); font-size:1rem; font-weight: 700;
-    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-primary);
-    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
-  }
-  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold-dark); }
-
-  .page-headline {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
-    color: var(--text-primary); margin-bottom: 0.75rem;
-  }
-  .page-headline em { font-style: italic; color: #8B6914; }
-
-  .page-intro {
-    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8;
-    margin-bottom: 3rem; max-width: 580px;
-  }
+  
 
   .comp-block {
     border: 1px solid var(--border);
@@ -48,8 +30,8 @@
     color: var(--text-muted); margin-bottom: 5px;
   }
   .comp-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.45rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;
+    font-family: var(--font-mono);
+    font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;
   }
   .comp-dates {
     font-family: var(--font-mono); font-size:1rem; font-weight: 700;
@@ -102,11 +84,15 @@
     font-size: 1rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 4px;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .comp-block { padding: 20px 18px; }
-    .comp-title { font-size: 1.25rem; }
-    .comp-dates { text-align: left; }
-    .comp-header { gap: 10px; }
+    .comp-title { font-size: 1.15rem; }
+    .comp-header { flex-direction: column; gap: 8px; }
+    .comp-dates { text-align: left; white-space: normal; }
+    .comp-dates small { text-align: left; }
+    .comp-actions { flex-direction: column; align-items: stretch; }
+    .comp-actions .btn { width: 100%; text-align: center; box-sizing: border-box; }
+    .comp-actions .comp-action-note { font-size: 1rem; }
   }
 </style>
 {% endblock %}
@@ -114,10 +100,13 @@
 {% block content %}
 <div class="contests-wrap">
 
-  <div class="page-eyebrow">Photography Programmes</div>
-  <h1 class="page-headline">Three ways to go further.<br><em>One scientific standard.</em></h1>
-  <p class="page-intro">
-    Your uploaded images build your Annual Excellence Award standing continuously through the calendar year. The Open Submission is an annual deliberate entry. The Body of Work is the platform&#8217;s most prestigious annual submission.
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1>Photography Programmes</h1>
+    <p>Three ways to go further. One scientific standard.</p>
+  </div>
+
+  <p style="font-size:1rem; color:var(--text-secondary); line-height:1.8; margin-bottom:2rem; max-width:580px;">
+    Your uploaded images build your Annual Excellence Award standing continuously through the calendar year. The Open Submission is an annual deliberate entry. The Body of Work is the platform's most prestigious annual submission.
   </p>
 
   <!-- ── ELIGIBILITY ── -->

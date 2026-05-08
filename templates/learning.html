@@ -10,14 +10,7 @@
   }
 
   /* ── Wrap ── */
-  .learn-wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--page-pad) 80px; }
-
-  /* ── Hero ── */
-  .learn-hero { text-align:center; padding:64px var(--page-pad) 56px; border-bottom:1px solid rgba(44,62,107,0.15); margin-bottom:56px; }
-  .learn-eyebrow { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:20px; }
-  .learn-title { font-size:clamp(36px,6vw,64px); font-weight:700; font-family:Georgia,serif; color:var(--text-primary); line-height:1.1; margin-bottom:16px; }
-  .learn-title em { font-style:italic; color:#2C3E6B; }
-  .learn-sub { font-size:clamp(17px,2.5vw,20px); color:var(--text-primary); max-width:580px; margin:0 auto; line-height:1.6; }
+  .learn-wrap { max-width: 880px; margin: 0 auto; padding: 0 var(--page-pad) 80px; }
 
   /* ── Plans table (desktop ≥700px) ──
      Features = rows, Plans = columns
@@ -76,7 +69,7 @@
 
   /* ── Mobile plan cards (≤699px) ── */
   .plan-cards { display:none; }
-  @media (max-width:699px) {
+  @media (max-width:768px) {
     .plans-table-wrap { display:none; }
     .plan-cards { display:flex; flex-direction:column; gap:16px; }
     .plan-card-m { border-radius:var(--radius-lg); border:1px solid rgba(44,62,107,0.2); overflow:hidden; }
@@ -102,7 +95,7 @@
 
   /* ── Proof graph ── */
   .proof { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; margin-bottom:64px; }
-  @media (max-width:699px) { .proof { grid-template-columns:1fr; gap:32px; } }
+  @media (max-width:768px) { .proof { grid-template-columns:1fr; gap:32px; } }
   .proof-graph { background:#0d1f1a; border-radius:var(--radius-lg); padding:24px; overflow:hidden; }
   .proof-canvas-wrap { width:100%; position:relative; padding-bottom:75%; /* 4:3 */ }
   .proof-canvas-wrap canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
@@ -127,7 +120,7 @@
   .how-card-body { font-size:16px; color:var(--text-primary); line-height:1.6; }
   /* Mobile: animated single block */
   .how-anim { display:none; }
-  @media (max-width:699px) {
+  @media (max-width:768px) {
     .how-grid { display:none; }
     .how-anim { display:block; }
     .how-anim-box {
@@ -145,7 +138,7 @@
 
   /* ── Loop animated block ── */
   .loop { background:var(--surface-2); border:1px solid rgba(44,62,107,0.2); border-radius:var(--radius-lg); padding:48px 40px; margin-bottom:64px; text-align:center; }
-  @media (max-width:600px) { .loop { padding:32px 20px; } }
+  @media (max-width:768px) { .loop { padding:32px 20px; } }
   .loop-display {
     margin:28px auto 24px; max-width:340px;
     background:#1A2744; border-radius:12px; padding:28px 24px;
@@ -163,13 +156,12 @@
 
 {% block content %}
 
-<div class="learn-hero">
-  <div class="learn-eyebrow">Learning · Mentorship · Improvement</div>
-  <h1 class="learn-title">Get Better.<br><em>Fast.</em></h1>
-  <p class="learn-sub">Two ways to improve. Both start with your score.</p>
-</div>
-
 <div class="learn-wrap">
+
+  <div class="page-header" style="margin-bottom: 56px;">
+    <h1>Get Better. Fast.</h1>
+    <p>Two ways to improve. Both start with your score.</p>
+  </div>
 
   <!-- ── Plans ── -->
   <div class="plans-section">

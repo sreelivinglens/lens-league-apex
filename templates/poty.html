@@ -11,21 +11,7 @@
 
 {% block extra_css %}
 <style>
-.awards-wrap { max-width:860px; margin:0 auto; padding:48px var(--page-pad) 80px; }
-
-.awards-hero { margin-bottom:52px; text-align:center; }
-.awards-hero-eyebrow {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:3px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;
-}
-.awards-hero h1 {
-  font-size:clamp(28px,5vw,44px); font-weight:700; color:var(--text-primary);
-  margin-bottom:16px; line-height:1.15;
-}
-.awards-hero p {
-  font-size:18px; color:var(--text-primary); max-width:580px;
-  margin:0 auto; line-height:1.8;
-}
+.awards-wrap { max-width:880px; margin:0 auto; padding:48px var(--page-pad) 80px; }
 
 .awards-section { margin-bottom:52px; }
 .awards-section-title {
@@ -173,11 +159,9 @@
   .track-card { padding:0; }
   .why-diff-row { grid-template-columns:1fr !important; }
   .why-diff-label { border-right:none !important; border-bottom:1px solid var(--border) !important; }
-}
-@media (max-width:520px) {
   .awards-wrap { padding:32px 16px 60px; }
   .sh-cell.narrow, .sl-cell.narrow { display:none; }
-  .solari-board { max-width:100%; box-sizing:border-box; display:none; }
+  .solari-board { max-width:100%; box-sizing:border-box; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .board-desc-list { margin-top:0; }
   .board-desc-label { color:#2C3E6B; }
 }
@@ -194,11 +178,9 @@
 {% block content %}
 <div class="awards-wrap">
 
-  <!-- Hero -->
-  <div class="awards-hero">
-    <div class="awards-hero-eyebrow">Annual Excellence Award · {{ current_year or '2026' }}</div>
-    <h1>India&#39;s Photography<br>Ranking System</h1>
-    <p>Most awards judge you once, at the end. Your POTY standing updates every time you upload. The Apex DDI Engine scores every image automatically — no entry fee, no submission window, no human bias. A jury verifies the top finalists. Your strongest genre determines your rank.</p>
+  <div class="page-header" style="margin-bottom: 56px;">
+    <h1>India's Photography Ranking System</h1>
+    <p>Your POTY standing updates every time you upload. Scored automatically — no entry fee, no submission window, no human bias.</p>
   </div>
 
   <!-- Why different -->

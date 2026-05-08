@@ -11,24 +11,18 @@
     --mint-border: #C0DD97;
   }
 
-  .pricing-page { max-width: 1000px; margin: 0 auto; padding: 0 var(--page-pad); }
-  
-  /* Hero */
-  .pricing-hero { text-align: center; padding: 40px 0 32px; }
-  .pricing-hero-eyebrow { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 3px; color: var(--slate); text-transform: uppercase; margin-bottom: 12px; }
-  .pricing-hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; color: var(--text-primary); margin-bottom: 12px; line-height: 1.15; }
-  .pricing-hero p { font-size: clamp(15px, 2vw, 17px); color: var(--text-primary); max-width: 600px; margin: 0 auto 28px; line-height: 1.7; }
+  .pricing-page { max-width: 880px; margin: 0 auto; padding: 0 var(--page-pad); }
   
   /* Toggle */
   .pricing-toggle { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 40px; }
-  .toggle-label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; cursor: pointer; transition: .2s; }
+  .toggle-label { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; cursor: pointer; transition: .2s; }
   .toggle-label.active { color: var(--slate); }
   .toggle-switch { position: relative; width: 52px; height: 28px; cursor: pointer; }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; transition: .3s; }
   .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: var(--gold); border-radius: 50%; transition: .3s; }
   input:checked + .toggle-slider:before { transform: translateX(24px); }
-  .save-badge { font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 6px; }
+  .save-badge { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 6px; }
 
   /* Plan Rows */
   .plans-section { margin-bottom: 48px; }
@@ -37,33 +31,33 @@
   .plan-row.featured { border: 2px solid var(--gold); background: rgba(245, 197, 24, 0.03); }
   .plan-row.greyed { opacity: 0.5; pointer-events: none; }
   .plan-icon { font-size: 28px; }
-  .plan-for { font-size: 15px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
+  .plan-for { font-size: 16px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
   .plan-name { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .plan-sub { font-size: 15px; color: var(--text-primary); }
+  .plan-sub { font-size: 16px; color: var(--text-primary); }
   .plan-images { text-align: center; }
   .plan-images strong { display: block; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .plan-images-label { font-size: 15px; color: var(--text-primary); white-space: nowrap; }
+  .plan-images-label { font-size: 16px; color: var(--text-primary); white-space: nowrap; }
   .plan-price { text-align: right; }
   .plan-amount { font-size: 32px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .plan-period { font-size: 15px; color: var(--text-primary); margin-top: 2px; }
-  .plan-cta { display: inline-block; padding: 12px 24px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: .2s; }
+  .plan-period { font-size: 16px; color: var(--text-primary); margin-top: 2px; }
+  .plan-cta { display: inline-block; padding: 12px 24px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: .2s; }
   .plan-cta.primary { background: var(--slate); color: #fff; border: none; }
   .plan-cta.primary:hover { opacity: .85; }
   .plan-cta.gold { background: var(--gold); color: #000; border: none; }
   .plan-cta.gold:hover { opacity: .85; }
   .plan-cta.secondary { background: transparent; color: var(--slate); border: 1px solid var(--slate); }
   .plan-cta.secondary:hover { background: rgba(44, 62, 107, 0.05); }
-  .plan-mobile-meta { display: none; font-size: 15px; color: var(--text-primary); margin-top: 6px; font-weight: 600; }
+  .plan-mobile-meta { display: none; font-size: 16px; color: var(--text-primary); margin-top: 6px; font-weight: 600; }
 
   /* What You Can Enter */
   .compete-section { margin-bottom: 48px; }
-  .section-label { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
+  .section-label { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
   .compete-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .compete-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; display: flex; gap: 12px; align-items: flex-start; }
   .compete-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
   .compete-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
   .compete-desc { font-size: 16px; color: var(--text-primary); line-height: 1.6; margin-bottom: 6px; }
-  .compete-pill { display: inline-block; font-size: 15px; font-weight: 600; padding: 4px 10px; border-radius: 99px; border: 1px solid; }
+  .compete-pill { display: inline-block; font-size: 16px; font-weight: 600; padding: 4px 10px; border-radius: 99px; border: 1px solid; }
   .pill-open { background: var(--mint); color: #27500A; border-color: var(--mint-border); }
   .pill-soon { background: var(--surface-3); color: var(--text-secondary); border-color: var(--border-secondary); }
 
@@ -71,12 +65,12 @@
   .topup-section { margin-bottom: 48px; }
   .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .topup-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
-  .topup-name { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .topup-desc { font-size: 15px; color: var(--text-primary); }
+  .topup-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+  .topup-desc { font-size: 16px; color: var(--text-primary); }
   .topup-price { font-size: 24px; font-weight: 700; color: var(--text-primary); }
 
   /* FAQ */
-  .faq-section { max-width: 720px; margin: 0 auto 64px; }
+  .faq-section { max-width: 880px; margin: 0 auto 64px; }
   .faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; }
   .faq-q { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .faq-a { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
@@ -94,10 +88,9 @@
     .topup-card { flex-direction: column; align-items: stretch; gap: 16px; }
     .topup-card > div:last-child { flex-direction: column; gap: 12px; }
     .topup-card .plan-cta { width: 100%; }
-    .pricing-hero { padding: 32px 0 24px; }
     .pricing-toggle { margin-bottom: 32px; }
-    .toggle-label { font-size: 14px; letter-spacing: 1px; }
-    .save-badge { font-size: 14px; padding: 2px 6px; }
+    .toggle-label { font-size: 16px; letter-spacing: 1px; }
+    .save-badge { font-size: 16px; padding: 2px 6px; }
   }
 </style>
 {% endblock %}
@@ -105,10 +98,9 @@
 {% block content %}
 <div class="pricing-page">
 
-  <div class="pricing-hero">
-    <div class="pricing-hero-eyebrow">Simple, honest pricing</div>
-    <h1>Two Leagues.<br>One Scientific Standard.</h1>
-    <p>Get 3 free scored images to assess your photography. No credit card. When you're ready to compete, pick your League.</p>
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1>Two Leagues. One Scientific Standard.</h1>
+    <p>Get 3 free scored images to start. No credit card. When you're ready to compete, pick your League.</p>
   </div>
 
   <div class="pricing-toggle">
@@ -274,7 +266,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
           <div class="topup-price">₹99</div>
-          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:14px;">Purchase →</a>
+          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:16px;">Purchase →</a>
         </div>
       </div>
 

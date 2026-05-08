@@ -46,7 +46,7 @@
     text-align: center; font-size: 24px; color: var(--text-secondary);
     margin: -8px 0; opacity: 0.4;
   }
-  @media (min-width: 641px) {
+  @media (min-width: 769px) {
     .steps-row { max-width: 900px; }
   }
 
@@ -65,9 +65,9 @@
     margin-bottom: 28px;
   }
   .ddi-dims { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
-  @media (max-width: 600px) { .ddi-dims { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 768px) { .ddi-dims { grid-template-columns: repeat(3,1fr); } }
   .ddi-dim-labels { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-top: 16px; text-align: center; }
-  @media (max-width: 600px) { .ddi-dim-labels { display: none; } }
+  @media (max-width: 768px) { .ddi-dim-labels { display: none; } }
   .ddi-dim-card {
     text-align: center; padding: 16px 8px;
     background: var(--surface-3); border-radius: var(--radius-sm);
@@ -77,7 +77,7 @@
   .ddi-dim-bar { height: 4px; border-radius: 2px; background: var(--border); margin: 6px auto 8px; max-width: 48px; }
   .ddi-dim-fill { height: 4px; border-radius: 2px; }
   .ddi-dim-name { font-family: var(--font-mono); font-size: 16px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
-  @media (max-width: 600px) { 
+  @media (max-width: 768px) { 
     .ddi-dim-name { font-size: 16px; letter-spacing: 0px; } 
     .ddi-dim-card { padding: 12px 4px; }
   }
@@ -100,7 +100,7 @@
   .tier-range.dark { color: #FFFFFF; }
   .tier-desc { font-size: 16px; color: var(--text-muted); line-height: 1.5; }
   .tier-desc.dark { color: rgba(255,255,255,0.65); }
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .tier-block { grid-template-columns: 120px 1fr; gap: 10px; padding: 14px 16px; }
     .tier-desc { grid-column: 1 / -1; padding-top: 2px; }
   }
@@ -125,7 +125,7 @@
 
   /* ── Section 5: Pricing ── */
   .pricing-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-  @media (max-width: 600px) { 
+  @media (max-width: 768px) { 
     .pricing-cards { grid-template-columns: 1fr; }
     .pricing-features { display: none; }
     .pricing-mobile-summary { display: block !important; }
@@ -146,7 +146,7 @@
 
   /* ── Section 6: POTY ── */
   .poty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
-  @media (max-width: 640px) { .poty-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 768px) { .poty-grid { grid-template-columns: repeat(2,1fr); } }
   .poty-genre-card {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
@@ -168,7 +168,7 @@
 
   /* ── Section 7: RAW ── */
   .raw-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-  @media (max-width: 640px) { .raw-steps { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) { .raw-steps { grid-template-columns: 1fr; } }
   .raw-step {
     background: var(--surface-2); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 24px 20px; text-align: center;
