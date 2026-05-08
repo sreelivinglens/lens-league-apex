@@ -20,20 +20,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* ── Hero Image ── */
 .sl-hero-img-wrap {
   position:relative; width:100%;
-  height:calc(100svh - 64px); min-height:460px; max-height:900px;
+  aspect-ratio:16/7; min-height:320px;
 }
 .sl-hero-img {
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:center; opacity:0.75;
+  object-fit:cover; object-position:center; opacity:1;
 }
-.sl-hero-grad {
-  position:absolute; inset:0;
-  background:linear-gradient(to bottom,
-    rgba(0,0,0,0.10) 0%,
-    rgba(0,0,0,0.08) 30%,
-    rgba(0,0,0,0.72) 60%,
-    rgba(0,0,0,0.96) 100%);
-}
+.sl-hero-grad { display:none; }
 
 /* ── Badge Bar (below image on mobile, overlay on desktop) ── */
 .sl-hero-id {
@@ -75,40 +68,38 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-id-info { display:contents; }
 .sl-hero-sub { white-space:nowrap; }
 
-/* ── Bottom content ── */
-.sl-hero-content {
-  position:absolute; bottom:0; left:0; right:0;
-  padding:clamp(40px,6vw,72px) clamp(18px,5vw,64px) clamp(40px,5vw,72px);
+/* ── Copy row below image ── */
+.sl-hero-copy-row {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px; padding:24px clamp(18px,5vw,48px) 0;
+  max-width:880px; margin:0 auto;
 }
+.sl-hero-copy-text { flex:1; }
 .sl-hero-h1 {
-  font-family:var(--font-mono); font-weight:400; color:rgba(255,255,255,0.62);
-  line-height:1.2; font-size:clamp(18px,2.4vw,28px);
-  text-shadow:0 2px 12px rgba(0,0,0,0.95),0 1px 3px rgba(0,0,0,0.95);
-  margin-bottom:0;
+  font-family:var(--font-mono); font-weight:700; color:#2C3E6B;
+  line-height:1.2; font-size:clamp(18px,2vw,24px);
+  margin-bottom:2px;
 }
 .sl-hero-h2 {
-  font-family:var(--font-mono); font-size:clamp(18px,2.4vw,28px);
-  font-weight:700; color:#FFFFFF; display:block;
-  text-shadow:0 2px 8px rgba(0,0,0,0.95);
-  margin-bottom:0;
+  font-family:var(--font-mono); font-size:clamp(18px,2vw,24px);
+  font-weight:700; color:#1a1a18; display:block; line-height:1.2;
 }
-.sl-hero-h3 { display:none; }
-.sl-hero-cta-wrap {
-  margin-top:clamp(16px,3vw,26px);
-  display:flex; flex-direction:column; align-items:flex-start; gap:7px;
+.sl-hero-btn-wrap {
+  display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+  flex-shrink:0;
 }
 .sl-hero-btn {
   display:inline-block; background:#F5C518; color:#0D0D0B;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1.5px; text-transform:uppercase;
   padding:13px 28px; border-radius:4px; text-decoration:none;
-  transition:opacity 0.2s;
+  transition:opacity 0.2s; white-space:nowrap;
 }
 .sl-hero-btn:hover { opacity:0.88; }
 .sl-hero-sub {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.48); letter-spacing:0.5px;
-  text-shadow:0 1px 4px rgba(0,0,0,0.8);
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  color:#2C3E6B; letter-spacing:0.5px; text-align:right;
+  white-space:nowrap;
 }
 
 /* ── Below fold ── */
@@ -225,67 +216,30 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* MOBILE REDESIGN */
 @media (max-width:768px) {
-  /* 16:9 hero image */
-  .sl-hero-img-wrap {
-    height:auto !important;
-    min-height:0 !important;
-    max-height:none !important;
-    aspect-ratio:16/9;
-  }
-  .sl-hero-img {
-    opacity:1;
-  }
+  /* Hero image 16:9 on mobile */
+  .sl-hero-img-wrap { aspect-ratio:16/9; min-height:0; }
   .sl-hero-grad { display:none; }
-  
-  /* Badge becomes bar below image */
+
+  /* Badge becomes bar below image on mobile */
   .sl-hero-id {
-    position:static;
-    width:100%;
-    background:#2C3E6B;
-    border:none;
-    border-radius:0;
-    padding:14px 16px;
-    gap:12px;
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
+    position:static; width:100%;
+    background:#2C3E6B; border:none; border-radius:0;
+    padding:12px 16px; gap:10px;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
   }
-  .sl-tier-badge {
-    font-size:16px;
-    padding:4px 8px;
-    letter-spacing:1px;
+  .sl-tier-badge { font-size:16px; padding:4px 8px; }
+  .sl-hero-id-score { font-size:16px !important; }
+  .sl-hero-id-meta, .sl-hero-id-by { font-size:16px; letter-spacing:0.5px; }
+
+  /* Copy row stacks on mobile */
+  .sl-hero-copy-row {
+    flex-direction:column; align-items:flex-start;
+    gap:16px; padding:20px 16px 0;
   }
-  .sl-hero-id-score {
-    font-size:20px !important;
-  }
-  .sl-hero-id-meta, .sl-hero-id-by {
-    font-size:16px;
-    letter-spacing:0.5px;
-  }
-  
-  /* CTA content */
-  .sl-hero-content {
-    position:static;
-    background:#2C3E6B;
-    padding:20px 16px 24px;
-    border-top:1px solid rgba(255,255,255,0.08);
-  }
-  .sl-hero-h1 {
-    font-size:22px;
-  }
-  .sl-hero-h2 {
-    font-size:22px;
-  }
-  .sl-hero-btn {
-    width:100%;
-    font-size:16px;
-    padding:12px 24px;
-    text-align:center;
-  }
-  .sl-hero-sub {
-    font-size:16px;
-    text-align:center;
-  }
-  
+  .sl-hero-btn-wrap { align-items:flex-start; width:100%; }
+  .sl-hero-btn { width:100%; text-align:center; font-size:16px; padding:12px 24px; }
+  .sl-hero-sub { text-align:left; font-size:16px; }
+
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
   .sl-gimg-photo { aspect-ratio:3/2; }
 
@@ -298,7 +252,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* Scanner mobile */
   .sl-scan-row { padding:14px 14px; gap:10px; }
   .sl-scan-text { font-size:16px; }
-
 }
 @media (max-width:480px) {
   .sl-below { padding:18px 14px 32px; }
@@ -343,15 +296,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
     {% endif %}
 
-    <div class="sl-hero-content">
+  </div>
+
+  {# ── COPY ROW — below hero image ── #}
+  <div class="sl-below" style="padding-bottom:0;">
+  <div class="sl-hero-copy-row">
+    <div class="sl-hero-copy-text">
       <div class="sl-hero-h1">How good is your photo?</div>
       <span class="sl-hero-h2">Find out in minutes.</span>
-      <div class="sl-hero-cta-wrap">
-        <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-           class="sl-hero-btn">Score My Photo Now &rarr;</a>
-        <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
-      </div>
     </div>
+    <div class="sl-hero-btn-wrap">
+      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+         class="sl-hero-btn">Score My Photo Now &rarr;</a>
+      <span class="sl-hero-sub">Free &nbsp;&middot;&nbsp; First 3 scored free &nbsp;&middot;&nbsp; No card required</span>
+    </div>
+  </div>
   </div>
 
   {# ── BELOW FOLD ── #}
