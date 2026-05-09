@@ -1,22 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Shutter League — How good is your photograph, really?{% endblock %}
+{% block title %}Shutter League — Honest photography feedback. One improvement at a time.{% endblock %}
 
 {% block extra_head %}
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="description" content="We cracked the Wow factor. Find out if your photo has it.">
+<meta name="description" content="200 years of photography. First honest improvement loop. Find out if your photo has it.">
 {% endblock %}
 
 {% block extra_css %}
 <style>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    DESIGN TOKENS
-   Gold #F5C518       — dark backgrounds only
-   Slate #2C3E6B      — light/cream backgrounds only (10.46:1 on white)
-   Navy #1A2744       — all dark sections (never black)
-   Cream #FEFCF8      — page bg
-   Dark text #1a1a18
+   Gold  #F5C518  — dark backgrounds ONLY, never cream/light
+   Navy  #1A2744  — all dark sections, never black
+   Slate #2C3E6B  — light/cream backgrounds only
+   Cream #FEFCF8  — page background
+   Dark  #1a1a18  — all body text
+   All fonts ≥16px · All contrast ≥7.0:1 AAA
+   Border radius: 0 sections · 2px cards/buttons
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
@@ -24,7 +26,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
    HERO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-hero { position:relative; width:100%; overflow:hidden; background:#1A2744; }
-
 .sl-hero-img-wrap {
   position:relative; width:100%;
   height:calc(100svh - 64px); min-height:480px; max-height:900px;
@@ -39,11 +40,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.10) 18%,
     rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.95) 100%);
 }
-
-/* ── Hero badge
-   Desktop: absolute bottom-right of .sl-hero (image corner)
-   Mobile: static row — see 768px overrides
-── */
 .sl-hero-badge {
   position:absolute; bottom:0; right:0; z-index:6;
   display:inline-flex; align-items:center; gap:8px;
@@ -64,18 +60,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   color:rgba(255,255,255,0.92); letter-spacing:1px; white-space:nowrap;
 }
-.sl-badge-dot { color:rgba(255,255,255,0.28); font-size:13px; margin:0 1px; }
+.sl-badge-dot { color:rgba(255,255,255,0.28); font-size:14px; margin:0 1px; }
 .sl-badge-meta {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(255,255,255,0.52); letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
+  color:rgba(255,255,255,0.72); letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
 }
 .sl-badge-by {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(245,197,24,0.72); letter-spacing:0.5px;
+  color:rgba(245,197,24,0.82); letter-spacing:0.5px;
   max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-
-/* ── Hero copy — desktop overlay ── */
 .sl-hero-content {
   position:absolute; bottom:0; left:0; right:0; z-index:5;
   padding:clamp(32px,5vw,64px) clamp(20px,5vw,64px) clamp(60px,7vw,90px);
@@ -84,28 +78,31 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
   font-size:clamp(22px,3.2vw,44px); line-height:1.18;
   text-shadow:0 2px 16px rgba(0,0,0,0.98), 0 1px 4px rgba(0,0,0,0.98), 0 0 40px rgba(0,0,0,0.85);
-  margin-bottom:6px; max-width:640px;
+  margin-bottom:8px; max-width:640px;
 }
 .sl-hero-sub {
   font-family:var(--font-mono); font-size:clamp(16px,1.6vw,20px); font-weight:400;
-  color:rgba(255,255,255,0.90); text-shadow:0 1px 8px rgba(0,0,0,0.98), 0 0 24px rgba(0,0,0,0.90);
-  max-width:480px; line-height:1.4; display:block; margin-bottom:0;
+  color:rgba(255,255,255,0.90);
+  text-shadow:0 1px 8px rgba(0,0,0,0.98), 0 0 24px rgba(0,0,0,0.90);
+  max-width:520px; line-height:1.5; display:block; margin-bottom:0;
+  text-align:justify;
 }
 .sl-hero-cta {
-  margin-top:clamp(16px,2.5vw,24px);
+  margin-top:clamp(16px,2.5vw,28px);
   display:flex; align-items:center; gap:20px; flex-wrap:nowrap;
 }
 .sl-hero-btn {
   display:inline-block; background:#F5C518; color:#0D0D0B;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1.5px; text-transform:uppercase;
-  padding:14px 28px; border-radius:4px; text-decoration:none;
+  font-family:var(--font-mono); font-size:18px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:16px 32px; border-radius:2px; text-decoration:none;
   transition:opacity 0.2s; white-space:nowrap; flex-shrink:0;
 }
 .sl-hero-btn:hover { opacity:0.88; }
 .sl-hero-micro {
   font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.70); text-shadow:0 1px 6px rgba(0,0,0,0.98), 0 0 20px rgba(0,0,0,0.90);
+  color:rgba(255,255,255,0.82);
+  text-shadow:0 1px 6px rgba(0,0,0,0.98), 0 0 20px rgba(0,0,0,0.90);
   white-space:nowrap; flex-shrink:0;
 }
 .sl-hero-caption {
@@ -116,367 +113,291 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TRUST BAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-trust {
+  background:#1a1a18; padding:14px 48px;
+  display:flex; align-items:center; justify-content:center;
+  flex-wrap:wrap; gap:6px 28px;
+}
+.sl-trust-item {
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.82); letter-spacing:1px; text-transform:uppercase;
+}
+.sl-trust-dot { color:rgba(255,255,255,0.28); font-size:14px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    BELOW FOLD
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-below { background:#FEFCF8; }
-.sl-below-inner {
-  max-width:880px; margin:0 auto;
-  padding:clamp(24px,4vw,48px) clamp(20px,5vw,48px) clamp(40px,5vw,56px);
-}
+.sl-below-inner { max-width:900px; margin:0 auto; padding:80px 48px 88px; }
 
-/* ── Statement ── */
-.sl-statement {
-  background:#1A2744; border-left:3px solid #F5C518;
-  border-radius:0 6px 6px 0; padding:22px 26px; margin-bottom:28px;
+.sl-eyebrow {
+  font-family:var(--font-mono); font-size:16px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase;
+  color:#1a1a18; margin-bottom:16px; display:block;
 }
-.sl-statement-text {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.80); line-height:1.7; font-style:italic;
+.sl-eyebrow-light { color:rgba(26,26,24,0.65); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 1 — 200 YEARS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-statement { margin-bottom:80px; }
+.sl-stmt-num {
+  font-family:var(--font-mono); font-size:108px; font-weight:700; color:#1A2744;
+  line-height:0.9; display:block; margin-bottom:8px;
 }
-.sl-statement-punch {
+.sl-stmt-since {
+  font-family:var(--font-mono); font-size:18px; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; color:#1a1a18;
+  display:block; margin-bottom:32px;
+}
+.sl-stmt-body {
+  font-family:var(--font-mono); font-size:19px; color:#1a1a18;
+  line-height:1.78; text-align:justify; margin-bottom:28px;
+}
+.sl-stmt-punch {
+  font-family:var(--font-mono); font-size:24px; font-weight:700; color:#1a1a18;
+  display:block; line-height:1.3;
+  border-left:4px solid #2C3E6B; padding-left:20px; margin-bottom:32px;
+}
+.sl-stmt-rule { border:none; border-top:2px solid #1A2744; margin:0 0 20px; }
+.sl-eye-line {
   font-family:var(--font-mono); font-size:20px; font-weight:700;
-  color:#F5C518; display:block; margin-top:10px;
+  color:#1A2744; line-height:1.4; display:block;
+}
+.sl-eye-line .hl { color:#FFFFFF; background:#1A2744; padding:2px 10px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BEAT 2 — HOW IT WORKS
+   Desktop: 2-col grid
+   Mobile: single merged container
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-loop { margin-bottom:80px; }
+.sl-loop-h2 {
+  font-family:var(--font-mono); font-size:clamp(22px,2.6vw,28px); font-weight:700;
+  color:#1a1a18; line-height:1.25; margin-bottom:14px;
+}
+.sl-loop-sub {
+  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
+  line-height:1.78; text-align:justify; margin-bottom:36px;
+}
+/* Desktop: 2 columns */
+.sl-loop-steps {
+  display:grid; grid-template-columns:repeat(2,1fr);
+}
+.sl-loop-step {
+  padding:28px 28px 26px;
+  border:1px solid rgba(26,26,24,0.12);
+  border-right:none; background:#FFFFFF;
+  position:relative; border-radius:0;
+}
+.sl-loop-step:last-child { border-right:1px solid rgba(26,26,24,0.12); }
+.sl-loop-arrow {
+  position:absolute; top:50%; right:-13px; z-index:2;
+  font-size:18px; color:rgba(26,26,24,0.30);
+  transform:translateY(-50%); background:#FFFFFF; padding:0 3px;
+}
+.sl-loop-num {
+  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
+  letter-spacing:2px; margin-bottom:14px; display:block;
+}
+.sl-loop-title {
+  font-family:var(--font-mono); font-size:18px; font-weight:700;
+  color:#1a1a18; margin-bottom:10px; line-height:1.4; text-align:justify;
+}
+.sl-loop-desc {
+  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
+  line-height:1.75; text-align:justify;
+}
+.sl-hive-note {
+  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
+  margin-top:24px; line-height:1.78; text-align:justify;
+  border-left:3px solid #2C3E6B; padding-left:20px;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 1 — THREE PILLARS
-   Desktop: 3-col grid
-   Mobile: single animated card carousel
+   BEAT 3 — SCORE SECTION (CREAM)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-pillars-section { margin-bottom:28px; }
-.sl-section-eyebrow {
+.sl-score-section {
+  background:#FEFCF8; border:1px solid rgba(26,26,24,0.10);
+  border-radius:0; padding:44px 44px 38px; margin-bottom:80px;
+}
+.sl-score-ey {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase;
-  color:#2C3E6B; margin-bottom:14px; /* SLATE BLUE */
+  letter-spacing:3px; text-transform:uppercase;
+  color:#1a1a18; margin-bottom:14px; display:block;
 }
-
-/* Desktop grid — hidden on mobile */
-.sl-pillars {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  border:1px solid rgba(44,62,107,0.13); border-radius:8px;
-  overflow:hidden; background:#FFFFFF;
+.sl-score-h2 {
+  font-family:var(--font-mono); font-size:clamp(22px,2.4vw,26px); font-weight:700;
+  color:#1a1a18; line-height:1.3; margin-bottom:14px;
 }
-.sl-pillar {
-  padding:20px 20px 22px;
-  border-right:1px solid rgba(44,62,107,0.10);
-  position:relative;
+.sl-score-body {
+  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
+  line-height:1.78; text-align:justify; margin-bottom:28px;
 }
-.sl-pillar:last-child { border-right:none; background:rgba(44,62,107,0.03); }
-.sl-pillar:last-child::after {
-  content:'NEW'; position:absolute; top:12px; right:12px;
-  font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px;
-  background:#2C3E6B; color:#FFFFFF; padding:2px 6px; border-radius:2px;
+.sl-emotion-block {
+  background:#2C3E6B; border-radius:0; padding:26px 28px; margin-bottom:20px;
 }
-.sl-pillar-num {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:rgba(44,62,107,0.28); letter-spacing:1px; margin-bottom:7px;
+.sl-emotion-label {
+  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#FFFFFF;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; display:block;
 }
-.sl-pillar-q {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; background:#1A2744;
-  display:inline-block; padding:3px 8px; border-radius:2px;
-  margin-bottom:10px; line-height:1.35;
+.sl-emotion-text {
+  font-family:var(--font-mono); font-size:17px; color:#FFFFFF;
+  line-height:1.75; text-align:justify;
 }
-.sl-pillar-ans {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.65); line-height:1.6; margin-bottom:12px;
-}
-.sl-pillar-tags { display:flex; flex-wrap:wrap; gap:5px; }
-.sl-pillar-tag {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:#2C3E6B; background:rgba(44,62,107,0.08); /* SLATE BLUE */
-  border-radius:2px; padding:2px 7px; white-space:nowrap;
-}
-
-/* Mobile carousel — hidden on desktop, shown on mobile */
-.sl-carousel-wrap { display:none; }
-.sl-carousel-viewport { overflow:hidden; border-radius:8px; }
-.sl-carousel-track {
-  display:flex; transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-.sl-carousel-slide {
-  min-width:100%; flex-shrink:0;
-  background:#FFFFFF; border:1px solid rgba(44,62,107,0.13);
-  border-radius:8px; padding:20px 20px 22px; position:relative;
-}
-.sl-carousel-slide.last-slide { background:rgba(44,62,107,0.03); }
-.sl-carousel-slide.last-slide::after {
-  content:'NEW'; position:absolute; top:12px; right:12px;
-  font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px;
-  background:#2C3E6B; color:#FFFFFF; padding:2px 6px; border-radius:2px;
-}
-.sl-carousel-dots {
-  display:flex; gap:7px; justify-content:center; margin-top:12px;
-}
-.sl-cdot {
-  width:8px; height:8px; border-radius:50%; cursor:pointer;
-  background:rgba(44,62,107,0.18); border:none; padding:0;
-  transition:background 0.2s, transform 0.2s;
-}
-.sl-cdot.active { background:#2C3E6B; transform:scale(1.2); } /* SLATE BLUE */
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 2 — THE HONEST MIRROR
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-wow {
-  background:#1A2744; border-radius:8px; /* NAVY not black */
-  padding:26px 26px 22px; margin-bottom:28px;
-}
-.sl-wow-eyebrow {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase;
-  color:rgba(245,197,24,0.72); margin-bottom:8px; /* GOLD on navy */
-}
-.sl-wow-h2 {
-  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,22px); font-weight:700;
-  color:#FFFFFF; line-height:1.3; margin-bottom:6px;
-}
-.sl-wow-sub {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.62); line-height:1.65; margin-bottom:20px; max-width:540px;
-}
-
-/* Score card */
-.sl-scorecard {
-  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
-  border-radius:6px; padding:18px 18px 16px; margin-bottom:16px;
-}
-
-/* Desktop: 5 columns */
-.sl-scorecard-dims {
-  display:grid; grid-template-columns:repeat(5,1fr);
-  gap:10px; margin-bottom:14px;
-}
-.sl-dim { display:flex; flex-direction:column; align-items:center; gap:5px; }
-.sl-dim-label {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.45); letter-spacing:0.5px;
-  text-transform:uppercase; text-align:center; white-space:nowrap;
-}
-.sl-dim-bar {
-  width:100%; height:3px; background:rgba(255,255,255,0.12);
-  border-radius:2px; overflow:hidden;
-}
-.sl-dim-fill { height:100%; border-radius:2px; background:#F5C518; }
-.sl-dim-score {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; line-height:1;
-}
-/* AQ — soul dimension highlight */
-.sl-dim-aq {
-  background:rgba(245,197,24,0.10); border-radius:4px;
-  padding:7px 5px 5px; border:1px solid rgba(245,197,24,0.28);
-}
-.sl-dim-aq .sl-dim-label { color:rgba(245,197,24,0.82); }
-.sl-dim-aq .sl-dim-fill  { background:#FFFFFF; }
-.sl-dim-aq .sl-dim-score { color:#FFFFFF; font-size:18px; }
-
-/* Soul bonus — AAA: white text on navy = 15:1 contrast */
 .sl-soul-bonus {
-  display:flex; align-items:flex-start; gap:10px;
-  background:rgba(245,197,24,0.09); border:1px solid rgba(245,197,24,0.22);
-  border-radius:4px; padding:12px 14px;
+  display:flex; align-items:flex-start; gap:14px;
+  background:rgba(44,62,107,0.08); border-left:4px solid #2C3E6B;
+  border-radius:0; padding:20px 22px; margin-bottom:22px;
 }
-.sl-soul-icon { font-size:16px; color:#F5C518; flex-shrink:0; margin-top:2px; }
+.sl-soul-icon { font-size:18px; color:#2C3E6B; flex-shrink:0; margin-top:2px; }
 .sl-soul-text {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.90); line-height:1.65; /* AAA on #1A2744 */
+  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
+  line-height:1.68; text-align:justify;
 }
-.sl-soul-text strong { color:#F5C518; font-weight:400; }
-
-/* AQ explanation (when soul bonus not active) */
+.sl-soul-text strong { color:#2C3E6B; font-weight:700; }
 .sl-aq-explain {
-  display:flex; align-items:flex-start; gap:10px;
-  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
-  border-radius:4px; padding:12px 14px;
+  display:flex; align-items:flex-start; gap:14px;
+  background:rgba(44,62,107,0.05); border-left:4px solid rgba(44,62,107,0.30);
+  border-radius:0; padding:20px 22px; margin-bottom:22px;
 }
 .sl-aq-explain-text {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.70); line-height:1.65;
+  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
+  line-height:1.68; text-align:justify;
 }
-.sl-aq-explain-text strong { color:rgba(245,197,24,0.75); font-weight:400; }
-
-/* Heart line — "We rate your heart" */
-.sl-heart-line {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:rgba(255,255,255,0.60);
-  border-top:1px solid rgba(255,255,255,0.08); padding-top:14px;
+.sl-aq-explain-text strong { color:#2C3E6B; font-weight:700; }
+.sl-score-foot {
+  font-family:var(--font-mono); font-size:17px; font-weight:700; color:#1a1a18;
+  border-top:1px solid rgba(26,26,24,0.12); padding-top:20px;
   display:flex; align-items:center; justify-content:space-between;
   flex-wrap:wrap; gap:12px;
 }
-.sl-heart-line em { color:#F5C518; font-style:normal; }
-.sl-science-link {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(245,197,24,0.55); text-decoration:none; white-space:nowrap;
+.sl-score-foot em { color:#2C3E6B; font-style:normal; }
+.sl-sci-link {
+  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
+  text-decoration:none; transition:opacity 0.18s;
 }
-.sl-science-link:hover { color:rgba(245,197,24,0.85); }
+.sl-sci-link:hover { opacity:0.75; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 3 — YOUR SCORE GROWS
-   (formerly "The Learning Arc" — renamed for clarity)
+   MENTORS — full-width warm section
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-arc { margin-bottom:28px; }
-.sl-arc-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.sl-arc-step {
-  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
-  border-radius:6px; padding:18px 18px 16px; position:relative;
+.sl-mentors-wrap {
+  background:#F0EDE6;
+  border-top:1px solid rgba(26,26,24,0.10);
+  border-bottom:1px solid rgba(26,26,24,0.10);
+  padding:72px 0 68px;
 }
-.sl-arc-step.sl-arc-final {
-  background:#1A2744; border-color:rgba(245,197,24,0.20); /* NAVY not black */
-}
-/* Score number — the visual hook */
-.sl-arc-score {
-  font-family:var(--font-mono); font-size:28px; font-weight:700;
-  color:rgba(44,62,107,0.18); letter-spacing:-0.5px;
-  margin-bottom:6px; line-height:1;
-}
-.sl-arc-final .sl-arc-score { color:rgba(245,197,24,0.22); font-size:28px; }
-.sl-arc-title {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#1a1a18; margin-bottom:5px;
-}
-.sl-arc-final .sl-arc-title { color:#F5C518; }
-.sl-arc-desc {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.55); line-height:1.55;
-}
-.sl-arc-final .sl-arc-desc { color:rgba(255,255,255,0.48); }
-/* Progress arrow between cards — desktop only */
-.sl-arc-arrow {
-  display:none; /* shown via JS on desktop */
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MENTOR MARKETPLACE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-mentors { margin-bottom:32px; }
+.sl-mentors-inner { max-width:900px; margin:0 auto; padding:0 48px; }
 .sl-mentors-h2 {
-  font-family:var(--font-mono); font-size:clamp(17px,2.2vw,24px); font-weight:700;
-  color:#1a1a18; line-height:1.25; margin-bottom:8px;
+  font-family:var(--font-mono); font-size:clamp(22px,2.6vw,28px); font-weight:700;
+  color:#1a1a18; line-height:1.25; margin-bottom:16px;
+}
+.sl-mentor-diff {
+  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#1a1a18;
+  margin-bottom:28px; padding:20px 24px;
+  background:rgba(26,39,68,0.07); border-left:4px solid #1A2744;
+  line-height:1.5; text-align:justify;
 }
 .sl-mentors-sub {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.55); line-height:1.65; max-width:540px; margin-bottom:20px;
+  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
+  line-height:1.82; margin-bottom:20px; text-align:justify;
 }
-.sl-ddi-bar {
-  background:#1A2744; border-left:3px solid rgba(245,197,24,0.50);
-  border-radius:0 6px 6px 0; padding:16px 20px;
-  display:flex; align-items:flex-start; gap:14px; margin-bottom:22px;
-}
-.sl-ddi-icon { font-size:18px; color:#F5C518; flex-shrink:0; margin-top:1px; }
-.sl-ddi-head {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#FFFFFF; margin-bottom:4px;
-}
-.sl-ddi-body {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.60); line-height:1.6;
-}
-.sl-ddi-body strong { color:#F5C518; font-weight:400; }
 .sl-mentor-grid {
   display:grid; grid-template-columns:repeat(3,1fr);
-  gap:14px; margin-bottom:18px;
+  gap:16px; margin-bottom:28px;
 }
 .sl-mcard {
-  background:#FFFFFF; border:1px solid rgba(44,62,107,0.12);
-  border-radius:8px; overflow:hidden; text-decoration:none;
-  display:flex; flex-direction:column;
-  transition:transform 0.18s, box-shadow 0.18s;
+  background:#FFFFFF; border:1px solid rgba(26,26,24,0.12);
+  border-radius:2px; overflow:hidden; display:flex; flex-direction:column;
+  transition:transform 0.18s, box-shadow 0.18s; text-decoration:none;
 }
-.sl-mcard:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,39,68,0.09); }
+.sl-mcard:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(26,26,24,0.10); }
 .sl-mcard-photo {
-  aspect-ratio:4/3; position:relative; background:#1A2744; /* NAVY */
+  aspect-ratio:4/3; position:relative; background:#1A2744;
   overflow:hidden; display:flex; align-items:center; justify-content:center;
 }
 .sl-mcard-photo img { width:100%; height:100%; object-fit:cover; display:block; }
 .sl-mcard-initials {
-  font-family:var(--font-mono); font-size:28px; font-weight:700;
-  color:rgba(255,255,255,0.10); letter-spacing:2px; user-select:none;
+  font-family:var(--font-mono); font-size:32px; font-weight:700;
+  color:rgba(255,255,255,0.08); letter-spacing:3px; user-select:none;
 }
-.sl-mcard-tier {
-  position:absolute; top:10px; left:10px;
-  background:#F5C518; color:#0D0D0B;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:2px;
-}
-.sl-mcard-score-badge {
+.sl-mcard-level-badge {
   position:absolute; bottom:10px; right:10px;
-  background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.10);
-  border-radius:4px; padding:4px 8px; text-align:right;
+  background:rgba(245,197,24,0.92); color:#0D0D0B;
+  border-radius:2px; padding:4px 10px;
 }
-.sl-mcard-score-val {
-  display:block; font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; line-height:1;
+.sl-mcard-level-val {
+  display:block; font-family:var(--font-mono); font-size:13px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; line-height:1.3;
 }
-.sl-mcard-score-lbl {
-  display:block; font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.38); letter-spacing:0.5px; text-transform:uppercase; margin-top:2px;
+.sl-mcard-body { padding:16px 18px 18px; flex:1; display:flex; flex-direction:column; }
+.sl-mcard-name {
+  font-family:var(--font-mono); font-size:17px; font-weight:700;
+  color:#1a1a18; margin-bottom:4px; text-align:justify;
 }
-.sl-mcard-body { padding:13px 14px 12px; flex:1; display:flex; flex-direction:column; }
-.sl-mcard-name { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
-.sl-mcard-tagline { font-family:var(--font-mono); font-size:16px; font-weight:400; color:rgba(26,26,24,0.50); margin-bottom:10px; line-height:1.4; }
-.sl-mcard-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; flex:1; }
+.sl-mcard-tagline {
+  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
+  margin-bottom:12px; line-height:1.5; text-align:justify;
+}
+.sl-mcard-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; flex:1; }
 .sl-mcard-tag {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:#2C3E6B; background:rgba(44,62,107,0.07); /* SLATE BLUE */
-  border-radius:2px; padding:2px 6px;
+  font-family:var(--font-mono); font-size:14px; color:#2C3E6B;
+  background:rgba(44,62,107,0.08); border-radius:2px; padding:3px 8px;
 }
-.sl-mcard-footer {
-  display:flex; align-items:center; justify-content:space-between;
-  padding-top:10px; border-top:1px solid rgba(44,62,107,0.08);
-}
-.sl-mcard-price { font-family:var(--font-mono); font-size:16px; font-weight:700; color:#1a1a18; }
-.sl-mcard-price span { font-weight:400; color:rgba(26,26,24,0.42); }
+.sl-mcard-footer { padding-top:12px; border-top:1px solid rgba(26,26,24,0.09); }
 .sl-mcard-btn {
-  background:#1A2744; color:#FFFFFF; /* NAVY */
+  background:#1A2744; color:#FFFFFF;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:0.5px; border:none; border-radius:4px;
-  padding:5px 13px; cursor:pointer; text-decoration:none; display:inline-block;
+  border-radius:2px; padding:12px 22px; border:none; cursor:pointer;
+  width:100%; text-align:center; transition:opacity 0.18s;
+  text-decoration:none; display:block;
 }
-.sl-mcard-btn:hover { opacity:0.88; }
-.sl-mentors-cta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.sl-mcard-btn:hover { opacity:0.85; }
+.sl-mentors-cta { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
 .sl-mentors-cta-btn {
-  display:inline-block; background:#2C3E6B; color:#FFFFFF; /* SLATE BLUE */
+  display:inline-block; background:#2C3E6B; color:#FFFFFF;
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   letter-spacing:1px; text-transform:uppercase;
-  padding:12px 22px; border-radius:4px; text-decoration:none; transition:opacity 0.18s;
+  padding:14px 26px; border-radius:2px; text-decoration:none; cursor:pointer;
+  transition:opacity 0.18s;
 }
 .sl-mentors-cta-btn:hover { opacity:0.88; }
 .sl-mentors-cta-note {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(26,26,24,0.45);
+  font-family:var(--font-mono); font-size:16px; color:#1a1a18; text-align:justify;
 }
-
-/* ── Divider ── */
-.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.09); margin:0 0 28px; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 4 — EMOTIONAL CLOSE
+   CLOSE — Navy. Solid gold CTA.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-close {
-  background:#F5C518; border-radius:8px;
-  padding:28px 28px 24px; margin-bottom:32px;
+  background:#1A2744; border-top:4px solid #F5C518;
+  border-radius:0; padding:52px 44px 48px; margin-bottom:60px;
 }
 .sl-close-h2 {
-  font-family:var(--font-mono); font-size:clamp(18px,2.4vw,26px); font-weight:700;
-  color:#0D0D0B; line-height:1.25; margin-bottom:8px;
+  font-family:var(--font-mono); font-size:clamp(26px,3vw,36px); font-weight:700;
+  color:#FFFFFF; line-height:1.25; margin-bottom:16px; text-align:justify;
 }
 .sl-close-sub {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(13,13,11,0.62); line-height:1.65; margin-bottom:20px; max-width:500px;
+  font-family:var(--font-mono); font-size:18px; color:rgba(255,255,255,0.90);
+  line-height:1.75; margin-bottom:36px; text-align:justify;
 }
-.sl-close-btns { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.sl-close-btns { display:flex; flex-direction:column; align-items:stretch; gap:16px; }
 .sl-close-btn {
-  display:inline-block; background:#0D0D0B; color:#F5C518;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1.5px; text-transform:uppercase;
-  padding:13px 26px; border-radius:4px; text-decoration:none;
-  transition:opacity 0.2s; white-space:nowrap;
+  display:block; width:100%;
+  background:#F5C518; color:#0D0D0B;
+  font-family:var(--font-mono); font-size:20px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:22px 36px; border-radius:0; border:none;
+  text-decoration:none; text-align:center; cursor:pointer;
+  transition:opacity 0.18s; -webkit-appearance:none; appearance:none;
 }
-.sl-close-btn:hover { opacity:0.88; }
+.sl-close-btn:hover { opacity:0.90; }
 .sl-close-micro {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(13,13,11,0.45);
+  font-family:var(--font-mono); font-size:16px;
+  color:rgba(255,255,255,0.82); text-align:center;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -484,24 +405,24 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-gallery-label {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase;
-  color:#2C3E6B; margin-bottom:12px; /* SLATE BLUE */
+  letter-spacing:3px; text-transform:uppercase; color:#1a1a18; margin-bottom:6px;
+}
+.sl-gallery-sub {
+  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
+  margin-bottom:16px; text-align:justify;
 }
 .sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .sl-gimg {
-  border-radius:6px; overflow:hidden; background:#1A2744; /* NAVY not black */
-  display:flex; flex-direction:column; text-decoration:none;
+  border-radius:0; overflow:hidden; background:#1A2744;
   border:1px solid rgba(44,62,107,0.18);
+  display:flex; flex-direction:column; text-decoration:none;
 }
 .sl-gimg-photo { position:relative; aspect-ratio:4/3; overflow:hidden; }
-.sl-gimg img {
-  width:100%; height:100%; object-fit:cover; display:block;
-  transition:transform 0.3s ease;
-}
+.sl-gimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease; }
 .sl-gimg:hover img { transform:scale(1.04); }
 .sl-gbar {
   display:flex; align-items:center; justify-content:space-between;
-  padding:6px 10px; background:#1A2744; /* NAVY */
+  padding:7px 10px; background:#1A2744;
   border-top:1px solid rgba(255,255,255,0.07);
 }
 .sl-gbar-left { display:flex; align-items:center; gap:5px; }
@@ -509,15 +430,18 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-family:var(--font-mono); font-size:16px; font-weight:700;
   color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
 }
-.sl-gbar-dot { color:rgba(255,255,255,0.22); font-size:12px; }
+.sl-gbar-dot { color:rgba(255,255,255,0.28); font-size:12px; }
 .sl-gbar-tier {
   font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+  color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
 }
 .sl-gbar-genre {
   font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
 }
+
+/* ── Divider ── */
+.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.10); margin:0 0 60px; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
@@ -525,135 +449,119 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width:768px) {
 
   /* Hero — image becomes 16:9, content drops below */
-  /* Mobile hero: flex column so badge appears below image */
   .sl-hero-img-wrap {
-    height:auto !important; min-height:0 !important;
-    max-height:none !important;
+    height:auto !important; min-height:0 !important; max-height:none !important;
     display:flex !important; flex-direction:column;
-    overflow:visible !important;
-    position:static !important;
+    overflow:visible !important; position:static !important;
   }
-  /* Image sits first, natural 16:9 */
   .sl-hero-img {
-    opacity:1 !important;
-    position:static !important; inset:auto !important;
-    width:100% !important; aspect-ratio:16/9;
-    object-fit:cover; display:block;
+    opacity:1 !important; position:static !important; inset:auto !important;
+    width:100% !important; aspect-ratio:16/9; object-fit:cover; display:block;
   }
   .sl-hero-grad { display:none; }
-
-  /* Badge — static row below image */
   .sl-hero-badge {
     position:static !important; width:100%;
     background:#FEFCF8; border:none; border-radius:0;
     border-bottom:1px solid rgba(44,62,107,0.08);
     padding:10px 16px; gap:7px; flex-wrap:wrap;
-    backdrop-filter:none; -webkit-backdrop-filter:none;
-    z-index:auto;
+    backdrop-filter:none; -webkit-backdrop-filter:none; z-index:auto;
   }
-  .sl-tier-badge {
-    background:#2C3E6B !important; color:#FFFFFF !important; /* SLATE BLUE on cream */
-    font-size:16px;
-  }
+  .sl-tier-badge { background:#2C3E6B !important; color:#FFFFFF !important; font-size:16px; }
   .sl-badge-score { font-size:16px !important; color:#1a1a18 !important; }
   .sl-badge-dot   { color:rgba(44,62,107,0.30) !important; }
-  .sl-badge-meta  { font-size:16px !important; color:rgba(44,62,107,0.55) !important; }
+  .sl-badge-meta  { font-size:16px !important; color:rgba(44,62,107,0.65) !important; }
   .sl-badge-by    { font-size:16px !important; color:#2C3E6B !important; max-width:160px; }
 
-  /* Hero content — static, cream bg */
-  .sl-hero-content {
-    position:static; background:#FEFCF8;
-    padding:20px 16px 24px;
-  }
-  .sl-hero-h1 {
-    font-size:22px; font-weight:700; color:#1a1a18;
-    text-shadow:none; max-width:100%; line-height:1.2;
-  }
-  .sl-hero-sub {
-    font-size:16px; color:#2C3E6B; /* SLATE BLUE on cream */
-    text-shadow:none; max-width:100%; margin-top:5px;
-  }
+  .sl-hero-content { position:static; background:#FEFCF8; padding:20px 16px 24px; }
+  .sl-hero-h1 { font-size:clamp(22px,6vw,30px); color:#1a1a18; text-shadow:none; max-width:100%; line-height:1.2; }
+  .sl-hero-sub { font-size:16px; color:#1a1a18; text-shadow:none; max-width:100%; margin-top:5px; }
   .sl-hero-cta { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
-  .sl-hero-btn  { width:100%; text-align:center; font-size:16px; padding:15px 24px; }
-  /* Micro copy — no overflow, all on one line or wraps gracefully */
-  .sl-hero-micro {
-    font-size:16px; color:rgba(44,62,107,0.50);
-    text-shadow:none; text-align:center;
-    white-space:normal; /* allow wrap on very small screens */
-  }
+  .sl-hero-btn  { width:100%; text-align:center; font-size:16px; padding:16px 24px; }
+  .sl-hero-micro { font-size:16px; color:rgba(26,26,24,0.72); text-shadow:none; text-align:center; white-space:normal; }
   .sl-hero-caption { display:none; }
 
-  /* Statement */
-  .sl-statement { padding:16px 16px; margin-bottom:20px; }
-  .sl-statement-text { font-size:16px; }
-  .sl-statement-punch { font-size:18px; }
+  .sl-trust { padding:14px 16px; gap:5px 16px; }
+  .sl-below-inner { padding:44px 16px 60px; }
 
-  /* Pillars — hide desktop grid, show carousel */
-  .sl-pillars { display:none; }
-  .sl-carousel-wrap { display:block; }
+  /* Beat 1 */
+  .sl-statement { margin-bottom:52px; }
+  .sl-stmt-num { font-size:72px; }
+  .sl-stmt-since { font-size:16px; margin-bottom:20px; }
+  .sl-stmt-body { font-size:17px; }
+  .sl-stmt-punch { font-size:20px; }
+  .sl-eye-line { font-size:18px; }
 
-  /* Score card — 2-row layout on mobile */
-  .sl-scorecard-dims {
-    grid-template-columns:repeat(3,1fr); gap:8px;
+  /* Beat 2 — How it works
+     Mobile: 2 cards merge into ONE container, stacked vertically */
+  .sl-loop { margin-bottom:52px; }
+  .sl-loop-h2 { font-size:22px; }
+  .sl-loop-sub { font-size:17px; margin-bottom:24px; }
+  .sl-loop-steps {
+    grid-template-columns:1fr;
+    border:1px solid rgba(26,26,24,0.12);
+    background:#FFFFFF;
   }
-  /* AQ goes full width on row 2 */
-  .sl-dim-aq {
-    grid-column: span 1; /* stays in grid naturally */
+  .sl-loop-step {
+    border:none;
+    border-bottom:1px solid rgba(26,26,24,0.10);
+    padding:24px 20px;
+    border-right:none !important;
   }
+  .sl-loop-step:last-child { border-bottom:none; }
+  .sl-loop-arrow { display:none; }
+  .sl-loop-desc { font-size:16px; }
+  .sl-hive-note { font-size:16px; }
 
-  /* Wow section */
-  .sl-wow { padding:20px 16px 18px; margin-bottom:20px; }
-  .sl-wow-h2 { font-size:17px; }
-  .sl-wow-sub { font-size:16px; margin-bottom:16px; }
-  .sl-soul-text { font-size:16px; }
+  /* Beat 3 */
+  .sl-score-section { padding:26px 20px 24px; margin-bottom:52px; }
+  .sl-score-h2   { font-size:20px; }
+  .sl-score-body { font-size:16px; }
+  .sl-emotion-text { font-size:16px; }
+  .sl-soul-text  { font-size:16px; }
   .sl-aq-explain-text { font-size:16px; }
-  .sl-heart-line { font-size:16px; flex-direction:column; align-items:flex-start; gap:8px; }
+  .sl-score-foot { font-size:16px; flex-direction:column; align-items:flex-start; gap:10px; }
 
-  /* Arc steps — stack on mobile */
-  .sl-arc-steps { grid-template-columns:1fr; gap:10px; }
-  .sl-arc-score { font-size:24px; }
-  .sl-arc-title { font-size:16px; }
-  .sl-arc-desc  { font-size:16px; }
-
-  /* Mentor */
-  .sl-mentors-h2 { font-size:17px; }
+  /* Mentors */
+  .sl-mentors-wrap { padding:44px 0 40px; }
+  .sl-mentors-inner { padding:0 16px; }
+  .sl-mentors-h2 { font-size:20px; }
   .sl-mentors-sub { font-size:16px; }
-  .sl-ddi-head { font-size:16px; }
-  .sl-ddi-body { font-size:16px; }
-  .sl-mentor-grid { grid-template-columns:1fr; gap:12px; }
-  .sl-mcard-photo { aspect-ratio:16/7; }
+  .sl-mentor-diff { font-size:16px; padding:14px 16px; }
+  .sl-mentor-grid { grid-template-columns:1fr; gap:16px; }
+  .sl-mcard { flex-direction:row; align-items:stretch; }
+  .sl-mcard-photo {
+    width:120px; min-width:120px; aspect-ratio:auto;
+    height:auto; flex-shrink:0; border-radius:0;
+  }
+  .sl-mcard-initials { font-size:22px; }
+  .sl-mcard-level-badge { bottom:8px; right:8px; padding:3px 7px; }
+  .sl-mcard-level-val { font-size:11px; }
+  .sl-mcard-body { padding:14px 14px 14px; }
   .sl-mcard-name    { font-size:16px; }
-  .sl-mcard-tagline { font-size:16px; }
-  .sl-mcard-tag     { font-size:16px; }
-  .sl-mcard-price   { font-size:16px; }
-  .sl-mcard-btn     { font-size:16px; }
-  .sl-mcard-score-val { font-size:16px; }
-  .sl-mcard-score-lbl { font-size:16px; }
-  .sl-mentors-cta-btn { width:100%; text-align:center; font-size:16px; }
-  .sl-mentors-cta-note { font-size:16px; }
+  .sl-mcard-tagline { font-size:15px; margin-bottom:8px; }
+  .sl-mcard-tags { gap:4px; margin-bottom:10px; }
+  .sl-mcard-tag  { font-size:13px; padding:2px 6px; }
+  .sl-mcard-btn  { font-size:15px; padding:10px 14px; }
+  .sl-mentors-cta { flex-direction:column; align-items:stretch; }
+  .sl-mentors-cta-btn { text-align:center; }
 
   /* Close */
-  .sl-close { padding:22px 16px 20px; margin-bottom:24px; }
-  .sl-close-h2  { font-size:19px; }
-  .sl-close-sub { font-size:16px; }
-  .sl-close-btns { flex-direction:column; align-items:stretch; gap:10px; }
-  .sl-close-btn  { width:100%; text-align:center; }
-  .sl-close-micro { font-size:16px; text-align:center; }
+  .sl-close { padding:28px 20px 24px; margin-bottom:40px; }
+  .sl-close-h2  { font-size:22px; }
+  .sl-close-sub { font-size:17px; }
+  .sl-close-btn { font-size:17px; padding:18px 24px; }
 
   /* Gallery */
   .sl-gallery { grid-template-columns:repeat(2,1fr); }
-  .sl-gimg-photo { aspect-ratio:3/2; }
-  .sl-gbar-score { font-size:16px; }
-  .sl-gbar-tier  { font-size:16px; }
-  .sl-gbar-genre { display:none; } /* hide genre on mobile gallery — too crowded */
+  .sl-gbar-genre { display:none; }
 }
 
 @media (max-width:480px) {
-  .sl-below-inner { padding:16px 14px 32px; }
-  .sl-scorecard { padding:14px 12px 12px; }
-  .sl-scorecard-dims { gap:6px; }
-  .sl-dim-label { font-size:16px; letter-spacing:0; }
-  .sl-dim-score { font-size:16px; }
+  .sl-below-inner { padding:36px 14px 52px; }
+  .sl-score-section { padding:22px 16px 20px; }
+  .sl-close { padding:24px 16px 20px; }
+  .sl-mcard-photo { width:100px; min-width:100px; }
+  .sl-mentors-inner { padding:0 14px; }
 }
 </style>
 {% endblock %}
@@ -687,7 +595,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 
   {% else %}
-  {# Fallback — no images yet #}
   <div class="sl-hero-img-wrap">
     <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1A2744,#0D0D0B);"></div>
     <div class="sl-hero-grad"></div>
@@ -701,7 +608,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   {% endif %}
 
   <div class="sl-hero-content">
-    <div class="sl-hero-h1">How good is your photograph, really?</div>
+    <div class="sl-hero-h1">Honest photography feedback.<br>One improvement at a time.</div>
     <span class="sl-hero-sub">We cracked the Wow factor. Find out if your photo has it.</span>
     <div class="sl-hero-cta">
       <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
@@ -713,185 +620,96 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 </div>{# end sl-hero #}
 
+{# ━━━━━━━━━━━━━━━━━━ TRUST BAR ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-trust">
+  <span class="sl-trust-item">RAW verified</span>
+  <span class="sl-trust-dot">·</span>
+  <span class="sl-trust-item">Genre-aware evaluation</span>
+  <span class="sl-trust-dot">·</span>
+  <span class="sl-trust-item">Mentor-guided</span>
+  <span class="sl-trust-dot">·</span>
+  <span class="sl-trust-item">Human-reviewed finals</span>
+  <span class="sl-trust-dot">·</span>
+  <span class="sl-trust-item">Private &amp; secure</span>
+</div>
+
 {# ━━━━━━━━━━━━━━━━━━ BELOW FOLD ━━━━━━━━━━━━━━━━━━ #}
 <div class="sl-below">
 <div class="sl-below-inner">
 
+  {# ━━ BEAT 1 — 200 YEARS ━━ #}
   <div class="sl-statement">
-    <span class="sl-statement-text">For 200 years since the first photograph was taken, there has been no standard to rate the photographer. Chess has ELO. Wine has Parker Points. Photography has likes.</span>
-    <span class="sl-statement-punch">Until now.</span>
+    <span class="sl-stmt-num">200</span>
+    <span class="sl-stmt-since">Years of photography since 1826</span>
+    <p class="sl-stmt-body">Photographers have received two kinds of feedback: flattery and silence. Likes are not feedback. Scores without reasons are not feedback. Feedback is what works, what doesn&#39;t, and what to improve next.</p>
+    <span class="sl-stmt-punch">Photography has never had an honest improvement loop. Until now.</span>
+    <hr class="sl-stmt-rule">
+    <span class="sl-eye-line">The brands rated your gear. <span class="hl">We rate your eye.</span></span>
   </div>
 
-  {# ━━ BEAT 1 — THREE PILLARS ━━ #}
-  <div class="sl-pillars-section">
-    <div class="sl-section-eyebrow">What you get</div>
-
-    {# Desktop grid #}
-    <div class="sl-pillars">
-      <div class="sl-pillar">
-        <div class="sl-pillar-num">01</div>
-        <div class="sl-pillar-q">Is my work actually good?</div>
-        <p class="sl-pillar-ans">Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.</p>
-        <div class="sl-pillar-tags">
-          <span class="sl-pillar-tag">Decisive Moment</span>
-          <span class="sl-pillar-tag">Wonder</span>
-          <span class="sl-pillar-tag">AQ</span>
-          <span class="sl-pillar-tag">Disruption</span>
-          <span class="sl-pillar-tag">DoD</span>
-        </div>
+  {# ━━ BEAT 2 — HOW IT WORKS ━━ #}
+  <div class="sl-loop">
+    <span class="sl-eyebrow">How it works</span>
+    <div class="sl-loop-h2">One improvement. Every time.</div>
+    <p class="sl-loop-sub">Most feedback overwhelms you with everything at once. We give you one thing — the most important one — and let you shoot with it.</p>
+    <div class="sl-loop-steps">
+      <div class="sl-loop-step">
+        <span class="sl-loop-num">01</span>
+        <div class="sl-loop-title">Upload your photograph</div>
+        <p class="sl-loop-desc">Any genre. Any skill level. Camera or phone. You get a score across five dimensions — including emotional impact — and one specific improvement note written the way a senior photographer would say it.</p>
+        <span class="sl-loop-arrow">→</span>
       </div>
-      <div class="sl-pillar">
-        <div class="sl-pillar-num">02</div>
-        <div class="sl-pillar-q">Where do I actually stand?</div>
-        <p class="sl-pillar-ans">Blind ranking — nobody knows whose photo they rate. Your score reflects your photography, not your followers.</p>
-        <div class="sl-pillar-tags">
-          <span class="sl-pillar-tag">Blind peer rating</span>
-          <span class="sl-pillar-tag">India rankings</span>
-          <span class="sl-pillar-tag">Photographer of the Year</span>
-        </div>
-      </div>
-      <div class="sl-pillar">
-        <div class="sl-pillar-num">03</div>
-        <div class="sl-pillar-q">How do I get better?</div>
-        <p class="sl-pillar-ans">Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.</p>
-        <div class="sl-pillar-tags">
-          <span class="sl-pillar-tag">AI mentor</span>
-          <span class="sl-pillar-tag">Human expert</span>
-          <span class="sl-pillar-tag">From &#x20B9;50</span>
-        </div>
+      <div class="sl-loop-step">
+        <span class="sl-loop-num">02</span>
+        <div class="sl-loop-title">Apply it. Shoot again.</div>
+        <p class="sl-loop-desc">Upload your next photograph. Watch your score move. Over ten uploads, a hundred, a year of work — the pattern becomes visible. That pattern is your growth as a photographer.</p>
       </div>
     </div>
-
-    {# Mobile carousel #}
-    <div class="sl-carousel-wrap" id="slCarousel">
-      <div class="sl-carousel-viewport">
-        <div class="sl-carousel-track" id="slCarouselTrack">
-          <div class="sl-carousel-slide">
-            <div class="sl-pillar-num">01</div>
-            <div class="sl-pillar-q">Is my work actually good?</div>
-            <p class="sl-pillar-ans">Scored across 5 dimensions including emotional resonance. The honest answer nobody else will give you.</p>
-            <div class="sl-pillar-tags">
-              <span class="sl-pillar-tag">Decisive Moment</span>
-              <span class="sl-pillar-tag">Wonder</span>
-              <span class="sl-pillar-tag">AQ</span>
-              <span class="sl-pillar-tag">Disruption</span>
-              <span class="sl-pillar-tag">DoD</span>
-            </div>
-          </div>
-          <div class="sl-carousel-slide">
-            <div class="sl-pillar-num">02</div>
-            <div class="sl-pillar-q">Where do I actually stand?</div>
-            <p class="sl-pillar-ans">Blind ranking — nobody knows whose photo they rate. Your score reflects your photography, not your followers.</p>
-            <div class="sl-pillar-tags">
-              <span class="sl-pillar-tag">Blind peer rating</span>
-              <span class="sl-pillar-tag">India rankings</span>
-              <span class="sl-pillar-tag">Photographer of the Year</span>
-            </div>
-          </div>
-          <div class="sl-carousel-slide last-slide">
-            <div class="sl-pillar-num">03</div>
-            <div class="sl-pillar-q">How do I get better?</div>
-            <p class="sl-pillar-ans">Every score includes one specific actionable improvement. Book a master photographer who already has your full DDI breakdown.</p>
-            <div class="sl-pillar-tags">
-              <span class="sl-pillar-tag">AI mentor</span>
-              <span class="sl-pillar-tag">Human expert</span>
-              <span class="sl-pillar-tag">From &#x20B9;50</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="sl-carousel-dots" id="slCarouselDots">
-        <button class="sl-cdot active" data-idx="0" aria-label="Pillar 1"></button>
-        <button class="sl-cdot" data-idx="1" aria-label="Pillar 2"></button>
-        <button class="sl-cdot" data-idx="2" aria-label="Pillar 3"></button>
-      </div>
-    </div>
+    <p class="sl-hive-note">Every evaluation ends with one specific, actionable observation — the thing a senior photographer would notice first. Not a checklist. The one thing that will move your work forward right now.</p>
   </div>
 
-  {# ━━ BEAT 2 — THE HONEST MIRROR ━━ #}
-  <div class="sl-wow">
-    <div class="sl-wow-eyebrow">The Honest Mirror</div>
-    <div class="sl-wow-h2">Can an AI really score something as personal as a photograph?</div>
-    <p class="sl-wow-sub">Yes — because AQ, the soul dimension, measures emotional resonance. An emotionally empty photograph scores lower than an imperfect one that stops you breathing. That is by design.</p>
-
-    <div class="sl-scorecard">
-      <div class="sl-scorecard-dims" id="slScoreCardDims">
-        {% if hero and hero.get_audit %}
-          {% set _a = hero.get_audit() %}
-          {% for mname, mval in _a.get('modules', []) %}
-          <div class="sl-dim {% if mname == 'AQ' %}sl-dim-aq{% endif %}">
-            <div class="sl-dim-label">{{ mname }}</div>
-            <div class="sl-dim-bar"><div class="sl-dim-fill" style="width:{{ (mval / 10 * 100)|int }}%"></div></div>
-            <div class="sl-dim-score">{{ "%.1f"|format(mval) }}{% if mname == 'AQ' %} ✦{% endif %}</div>
-          </div>
-          {% endfor %}
-        {% else %}
-          <div class="sl-dim"><div class="sl-dim-label">DoD</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:82%"></div></div><div class="sl-dim-score">8.2</div></div>
-          <div class="sl-dim"><div class="sl-dim-label">Disruption</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8</div></div>
-          <div class="sl-dim"><div class="sl-dim-label">Dec. Moment</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:90%"></div></div><div class="sl-dim-score">9.0</div></div>
-          <div class="sl-dim"><div class="sl-dim-label">Wonder</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:85%"></div></div><div class="sl-dim-score">8.5</div></div>
-          <div class="sl-dim sl-dim-aq"><div class="sl-dim-label">AQ / Soul</div><div class="sl-dim-bar"><div class="sl-dim-fill" style="width:88%"></div></div><div class="sl-dim-score">8.8 ✦</div></div>
-        {% endif %}
-      </div>
-
-      {% if soul_active %}
-      <div class="sl-soul-bonus">
-        <span class="sl-soul-icon">✦</span>
-        <span class="sl-soul-text">
-          <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.
-        </span>
-      </div>
-      {% else %}
-      <div class="sl-aq-explain">
-        <span class="sl-soul-icon" style="color:rgba(255,255,255,0.35);">◆</span>
-        <span class="sl-aq-explain-text">
-          <strong>AQ — the soul dimension.</strong> Reach AQ ≥ 8.0 and the Soul Bonus removes all technical penalties. Emotional truth matters more than technical perfection.
-        </span>
-      </div>
-      {% endif %}
+  {# ━━ BEAT 3 — SCORE SECTION ━━ #}
+  <div class="sl-score-section">
+    <span class="sl-score-ey">The honest part</span>
+    <div class="sl-score-h2">The score keeps the feedback honest.</div>
+    <p class="sl-score-body">Every photo gets a score. Not to rank you against other photographers — but to give the feedback a spine. Without a score, feedback is just opinion. With a score, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
+    <div class="sl-emotion-block">
+      <span class="sl-emotion-label">Emotional impact</span>
+      <p class="sl-emotion-text">Most systems evaluate sharpness, composition, and light. Ours also evaluates whether a photograph moves people. A technically imperfect photograph that stops you breathing scores higher than a technically clean one that says nothing. That is by design.</p>
     </div>
-
-    <div class="sl-heart-line">
+    {% if soul_active %}
+    <div class="sl-soul-bonus">
+      <span class="sl-soul-icon">✦</span>
+      <span class="sl-soul-text">
+        <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.
+      </span>
+    </div>
+    {% else %}
+    <div class="sl-aq-explain">
+      <span class="sl-soul-icon" style="color:rgba(44,62,107,0.45);">◆</span>
+      <span class="sl-aq-explain-text">
+        <strong>AQ — the soul dimension.</strong> Reach AQ ≥ 8.0 and the Soul Bonus removes all technical penalties. Emotional truth matters more than technical perfection.
+      </span>
+    </div>
+    {% endif %}
+    <div class="sl-score-foot">
       <span>The brands rated your gear. <em>We rate your heart.</em></span>
-      <a href="{{ url_for('science') }}" class="sl-science-link">How the scoring works →</a>
+      <a href="{{ url_for('science') }}" class="sl-sci-link">How the scoring works →</a>
     </div>
   </div>
 
-  {# ━━ BEAT 3 — YOUR SCORE GROWS ━━ #}
-  <div class="sl-arc">
-    <div class="sl-section-eyebrow">Your score grows</div>
-    <div class="sl-arc-steps">
-      <div class="sl-arc-step">
-        <div class="sl-arc-score">5.8</div>
-        <div class="sl-arc-title">Upload 1 — Get your score</div>
-        <p class="sl-arc-desc">46 seconds. 5 dimensions. One specific improvement. No flattery.</p>
-      </div>
-      <div class="sl-arc-step">
-        <div class="sl-arc-score">7.2</div>
-        <div class="sl-arc-title">Upload 10 — See the pattern</div>
-        <p class="sl-arc-desc">Low on Decisive Moment? High AQ but weak DoD? The data shows you exactly where to focus.</p>
-      </div>
-      <div class="sl-arc-step sl-arc-final">
-        <div class="sl-arc-score">8.9</div>
-        <div class="sl-arc-title">Upload 50 — Compete when ready</div>
-        <p class="sl-arc-desc">You upgrade because you feel ready. Not because of a sales pitch.</p>
-      </div>
-    </div>
-  </div>
+</div>{# end sl-below-inner #}
+</div>{# end sl-below #}
 
-  {# ━━ MENTOR MARKETPLACE ━━ #}
-  {% if active_mentors and active_mentors|length >= 3 %}
-  <div class="sl-mentors">
-    <div class="sl-section-eyebrow">Mentor Marketplace</div>
-    <h2 class="sl-mentors-h2">Get your photo reviewed by a master photographer.</h2>
-    <p class="sl-mentors-sub">Your mentor sees your full DDI score before they begin. Precise feedback on exactly what to fix. Written response within 72 hours.</p>
-    <div class="sl-ddi-bar">
-      <span class="sl-ddi-icon">✦</span>
-      <div>
-        <div class="sl-ddi-head">Your mentor already knows where you stand</div>
-        <div class="sl-ddi-body">Full DDI breakdown shared before every session — <strong>Decisive Moment, Wonder, DoD, Disruption, AQ</strong>. No other platform does this.</div>
-      </div>
-    </div>
+{# ━━━━━━━━━━━━━━━━━━ MENTORS ━━━━━━━━━━━━━━━━━━ #}
+{% if active_mentors and active_mentors|length >= 3 %}
+<div class="sl-mentors-wrap">
+  <div class="sl-mentors-inner">
+    <span class="sl-eyebrow sl-eyebrow-light">Get Reviewed by our Mentors</span>
+    <h2 class="sl-mentors-h2">Learn from a photographer who already knows your work. Improve with purpose.</h2>
+    <p class="sl-mentor-diff">No other platform does this. Your mentor arrives prepared.</p>
+    <p class="sl-mentors-sub">The evaluation gives you one improvement. A mentor gives you the conversation behind it.</p>
+    <p class="sl-mentors-sub">Every session begins with your full score already shared. Your mentor knows your technical strengths, your emotional blind spots, and your improvement arc — before they write a single word.</p>
     <div class="sl-mentor-grid">
       {% for mentor in active_mentors[:3] %}
       <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
@@ -901,13 +719,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
           {% else %}
             <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
           {% endif %}
-          <div class="sl-mcard-tier">{{ mentor.tier | title }}</div>
-          {% if mentor.avg_ddi_score %}
-          <div class="sl-mcard-score-badge">
-            <span class="sl-mcard-score-val">{{ "%.2f"|format(mentor.avg_ddi_score) }}</span>
-            <span class="sl-mcard-score-lbl">DDI avg</span>
+          <div class="sl-mcard-level-badge">
+            <span class="sl-mcard-level-val">{{ mentor.tier | title }}</span>
           </div>
-          {% endif %}
         </div>
         <div class="sl-mcard-body">
           <div class="sl-mcard-name">{{ mentor.display_name }}</div>
@@ -918,8 +732,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
             {% endfor %}
           </div>
           <div class="sl-mcard-footer">
-            <div class="sl-mcard-price">&#x20B9;{{ mentor.session_price }} <span>/ review</span></div>
-            <span class="sl-mcard-btn">Book</span>
+            <span class="sl-mcard-btn">Book your Review</span>
           </div>
         </div>
       </a>
@@ -927,19 +740,23 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </div>
     <div class="sl-mentors-cta">
       <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet all mentors →</a>
-      <span class="sl-mentors-cta-note">From &#x20B9;50 &nbsp;·&nbsp; No subscription required &nbsp;·&nbsp; 72-hr feedback</span>
+      <span class="sl-mentors-cta-note">No subscription required &nbsp;·&nbsp; Written within 72 hours</span>
     </div>
   </div>
-  <hr class="sl-divider">
-  {% endif %}
+</div>
+<hr class="sl-divider">
+{% endif %}
 
-  {# ━━ BEAT 4 — EMOTIONAL CLOSE ━━ #}
+{# ━━━━━━━━━━━━━━━━━━ CLOSE + GALLERY ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-below">
+<div class="sl-below-inner">
+
   <div class="sl-close">
     <div class="sl-close-h2">We take your work as seriously as you do.</div>
-    <p class="sl-close-sub">Every serious photographer deserves an honest answer. Not likes. Not club politics. A score with a reason.</p>
+    <p class="sl-close-sub">Every serious photographer deserves an honest answer. Not club politics. A score with a reason and an improvement with a purpose.</p>
     <div class="sl-close-btns">
       <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-close-btn">Start free →</a>
+         class="sl-close-btn">GET MY FIRST SCORE — FREE →</a>
       <span class="sl-close-micro">Free &nbsp;·&nbsp; First 3 scored free &nbsp;·&nbsp; No card required</span>
     </div>
   </div>
@@ -948,6 +765,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   {% set gallery_imgs = carousel_images[1:] %}
   {% if gallery_imgs %}
   <div class="sl-gallery-label">Top scores this week</div>
+  <div class="sl-gallery-sub">Real photographs. Real evaluations. Real members.</div>
   <div class="sl-gallery">
     {% for img in gallery_imgs %}{% if img.thumb_url %}
     <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
@@ -975,62 +793,15 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {% block extra_js %}
 <script>
 (function(){
-  /* ── Mobile pillar carousel ── */
-  var track = document.getElementById('slCarouselTrack');
-  var dots  = document.querySelectorAll('#slCarouselDots .sl-cdot');
-  if(!track || !dots.length) return;
-
-  var cur = 0;
-  var total = dots.length;
-  var timer = null;
-
-  function goTo(idx){
-    cur = (idx + total) % total;
-    track.style.transform = 'translateX(-' + (cur * 100) + '%)';
-    dots.forEach(function(d,i){
-      d.classList.toggle('active', i === cur);
-    });
-  }
-
-  function startAuto(){
-    clearInterval(timer);
-    timer = setInterval(function(){ goTo(cur + 1); }, 3200);
-  }
-
-  /* Dot clicks */
-  dots.forEach(function(d){
-    d.addEventListener('click', function(){
-      goTo(parseInt(d.dataset.idx));
-      startAuto(); /* reset timer on manual tap */
-    });
-  });
-
-  /* Touch swipe support */
-  var startX = 0;
-  track.addEventListener('touchstart', function(e){
-    startX = e.touches[0].clientX;
-    clearInterval(timer);
-  }, {passive:true});
-  track.addEventListener('touchend', function(e){
-    var diff = startX - e.changedTouches[0].clientX;
-    if(Math.abs(diff) > 40) goTo(diff > 0 ? cur + 1 : cur - 1);
-    startAuto();
-  }, {passive:true});
-
-  startAuto();
-
-  /* ── Score card 2-row on mobile ── */
+  /* Score card resize on window change — kept for compatibility */
   function checkDims(){
-    var dims = document.getElementById('slScoreCardDims');
+    var dims=document.getElementById('slScoreCardDims');
     if(!dims) return;
-    if(window.innerWidth <= 768){
-      dims.classList.add('two-row');
-    } else {
-      dims.classList.remove('two-row');
-    }
+    if(window.innerWidth<=768){ dims.classList.add('two-row'); }
+    else { dims.classList.remove('two-row'); }
   }
   checkDims();
-  window.addEventListener('resize', checkDims);
+  window.addEventListener('resize',checkDims);
 })();
 </script>
 {% endblock %}
