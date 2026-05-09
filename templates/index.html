@@ -67,7 +67,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-badge-by {
   font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(245,197,24,0.82); letter-spacing:0.5px;
+  color:#F5C518; letter-spacing:0.5px;
   max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .sl-hero-content {
@@ -137,7 +137,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   letter-spacing:3px; text-transform:uppercase;
   color:#1a1a18; margin-bottom:16px; display:block;
 }
-.sl-eyebrow-light { color:rgba(26,26,24,0.65); }
+.sl-eyebrow-light { color:rgba(26,26,24,0.82); }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    BEAT 1 — 200 YEARS
@@ -437,7 +437,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-gbar-genre {
   font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+  color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
 }
 
 /* ── Divider ── */
@@ -609,7 +609,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   <div class="sl-hero-content">
     <div class="sl-hero-h1">Honest photography feedback.<br>One improvement at a time.</div>
-    <span class="sl-hero-sub">We cracked the Wow factor. Find out if your photo has it.</span>
     <div class="sl-hero-cta">
       <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
          class="sl-hero-btn">Score mine — free →</a>
