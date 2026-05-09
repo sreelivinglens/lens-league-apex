@@ -1074,7 +1074,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </section>
 
 {# ━━━━━━━━━━━━━━━━━━ FEATURE CARDS ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-cards">
+<div class="sl-cards" id="sl-mentors">
 
   <div class="sl-card">
     <img class="sl-card-img"
@@ -1087,7 +1087,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <div class="sl-card-content">
       <div class="sl-card-heading">Grow with a mentor<br>who knows your work.</div>
       <p class="sl-card-body">Personalized guidance based on your scores, strengths, and blind spots.</p>
-      <a href="/mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
+      {# TODO Session 16: Replace with url_for('mentors') once mentor marketplace page is built #}
+      <a href="{{ url_for('index') }}#sl-mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
     </div>
   </div>
 
