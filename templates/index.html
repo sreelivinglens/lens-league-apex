@@ -466,9 +466,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   line-height: 1.3;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   FEATURE CARDS — Mentor / BoW / POTY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* Step inner wrappers — desktop: transparent passthrough, mobile: horizontal layout */
+.sl-loop-step-left {
+  display: contents; /* invisible wrapper on desktop */
+}
+.sl-loop-step-right {
+  display: contents;
+}
 .sl-cards {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -668,68 +672,181 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* Hero */
-  .sl-hero { min-height: 60vw; }
-  .sl-hero-text { top: 24px; left: 20px; max-width: calc(100% - 40px); }
-  .sl-hero-h1 { font-size: 32px; white-space: normal; text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98); }
-  .sl-hero-sub { font-size: 14px; }
-  .sl-hero-btn { font-size: 12px; padding: 12px 22px; }
-  .sl-hero-micro { font-size: 12px; }
-  .sl-coaching { right: 12px; bottom: 12px; width: 180px; padding: 14px 14px 12px; }
-  .sl-co-body { font-size: 12px; }
+  /* ── Hero ── */
+  .sl-hero { min-height: 72vw; }
+  .sl-hero-text {
+    top: 28px; left: 20px;
+    max-width: calc(100% - 40px);
+  }
+  .sl-hero-h1 {
+    font-size: 36px;
+    white-space: normal;
+    line-height: 1.08;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.98) !important;
+  }
+  .sl-hero-sub {
+    font-size: 17px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.98) !important;
+  }
+  .sl-hero-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    padding: 16px 24px;
+  }
+  .sl-hero-micro {
+    font-size: 16px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.98) !important;
+  }
+  /* Hide coaching overlay on mobile — photo must breathe */
+  .sl-coaching { display: none; }
 
-  /* Trust bar */
-  .sl-trust { padding: 20px 16px; flex-wrap: wrap; gap: 16px; }
-  .sl-trust-item { flex: 0 0 calc(50% - 8px); }
+  /* ── Trust bar — 2×2 grid ── */
+  .sl-trust {
+    padding: 24px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 16px;
+  }
+  .sl-trust-item {
+    flex: none;
+    align-items: flex-start;
+    text-align: left;
+    gap: 8px;
+  }
+  .sl-trust-label { font-size: 11px; }
+  .sl-trust-desc { font-size: 13px; }
 
-  /* 200 years */
-  .sl-200 { grid-template-columns: 1fr; padding: 48px 20px; gap: 40px; }
+  /* ── 200 Years — single column ── */
+  .sl-200 {
+    grid-template-columns: 1fr;
+    padding: 72px 20px;
+    gap: 48px;
+  }
   .sl-200-num { font-size: 64px; }
+  .sl-200-label-line { font-size: 11px; }
+  .sl-200-body { font-size: 18px; }
+  .sl-200-body-bold { font-size: 18px; }
   .sl-200-right { padding-left: 0; }
   .sl-200-tagline-1 { font-size: 22px; }
-  .sl-200-tagline-2 { font-size: 26px; }
+  .sl-200-tagline-2 { font-size: 28px; }
 
-  /* Learning loop */
-  .sl-loop { padding: 48px 20px; }
-  .sl-loop-steps { flex-direction: column; align-items: center; gap: 32px; }
+  /* ── Learning loop — horizontal rows per step ── */
+  .sl-loop { padding: 72px 20px; }
+  .sl-loop-heading { font-size: 13px; margin-bottom: 40px; }
+  .sl-loop-steps {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .sl-loop-step {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(26,26,24,0.08);
+  }
+  .sl-loop-step:last-child { border-bottom: none; }
+  .sl-loop-step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    width: 60px;
+  }
+  .sl-loop-step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    width: 64px;
+  }
+  .sl-loop-step-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+  }
+  .sl-loop-num { margin-bottom: 0; }
+  .sl-loop-icon { height: auto; margin-bottom: 0; }
+  .sl-loop-title { font-size: 17px; margin-bottom: 6px; }
+  .sl-loop-desc { font-size: 17px; text-align: left; }
   .sl-loop-arrow { display: none; }
-  .sl-loop-step { width: 100%; max-width: 280px; }
+  .sl-loop-cta { margin-top: 40px; }
 
-  /* Honest part */
-  .sl-honest { grid-template-columns: 1fr; padding: 48px 20px; gap: 40px; }
-  .sl-honest-col { padding: 0; border-right: none !important; border-bottom: 1px solid rgba(26,26,24,0.12); padding-bottom: 32px; }
-  .sl-honest-col:last-child { border-bottom: none; padding-bottom: 0; align-items: flex-start; text-align: left; }
+  /* ── Honest Part + Emotional Impact — single column ── */
+  .sl-honest {
+    grid-template-columns: 1fr;
+    padding: 72px 20px;
+    gap: 0;
+  }
+  .sl-honest-col {
+    padding: 0 0 48px 0;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+    margin-bottom: 48px;
+  }
+  .sl-honest-col:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .sl-honest-heading { font-size: 30px; }
+  .sl-honest-body { font-size: 18px; }
+  .sl-honest-body-bold { font-size: 18px; }
+  .sl-soul-title { font-size: 18px; }
+  .sl-soul-body { font-size: 18px; text-align: left; }
+  .sl-soul-tag1 { font-size: 22px; text-align: left; }
+  .sl-soul-tag2 { font-size: 26px; text-align: left; }
+  .sl-heart-circle { margin-bottom: 16px; }
 
-  /* Feature cards */
+  /* ── Feature cards — stacked full width ── */
   .sl-cards { grid-template-columns: 1fr; }
-  .sl-card { height: 300px; }
+  .sl-card { height: 320px; }
+  .sl-card-heading { font-size: 22px; }
+  .sl-card-body { font-size: 14px; }
 
-  /* Gallery */
-  .sl-gallery-grid { grid-template-columns: repeat(2, 1fr); }
-  .sl-gallery-header { padding: 0 16px 14px; }
+  /* ── Gallery — single column ── */
+  .sl-gallery-wrap { padding: 24px 0 0; }
+  .sl-gallery-header { padding: 0 20px 16px; }
+  .sl-gallery-title { font-size: 12px; }
+  .sl-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .sl-gitem { aspect-ratio: 16/9; } /* landscape on mobile single col */
+  .sl-gitem-score { font-size: 28px; }
+  .sl-gitem-title { font-size: 13px; }
+  .sl-gitem-by { font-size: 12px; }
 
-  /* Manifesto */
-  .sl-manifesto { grid-template-columns: 1fr; padding: 40px 20px; gap: 28px; }
-  .sl-mf-col3 { display: none; }
-
-  /* Footer bar */
-  .sl-footer-bar { padding: 24px 20px; }
-  .sl-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start; }
-  .sl-footer-nav { flex-wrap: wrap; gap: 12px 20px; }
-
-  /* text-shadow zeroed on mobile for all hero text */
-  .sl-hero-h1 { text-shadow: 0 1px 8px rgba(0,0,0,0.98) !important; }
-  .sl-hero-sub { text-shadow: 0 1px 6px rgba(0,0,0,0.98) !important; }
-  .sl-hero-micro { text-shadow: 0 1px 4px rgba(0,0,0,0.98) !important; }
+  /* ── Manifesto strip ── */
+  .sl-manifesto {
+    grid-template-columns: 1fr;
+    padding: 48px 20px;
+    gap: 24px;
+  }
+  .sl-mf-col1 { gap: 16px; }
+  .sl-mf-tagline { font-size: 20px; }
+  .sl-mf-col3 { font-size: 16px; }
 }
 
+/* ── 480px tightening ── */
 @media (max-width: 480px) {
-  .sl-200 { padding: 40px 16px; }
-  .sl-loop { padding: 40px 16px; }
-  .sl-honest { padding: 40px 16px; }
-  .sl-manifesto { padding: 32px 16px; }
-  .sl-footer-bar { padding: 20px 16px; }
-  .sl-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .sl-hero-h1 { font-size: 32px; }
+  .sl-200 { padding: 56px 16px; }
+  .sl-200-num { font-size: 56px; }
+  .sl-loop { padding: 56px 16px; }
+  .sl-honest { padding: 56px 16px; }
+  .sl-manifesto { padding: 40px 16px; }
+  .sl-gallery-header { padding: 0 16px 14px; }
 }
 </style>
 {% endblock %}
@@ -827,68 +944,84 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-loop-steps">
 
     <div class="sl-loop-step">
-      <div class="sl-loop-num">1</div>
-      <div class="sl-loop-icon">
-        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="16 16 12 12 8 16"/>
-          <line x1="12" y1="12" x2="12" y2="21"/>
-          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-        </svg>
+      <div class="sl-loop-step-left">
+        <div class="sl-loop-num">1</div>
+        <div class="sl-loop-icon">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+        </div>
       </div>
-      <div class="sl-loop-title">Upload</div>
-      <div class="sl-loop-desc">Submit a photo.<br>Get your score<br>and feedback.</div>
+      <div class="sl-loop-step-right">
+        <div class="sl-loop-title">Upload</div>
+        <div class="sl-loop-desc">Submit a photo.<br>Get your score<br>and feedback.</div>
+      </div>
     </div>
 
     <div class="sl-loop-arrow">&rarr;</div>
 
     <div class="sl-loop-step">
-      <div class="sl-loop-num">2</div>
-      <div class="sl-loop-icon">
-        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 21h6"/>
-          <path d="M10 17h4"/>
-          <path d="M12 3a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3 6H9c-1.5-1.5-3-3.5-3-6a6 6 0 0 1 6-6z"/>
-          <line x1="12" y1="1" x2="12" y2="2"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="19.78" y1="4.22" x2="18.36" y2="5.64"/>
-          <line x1="1" y1="12" x2="2" y2="12"/>
-          <line x1="23" y1="12" x2="22" y2="12"/>
-        </svg>
+      <div class="sl-loop-step-left">
+        <div class="sl-loop-num">2</div>
+        <div class="sl-loop-icon">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21h6"/>
+            <path d="M10 17h4"/>
+            <path d="M12 3a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3 6H9c-1.5-1.5-3-3.5-3-6a6 6 0 0 1 6-6z"/>
+            <line x1="12" y1="1" x2="12" y2="2"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="19.78" y1="4.22" x2="18.36" y2="5.64"/>
+            <line x1="1" y1="12" x2="2" y2="12"/>
+            <line x1="23" y1="12" x2="22" y2="12"/>
+          </svg>
+        </div>
       </div>
-      <div class="sl-loop-title">Insight</div>
-      <div class="sl-loop-desc">Understand what&rsquo;s<br>working and what&rsquo;s<br>not.</div>
+      <div class="sl-loop-step-right">
+        <div class="sl-loop-title">Insight</div>
+        <div class="sl-loop-desc">Understand what&rsquo;s<br>working and what&rsquo;s<br>not.</div>
+      </div>
     </div>
 
     <div class="sl-loop-arrow">&rarr;</div>
 
     <div class="sl-loop-step">
-      <div class="sl-loop-num">3</div>
-      <div class="sl-loop-icon">
-        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="8"/>
-          <circle cx="12" cy="12" r="3"/>
-          <line x1="12" y1="2" x2="12" y2="4"/>
-          <line x1="12" y1="20" x2="12" y2="22"/>
-          <line x1="2" y1="12" x2="4" y2="12"/>
-          <line x1="20" y1="12" x2="22" y2="12"/>
-        </svg>
+      <div class="sl-loop-step-left">
+        <div class="sl-loop-num">3</div>
+        <div class="sl-loop-icon">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="8"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="4"/>
+            <line x1="12" y1="20" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="4" y2="12"/>
+            <line x1="20" y1="12" x2="22" y2="12"/>
+          </svg>
+        </div>
       </div>
-      <div class="sl-loop-title">One Improvement</div>
-      <div class="sl-loop-desc">Apply one clear<br>suggestion to<br>get better.</div>
+      <div class="sl-loop-step-right">
+        <div class="sl-loop-title">One Improvement</div>
+        <div class="sl-loop-desc">Apply one clear<br>suggestion to<br>get better.</div>
+      </div>
     </div>
 
     <div class="sl-loop-arrow">&rarr;</div>
 
     <div class="sl-loop-step">
-      <div class="sl-loop-num">4</div>
-      <div class="sl-loop-icon">
-        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
+      <div class="sl-loop-step-left">
+        <div class="sl-loop-num">4</div>
+        <div class="sl-loop-icon">
+          <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
       </div>
-      <div class="sl-loop-title">Shoot Again</div>
-      <div class="sl-loop-desc">Practice, refine,<br>and see your<br>progress.</div>
+      <div class="sl-loop-step-right">
+        <div class="sl-loop-title">Shoot Again</div>
+        <div class="sl-loop-desc">Practice, refine,<br>and see your<br>progress.</div>
+      </div>
     </div>
 
   </div>
