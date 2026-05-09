@@ -131,6 +131,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-below { background:#FEFCF8; }
 .sl-below-inner { max-width:900px; margin:0 auto; padding:80px 48px 88px; }
+.sl-below-close { padding-top:48px; }
 
 .sl-eyebrow {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
@@ -188,9 +189,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-loop-step {
   padding:28px 28px 26px;
-  border:1px solid rgba(26,26,24,0.12);
+  border:1px solid rgba(26,26,24,0.18);
   border-right:none; background:#FFFFFF;
   position:relative; border-radius:0;
+  box-shadow:0 2px 8px rgba(26,26,24,0.06);
 }
 .sl-loop-step:last-child { border-right:1px solid rgba(26,26,24,0.12); }
 .sl-loop-arrow {
@@ -445,7 +447,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-mcard-photo-soon .sl-mcard-initials { font-size:48px; color:rgba(255,255,255,0.25); }
 
 /* ── Divider ── */
-.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.10); margin:0 0 60px; }
+.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.10); margin:0 0 0; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
@@ -819,7 +821,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 {# ━━━━━━━━━━━━━━━━━━ CLOSE + GALLERY ━━━━━━━━━━━━━━━━━━ #}
 <div class="sl-below">
-<div class="sl-below-inner">
+<div class="sl-below-inner sl-below-close">
 
   <div class="sl-close">
     <div class="sl-close-h2">We take your work as seriously as you do.</div>
@@ -829,7 +831,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
          class="sl-close-btn">GET MY FIRST SCORE — FREE →</a>
       <span class="sl-close-micro">Free &nbsp;·&nbsp; First 3 scored free &nbsp;·&nbsp; No card required</span>
     </div>
-  </div>
+  </div>{# end sl-close #}
 
   {# ━━ GALLERY ━━ #}
   {% set gallery_imgs = carousel_images[1:] %}
