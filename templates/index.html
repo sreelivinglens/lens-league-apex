@@ -661,61 +661,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   text-align: left;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   DARK FOOTER BAR
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-footer-bar {
-  background: #0D0D0B;
-  padding: 28px 64px;
-}
-.sl-footer-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.sl-footer-brand-name {
-  display: block;
-  color: #F5C518;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  line-height: 1.2;
-}
-.sl-footer-brand-sub {
-  display: block;
-  color: rgba(255,255,255,0.38);
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.sl-footer-nav {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-.sl-footer-nav a {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-.sl-footer-nav a:hover { color: #FFFFFF; }
-.sl-footer-social {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.sl-footer-social a {
-  color: rgba(255,255,255,0.65);
-  transition: color 0.2s;
-  text-decoration: none;
-  display: flex;
-}
-.sl-footer-social a:hover { color: #FFFFFF; }
+/* ━━ FOOTER BAR handled by base.html ━━ */
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
@@ -1077,33 +1023,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 </div>
 
-{# ━━━━━━━━━━━━━━━━━━ DARK FOOTER BAR ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-footer-bar">
-  <div class="sl-footer-inner">
-    <div>
-      <span class="sl-footer-brand-name">SHUTTER LEAGUE</span>
-      <span class="sl-footer-brand-sub">Honest Feedback. Real Improvement.</span>
-    </div>
-    <nav class="sl-footer-nav" aria-label="Footer navigation">
-      <a href="/about">About</a>
-      <a href="{{ url_for('science') }}">Science</a>
-      <a href="/blog">Blog</a>
-      <a href="/faq">FAQ</a>
-      <a href="/contact">Contact</a>
-    </nav>
-    <div class="sl-footer-social">
-      <a href="https://instagram.com/shutterleague" target="_blank" rel="noopener" aria-label="Instagram">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-      </a>
-      <a href="https://youtube.com/@shutterleague" target="_blank" rel="noopener" aria-label="YouTube">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
-      </a>
-      <a href="https://facebook.com/shutterleague" target="_blank" rel="noopener" aria-label="Facebook">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-      </a>
-    </div>
-  </div>
-</div>
+{# ━━━━━━━━━━━━━━━━━━ FOOTER BAR ━━━━━━━━━━━━━━━━━━ #}
+{# Handled by base.html footer — dark bg + Inter fonts applied there #}
 
 </div>{# end sl-home #}
 {% endblock %}

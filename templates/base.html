@@ -556,22 +556,25 @@ tr:last-child td { border-bottom: none; }
 tbody tr:hover { background: rgba(245,197,24,0.12); }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
+/* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
 footer {
-  border-top: 1px solid var(--border);
+  background: #0D0D0B;
+  border-top: none;
   padding: 28px var(--page-pad) 24px;
   text-align: center;
-  font-family: var(--font-mono);
-  color: var(--text-disabled);
-  margin-top: 80px;
+  font-family: 'Inter', sans-serif;
+  color: rgba(255,255,255,0.45);
+  margin-top: 0;
 }
 .footer-brand {
   font-size: 16px;
-  letter-spacing: 1.5px;
-  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.65);
   margin-bottom: 14px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
   line-height: 1.7;
+  font-family: 'Inter', sans-serif;
 }
 @media (max-width: 480px) {
   .footer-brand { font-size: 16px; letter-spacing: 0.5px; }
@@ -588,14 +591,15 @@ footer {
   gap: 8px 28px;
   font-size: 16px;
   letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
 }
 .footer-links a {
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.55);
   text-decoration: none;
   transition: color 0.2s;
   white-space: nowrap;
 }
-.footer-links a:hover { color: var(--gold); }
+.footer-links a:hover { color: #FFFFFF; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -618,7 +622,7 @@ footer {
   .page-header h1 { font-size: 22px; }
 
   .btn { padding: 10px 18px; font-size: 16px; }
-  footer { font-size: 16px; letter-spacing: 1px; }
+  footer { font-size: 16px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif; }
 }
 
 @media (max-width: 480px) {
