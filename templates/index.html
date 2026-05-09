@@ -5,875 +5,1138 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="description" content="200 years of photography. First honest improvement loop. Find out if your photo has it.">
+<meta name="description" content="How good is your photograph, really? Upload a photo. Get one honest improvement. Shoot better next time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block extra_css %}
 <style>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   DESIGN TOKENS
-   Gold  #F5C518  — dark backgrounds ONLY, never cream/light
-   Navy  #1A2744  — all dark sections, never black
-   Slate #2C3E6B  — light/cream backgrounds only
-   Cream #FEFCF8  — page background
-   Dark  #1a1a18  — all body text
-   All fonts ≥16px · All contrast ≥7.0:1 AAA
-   Border radius: 0 sections · 2px cards/buttons
+   HOMEPAGE TOKENS
+   Inter only — 600 headings · 500 body
+   #F7F5F2 light bg · #EDEAE4 warm bg
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #0D0D0B hero/footer bg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
+
+/* ━━ INTER OVERRIDE — all homepage elements ━━ */
+.sl-home, .sl-home * {
+  font-family: 'Inter', sans-serif !important;
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    HERO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-hero { position:relative; width:100%; overflow:hidden; background:#1A2744; }
-.sl-hero-img-wrap {
-  position:relative; width:100%;
-  height:calc(100svh - 64px); min-height:480px; max-height:900px;
+.sl-hero {
+  position: relative;
+  width: 100%;
+  min-height: 92vh;
+  overflow: hidden;
+  background: #0D0D0B;
 }
 .sl-hero-img {
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; object-position:center; opacity:0.82;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-.sl-hero-grad {
-  position:absolute; inset:0;
-  background:linear-gradient(to bottom,
-    rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.10) 18%,
-    rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.95) 100%);
-}
-.sl-hero-badge {
-  position:absolute; bottom:0; right:0; z-index:6;
-  display:inline-flex; align-items:center; gap:8px;
-  background:rgba(0,0,0,0.30);
-  border-top:1px solid rgba(255,255,255,0.09);
-  border-left:1px solid rgba(255,255,255,0.09);
-  border-radius:6px 0 0 0;
-  padding:8px 16px;
-  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-}
-.sl-tier-badge {
-  background:rgba(245,197,24,0.90); color:#0D0D0B;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase;
-  padding:3px 9px; border-radius:2px; white-space:nowrap; flex-shrink:0;
-}
-.sl-badge-score {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:rgba(255,255,255,0.92); letter-spacing:1px; white-space:nowrap;
-}
-.sl-badge-dot { color:rgba(255,255,255,0.28); font-size:14px; margin:0 1px; }
-.sl-badge-meta {
-  font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:rgba(255,255,255,0.72); letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
-}
-.sl-badge-by {
-  font-family:var(--font-mono); font-size:16px; font-weight:500;
-  color:#F5C518; letter-spacing:0.5px;
-  max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-.sl-hero-content {
-  position:absolute; bottom:0; left:0; right:0; z-index:5;
-  padding:clamp(32px,5vw,64px) clamp(20px,5vw,64px) clamp(60px,7vw,90px);
+.sl-hero-text {
+  position: absolute;
+  top: 52px;
+  left: 52px;
+  max-width: 580px;
+  z-index: 5;
 }
 .sl-hero-h1 {
-  font-family:var(--font-mono); font-weight:700; color:#FFFFFF;
-  font-size:clamp(22px,3.2vw,44px); line-height:1.18;
-  text-shadow:0 2px 16px rgba(0,0,0,0.98), 0 1px 4px rgba(0,0,0,0.98), 0 0 40px rgba(0,0,0,0.85);
-  margin-bottom:8px; max-width:640px;
+  font-size: 76px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  white-space: nowrap;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.95), 0 1px 8px rgba(0,0,0,0.98), 0 0 48px rgba(0,0,0,0.80);
 }
 .sl-hero-sub {
-  font-family:var(--font-mono); font-size:clamp(16px,1.6vw,20px); font-weight:400;
-  color:rgba(255,255,255,0.90);
-  text-shadow:0 1px 8px rgba(0,0,0,0.98), 0 0 24px rgba(0,0,0,0.90);
-  max-width:520px; line-height:1.5; display:block; margin-bottom:0;
-  text-align:justify;
-}
-.sl-hero-cta {
-  margin-top:clamp(16px,2.5vw,28px);
-  display:flex; align-items:center; gap:20px; flex-wrap:nowrap;
+  font-size: 20px;
+  font-weight: 400;
+  color: #FFFFFF;
+  line-height: 1.55;
+  margin-bottom: 28px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98);
 }
 .sl-hero-btn {
-  display:inline-block; background:#F5C518; color:#0D0D0B;
-  font-family:var(--font-mono); font-size:18px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase;
-  padding:16px 32px; border-radius:2px; text-decoration:none;
-  transition:opacity 0.2s; white-space:nowrap; flex-shrink:0;
+  display: inline-block;
+  background: #F5C518;
+  color: #0D0D0B;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 36px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
-.sl-hero-btn:hover { opacity:0.88; }
+.sl-hero-btn:hover { opacity: 0.88; }
 .sl-hero-micro {
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.82);
-  text-shadow:0 1px 6px rgba(0,0,0,0.98), 0 0 20px rgba(0,0,0,0.90);
-  white-space:nowrap; flex-shrink:0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 400;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.98), 0 0 24px rgba(0,0,0,0.95);
 }
-.sl-hero-caption {
-  position:absolute; bottom:16px; left:clamp(20px,5vw,64px); z-index:6;
-  font-family:var(--font-mono); font-size:16px; font-weight:400;
-  color:rgba(255,255,255,0.55); letter-spacing:0.5px;
-  text-shadow:0 1px 6px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.8);
+.sl-hero-micro svg { flex-shrink: 0; }
+
+/* Coaching overlay */
+.sl-coaching {
+  position: absolute;
+  bottom: 48px;
+  right: 44px;
+  width: 252px;
+  background: rgba(6,4,2,0.88);
+  padding: 20px 22px 18px;
+  z-index: 5;
+}
+.sl-co-q {
+  font-size: 26px;
+  font-weight: 700;
+  color: #F5C518;
+  line-height: 1;
+  display: block;
+  margin-bottom: 10px;
+  font-family: Georgia, serif !important;
+}
+.sl-co-body {
+  font-size: 14px;
+  font-style: italic;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.68;
+  margin-bottom: 14px;
+}
+.sl-co-name {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 5px;
+}
+.sl-co-tag {
+  font-size: 10px;
+  color: rgba(255,255,255,0.40);
+  letter-spacing: 0.03em;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    TRUST BAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-trust {
-  background:#1a1a18; padding:14px 48px;
-  display:flex; align-items:center; justify-content:center;
-  flex-wrap:wrap; gap:6px 28px;
+  background: #F7F5F2;
+  padding: 28px 52px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 .sl-trust-item {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.82); letter-spacing:1px; text-transform:uppercase;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 0 12px;
 }
-.sl-trust-dot { color:rgba(255,255,255,0.28); font-size:14px; }
+.sl-trust-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  line-height: 1.4;
+}
+.sl-trust-desc {
+  font-size: 12px;
+  color: rgba(26,26,24,0.56);
+  line-height: 1.55;
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BELOW FOLD
+   200 YEARS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-below { background:#FEFCF8; }
-.sl-below-inner { max-width:900px; margin:0 auto; padding:80px 48px 88px; }
-.sl-below-close { padding-top:48px; }
-
-.sl-eyebrow {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:3px; text-transform:uppercase;
-  color:#1a1a18; margin-bottom:16px; display:block;
+.sl-200 {
+  background: #EDEAE4;
+  padding: 72px 64px;
+  display: grid;
+  grid-template-columns: 55% 45%;
+  align-items: center;
 }
-.sl-eyebrow-light { color:rgba(26,26,24,0.82); }
+.sl-200-num-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.sl-200-num {
+  font-size: 88px;
+  font-weight: 800;
+  color: #1A1A18;
+  line-height: 1;
+}
+.sl-200-label-line {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.sl-200-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.78;
+  margin-bottom: 16px;
+}
+.sl-200-body-bold {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.78;
+}
+.sl-200-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-left: 48px;
+}
+.sl-200-tagline-1 {
+  font-size: 26px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.sl-200-tagline-2 {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.3;
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 1 — 200 YEARS
+   LEARNING LOOP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-statement { margin-bottom:80px; }
-.sl-stmt-num {
-  font-family:var(--font-mono); font-size:108px; font-weight:700; color:#1A2744;
-  line-height:0.9; display:block; margin-bottom:8px;
+.sl-loop {
+  background: #F7F5F2;
+  padding: 72px 64px;
 }
-.sl-stmt-since {
-  font-family:var(--font-mono); font-size:18px; font-weight:700;
-  letter-spacing:3px; text-transform:uppercase; color:#1a1a18;
-  display:block; margin-bottom:32px;
+.sl-loop-heading {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  margin-bottom: 52px;
 }
-.sl-stmt-body {
-  font-family:var(--font-mono); font-size:19px; color:#1a1a18;
-  line-height:1.78; text-align:justify; margin-bottom:28px;
-}
-.sl-stmt-punch {
-  font-family:var(--font-mono); font-size:24px; font-weight:700; color:#1a1a18;
-  display:block; line-height:1.3;
-  border-left:4px solid #2C3E6B; padding-left:20px; margin-bottom:32px;
-}
-.sl-stmt-rule { border:none; border-top:2px solid #1A2744; margin:0 0 20px; }
-.sl-eye-line {
-  font-family:var(--font-mono); font-size:20px; font-weight:700;
-  color:#1A2744; line-height:1.4; display:block;
-}
-.sl-eye-line .hl { color:#FFFFFF; background:#1A2744; padding:2px 10px; }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 2 — HOW IT WORKS
-   Desktop: 2-col grid
-   Mobile: single merged container
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-loop { margin-bottom:80px; }
-.sl-loop-h2 {
-  font-family:var(--font-mono); font-size:clamp(22px,2.6vw,28px); font-weight:700;
-  color:#1a1a18; line-height:1.25; margin-bottom:14px;
-}
-.sl-loop-sub {
-  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
-  line-height:1.78; text-align:justify; margin-bottom:36px;
-}
-/* Desktop: 2 columns */
 .sl-loop-steps {
-  display:grid; grid-template-columns:repeat(2,1fr);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 .sl-loop-step {
-  padding:28px 28px 26px;
-  border:1px solid rgba(26,26,24,0.18);
-  border-right:none; background:#FFFFFF;
-  position:relative; border-radius:0;
-  box-shadow:0 2px 8px rgba(26,26,24,0.06);
-}
-.sl-loop-step:last-child { border-right:1px solid rgba(26,26,24,0.12); }
-.sl-loop-arrow {
-  position:absolute; top:50%; right:-13px; z-index:2;
-  font-size:18px; color:rgba(26,26,24,0.30);
-  transform:translateY(-50%); background:#FFFFFF; padding:0 3px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 .sl-loop-num {
-  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
-  letter-spacing:2px; margin-bottom:14px; display:block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1A1A18;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.sl-loop-icon {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 .sl-loop-title {
-  font-family:var(--font-mono); font-size:18px; font-weight:700;
-  color:#1a1a18; margin-bottom:10px; line-height:1.4; text-align:justify;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 12px;
 }
 .sl-loop-desc {
-  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
-  line-height:1.75; text-align:justify;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.75;
+  text-align: center;
 }
-.sl-hive-note {
-  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
-  margin-top:24px; line-height:1.78; text-align:justify;
-  border-left:3px solid #2C3E6B; padding-left:20px;
+.sl-loop-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 88px;
+  font-size: 22px;
+  color: #1A1A18;
+  flex-shrink: 0;
+  width: 52px;
+}
+.sl-loop-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 52px;
+}
+.sl-loop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid #1A1A18;
+  background: #F7F5F2;
+  color: #1A1A18;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 30px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.sl-loop-btn:hover { opacity: 0.75; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HONEST PART + EMOTIONAL IMPACT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-honest {
+  background: #EDEAE4;
+  padding: 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.sl-honest-col {
+  padding: 0 40px;
+}
+.sl-honest-col:first-child {
+  padding-left: 0;
+  border-right: 1px solid rgba(26,26,24,0.15);
+}
+.sl-honest-col:nth-child(2) {
+  border-right: 1px solid rgba(26,26,24,0.15);
+}
+.sl-honest-col:last-child {
+  padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.sl-honest-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-gold-rule {
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 20px;
+}
+.sl-honest-heading {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1A1A18;
+  line-height: 1.25;
+  margin-bottom: 20px;
+}
+.sl-honest-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.78;
+  margin-bottom: 16px;
+  text-align: justify;
+}
+.sl-honest-body-bold {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.78;
+  text-align: justify;
+}
+.sl-honest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid #1A1A18;
+  background: transparent;
+  color: #1A1A18;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  cursor: pointer;
+  margin-top: 24px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.sl-honest-btn:hover { opacity: 0.75; }
+.sl-yellow-underline {
+  text-decoration: underline;
+  text-decoration-color: #F5C518;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Soul bonus col */
+.sl-heart-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #6B5800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.sl-soul-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A1A18;
+  margin-bottom: 12px;
+}
+.sl-soul-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.75;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.sl-soul-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(26,26,24,0.15);
+  margin-bottom: 20px;
+}
+.sl-soul-tag1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.sl-soul-tag2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.3;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BEAT 3 — SCORE SECTION (CREAM)
+   FEATURE CARDS — Mentor / BoW / POTY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-score-section {
-  background:#FEFCF8; border:1px solid rgba(26,26,24,0.10);
-  border-radius:0; padding:44px 44px 38px; margin-bottom:40px;
+.sl-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
 }
-.sl-score-ey {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:3px; text-transform:uppercase;
-  color:#1a1a18; margin-bottom:14px; display:block;
+.sl-card {
+  position: relative;
+  height: 380px;
+  overflow: hidden;
+  background: #0D0D0B;
 }
-.sl-score-h2 {
-  font-family:var(--font-mono); font-size:clamp(22px,2.4vw,26px); font-weight:700;
-  color:#1a1a18; line-height:1.3; margin-bottom:14px;
+.sl-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-.sl-score-body {
-  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
-  line-height:1.78; text-align:justify; margin-bottom:28px;
+.sl-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 100%);
 }
-.sl-emotion-block {
-  background:#2C3E6B; border-radius:0; padding:26px 28px; margin-bottom:20px;
+.sl-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 28px;
+  z-index: 2;
 }
-.sl-emotion-label {
-  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#FFFFFF;
-  letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; display:block;
+.sl-card-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin-bottom: 10px;
 }
-.sl-emotion-text {
-  font-family:var(--font-mono); font-size:17px; color:#FFFFFF;
-  line-height:1.75; text-align:justify;
+.sl-card-heading {
+  font-size: 26px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  text-align: justify;
 }
-.sl-soul-bonus {
-  display:flex; align-items:flex-start; gap:14px;
-  background:rgba(44,62,107,0.08); border-left:4px solid #2C3E6B;
-  border-radius:0; padding:20px 22px; margin-bottom:22px;
+.sl-card-body {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.65;
+  margin-bottom: 18px;
+  text-align: justify;
 }
-.sl-soul-icon { font-size:18px; color:#2C3E6B; flex-shrink:0; margin-top:2px; }
-.sl-soul-text {
-  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
-  line-height:1.68; text-align:justify;
+.sl-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid rgba(255,255,255,0.80);
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
 }
-.sl-soul-text strong { color:#2C3E6B; font-weight:700; }
-.sl-aq-explain {
-  display:flex; align-items:flex-start; gap:14px;
-  background:rgba(44,62,107,0.05); border-left:4px solid rgba(44,62,107,0.30);
-  border-radius:0; padding:20px 22px; margin-bottom:22px;
-}
-.sl-aq-explain-text {
-  font-family:var(--font-mono); font-size:17px; color:#1a1a18;
-  line-height:1.68; text-align:justify;
-}
-.sl-aq-explain-text strong { color:#2C3E6B; font-weight:700; }
-.sl-score-foot {
-  font-family:var(--font-mono); font-size:17px; font-weight:700; color:#1a1a18;
-  border-top:1px solid rgba(26,26,24,0.12); padding-top:20px;
-  display:flex; align-items:center; justify-content:space-between;
-  flex-wrap:wrap; gap:12px;
-}
-.sl-score-foot em { color:#2C3E6B; font-style:normal; }
-.sl-sci-link {
-  font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
-  text-decoration:none; transition:opacity 0.18s;
-}
-.sl-sci-link:hover { opacity:0.75; }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MENTORS — full-width warm section
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-mentors-wrap {
-  background:#F0EDE6;
-  border-top:1px solid rgba(26,26,24,0.10);
-  border-bottom:1px solid rgba(26,26,24,0.10);
-  padding:72px 0 68px;
-}
-.sl-mentors-inner { max-width:900px; margin:0 auto; padding:0 48px; }
-.sl-mentors-h2 {
-  font-family:var(--font-mono); font-size:clamp(22px,2.6vw,28px); font-weight:700;
-  color:#1a1a18; line-height:1.25; margin-bottom:16px;
-}
-.sl-mentor-diff {
-  font-family:var(--font-mono); font-size:20px; font-weight:700; color:#1a1a18;
-  margin-bottom:28px; padding:20px 24px;
-  background:rgba(26,39,68,0.07); border-left:4px solid #1A2744;
-  line-height:1.5; text-align:justify;
-}
-.sl-mentors-sub {
-  font-family:var(--font-mono); font-size:18px; color:#1a1a18;
-  line-height:1.82; margin-bottom:20px; text-align:justify;
-}
-.sl-mentor-grid {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:16px; margin-bottom:28px;
-}
-.sl-mcard {
-  background:#FFFFFF; border:1px solid rgba(26,26,24,0.12);
-  border-radius:2px; overflow:hidden; display:flex; flex-direction:column;
-  transition:transform 0.18s, box-shadow 0.18s; text-decoration:none;
-}
-.sl-mcard:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(26,26,24,0.10); }
-.sl-mcard-photo {
-  aspect-ratio:4/3; position:relative; background:#1A2744;
-  overflow:hidden; display:flex; align-items:center; justify-content:center;
-}
-.sl-mcard-photo img { width:100%; height:100%; object-fit:cover; display:block; }
-.sl-mcard-initials {
-  font-family:var(--font-mono); font-size:32px; font-weight:700;
-  color:rgba(255,255,255,0.08); letter-spacing:3px; user-select:none;
-}
-.sl-mcard-level-badge {
-  position:absolute; bottom:10px; right:10px;
-  background:rgba(245,197,24,0.92); color:#0D0D0B;
-  border-radius:2px; padding:4px 10px;
-}
-.sl-mcard-level-val {
-  display:block; font-family:var(--font-mono); font-size:13px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase; line-height:1.3;
-}
-.sl-mcard-body { padding:16px 18px 18px; flex:1; display:flex; flex-direction:column; }
-.sl-mcard-name {
-  font-family:var(--font-mono); font-size:17px; font-weight:700;
-  color:#1a1a18; margin-bottom:4px; text-align:justify;
-}
-.sl-mcard-tagline {
-  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
-  margin-bottom:12px; line-height:1.5; text-align:justify;
-}
-.sl-mcard-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; flex:1; }
-.sl-mcard-tag {
-  font-family:var(--font-mono); font-size:14px; color:#2C3E6B;
-  background:rgba(44,62,107,0.08); border-radius:2px; padding:3px 8px;
-}
-.sl-mcard-footer { padding-top:12px; border-top:1px solid rgba(26,26,24,0.09); }
-.sl-mcard-btn {
-  background:#1A2744; color:#FFFFFF;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  border-radius:2px; padding:12px 22px; border:none; cursor:pointer;
-  width:100%; text-align:center; transition:opacity 0.18s;
-  text-decoration:none; display:block;
-}
-.sl-mcard-btn:hover { opacity:0.85; }
-.sl-mentors-cta { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
-.sl-mentors-cta-btn {
-  display:inline-block; background:#2C3E6B; color:#FFFFFF;
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase;
-  padding:14px 26px; border-radius:2px; text-decoration:none; cursor:pointer;
-  transition:opacity 0.18s;
-}
-.sl-mentors-cta-btn:hover { opacity:0.88; }
-.sl-mentors-cta-note {
-  font-family:var(--font-mono); font-size:16px; color:#1a1a18; text-align:justify;
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CLOSE — Navy. Solid gold CTA.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-close {
-  background:#1A2744; border-top:4px solid #F5C518;
-  border-radius:0; padding:52px 44px 48px; margin-bottom:60px;
-}
-.sl-close-h2 {
-  font-family:var(--font-mono); font-size:clamp(26px,3vw,36px); font-weight:700;
-  color:#FFFFFF; line-height:1.25; margin-bottom:16px; text-align:justify;
-}
-.sl-close-sub {
-  font-family:var(--font-mono); font-size:18px; color:rgba(255,255,255,0.90);
-  line-height:1.75; margin-bottom:36px; text-align:justify;
-}
-.sl-close-btns { display:flex; flex-direction:column; align-items:stretch; gap:16px; }
-.sl-close-btn {
-  display:block; width:100%;
-  background:#F5C518; color:#0D0D0B;
-  font-family:var(--font-mono); font-size:20px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase;
-  padding:22px 36px; border-radius:0; border:none;
-  text-decoration:none; text-align:center; cursor:pointer;
-  transition:opacity 0.18s; -webkit-appearance:none; appearance:none;
-}
-.sl-close-btn:hover { opacity:0.90; }
-.sl-close-micro {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.82); text-align:center;
-}
+.sl-card-btn:hover { opacity: 0.75; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    GALLERY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-gallery-label {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:3px; text-transform:uppercase; color:#1a1a18; margin-bottom:6px;
+.sl-gallery-wrap {
+  background: #F7F5F2;
+  padding: 28px 0 0;
 }
-.sl-gallery-sub {
-  font-family:var(--font-mono); font-size:16px; color:#1a1a18;
-  margin-bottom:16px; text-align:justify;
+.sl-gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px 18px;
 }
-.sl-gallery { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-.sl-gimg {
-  border-radius:0; overflow:hidden; background:#1A2744;
-  border:1px solid rgba(44,62,107,0.18);
-  display:flex; flex-direction:column; text-decoration:none;
+.sl-gallery-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1A1A18;
 }
-.sl-gimg-photo { position:relative; aspect-ratio:4/3; overflow:hidden; }
-.sl-gimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease; }
-.sl-gimg:hover img { transform:scale(1.04); }
-.sl-gbar {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:7px 10px; background:#1A2744;
-  border-top:1px solid rgba(255,255,255,0.07);
+.sl-gallery-viewall {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  text-decoration: none;
+  transition: opacity 0.2s;
 }
-.sl-gbar-left { display:flex; align-items:center; gap:5px; }
-.sl-gbar-score {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  color:#F5C518; letter-spacing:0.5px; white-space:nowrap;
+.sl-gallery-viewall:hover { opacity: 0.65; }
+.sl-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  width: 100%;
 }
-.sl-gbar-dot { color:rgba(255,255,255,0.28); font-size:12px; }
-.sl-gbar-tier {
-  font-family:var(--font-mono); font-size:16px; font-weight:600;
-  color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+.sl-gitem {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background: #0D0D0B;
+  text-decoration: none;
+  display: block;
 }
-.sl-gbar-genre {
-  font-family:var(--font-mono); font-size:16px;
-  color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
+.sl-gitem-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.sl-gitem-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.30) 45%, transparent 100%);
+}
+.sl-gitem-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 14px 16px;
+  z-index: 2;
+}
+.sl-gitem-score {
+  display: block;
+  font-size: 38px;
+  font-weight: 700;
+  color: #F5C518;
+  line-height: 1.05;
+  margin-bottom: 4px;
+}
+.sl-gitem-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+.sl-gitem-by {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
 }
 
-.sl-mcard-soon { opacity:0.72; }
-.sl-mcard-photo-soon { background:#2C3E6B; }
-.sl-mcard-photo-soon .sl-mcard-initials { font-size:48px; color:rgba(255,255,255,0.25); }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MANIFESTO FOOTER STRIP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-manifesto {
+  background: #F7F5F2;
+  padding: 48px 64px;
+  display: grid;
+  grid-template-columns: 45% 25% 30%;
+  align-items: center;
+  border-top: 1px solid rgba(26,26,24,0.10);
+}
+.sl-mf-col1 {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.sl-mf-tagline {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1A1A18;
+  line-height: 1.3;
+}
+.sl-mf-col3 {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1.75;
+  text-align: left;
+}
 
-/* ── Divider ── */
-.sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.10); margin:0 0 0; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DARK FOOTER BAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-footer-bar {
+  background: #0D0D0B;
+  padding: 28px 64px;
+}
+.sl-footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sl-footer-brand-name {
+  display: block;
+  color: #F5C518;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+}
+.sl-footer-brand-sub {
+  display: block;
+  color: rgba(255,255,255,0.38);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.sl-footer-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.sl-footer-nav a {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sl-footer-nav a:hover { color: #FFFFFF; }
+.sl-footer-social {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.sl-footer-social a {
+  color: rgba(255,255,255,0.65);
+  transition: color 0.2s;
+  text-decoration: none;
+  display: flex;
+}
+.sl-footer-social a:hover { color: #FFFFFF; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-@media (max-width:768px) {
+@media (max-width: 768px) {
 
-  /* Hero — image becomes 16:9, content drops below */
-  .sl-hero-img-wrap {
-    height:auto !important; min-height:0 !important; max-height:none !important;
-    display:flex !important; flex-direction:column;
-    overflow:visible !important; position:static !important;
-  }
-  .sl-hero-img {
-    opacity:1 !important; position:static !important; inset:auto !important;
-    width:100% !important; aspect-ratio:16/9; object-fit:cover; display:block;
-  }
-  .sl-hero-grad { display:none; }
-  .sl-hero-badge {
-    position:static !important; width:100%;
-    background:#FEFCF8; border:none; border-radius:0;
-    border-bottom:1px solid rgba(44,62,107,0.08);
-    padding:10px 16px; gap:7px; flex-wrap:wrap;
-    backdrop-filter:none; -webkit-backdrop-filter:none; z-index:auto;
-  }
-  .sl-tier-badge { background:#2C3E6B !important; color:#FFFFFF !important; font-size:16px; }
-  .sl-badge-score { font-size:16px !important; color:#1a1a18 !important; }
-  .sl-badge-dot   { color:rgba(44,62,107,0.30) !important; }
-  .sl-badge-meta  { font-size:16px !important; color:rgba(44,62,107,0.65) !important; }
-  .sl-badge-by    { font-size:16px !important; color:#2C3E6B !important; max-width:160px; }
+  /* Hero */
+  .sl-hero { min-height: 60vw; }
+  .sl-hero-text { top: 24px; left: 20px; max-width: calc(100% - 40px); }
+  .sl-hero-h1 { font-size: 40px; white-space: normal; text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98); }
+  .sl-hero-sub { font-size: 16px; }
+  .sl-hero-btn { font-size: 13px; padding: 14px 24px; }
+  .sl-hero-micro { font-size: 13px; }
+  .sl-coaching { right: 12px; bottom: 12px; width: 180px; padding: 14px 14px 12px; }
+  .sl-co-body { font-size: 12px; }
 
-  .sl-hero-content { position:static; background:#FEFCF8; padding:20px 16px 24px; }
-  .sl-hero-h1 { font-size:clamp(22px,6vw,30px); color:#1a1a18; text-shadow:none; max-width:100%; line-height:1.2; }
-  .sl-hero-sub { font-size:16px; color:#1a1a18; text-shadow:none; max-width:100%; margin-top:5px; }
-  .sl-hero-cta { flex-direction:column; align-items:stretch; gap:10px; margin-top:18px; }
-  .sl-hero-btn  { width:100%; text-align:center; font-size:16px; padding:16px 24px; }
-  .sl-hero-micro { font-size:16px; color:rgba(26,26,24,0.72); text-shadow:none; text-align:center; white-space:normal; }
-  .sl-hero-caption { display:none; }
+  /* Trust bar */
+  .sl-trust { padding: 20px 16px; flex-wrap: wrap; gap: 16px; }
+  .sl-trust-item { flex: 0 0 calc(50% - 8px); }
 
-  .sl-trust { padding:14px 16px; gap:5px 16px; }
-  .sl-below-inner { padding:44px 16px 60px; }
+  /* 200 years */
+  .sl-200 { grid-template-columns: 1fr; padding: 48px 20px; gap: 40px; }
+  .sl-200-num { font-size: 64px; }
+  .sl-200-right { padding-left: 0; }
+  .sl-200-tagline-1 { font-size: 22px; }
+  .sl-200-tagline-2 { font-size: 26px; }
 
-  /* Beat 1 */
-  .sl-statement { margin-bottom:52px; }
-  .sl-stmt-num { font-size:72px; }
-  .sl-stmt-since { font-size:16px; margin-bottom:20px; }
-  .sl-stmt-body { font-size:17px; }
-  .sl-stmt-punch { font-size:20px; }
-  .sl-eye-line { font-size:18px; }
+  /* Learning loop */
+  .sl-loop { padding: 48px 20px; }
+  .sl-loop-steps { flex-direction: column; align-items: center; gap: 32px; }
+  .sl-loop-arrow { display: none; }
+  .sl-loop-step { width: 100%; max-width: 280px; }
 
-  /* Beat 2 — How it works
-     Mobile: 2 cards merge into ONE container, stacked vertically */
-  .sl-loop { margin-bottom:52px; }
-  .sl-loop-h2 { font-size:22px; }
-  .sl-loop-sub { font-size:17px; margin-bottom:24px; }
-  .sl-loop-steps {
-    grid-template-columns:1fr;
-    border:1px solid rgba(26,26,24,0.12);
-    background:#FFFFFF;
-  }
-  .sl-loop-step {
-    border:none;
-    border-bottom:1px solid rgba(26,26,24,0.10);
-    padding:24px 20px;
-    border-right:none !important;
-  }
-  .sl-loop-step:last-child { border-bottom:none; }
-  .sl-loop-arrow { display:none; }
-  .sl-loop-desc { font-size:16px; }
-  .sl-hive-note { font-size:16px; }
+  /* Honest part */
+  .sl-honest { grid-template-columns: 1fr; padding: 48px 20px; gap: 40px; }
+  .sl-honest-col { padding: 0; border-right: none !important; border-bottom: 1px solid rgba(26,26,24,0.12); padding-bottom: 32px; }
+  .sl-honest-col:last-child { border-bottom: none; padding-bottom: 0; align-items: flex-start; text-align: left; }
 
-  /* Beat 3 */
-  .sl-score-section { padding:26px 20px 24px; margin-bottom:52px; }
-  .sl-score-h2   { font-size:20px; }
-  .sl-score-body { font-size:16px; }
-  .sl-emotion-text { font-size:16px; }
-  .sl-soul-text  { font-size:16px; }
-  .sl-aq-explain-text { font-size:16px; }
-  .sl-score-foot { font-size:16px; flex-direction:column; align-items:flex-start; gap:10px; }
-
-  /* Mentors */
-  .sl-mentors-wrap { padding:44px 0 40px; }
-  .sl-mentors-inner { padding:0 16px; }
-  .sl-mentors-h2 { font-size:20px; }
-  .sl-mentors-sub { font-size:16px; }
-  .sl-mentor-diff { font-size:16px; padding:14px 16px; }
-  .sl-mentor-grid { grid-template-columns:1fr; gap:16px; }
-  .sl-mcard { flex-direction:row; align-items:stretch; }
-  .sl-mcard-photo {
-    width:120px; min-width:120px; aspect-ratio:auto;
-    height:auto; flex-shrink:0; border-radius:0;
-  }
-  .sl-mcard-initials { font-size:22px; }
-  .sl-mcard-level-badge { bottom:8px; right:8px; padding:3px 7px; }
-  .sl-mcard-level-val { font-size:11px; }
-  .sl-mcard-body { padding:14px 14px 14px; }
-  .sl-mcard-name    { font-size:16px; }
-  .sl-mcard-tagline { font-size:15px; margin-bottom:8px; }
-  .sl-mcard-tags { gap:4px; margin-bottom:10px; }
-  .sl-mcard-tag  { font-size:13px; padding:2px 6px; }
-  .sl-mcard-btn  { font-size:15px; padding:10px 14px; }
-  .sl-mentors-cta { flex-direction:column; align-items:stretch; }
-  .sl-mentors-cta-btn { text-align:center; }
-
-  /* Close */
-  .sl-close { padding:28px 20px 24px; margin-bottom:40px; }
-  .sl-close-h2  { font-size:22px; }
-  .sl-close-sub { font-size:17px; }
-  .sl-close-btn { font-size:17px; padding:18px 24px; }
+  /* Feature cards */
+  .sl-cards { grid-template-columns: 1fr; }
+  .sl-card { height: 300px; }
 
   /* Gallery */
-  .sl-gallery { grid-template-columns:repeat(2,1fr); }
-  .sl-gbar-genre { display:none; }
+  .sl-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .sl-gallery-header { padding: 0 16px 14px; }
+
+  /* Manifesto */
+  .sl-manifesto { grid-template-columns: 1fr; padding: 40px 20px; gap: 28px; }
+  .sl-mf-col3 { display: none; }
+
+  /* Footer bar */
+  .sl-footer-bar { padding: 24px 20px; }
+  .sl-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start; }
+  .sl-footer-nav { flex-wrap: wrap; gap: 12px 20px; }
+
+  /* text-shadow zeroed on mobile for all hero text */
+  .sl-hero-h1 { text-shadow: 0 1px 8px rgba(0,0,0,0.98) !important; }
+  .sl-hero-sub { text-shadow: 0 1px 6px rgba(0,0,0,0.98) !important; }
+  .sl-hero-micro { text-shadow: 0 1px 4px rgba(0,0,0,0.98) !important; }
 }
 
-@media (max-width:480px) {
-  .sl-below-inner { padding:36px 14px 52px; }
-  .sl-score-section { padding:22px 16px 20px; }
-  .sl-close { padding:24px 16px 20px; }
-  .sl-mcard-photo { width:100px; min-width:100px; }
-  .sl-mentors-inner { padding:0 14px; }
+@media (max-width: 480px) {
+  .sl-200 { padding: 40px 16px; }
+  .sl-loop { padding: 40px 16px; }
+  .sl-honest { padding: 40px 16px; }
+  .sl-manifesto { padding: 32px 16px; }
+  .sl-footer-bar { padding: 20px 16px; }
+  .sl-gallery-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 {% set hero = carousel_images[0] if carousel_images else none %}
-{% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else true %}
+{% set gallery_imgs = carousel_images[1:] if carousel_images|length > 1 else [] %}
+{% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else false %}
 
 <div class="sl-home">
 
 {# ━━━━━━━━━━━━━━━━━━ HERO ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-hero">
-
+<section class="sl-hero">
   {% if hero and hero.thumb_url %}
-  <div class="sl-hero-img-wrap">
-    <img class="sl-hero-img"
-         src="{{ hero.thumb_url }}"
-         alt="{{ hero.genre or 'Photography' }}"
-         loading="eager" fetchpriority="high">
-    <div class="sl-hero-grad"></div>
-    <div class="sl-hero-badge">
-      <div class="sl-tier-badge">{{ hero.tier }}</div>
-      <span class="sl-badge-score">{{ "%.2f"|format(hero.score) }}</span>
-      {% if hero.genre %}
-      <span class="sl-badge-dot">·</span>
-      <span class="sl-badge-meta">{{ hero.genre | upper }}</span>
-      {% endif %}
-      <span class="sl-badge-dot">·</span>
-      <span class="sl-badge-by">{{ hero.author.username[:18] }}{% if hero.author.username|length > 18 %}…{% endif %}</span>
-    </div>
-  </div>
-
-  {% else %}
-  <div class="sl-hero-img-wrap">
-    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1A2744,#0D0D0B);"></div>
-    <div class="sl-hero-grad"></div>
-    <div class="sl-hero-badge">
-      <div class="sl-tier-badge">Grandmaster</div>
-      <span class="sl-badge-score">8.74</span>
-      <span class="sl-badge-dot">·</span>
-      <span class="sl-badge-meta">Wildlife</span>
-    </div>
-  </div>
+  <img class="sl-hero-img"
+       src="{{ hero.thumb_url }}"
+       alt="{{ hero.genre or 'Photography' }}"
+       loading="eager"
+       fetchpriority="high">
   {% endif %}
 
-  <div class="sl-hero-content">
-    <div class="sl-hero-h1">Honest photography feedback.<br>One improvement at a time.</div>
-    <div class="sl-hero-cta">
-      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-hero-btn">Score mine — free →</a>
-      <span class="sl-hero-micro">Free &nbsp;·&nbsp; 46 seconds &nbsp;·&nbsp; No card required</span>
+  <div class="sl-hero-text">
+    <h1 class="sl-hero-h1">How good is<br>your photograph,<br>really?</h1>
+    <p class="sl-hero-sub">Honest photography feedback.<br>One improvement at a time.</p>
+    <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+       class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
+    <div class="sl-hero-micro">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Usually under a minute
     </div>
   </div>
-  <span class="sl-hero-caption">Art is the Question. Math is the Verification.</span>
 
-</div>{# end sl-hero #}
+  {% if hero %}
+  <div class="sl-coaching">
+    <span class="sl-co-q">&ldquo;</span>
+    <p class="sl-co-body">{{ hero.improvement_note or 'Strong emotional resonance and atmosphere. Consider simplifying the foreground to strengthen the viewer\'s focus on the light.' }}</p>
+    <span class="sl-co-name">Shutter League Mentor</span>
+    <span class="sl-co-tag">Real photo. Real member. Real feedback.</span>
+  </div>
+  {% endif %}
+</section>
 
 {# ━━━━━━━━━━━━━━━━━━ TRUST BAR ━━━━━━━━━━━━━━━━━━ #}
 <div class="sl-trust">
-  <span class="sl-trust-item">RAW verified</span>
-  <span class="sl-trust-dot">·</span>
-  <span class="sl-trust-item">Genre-aware evaluation</span>
-  <span class="sl-trust-dot">·</span>
-  <span class="sl-trust-item">Mentor-guided</span>
-  <span class="sl-trust-dot">·</span>
-  <span class="sl-trust-item">Human-reviewed finals</span>
-  <span class="sl-trust-dot">·</span>
-  <span class="sl-trust-item">Private &amp; secure</span>
+  <div class="sl-trust-item">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span class="sl-trust-label">Real Photographs</span>
+    <span class="sl-trust-desc">No AI images.<br>Ever.</span>
+  </div>
+  <div class="sl-trust-item">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="sl-trust-label">Real Feedback</span>
+    <span class="sl-trust-desc">AI consistency.<br>Human judgment.</span>
+  </div>
+  <div class="sl-trust-item">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+    <span class="sl-trust-label">Real Improvement</span>
+    <span class="sl-trust-desc">Actionable insight<br>you can use.</span>
+  </div>
+  <div class="sl-trust-item">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span class="sl-trust-label">No Other Platform<br>Does This</span>
+    <span class="sl-trust-desc">We are the original.</span>
+  </div>
 </div>
 
-{# ━━━━━━━━━━━━━━━━━━ BELOW FOLD ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-below">
-<div class="sl-below-inner">
-
-  {# ━━ BEAT 1 — 200 YEARS ━━ #}
-  <div class="sl-statement">
-    <span class="sl-stmt-num">200</span>
-    <span class="sl-stmt-since">Years of photography since 1826</span>
-    <p class="sl-stmt-body">Photographers have received two kinds of feedback: flattery and silence. Likes are not feedback. Scores without reasons are not feedback. Feedback is what works, what doesn&#39;t, and what to improve next.</p>
-    <span class="sl-stmt-punch">Photography has never had an honest improvement loop. Until now.</span>
-    <hr class="sl-stmt-rule">
-    <span class="sl-eye-line">The brands rated your gear. <span class="hl">We rate your eye.</span></span>
-  </div>
-
-  {# ━━ BEAT 2 — HOW IT WORKS ━━ #}
-  <div class="sl-loop">
-    <span class="sl-eyebrow">How it works</span>
-    <div class="sl-loop-h2">One improvement. Every time.</div>
-    <p class="sl-loop-sub">Most feedback overwhelms you with everything at once. We give you one thing — the most important one — and let you shoot with it.</p>
-    <div class="sl-loop-steps">
-      <div class="sl-loop-step">
-        <span class="sl-loop-num">01</span>
-        <div class="sl-loop-title">Upload your photograph</div>
-        <p class="sl-loop-desc">Any genre. Any skill level. Camera or phone. You get a score across five dimensions — including emotional impact — and one specific improvement note written the way a senior photographer would say it.</p>
-        <span class="sl-loop-arrow">→</span>
-      </div>
-      <div class="sl-loop-step">
-        <span class="sl-loop-num">02</span>
-        <div class="sl-loop-title">Apply it. Shoot again.</div>
-        <p class="sl-loop-desc">Upload your next photograph. Watch your score move. Over ten uploads, a hundred, a year of work — the pattern becomes visible. That pattern is your growth as a photographer.</p>
+{# ━━━━━━━━━━━━━━━━━━ 200 YEARS ━━━━━━━━━━━━━━━━━━ #}
+<section class="sl-200">
+  <div>
+    <div class="sl-200-num-row">
+      <span class="sl-200-num">200</span>
+      <div>
+        <span class="sl-200-label-line">Years of Photography</span>
+        <span class="sl-200-label-line">Since 1826</span>
       </div>
     </div>
-    <p class="sl-hive-note">Every evaluation ends with one specific, actionable observation — the thing a senior photographer would notice first. Not a checklist. The one thing that will move your work forward right now.</p>
+    <p class="sl-200-body">Photographers have received two kinds of feedback: flattery and silence.</p>
+    <p class="sl-200-body">Likes are not feedback. Scores without reasons are not feedback. Feedback is what works, what doesn&rsquo;t, and what to improve next.</p>
+    <p class="sl-200-body-bold">Photography has never had an honest improvement loop. Until now.</p>
+  </div>
+  <div class="sl-200-right">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px" aria-hidden="true">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    <p class="sl-200-tagline-1">The brands rated your gear.</p>
+    <p class="sl-200-tagline-2">We rate your eye.</p>
+  </div>
+</section>
+
+{# ━━━━━━━━━━━━━━━━━━ LEARNING LOOP ━━━━━━━━━━━━━━━━━━ #}
+<section class="sl-loop">
+  <div class="sl-loop-heading">A Simple Learning Loop</div>
+  <div class="sl-loop-steps">
+
+    <div class="sl-loop-step">
+      <div class="sl-loop-num">1</div>
+      <div class="sl-loop-icon">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <div class="sl-loop-title">Upload</div>
+      <div class="sl-loop-desc">Submit a photo.<br>Get your score<br>and feedback.</div>
+    </div>
+
+    <div class="sl-loop-arrow">&rarr;</div>
+
+    <div class="sl-loop-step">
+      <div class="sl-loop-num">2</div>
+      <div class="sl-loop-icon">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21h6"/>
+          <path d="M10 17h4"/>
+          <path d="M12 3a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3 6H9c-1.5-1.5-3-3.5-3-6a6 6 0 0 1 6-6z"/>
+          <line x1="12" y1="1" x2="12" y2="2"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="19.78" y1="4.22" x2="18.36" y2="5.64"/>
+          <line x1="1" y1="12" x2="2" y2="12"/>
+          <line x1="23" y1="12" x2="22" y2="12"/>
+        </svg>
+      </div>
+      <div class="sl-loop-title">Insight</div>
+      <div class="sl-loop-desc">Understand what&rsquo;s<br>working and what&rsquo;s<br>not.</div>
+    </div>
+
+    <div class="sl-loop-arrow">&rarr;</div>
+
+    <div class="sl-loop-step">
+      <div class="sl-loop-num">3</div>
+      <div class="sl-loop-icon">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"/>
+          <circle cx="12" cy="12" r="3"/>
+          <line x1="12" y1="2" x2="12" y2="4"/>
+          <line x1="12" y1="20" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="4" y2="12"/>
+          <line x1="20" y1="12" x2="22" y2="12"/>
+        </svg>
+      </div>
+      <div class="sl-loop-title">One Improvement</div>
+      <div class="sl-loop-desc">Apply one clear<br>suggestion to<br>get better.</div>
+    </div>
+
+    <div class="sl-loop-arrow">&rarr;</div>
+
+    <div class="sl-loop-step">
+      <div class="sl-loop-num">4</div>
+      <div class="sl-loop-icon">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <div class="sl-loop-title">Shoot Again</div>
+      <div class="sl-loop-desc">Practice, refine,<br>and see your<br>progress.</div>
+    </div>
+
+  </div>
+  <div class="sl-loop-cta">
+    <a href="{{ url_for('how_it_works') }}" class="sl-loop-btn">HOW IT WORKS &rarr;</a>
+  </div>
+</section>
+
+{# ━━━━━━━━━━━━━━━━━━ HONEST PART + EMOTIONAL IMPACT ━━━━━━━━━━━━━━━━━━ #}
+<section class="sl-honest">
+
+  <div class="sl-honest-col">
+    <span class="sl-honest-label">The Honest Part</span>
+    <span class="sl-gold-rule"></span>
+    <h2 class="sl-honest-heading">The score keeps the feedback honest.</h2>
+    <p class="sl-honest-body">Every photo gets a score. Not to rank you against other photographers &mdash; but to give the feedback a spine.</p>
+    <p class="sl-honest-body">Without a score, feedback is just opinion. With a score, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
+    <a href="{{ url_for('science') }}" class="sl-honest-btn">HOW THE SCORING WORKS &rarr;</a>
   </div>
 
-  {# ━━ BEAT 3 — SCORE SECTION ━━ #}
-  <div class="sl-score-section">
-    <span class="sl-score-ey">The honest part</span>
-    <div class="sl-score-h2">The score keeps the feedback honest.</div>
-    <p class="sl-score-body">Every photo gets a score. Not to rank you against other photographers — but to give the feedback a spine. Without a score, feedback is just opinion. With a score, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
-    <div class="sl-emotion-block">
-      <span class="sl-emotion-label">Emotional impact</span>
-      <p class="sl-emotion-text">Most systems evaluate sharpness, composition, and light. Ours also evaluates whether a photograph moves people. A technically imperfect photograph that stops you breathing scores higher than a technically clean one that says nothing. That is by design.</p>
+  <div class="sl-honest-col">
+    <span class="sl-honest-label">Emotional Impact</span>
+    <span class="sl-gold-rule"></span>
+    <p class="sl-honest-body">Most systems evaluate sharpness, composition, and light. <span class="sl-yellow-underline">Ours also evaluates whether a photograph moves people.</span></p>
+    <p class="sl-honest-body">A technically imperfect photograph that stops you breathing scores higher than a technically clean one that says nothing.</p>
+    <p class="sl-honest-body-bold">That is by design.</p>
+  </div>
+
+  <div class="sl-honest-col">
+    <div class="sl-heart-circle">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
     </div>
     {% if soul_active %}
-    <div class="sl-soul-bonus">
-      <span class="sl-soul-icon">✦</span>
-      <span class="sl-soul-text">
-        <strong>Soul Bonus active.</strong> AQ ≥ 8.0 removes all technical penalties. A photograph that moves people cannot be penalised out of recognition.
-      </span>
-    </div>
+    <p class="sl-soul-title">Soul Bonus active.</p>
+    <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
     {% else %}
-    <div class="sl-aq-explain">
-      <span class="sl-soul-icon" style="color:rgba(44,62,107,0.45);">◆</span>
-      <span class="sl-aq-explain-text">
-        <strong>AQ — the soul dimension.</strong> Reach AQ ≥ 8.0 and the Soul Bonus removes all technical penalties. Emotional truth matters more than technical perfection.
-      </span>
-    </div>
+    <p class="sl-soul-title">Soul Bonus active.</p>
+    <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
     {% endif %}
-    <div class="sl-score-foot">
-      <span>The brands rated your gear. <em>We rate your heart.</em></span>
-      <a href="{{ url_for('science') }}" class="sl-sci-link">How the scoring works →</a>
+    <div class="sl-soul-divider"></div>
+    <p class="sl-soul-tag1">The brands rated your gear.</p>
+    <p class="sl-soul-tag2">We rate your heart.</p>
+  </div>
+
+</section>
+
+{# ━━━━━━━━━━━━━━━━━━ FEATURE CARDS ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-cards">
+
+  <div class="sl-card">
+    {% if active_mentors and active_mentors[0].photo_url %}
+    <img class="sl-card-img" src="{{ active_mentors[0].photo_url }}" alt="Mentor Guidance" loading="lazy">
+    {% else %}
+    <img class="sl-card-img" src="{{ url_for('static', filename='img/mentor_image.jpg') }}" alt="Mentor Guidance" loading="lazy">
+    {% endif %}
+    <div class="sl-card-overlay"></div>
+    <div class="sl-card-content">
+      <span class="sl-card-eyebrow">Mentor Guidance</span>
+      <div class="sl-card-heading">Grow with a mentor<br>who knows your work.</div>
+      <p class="sl-card-body">Personalized guidance based on your scores, strengths, and blind spots.</p>
+      <a href="/mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
     </div>
   </div>
 
-</div>{# end sl-below-inner #}
-</div>{# end sl-below #}
-
-{# ━━━━━━━━━━━━━━━━━━ MENTORS ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-mentors-wrap">
-  <div class="sl-mentors-inner">
-    <span class="sl-eyebrow sl-eyebrow-light">Get Reviewed by our Mentors</span>
-    <h2 class="sl-mentors-h2">Learn from a photographer who already knows your work. Improve with purpose.</h2>
-    <p class="sl-mentor-diff">No other platform does this. Your mentor arrives prepared.</p>
-    <p class="sl-mentors-sub">The evaluation gives you one improvement. A mentor gives you the conversation behind it.</p>
-    <p class="sl-mentors-sub">Every session begins with your full score already shared. Your mentor knows your technical strengths, your emotional blind spots, and your improvement arc — before they write a single word.</p>
-    <div class="sl-mentor-grid">
-
-      {% if active_mentors and active_mentors|length >= 3 %}
-        {% for mentor in active_mentors[:3] %}
-        <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
-          <div class="sl-mcard-photo">
-            {% if mentor.photo_url %}
-              <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
-            {% else %}
-              <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
-            {% endif %}
-            <div class="sl-mcard-level-badge">
-              <span class="sl-mcard-level-val">{{ mentor.tier | title }}</span>
-            </div>
-          </div>
-          <div class="sl-mcard-body">
-            <div class="sl-mcard-name">{{ mentor.display_name }}</div>
-            <div class="sl-mcard-tagline">{{ mentor.tagline or '' }}</div>
-            <div class="sl-mcard-tags">
-              {% for genre in mentor.specialisms_list[:3] %}
-                <span class="sl-mcard-tag">{{ genre }}</span>
-              {% endfor %}
-            </div>
-            <div class="sl-mcard-footer">
-              <span class="sl-mcard-btn">Book your Review</span>
-            </div>
-          </div>
-        </a>
-        {% endfor %}
-
-      {% else %}
-        {# Placeholder mentor 1 — Sreekumar Krishnan #}
-        <div class="sl-mcard">
-          <div class="sl-mcard-photo">
-            <img src="https://www.thelivinglens.org/wp-content/uploads/2025/02/IMG_6381-603x1024.png" alt="Sreekumar Krishnan" loading="lazy" onerror="this.style.display='none'">
-            <div class="sl-mcard-level-badge">
-              <span class="sl-mcard-level-val">Grandmaster</span>
-            </div>
-          </div>
-          <div class="sl-mcard-body">
-            <div class="sl-mcard-name">Sreekumar Krishnan</div>
-            <div class="sl-mcard-tagline">International award-winning photographer · 12 years</div>
-            <div class="sl-mcard-tags">
-              <span class="sl-mcard-tag">Wildlife</span>
-              <span class="sl-mcard-tag">Nature</span>
-              <span class="sl-mcard-tag">Portraits</span>
-              <span class="sl-mcard-tag">Street</span>
-            </div>
-            <div class="sl-mcard-footer">
-              <span class="sl-mcard-btn">Book your Review</span>
-            </div>
-          </div>
-        </div>
-
-        {# Placeholder mentor 2 — Ashok Kochhar #}
-        <div class="sl-mcard">
-          <div class="sl-mcard-photo">
-            <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" loading="lazy" onerror="this.style.display='none'">
-            <div class="sl-mcard-level-badge">
-              <span class="sl-mcard-level-val">Grandmaster</span>
-            </div>
-          </div>
-          <div class="sl-mcard-body">
-            <div class="sl-mcard-name">Ashok Kochhar</div>
-            <div class="sl-mcard-tagline">3 decades · Canon India representative · Mentor</div>
-            <div class="sl-mcard-tags">
-              <span class="sl-mcard-tag">Conceptual</span>
-              <span class="sl-mcard-tag">Fashion</span>
-              <span class="sl-mcard-tag">Street</span>
-              <span class="sl-mcard-tag">Nature</span>
-            </div>
-            <div class="sl-mcard-footer">
-              <span class="sl-mcard-btn">Book your Review</span>
-            </div>
-          </div>
-        </div>
-
-        {# Placeholder mentor 3 — coming soon #}
-        <div class="sl-mcard sl-mcard-soon">
-          <div class="sl-mcard-photo sl-mcard-photo-soon">
-            <div class="sl-mcard-initials">+</div>
-          </div>
-          <div class="sl-mcard-body">
-            <div class="sl-mcard-name">More mentors joining</div>
-            <div class="sl-mcard-tagline">Applications open for Grandmaster &amp; Master level photographers</div>
-            <div class="sl-mcard-tags">
-              <span class="sl-mcard-tag">All genres</span>
-            </div>
-            <div class="sl-mcard-footer">
-              <span class="sl-mcard-btn">Apply to mentor</span>
-            </div>
-          </div>
-        </div>
-
-      {% endif %}
-
-    </div>
-    <div class="sl-mentors-cta">
-      <a href="/mentors" class="sl-mentors-cta-btn">Meet all mentors →</a>
-      <span class="sl-mentors-cta-note">No subscription required &nbsp;·&nbsp; Written within 72 hours</span>
+  <div class="sl-card">
+    {% if gallery_imgs and gallery_imgs[0].thumb_url %}
+    <img class="sl-card-img" src="{{ gallery_imgs[0].thumb_url }}" alt="Body of Work" loading="lazy">
+    {% endif %}
+    <div class="sl-card-overlay"></div>
+    <div class="sl-card-content">
+      <span class="sl-card-eyebrow">Body of Work</span>
+      <div class="sl-card-heading">Some stories deserve<br>to be seen together.</div>
+      <p class="sl-card-body">Curate, organize, and get feedback on your complete work.</p>
+      <a href="{{ url_for('contests') }}" class="sl-card-btn">EXPLORE BODY OF WORK &rarr;</a>
     </div>
   </div>
+
+  <div class="sl-card">
+    <img class="sl-card-img" src="{{ url_for('static', filename='img/POTY revised.png') }}" alt="Photographer of the Year" loading="lazy">
+    <div class="sl-card-overlay"></div>
+    <div class="sl-card-content">
+      <span class="sl-card-eyebrow">Photographer of the Year</span>
+      <div class="sl-card-heading">A year-long recognition<br>for real growth.</div>
+      <p class="sl-card-body">Earn points, climb the ranks, and compete for Photographer of the Year.</p>
+      <a href="{{ url_for('poty') }}" class="sl-card-btn">VIEW POTY &amp; POINTS &rarr;</a>
+    </div>
+  </div>
+
 </div>
-<hr class="sl-divider">
 
-{# ━━━━━━━━━━━━━━━━━━ CLOSE + GALLERY ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-below">
-<div class="sl-below-inner sl-below-close">
-
-  <div class="sl-close">
-    <div class="sl-close-h2">We take your work as seriously as you do.</div>
-    <p class="sl-close-sub">Every serious photographer deserves an honest answer. Not club politics. A score with a reason and an improvement with a purpose.</p>
-    <div class="sl-close-btns">
-      <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-         class="sl-close-btn">GET MY FIRST SCORE — FREE →</a>
-      <span class="sl-close-micro">Free &nbsp;·&nbsp; First 3 scored free &nbsp;·&nbsp; No card required</span>
-    </div>
-  </div>{# end sl-close #}
-
-  {# ━━ GALLERY ━━ #}
-  {% set gallery_imgs = carousel_images[1:] %}
-  {% if gallery_imgs %}
-  <div class="sl-gallery-label">Top scores this week</div>
-  <div class="sl-gallery-sub">Real photographs. Real evaluations. Real members.</div>
-  <div class="sl-gallery">
-    {% for img in gallery_imgs %}{% if img.thumb_url %}
-    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gimg">
-      <div class="sl-gimg-photo">
-        <img src="{{ img.thumb_url }}" alt="{{ img.genre or '' }}" loading="lazy">
-      </div>
-      <div class="sl-gbar">
-        <div class="sl-gbar-left">
-          <span class="sl-gbar-score">{{ "%.2f"|format(img.score) }}</span>
-          <span class="sl-gbar-dot">·</span>
-          <span class="sl-gbar-tier">{{ img.tier }}</span>
-        </div>
-        {% if img.genre %}<span class="sl-gbar-genre">{{ img.genre }}</span>{% endif %}
+{# ━━━━━━━━━━━━━━━━━━ GALLERY ━━━━━━━━━━━━━━━━━━ #}
+{% if gallery_imgs %}
+<div class="sl-gallery-wrap">
+  <div class="sl-gallery-header">
+    <span class="sl-gallery-title">Recent Work From Our Photographers</span>
+    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All Galleries &rarr;</a>
+  </div>
+  <div class="sl-gallery-grid">
+    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
+    <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gitem">
+      <img class="sl-gitem-img"
+           src="{{ img.thumb_url }}"
+           alt="{{ img.genre or 'Photography' }}"
+           loading="lazy">
+      <div class="sl-gitem-overlay"></div>
+      <div class="sl-gitem-info">
+        <span class="sl-gitem-score">{{ (img.score * 10)|round|int }}</span>
+        <span class="sl-gitem-title">{{ img.title or img.genre or 'Untitled' }}</span>
+        <span class="sl-gitem-by">by {{ img.author.username }}</span>
       </div>
     </a>
     {% endif %}{% endfor %}
   </div>
-  {% endif %}
+</div>
+{% endif %}
 
-</div>{# end sl-below-inner #}
-</div>{# end sl-below #}
+{# ━━━━━━━━━━━━━━━━━━ MANIFESTO FOOTER STRIP ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-manifesto">
+  <div class="sl-mf-col1">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+    <p class="sl-mf-tagline">Built for photographers<br>who want to improve honestly.</p>
+  </div>
+  <div></div>
+  <div class="sl-mf-col3">
+    Honesty. Respect. Privacy.<br>
+    No likes. No vanity metrics.<br>
+    Just truthful feedback that helps<br>
+    you become a better photographer.
+  </div>
+</div>
+
+{# ━━━━━━━━━━━━━━━━━━ DARK FOOTER BAR ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-footer-bar">
+  <div class="sl-footer-inner">
+    <div>
+      <span class="sl-footer-brand-name">SHUTTER LEAGUE</span>
+      <span class="sl-footer-brand-sub">Honest Feedback. Real Improvement.</span>
+    </div>
+    <nav class="sl-footer-nav" aria-label="Footer navigation">
+      <a href="/about">About</a>
+      <a href="{{ url_for('science') }}">Science</a>
+      <a href="/blog">Blog</a>
+      <a href="/faq">FAQ</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <div class="sl-footer-social">
+      <a href="https://instagram.com/shutterleague" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </a>
+      <a href="https://youtube.com/@shutterleague" target="_blank" rel="noopener" aria-label="YouTube">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+      </a>
+      <a href="https://facebook.com/shutterleague" target="_blank" rel="noopener" aria-label="Facebook">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
 </div>{# end sl-home #}
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function(){
-  /* Score card resize on window change — kept for compatibility */
-  function checkDims(){
-    var dims=document.getElementById('slScoreCardDims');
-    if(!dims) return;
-    if(window.innerWidth<=768){ dims.classList.add('two-row'); }
-    else { dims.classList.remove('two-row'); }
+  /* Fade in hero text on load */
+  var heroText = document.querySelector('.sl-hero-text');
+  if (heroText) {
+    heroText.style.opacity = '0';
+    heroText.style.transform = 'translateY(12px)';
+    heroText.style.transition = 'opacity 0.9s ease-out, transform 0.9s ease-out';
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        heroText.style.opacity = '1';
+        heroText.style.transform = 'translateY(0)';
+      }, 100);
+    });
   }
-  checkDims();
-  window.addEventListener('resize',checkDims);
+  /* Fade in coaching overlay */
+  var coaching = document.querySelector('.sl-coaching');
+  if (coaching) {
+    coaching.style.opacity = '0';
+    coaching.style.transform = 'translateY(12px)';
+    coaching.style.transition = 'opacity 0.9s ease-out 0.4s, transform 0.9s ease-out 0.4s';
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        coaching.style.opacity = '1';
+        coaching.style.transform = 'translateY(0)';
+      }, 100);
+    });
+  }
 })();
 </script>
 {% endblock %}
