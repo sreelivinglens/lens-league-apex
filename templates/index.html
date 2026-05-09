@@ -221,7 +221,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-score-section {
   background:#FEFCF8; border:1px solid rgba(26,26,24,0.10);
-  border-radius:0; padding:44px 44px 38px; margin-bottom:80px;
+  border-radius:0; padding:44px 44px 38px; margin-bottom:40px;
 }
 .sl-score-ey {
   font-family:var(--font-mono); font-size:16px; font-weight:700;
@@ -439,6 +439,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-family:var(--font-mono); font-size:16px;
   color:rgba(255,255,255,0.72); text-transform:uppercase; letter-spacing:1px; white-space:nowrap;
 }
+
+.sl-mcard-soon { opacity:0.72; }
+.sl-mcard-photo-soon { background:#2C3E6B; }
+.sl-mcard-photo-soon .sl-mcard-initials { font-size:48px; color:rgba(255,255,255,0.25); }
 
 /* ── Divider ── */
 .sl-divider { border:none; border-top:1px solid rgba(44,62,107,0.10); margin:0 0 60px; }
@@ -701,7 +705,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </div>{# end sl-below #}
 
 {# ━━━━━━━━━━━━━━━━━━ MENTORS ━━━━━━━━━━━━━━━━━━ #}
-{% if active_mentors and active_mentors|length >= 3 %}
 <div class="sl-mentors-wrap">
   <div class="sl-mentors-inner">
     <span class="sl-eyebrow sl-eyebrow-light">Get Reviewed by our Mentors</span>
@@ -710,32 +713,101 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <p class="sl-mentors-sub">The evaluation gives you one improvement. A mentor gives you the conversation behind it.</p>
     <p class="sl-mentors-sub">Every session begins with your full score already shared. Your mentor knows your technical strengths, your emotional blind spots, and your improvement arc — before they write a single word.</p>
     <div class="sl-mentor-grid">
-      {% for mentor in active_mentors[:3] %}
-      <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
-        <div class="sl-mcard-photo">
-          {% if mentor.photo_url %}
-            <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
-          {% else %}
-            <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
-          {% endif %}
-          <div class="sl-mcard-level-badge">
-            <span class="sl-mcard-level-val">{{ mentor.tier | title }}</span>
+
+      {% if active_mentors and active_mentors|length >= 3 %}
+        {% for mentor in active_mentors[:3] %}
+        <a href="{{ url_for('mentor_profile', mentor_id=mentor.id) }}" class="sl-mcard">
+          <div class="sl-mcard-photo">
+            {% if mentor.photo_url %}
+              <img src="{{ mentor.photo_url }}" alt="{{ mentor.display_name }}" loading="lazy">
+            {% else %}
+              <div class="sl-mcard-initials">{{ mentor.display_name[:2] | upper }}</div>
+            {% endif %}
+            <div class="sl-mcard-level-badge">
+              <span class="sl-mcard-level-val">{{ mentor.tier | title }}</span>
+            </div>
+          </div>
+          <div class="sl-mcard-body">
+            <div class="sl-mcard-name">{{ mentor.display_name }}</div>
+            <div class="sl-mcard-tagline">{{ mentor.tagline or '' }}</div>
+            <div class="sl-mcard-tags">
+              {% for genre in mentor.specialisms_list[:3] %}
+                <span class="sl-mcard-tag">{{ genre }}</span>
+              {% endfor %}
+            </div>
+            <div class="sl-mcard-footer">
+              <span class="sl-mcard-btn">Book your Review</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+
+      {% else %}
+        {# Placeholder mentor 1 — Sreekumar Krishnan #}
+        <div class="sl-mcard">
+          <div class="sl-mcard-photo">
+            <img src="https://www.thelivinglens.org/wp-content/uploads/2025/02/IMG_6381-603x1024.png" alt="Sreekumar Krishnan" loading="lazy" onerror="this.style.display='none'">
+            <div class="sl-mcard-level-badge">
+              <span class="sl-mcard-level-val">Grandmaster</span>
+            </div>
+          </div>
+          <div class="sl-mcard-body">
+            <div class="sl-mcard-name">Sreekumar Krishnan</div>
+            <div class="sl-mcard-tagline">International award-winning photographer · 12 years</div>
+            <div class="sl-mcard-tags">
+              <span class="sl-mcard-tag">Wildlife</span>
+              <span class="sl-mcard-tag">Nature</span>
+              <span class="sl-mcard-tag">Portraits</span>
+              <span class="sl-mcard-tag">Street</span>
+            </div>
+            <div class="sl-mcard-footer">
+              <span class="sl-mcard-btn">Book your Review</span>
+            </div>
           </div>
         </div>
-        <div class="sl-mcard-body">
-          <div class="sl-mcard-name">{{ mentor.display_name }}</div>
-          <div class="sl-mcard-tagline">{{ mentor.tagline or '' }}</div>
-          <div class="sl-mcard-tags">
-            {% for genre in mentor.specialisms_list[:3] %}
-              <span class="sl-mcard-tag">{{ genre }}</span>
-            {% endfor %}
+
+        {# Placeholder mentor 2 — Ashok Kochhar #}
+        <div class="sl-mcard">
+          <div class="sl-mcard-photo">
+            <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}" alt="Ashok Kochhar" loading="lazy" onerror="this.style.display='none'">
+            <div class="sl-mcard-level-badge">
+              <span class="sl-mcard-level-val">Grandmaster</span>
+            </div>
           </div>
-          <div class="sl-mcard-footer">
-            <span class="sl-mcard-btn">Book your Review</span>
+          <div class="sl-mcard-body">
+            <div class="sl-mcard-name">Ashok Kochhar</div>
+            <div class="sl-mcard-tagline">3 decades · Canon India representative · Mentor</div>
+            <div class="sl-mcard-tags">
+              <span class="sl-mcard-tag">Conceptual</span>
+              <span class="sl-mcard-tag">Fashion</span>
+              <span class="sl-mcard-tag">Street</span>
+              <span class="sl-mcard-tag">Nature</span>
+            </div>
+            <div class="sl-mcard-footer">
+              <span class="sl-mcard-btn">Book your Review</span>
+            </div>
           </div>
         </div>
-      </a>
-      {% endfor %}
+
+        {# Placeholder mentor 3 — coming soon #}
+        <div class="sl-mcard sl-mcard-soon">
+          <div class="sl-mcard-photo sl-mcard-photo-soon">
+            <div class="sl-mcard-initials">+</div>
+          </div>
+          <div class="sl-mcard-body">
+            <div class="sl-mcard-name">More mentors joining</div>
+            <div class="sl-mcard-tagline">Applications open for Grandmaster &amp; Master level photographers</div>
+            <div class="sl-mcard-tags">
+              <span class="sl-mcard-tag">All genres</span>
+            </div>
+            <div class="sl-mcard-footer">
+              <span class="sl-mcard-btn">Apply to mentor</span>
+            </div>
+          </div>
+        </div>
+
+      {% endif %}
+
     </div>
     <div class="sl-mentors-cta">
       <a href="{{ url_for('mentors') }}" class="sl-mentors-cta-btn">Meet all mentors →</a>
@@ -744,7 +816,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 </div>
 <hr class="sl-divider">
-{% endif %}
 
 {# ━━━━━━━━━━━━━━━━━━ CLOSE + GALLERY ━━━━━━━━━━━━━━━━━━ #}
 <div class="sl-below">
