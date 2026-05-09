@@ -560,46 +560,67 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 footer {
   background: #0D0D0B;
   border-top: none;
-  padding: 28px var(--page-pad) 24px;
-  text-align: center;
+  padding: 0;
   font-family: 'Inter', sans-serif;
-  color: rgba(255,255,255,0.45);
   margin-top: 0;
 }
+.footer-top {
+  padding: 0 var(--page-pad);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 .footer-brand {
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.65);
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  line-height: 1.7;
   font-family: 'Inter', sans-serif;
-}
-@media (max-width: 480px) {
-  .footer-brand { font-size: 16px; letter-spacing: 0.5px; }
-}
-.footer-brand strong {
-  color: var(--gold);
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  line-height: 1;
 }
 .footer-links {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px 28px;
-  font-size: 16px;
-  letter-spacing: 0.5px;
+  gap: 2px 4px;
   font-family: 'Inter', sans-serif;
 }
 .footer-links a {
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.75);
   text-decoration: none;
-  transition: color 0.2s;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
   white-space: nowrap;
 }
-.footer-links a:hover { color: #FFFFFF; }
+.footer-links a:hover { color: #FFFFFF; background: rgba(255,255,255,0.10); }
+.footer-bottom {
+  padding: 14px var(--page-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.38);
+}
+@media (max-width: 768px) {
+  .footer-top { height: auto; padding: 16px var(--page-pad); flex-direction: column; align-items: flex-start; gap: 12px; }
+  .footer-links { justify-content: flex-start; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -622,7 +643,7 @@ footer {
   .page-header h1 { font-size: 22px; }
 
   .btn { padding: 10px 18px; font-size: 16px; }
-  footer { font-size: 16px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif; }
+  
 }
 
 @media (max-width: 480px) {
@@ -862,28 +883,26 @@ img {
 </main>
 
 <footer>
-  <div class="footer-brand">
-    <div>&copy; 2026 Shutter League. All rights reserved.</div>
-    <div style="margin-top:4px;">APEX DDI ENGINE &nbsp;&middot;&nbsp; Rated by Science. Not Opinion.</div>
+  <!-- Row 1: Brand left · Links right — mirrors nav -->
+  <div class="footer-top">
+    <span class="footer-brand">SHUTTER LEAGUE</span>
+    <div class="footer-links">
+      <a href="/about">About Us</a>
+      <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
+      <a href="/terms">Terms &amp; Conditions</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/refund-policy">Refund Policy</a>
+      <a href="/shipping-policy">Shipping &amp; Returns</a>
+      <a href="/contact">Contact Us</a>
+      <a href="/faq">FAQ</a>
+      <a href="{{ url_for('poty') }}">Awards</a>
+      <a href="/programme-rules">Programme Rules</a>
+    </div>
   </div>
-  <div class="footer-links">
-    <a href="/about">About Us</a>
-    <a href="{{ url_for('poty') }}">Annual Excellence Award</a>
-    <a href="/terms">Terms &amp; Conditions</a>
-    <a href="/privacy">Privacy Policy</a>
-    <a href="/refund-policy">Refund Policy</a>
-    <a href="/shipping-policy">Shipping &amp; Returns</a>
-    <a href="/contact">Contact Us</a>
-    <a href="/faq">FAQ</a>
-    <a href="/poty">Awards</a>
-    <a href="/programme-rules">Programme Rules</a>
-  </div>
-  <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.08);font-family:var(--font-mono);font-size:16px;color:rgba(26,26,24,0.45);text-align:center;line-height:2.0;">
-    <strong style="color:rgba(26,26,24,0.6);">Shutter League</strong> &mdash; Sole Proprietorship
-    &nbsp;&middot;&nbsp; Bengaluru, Karnataka, India<br>
-    <a href="mailto:info@shutterleague.com" style="color:rgba(26,26,24,0.45);text-decoration:none;">info@shutterleague.com</a>
-    &nbsp;&middot;&nbsp; Grievance: <a href="/contact" style="color:rgba(26,26,24,0.6);text-decoration:none;">Contact Us</a><br>
-    Payments processed via RBI-authorised gateways &mdash; we do not store card details
+  <!-- Row 2: Copyright left · Tagline right -->
+  <div class="footer-bottom">
+    <span>&copy; 2026 Shutter League. All rights reserved.</span>
+    <span>APEX DDI ENGINE &nbsp;&middot;&nbsp; Rated by Science. Not Opinion.</span>
   </div>
 </footer>
 
