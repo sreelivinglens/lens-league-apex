@@ -670,39 +670,108 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ━━ FOOTER BAR handled by base.html ━━ */
 
+/* Below-hero mobile block — hidden on desktop */
+.sl-hero-below { display: none; }
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* ── Hero ── */
-  .sl-hero { min-height: 72vw; }
+  /* ── Hero — Option B: 16:9 photo, headline at bottom, rest on cream ── */
+  .sl-hero {
+    min-height: unset;
+    height: auto;
+    background: #0D0D0B;
+  }
+  .sl-hero-img {
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  /* Gradient over photo bottom for headline readability */
+  .sl-hero::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 56.25vw; /* matches 16:9 */
+    background: linear-gradient(to top,
+      rgba(0,0,0,0.90) 0%,
+      rgba(0,0,0,0.50) 40%,
+      transparent 100%);
+    pointer-events: none;
+    z-index: 3;
+  }
+  /* Hero text: headline anchored bottom of photo */
   .sl-hero-text {
-    top: 28px; left: 20px;
-    max-width: calc(100% - 40px);
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    max-width: 100%;
+    z-index: 5;
+    padding-bottom: 16px;
   }
   .sl-hero-h1 {
-    font-size: 36px;
+    font-size: 32px;
     white-space: normal;
     line-height: 1.08;
+    color: #FFFFFF;
     text-shadow: 0 1px 8px rgba(0,0,0,0.98) !important;
+    margin-bottom: 0;
   }
+  /* Subhead + CTA + micro move BELOW the photo on cream */
   .sl-hero-sub {
-    font-size: 17px;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.98) !important;
+    display: none; /* hidden inside hero, shown in below-hero block */
   }
-  .sl-hero-btn {
+  .sl-hero-btn { display: none; }
+  .sl-hero-micro { display: none; }
+
+  /* Below-hero cream block */
+  .sl-hero-below {
+    display: block;
+    background: #F7F5F2;
+    padding: 20px 20px 24px;
+  }
+  .sl-hero-below-sub {
+    font-size: 17px;
+    font-weight: 400;
+    color: rgba(26,26,24,0.80);
+    line-height: 1.55;
+    margin-bottom: 20px;
+  }
+  .sl-hero-below-btn {
     display: block;
     width: 100%;
-    text-align: center;
+    background: #F5C518;
+    color: #0D0D0B;
+    font-family: 'Inter', sans-serif;
     font-size: 13px;
-    padding: 16px 24px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 12px;
   }
-  .sl-hero-micro {
-    font-size: 16px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.98) !important;
+  .sl-hero-below-micro {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(26,26,24,0.55);
+    font-size: 14px;
+    font-weight: 400;
   }
-  /* Hide coaching overlay on mobile — photo must breathe */
+  /* Hide coaching overlay on mobile */
   .sl-coaching { display: none; }
 
   /* ── Trust bar — 2×2 grid ── */
@@ -710,7 +779,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     padding: 24px 20px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px 16px;
+    gap: 24px 20px;
   }
   .sl-trust-item {
     flex: none;
@@ -718,7 +787,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     text-align: left;
     gap: 8px;
   }
-  .sl-trust-label { font-size: 11px; }
+  .sl-trust-label {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    word-break: normal;
+    hyphens: none;
+  }
   .sl-trust-desc { font-size: 13px; }
 
   /* ── 200 Years — single column ── */
@@ -893,7 +968,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   {% endif %}
 </section>
 
-{# ━━━━━━━━━━━━━━━━━━ TRUST BAR ━━━━━━━━━━━━━━━━━━ #}
+{# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
+<div class="sl-hero-below">
+  <div class="sl-hero-below-sub">Honest photography feedback.<br>One improvement at a time.</div>
+  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+     class="sl-hero-below-btn">GET MY FIRST FEEDBACK</a>
+  <div class="sl-hero-below-micro">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Usually under a minute
+  </div>
+</div>
 <div class="sl-trust">
   <div class="sl-trust-item">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -917,7 +1001,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 </div>
 
-{# ━━━━━━━━━━━━━━━━━━ 200 YEARS ━━━━━━━━━━━━━━━━━━ #}
+{# ━━━━━━━━━━━━━━━━━━ TRUST BAR ━━━━━━━━━━━━━━━━━━ #}
 <section class="sl-200">
   <div>
     <div class="sl-200-num-row">

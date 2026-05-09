@@ -113,6 +113,19 @@ nav {
   color: var(--gold);
   text-decoration: none;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.nav-brand-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40);
+  display: block;
 }
 .nav-links {
   display: flex;
@@ -781,7 +794,10 @@ img {
 <body>
 
 <nav>
-  <a href="{{ url_for('index') }}" class="nav-brand">SHUTTER LEAGUE</a>
+  <a href="{{ url_for('index') }}" class="nav-brand">
+    SHUTTER LEAGUE
+    <span class="nav-brand-tag">Honest Feedback. Real Improvement.</span>
+  </a>
 
   <!-- Desktop nav -->
   <div class="nav-links">
