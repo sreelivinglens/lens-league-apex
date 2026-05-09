@@ -502,32 +502,35 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 28px;
+  padding: 22px 24px;
   z-index: 2;
 }
 .sl-card-eyebrow {
+  position: absolute;
+  top: 20px;
+  left: 24px;
   display: block;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #FFFFFF;
-  margin-bottom: 10px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.80);
 }
 .sl-card-heading {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 600;
   color: #FFFFFF;
   line-height: 1.2;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-align: justify;
 }
 .sl-card-body {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: rgba(255,255,255,0.82);
-  line-height: 1.65;
-  margin-bottom: 18px;
+  line-height: 1.60;
+  margin-bottom: 16px;
   text-align: justify;
 }
 .sl-card-btn {
@@ -811,8 +814,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* ── Feature cards — stacked full width ── */
   .sl-cards { grid-template-columns: 1fr; }
   .sl-card { height: 320px; }
-  .sl-card-heading { font-size: 22px; }
-  .sl-card-body { font-size: 14px; }
+  .sl-card-heading { font-size: 18px; }
+  .sl-card-body { font-size: 13px; }
 
   /* ── Gallery — single column ── */
   .sl-gallery-wrap { padding: 24px 0 0; }
@@ -1074,14 +1077,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div class="sl-cards">
 
   <div class="sl-card">
-    {% if active_mentors and active_mentors[0].photo_url %}
-    <img class="sl-card-img" src="{{ active_mentors[0].photo_url }}" alt="Mentor Guidance" loading="lazy">
-    {% else %}
-    <img class="sl-card-img" src="{{ url_for('static', filename='img/mentor_image.jpg') }}" alt="Mentor Guidance" loading="lazy">
-    {% endif %}
+    <img class="sl-card-img"
+         src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+         alt="Mentor Guidance"
+         loading="lazy"
+         onerror="this.style.display='none'">
     <div class="sl-card-overlay"></div>
+    <span class="sl-card-eyebrow">Mentor Guidance</span>
     <div class="sl-card-content">
-      <span class="sl-card-eyebrow">Mentor Guidance</span>
       <div class="sl-card-heading">Grow with a mentor<br>who knows your work.</div>
       <p class="sl-card-body">Personalized guidance based on your scores, strengths, and blind spots.</p>
       <a href="/mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
@@ -1090,11 +1093,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   <div class="sl-card">
     {% if gallery_imgs and gallery_imgs[0].thumb_url %}
-    <img class="sl-card-img" src="{{ gallery_imgs[0].thumb_url }}" alt="Body of Work" loading="lazy">
+    <img class="sl-card-img" src="{{ gallery_imgs[0].thumb_url }}" alt="Body of Work" loading="lazy" onerror="this.style.display='none'">
     {% endif %}
     <div class="sl-card-overlay"></div>
+    <span class="sl-card-eyebrow">Body of Work</span>
     <div class="sl-card-content">
-      <span class="sl-card-eyebrow">Body of Work</span>
       <div class="sl-card-heading">Some stories deserve<br>to be seen together.</div>
       <p class="sl-card-body">Curate, organize, and get feedback on your complete work.</p>
       <a href="{{ url_for('contests') }}" class="sl-card-btn">EXPLORE BODY OF WORK &rarr;</a>
@@ -1102,10 +1105,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 
   <div class="sl-card">
-    <img class="sl-card-img" src="{{ url_for('static', filename='img/POTY revised.png') }}" alt="Photographer of the Year" loading="lazy">
+    <img class="sl-card-img" src="{{ url_for('static', filename='img/POTY revised.png') }}" alt="Photographer of the Year" loading="lazy" onerror="this.style.display='none'">
     <div class="sl-card-overlay"></div>
+    <span class="sl-card-eyebrow">Photographer of the Year</span>
     <div class="sl-card-content">
-      <span class="sl-card-eyebrow">Photographer of the Year</span>
       <div class="sl-card-heading">A year-long recognition<br>for real growth.</div>
       <p class="sl-card-body">Earn points, climb the ranks, and compete for Photographer of the Year.</p>
       <a href="{{ url_for('poty') }}" class="sl-card-btn">VIEW POTY &amp; POINTS &rarr;</a>
