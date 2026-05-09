@@ -1088,7 +1088,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       <div class="sl-card-heading">Grow with a mentor<br>who knows your work.</div>
       <p class="sl-card-body">Personalized guidance based on your scores, strengths, and blind spots.</p>
       {# TODO Session 16: Replace with url_for('mentors') once mentor marketplace page is built #}
-      <a href="/#sl-mentors" class="sl-card-btn">MEET THE MENTORS &rarr;</a>
+      <button class="sl-card-btn" onclick="slMentorSoon(this)">MEET THE MENTORS &rarr;</button>
+      <span class="sl-mentor-soon" id="sl-mentor-soon-msg" style="display:none; margin-top:10px; font-size:12px; font-weight:500; color:rgba(255,255,255,0.75); display:none;">Mentor booking coming soon.</span>
     </div>
   </div>
 
@@ -1197,5 +1198,26 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     });
   }
 })();
+
+/* Mentor coming soon */
+function slMentorSoon(btn) {
+  var msg = document.getElementById('sl-mentor-soon-msg');
+  if (!msg) return;
+  btn.style.display = 'none';
+  msg.style.display = 'block';
+  msg.style.opacity = '0';
+  msg.style.transition = 'opacity 0.4s ease';
+  setTimeout(function(){ msg.style.opacity = '1'; }, 20);
+  setTimeout(function(){
+    msg.style.opacity = '0';
+    setTimeout(function(){
+      msg.style.display = 'none';
+      btn.style.display = 'inline-flex';
+      btn.style.opacity = '0';
+      btn.style.transition = 'opacity 0.4s ease';
+      setTimeout(function(){ btn.style.opacity = '1'; }, 20);
+    }, 400);
+  }, 2500);
+}
 </script>
 {% endblock %}
