@@ -53,21 +53,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   z-index: 5;
 }
 .sl-hero-h1 {
-  font-size: 76px;
+  font-size: 61px;
   font-weight: 600;
   color: #FFFFFF;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   white-space: nowrap;
   text-shadow: 0 2px 24px rgba(0,0,0,0.95), 0 1px 8px rgba(0,0,0,0.98), 0 0 48px rgba(0,0,0,0.80);
 }
 .sl-hero-sub {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 400;
   color: #FFFFFF;
   line-height: 1.55;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98);
 }
 .sl-hero-btn {
@@ -78,7 +78,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 16px 36px;
+  padding: 14px 32px;
   text-decoration: none;
   border: none;
   cursor: pointer;
@@ -89,9 +89,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 12px;
   color: #FFFFFF;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
   text-shadow: 0 1px 12px rgba(0,0,0,0.98), 0 0 24px rgba(0,0,0,0.95);
 }
@@ -671,10 +671,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* Hero */
   .sl-hero { min-height: 60vw; }
   .sl-hero-text { top: 24px; left: 20px; max-width: calc(100% - 40px); }
-  .sl-hero-h1 { font-size: 40px; white-space: normal; text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98); }
-  .sl-hero-sub { font-size: 16px; }
-  .sl-hero-btn { font-size: 13px; padding: 14px 24px; }
-  .sl-hero-micro { font-size: 13px; }
+  .sl-hero-h1 { font-size: 32px; white-space: normal; text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98); }
+  .sl-hero-sub { font-size: 14px; }
+  .sl-hero-btn { font-size: 12px; padding: 12px 22px; }
+  .sl-hero-micro { font-size: 12px; }
   .sl-coaching { right: 12px; bottom: 12px; width: 180px; padding: 14px 14px 12px; }
   .sl-co-body { font-size: 12px; }
 
@@ -748,7 +748,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
        src="{{ hero.thumb_url }}"
        alt="{{ hero.genre or 'Photography' }}"
        loading="eager"
-       fetchpriority="high">
+       fetchpriority="high"
+       onerror="this.style.display='none'">
   {% endif %}
 
   <div class="sl-hero-text">
