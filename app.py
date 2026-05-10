@@ -5108,8 +5108,27 @@ def notify_me():
 
 @app.route('/learning')
 def learning():
+    try:
+        learning_hero = (Image.query
+                         .filter(Image.status == 'scored',
+                                 Image.score != None,
+                                 Image.is_public == True,
+                                 Image.is_flagged == False,
+                                 Image.thumb_url != None,
+                                 Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                                 Image.score >= 8.0)
+                         .order_by(db.func.random())
+                         .first())
+    except Exception:
+        learning_hero = None
     return render_template('learning.html',
-                           learning_limit=LEARNING_IMAGE_LIMIT)
+                           learning_limit=LEARNING_IMAGE_LIMIT,
+                           learning_hero=learning_hero)
+
+@app.route('/mentor-register')
+def mentor_register():
+    # Placeholder — mentor booking page to be built in a future session
+    return redirect(url_for('learning'))
 
 @app.route('/pricing')
 def pricing():
