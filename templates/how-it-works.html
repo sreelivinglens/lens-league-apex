@@ -427,27 +427,34 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* HERO — full-bleed on mobile too, text container overlaid */
+  /* HERO — fixed height, matches poty standard */
   .sl-hiw-hero {
-    min-height: 360px;
+    height: 360px;
+    max-height: 360px;
     align-items: flex-end;
   }
   .sl-hiw-hero-content {
     margin: 0 16px 24px;
     padding: 24px 20px;
     max-width: none;
+    width: fit-content;
     text-shadow: none;
     background: rgba(30,28,24,0.58);
     backdrop-filter: blur(2px);
   }
   .sl-hiw-hero-h1 {
-    font-size: 34px;
+    font-size: 28px;
     text-shadow: none;
     letter-spacing: -0.02em;
-    margin-bottom: 12px;
+    margin-bottom: 0;
+  }
+  .sl-hiw-hero-sub {
+    display: none;
   }
   .sl-hiw-hero-body {
-    font-size: 17px;
+    display: none;
+  }
+  .sl-hiw-eyebrow {
     text-shadow: none;
   }
 
