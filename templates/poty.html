@@ -1,630 +1,1163 @@
 {% extends "base.html" %}
-{% block title %}Annual Excellence Award — Photographer of the Year · Shutter League{% endblock %}
+{% block title %}Annual Excellence Award — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="India&#39;s only continuously-updated photography ranking system. Scored by the Apex DDI Engine across 8 genres, verified by jury. No entry fee — every upload counts. Camera and Mobile leagues.">
-<meta property="og:title" content="POTY — India&#39;s Photography Ranking System · Shutter League">
-<meta property="og:description" content="Your rank updates every time you upload. No entry fee, no submission window. AI scores every image. Jury verifies the top finalists. Two leagues — Camera and Mobile.">
-<meta property="og:type" content="website">
-<link rel="canonical" href="https://shutterleague.com/poty">
+<meta name="description" content="The Annual Excellence Award recognises photographers who consistently create meaningful work, demonstrate growth, and uphold the highest standards of photographic expression.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.awards-wrap { max-width:880px; margin:0 auto; padding:0 var(--page-pad) 80px; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ANNUAL EXCELLENCE AWARD — poty.html
+   Session 16 · Inter only
+   #F7F5F2 light bg · #EDEAE4 warm bg
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #0D0D0B hero/footer bg · #1A2744 navy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 
-.awards-section { margin-bottom:52px; }
-.awards-section-title {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase; color:var(--text-primary);
-  margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border);
-}
-
-/* Track grid */
-.track-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
-.track-card {
-  background:#FFFFFF; border:1px solid var(--border);
-  border-radius:var(--radius-lg); overflow:hidden; padding:0;
-}
-.track-card.camera { border:1.5px solid #2C3E6B; }
-.track-card.mobile  { border:1.5px solid #004D40; }
-.track-card-header {
-  padding:16px 20px; display:flex; align-items:center; gap:12px;
-}
-.track-card.camera .track-card-header { background:#2C3E6B; }
-.track-card.mobile  .track-card-header { background:#004D40; }
-.track-card-body { padding:20px 20px; }
-.track-icon { font-size:24px; flex-shrink:0; }
-.track-name { font-size:18px; font-weight:700; margin-bottom:2px; }
-.track-card.camera .track-name { color:#FFFFFF; }
-.track-card.mobile  .track-name { color:#FFFFFF; }
-.track-sub {
-  font-family:var(--font-mono); font-size:16px;
-  letter-spacing:1px; text-transform:uppercase;
-}
-.track-card.camera .track-sub { color:rgba(255,255,255,0.70); }
-.track-card.mobile  .track-sub { color:rgba(255,255,255,0.70); }
-.track-honours { display:flex; flex-direction:column; gap:10px; }
-.track-honour-row {
-  display:flex; justify-content:space-between; align-items:baseline;
-  padding:10px 0; border-bottom:1px solid var(--border-subtle);
-}
-.track-honour-row:last-child { border-bottom:none; }
-.track-honour-place {
-  font-family:var(--font-mono); font-size:16px;
-  letter-spacing:1px; text-transform:uppercase;
-}
-.track-card.camera .track-honour-place { color:#2C3E6B; }
-.track-card.mobile  .track-honour-place { color:#004D40; }
-.track-card.camera .track-honour-row { border-bottom-color:#C5CEDF; }
-.track-card.mobile  .track-honour-row { border-bottom-color:#B2CECA; }
-.track-honour-amount { font-size:16px; font-weight:700; color:var(--text-primary); }
-
-/* Genre table */
-.genre-table { width:100%; border-collapse:collapse; }
-.genre-table th {
-  font-family:var(--font-mono); font-size:16px; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--text-muted); text-align:left;
-  padding:12px 14px; border-bottom:1px solid var(--border);
-  background:var(--surface-3);
-}
-.genre-table td {
-  padding:14px; font-size:16px; color:var(--text-primary);
-  border-bottom:1px solid var(--border-subtle);
-}
-.genre-table tr:last-child td { border-bottom:none; }
-
-/* ── Solari Board ── */
-.solari-board {
-  background:#2C3E6B; border-radius:8px;
-  padding:16px; overflow:hidden; margin-bottom:8px;
-}
-.solari-header {
-  display:flex; gap:0; margin-bottom:10px;
-}
-.sh-cell {
-  font-family:var(--font-mono); font-size:16px; letter-spacing:2px;
-  text-transform:uppercase; color:rgba(255,255,255,0.30); padding:0 12px 8px;
-}
-.sh-cell.wide { flex:2; }
-.sh-cell.narrow { flex:1; }
-.sl-row {
-  display:flex; align-items:stretch; gap:2px; margin-bottom:2px;
-  opacity:0; transform:translateY(4px); transition:opacity 0.3s, transform 0.3s;
-}
-.sl-row.visible { opacity:1; transform:translateY(0); }
-.sl-cell {
-  display:flex; align-items:center; padding:0 12px; min-height:44px; overflow:hidden;
-}
-.sl-cell.wide { flex:2; }
-.sl-cell.narrow { flex:1; }
-.sl-cell.gold-bg { background:rgba(245,197,24,0.15); }
-.sl-cell.light-bg { background:rgba(255,255,255,0.07); }
-.sl-cell.mid-bg { background:rgba(255,255,255,0.04); }
-.flip-text {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  letter-spacing:1px; display:flex; gap:2px; flex-wrap:wrap; align-items:center;
-}
-.fl-char { display:inline-block; overflow:hidden; line-height:1; }
-.fl-char span { display:block; }
-.fl-char.flipping span { animation:slflip 0.06s linear forwards; }
-@keyframes slflip {
-  0%  { transform:rotateX(0deg); opacity:1; }
-  50% { transform:rotateX(90deg); opacity:0; }
-  100%{ transform:rotateX(0deg); opacity:1; }
-}
-.sl-gold  { color:#F5C518; }
-.sl-white { color:rgba(255,255,255,0.92); }
-.sl-muted { color:rgba(255,255,255,0.45); }
-.sl-pill {
-  font-family:var(--font-mono); font-size:16px; letter-spacing:1.5px;
-  font-weight:700; padding:3px 8px; border-radius:3px;
-  text-transform:uppercase; white-space:nowrap;
-}
-.pill-gold   { background:#F5C518; color:#1a1200; }
-.pill-dim    { background:rgba(255,255,255,0.10); color:rgba(255,255,255,0.60); }
-.pill-green  { background:rgba(74,222,128,0.15); color:#4ade80; }
-
-.board-replay { display:none; }
-
-/* Board description text beneath each board row */
-.board-desc-list { display:flex; flex-direction:column; gap:0; margin-top:12px; }
-.board-desc-row {
-  display:flex; gap:20px; padding:14px 0;
-  border-bottom:1px solid var(--border-subtle); font-size:16px;
-  color:var(--text-primary); line-height:1.7;
-}
-.board-desc-row:last-child { border-bottom:none; }
-.board-desc-label {
-  font-family:var(--font-mono); font-size:16px; font-weight:700;
-  min-width:100px; color:#2C3E6B; flex-shrink:0; padding-top:2px;
+.sl-poty, .sl-poty * {
+  font-family: 'Inter', sans-serif !important;
 }
 
-/* CTA */
-.awards-cta {
-  background:linear-gradient(135deg,#1a1a18,#2d2d28);
-  border-radius:var(--radius-lg); padding:40px 36px; text-align:center;
-  margin-top:52px;
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-hero {
+  position: relative;
+  width: 100%;
+  min-height: 520px;
+  background: #0D0D0B;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
 }
-.awards-cta h2 { font-size:26px; font-weight:700; color:#FFFFFF; margin-bottom:10px; }
-.awards-cta p { font-size:17px; color:rgba(255,255,255,0.80); margin-bottom:8px; line-height:1.7; }
-.awards-cta .cta-note {
-  font-family:var(--font-mono); font-size:16px; color:rgba(255,255,255,0.55);
-  margin-bottom:24px; line-height:1.6;
+.sl-poty-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-poty-hero-img[src=""],
+.sl-poty-hero-img:not([src]) {
+  display: none;
+}
+.sl-poty-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,13,11,0.45);
+}
+.sl-poty-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 64px;
+  max-width: 660px;
+  background: rgba(30,28,24,0.52);
+  backdrop-filter: blur(2px);
+  margin: 48px 64px;
+}
+.sl-poty-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-poty-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-poty-hero-h1 {
+  font-size: 56px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-poty-hero-sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-poty-hero-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.65;
+  text-align: justify;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
 }
 
-@media (max-width:768px) {
-  .track-grid { grid-template-columns:1fr; }
-  .sh-cell, .flip-text { font-size:16px; }
-  .track-card { padding:0; }
-  .why-diff-row { grid-template-columns:1fr !important; }
-  .why-diff-label { border-right:none !important; border-bottom:1px solid var(--border) !important; }
-  .awards-wrap { padding:0 16px 60px; }
-  .sh-cell.narrow, .sl-cell.narrow { display:none; }
-  .solari-board { max-width:100%; box-sizing:border-box; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .board-desc-list { margin-top:0; }
-  .board-desc-label { color:#2C3E6B; }
+/* ━━ TRUST BAR ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-trust {
+  background: #F7F5F2;
+  border-bottom: 1px solid rgba(26,26,24,0.08);
+  padding: 0 64px;
+  display: flex;
+  align-items: stretch;
 }
-@media (max-width:480px) {
-  .awards-cta { padding:28px 18px; }
-  .awards-cta-btns { flex-direction:column; align-items:stretch; }
-  .awards-cta-btns a { width:100%; text-align:center; box-sizing:border-box; }
-  .board-desc-row { flex-direction:column; gap:4px; }
-  .board-desc-label { min-width:auto; }
+.sl-poty-trust-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 16px;
+  border-right: 1px solid rgba(26,26,24,0.08);
+  text-align: center;
+}
+.sl-poty-trust-item:last-child {
+  border-right: none;
+}
+.sl-poty-trust-icon {
+  color: #1A1A18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-poty-trust-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1A18;
+  line-height: 1.4;
+}
+
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-sec {
+  padding: 80px 64px;
+}
+.sl-poty-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-poty-sec-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  margin-bottom: 6px;
+}
+.sl-poty-sec-rule-dark {
+  width: 32px;
+  height: 2px;
+  background: #1A2744;
+  margin-bottom: 22px;
+}
+.sl-poty-h2 {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1A1A18;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.sl-poty-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.72);
+  line-height: 1.7;
+  text-align: justify;
+}
+.sl-poty-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid #1A1A18;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+  color: #1A1A18;
+  text-decoration: none;
+  margin-top: 28px;
+  border-radius: 0;
+  transition: background 0.2s, color 0.2s;
+}
+.sl-poty-btn-outline:hover {
+  background: #1A1A18;
+  color: #F7F5F2;
+}
+
+/* ━━ HOW THE AWARD WORKS — 2-col ━━━━━━━━ */
+.sl-poty-how-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: start;
+}
+
+/* ━━ AWARD STEPS ━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-steps {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
+  align-items: start;
+  margin-top: 8px;
+}
+.sl-poty-step {
+  text-align: center;
+  padding: 0 8px;
+}
+.sl-poty-step-num {
+  width: 36px;
+  height: 36px;
+  background: #1A1A18;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 auto 16px;
+}
+.sl-poty-step-icon {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  color: #1A1A18;
+}
+.sl-poty-step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-poty-step-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.6;
+  text-align: center;
+}
+.sl-poty-arrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 42px;
+  font-size: 18px;
+  color: rgba(26,26,24,0.22);
+  font-family: sans-serif !important;
+}
+
+/* ━━ POINTS SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-points-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  margin-top: 48px;
+}
+.sl-poty-point-col {
+  padding: 36px 28px 36px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-poty-point-col:last-child {
+  border-right: none;
+}
+.sl-poty-point-icon {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #1A1A18;
+}
+.sl-poty-point-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-poty-point-desc {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.65;
+  text-align: justify;
+}
+.sl-poty-points-note {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1A1A18;
+  padding: 28px 0 24px;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  margin-top: 0;
+}
+.sl-poty-points-note strong {
+  font-weight: 700;
+}
+.sl-poty-btn-center {
+  display: flex;
+  justify-content: center;
+}
+
+/* ━━ LEADERBOARD SECTION ━━━━━━━━━━━━━━━━ */
+.sl-poty-lb-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.sl-poty-lb-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #0D0D0B;
+}
+.sl-poty-lb-photo[src=""],
+.sl-poty-lb-photo:not([src]) {
+  display: none;
+}
+.sl-poty-lb-photo-wrap {
+  background: #0D0D0B;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+.sl-poty-tab-bar {
+  border-bottom: 2px solid rgba(26,26,24,0.12);
+  margin-bottom: 20px;
+}
+.sl-poty-tab {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  border-bottom: 2px solid #1A1A18;
+  margin-bottom: -2px;
+}
+.sl-poty-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sl-poty-lb-table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(26,26,24,0.12);
+  text-align: left;
+}
+.sl-poty-lb-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid rgba(26,26,24,0.07);
+  font-size: 15px;
+  font-weight: 500;
+  color: #1A1A18;
+}
+.sl-poty-rank-gold {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1A1A18;
+  color: #F5C518;
+  font-weight: 800;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-poty-rank-n {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(26,26,24,0.10);
+  color: #1A1A18;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-poty-lb-note {
+  font-size: 12px;
+  color: rgba(26,26,24,0.42);
+  font-style: italic;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+.sl-poty-lb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1A1A18;
+  text-decoration: none;
+  margin-top: 16px;
+  border-bottom: 1px solid rgba(26,26,24,0.25);
+  padding-bottom: 2px;
+  transition: border-color 0.2s;
+}
+.sl-poty-lb-link:hover {
+  border-color: #1A1A18;
+}
+
+/* ━━ AWARD & RECOGNITION ━━━━━━━━━━━━━━━━ */
+.sl-poty-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  margin-top: 48px;
+}
+.sl-poty-rec-col {
+  padding: 36px 24px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.sl-poty-rec-col:last-child {
+  border-right: none;
+}
+.sl-poty-rec-icon {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A1A18;
+}
+.sl-poty-rec-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-poty-rec-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ━━ KEY DATES + CATEGORIES + IMAGES ━━━━ */
+.sl-poty-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 0;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  margin-top: 48px;
+}
+.sl-poty-kd-block {
+  padding: 40px 40px 40px 0;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-poty-cat-block {
+  padding: 40px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-poty-img-block {
+  padding: 40px 0 40px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  align-content: start;
+}
+.sl-poty-img-block img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #1a1810;
+}
+.sl-poty-kd-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.sl-poty-kd-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+.sl-poty-kd-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1A1A18;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+.sl-poty-kd-event {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.70);
+  line-height: 1.45;
+}
+.sl-poty-cat-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+.sl-poty-cat-list li {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A18;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(26,26,24,0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sl-poty-cat-list li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1A1A18;
+  flex-shrink: 0;
+}
+.sl-poty-cat-list li:last-child {
+  border-bottom: none;
+}
+
+/* ━━ CTA STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-poty-cta {
+  background: #1A2744;
+  padding: 60px 64px;
+}
+.sl-poty-cta-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+.sl-poty-cta-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.sl-poty-cta-trophy {
+  width: 56px;
+  height: 56px;
+  background: rgba(245,197,24,0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #F5C518;
+}
+.sl-poty-cta-h {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.sl-poty-cta-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.58);
+  line-height: 1.5;
+}
+.sl-poty-cta-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #F5C518;
+  color: #0D0D0B;
+  padding: 16px 36px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.sl-poty-cta-btn:hover {
+  opacity: 0.88;
+}
+.sl-poty-cta-micro {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(13,13,11,0.60);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+   Per MOBILE_CONTENT_BEHAVIOR.docx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  /* HERO */
+  .sl-poty-hero {
+    min-height: 360px;
+    align-items: flex-end;
+  }
+  .sl-poty-hero-content {
+    margin: 0 16px 24px;
+    padding: 24px 20px;
+    max-width: none;
+    text-shadow: none;
+    background: rgba(30,28,24,0.58);
+    backdrop-filter: blur(2px);
+  }
+  .sl-poty-hero-h1 {
+    font-size: 34px;
+    text-shadow: none;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .sl-poty-hero-body {
+    font-size: 17px;
+    text-shadow: none;
+  }
+  .sl-poty-hero-sub {
+    text-shadow: none;
+  }
+  .sl-poty-eyebrow {
+    text-shadow: none;
+  }
+
+  /* TRUST BAR */
+  .sl-poty-trust {
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .sl-poty-trust-item {
+    border-right: 1px solid rgba(26,26,24,0.08);
+    border-bottom: 1px solid rgba(26,26,24,0.08);
+    padding: 20px 12px;
+  }
+  .sl-poty-trust-item:nth-child(even) {
+    border-right: none;
+  }
+  .sl-poty-trust-item:nth-child(3),
+  .sl-poty-trust-item:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* SECTIONS */
+  .sl-poty-sec {
+    padding: 56px 20px;
+  }
+
+  /* HOW THE AWARD WORKS */
+  .sl-poty-how-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .sl-poty-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .sl-poty-arrow {
+    display: none;
+  }
+  .sl-poty-step {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    grid-template-rows: auto auto;
+    text-align: left;
+    padding: 0;
+    gap: 0 14px;
+    align-items: start;
+  }
+  .sl-poty-step-num {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .sl-poty-step-icon {
+    grid-column: 1;
+    grid-row: 2;
+    height: 36px;
+    justify-content: flex-start;
+    margin-bottom: 0;
+    margin-top: 10px;
+  }
+  .sl-poty-step-title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 17px;
+    padding-top: 4px;
+    margin-bottom: 6px;
+  }
+  .sl-poty-step-desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 16px;
+    text-align: left;
+    margin-top: 2px;
+  }
+  .sl-poty-h2 {
+    font-size: 30px;
+  }
+
+  /* POINTS */
+  .sl-poty-points-grid {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 32px;
+  }
+  .sl-poty-point-col {
+    padding: 24px 16px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-point-col:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-point-col:nth-child(4),
+  .sl-poty-point-col:nth-child(5) {
+    border-bottom: none;
+  }
+
+  /* LEADERBOARD */
+  .sl-poty-lb-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .sl-poty-lb-photo-wrap {
+    display: none;
+  }
+
+  /* RECOGNITION */
+  .sl-poty-rec-grid {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 32px;
+  }
+  .sl-poty-rec-col {
+    padding: 24px 16px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-rec-col:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-rec-col:nth-child(4),
+  .sl-poty-rec-col:nth-child(5) {
+    border-bottom: none;
+  }
+
+  /* BOTTOM GRID */
+  .sl-poty-bottom-grid {
+    grid-template-columns: 1fr;
+    margin-top: 32px;
+  }
+  .sl-poty-kd-block {
+    padding: 32px 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-cat-block {
+    padding: 32px 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-poty-img-block {
+    padding: 32px 0 0;
+  }
+
+  /* CTA */
+  .sl-poty-cta {
+    padding: 56px 20px;
+  }
+  .sl-poty-cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+  .sl-poty-cta-h {
+    font-size: 26px;
+  }
+  .sl-poty-cta-btn {
+    width: 100%;
+    text-align: center;
+    align-items: center;
+    padding: 16px 20px;
+    font-size: 14px;
+  }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="awards-wrap">
+<div class="sl-poty">
 
-  <div class="page-header" style="margin-bottom: 56px;">
-    <h1>India's Photography Ranking System</h1>
-    <p>Your POTY standing updates every time you upload. Scored automatically — no entry fee, no submission window, no human bias.</p>
-  </div>
+  <!-- ── HERO ─────────────────────────────────────────────────── -->
+  <section class="sl-poty-hero">
+    {% if poty_hero and poty_hero.thumb_url %}
+    <img
+      class="sl-poty-hero-img"
+      src="{{ poty_hero.thumb_url }}"
+      alt="Photograph by a Shutter League member — Master level or above"
+      onerror="this.style.display='none'"
+    >
+    {% endif %}
+    <div class="sl-poty-hero-fade"></div>
+    <div class="sl-poty-hero-content">
+      <p class="sl-poty-eyebrow">Annual Excellence Award</p>
+      <div class="sl-poty-gold-rule"></div>
+      <h1 class="sl-poty-hero-h1">Recognition for photographic excellence.<br>Earned over time.</h1>
+      <p class="sl-poty-hero-sub">SHUTTER LEAGUE · HONEST FEEDBACK. REAL IMPROVEMENT.</p>
+      <p class="sl-poty-hero-body">The Annual Excellence Award recognises photographers who consistently create meaningful work, demonstrate growth, and uphold the highest standards of photographic expression.</p>
+    </div>
+  </section>
 
-  <!-- Why different -->
-  <div class="awards-section">
-    <div class="awards-section-title">Why This Is Different</div>
-    <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
-      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
-        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
-          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">No Entry Fee. Ever.</span>
-        </div>
-        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Every scored image automatically enters POTY for its genre. Other awards charge per submission. Here, uploading is enough.</div>
+  <!-- ── TRUST BAR ──────────────────────────────────────────── -->
+  <div class="sl-poty-trust">
+    <div class="sl-poty-trust-item">
+      <div class="sl-poty-trust-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
-      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
-        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
-          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Rank Updates Live</span>
-        </div>
-        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Your standing isn&#39;t calculated at year end. It moves every time you score a new image. You can watch your rank climb in real time.</div>
+      <span class="sl-poty-trust-label">Merit-based<br>recognition</span>
+    </div>
+    <div class="sl-poty-trust-item">
+      <div class="sl-poty-trust-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       </div>
-      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
-        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
-          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Two-Stage Verification</span>
-        </div>
-        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">On other platforms, crowd votes and jury opinions are shaped by who you know and how many followers you have. Your POTY score is determined by the DDI Engine — the same calculation for every photographer, every image, every time. A jury verifies the top finalists. Popularity scores zero.</div>
+      <span class="sl-poty-trust-label">Growth over<br>consistency</span>
+    </div>
+    <div class="sl-poty-trust-item">
+      <div class="sl-poty-trust-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       </div>
-      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);">
-        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
-          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">Gear Does Not Decide</span>
-        </div>
-        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Camera and Mobile leagues are separate. A smartphone photographer is never competing against a medium-format camera. The engine scores the image, not the equipment.</div>
+      <span class="sl-poty-trust-label">For all genres and<br>experience levels</span>
+    </div>
+    <div class="sl-poty-trust-item">
+      <div class="sl-poty-trust-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </div>
-      <div class="why-diff-row" style="display:grid;grid-template-columns:200px 1fr;">
-        <div class="why-diff-label" style="padding:20px 24px;background:rgba(44,62,107,0.05);border-right:1px solid var(--border);display:flex;align-items:center;">
-          <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#2C3E6B;letter-spacing:1px;text-transform:uppercase;line-height:1.4;">A Credential Clients Can Verify</span>
-        </div>
-        <div style="padding:20px 24px;font-size:16px;color:var(--text-primary);line-height:1.7;">Instagram rewards followers, not skill. A photographer with 500 followers and a DDI rank of 8.4 has no way to prove their craft against someone with 50,000 followers and average work. Your Shutter League rank is independently verifiable, continuously updated, and objectively generated. For the first time, a photographer has a credential that reflects what they can actually do — not who follows them.</div>
-      </div>
+      <span class="sl-poty-trust-label">One recognition<br>per year</span>
     </div>
   </div>
 
-  <!-- User Honours -->
-  <div class="awards-section">
-    <div class="awards-section-title">Recognition &amp; Honours</div>
-    <div class="track-grid">
-      <div class="track-card camera">
-        <div class="track-card-header">
-          <span class="track-icon">📷</span>
-          <div>
-            <div class="track-name">Camera League</div>
-            <div class="track-sub">DSLR · Mirrorless · Film</div>
-          </div>
+  <!-- ── HOW THE AWARD WORKS ────────────────────────────────── -->
+  <section class="sl-poty-sec" style="background:#F7F5F2;">
+    <div class="sl-poty-inner">
+      <div class="sl-poty-how-grid">
+        <div>
+          <p class="sl-poty-sec-eyebrow">How the Award Works</p>
+          <div class="sl-poty-sec-rule-dark"></div>
+          <h2 class="sl-poty-h2">Excellence is a journey,<br>not a moment.</h2>
+          <p class="sl-poty-body">Over the course of a year, your best photographs are evaluated across multiple dimensions. Your points reflect your overall photographic growth and the impact of your work.</p>
+          <a href="{{ url_for('science') }}" class="sl-poty-btn-outline">View Evaluation Criteria →</a>
         </div>
-        <div class="track-card-body">
-        <div class="track-honours">
-          <div class="track-honour-row">
-            <span class="track-honour-place">Grand Recipient</span>
-            <span class="track-honour-amount">Platform's Highest Honour</span>
+        <div>
+          <div class="sl-poty-steps">
+            <div class="sl-poty-step">
+              <div class="sl-poty-step-num">1</div>
+              <div class="sl-poty-step-icon">
+                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              </div>
+              <div class="sl-poty-step-title">Upload</div>
+              <div class="sl-poty-step-desc">Upload your best work throughout the year. Quality over quantity.</div>
+            </div>
+            <div class="sl-poty-arrow">→</div>
+            <div class="sl-poty-step">
+              <div class="sl-poty-step-num">2</div>
+              <div class="sl-poty-step-icon">
+                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              <div class="sl-poty-step-title">Earn Points</div>
+              <div class="sl-poty-step-desc">Each accepted photo earns points based on its overall performance across key dimensions.</div>
+            </div>
+            <div class="sl-poty-arrow">→</div>
+            <div class="sl-poty-step">
+              <div class="sl-poty-step-num">3</div>
+              <div class="sl-poty-step-icon">
+                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              </div>
+              <div class="sl-poty-step-title">Climb Rankings</div>
+              <div class="sl-poty-step-desc">Your points contribute to your position on the Annual Excellence Leaderboard.</div>
+            </div>
+            <div class="sl-poty-arrow">→</div>
+            <div class="sl-poty-step">
+              <div class="sl-poty-step-num">4</div>
+              <div class="sl-poty-step-icon">
+                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              </div>
+              <div class="sl-poty-step-title">Earn Recognition</div>
+              <div class="sl-poty-step-desc">Top performers receive the Annual Excellence Award and exclusive recognition.</div>
+            </div>
           </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Gold × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Silver × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Bronze × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-        </div>
-        </div>
-      </div>
-      <div class="track-card mobile">
-        <div class="track-card-header">
-          <span class="track-icon">📱</span>
-          <div>
-            <div class="track-name">Mobile League</div>
-            <div class="track-sub">iPhone · Android · Smartphone</div>
-          </div>
-        </div>
-        <div class="track-card-body">
-        <div class="track-honours">
-          <div class="track-honour-row">
-            <span class="track-honour-place">Grand Recipient</span>
-            <span class="track-honour-amount">Platform's Highest Honour</span>
-          </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Gold × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Silver × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-          <div class="track-honour-row">
-            <span class="track-honour-place">Bronze × 8 Genres</span>
-            <span class="track-honour-amount">Badge &amp; Certificate</span>
-          </div>
-        </div>
         </div>
       </div>
     </div>
-    <p style="font-size:16px;color:var(--text-primary);font-family:Georgia,serif;line-height:1.7;margin-top:20px;">
-      Recognition is communicated directly to honourees. Qualifying participants are notified by email. See <a href="{{ url_for('contest_rules') }}" style="color:#2C3E6B;font-weight:700;text-decoration:underline;">Programme Rules</a> for full eligibility terms.
-    </p>
-  </div>
+  </section>
 
-  <!-- Genres -->
-  <div class="awards-section">
-    <div class="awards-section-title">Eight Genres</div>
-    <div style="overflow-x:auto;">
-    <table class="genre-table">
-      <thead>
-        <tr><th>Genre</th><th>Description</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Wildlife</td><td>Animals in their natural habitat. Behaviour, interaction, environment.</td></tr>
-        <tr><td>Street</td><td>Candid life in public spaces. People, culture, urban moments.</td></tr>
-        <tr><td>People &amp; Portrait</td><td>Individuals and groups. Expression, character, identity.</td></tr>
-        <tr><td>Landscape</td><td>Natural environments. Light, scale, atmosphere.</td></tr>
-        <tr><td>Architecture</td><td>Built structures. Form, geometry, context.</td></tr>
-        <tr><td>Macro</td><td>Close-up detail. Scale, texture, abstraction.</td></tr>
-        <tr><td>Drone / Aerial</td><td>Images captured from above. Perspective, pattern, scale.</td></tr>
-        <tr><td>Abstract</td><td>Non-representational. Shape, colour, form without literal subject.</td></tr>
-      </tbody>
-    </table>
-    </div>
-  </div>
-
-  <!-- Timeline -->
-  <div class="awards-section">
-    <div class="awards-section-title">{{ current_year or '2026' }} Programme Timeline</div>
-    <div class="solari-board" id="tl-board">
-      <div class="solari-header">
-        <div class="sh-cell narrow">Period</div>
-        <div class="sh-cell wide">Event</div>
-        <div class="sh-cell narrow">Status</div>
-      </div>
-    </div>
-    <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">How the timeline works <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-        <div class="board-desc-list">
-          <div class="board-desc-row">
-            <div class="board-desc-label">Jan – Dec 31</div>
-            <div>Qualifying period. Upload and score in your genre. Every scored image counts toward your top-6 annual average. Scores accumulate from your first upload — no separate entry required.</div>
+  <!-- ── WHAT EARNS YOU POINTS ──────────────────────────────── -->
+  <section class="sl-poty-sec" style="background:#EDEAE4;">
+    <div class="sl-poty-inner">
+      <p class="sl-poty-sec-eyebrow">What Earns You Points</p>
+      <div class="sl-poty-sec-rule-dark"></div>
+      <h2 class="sl-poty-h2">Points that reflect real photographic achievement.</h2>
+      <div class="sl-poty-points-grid">
+        <div class="sl-poty-point-col">
+          <div class="sl-poty-point-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">Jan 1 – 7</div>
-            <div>RAW verification requests sent to top-50 photographers per genre. <strong>7-day submission window.</strong> A reminder email is sent 24 hours before the deadline. Failure to submit within the window results in removal from standings. New calendar year begins — annual standings reset.</div>
+          <div class="sl-poty-point-title">Photo Performance</div>
+          <div class="sl-poty-point-desc">Your photo's DDI® score is the foundation of the points you earn.</div>
+        </div>
+        <div class="sl-poty-point-col">
+          <div class="sl-poty-point-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">Jan 8 – 31</div>
-            <div>Jury review of top-20 finalists per genre. Rankings confirmed.</div>
+          <div class="sl-poty-point-title">Consistency</div>
+          <div class="sl-poty-point-desc">Regular participation throughout the year strengthens your standing.</div>
+        </div>
+        <div class="sl-poty-point-col">
+          <div class="sl-poty-point-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">February</div>
-            <div>Annual Excellence Award recipients announced. Honourees notified by email and recognised on the platform. Award payments processed after PAN and bank verification.</div>
+          <div class="sl-poty-point-title">Growth</div>
+          <div class="sl-poty-point-desc">We reward improvement. Your growth matters more than perfection.</div>
+        </div>
+        <div class="sl-poty-point-col">
+          <div class="sl-poty-point-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </div>
+          <div class="sl-poty-point-title">Emotional Impact</div>
+          <div class="sl-poty-point-desc">Photos that move people earn higher appreciation via the Soul Bonus.</div>
+        </div>
+        <div class="sl-poty-point-col">
+          <div class="sl-poty-point-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="sl-poty-point-title">Quality of Work</div>
+          <div class="sl-poty-point-desc">A strong body of work speaks louder than a single great photo.</div>
         </div>
       </div>
-    </details>
-  </div>
-
-  <!-- 6-6-12 -->
-  <div class="awards-section">
-    <div class="awards-section-title">The 6-6-12 Rule — Why Your Rank Means Something</div>
-    <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:24px;">
-      A single brilliant photograph doesn&#39;t make a rank. Neither does a single great month. Shutter League uses a residency-based system — the same logic as ICC cricket rankings and ATP tennis points. You have to show up consistently, across time, before the ranking is yours. And because the pool rolls — old images drop off as new ones arrive — your rank reflects what you&#39;ve shot recently, not a peak performance from three years ago.
-    </p>
-    <div class="solari-board" id="rule-board">
-      <div class="solari-header">
-        <div class="sh-cell narrow">Number</div>
-        <div class="sh-cell wide">Rule</div>
-        <div class="sh-cell narrow">Gate</div>
+      <div class="sl-poty-points-note">
+        All points are calculated fairly and transparently based on our <strong>proprietary evaluation system.</strong>
+      </div>
+      <div class="sl-poty-btn-center">
+        <a href="{{ url_for('science') }}" class="sl-poty-btn-outline">Learn About Our Scoring System →</a>
       </div>
     </div>
-    <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">The three gates explained <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-        <div class="board-desc-list">
-          <div class="board-desc-row">
-            <div class="board-desc-label">6 Months</div>
-            <div>You must hold an active Camera or Mobile subscription for 6 cumulative months. The clock runs only while subscribed — it pauses if you cancel and resumes from where it stopped when you resubscribe.</div>
-          </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">6 Images</div>
-            <div>You must have at least 6 DDI-scored images in your qualifying genre. Six images is the statistical minimum for a meaningful rank — fewer and the data is not reliable enough to place you on the official leaderboard.</div>
-          </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">12 Pool</div>
-            <div>Your rank is calculated from your best or most recent 12 images. As you upload more, older images rotate out. Your rank reflects your current form, not a single peak performance years ago.</div>
-          </div>
-        </div>
-      </div>
-    </details>
-    <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">Pausing or Cancelling — What Happens to Your Rank? <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Runs</strong> while you hold an active Camera or Mobile subscription.</div>
-          <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Pauses</strong> if you cancel — your progress is not lost.</div>
-          <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Resumes</strong> from where it stopped when you resubscribe.</div>
-          <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">▸ <strong>Dormant Mode (₹19/month)</strong> keeps the clock ticking at minimal cost — the rational choice over full cancellation if you need a break.</div>
-        </div>
-      </div>
-    </details>
-  </div>
+  </section>
 
-  <!-- Eligibility -->
-  <div class="awards-section">
-    <div class="awards-section-title">Eligibility</div>
-    <div class="solari-board" id="elig-board">
-      <div class="solari-header">
-        <div class="sh-cell narrow">Check</div>
-        <div class="sh-cell wide">Requirement</div>
-        <div class="sh-cell narrow">Result</div>
+  <!-- ── ANNUAL EXCELLENCE LEADERBOARD ─────────────────────── -->
+  <section class="sl-poty-sec" style="background:#F7F5F2;">
+    <div class="sl-poty-inner">
+      <div class="sl-poty-lb-grid">
+        <div>
+          <p class="sl-poty-sec-eyebrow">Annual Excellence Leaderboard</p>
+          <div class="sl-poty-sec-rule-dark"></div>
+          <h2 class="sl-poty-h2" style="font-size:32px;">A live reflection of dedication.</h2>
+          <p class="sl-poty-body" style="font-size:17px;">The leaderboard showcases photographers who consistently create outstanding work and contribute to the community.</p>
+          <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Rankings are updated regularly throughout the year.</p>
+          <a href="{{ url_for('leaderboard') }}" class="sl-poty-btn-outline">View Full Leaderboard →</a>
+        </div>
+        <div>
+          <div class="sl-poty-tab-bar">
+            <span class="sl-poty-tab">Overall Provisional</span>
+          </div>
+          <table class="sl-poty-lb-table">
+            <thead>
+              <tr>
+                <th style="width:48px;">Rank</th>
+                <th>Photographer</th>
+                <th style="text-align:right;">Avg. Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if photographer_stats %}
+                {% for row in photographer_stats[:5] %}
+                <tr>
+                  <td>
+                    {% if loop.index == 1 %}
+                    <span class="sl-poty-rank-gold">1</span>
+                    {% else %}
+                    <span class="sl-poty-rank-n">{{ loop.index }}</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-weight:600;">{{ row.display_name }}</td>
+                  <td style="text-align:right;font-weight:700;">{{ "%.2f"|format(row.avg_score) }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="3" style="text-align:center;padding:24px;font-size:15px;color:rgba(26,26,24,0.45);">Leaderboard updates as scores come in.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+          <p class="sl-poty-lb-note">Provisional — weighted average score across all submissions. Updated live throughout the year.</p>
+          <a href="{{ url_for('leaderboard') }}" class="sl-poty-lb-link">View Full Leaderboard →</a>
+        </div>
+        <div class="sl-poty-lb-photo-wrap">
+          {% if lb_hero and lb_hero.thumb_url %}
+          <img class="sl-poty-lb-photo" src="{{ lb_hero.thumb_url }}" alt="Shutter League member photograph" onerror="this.style.display='none'">
+          {% endif %}
+        </div>
       </div>
     </div>
-    <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">All eligibility requirements <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-        <div class="board-desc-list">
-          <div class="board-desc-row">
-            <div class="board-desc-label">6 Months</div>
-            <div>Active Camera or Mobile League subscription for at least 6 cumulative months within the calendar year. Dormant Mode (₹19/month) counts toward this requirement.</div>
+  </section>
+
+  <!-- ── AWARD & RECOGNITION ───────────────────────────────── -->
+  <section class="sl-poty-sec" style="background:#EDEAE4;">
+    <div class="sl-poty-inner">
+      <p class="sl-poty-sec-eyebrow">Award & Recognition</p>
+      <div class="sl-poty-sec-rule-dark"></div>
+      <h2 class="sl-poty-h2">More than a title. A mark of photographic excellence.</h2>
+      <div class="sl-poty-rec-grid">
+        <div class="sl-poty-rec-col">
+          <div class="sl-poty-rec-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">24 Images</div>
-            <div>At least 24 DDI-scored images in your qualifying genre across the calendar year. Ensures the ranking reflects sustained commitment, not a single strong month.</div>
+          <div class="sl-poty-rec-title">Annual Recognition</div>
+          <div class="sl-poty-rec-desc">Top photographers are recognised each year across categories.</div>
+        </div>
+        <div class="sl-poty-rec-col">
+          <div class="sl-poty-rec-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">RAW Verified</div>
-            <div>If you are in the top-50 for your genre, RAW files for qualifying images must be submitted within the 7-day January verification window. Failure to submit removes you from standings.</div>
+          <div class="sl-poty-rec-title">Featured Showcase</div>
+          <div class="sl-poty-rec-desc">Award recipients are featured on our platform and across channels.</div>
+        </div>
+        <div class="sl-poty-rec-col">
+          <div class="sl-poty-rec-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">Top-6 DDI</div>
-            <div>Your annual ranking is calculated from your best 6 DDI scores in your strongest genre. You compete in one genre — whichever produces your highest 6-score average.</div>
+          <div class="sl-poty-rec-title">Digital Certificate</div>
+          <div class="sl-poty-rec-desc">Receive an official certificate of excellence from Shutter League.</div>
+        </div>
+        <div class="sl-poty-rec-col">
+          <div class="sl-poty-rec-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">Jury Cleared</div>
-            <div>The top-20 finalists per genre are reviewed by a panel of photography professionals in January. Jury review confirms the final rankings before recipients are announced.</div>
+          <div class="sl-poty-rec-title">Exclusive Badge</div>
+          <div class="sl-poty-rec-desc">Display your achievement with a unique Annual Excellence badge on your profile.</div>
+        </div>
+        <div class="sl-poty-rec-col">
+          <div class="sl-poty-rec-icon">
+            <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <div class="board-desc-row">
-            <div class="board-desc-label">Original Work</div>
-            <div>All submitted images must be original work captured by you. AI-generated images, composites, or images flagged by Hive AI detection are disqualified.</div>
-          </div>
+          <div class="sl-poty-rec-title">Industry Visibility</div>
+          <div class="sl-poty-rec-desc">Gain visibility among mentors, brands, and the photography community.</div>
         </div>
       </div>
-    </details>
-  </div>
 
-  <!-- How rankings work -->
-  <div class="awards-section">
-    <div class="awards-section-title">How Rankings Are Determined</div>
-    <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">The scoring and jury process <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-        <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-          Most photography awards are judged by a panel of humans who see your image once, in a batch, against thousands of others. Shutter League works differently. The Apex DDI Engine evaluates every image individually, immediately, across five dimensions — Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Aesthetic Quality. The score is generated the same way for every photographer, every time, with no human subjectivity in the initial assessment.
-        </p>
-        <p style="font-size:17px;color:var(--text-primary);line-height:1.8;margin-bottom:16px;">
-          Your annual POTY ranking is calculated from your best six DDI scores in your strongest genre. You compete in one genre — the one where your scores are highest. A wildlife photographer qualifies on wildlife alone. The top-20 photographers per genre then proceed to jury review, where photography professionals verify the work and confirm the final rankings.
-        </p>
-        <p style="font-size:17px;color:var(--text-primary);line-height:1.8;">
-          AI consistency first. Human judgement second. This two-stage process means your rank is both scientifically defensible and professionally validated — not a matter of who a judge happened to notice on a given day.
-        </p>
+      <!-- KEY DATES + CATEGORIES + CATEGORY IMAGES -->
+      <div class="sl-poty-bottom-grid">
+        <div class="sl-poty-kd-block">
+          <div class="sl-poty-kd-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Key Dates
+          </div>
+          <div class="sl-poty-kd-row">
+            <div class="sl-poty-kd-date">Jan 1</div>
+            <div class="sl-poty-kd-event">Award Year Begins</div>
+          </div>
+          <div class="sl-poty-kd-row">
+            <div class="sl-poty-kd-date">Dec 31</div>
+            <div class="sl-poty-kd-event">Final Submission Deadline</div>
+          </div>
+          <div class="sl-poty-kd-row">
+            <div class="sl-poty-kd-date">Jan (Next Year)</div>
+            <div class="sl-poty-kd-event">Recipients Announced</div>
+          </div>
+        </div>
+        <div class="sl-poty-cat-block">
+          <div class="sl-poty-kd-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Categories
+          </div>
+          <p style="font-size:16px;font-weight:500;color:rgba(26,26,24,0.76);line-height:1.65;text-align:justify;">Open to all photographers. Participate in the category that best matches your experience level.</p>
+          <ul class="sl-poty-cat-list">
+            <li>Street</li>
+            <li>Wedding</li>
+            <li>People</li>
+            <li>Wildlife</li>
+          </ul>
+        </div>
+        <div class="sl-poty-img-block">
+          {% if cat_street and cat_street.thumb_url %}
+          <img src="{{ cat_street.thumb_url }}" alt="Street photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          {% endif %}
+          {% if cat_wedding and cat_wedding.thumb_url %}
+          <img src="{{ cat_wedding.thumb_url }}" alt="Wedding photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          {% endif %}
+          {% if cat_people and cat_people.thumb_url %}
+          <img src="{{ cat_people.thumb_url }}" alt="People photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          {% endif %}
+          {% if cat_wildlife and cat_wildlife.thumb_url %}
+          <img src="{{ cat_wildlife.thumb_url }}" alt="Wildlife photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          {% endif %}
+        </div>
       </div>
-    </details>
-  </div>
 
-  <!-- CTA -->
-  <div class="awards-cta">
-    <h2>Your Ranking Has Already Started</h2>
-    <p>Every image you&#39;ve scored is already counting toward your POTY standing. You don&#39;t enter — you just keep shooting.</p>
-    <p class="cta-note">Active Camera or Mobile League subscription for 6+ months required to qualify. 24 scored images in your genre required for full eligibility.</p>
-    <div class="awards-cta-btns" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="{{ url_for('register') if not current_user.is_authenticated else url_for('upload') }}"
-         class="btn btn-solid" style="font-size:16px;padding:13px 28px;">
-        Upload Your Photo →
+    </div>
+  </section>
+
+  <!-- ── CTA STRIP ─────────────────────────────────────────── -->
+  <section class="sl-poty-cta">
+    <div class="sl-poty-cta-inner">
+      <div class="sl-poty-cta-left">
+        <div class="sl-poty-cta-trophy" aria-hidden="true">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+        </div>
+        <div>
+          <h2 class="sl-poty-cta-h">Excellence is earned. Not given.</h2>
+          <p class="sl-poty-cta-body">Keep creating. Keep growing. The Annual Excellence Award is your recognition.</p>
+        </div>
+      </div>
+      <a href="{{ url_for('register') }}" class="sl-poty-cta-btn">
+        Start Your Journey
+        <span class="sl-poty-cta-micro">↗ Usually under a minute</span>
       </a>
-      <a href="{{ url_for('pricing') }}"
-         style="display:inline-block;font-family:var(--font-mono);font-size:16px;font-weight:700;
-                letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.80);
-                border:1px solid rgba(255,255,255,0.30);padding:13px 28px;border-radius:var(--radius-sm);
-                text-decoration:none;min-height:44px;display:inline-flex;align-items:center;">
-        View Pricing →
-      </a>
     </div>
-  </div>
+  </section>
 
 </div>
-
-<script>
-(function(){
-  var CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·–';
-
-  function makeFlipText(finalText,colorClass,delay){
-    var wrap=document.createElement('div');
-    wrap.className='flip-text';
-    finalText.split(' ').forEach(function(word,wi){
-      var wdiv=document.createElement('span');
-      wdiv.style.cssText='display:inline-flex;gap:1px;margin-right:4px;';
-      word.split('').forEach(function(ch,ci){
-        var span=document.createElement('span');
-        span.className='fl-char '+colorClass;
-        var inner=document.createElement('span');
-        inner.textContent=ch===' '?'\u00A0':ch;
-        span.appendChild(inner);
-        setTimeout(function(){animateChar(span,inner,ch);},delay+wi*40+ci*18);
-        wdiv.appendChild(span);
-      });
-      wrap.appendChild(wdiv);
-    });
-    return wrap;
-  }
-
-  function animateChar(span,inner,finalChar){
-    var flips=0;
-    var total=4+Math.floor(Math.random()*4);
-    function tick(){
-      span.classList.add('flipping');
-      setTimeout(function(){
-        inner.textContent=flips<total-1?CHARS[Math.floor(Math.random()*CHARS.length)]:(finalChar===' '?'\u00A0':finalChar);
-        span.classList.remove('flipping');
-        flips++;
-        if(flips<total)setTimeout(tick,55+Math.random()*30);
-      },35);
-    }
-    tick();
-  }
-
-  function makeRow(cells,rowDelay){
-    var row=document.createElement('div');
-    row.className='sl-row';
-    cells.forEach(function(c){
-      var cell=document.createElement('div');
-      cell.className='sl-cell '+c.size+(c.bg?' '+c.bg:' mid-bg');
-      if(c.type==='flip'){
-        cell.appendChild(makeFlipText(c.text,c.color||'sl-white',rowDelay+80));
-      } else if(c.type==='pill'){
-        var pill=document.createElement('span');
-        pill.className='sl-pill '+c.pillClass;
-        pill.textContent=c.text;
-        setTimeout(function(){cell.appendChild(pill);},rowDelay+200);
-      }
-      row.appendChild(cell);
-    });
-    setTimeout(function(){row.classList.add('visible');},rowDelay);
-    return row;
-  }
-
-  var tlData=[
-    {period:'JAN – DEC 31',event:'QUALIFYING PERIOD · UPLOAD AND SCORE',status:'ACTIVE',   pc:'sl-gold', pb:'gold-bg'},
-    {period:'JAN 1 – 7',   event:'RAW VERIFICATION + NEW YEAR BEGINS', status:'UPCOMING', pc:'sl-white',pb:'light-bg'},
-    {period:'JAN 8 – 31',  event:'JURY REVIEW · TOP 20 PER GENRE',     status:'UPCOMING', pc:'sl-gold', pb:'gold-bg'},
-    {period:'FEBRUARY',    event:'RECIPIENTS ANNOUNCED · AWARDS',       status:'UPCOMING', pc:'sl-white',pb:'light-bg'},
-  ];
-
-  var ruleData=[
-    {num:'6', rule:'MONTHS SUBSCRIBED',      gate:'REQUIRED',nc:'sl-gold', nb:'gold-bg'},
-    {num:'6', rule:'IMAGES SCORED IN GENRE', gate:'REQUIRED',nc:'sl-white',nb:'light-bg'},
-    {num:'12',rule:'IMAGE ROLLING POOL',     gate:'REQUIRED',nc:'sl-gold', nb:'gold-bg'},
-  ];
-
-  var eligData=[
-    {check:'01',req:'6 MONTHS ACTIVE SUBSCRIPTION', cc:'sl-gold', cb:'gold-bg'},
-    {check:'02',req:'24 SCORED IMAGES IN GENRE',     cc:'sl-white',cb:'light-bg'},
-    {check:'03',req:'RAW VERIFICATION SUBMITTED',    cc:'sl-gold', cb:'gold-bg'},
-    {check:'04',req:'TOP-6 DDI SCORES QUALIFY',      cc:'sl-white',cb:'light-bg'},
-    {check:'05',req:'JURY REVIEW CLEARED',           cc:'sl-gold', cb:'gold-bg'},
-    {check:'06',req:'ORIGINAL WORK CONFIRMED',       cc:'sl-white',cb:'light-bg'},
-  ];
-
-  function buildBoards(){
-    ['tl-board','rule-board','elig-board'].forEach(function(id){
-      var b=document.getElementById(id);
-      if(!b)return;
-      while(b.children.length>1)b.removeChild(b.lastChild);
-    });
-
-    var tlBoard=document.getElementById('tl-board');
-    if(tlBoard){
-      tlData.forEach(function(d,i){
-        tlBoard.appendChild(makeRow([
-          {size:'narrow',bg:d.pb,     type:'flip',text:d.period,color:d.pc},
-          {size:'wide',  bg:'mid-bg', type:'flip',text:d.event, color:'sl-white'},
-          {size:'narrow',bg:'mid-bg', type:'pill',text:d.status,pillClass:d.status==='ACTIVE'?'pill-gold':'pill-dim'},
-        ],300+i*420));
-      });
-    }
-
-    var ruleBoard=document.getElementById('rule-board');
-    if(ruleBoard){
-      ruleData.forEach(function(d,i){
-        ruleBoard.appendChild(makeRow([
-          {size:'narrow',bg:d.nb,    type:'flip',text:d.num, color:d.nc},
-          {size:'wide',  bg:'mid-bg',type:'flip',text:d.rule,color:'sl-white'},
-          {size:'narrow',bg:'mid-bg',type:'pill',text:d.gate,pillClass:'pill-dim'},
-        ],2100+i*380));
-      });
-    }
-
-    var eligBoard=document.getElementById('elig-board');
-    if(eligBoard){
-      eligData.forEach(function(d,i){
-        eligBoard.appendChild(makeRow([
-          {size:'narrow',bg:d.cb,    type:'flip',text:d.check,color:d.cc},
-          {size:'wide',  bg:'mid-bg',type:'flip',text:d.req,  color:'sl-white'},
-          {size:'narrow',bg:'mid-bg',type:'pill',text:'REQUIRED',pillClass:'pill-dim'},
-        ],3300+i*340));
-      });
-    }
-  }
-
-  // Desktop: open all accordion items
-  if(window.innerWidth > 520){
-    document.querySelectorAll('.sl-accordion').forEach(function(el){
-      el.setAttribute('open', '');
-    });
-  }
-
-  window.replayAll=function(){buildBoards();};
-
-  // Auto-play when first board scrolls into view — fires once only
-  // Skip entirely on mobile where boards are hidden (display:none)
-  var _hasPlayed = false;
-  var _isMobile = window.innerWidth <= 520;
-  var _trigger = document.getElementById('tl-board');
-
-  if(!_isMobile && _trigger){
-    if('IntersectionObserver' in window){
-      var _obs = new IntersectionObserver(function(entries){
-        if(entries[0].isIntersecting && !_hasPlayed){
-          _hasPlayed = true;
-          buildBoards();
-          _obs.disconnect();
-        }
-      }, {threshold: 0, rootMargin: '0px 0px -10% 0px'});
-      _obs.observe(_trigger);
-    } else {
-      buildBoards();
-    }
-  }
-})();
-</script>
 {% endblock %}
