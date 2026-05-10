@@ -1122,22 +1122,22 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
           {% if cat_street and cat_street.thumb_url %}
           <img src="{{ cat_street.thumb_url }}" alt="Street photography — Shutter League member" onerror="this.style.display='none'">
           {% else %}
-          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
-          {% endif %}
-          {% if cat_wedding and cat_wedding.thumb_url %}
-          <img src="{{ cat_wedding.thumb_url }}" alt="Wedding photography — Shutter League member" onerror="this.style.display='none'">
-          {% else %}
-          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
-          {% endif %}
-          {% if cat_people and cat_people.thumb_url %}
-          <img src="{{ cat_people.thumb_url }}" alt="People photography — Shutter League member" onerror="this.style.display='none'">
-          {% else %}
-          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          <div style="aspect-ratio:1/1;background:#EDEAE4;"></div>
           {% endif %}
           {% if cat_wildlife and cat_wildlife.thumb_url %}
           <img src="{{ cat_wildlife.thumb_url }}" alt="Wildlife photography — Shutter League member" onerror="this.style.display='none'">
           {% else %}
-          <div style="aspect-ratio:1/1;background:#1a1a18;"></div>
+          <div style="aspect-ratio:1/1;background:#EDEAE4;"></div>
+          {% endif %}
+          {% if cat_people and cat_people.thumb_url %}
+          <img src="{{ cat_people.thumb_url }}" alt="People photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#EDEAE4;"></div>
+          {% endif %}
+          {% if cat_wedding and cat_wedding.thumb_url %}
+          <img src="{{ cat_wedding.thumb_url }}" alt="Wedding photography — Shutter League member" onerror="this.style.display='none'">
+          {% else %}
+          <div style="aspect-ratio:1/1;background:#EDEAE4;"></div>
           {% endif %}
         </div>
       </div>

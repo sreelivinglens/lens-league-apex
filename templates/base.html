@@ -823,21 +823,21 @@ img {
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% endif %}
     {% else %}
-      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
-      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-      <a href="/how-it-works" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
-      <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-      <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
-      <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Join Free</a>
+      <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
+      <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learning</a>
+      <a href="/mentors" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
+      <a href="{{ url_for('bow_info') }}" class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
+      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Annual Excellence Award</a>
+      <a href="{{ url_for('login') }}">Log In</a>
+      <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Get My First Score</a>
     {% endif %}
   </div>
 
   <!-- Mobile nav login buttons -->
   {% if not current_user.is_authenticated %}
   <div class="nav-mobile-login">
-    <a href="{{ url_for('login') }}" class="nav-ml-login">LOGIN</a>
-    <a href="{{ url_for('register') }}" class="nav-ml-join">JOIN FREE</a>
+    <a href="{{ url_for('login') }}" class="nav-ml-login">LOG IN</a>
+    <a href="{{ url_for('register') }}" class="nav-ml-join">GET MY FIRST SCORE</a>
   </div>
   {% endif %}
 
@@ -871,13 +871,13 @@ img {
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:rgba(255,100,80,0.85); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
     {% endif %}
   {% else %}
-    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
-    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
-    <a href="/how-it-works" onclick="toggleNav()">How It Works</a>
-    <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
-    <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
-    <a href="{{ url_for('login') }}" onclick="toggleNav()">Login</a>
-    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#FFFFFF; border:1px solid rgba(245,197,24,0.6); border-radius:4px; padding:4px 12px;">Join Free</a>
+    <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
+    <a href="/mentors" onclick="toggleNav()">Mentors</a>
+    <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
+    <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
+    <a href="{{ url_for('login') }}" onclick="toggleNav()">Log In</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Score</a>
   {% endif %}
 </div>
 <!-- Flash messages -->
