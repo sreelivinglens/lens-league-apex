@@ -54,12 +54,12 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 .sl-hiw-hero-content {
   position: relative;
   z-index: 2;
-  padding: 64px;
-  max-width: 660px;
-  /* translucent dark text container — 50% grey */
+  padding: 40px 48px;
+  width: fit-content;
+  max-width: 580px;
   background: rgba(30,28,24,0.52);
   backdrop-filter: blur(2px);
-  margin: 48px 64px;
+  margin: 0 64px;
 }
 .sl-hiw-eyebrow {
   font-size: 11px;
@@ -76,12 +76,12 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
   margin-bottom: 22px;
 }
 .sl-hiw-hero-h1 {
-  font-size: 56px;
+  font-size: 36px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
   letter-spacing: -0.03em;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .sl-hiw-hero-sub {
@@ -436,8 +436,8 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
   .sl-hiw-hero-content {
     margin: 0 16px 24px;
     padding: 24px 20px;
+    width: calc(100% - 32px);
     max-width: none;
-    width: fit-content;
     text-shadow: none;
     background: rgba(30,28,24,0.58);
     backdrop-filter: blur(2px);
