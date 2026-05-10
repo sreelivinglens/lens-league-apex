@@ -637,34 +637,52 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* HERO — fixed height, exact match to how-it-works.html */
+  /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
   .sl-poty-hero {
-    height: 360px;
-    max-height: 360px;
-    align-items: flex-end;
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-poty-hero-img {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  .sl-poty-hero-fade {
+    display: none;
   }
   .sl-poty-hero-content {
-    margin: 0 16px 24px;
-    padding: 24px 20px;
-    width: calc(100% - 32px);
+    position: static;
+    background: #2C3E6B;
+    margin: 0;
+    padding: 20px 16px 24px;
+    width: 100%;
     max-width: none;
+    backdrop-filter: none;
     text-shadow: none;
-    background: rgba(30,28,24,0.58);
-    backdrop-filter: blur(2px);
   }
   .sl-poty-hero-h1 {
     font-size: 28px;
-    text-shadow: none;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     margin-bottom: 0;
-  }
-  .sl-poty-hero-body {
-    font-size: 15px;
     text-shadow: none;
-    display: none;
   }
   .sl-poty-eyebrow {
     text-shadow: none;
+  }
+  .sl-poty-hero-body {
+    display: none;
+  }
+  .sl-poty-hero-sub {
+    display: none;
   }
 
   /* TRUST BAR */

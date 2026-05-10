@@ -26,7 +26,8 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
 .sl-hiw-hero {
   position: relative;
   width: 100%;
-  min-height: 480px;
+  height: 480px;
+  max-height: 480px;
   background: #0D0D0B;
   display: flex;
   align-items: center;
@@ -427,35 +428,52 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* HERO — fixed height, matches poty standard */
+  /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
   .sl-hiw-hero {
-    height: 360px;
-    max-height: 360px;
-    align-items: flex-end;
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-hiw-hero-img {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  .sl-hiw-hero-fade {
+    display: none;
   }
   .sl-hiw-hero-content {
-    margin: 0 16px 24px;
-    padding: 24px 20px;
-    width: calc(100% - 32px);
+    position: static;
+    background: #2C3E6B;
+    margin: 0;
+    padding: 20px 16px 24px;
+    width: 100%;
     max-width: none;
+    backdrop-filter: none;
     text-shadow: none;
-    background: rgba(30,28,24,0.58);
-    backdrop-filter: blur(2px);
   }
   .sl-hiw-hero-h1 {
     font-size: 28px;
-    text-shadow: none;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     margin-bottom: 0;
+    text-shadow: none;
   }
-  .sl-hiw-hero-sub {
-    display: none;
+  .sl-hiw-eyebrow {
+    text-shadow: none;
   }
   .sl-hiw-hero-body {
     display: none;
   }
-  .sl-hiw-eyebrow {
-    text-shadow: none;
+  .sl-hiw-hero-sub {
+    display: none;
   }
 
   /* SECTIONS */
