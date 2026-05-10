@@ -27,7 +27,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 .sl-poty-hero {
   position: relative;
   width: 100%;
-  min-height: 520px;
+  min-height: 480px;
   background: #0D0D0B;
   display: flex;
   align-items: center;
@@ -49,16 +49,18 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 .sl-poty-hero-fade {
   position: absolute;
   inset: 0;
-  background: rgba(13,13,11,0.45);
+  background: rgba(13,13,11,0.25);
 }
 .sl-poty-hero-content {
   position: relative;
   z-index: 2;
   padding: 64px;
-  max-width: 660px;
+  max-width: 620px;
   background: rgba(30,28,24,0.52);
   backdrop-filter: blur(2px);
   margin: 48px 64px;
+  align-self: flex-end;
+  margin-bottom: 48px;
 }
 .sl-poty-eyebrow {
   font-size: 11px;
@@ -154,7 +156,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 .sl-poty-sec-rule-dark {
   width: 32px;
   height: 2px;
-  background: #1A2744;
+  background: #F5C518;
   margin-bottom: 22px;
 }
 .sl-poty-h2 {
@@ -246,7 +248,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   font-weight: 500;
   color: rgba(26,26,24,0.58);
   line-height: 1.6;
-  text-align: center;
+  text-align: justify;
 }
 .sl-poty-arrow {
   display: flex;
@@ -526,6 +528,9 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   list-style: none;
   padding: 0;
   margin: 14px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
 }
 .sl-poty-cat-list li {
   font-size: 16px;
@@ -537,6 +542,9 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   align-items: center;
   gap: 10px;
 }
+.sl-poty-cat-list li:nth-child(odd) {
+  padding-right: 16px;
+}
 .sl-poty-cat-list li::before {
   content: '';
   width: 6px;
@@ -545,13 +553,13 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   background: #1A1A18;
   flex-shrink: 0;
 }
-.sl-poty-cat-list li:last-child {
+.sl-poty-cat-list li:nth-last-child(-n+2) {
   border-bottom: none;
 }
 
 /* ━━ CTA STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-poty-cta {
-  background: #1A2744;
+  background: #0D0D0B;
   padding: 60px 64px;
 }
 .sl-poty-cta-inner {
@@ -840,7 +848,6 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
       <p class="sl-poty-eyebrow">Annual Excellence Award</p>
       <div class="sl-poty-gold-rule"></div>
       <h1 class="sl-poty-hero-h1">Recognition for photographic excellence.<br>Earned over time.</h1>
-      <p class="sl-poty-hero-sub">HONEST FEEDBACK. REAL IMPROVEMENT.</p>
       <p class="sl-poty-hero-body">The Annual Excellence Award recognises photographers who consistently create meaningful work, demonstrate growth, and uphold the highest standards of photographic expression.</p>
     </div>
   </section>
@@ -928,7 +935,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   </section>
 
   <!-- ── WHAT EARNS YOU POINTS ──────────────────────────────── -->
-  <section class="sl-poty-sec" style="background:#EDEAE4;">
+  <section class="sl-poty-sec" style="background:#F7F5F2;">
     <div class="sl-poty-inner">
       <p class="sl-poty-sec-eyebrow">What Earns You Points</p>
       <div class="sl-poty-sec-rule-dark"></div>
@@ -989,7 +996,6 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
           <h2 class="sl-poty-h2" style="font-size:32px;">A live reflection of dedication.</h2>
           <p class="sl-poty-body" style="font-size:17px;">The leaderboard showcases photographers who consistently create outstanding work and contribute to the community.</p>
           <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Rankings are updated regularly throughout the year.</p>
-          <a href="{{ url_for('leaderboard') }}" class="sl-poty-btn-outline">View Full Leaderboard →</a>
         </div>
         <div>
           <div class="sl-poty-tab-bar">
