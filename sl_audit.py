@@ -12,8 +12,8 @@ def audit_html(filepath):
         ('Hero min-height 360px mobile',           'min-height: 360px' in content),
         ('Hero img→fade→content structure',        'sl-poty-hero-fade' in content or 'sl-hiw-hero-fade' in content),
         ('Hero onerror on img',                    "onerror=\"this.style.display='none'\"" in content),
-        ('Hero fade opacity ≤ 0.30',               any(f'rgba(13,13,11,0.{n})' in content for n in ['10','15','20','25','30'])),
-        ('Hero align-self flex-end on container',  'align-self: flex-end' in content),
+        ('Hero fade opacity 0.45 per hiw standard', 'rgba(13,13,11,0.45)' in content),
+        ('Hero content margin 48px 64px per hiw standard', 'margin: 48px 64px' in content),
         ('text-shadow none mobile — h1',           'text-shadow: none' in content),
         ('No hero sub line in HTML block',         'hero-sub' not in content.split('{% block content %}')[1] if '{% block content %}' in content else True),
         # FONTS
