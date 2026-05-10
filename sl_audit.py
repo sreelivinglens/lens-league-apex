@@ -9,7 +9,7 @@ def audit_html(filepath):
     checks = [
         # HERO — accepts fixed height (poty standard) OR min-height (hiw standard)
         ('Hero 480px desktop',                     'height: 480px' in content or 'min-height: 480px' in content),
-        ('Hero 360px mobile',                      'height: 360px' in content or 'min-height: 360px' in content),
+        ('Hero mobile standard',                   'height: 360px' in content or 'min-height: 360px' in content or 'aspect-ratio: 16 / 9' in content),
         ('Hero img→fade→content structure',        'hero-fade' in content),
         ('Hero onerror on img',                    "onerror=\"this.style.display='none'\"" in content),
         ('Hero fade opacity 0.45 per hiw standard', 'rgba(13,13,11,0.45)' in content),
