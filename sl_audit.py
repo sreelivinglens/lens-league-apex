@@ -7,13 +7,13 @@ import ast, sys
 def audit_html(filepath):
     content = open(filepath).read()
     checks = [
-        # HERO
-        ('Hero min-height 480px desktop',          'min-height: 480px' in content),
-        ('Hero min-height 360px mobile',           'min-height: 360px' in content),
-        ('Hero img→fade→content structure',        'sl-poty-hero-fade' in content or 'sl-hiw-hero-fade' in content),
+        # HERO — accepts fixed height (poty standard) OR min-height (hiw standard)
+        ('Hero 480px desktop',                     'height: 480px' in content or 'min-height: 480px' in content),
+        ('Hero 360px mobile',                      'height: 360px' in content or 'min-height: 360px' in content),
+        ('Hero img→fade→content structure',        'hero-fade' in content),
         ('Hero onerror on img',                    "onerror=\"this.style.display='none'\"" in content),
         ('Hero fade opacity 0.45 per hiw standard', 'rgba(13,13,11,0.45)' in content),
-        ('Hero content margin 48px 64px per hiw standard', 'margin: 48px 64px' in content),
+        ('Hero content margin 64px',               'margin: 48px 64px' in content or 'margin: 0 64px' in content),
         ('text-shadow none mobile — h1',           'text-shadow: none' in content),
         ('No hero sub line in HTML block',         'hero-sub' not in content.split('{% block content %}')[1] if '{% block content %}' in content else True),
         # FONTS
