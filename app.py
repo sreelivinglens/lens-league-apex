@@ -4783,7 +4783,20 @@ def public_profile(username):
 
 @app.route('/how-it-works')
 def how_it_works():
-    return render_template('how-it-works.html')
+    try:
+        hiw_hero = (Image.query
+                    .filter(Image.status == 'scored',
+                            Image.score != None,
+                            Image.is_public == True,
+                            Image.is_flagged == False,
+                            Image.thumb_url != None,
+                            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                            Image.score >= 8.0)
+                    .order_by(db.func.random())
+                    .first())
+    except Exception:
+        hiw_hero = None
+    return render_template('how-it-works.html', hiw_hero=hiw_hero)
 
 @app.route('/example-score')
 def example_score():
