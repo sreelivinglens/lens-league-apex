@@ -27,7 +27,8 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 .sl-poty-hero {
   position: relative;
   width: 100%;
-  min-height: 480px;
+  height: 480px;
+  max-height: 480px;
   background: #0D0D0B;
   display: flex;
   align-items: center;
@@ -55,11 +56,12 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 .sl-poty-hero-content {
   position: relative;
   z-index: 2;
-  padding: 64px;
-  max-width: 660px;
+  padding: 40px 48px;
+  width: fit-content;
+  max-width: 580px;
   background: rgba(30,28,24,0.52);
   backdrop-filter: blur(2px);
-  margin: 48px 64px;
+  margin: 0 64px;
 }
 .sl-poty-eyebrow {
   font-size: 11px;
@@ -76,12 +78,12 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
   margin-bottom: 22px;
 }
 .sl-poty-hero-h1 {
-  font-size: 56px;
+  font-size: 38px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
   letter-spacing: -0.03em;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .sl-poty-hero-sub {
@@ -635,30 +637,29 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* HERO — exact match to how-it-works.html */
+  /* HERO — fixed height, exact match to how-it-works.html */
   .sl-poty-hero {
-    min-height: 360px;
+    height: 360px;
+    max-height: 360px;
     align-items: flex-end;
   }
   .sl-poty-hero-content {
     margin: 0 16px 24px;
     padding: 24px 20px;
     max-width: none;
+    width: fit-content;
     text-shadow: none;
     background: rgba(30,28,24,0.58);
     backdrop-filter: blur(2px);
   }
   .sl-poty-hero-h1 {
-    font-size: 34px;
+    font-size: 28px;
     text-shadow: none;
     letter-spacing: -0.02em;
     margin-bottom: 12px;
   }
   .sl-poty-hero-body {
-    font-size: 17px;
-    text-shadow: none;
-  }
-  .sl-poty-hero-sub {
+    font-size: 15px;
     text-shadow: none;
   }
   .sl-poty-eyebrow {
