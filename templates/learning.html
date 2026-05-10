@@ -26,7 +26,8 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; }
 .sl-learn-hero {
   position: relative;
   width: 100%;
-  min-height: 480px;
+  height: 480px;
+  max-height: 480px;
   background: #0D0D0B;
   display: flex;
   align-items: center;
@@ -54,11 +55,12 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; }
 .sl-learn-hero-content {
   position: relative;
   z-index: 2;
-  padding: 64px;
-  max-width: 660px;
+  padding: 40px 48px;
+  width: fit-content;
+  max-width: 580px;
   background: rgba(30,28,24,0.52);
   backdrop-filter: blur(2px);
-  margin: 48px 64px;
+  margin: 0 64px;
 }
 .sl-learn-hero-eyebrow {
   font-size: 11px;
@@ -584,13 +586,15 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; }
 
   /* HERO */
   .sl-learn-hero {
-    min-height: 360px;
+    height: 360px;
+    max-height: 360px;
     align-items: flex-end;
   }
   .sl-learn-hero-content {
     margin: 0 16px 24px;
     padding: 24px 20px;
     max-width: none;
+    width: fit-content;
     text-shadow: none;
     background: rgba(30,28,24,0.58);
     backdrop-filter: blur(2px);
