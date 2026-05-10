@@ -342,6 +342,82 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
   gap: 6px;
 }
 
+/* ━━ EXAMPLE PHOTO + OVERLAYS ━━━━━━━━━━━ */
+.sl-hiw-example-wrap {
+  position: relative;
+  overflow: hidden;
+  min-height: 360px;
+  background: #1a1810;
+  display: flex;
+  flex-direction: column;
+}
+.sl-hiw-example-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  flex: 1;
+}
+/* Score chip — top left, mirrors live scorecard */
+.sl-hiw-score-chip {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(13,13,11,0.82);
+  backdrop-filter: blur(6px);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 3px solid #F5C518;
+}
+.sl-hiw-score-num {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.sl-hiw-score-tier {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+}
+.sl-hiw-soul {
+  font-size: 11px;
+  font-weight: 600;
+  color: #F5C518;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+/* One Improvement — bottom overlay, dark gradient behind */
+.sl-hiw-improvement {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(13,13,11,0.95) 0%, rgba(13,13,11,0.70) 70%, transparent 100%);
+  padding: 32px 24px 24px;
+}
+.sl-hiw-imp-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-hiw-imp-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.90);
+  line-height: 1.6;
+  text-align: left;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — max-width 768px
    Per MOBILE_CONTENT_BEHAVIOR.docx
@@ -462,6 +538,13 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
     min-height: 220px;
     aspect-ratio: 16 / 9;
   }
+  .sl-hiw-example-wrap {
+    min-height: 280px;
+    aspect-ratio: 4 / 3;
+  }
+  .sl-hiw-imp-text {
+    font-size: 13px;
+  }
   .sl-hiw-feature-text {
     padding: 40px 20px;
   }
@@ -515,12 +598,14 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section class="sl-hiw-hero">
+    {% if hiw_hero and hiw_hero.thumb_url %}
     <img
       class="sl-hiw-hero-img"
-      src="{{ url_for('static', filename='img/how_it_works_hero.jpg') }}"
-      alt="Photographer standing on a ridge at dusk, camera raised"
+      src="{{ hiw_hero.thumb_url }}"
+      alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    {% endif %}
     <div class="sl-hiw-hero-fade"></div>
     <div class="sl-hiw-hero-content">
       <p class="sl-hiw-eyebrow">How It Works</p>
@@ -608,16 +693,32 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
     </div>
   </section>
 
-  <!-- ── FEEDBACK — image left / text right ────────────────────── -->
+  <!-- ── FEEDBACK — real scored photo left / text right ──────────── -->
   <section class="sl-hiw-feature">
     <div class="sl-hiw-feature-grid">
-      <div class="sl-hiw-feature-img">
+
+      <!-- LEFT: real member photo with score chip + one-improvement overlay -->
+      <div class="sl-hiw-example-wrap">
         <img
-          src="{{ url_for('static', filename='img/how_it_works_feedback.jpg') }}"
-          alt="Hands holding a printed photograph over a wooden table"
-          onerror="this.style.display='none'"
+          class="sl-hiw-example-img"
+          src="{{ url_for('static', filename='img/sunflower_smile.jpg') }}"
+          alt="Sunflower Smile — People photograph by Sreekumar, scored Craftsman with Soul Bonus"
+          onerror="this.closest('.sl-hiw-example-wrap').style.display='none'"
         >
+        <!-- Score chip — top left -->
+        <div class="sl-hiw-score-chip">
+          <span class="sl-hiw-score-num">6.40</span>
+          <span class="sl-hiw-score-tier">CRAFTSMAN</span>
+          <span class="sl-hiw-soul">&#10022; SOUL BONUS</span>
+        </div>
+        <!-- One improvement — bottom overlay -->
+        <div class="sl-hiw-improvement">
+          <p class="sl-hiw-imp-label">THE ONE IMPROVEMENT</p>
+          <p class="sl-hiw-imp-text">Shoot at f/2.8 or wider to collapse the sunflower field into a softer wash of yellow — the colour and context remain, but the individual flowers dissolve, keeping all attention on her face and expression.</p>
+        </div>
       </div>
+
+      <!-- RIGHT: copy -->
       <div class="sl-hiw-feature-text">
         <h2 class="sl-hiw-h2">Feedback that teaches,<br>not just tells.</h2>
         <div class="sl-hiw-sec-rule"></div>
@@ -629,6 +730,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
           <p class="sl-hiw-callout-text">Because the goal is not a perfect photo.<br>The goal is growth.</p>
         </div>
       </div>
+
     </div>
   </section>
 
