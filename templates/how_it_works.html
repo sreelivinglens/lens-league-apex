@@ -1,0 +1,706 @@
+{% extends "base.html" %}
+{% block title %}How It Works — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Shutter League is built around a simple idea: honest feedback helps you grow. Here's how the journey works.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HOW IT WORKS — Session 16
+   Inter only · #F7F5F2 light · #EDEAE4 warm
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #0D0D0B hero/footer bg
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
+
+.sl-hiw, .sl-hiw * {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-hero {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  background: #0D0D0B;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.sl-hiw-hero-img {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 55%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-hiw-hero-img[src=""],
+.sl-hiw-hero-img:not([src]) {
+  display: none;
+}
+.sl-hiw-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(13,13,11,0.96) 38%, rgba(13,13,11,0.10) 100%);
+  text-shadow: none;
+}
+.sl-hiw-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px 64px 80px;
+  max-width: 620px;
+}
+.sl-hiw-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-hiw-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-hiw-hero-h1 {
+  font-size: 56px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-hiw-hero-sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-hiw-hero-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.65;
+  text-align: justify;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-sec {
+  padding: 80px 64px;
+}
+.sl-hiw-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-hiw-sec-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  margin-bottom: 6px;
+}
+.sl-hiw-sec-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 26px;
+}
+.sl-hiw-h2 {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1A1A18;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.sl-hiw-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.72);
+  line-height: 1.7;
+  text-align: justify;
+}
+
+/* ━━ LEARNING LOOP ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-loop-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  margin-bottom: 52px;
+}
+.sl-hiw-steps {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
+  align-items: start;
+}
+.sl-hiw-step {
+  text-align: center;
+  padding: 0 12px;
+}
+.sl-hiw-step-num {
+  width: 36px;
+  height: 36px;
+  background: #1A1A18;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 auto 16px;
+}
+.sl-hiw-step-icon {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sl-hiw-step-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-hiw-step-desc {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+  text-align: center;
+}
+.sl-hiw-arrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 46px;
+  font-size: 20px;
+  color: rgba(26,26,24,0.22);
+  font-family: sans-serif !important;
+}
+
+/* ━━ FEATURE — image left / text right ━━ */
+.sl-hiw-feature {
+  background: #EDEAE4;
+}
+.sl-hiw-feature-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+.sl-hiw-feature-img {
+  min-height: 360px;
+  overflow: hidden;
+  background: #1a1810;
+}
+.sl-hiw-feature-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-hiw-feature-text {
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #EDEAE4;
+}
+.sl-hiw-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(245,197,24,0.09);
+  margin-top: 28px;
+}
+.sl-hiw-callout-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A18;
+  line-height: 1.55;
+}
+
+/* ━━ WHAT MAKES DIFFERENT ━━━━━━━━━━━━━━━ */
+.sl-hiw-diff-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-hiw-diff-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin: 0 auto 52px;
+}
+.sl-hiw-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-diff-col {
+  padding: 36px 28px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-diff-col:last-child {
+  border-right: none;
+}
+.sl-hiw-diff-icon {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.sl-hiw-diff-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-hiw-diff-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.65;
+  text-align: justify;
+}
+
+/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-cta {
+  background: #0D0D0B;
+  padding: 80px 64px;
+}
+.sl-hiw-cta-h {
+  font-size: 38px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.sl-hiw-cta-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.58);
+  margin-bottom: 32px;
+  max-width: 520px;
+  text-align: justify;
+}
+.sl-hiw-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.sl-hiw-cta-btn {
+  display: inline-block;
+  background: #F5C518;
+  color: #0D0D0B;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  white-space: nowrap;
+}
+.sl-hiw-cta-btn:hover {
+  opacity: 0.88;
+}
+.sl-hiw-cta-micro {
+  font-size: 13px;
+  color: rgba(255,255,255,0.36);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+   Per MOBILE_CONTENT_BEHAVIOR.docx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  /* HERO — 16:9 photo on top, text block below on cream */
+  .sl-hiw-hero {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: unset;
+  }
+  .sl-hiw-hero-img {
+    position: relative;
+    right: unset;
+    top: unset;
+    bottom: unset;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .sl-hiw-hero-fade {
+    display: none;
+  }
+  .sl-hiw-hero-content {
+    position: relative;
+    background: #F7F5F2;
+    padding: 36px 20px 48px;
+    max-width: none;
+    text-shadow: none;
+  }
+  .sl-hiw-eyebrow {
+    color: rgba(26,26,24,0.50);
+  }
+  .sl-hiw-gold-rule {
+    /* gold rule now sits on light bg — use navy to avoid gold-on-cream violation */
+    background: #1A2744;
+  }
+  .sl-hiw-hero-h1 {
+    font-size: 36px;
+    color: #1A1A18;
+    text-shadow: none;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .sl-hiw-hero-sub {
+    color: rgba(26,26,24,0.50);
+  }
+  .sl-hiw-hero-body {
+    font-size: 18px;
+    color: rgba(26,26,24,0.72);
+    text-shadow: none;
+    max-width: none;
+  }
+
+  /* SECTIONS */
+  .sl-hiw-sec {
+    padding: 56px 20px;
+  }
+
+  /* LEARNING LOOP — vertical rows: number+icon LEFT, title+desc RIGHT */
+  .sl-hiw-loop-label {
+    margin-bottom: 36px;
+    font-size: 11px;
+  }
+  .sl-hiw-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .sl-hiw-arrow {
+    display: none;
+  }
+  .sl-hiw-step {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    grid-template-rows: auto auto;
+    text-align: left;
+    padding: 0;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .sl-hiw-step-num {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .sl-hiw-step-icon {
+    grid-column: 1;
+    grid-row: 2;
+    height: 36px;
+    justify-content: flex-start;
+    margin-bottom: 0;
+    margin-top: 10px;
+  }
+  .sl-hiw-step-title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 18px;
+    padding-top: 4px;
+    margin-bottom: 6px;
+  }
+  .sl-hiw-step-desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 16px;
+    text-align: left;
+    margin-top: 2px;
+  }
+
+  /* FEATURE — image stacks above text */
+  .sl-hiw-feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .sl-hiw-feature-img {
+    min-height: 220px;
+    aspect-ratio: 16 / 9;
+  }
+  .sl-hiw-feature-text {
+    padding: 40px 20px;
+  }
+  .sl-hiw-h2 {
+    font-size: 30px;
+  }
+
+  /* WHAT MAKES DIFFERENT — 2×2 on mobile */
+  .sl-hiw-diff-head {
+    font-size: 26px;
+  }
+  .sl-hiw-diff-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sl-hiw-diff-col {
+    padding: 24px 18px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-hiw-diff-col:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-hiw-diff-col:nth-child(3),
+  .sl-hiw-diff-col:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* CTA */
+  .sl-hiw-cta {
+    padding: 56px 20px;
+  }
+  .sl-hiw-cta-h {
+    font-size: 30px;
+  }
+  .sl-hiw-cta-body {
+    font-size: 18px;
+    max-width: none;
+  }
+  .sl-hiw-cta-btn {
+    width: 100%;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 14px;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-hiw">
+
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <section class="sl-hiw-hero">
+    <img
+      class="sl-hiw-hero-img"
+      src="{{ url_for('static', filename='img/how_it_works_hero.jpg') }}"
+      alt="Photographer standing on a ridge at dusk, camera raised"
+      onerror="this.style.display='none'"
+    >
+    <div class="sl-hiw-hero-fade"></div>
+    <div class="sl-hiw-hero-content">
+      <p class="sl-hiw-eyebrow">How It Works</p>
+      <div class="sl-hiw-gold-rule"></div>
+      <h1 class="sl-hiw-hero-h1">How it works</h1>
+      <p class="sl-hiw-hero-sub">HONEST FEEDBACK. REAL IMPROVEMENT.</p>
+      <p class="sl-hiw-hero-body">Shutter League is built around a simple idea: honest feedback helps you grow. Here's how the journey works.</p>
+    </div>
+  </section>
+
+  <!-- ── LEARNING LOOP ─────────────────────────────────────────── -->
+  <section class="sl-hiw-sec" style="background:#F7F5F2;">
+    <div class="sl-hiw-inner">
+      <p class="sl-hiw-loop-label">A Simple Learning Loop</p>
+      <div class="sl-hiw-steps">
+
+        <!-- Step 1 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">1</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 26V10"/><path d="M11 18l8-8 8 8"/>
+              <line x1="6" y1="30" x2="32" y2="30"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Upload</p>
+          <p class="sl-hiw-step-desc">Submit a photograph.<br>We accept JPG or RAW.<br>No presets. No filters.<br>Just your work.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 2 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">2</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="19" cy="14" r="8"/>
+              <line x1="19" y1="22" x2="19" y2="27"/>
+              <line x1="15" y1="31" x2="23" y2="31"/>
+              <line x1="19" y1="4"  x2="19" y2="6"/>
+              <line x1="11" y1="7"  x2="9.5"  y2="5.5"/>
+              <line x1="27" y1="7"  x2="28.5" y2="5.5"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Insight</p>
+          <p class="sl-hiw-step-desc">Get an honest score and in-depth feedback explaining what works, what doesn't, and why.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 3 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">3</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="19" cy="19" r="11"/>
+              <circle cx="19" cy="19" r="4"/>
+              <line x1="19" y1="4"  x2="19" y2="8"/>
+              <line x1="19" y1="30" x2="19" y2="34"/>
+              <line x1="4"  y1="19" x2="8"  y2="19"/>
+              <line x1="30" y1="19" x2="34" y2="19"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">One Improvement</p>
+          <p class="sl-hiw-step-desc">Receive one clear, actionable suggestion to make your next photo better.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 4 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">4</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="12" width="32" height="22" rx="2"/>
+              <path d="M13 12V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/>
+              <circle cx="19" cy="23" r="4"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Shoot Again</p>
+          <p class="sl-hiw-step-desc">Apply what you've learned. Upload again. Track your growth over time.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEEDBACK — image left / text right ────────────────────── -->
+  <section class="sl-hiw-feature">
+    <div class="sl-hiw-feature-grid">
+      <div class="sl-hiw-feature-img">
+        <img
+          src="{{ url_for('static', filename='img/how_it_works_feedback.jpg') }}"
+          alt="Hands holding a printed photograph over a wooden table"
+          onerror="this.style.display='none'"
+        >
+      </div>
+      <div class="sl-hiw-feature-text">
+        <h2 class="sl-hiw-h2">Feedback that teaches,<br>not just tells.</h2>
+        <div class="sl-hiw-sec-rule"></div>
+        <p class="sl-hiw-body">Every piece of feedback is written by our AI, guided by mentors and built on two centuries of photographic thinking. It's not just about pointing out flaws — it's about helping you see, understand, and improve.</p>
+        <div class="sl-hiw-callout">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <p class="sl-hiw-callout-text">Because the goal is not a perfect photo.<br>The goal is growth.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHAT MAKES THIS DIFFERENT ─────────────────────────────── -->
+  <section class="sl-hiw-sec" style="background:#F7F5F2;">
+    <div class="sl-hiw-inner">
+      <p class="sl-hiw-diff-head">What makes this different?</p>
+      <div class="sl-hiw-diff-rule"></div>
+      <div class="sl-hiw-diff-grid">
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 4l2.5 5 5.5.8-4 3.9.9 5.5L14 16.5l-4.9 2.7.9-5.5L6 9.8l5.5-.8z"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Honest scoring</p>
+          <p class="sl-hiw-diff-body">A score gives feedback a spine. We never soften the truth.</p>
+        </div>
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M23.84 4.61a5.5 5.5 0 0 0-7.78 0L15 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L15 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Emotional impact</p>
+          <p class="sl-hiw-diff-body">We evaluate how your photo makes people feel — not just how it looks.</p>
+        </div>
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="14" cy="10" r="5"/>
+              <path d="M4 24c0-5.5 4.5-8 10-8s10 2.5 10 8"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Personalized guidance</p>
+          <p class="sl-hiw-diff-body">Your feedback is tailored to your level, style, and goals.</p>
+        </div>
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="3,20 9,14 14,18 21,8"/>
+              <line x1="3" y1="24" x2="25" y2="24"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Track real progress</p>
+          <p class="sl-hiw-diff-body">See your improvement across uploads, weeks, months, and years.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA BANNER ────────────────────────────────────────────── -->
+  <section class="sl-hiw-cta">
+    <div class="sl-hiw-inner">
+      <h2 class="sl-hiw-cta-h">Start your journey.</h2>
+      <p class="sl-hiw-cta-body">Upload your first photo and get honest feedback that helps you become a better photographer.</p>
+      <div class="sl-hiw-cta-row">
+        <a href="{{ url_for('register') }}" class="sl-hiw-cta-btn">GET MY FIRST SCORE</a>
+        <span class="sl-hiw-cta-micro">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          </svg>
+          Usually under a minute
+        </span>
+      </div>
+    </div>
+  </section>
+
+</div>{# end sl-hiw #}
+{% endblock %}
