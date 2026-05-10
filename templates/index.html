@@ -908,12 +908,23 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* ── Manifesto strip ── */
   .sl-manifesto {
     grid-template-columns: 1fr;
-    padding: 48px 20px;
+    padding: 48px 20px 32px;
     gap: 24px;
   }
   .sl-mf-col1 { gap: 16px; }
   .sl-mf-tagline { font-size: 20px; }
   .sl-mf-col3 { font-size: 16px; }
+  .sl-manifesto + div {
+    padding: 0 20px 48px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .sl-manifesto + div .sl-hero-btn {
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
 }
 
 /* ── 480px tightening ── */
@@ -1237,12 +1248,24 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </svg>
     <p class="sl-mf-tagline">Built for photographers<br>who want to improve honestly.</p>
   </div>
-  <div></div>
+  <div class="sl-mf-col3" style="font-size:16px;font-weight:500;color:#1A1A18;line-height:1.75;">
+    We are independent.<br>
+    We answer to photographers,<br>
+    not investors.
+  </div>
   <div class="sl-mf-col3">
     Honesty. Respect. Privacy.<br>
     No likes. No vanity metrics.<br>
     Just truthful feedback that helps<br>
     you become a better photographer.
+  </div>
+</div>
+<div style="background:#F7F5F2;padding:0 64px 56px;display:flex;align-items:center;justify-content:flex-start;gap:20px;">
+  <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
+     class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
+  <div class="sl-hero-micro" style="color:rgba(26,26,24,0.55);">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Usually under a minute
   </div>
 </div>
 
