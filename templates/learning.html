@@ -306,30 +306,43 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   overflow: hidden;
   border: 1px solid rgba(44,62,107,0.18);
   background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+}
+.sl-learn-mentor-photo-wrap {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 .sl-learn-mentor-photo {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
   object-position: center top;
   display: block;
 }
 .sl-learn-mentor-body {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 .sl-learn-mentor-badge {
-  display: inline-block;
+  position: absolute;
+  top: 10px;
+  left: 10px;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 4px 8px;
   border-radius: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
-.sl-learn-badge-grandmaster { background: #1A2744; color: #F5C518; }
-.sl-learn-badge-master      { background: #2C3E6B; color: #FFFFFF; }
-.sl-learn-badge-base        { background: #4a5568; color: #FFFFFF; }
+.sl-learn-badge-grandmaster { background: #5b2d8a; color: #FFFFFF; }
+.sl-learn-badge-master      { background: #1a5f7a; color: #FFFFFF; }
+.sl-learn-badge-base        { background: #2d7a3a; color: #FFFFFF; }
 .sl-learn-mentor-name {
   font-size: 17px;
   font-weight: 700;
@@ -354,6 +367,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   line-height: 1.6;
   text-align: justify;
   margin-bottom: 14px;
+  flex: 1;
 }
 .sl-learn-mentor-btn {
   display: flex;
@@ -372,9 +386,9 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   transition: opacity 0.2s;
 }
 .sl-learn-mentor-btn:hover { opacity: 0.88; color: #FFFFFF; }
-.sl-learn-btn-grandmaster { background: #1A2744; }
-.sl-learn-btn-master      { background: #2C3E6B; }
-.sl-learn-btn-base        { background: #4a5568; }
+.sl-learn-btn-grandmaster { background: #5b2d8a; }
+.sl-learn-btn-master      { background: #1a5f7a; }
+.sl-learn-btn-base        { background: #2d7a3a; }
 .sl-learn-mentors-footer {
   font-size: 14px;
   color: #1A1A18;
@@ -610,7 +624,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
     position: static;
     background: #2C3E6B;
     margin: 0;
-    padding: 20px 16px 24px;
+    padding: 12px 16px 20px;
     width: 100%;
     max-width: none;
     backdrop-filter: none;
@@ -833,14 +847,16 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
 
             <!-- Ashok Kochhar — Grandmaster -->
             <div class="sl-learn-mentor-card">
-              <img
-                class="sl-learn-mentor-photo"
-                src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-                alt="Ashok Kochhar — Grandmaster Mentor"
-                onerror="this.style.display='none'"
-              >
-              <div class="sl-learn-mentor-body">
+              <div class="sl-learn-mentor-photo-wrap">
+                <img
+                  class="sl-learn-mentor-photo"
+                  src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+                  alt="Ashok Kochhar — Grandmaster Mentor"
+                  onerror="this.style.display='none'"
+                >
                 <span class="sl-learn-mentor-badge sl-learn-badge-grandmaster">Grandmaster Mentor</span>
+              </div>
+              <div class="sl-learn-mentor-body">
                 <div class="sl-learn-mentor-name">Ashok Kochhar</div>
                 <div class="sl-learn-mentor-genres">Conceptual &middot; Fashion &middot; Street &middot; Nature</div>
                 <div class="sl-learn-mentor-rule"></div>
@@ -851,14 +867,16 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
 
             <!-- Gopal MS — Master -->
             <div class="sl-learn-mentor-card">
-              <img
-                class="sl-learn-mentor-photo"
-                src="{{ url_for('static', filename='img/Gopal MS.jpeg') }}"
-                alt="Gopal MS — Master Mentor"
-                onerror="this.style.display='none'"
-              >
-              <div class="sl-learn-mentor-body">
+              <div class="sl-learn-mentor-photo-wrap">
+                <img
+                  class="sl-learn-mentor-photo"
+                  src="{{ url_for('static', filename='img/Gopal MS.jpeg') }}"
+                  alt="Gopal MS — Master Mentor"
+                  onerror="this.style.display='none'"
+                >
                 <span class="sl-learn-mentor-badge sl-learn-badge-master">Master Mentor</span>
+              </div>
+              <div class="sl-learn-mentor-body">
                 <div class="sl-learn-mentor-name">Gopal MS</div>
                 <div class="sl-learn-mentor-genres">Street &middot; Documentary &middot; Urban</div>
                 <div class="sl-learn-mentor-rule"></div>
@@ -869,18 +887,21 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
 
             <!-- Sreekumar Krishnan — Base -->
             <div class="sl-learn-mentor-card">
-              <img
-                class="sl-learn-mentor-photo"
-                src="{{ url_for('static', filename='img/Sreekumar.png') }}"
-                alt="Sreekumar Krishnan — Base Mentor"
-                onerror="this.style.display='none'"
-              >
-              <div class="sl-learn-mentor-body">
+              <div class="sl-learn-mentor-photo-wrap">
+                <img
+                  class="sl-learn-mentor-photo"
+                  src="{{ url_for('static', filename='img/Sreekumar.png') }}"
+                  alt="Sreekumar Krishnan — Base Mentor"
+                  onerror="this.style.display='none'"
+                  style="object-position: top center;"
+                >
                 <span class="sl-learn-mentor-badge sl-learn-badge-base">Base Mentor</span>
+              </div>
+              <div class="sl-learn-mentor-body">
                 <div class="sl-learn-mentor-name">Sreekumar Krishnan</div>
                 <div class="sl-learn-mentor-genres">Wildlife &middot; Street &middot; Portrait &middot; Mobile</div>
                 <div class="sl-learn-mentor-rule"></div>
-                <div class="sl-learn-mentor-bio">IPPA Gold 2019. The spirituality and science of light.</div>
+                <div class="sl-learn-mentor-bio">International award-winning photographer &amp; filmmaker. IPPA Gold 2019. Sanctuary Asia &amp; National Geographic featured.</div>
                 <a href="{{ url_for('mentor_register') }}" class="sl-learn-mentor-btn sl-learn-btn-base">&#8377;50 <span>&#8594;</span></a>
               </div>
             </div>
