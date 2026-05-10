@@ -1263,8 +1263,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div style="background:#F7F5F2;padding:0 64px 56px;display:flex;align-items:center;justify-content:flex-start;gap:20px;">
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
      class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
-  <div class="sl-hero-micro" style="color:rgba(26,26,24,0.55);">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  <div style="display:flex;align-items:center;gap:8px;color:#1A1A18;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Usually under a minute
   </div>
 </div>
