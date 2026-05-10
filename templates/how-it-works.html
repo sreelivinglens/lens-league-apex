@@ -1,561 +1,706 @@
 {% extends "base.html" %}
-{% block title %}How It Works — {{ platform_name }}{% endblock %}
+{% block title %}How It Works — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Shutter League is built around a simple idea: honest feedback helps you grow. Here's how the journey works.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
 
 {% block extra_css %}
 <style>
-  .hiw-wrap { max-width: 880px; margin: 0 auto; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HOW IT WORKS — Session 16
+   Inter only · #F7F5F2 light · #EDEAE4 warm
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #0D0D0B hero/footer bg
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 
-  /* Section spacing */
-  .hiw-section { margin-bottom: 72px; }
-  .hiw-section-label {
-    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-    letter-spacing: 3px; color: var(--text-primary); text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .hiw-section-title {
-    font-size: clamp(22px, 3vw, 30px); font-weight: 700;
-    color: var(--text-primary); margin-bottom: 12px; line-height: 1.2;
-  }
-  .hiw-section-sub {
-    font-size: 17px; color: var(--text-secondary); line-height: 1.7;
-    max-width: 600px; margin-bottom: 32px;
-  }
+.sl-hiw, .sl-hiw * {
+  font-family: 'Inter', sans-serif !important;
+}
 
-  /* ── Section 1: Upload & Score ── */
-  .steps-row { display: flex; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto; }
-  .step-card {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 24px 20px;
-    display: flex; align-items: center; gap: 16px;
-  }
-  .step-icon {
-    font-size: 32px; flex-shrink: 0;
-    width: 56px; height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface-3); border-radius: 50%;
-  }
-  .step-content { flex: 1; }
-  .step-num {
-    font-family: var(--font-mono); font-size: 16px; font-weight: 700;
-    color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .step-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .step-body { font-size: 16px; color: var(--text-primary); line-height: 1.6; }
-  .step-arrow {
-    text-align: center; font-size: 24px; color: var(--text-secondary);
-    margin: -8px 0; opacity: 0.4;
-  }
-  @media (min-width: 769px) {
-    .steps-row { max-width: 900px; }
-  }
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-hero {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  background: #0D0D0B;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.sl-hiw-hero-img {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 55%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-hiw-hero-img[src=""],
+.sl-hiw-hero-img:not([src]) {
+  display: none;
+}
+.sl-hiw-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(13,13,11,0.96) 38%, rgba(13,13,11,0.10) 100%);
+  text-shadow: none;
+}
+.sl-hiw-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px 64px 80px;
+  max-width: 620px;
+}
+.sl-hiw-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-hiw-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-hiw-hero-h1 {
+  font-size: 56px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-hiw-hero-sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-hiw-hero-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.65;
+  text-align: justify;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
 
-  /* ── Section 2: Score Card ── */
-  .ddi-showcase {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 32px;
-  }
-  .ddi-score-big {
-    font-family: var(--font-mono); font-size: 72px; font-weight: 700;
-    color: var(--text-primary); line-height: 1; margin-bottom: 4px;
-  }
-  .ddi-tier-label {
-    font-family: var(--font-mono); font-size: 16px; font-weight: 700;
-    letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase;
-    margin-bottom: 28px;
-  }
-  .ddi-dims { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
-  @media (max-width: 768px) { .ddi-dims { grid-template-columns: repeat(3,1fr); } }
-  .ddi-dim-labels { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-top: 16px; text-align: center; }
-  @media (max-width: 768px) { .ddi-dim-labels { display: none; } }
-  .ddi-dim-card {
-    text-align: center; padding: 16px 8px;
-    background: var(--surface-3); border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-  }
-  .ddi-dim-val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
-  .ddi-dim-bar { height: 4px; border-radius: 2px; background: var(--border); margin: 6px auto 8px; max-width: 48px; }
-  .ddi-dim-fill { height: 4px; border-radius: 2px; }
-  .ddi-dim-name { font-family: var(--font-mono); font-size: 16px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
-  @media (max-width: 768px) { 
-    .ddi-dim-name { font-size: 16px; letter-spacing: 0px; } 
-    .ddi-dim-card { padding: 12px 4px; }
-  }
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-sec {
+  padding: 80px 64px;
+}
+.sl-hiw-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-hiw-sec-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  margin-bottom: 6px;
+}
+.sl-hiw-sec-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 26px;
+}
+.sl-hiw-h2 {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1A1A18;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.sl-hiw-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.72);
+  line-height: 1.7;
+  text-align: justify;
+}
 
-  /* dim colours */
-  .dod-col   { color: #2e5b89; } .dod-bar   { background: #2e5b89; }
-  .dis-col   { color: #9b2c62; } .dis-bar   { background: #9b2c62; }
-  .dm-col    { color: #775111; } .dm-bar    { background: #775111; }
-  .won-col   { color: #3b630f; } .won-bar   { background: #3b630f; }
-  .aq-col    { color: #6b560a; } .aq-bar { background: #6b560a; }
+/* ━━ LEARNING LOOP ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-loop-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  margin-bottom: 52px;
+}
+.sl-hiw-steps {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
+  align-items: start;
+}
+.sl-hiw-step {
+  text-align: center;
+  padding: 0 12px;
+}
+.sl-hiw-step-num {
+  width: 36px;
+  height: 36px;
+  background: #1A1A18;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 auto 16px;
+}
+.sl-hiw-step-icon {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sl-hiw-step-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-hiw-step-desc {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+  text-align: center;
+}
+.sl-hiw-arrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 46px;
+  font-size: 20px;
+  color: rgba(26,26,24,0.22);
+  font-family: sans-serif !important;
+}
 
-  /* ── Section 3: Tiers ── */
-  .tiers-strip { display: flex; flex-direction: column; gap: 0; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
-  .tier-block { display: grid; grid-template-columns: 160px 140px 1fr; align-items: center; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--border); background: #FFFFFF; }
-  .tier-block:last-child { border-bottom: none; }
-  .tier-block.tier-gm { background: #1a1a18; }
-  .tier-block.tier-legend { background: #0D0D0B; border-top: 2px solid #F5C518; }
-  .tier-name { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-  .tier-range { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text-primary); }
-  .tier-range.dark { color: #FFFFFF; }
-  .tier-desc { font-size: 16px; color: var(--text-muted); line-height: 1.5; }
-  .tier-desc.dark { color: rgba(255,255,255,0.65); }
-  @media (max-width: 768px) {
-    .tier-block { grid-template-columns: 120px 1fr; gap: 10px; padding: 14px 16px; }
-    .tier-desc { grid-column: 1 / -1; padding-top: 2px; }
-  }
+/* ━━ FEATURE — image left / text right ━━ */
+.sl-hiw-feature {
+  background: #EDEAE4;
+}
+.sl-hiw-feature-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+.sl-hiw-feature-img {
+  min-height: 360px;
+  overflow: hidden;
+  background: #1a1810;
+}
+.sl-hiw-feature-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-hiw-feature-text {
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #EDEAE4;
+}
+.sl-hiw-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(245,197,24,0.09);
+  margin-top: 28px;
+}
+.sl-hiw-callout-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A18;
+  line-height: 1.55;
+}
 
-  /* ── Section 4: Challenges ── */
-  .challenge-card {
-    background: var(--surface-2); border: 1px solid #2C3E6B;
-    border-radius: var(--radius-md); padding: 28px 32px;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 24px; flex-wrap: wrap;
-  }
-  .challenge-card-left { flex: 1; min-width: 260px; }
-  .challenge-week { font-family: var(--font-mono); font-size: 16px; letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; margin-bottom: 6px; }
-  .challenge-title { font-size: 26px; font-weight: 700; font-style: italic; color: var(--text-primary); margin-bottom: 16px; line-height: 1.2; }
-  .slot-row { display: flex; gap: 16px; flex-wrap: wrap; }
-  .slot-pill {
-    padding: 8px 16px; border-radius: 20px; font-family: var(--font-mono);
-    font-size: 16px; font-weight: 600; letter-spacing: 1px;
-  }
-  .slot-free     { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); }
-  .slot-sub      { background: rgba(44,62,107,0.08); border: 1px solid #2C3E6B; color: var(--text-primary); }
+/* ━━ WHAT MAKES DIFFERENT ━━━━━━━━━━━━━━━ */
+.sl-hiw-diff-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-hiw-diff-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin: 0 auto 52px;
+}
+.sl-hiw-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-diff-col {
+  padding: 36px 28px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-hiw-diff-col:last-child {
+  border-right: none;
+}
+.sl-hiw-diff-icon {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.sl-hiw-diff-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-hiw-diff-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.65;
+  text-align: justify;
+}
 
-  /* ── Section 5: Pricing ── */
-  .pricing-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-  @media (max-width: 768px) { 
-    .pricing-cards { grid-template-columns: 1fr; }
-    .pricing-features { display: none; }
-    .pricing-mobile-summary { display: block !important; }
-  }
-  .pricing-card {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 28px 24px;
-    display: flex; flex-direction: column;
-  }
-  .pricing-card.featured { border-color: #2C3E6B; background: rgba(44,62,107,0.03); }
-  .pricing-track { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 8px; }
-  .pricing-price { font-family: var(--font-mono); font-size: 38px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .pricing-period { font-size: 16px; color: var(--text-muted); margin-bottom: 20px; }
-  .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-  .pricing-features li { font-size: 16px; color: var(--text-secondary); padding-left: 20px; position: relative; line-height: 1.5; }
-  .pricing-features li::before { content: '✓'; position: absolute; left: 0; color: var(--text-primary); font-weight: 700; }
-  .pricing-mobile-summary { display: none; font-size: 16px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
+/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-hiw-cta {
+  background: #0D0D0B;
+  padding: 80px 64px;
+}
+.sl-hiw-cta-h {
+  font-size: 38px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.sl-hiw-cta-body {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.58);
+  margin-bottom: 32px;
+  max-width: 520px;
+  text-align: justify;
+}
+.sl-hiw-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.sl-hiw-cta-btn {
+  display: inline-block;
+  background: #F5C518;
+  color: #0D0D0B;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  white-space: nowrap;
+}
+.sl-hiw-cta-btn:hover {
+  opacity: 0.88;
+}
+.sl-hiw-cta-micro {
+  font-size: 13px;
+  color: rgba(255,255,255,0.36);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  /* ── Section 6: POTY ── */
-  .poty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
-  @media (max-width: 768px) { .poty-grid { grid-template-columns: repeat(2,1fr); } }
-  .poty-genre-card {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
-  }
-  .poty-genre-name { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 8px; }
-  .poty-genre-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 6px; }
-  .poty-genre-fill { height: 4px; background: #2C3E6B; border-radius: 2px; }
-  .poty-genre-score { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text-primary); }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+   Per MOBILE_CONTENT_BEHAVIOR.docx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
 
-  .poty-rule-box {
-    background: rgba(44,62,107,0.05); border: 1px solid #C5D0E8;
-    border-radius: var(--radius-md); padding: 20px 24px;
-    display: flex; gap: 24px; flex-wrap: wrap; align-items: center;
+  /* HERO — 16:9 photo on top, text block below on cream */
+  .sl-hiw-hero {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: unset;
   }
-  .poty-rule-stat { text-align: center; }
-  .poty-rule-val { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .poty-rule-lbl { font-family: var(--font-mono); font-size: 16px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-  .poty-rule-text { flex: 1; min-width: 200px; font-size: 16px; color: var(--text-secondary); line-height: 1.7; }
-
-  /* ── Section 7: RAW ── */
-  .raw-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-  @media (max-width: 768px) { .raw-steps { grid-template-columns: 1fr; } }
-  .raw-step {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 24px 20px; text-align: center;
+  .sl-hiw-hero-img {
     position: relative;
+    right: unset;
+    top: unset;
+    bottom: unset;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
   }
-  .raw-step-icon { font-size: 32px; margin-bottom: 12px; }
-  .raw-step-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-  .raw-step-body { font-size: 16px; color: var(--text-secondary); line-height: 1.6; }
-  .raw-step.highlight { border-color: #2C3E6B; background: rgba(44,62,107,0.05); }
+  .sl-hiw-hero-fade {
+    display: none;
+  }
+  .sl-hiw-hero-content {
+    position: relative;
+    background: #F7F5F2;
+    padding: 36px 20px 48px;
+    max-width: none;
+    text-shadow: none;
+  }
+  .sl-hiw-eyebrow {
+    color: rgba(26,26,24,0.50);
+  }
+  .sl-hiw-gold-rule {
+    /* gold rule now sits on light bg — use navy to avoid gold-on-cream violation */
+    background: #1A2744;
+  }
+  .sl-hiw-hero-h1 {
+    font-size: 36px;
+    color: #1A1A18;
+    text-shadow: none;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .sl-hiw-hero-sub {
+    color: rgba(26,26,24,0.50);
+  }
+  .sl-hiw-hero-body {
+    font-size: 18px;
+    color: rgba(26,26,24,0.72);
+    text-shadow: none;
+    max-width: none;
+  }
 
-  /* CTA strip */
-  .cta-strip {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 36px 32px; text-align: center;
-    margin-top: 64px;
+  /* SECTIONS */
+  .sl-hiw-sec {
+    padding: 56px 20px;
   }
-  .cta-strip h2 { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
-  .cta-strip p  { font-size: 17px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.7; }
-  .cta-buttons  { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  /* LEARNING LOOP — vertical rows: number+icon LEFT, title+desc RIGHT */
+  .sl-hiw-loop-label {
+    margin-bottom: 36px;
+    font-size: 11px;
+  }
+  .sl-hiw-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .sl-hiw-arrow {
+    display: none;
+  }
+  .sl-hiw-step {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    grid-template-rows: auto auto;
+    text-align: left;
+    padding: 0;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .sl-hiw-step-num {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .sl-hiw-step-icon {
+    grid-column: 1;
+    grid-row: 2;
+    height: 36px;
+    justify-content: flex-start;
+    margin-bottom: 0;
+    margin-top: 10px;
+  }
+  .sl-hiw-step-title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 18px;
+    padding-top: 4px;
+    margin-bottom: 6px;
+  }
+  .sl-hiw-step-desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 16px;
+    text-align: left;
+    margin-top: 2px;
+  }
+
+  /* FEATURE — image stacks above text */
+  .sl-hiw-feature-grid {
+    grid-template-columns: 1fr;
+  }
+  .sl-hiw-feature-img {
+    min-height: 220px;
+    aspect-ratio: 16 / 9;
+  }
+  .sl-hiw-feature-text {
+    padding: 40px 20px;
+  }
+  .sl-hiw-h2 {
+    font-size: 30px;
+  }
+
+  /* WHAT MAKES DIFFERENT — 2×2 on mobile */
+  .sl-hiw-diff-head {
+    font-size: 26px;
+  }
+  .sl-hiw-diff-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sl-hiw-diff-col {
+    padding: 24px 18px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-hiw-diff-col:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-hiw-diff-col:nth-child(3),
+  .sl-hiw-diff-col:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* CTA */
+  .sl-hiw-cta {
+    padding: 56px 20px;
+  }
+  .sl-hiw-cta-h {
+    font-size: 30px;
+  }
+  .sl-hiw-cta-body {
+    font-size: 18px;
+    max-width: none;
+  }
+  .sl-hiw-cta-btn {
+    width: 100%;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 14px;
+  }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="hiw-wrap">
+<div class="sl-hiw">
 
-  <div class="page-header" style="margin-bottom: 56px;">
-    <h1>How {{ platform_name }} Works</h1>
-    <p>Scientific scoring. Real competition. Verified results.</p>
-  </div>
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <section class="sl-hiw-hero">
+    <img
+      class="sl-hiw-hero-img"
+      src="{{ url_for('static', filename='img/how_it_works_hero.jpg') }}"
+      alt="Photographer standing on a ridge at dusk, camera raised"
+      onerror="this.style.display='none'"
+    >
+    <div class="sl-hiw-hero-fade"></div>
+    <div class="sl-hiw-hero-content">
+      <p class="sl-hiw-eyebrow">How It Works</p>
+      <div class="sl-hiw-gold-rule"></div>
+      <h1 class="sl-hiw-hero-h1">How it works</h1>
+      <p class="sl-hiw-hero-sub">HONEST FEEDBACK. REAL IMPROVEMENT.</p>
+      <p class="sl-hiw-hero-body">Shutter League is built around a simple idea: honest feedback helps you grow. Here's how the journey works.</p>
+    </div>
+  </section>
 
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 1: Upload & Get Scored                                  #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Step by step</div>
-    <div class="hiw-section-title">Upload &amp; Get Scored</div>
-    <div class="hiw-section-sub">Every photograph you upload is scored instantly by the Apex DDI Engine — a multi-dimensional AI scoring system trained on photographic principles.</div>
+  <!-- ── LEARNING LOOP ─────────────────────────────────────────── -->
+  <section class="sl-hiw-sec" style="background:#F7F5F2;">
+    <div class="sl-hiw-inner">
+      <p class="sl-hiw-loop-label">A Simple Learning Loop</p>
+      <div class="sl-hiw-steps">
 
-    <div class="steps-row">
-      <div class="step-card">
-        <div class="step-icon">📤</div>
-        <div class="step-content">
-          <div class="step-num">Step 01</div>
-          <div class="step-title">Upload your photograph</div>
-          <div class="step-body">Any JPEG up to 20MB · Mobile or camera · All genres</div>
+        <!-- Step 1 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">1</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 26V10"/><path d="M11 18l8-8 8 8"/>
+              <line x1="6" y1="30" x2="32" y2="30"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Upload</p>
+          <p class="sl-hiw-step-desc">Submit a photograph.<br>We accept JPG or RAW.<br>No presets. No filters.<br>Just your work.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 2 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">2</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="19" cy="14" r="8"/>
+              <line x1="19" y1="22" x2="19" y2="27"/>
+              <line x1="15" y1="31" x2="23" y2="31"/>
+              <line x1="19" y1="4"  x2="19" y2="6"/>
+              <line x1="11" y1="7"  x2="9.5"  y2="5.5"/>
+              <line x1="27" y1="7"  x2="28.5" y2="5.5"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Insight</p>
+          <p class="sl-hiw-step-desc">Get an honest score and in-depth feedback explaining what works, what doesn't, and why.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 3 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">3</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="19" cy="19" r="11"/>
+              <circle cx="19" cy="19" r="4"/>
+              <line x1="19" y1="4"  x2="19" y2="8"/>
+              <line x1="19" y1="30" x2="19" y2="34"/>
+              <line x1="4"  y1="19" x2="8"  y2="19"/>
+              <line x1="30" y1="19" x2="34" y2="19"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">One Improvement</p>
+          <p class="sl-hiw-step-desc">Receive one clear, actionable suggestion to make your next photo better.</p>
+        </div>
+
+        <div class="sl-hiw-arrow" aria-hidden="true">&rarr;</div>
+
+        <!-- Step 4 -->
+        <div class="sl-hiw-step">
+          <div class="sl-hiw-step-num">4</div>
+          <div class="sl-hiw-step-icon">
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="12" width="32" height="22" rx="2"/>
+              <path d="M13 12V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/>
+              <circle cx="19" cy="23" r="4"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-step-title">Shoot Again</p>
+          <p class="sl-hiw-step-desc">Apply what you've learned. Upload again. Track your growth over time.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEEDBACK — image left / text right ────────────────────── -->
+  <section class="sl-hiw-feature">
+    <div class="sl-hiw-feature-grid">
+      <div class="sl-hiw-feature-img">
+        <img
+          src="{{ url_for('static', filename='img/how_it_works_feedback.jpg') }}"
+          alt="Hands holding a printed photograph over a wooden table"
+          onerror="this.style.display='none'"
+        >
+      </div>
+      <div class="sl-hiw-feature-text">
+        <h2 class="sl-hiw-h2">Feedback that teaches,<br>not just tells.</h2>
+        <div class="sl-hiw-sec-rule"></div>
+        <p class="sl-hiw-body">Every piece of feedback is written by our AI, guided by mentors and built on two centuries of photographic thinking. It's not just about pointing out flaws — it's about helping you see, understand, and improve.</p>
+        <div class="sl-hiw-callout">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <p class="sl-hiw-callout-text">Because the goal is not a perfect photo.<br>The goal is growth.</p>
         </div>
       </div>
-      
-      <div class="step-arrow">↓</div>
-      
-      <div class="step-card">
-        <div class="step-icon">🎯</div>
-        <div class="step-content">
-          <div class="step-num">Step 02</div>
-          <div class="step-title">Get scored instantly</div>
-          <div class="step-body">Apex DDI Engine rates across 5 dimensions in seconds</div>
+    </div>
+  </section>
+
+  <!-- ── WHAT MAKES THIS DIFFERENT ─────────────────────────────── -->
+  <section class="sl-hiw-sec" style="background:#F7F5F2;">
+    <div class="sl-hiw-inner">
+      <p class="sl-hiw-diff-head">What makes this different?</p>
+      <div class="sl-hiw-diff-rule"></div>
+      <div class="sl-hiw-diff-grid">
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 4l2.5 5 5.5.8-4 3.9.9 5.5L14 16.5l-4.9 2.7.9-5.5L6 9.8l5.5-.8z"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Honest scoring</p>
+          <p class="sl-hiw-diff-body">A score gives feedback a spine. We never soften the truth.</p>
         </div>
-      </div>
-      
-      <div class="step-arrow">↓</div>
-      
-      <div class="step-card">
-        <div class="step-icon">🏆</div>
-        <div class="step-content">
-          <div class="step-num">Step 03</div>
-          <div class="step-title">Compete & rank</div>
-          <div class="step-body">Weekly Challenge · Annual Excellence Award · Leaderboard</div>
+
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M23.84 4.61a5.5 5.5 0 0 0-7.78 0L15 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L15 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Emotional impact</p>
+          <p class="sl-hiw-diff-body">We evaluate how your photo makes people feel — not just how it looks.</p>
         </div>
-      </div>
-    </div>
-  </div>
 
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 2: Your Score Card                                      #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">The DDI Score</div>
-    <div class="hiw-section-title">Your Score Card</div>
-    <div class="hiw-section-sub">Five dimensions. One score. Each dimension captures a distinct aspect of photographic excellence — rated on a 0–10 scale.</div>
-
-    <div class="ddi-showcase">
-      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:4px; flex-wrap:wrap;">
-        <div class="ddi-score-big">8.40</div>
-        <div>
-          <div class="ddi-tier-label">Master</div>
-          <div style="font-size:16px; font-style:italic; color:var(--text-secondary);">Sovereign Momentum</div>
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="14" cy="10" r="5"/>
+              <path d="M4 24c0-5.5 4.5-8 10-8s10 2.5 10 8"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Personalized guidance</p>
+          <p class="sl-hiw-diff-body">Your feedback is tailored to your level, style, and goals.</p>
         </div>
-      </div>
-      <div style="font-family:var(--font-mono); font-size: 16px; color:var(--text-muted); letter-spacing:1px; margin-bottom:24px;">WILDLIFE · CAMERA LEAGUE</div>
 
-      <div class="ddi-dims">
-        <div class="ddi-dim-card">
-          <div class="ddi-dim-val dod-col">8.50</div>
-          <div class="ddi-dim-bar"><div class="ddi-dim-fill dod-bar" style="width:85%;"></div></div>
-          <div class="ddi-dim-name">DoD</div>
+        <div class="sl-hiw-diff-col">
+          <div class="sl-hiw-diff-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="3,20 9,14 14,18 21,8"/>
+              <line x1="3" y1="24" x2="25" y2="24"/>
+            </svg>
+          </div>
+          <p class="sl-hiw-diff-title">Track real progress</p>
+          <p class="sl-hiw-diff-body">See your improvement across uploads, weeks, months, and years.</p>
         </div>
-        <div class="ddi-dim-card">
-          <div class="ddi-dim-val dis-col">7.80</div>
-          <div class="ddi-dim-bar"><div class="ddi-dim-fill dis-bar" style="width:78%;"></div></div>
-          <div class="ddi-dim-name">Disruption</div>
-        </div>
-        <div class="ddi-dim-card">
-          <div class="ddi-dim-val dm-col">9.10</div>
-          <div class="ddi-dim-bar"><div class="ddi-dim-fill dm-bar" style="width:91%;"></div></div>
-          <div class="ddi-dim-name">DM</div>
-        </div>
-        <div class="ddi-dim-card">
-          <div class="ddi-dim-val won-col">8.20</div>
-          <div class="ddi-dim-bar"><div class="ddi-dim-fill won-bar" style="width:82%;"></div></div>
-          <div class="ddi-dim-name">Wonder</div>
-        </div>
-        <div class="ddi-dim-card">
-          <div class="ddi-dim-val aq-col">8.40</div>
-          <div class="ddi-dim-bar"><div class="ddi-dim-fill aq-bar" style="width:84%;"></div></div>
-          <div class="ddi-dim-name">AQ</div>
-        </div>
-      </div>
 
-      <div class="ddi-dim-labels">
-        <div style="font-size: 16px; color:var(--text-muted); line-height:1.4;">Depth of<br>Detail</div>
-        <div style="font-size: 16px; color:var(--text-muted); line-height:1.4;">Visual<br>Disruption</div>
-        <div style="font-size: 16px; color:var(--text-muted); line-height:1.4;">Decisive<br>Moment</div>
-        <div style="font-size: 16px; color:var(--text-muted); line-height:1.4;">Wonder<br>Factor</div>
-        <div style="font-size: 16px; color:var(--text-muted); line-height:1.4;">Authenticity<br>Quotient</div>
       </div>
     </div>
-  </div>
+  </section>
 
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 3: Tiers                                                #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Progression</div>
-    <div class="hiw-section-title">Eight Tiers of Excellence</div>
-    <div class="hiw-section-sub">Your tier is determined by your DDI score. Each image is graded independently — there's no cumulative ranking to game.</div>
-
-    <div class="tiers-strip">
-      <div class="tier-block" style="background:var(--surface-3);">
-        <div class="tier-name" style="color:#8A8478;">Rookie</div>
-        <div class="tier-range">0.00–3.99</div>
-        <div class="tier-desc">Starting out</div>
-      </div>
-      <div class="tier-block">
-        <div class="tier-name" style="color:#6B8E9F;">Shooter</div>
-        <div class="tier-range">4.00–4.99</div>
-        <div class="tier-desc">Building basics</div>
-      </div>
-      <div class="tier-block">
-        <div class="tier-name" style="color:#2e5b89;">Contender</div>
-        <div class="tier-range">5.00–5.99</div>
-        <div class="tier-desc">Growing craft</div>
-      </div>
-      <div class="tier-block">
-        <div class="tier-name" style="color:#495e25;">Craftsman</div>
-        <div class="tier-range">6.00–6.99</div>
-        <div class="tier-desc">Consistent craft</div>
-      </div>
-      <div class="tier-block">
-        <div class="tier-name" style="color:#844821;">Maverick</div>
-        <div class="tier-range">7.00–7.99</div>
-        <div class="tier-desc">Distinctive style</div>
-      </div>
-      <div class="tier-block">
-        <div class="tier-name" style="color:#3b630f;">Master</div>
-        <div class="tier-range">8.00–8.99</div>
-        <div class="tier-desc">Distinctive vision</div>
-      </div>
-      <div class="tier-block tier-gm">
-        <div class="tier-name" style="color:#F5C518;">Grandmaster</div>
-        <div class="tier-range dark">9.00–9.69</div>
-        <div class="tier-desc dark">Exceptional work</div>
-      </div>
-      <div class="tier-block tier-legend">
-        <div class="tier-name" style="color:#F5C518;">Legend</div>
-        <div class="tier-range dark">9.70–10.00</div>
-        <div class="tier-desc dark">Rare. Jury-eligible.</div>
+  <!-- ── CTA BANNER ────────────────────────────────────────────── -->
+  <section class="sl-hiw-cta">
+    <div class="sl-hiw-inner">
+      <h2 class="sl-hiw-cta-h">Start your journey.</h2>
+      <p class="sl-hiw-cta-body">Upload your first photo and get honest feedback that helps you become a better photographer.</p>
+      <div class="sl-hiw-cta-row">
+        <a href="{{ url_for('register') }}" class="sl-hiw-cta-btn">GET MY FIRST SCORE</a>
+        <span class="sl-hiw-cta-micro">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          </svg>
+          Usually under a minute
+        </span>
       </div>
     </div>
-  </div>
+  </section>
 
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 4: Weekly Challenges                                    #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Weekly</div>
-    <div class="hiw-section-title">Weekly Challenges</div>
-    <div class="hiw-section-sub">Every Monday a new challenge prompt drops. Submit an image that fits the brief — get scored, participate, and see where you rank.</div>
-
-    <div class="challenge-card">
-      <div class="challenge-card-left">
-        <div class="challenge-week">This Week · 2026-W17</div>
-        <div class="challenge-title">The Last Hour of Light</div>
-        <div class="slot-row">
-          <div class="slot-pill slot-free">Free: 1 image</div>
-          <div class="slot-pill slot-sub">Subscribed: 3 images</div>
-        </div>
-      </div>
-      <div>
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid">Enter Challenge →</a>
-        {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-solid">Join to Enter →</a>
-        {% endif %}
-      </div>
-    </div>
-
-    <div style="margin-top:16px; font-size:16px; color:var(--text-muted); line-height:1.7;">
-      Subscribers get 3 submission slots per week. Challenge results are published after the weekly close. Your best score from all submissions counts.
-    </div>
-  </div>
-
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 5: Subscribe to Compete                                 #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Subscriptions</div>
-    <div class="hiw-section-title">Subscribe to Participate</div>
-    <div class="hiw-section-sub">Free members can get up to 3 scored images, lifetime. Subscribe to enter programmes, build your Annual Excellence Award ranking, and qualify for annual honours.</div>
-
-    <div class="pricing-cards">
-      <div class="pricing-card">
-        <div class="pricing-track">📱 Mobile League</div>
-        <div class="pricing-price">₹99</div>
-        <div class="pricing-period">per month &nbsp;·&nbsp; ₹999/year</div>
-        <div class="pricing-mobile-summary">8 images/mo · Annual Excellence Award qualification · Weekly Challenge access · Peer rating pool</div>
-        <ul class="pricing-features">
-          <li>Unlimited scored uploads</li>
-          <li>Monthly Programme — Mobile League</li>
-          <li>Annual Excellence Award — Photographer of the Year — Mobile League ranking</li>
-          <li>3 challenge slots per week</li>
-          <li>Peer rating — earn pool entries</li>
-          <li>RAW verification eligible</li>
-        </ul>
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('subscribe', track='mobile') }}" class="btn btn-solid" style="width:100%; text-align:center;">Subscribe Mobile →</a>
-        {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-solid" style="width:100%; text-align:center;">Join to Subscribe →</a>
-        {% endif %}
-      </div>
-
-      <div class="pricing-card featured">
-        <div class="pricing-track">📷 Camera League</div>
-        <div class="pricing-price">₹199</div>
-        <div class="pricing-period">per month &nbsp;·&nbsp; ₹1,999/year</div>
-        <div class="pricing-mobile-summary">5 images/mo · Annual Excellence Award qualification · Weekly Challenge access · Jury programme eligible</div>
-        <ul class="pricing-features">
-          <li>Unlimited scored uploads</li>
-          <li>Monthly Programme — Camera League</li>
-          <li>Annual Excellence Award — Photographer of the Year — Camera League ranking</li>
-          <li>3 challenge slots per week</li>
-          <li>Peer rating — earn pool entries</li>
-          <li>RAW verification eligible</li>
-          <li>Jury programme eligible</li>
-        </ul>
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="width:100%; text-align:center;">Subscribe Camera →</a>
-        {% else %}
-          <a href="{{ url_for('register') }}" class="btn btn-solid" style="width:100%; text-align:center;">Join to Subscribe →</a>
-        {% endif %}
-      </div>
-    </div>
-
-    <div style="margin-top:12px; font-size: 16px; color:var(--text-muted); text-align:center;">
-      Cancel anytime from your dashboard. Access continues to end of billing period. <a href="{{ url_for('pricing') }}" style="color: var(--text-primary);">Full pricing details →</a>
-    </div>
-  </div>
-
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 6: POTY                                                 #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Annual</div>
-    <div class="hiw-section-title">Photographer of the Year</div>
-    <div class="hiw-section-sub">The Annual Excellence Award — Photographer of the Year ranking runs year-round across 8 genres and 2 Leagues. Your top-6 average in any genre determines your standing — a wildlife-only photographer qualifies on wildlife alone. Recognition and awards announced to qualifying participants.</div>
-
-    <div class="poty-grid">
-      {% set genres = [
-        ('Wildlife',  78),
-        ('Street',    65),
-        ('Landscape', 82),
-        ('People',    71),
-        ('Wedding',   55),
-        ('Macro',     90),
-        ('Drone',     48),
-        ('Creative',  73),
-      ] %}
-      {% for genre, pct in genres %}
-      <div class="poty-genre-card">
-        <div class="poty-genre-name">{{ genre }}</div>
-        <div class="poty-genre-bar"><div class="poty-genre-fill" style="width:{{ pct }}%;"></div></div>
-        <div class="poty-genre-score">{{ '%.1f'|format(pct / 10) }}</div>
-      </div>
-      {% endfor %}
-    </div>
-
-    <div class="poty-rule-box">
-      <div class="poty-rule-stat">
-        <div class="poty-rule-val">6</div>
-        <div class="poty-rule-lbl">Top scores averaged</div>
-      </div>
-      <div class="poty-rule-stat">
-        <div class="poty-rule-val">24</div>
-        <div class="poty-rule-lbl">Min images to qualify</div>
-      </div>
-      <div class="poty-rule-stat">
-        <div class="poty-rule-val">16</div>
-        <div class="poty-rule-lbl">Competitions per year</div>
-      </div>
-      <div class="poty-rule-text">
-        Your Annual Excellence Award score is the average of your top 6 DDI scores in your strongest genre. You compete in one genre — the one where your scores are highest. Upload more — only your best 6 count. A specialist always qualifies.
-      </div>
-    </div>
-  </div>
-
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# Section 7: RAW Verification                                     #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="hiw-section">
-    <div class="hiw-section-label">Integrity</div>
-    <div class="hiw-section-title">RAW Verification</div>
-    <div class="hiw-section-sub">All provisional top-placed finalists must verify their result by submitting the original RAW file. This is what keeps the programmes honest.</div>
-
-    <div class="raw-steps">
-      <div class="raw-step">
-        <div class="raw-step-icon">🏆</div>
-        <div class="raw-step-title">You place in the top 3</div>
-        <div class="raw-step-body">Your image achieves a provisional winning position in a programme. You receive an email notification with instructions.</div>
-      </div>
-      <div class="raw-step highlight">
-        <div class="raw-step-icon">📂</div>
-        <div class="raw-step-title">Submit your RAW file</div>
-        <div class="raw-step-body">Upload your original RAW or full-resolution source file through the platform within the stated deadline. Our automated system verifies EXIF, resolution, and authenticity.</div>
-      </div>
-      <div class="raw-step">
-        <div class="raw-step-icon">✓</div>
-        <div class="raw-step-title">Result confirmed</div>
-        <div class="raw-step-body">Verification passes → your result is confirmed and honours disbursed. All verified. Always retain your original files.</div>
-      </div>
-    </div>
-
-    <div style="margin-top:16px; background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; font-size:16px; color:var(--text-muted); line-height:1.7;">
-      Random spot-check verification may be conducted on any image at any time, regardless of competition standing. See the <a href="{{ url_for('contest_rules') }}" style="color: var(--text-primary);">Contest Rules</a> for full details.
-    </div>
-  </div>
-
-  {# ─────────────────────────────────────────────────────────────── #}
-  {# CTA strip                                                       #}
-  {# ─────────────────────────────────────────────────────────────── #}
-  <div class="cta-strip">
-    <h2>Ready to find out your score?</h2>
-    <p>Upload your first image and get your DDI score in seconds.<br>No subscription needed to start.</p>
-    <div class="cta-buttons">
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px; padding:14px 32px;">Upload a Photo →</a>
-        <a href="{{ url_for('contests') }}" class="btn" style="font-size:16px; padding:14px 32px;">View Contests</a>
-      {% else %}
-        <a href="{{ url_for('register') }}" class="btn btn-solid" style="font-size:16px; padding:14px 32px;">Join Free →</a>
-        <a href="{{ url_for('pricing') }}" class="btn" style="font-size:16px; padding:14px 32px;">View Pricing</a>
-      {% endif %}
-    </div>
-  </div>
-
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function(){
-
-  if (!('IntersectionObserver' in window)) return;
-
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (!e.isIntersecting) return;
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-      obs.unobserve(e.target);
-    });
-  }, { threshold: 0.12 });
-
-  document.querySelectorAll('.hiw-section, .cta-strip').forEach(function(el){
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    obs.observe(el);
-  });
-
-})();
-</script>
+</div>{# end sl-hiw #}
 {% endblock %}
