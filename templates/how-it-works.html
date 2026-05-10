@@ -26,18 +26,17 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 .sl-hiw-hero {
   position: relative;
   width: 100%;
-  min-height: 420px;
+  min-height: 480px;
   background: #0D0D0B;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   overflow: hidden;
 }
 .sl-hiw-hero-img {
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 55%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
@@ -49,14 +48,18 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 .sl-hiw-hero-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(13,13,11,0.96) 38%, rgba(13,13,11,0.10) 100%);
+  background: rgba(13,13,11,0.45);
   text-shadow: none;
 }
 .sl-hiw-hero-content {
   position: relative;
   z-index: 2;
-  padding: 80px 64px 80px;
-  max-width: 620px;
+  padding: 64px;
+  max-width: 660px;
+  /* translucent dark text container — 50% grey */
+  background: rgba(30,28,24,0.52);
+  backdrop-filter: blur(2px);
+  margin: 48px 64px;
 }
 .sl-hiw-eyebrow {
   font-size: 11px;
@@ -424,54 +427,28 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
-  /* HERO — 16:9 photo on top, text block below on cream */
+  /* HERO — full-bleed on mobile too, text container overlaid */
   .sl-hiw-hero {
-    flex-direction: column;
-    align-items: stretch;
-    min-height: unset;
-  }
-  .sl-hiw-hero-img {
-    position: relative;
-    right: unset;
-    top: unset;
-    bottom: unset;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-  }
-  .sl-hiw-hero-fade {
-    display: none;
+    min-height: 360px;
+    align-items: flex-end;
   }
   .sl-hiw-hero-content {
-    position: relative;
-    background: #F7F5F2;
-    padding: 36px 20px 48px;
+    margin: 0 16px 24px;
+    padding: 24px 20px;
     max-width: none;
     text-shadow: none;
-  }
-  .sl-hiw-eyebrow {
-    color: rgba(26,26,24,0.50);
-  }
-  .sl-hiw-gold-rule {
-    /* gold rule now sits on light bg — use navy to avoid gold-on-cream violation */
-    background: #1A2744;
+    background: rgba(30,28,24,0.58);
+    backdrop-filter: blur(2px);
   }
   .sl-hiw-hero-h1 {
-    font-size: 36px;
-    color: #1A1A18;
+    font-size: 34px;
     text-shadow: none;
     letter-spacing: -0.02em;
-    margin-bottom: 16px;
-  }
-  .sl-hiw-hero-sub {
-    color: rgba(26,26,24,0.50);
+    margin-bottom: 12px;
   }
   .sl-hiw-hero-body {
-    font-size: 18px;
-    color: rgba(26,26,24,0.72);
+    font-size: 17px;
     text-shadow: none;
-    max-width: none;
   }
 
   /* SECTIONS */
