@@ -4858,7 +4858,86 @@ def sree_admin_login():
 
 @app.route('/poty')
 def poty():
-    return render_template('poty.html')
+    try:
+        poty_hero = (Image.query
+                     .filter(Image.status == 'scored',
+                             Image.score != None,
+                             Image.is_public == True,
+                             Image.is_flagged == False,
+                             Image.thumb_url != None,
+                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                             Image.score >= 8.0)
+                     .order_by(db.func.random())
+                     .first())
+    except Exception:
+        poty_hero = None
+    try:
+        exclude_id = poty_hero.id if poty_hero else 0
+        lb_hero = (Image.query
+                   .filter(Image.status == 'scored',
+                           Image.score != None,
+                           Image.is_public == True,
+                           Image.is_flagged == False,
+                           Image.thumb_url != None,
+                           Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                           Image.score >= 8.0,
+                           Image.id != exclude_id)
+                   .order_by(db.func.random())
+                   .first())
+    except Exception:
+        lb_hero = None
+    try:
+        pg_rows = (
+            db.session.query(
+                Image.user_id,
+                User.username,
+                User.full_name,
+                db.func.avg(Image.score).label('avg_score'),
+            )
+            .join(User, Image.user_id == User.id)
+            .filter(Image.score != None,
+                    Image.score > 0,
+                    Image.status == 'scored',
+                    Image.is_public == True,
+                    db.or_(Image.is_flagged == False, Image.is_flagged == None))
+            .group_by(Image.user_id, User.username, User.full_name)
+            .order_by(db.func.avg(Image.score).desc())
+            .limit(5).all()
+        )
+        photographer_stats = [
+            {'display_name': r.full_name or r.username,
+             'avg_score': round(float(r.avg_score), 2)}
+            for r in pg_rows
+        ]
+    except Exception:
+        photographer_stats = []
+    def _cat_img(genre_key, exclude_ids=None):
+        try:
+            q = Image.query.filter(
+                Image.status == 'scored',
+                Image.score != None,
+                Image.is_public == True,
+                Image.is_flagged == False,
+                Image.thumb_url != None,
+                Image.score >= 7.0,
+                Image.genre == normalise_genre(genre_key))
+            if exclude_ids:
+                q = q.filter(Image.id.notin_(exclude_ids))
+            return q.order_by(db.func.random()).first()
+        except Exception:
+            return None
+    cat_street   = _cat_img('Street')
+    cat_wildlife = _cat_img('Wildlife', exclude_ids=[cat_street.id] if cat_street else [])
+    cat_people   = _cat_img('People')
+    cat_wedding  = _cat_img('Wedding')
+    return render_template('poty.html',
+                           poty_hero=poty_hero,
+                           lb_hero=lb_hero,
+                           photographer_stats=photographer_stats,
+                           cat_street=cat_street,
+                           cat_wildlife=cat_wildlife,
+                           cat_people=cat_people,
+                           cat_wedding=cat_wedding)
 
 @app.route('/about')
 def about():
