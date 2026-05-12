@@ -5195,7 +5195,20 @@ def contests():
 
 @app.route('/bow')
 def bow_info():
-    return render_template('bow.html')
+    try:
+        bow_hero = (Image.query
+                    .filter(Image.status == 'scored',
+                            Image.score != None,
+                            Image.is_public == True,
+                            Image.is_flagged == False,
+                            Image.thumb_url != None,
+                            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                            Image.score >= 8.0)
+                    .order_by(db.func.random())
+                    .first())
+    except Exception:
+        bow_hero = None
+    return render_template('bow.html', bow_hero=bow_hero)
 
 # ---------------------------------------------------------------------------
 
