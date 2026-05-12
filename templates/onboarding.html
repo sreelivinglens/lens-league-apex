@@ -62,6 +62,27 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin-bottom:24px;">
+          <label for="phone">Mobile Number <span style="color:var(--red);">*</span></label>
+          <input type="tel" id="phone" name="phone" required
+                 placeholder="e.g. +91 98765 43210"
+                 style="width:100%;"
+                 value="{{ request.form.get('phone', '') }}">
+          <p style="font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
+            Used for account security and identity verification only. Never shared publicly.
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-bottom:24px;">
+          <label for="address">Address <span style="color:var(--red);">*</span></label>
+          <textarea id="address" name="address" required rows="3"
+                    placeholder="House / flat no., street, area, pincode"
+                    style="width:100%; resize:vertical;">{{ request.form.get('address', '') }}</textarea>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
+            Required for award delivery and KYC. Not shown on your public profile.
+          </p>
+        </div>
+
         <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
           Member Agreement
         </div>

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}User — {{ user.full_name or user.username }} — Admin — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-aud { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif; }
+.sl-aud * { font-family: 'Inter', sans-serif; }
+
+.sl-aud-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(26,26,24,0.45); text-decoration: none; margin-bottom: 28px;
+}
+.sl-aud-back:hover { color: #1A1A18; }
+
+.sl-aud-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px; margin-bottom: 36px;
+  padding-bottom: 24px; border-bottom: 1px solid rgba(26,26,24,0.10);
+}
+.sl-aud-name { font-size: 26px; font-weight: 700; color: #1A1A18; margin-bottom: 4px; }
+.sl-aud-meta { font-size: 14px; color: rgba(26,26,24,0.50); }
+.sl-aud-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.sl-aud-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 2px;
+}
+.sl-aud-badge.active   { background: #e8f5ec; color: #2d7a3a; }
+.sl-aud-badge.inactive { background: #fde8e8; color: #c0392b; }
+.sl-aud-badge.sub      { background: #fff8e1; color: #b8700a; }
+.sl-aud-badge.free     { background: #f0f0f0; color: rgba(26,26,24,0.55); }
+.sl-aud-badge.admin    { background: #5b2d8a; color: #fff; }
+
+.sl-aud-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;
+}
+.sl-aud-card {
+  background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px 28px 24px;
+}
+.sl-aud-card-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(26,26,24,0.40); margin-bottom: 20px;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(26,26,24,0.07);
+}
+.sl-aud-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 0; border-bottom: 0.5px solid rgba(26,26,24,0.06);
+  gap: 16px;
+}
+.sl-aud-row:last-child { border-bottom: none; padding-bottom: 0; }
+.sl-aud-key { font-size: 13px; color: rgba(26,26,24,0.45); white-space: nowrap; flex-shrink: 0; }
+.sl-aud-val { font-size: 14px; font-weight: 600; color: #1A1A18; text-align: right; word-break: break-word; }
+.sl-aud-val.missing { color: rgba(26,26,24,0.30); font-weight: 400; font-style: italic; }
+
+.sl-aud-full { grid-column: 1 / -1; }
+
+/* Mentor sessions table */
+.sl-aud-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sl-aud-table th {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(26,26,24,0.40); padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid rgba(26,26,24,0.10); white-space: nowrap;
+}
+.sl-aud-table td { padding: 10px 12px; border-bottom: 0.5px solid rgba(26,26,24,0.07); color: #1A1A18; }
+.sl-aud-table tr:last-child td { border-bottom: none; }
+.sl-aud-table tr:hover td { background: rgba(26,26,24,0.02); }
+
+.sl-aud-empty { font-size: 14px; color: rgba(26,26,24,0.35); padding: 16px 0; }
+
+@media (max-width: 768px) {
+  .sl-aud { padding: 20px 16px 56px; }
+  .sl-aud-grid { grid-template-columns: 1fr; }
+  .sl-aud-full { grid-column: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-aud">
+
+  <a href="{{ url_for('admin_users') }}" class="sl-aud-back">
+    ← Back to Users
+  </a>
+
+  <div class="sl-aud-header">
+    <div>
+      <div class="sl-aud-name">{{ user.full_name or user.username }}</div>
+      <div class="sl-aud-meta">@{{ user.username }} &nbsp;·&nbsp; {{ user.email }}</div>
+      <div class="sl-aud-badges">
+        {% if user.is_active %}
+          <span class="sl-aud-badge active">Active</span>
+        {% else %}
+          <span class="sl-aud-badge inactive">Deactivated</span>
+        {% endif %}
+        {% if user.role == 'admin' %}
+          <span class="sl-aud-badge admin">Admin</span>
+        {% endif %}
+        {% if user.is_subscribed %}
+          <span class="sl-aud-badge sub">Subscriber · {{ user.subscription_plan or '—' }}</span>
+        {% else %}
+          <span class="sl-aud-badge free">Free</span>
+        {% endif %}
+        {% if user.onboarding_complete %}
+          <span class="sl-aud-badge active">Onboarding ✓</span>
+        {% else %}
+          <span class="sl-aud-badge inactive">Onboarding Incomplete</span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+      <form method="POST" action="{{ url_for('admin_toggle_subscription', user_id=user.id) }}">
+        <input type="hidden" name="track" value="{{ user.subscription_track or 'camera' }}">
+        <input type="hidden" name="plan"  value="{{ user.subscription_plan  or 'monthly' }}">
+        <button type="submit" class="btn" style="font-size:12px; padding:8px 16px;"
+                onclick="return confirm('Toggle subscription for this user?')">
+          {{ 'Deactivate Sub' if user.is_subscribed else 'Activate Sub' }}
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}">
+        <button type="submit" class="btn btn-danger" style="font-size:12px; padding:8px 16px;"
+                onclick="return confirm('Permanently delete {{ user.full_name or user.username }}? This cannot be undone.')">
+          Delete User
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="sl-aud-grid">
+
+    <!-- CONTACT & IDENTITY -->
+    <div class="sl-aud-card">
+      <div class="sl-aud-card-title">Contact &amp; Identity</div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Full name</span>
+        <span class="sl-aud-val">{{ user.full_name or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Email</span>
+        <span class="sl-aud-val">{{ user.email }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Mobile</span>
+        <span class="sl-aud-val {% if not user.phone %}missing{% endif %}">
+          {{ user.phone or 'Not provided' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Address</span>
+        <span class="sl-aud-val {% if not user.address %}missing{% endif %}">
+          {{ user.address or 'Not provided' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Sign-up IP</span>
+        <span class="sl-aud-val {% if not user.signup_ip %}missing{% endif %}">
+          {{ user.signup_ip or '—' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Google ID</span>
+        <span class="sl-aud-val {% if not user.google_id %}missing{% endif %}">
+          {{ user.google_id or '—' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div class="sl-aud-card">
+      <div class="sl-aud-card-title">Location (Onboarding)</div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Country</span>
+        <span class="sl-aud-val {% if not user.country %}missing{% endif %}">{{ user.country or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">State / Province</span>
+        <span class="sl-aud-val {% if not user.state %}missing{% endif %}">{{ user.state or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">City</span>
+        <span class="sl-aud-val {% if not user.city %}missing{% endif %}">{{ user.city or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Joined</span>
+        <span class="sl-aud-val">{{ user.created_at.strftime('%d %b %Y, %H:%M') if user.created_at else '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Last login</span>
+        <span class="sl-aud-val">{{ user.last_login.strftime('%d %b %Y, %H:%M') if user.last_login else '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Agreement signed</span>
+        <span class="sl-aud-val">{{ user.agreed_at.strftime('%d %b %Y') if user.agreed_at else '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Terms version</span>
+        <span class="sl-aud-val {% if not user.terms_version %}missing{% endif %}">{{ user.terms_version or '—' }}</span>
+      </div>
+    </div>
+
+    <!-- SCORES & IMAGES -->
+    <div class="sl-aud-card">
+      <div class="sl-aud-card-title">Scores &amp; Images</div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Total images</span>
+        <span class="sl-aud-val">{{ image_count }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Scored images</span>
+        <span class="sl-aud-val">{{ scored_count }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Points balance</span>
+        <span class="sl-aud-val">{{ "%.0f"|format(user.points_balance or 0) }} pts</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Lifetime points earned</span>
+        <span class="sl-aud-val">{{ "%.0f"|format(user.points_lifetime_earned or 0) }} pts</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Declared camera</span>
+        <span class="sl-aud-val {% if not user.declared_camera %}missing{% endif %}">{{ user.declared_camera or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Camera mismatches</span>
+        <span class="sl-aud-val" style="{% if (user.camera_mismatch_count or 0) > 0 %}color:#c0392b;{% endif %}">
+          {{ user.camera_mismatch_count or 0 }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">League suspended</span>
+        <span class="sl-aud-val" style="{% if user.league_suspended %}color:#c0392b;{% endif %}">
+          {{ 'Yes — ' ~ (user.league_suspended_reason or 'No reason given') if user.league_suspended else 'No' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION -->
+    <div class="sl-aud-card">
+      <div class="sl-aud-card-title">Subscription</div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Status</span>
+        <span class="sl-aud-val">{{ 'Active' if user.is_subscribed else 'Free' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Track</span>
+        <span class="sl-aud-val {% if not user.subscription_track %}missing{% endif %}">{{ user.subscription_track or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Plan</span>
+        <span class="sl-aud-val {% if not user.subscription_plan %}missing{% endif %}">{{ user.subscription_plan or '—' }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Subscribed at</span>
+        <span class="sl-aud-val {% if not user.subscribed_at %}missing{% endif %}">
+          {{ user.subscribed_at.strftime('%d %b %Y') if user.subscribed_at else '—' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Monthly uploads used</span>
+        <span class="sl-aud-val">{{ user.monthly_uploads_used or 0 }}</span>
+      </div>
+      <div class="sl-aud-row">
+        <span class="sl-aud-key">Monthly reset date</span>
+        <span class="sl-aud-val {% if not user.monthly_reset_date %}missing{% endif %}">
+          {{ user.monthly_reset_date.strftime('%d %b %Y') if user.monthly_reset_date else '—' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- MENTOR SESSIONS -->
+    <div class="sl-aud-card sl-aud-full">
+      <div class="sl-aud-card-title">Mentor Sessions</div>
+      {% if mentor_sessions %}
+      <table class="sl-aud-table">
+        <thead>
+          <tr>
+            <th>Mentor</th>
+            <th>Payment</th>
+            <th>Points used</th>
+            <th>Status</th>
+            <th>Deadline</th>
+            <th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ms in mentor_sessions %}
+          <tr>
+            <td>{{ ms.mentor_slug }}</td>
+            <td>{{ ms.payment_method }}</td>
+            <td>{{ ms.points_used or '—' }}</td>
+            <td>{{ ms.status }}</td>
+            <td>{{ ms.deadline_at.strftime('%d %b %Y') if ms.deadline_at else '—' }}</td>
+            <td>{{ ms.created_at.strftime('%d %b %Y, %H:%M') if ms.created_at else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p class="sl-aud-empty">No mentor sessions yet.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

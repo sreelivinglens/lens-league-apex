@@ -17,6 +17,8 @@
   .users-table tr:last-child td { border-bottom: none; }
   .users-table tr:hover td { background: #F5F0E8; }
   .user-name { font-weight: 600; color: var(--text-primary); }
+  .user-name a { color: var(--text-primary); text-decoration: none; }
+  .user-name a:hover { color: var(--gold); text-decoration: underline; }
   .user-handle { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
   .badge { display: inline-block; font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
   .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
@@ -104,7 +106,9 @@
       {% for user in users %}
       <tr>
         <td>
-          <div class="user-name">{{ user.full_name or user.username }}</div>
+          <div class="user-name">
+            <a href="{{ url_for('admin_user_detail', user_id=user.id) }}">{{ user.full_name or user.username }}</a>
+          </div>
           <div class="user-handle">@{{ user.username }}</div>
         </td>
         <td>{{ user.email }}</td>
