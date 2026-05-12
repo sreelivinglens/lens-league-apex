@@ -763,7 +763,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
           Keep improving.
         </div>
       </div>
-      <a href="{{ url_for('mentor_register') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
+      <a href="{{ url_for('mentors') }}" class="sl-learn-hero-cta">SUBMIT FOR MENTOR REVIEW</a>
       <div class="sl-learn-hero-timing">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Usually under 72 hours
@@ -872,7 +872,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
                 <div class="sl-learn-mentor-genres">Conceptual &middot; Fashion &middot; Street &middot; Nature</div>
                 <div class="sl-learn-mentor-rule"></div>
                 <div class="sl-learn-mentor-bio">Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.</div>
-                <a href="{{ url_for('mentor_register') }}" class="sl-learn-mentor-btn sl-learn-btn-grandmaster">&#8377;100 <span>&#8594;</span></a>
+                <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-learn-mentor-btn sl-learn-btn-grandmaster">&#8377;100 <span>&#8594;</span></a>
               </div>
             </div>
 
@@ -892,7 +892,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
                 <div class="sl-learn-mentor-genres">Street &middot; Documentary &middot; Urban</div>
                 <div class="sl-learn-mentor-rule"></div>
                 <div class="sl-learn-mentor-bio">Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.</div>
-                <a href="{{ url_for('mentor_register') }}" class="sl-learn-mentor-btn sl-learn-btn-master">&#8377;75 <span>&#8594;</span></a>
+                <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-learn-mentor-btn sl-learn-btn-master">&#8377;75 <span>&#8594;</span></a>
               </div>
             </div>
 
@@ -913,7 +913,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
                 <div class="sl-learn-mentor-genres">Wildlife &middot; Street &middot; Portrait &middot; Mobile</div>
                 <div class="sl-learn-mentor-rule"></div>
                 <div class="sl-learn-mentor-bio">International award-winning photographer &amp; filmmaker. IPPA Gold 2019. Sanctuary Asia &amp; National Geographic featured.</div>
-                <a href="{{ url_for('mentor_register') }}" class="sl-learn-mentor-btn sl-learn-btn-base">&#8377;50 <span>&#8594;</span></a>
+                <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-learn-mentor-btn sl-learn-btn-base">&#8377;50 <span>&#8594;</span></a>
               </div>
             </div>
 
@@ -1026,7 +1026,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
         </div>
       </div>
     </div>
-    <a href="{{ url_for('mentor_register') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
+    <a href="{{ url_for('mentors') }}" class="sl-learn-cta-btn">SUBMIT FOR MENTOR REVIEW</a>
   </div>
 
 </div><!-- /sl-learn -->
