@@ -3766,6 +3766,34 @@ def admin_users():
     return render_template('admin_users.html', users=users)
 
 
+@app.route('/admin/user/<int:user_id>')
+@login_required
+@admin_required
+def admin_user_detail(user_id):
+    user = User.query.get_or_404(user_id)
+    image_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid"),
+        {'uid': user_id}
+    ).scalar() or 0
+    scored_count = db.session.execute(
+        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND score IS NOT NULL"),
+        {'uid': user_id}
+    ).scalar() or 0
+    try:
+        mentor_sessions = db.session.execute(
+            db.text("SELECT * FROM mentor_sessions WHERE user_id = :uid ORDER BY created_at DESC"),
+            {'uid': user_id}
+        ).fetchall()
+    except Exception:
+        mentor_sessions = []
+    return render_template('admin_user_detail.html',
+        user            = user,
+        image_count     = image_count,
+        scored_count    = scored_count,
+        mentor_sessions = mentor_sessions,
+    )
+
+
 @app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
 @login_required
 @admin_required
