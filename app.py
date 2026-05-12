@@ -194,6 +194,22 @@ Enter here: {challenge_url}
 FREE_IMAGE_LIMIT = 3  # Lifetime assessment images (Initial Assessment Phase — investor doc)
 LEARNING_IMAGE_LIMIT = 12    # ₹100 Learning tier — 12 images/month
 
+# ── Email allowlist — UAT/beta phase ─────────────────────────────────────────
+# Set ALLOWED_EMAILS env var as comma-separated list: "a@b.com,c@d.com"
+# If env var is empty or not set, registration is OPEN to all.
+# Existing users in DB are never blocked — only new registrations are gated.
+def _get_allowed_emails():
+    raw = os.getenv('ALLOWED_EMAILS', '').strip()
+    if not raw:
+        return set()
+    return {e.strip().lower() for e in raw.split(',') if e.strip()}
+
+def is_email_allowed(email):
+    allowed = _get_allowed_emails()
+    if not allowed:
+        return True   # empty allowlist = open registration
+    return email.strip().lower() in allowed
+
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['SECRET_KEY']          = os.getenv('SECRET_KEY', 'dev-secret-change-me')
@@ -1240,9 +1256,10 @@ def index():
         # Recent public scored images for bottom strips
         recent_images = (Image.query
                          .filter(Image.status=='scored', Image.score!=None,
-                                 Image.is_public==True, Image.is_flagged==False)
+                                 Image.is_public==True, Image.is_flagged==False,
+                                 Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
-                         .limit(6).all())
+                         .limit(12).all())
         # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
         carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
@@ -1316,6 +1333,11 @@ def register():
             errors.append('Passwords do not match.')
 
         if not errors:
+            # -- Allowlist check -------------------------------------------
+            if not is_email_allowed(email):
+                flash('Registration is currently by invitation only. Contact us to request access.', 'error')
+                return render_template('register.html',
+                                       full_name=full_name, username=username, email=email)
             _existing_email = User.query.filter_by(email=email).first()
             if _existing_email:
                 if not _existing_email.is_active:
@@ -1527,6 +1549,10 @@ def auth_google_callback():
             return redirect(post_next)
         return redirect(url_for('dashboard'))
     else:
+        # New user — check allowlist before creating account
+        if not is_email_allowed(email):
+            flash('Registration is currently by invitation only. Contact us to request access.', 'error')
+            return redirect(url_for('login'))
         # New user  -  create account, send to onboarding
         import re
         base_username = re.sub(r'[^a-zA-Z0-9_]', '', name.replace(' ', '_').lower()) or 'photographer'
