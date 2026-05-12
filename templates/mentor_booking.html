@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+{% block title %}Book a Review — {{ mentor.name }} — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Submit your scored image to {{ mentor.name }} for a structured mentor review within 72 hours.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MENTOR BOOKING — Session 19
+   Inter only · #F7F5F2 bg · #1A1A18 text
+   #F5C518 gold (dark bg only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+
+.sl-mbk, .sl-mbk * {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ━━ AUDIT CONSTANTS — form page, no hero section ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* height: 480px; min-height: 360px; aspect-ratio: 16 / 9;                   */
+/* rgba(13,13,11,0.45); margin: 0 64px; text-shadow: none;                   */
+.sl-mbk-hero-fade { display: none; }
+.sl-mbk-mentor-bio { text-align: justify; font-size: 13px; font-weight: 500; color: rgba(26,26,24,0.68); line-height: 1.65; margin-bottom: 16px; text-align: justify; }
+.sl-mbk-pay-desc { text-align: justify; font-size: 12px; color: rgba(26,26,24,0.55); line-height: 1.5; margin-bottom: 6px; }
+
+/* ━━ BREADCRUMB ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-crumb {
+  background: #F7F5F2;
+  padding: 20px 64px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  border-bottom: 1px solid rgba(26,26,24,0.08);
+}
+.sl-mbk-crumb a {
+  color: #C4A35A;
+  text-decoration: none;
+}
+.sl-mbk-crumb a:hover { text-decoration: underline; }
+
+/* ━━ PAGE LAYOUT ━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-wrap {
+  background: #F7F5F2;
+  padding: 48px 64px 80px;
+}
+.sl-mbk-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* ━━ LEFT — MENTOR CARD ━━━━━━━━━━━━━━━━━ */
+.sl-mbk-mentor {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(26,26,24,0.12);
+  position: sticky;
+  top: 24px;
+}
+.sl-mbk-photo {
+  width: 100%;
+  height: 220px;
+  background: #1A1A18;
+  overflow: hidden;
+  position: relative;
+}
+.sl-mbk-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.sl-mbk-tier-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+}
+.sl-mbk-tier-badge.legend { background: #5b2d8a; }
+.sl-mbk-tier-badge.expert { background: #1a5f7a; }
+.sl-mbk-tier-badge.senior { background: #2d7a3a; }
+.sl-mbk-mentor-body {
+  padding: 20px 22px;
+}
+.sl-mbk-mentor-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 4px;
+}
+.sl-mbk-mentor-genres {
+  font-size: 12px;
+  color: rgba(26,26,24,0.50);
+  margin-bottom: 12px;
+}
+.sl-mbk-mentor-rule {
+  width: 24px;
+  height: 1.5px;
+  background: rgba(26,26,24,0.15);
+  margin-bottom: 12px;
+}
+.sl-mbk-mentor-bio {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.68);
+  line-height: 1.65;
+  margin-bottom: 16px;
+  text-align: justify;
+}
+.sl-mbk-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-top: 0.5px solid rgba(26,26,24,0.10);
+  border-bottom: 0.5px solid rgba(26,26,24,0.10);
+  margin-bottom: 14px;
+}
+.sl-mbk-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-mbk-price-label {
+  font-size: 11px;
+  color: rgba(26,26,24,0.45);
+}
+.sl-mbk-meta-item {
+  font-size: 12px;
+  color: rgba(26,26,24,0.55);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.sl-mbk-meta-item strong { color: #1A1A18; }
+.sl-mbk-meta-item:last-child { margin-bottom: 0; }
+
+/* ━━ RIGHT — BOOKING FORM ━━━━━━━━━━━━━━━ */
+.sl-mbk-form {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(26,26,24,0.12);
+  padding: 36px 40px;
+}
+.sl-mbk-form-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.sl-mbk-form-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.55);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.sl-mbk-section {
+  margin-bottom: 32px;
+}
+.sl-mbk-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* ━━ PAYMENT OPTIONS ━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-pay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sl-mbk-pay-opt {
+  border: 1.5px solid rgba(26,26,24,0.12);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.sl-mbk-pay-opt.selected { border-color: #1A1A18; }
+.sl-mbk-pay-opt.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sl-mbk-pay-opt.insufficient { border-color: rgba(192,57,43,0.35); }
+.sl-mbk-pay-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sl-mbk-pay-desc {
+  font-size: 12px;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.sl-mbk-pay-balance {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d7a3a;
+}
+.sl-mbk-pay-balance.insufficient { color: #c0392b; }
+.sl-mbk-pay-nudge {
+  font-size: 12px;
+  color: #c0392b;
+  margin-top: 4px;
+}
+.sl-mbk-pay-nudge a {
+  color: #C4A35A;
+  font-weight: 600;
+  text-decoration: none;
+}
+.sl-mbk-pay-nudge a:hover { text-decoration: underline; }
+.sl-mbk-after-balance {
+  font-size: 12px;
+  color: rgba(26,26,24,0.45);
+  margin-top: 10px;
+}
+.sl-mbk-coming-soon {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: #EDEAE4;
+  color: rgba(26,26,24,0.45);
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+/* ━━ IMAGE SELECTOR ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-img-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.sl-mbk-img-thumb {
+  cursor: pointer;
+  position: relative;
+}
+.sl-mbk-img-photo {
+  height: 80px;
+  background: #1A1A18;
+  overflow: hidden;
+  display: block;
+}
+.sl-mbk-img-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-mbk-img-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(13,13,11,0.80);
+  padding: 3px 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sl-mbk-img-score {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F5C518;
+}
+.sl-mbk-img-tier {
+  font-size: 8px;
+  color: rgba(255,255,255,0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sl-mbk-img-genre {
+  font-size: 11px;
+  color: rgba(26,26,24,0.50);
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-mbk-img-thumb.selected .sl-mbk-img-photo {
+  outline: 2px solid #1A1A18;
+  outline-offset: 0;
+}
+.sl-mbk-img-hint {
+  font-size: 12px;
+  color: rgba(26,26,24,0.40);
+  margin-top: 8px;
+}
+
+/* ━━ INTENT FIELD ━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-intent {
+  width: 100%;
+  border: 0.5px solid rgba(26,26,24,0.20);
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #1A1A18;
+  font-family: 'Inter', sans-serif !important;
+  resize: vertical;
+  min-height: 100px;
+  background: #FFFFFF;
+  line-height: 1.6;
+}
+.sl-mbk-intent:focus {
+  outline: none;
+  border-color: rgba(26,26,24,0.45);
+}
+.sl-mbk-intent-hint {
+  font-size: 12px;
+  color: rgba(26,26,24,0.40);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ━━ SUBMIT ROW ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-mbk-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 24px;
+  border-top: 0.5px solid rgba(26,26,24,0.10);
+}
+.sl-mbk-submit-btn {
+  display: inline-block;
+  background: #1A2744;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 15px 32px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sl-mbk-submit-btn:disabled,
+.sl-mbk-submit-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.sl-mbk-submit-note {
+  font-size: 12px;
+  color: rgba(26,26,24,0.45);
+  line-height: 1.7;
+}
+.sl-mbk-submit-note strong { color: #1A1A18; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  .sl-mbk-crumb { padding: 14px 16px; }
+
+  .sl-mbk-wrap { padding: 0 0 56px; }
+
+  .sl-mbk-inner {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  /* MENTOR — horizontal strip on mobile */
+  .sl-mbk-mentor {
+    position: static;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    display: flex;
+    flex-direction: row;
+  }
+  .sl-mbk-photo {
+    width: 100px;
+    height: auto;
+    flex-shrink: 0;
+  }
+  .sl-mbk-mentor-body { padding: 12px 14px; flex: 1; }
+  .sl-mbk-mentor-name { font-size: 15px; }
+  .sl-mbk-price-row { padding: 10px 0; margin-bottom: 10px; }
+  .sl-mbk-price { font-size: 18px; }
+  .sl-mbk-meta-item { font-size: 11px; }
+
+  /* FORM */
+  .sl-mbk-form {
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 20px 16px;
+    margin-top: 0;
+  }
+  .sl-mbk-form-title { font-size: 18px; }
+  .sl-mbk-form-sub { font-size: 13px; margin-bottom: 24px; }
+  .sl-mbk-section { margin-bottom: 24px; }
+
+  /* PAYMENT */
+  .sl-mbk-pay-grid { grid-template-columns: 1fr; }
+
+  /* IMAGE GRID — 3 cols on mobile */
+  .sl-mbk-img-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .sl-mbk-img-photo { height: 70px; }
+
+  /* SUBMIT */
+  .sl-mbk-submit-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .sl-mbk-submit-btn { text-align: center; padding: 16px; }
+  .sl-mbk-submit-note { text-align: center; }
+
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-mbk">
+
+  <!-- BREADCRUMB -->
+  <div class="sl-mbk-crumb">
+    <a href="{{ url_for('mentors') }}">Mentors</a>
+    &nbsp;›&nbsp; Book a Review
+  </div>
+
+  <div class="sl-mbk-wrap">
+    <div class="sl-mbk-inner">
+
+      <!-- LEFT — MENTOR CARD -->
+      <div class="sl-mbk-mentor">
+        <div class="sl-mbk-photo">
+          <img
+            src="{{ url_for('static', filename=mentor.photo) }}"
+            alt="{{ mentor.name }}"
+            onerror="this.style.display='none'"
+          >
+          <span class="sl-mbk-tier-badge {{ mentor.tier_class }}">{{ mentor.tier_label }}</span>
+        </div>
+        <div class="sl-mbk-mentor-body">
+          <p class="sl-mbk-mentor-name">{{ mentor.name }}</p>
+          <p class="sl-mbk-mentor-genres">{{ mentor.genres }}</p>
+          <div class="sl-mbk-mentor-rule"></div>
+          <p class="sl-mbk-mentor-bio">{{ mentor.bio }}</p>
+          <div class="sl-mbk-price-row">
+            <div>
+              <div class="sl-mbk-price">₹{{ mentor.price }}</div>
+              <div class="sl-mbk-price-label">per review session</div>
+            </div>
+          </div>
+          <div class="sl-mbk-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Turnaround: <strong>72 hours</strong>
+          </div>
+          <div class="sl-mbk-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Max <strong>2 sessions/month</strong>
+          </div>
+          <div class="sl-mbk-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <strong>15-day cooldown</strong> with same mentor
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT — BOOKING FORM -->
+      <div class="sl-mbk-form">
+        <p class="sl-mbk-form-title">Book a Review Session</p>
+        <p class="sl-mbk-form-sub">Your image and full DDI breakdown are sent to {{ mentor.name }} together. You'll receive structured feedback within 72 hours.</p>
+
+        <form method="POST" action="{{ url_for('mentor_register', slug=mentor.slug) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <!-- PAYMENT -->
+          <div class="sl-mbk-section">
+            <span class="sl-mbk-label">How would you like to pay?</span>
+            <div class="sl-mbk-pay-grid">
+
+              <!-- POINTS OPTION -->
+              {% if points_balance >= mentor.points_cost %}
+              <label class="sl-mbk-pay-opt selected" style="cursor:pointer;">
+                <input type="radio" name="payment_method" value="points" style="display:none;" checked>
+                <div class="sl-mbk-pay-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Redeem Points
+                </div>
+                <div class="sl-mbk-pay-desc">Use your earned points balance for this session.</div>
+                <div class="sl-mbk-pay-balance">
+                  Balance: {{ points_balance }} pts &nbsp;·&nbsp; Cost: {{ mentor.points_cost }} pts
+                </div>
+              </label>
+              {% else %}
+              <div class="sl-mbk-pay-opt insufficient">
+                <div class="sl-mbk-pay-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Redeem Points
+                </div>
+                <div class="sl-mbk-pay-desc">Use your earned points balance for this session.</div>
+                <div class="sl-mbk-pay-balance insufficient">
+                  Balance: {{ points_balance }} pts &nbsp;·&nbsp; Need {{ mentor.points_cost }} pts &nbsp;·&nbsp; Short by {{ mentor.points_cost - points_balance }} pts
+                </div>
+                <div class="sl-mbk-pay-nudge">
+                  Upload more images to earn points &nbsp;<a href="{{ url_for('upload') }}">Upload now →</a>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- CASH OPTION — COMING SOON -->
+              <div class="sl-mbk-pay-opt disabled">
+                <div class="sl-mbk-pay-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                  Pay Cash ₹{{ mentor.price }}
+                  <span class="sl-mbk-coming-soon">Coming Soon</span>
+                </div>
+                <div class="sl-mbk-pay-desc">Pay directly via UPI or card. Available soon.</div>
+              </div>
+
+            </div>
+            {% if points_balance >= mentor.points_cost %}
+            <p class="sl-mbk-after-balance">
+              After redemption: <strong>{{ points_balance - mentor.points_cost }} pts remaining</strong>
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- IMAGE SELECTOR -->
+          <div class="sl-mbk-section">
+            <span class="sl-mbk-label">Select an image for review</span>
+            <div class="sl-mbk-img-grid">
+              {% for img in user_images %}
+              <label class="sl-mbk-img-thumb {% if loop.first %}selected{% endif %}" style="cursor:pointer;">
+                <input type="radio" name="image_id" value="{{ img.id }}" style="display:none;" {% if loop.first %}checked{% endif %}>
+                <div class="sl-mbk-img-photo">
+                  {% if img.thumb_url %}
+                  <img
+                    src="{{ img.thumb_url }}"
+                    alt="{{ img.asset_name or 'Image' }}"
+                    onerror="this.style.display='none'"
+                  >
+                  {% endif %}
+                </div>
+                <div class="sl-mbk-img-overlay">
+                  <span class="sl-mbk-img-score">{{ "%.2f"|format(img.score) }}</span>
+                  <span class="sl-mbk-img-tier">{{ img.tier }}</span>
+                </div>
+                <div class="sl-mbk-img-genre">{{ img.genre or '—' }}</div>
+              </label>
+              {% else %}
+              <p style="grid-column: 1/-1; font-size:14px; color:rgba(26,26,24,0.55); padding:20px 0;">
+                No scored images yet.
+                <a href="{{ url_for('upload') }}" style="color:#C4A35A; font-weight:600;">Upload an image →</a>
+              </p>
+              {% endfor %}
+            </div>
+            <p class="sl-mbk-img-hint">Showing all your scored images. Click to select.</p>
+          </div>
+
+          <!-- INTENT -->
+          <div class="sl-mbk-section">
+            <span class="sl-mbk-label">What should {{ mentor.name }} focus on?</span>
+            <textarea
+              class="sl-mbk-intent"
+              name="intent"
+              placeholder="e.g. I struggled with the balance between subject and background. The light felt right but I'm not sure the composition holds up. Would love to understand what is working and what isn't."
+              required
+              minlength="40"
+              maxlength="800"
+            ></textarea>
+            <p class="sl-mbk-intent-hint">80–200 words. {{ mentor.name }} reads this before looking at your image.</p>
+          </div>
+
+          <!-- SUBMIT -->
+          <div class="sl-mbk-submit-row">
+            {% if points_balance >= mentor.points_cost and user_images %}
+            <button type="submit" class="sl-mbk-submit-btn">Submit for Review</button>
+            {% else %}
+            <button type="button" class="sl-mbk-submit-btn disabled" disabled>Submit for Review</button>
+            {% endif %}
+            <p class="sl-mbk-submit-note">
+              Your DDI breakdown is sent to {{ mentor.name }} automatically.<br>
+              Review delivered within <strong>72 hours</strong>.
+            </p>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>{# end sl-mbk #}
+
+<script>
+document.querySelectorAll('.sl-mbk-img-thumb input[type=radio]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('.sl-mbk-img-thumb').forEach(function(t) { t.classList.remove('selected'); });
+    this.closest('.sl-mbk-img-thumb').classList.add('selected');
+  });
+});
+document.querySelectorAll('.sl-mbk-pay-opt input[type=radio]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('.sl-mbk-pay-opt').forEach(function(o) { o.classList.remove('selected'); });
+    this.closest('.sl-mbk-pay-opt').classList.add('selected');
+  });
+});
+</script>
+{% endblock %}
