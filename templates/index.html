@@ -493,27 +493,36 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   object-position: center;
 }
 
-/* ── BOW auto-scroll filmstrip ── */
+/* ── BOW crossfade slideshow ── */
 .sl-bow-strip-wrap {
   position: absolute;
   inset: 0;
-  overflow: hidden;
 }
 .sl-bow-strip {
-  display: flex;
+  position: relative;
+  width: 100%;
   height: 100%;
-  animation: bowScroll 2.5s linear infinite;
 }
 .sl-bow-strip img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  width: auto;
-  flex-shrink: 0;
   object-fit: cover;
-  display: block;
+  opacity: 0;
+  animation: bowFade 15s linear infinite;
 }
-@keyframes bowScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-71.4%); }
+.sl-bow-strip img:nth-child(1) { animation-delay: 0s; }
+.sl-bow-strip img:nth-child(2) { animation-delay: 3s; }
+.sl-bow-strip img:nth-child(3) { animation-delay: 6s; }
+.sl-bow-strip img:nth-child(4) { animation-delay: 9s; }
+.sl-bow-strip img:nth-child(5) { animation-delay: 12s; }
+@keyframes bowFade {
+  0%   { opacity: 0; }
+  5%   { opacity: 1; }
+  20%  { opacity: 1; }
+  25%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 .sl-card-overlay {
   position: absolute;
@@ -1219,9 +1228,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
         <img src="{{ url_for('static', filename='Week-248-Mangrove-clean-up_SRA2850.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
         <img src="{{ url_for('static', filename='When-children-have-to-pick-your-Trash_People_SRA4720.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
         <img src="{{ url_for('static', filename='When-the-sea-throws-back-1000-school-bags_Conservation_IMG_9317-(1).jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <!-- duplicate for seamless loop -->
-        <img src="{{ url_for('static', filename='Toothbrush-in-the-mangroves_SRA2920.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
-        <img src="{{ url_for('static', filename='Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
       </div>
     </div>
     <div class="sl-card-overlay"></div>
