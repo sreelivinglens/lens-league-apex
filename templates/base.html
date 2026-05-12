@@ -151,6 +151,62 @@ nav {
   padding-bottom: 4px;
 }
 
+/* ── More dropdown ───────────────────────────────────────────────────────── */
+.nav-more {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-more-btn {
+  color: #FFFFFF;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color 0.2s, background 0.2s;
+  font-family: inherit;
+  line-height: 1;
+}
+.nav-more-btn:hover { background: rgba(255,255,255,0.12); }
+.nav-more-btn.nav-more-active { color: var(--gold); background: rgba(245,197,24,0.12); }
+.nav-more-chevron { font-size: 9px; opacity: 0.6; transition: transform 0.2s; }
+.nav-more.open .nav-more-chevron { transform: rotate(180deg); }
+.nav-more-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: rgba(26,24,20,0.98);
+  border: 1px solid rgba(245,197,24,0.18);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  min-width: 178px;
+  z-index: 201;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.40);
+}
+.nav-more.open .nav-more-menu { display: block; }
+.nav-more-menu a {
+  display: block;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-more-menu a:hover { background: rgba(255,255,255,0.09); color: #FFFFFF; }
+.nav-more-menu a.nav-active { color: var(--gold) !important; background: rgba(245,197,24,0.10); }
+
+
 /* Hamburger */
 .nav-toggle {
   display: none;
@@ -811,19 +867,26 @@ img {
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% else %}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
-        <a href="{{ url_for('profile') }}"   class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+        <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
-        <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Awards</a>
-        <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-        <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
-        <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
-        <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
         <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
-        <a href="{{ url_for('bow_info') }}" class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
-        <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
-        {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
-        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+        <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Awards</a>
+        <div class="nav-more" id="navMore">
+          <button class="nav-more-btn {% if request.endpoint in ['profile','pricing','science','how_it_works','learning','bow_info','bulk_upload'] %}nav-more-active{% endif %}" onclick="toggleNavMore()" aria-haspopup="true" aria-label="More navigation">
+            More <span class="nav-more-chevron">&#9660;</span>
+          </button>
+          <div class="nav-more-menu">
+            <a href="{{ url_for('profile') }}"      class="{% if request.endpoint == 'profile' %}nav-active{% endif %}">Profile</a>
+            <a href="{{ url_for('pricing') }}"      class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
+            <a href="{{ url_for('science') }}"      class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
+            <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
+            <a href="{{ url_for('learning') }}"     class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learn</a>
+            <a href="{{ url_for('bow_info') }}"     class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
+            {% if current_user.is_authenticated and current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="{% if request.endpoint == 'bulk_upload' %}nav-active{% endif %}">Bulk Upload</a>{% endif %}
+          </div>
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:4px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% endif %}
     {% else %}
       <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
@@ -932,10 +995,18 @@ img {
 function toggleNav() {
   document.getElementById('navMobile').classList.toggle('open');
 }
+function toggleNavMore() {
+  var nm = document.getElementById('navMore');
+  if (nm) nm.classList.toggle('open');
+}
 document.addEventListener('click', function(e) {
-  const nav = document.getElementById('navMobile');
-  const toggle = document.querySelector('.nav-toggle');
-  if (nav.classList.contains('open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+  var nm = document.getElementById('navMore');
+  if (nm && nm.classList.contains('open') && !nm.contains(e.target)) {
+    nm.classList.remove('open');
+  }
+  var nav = document.getElementById('navMobile');
+  var toggle = document.querySelector('.nav-toggle');
+  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && toggle && !toggle.contains(e.target)) {
     nav.classList.remove('open');
   }
 });
