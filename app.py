@@ -5125,10 +5125,179 @@ def learning():
                            learning_limit=LEARNING_IMAGE_LIMIT,
                            learning_hero=learning_hero)
 
-@app.route('/mentor-register')
-def mentor_register():
-    # Placeholder — mentor booking page to be built in a future session
-    return redirect(url_for('learning'))
+# ---------------------------------------------------------------------------
+# MENTOR DATA — source of truth; move to DB when roster grows
+# ---------------------------------------------------------------------------
+MENTORS = {
+    'ashok': {
+        'slug':        'ashok',
+        'name':        'Ashok Kochhar',
+        'tier_label':  'Legend Mentor',
+        'tier_class':  'legend',
+        'price':       100,
+        'points_cost': 1000,
+        'photo':       'mentor_ashok.jpg',
+        'genres':      'Conceptual · Fashion · Street · Nature',
+        'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
+    },
+    'gopal': {
+        'slug':        'gopal',
+        'name':        'Gopal MS',
+        'tier_label':  'Expert Mentor',
+        'tier_class':  'expert',
+        'price':       75,
+        'points_cost': 750,
+        'photo':       'Gopal MS.jpeg',
+        'genres':      'Street · Documentary · Urban',
+        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
+    },
+    'sreekumar': {
+        'slug':        'sreekumar',
+        'name':        'Sreekumar Krishnan',
+        'tier_label':  'Senior Mentor',
+        'tier_class':  'senior',
+        'price':       50,
+        'points_cost': 500,
+        'photo':       'Sreekumar.png',
+        'genres':      'Wildlife · Street · Portrait · Mobile',
+        'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
+    },
+}
+
+# ---------------------------------------------------------------------------
+
+@app.route('/mentors')
+def mentors():
+    try:
+        men_hero = (Image.query
+                    .filter(Image.status == 'scored',
+                            Image.score != None,
+                            Image.is_public == True,
+                            Image.is_flagged == False,
+                            Image.thumb_url != None,
+                            Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                            Image.score >= 8.0)
+                    .order_by(db.func.random())
+                    .first())
+    except Exception:
+        men_hero = None
+    return render_template('mentors.html', men_hero=men_hero)
+
+# ---------------------------------------------------------------------------
+
+@app.route('/mentor-register/<slug>', methods=['GET', 'POST'])
+@login_required
+def mentor_register(slug):
+    mentor = MENTORS.get(slug)
+    if not mentor:
+        flash('Mentor not found.', 'error')
+        return redirect(url_for('mentors'))
+
+    # Ensure mentor_sessions table exists
+    try:
+        db.session.execute(db.text("""
+            CREATE TABLE IF NOT EXISTS mentor_sessions (
+                id              SERIAL PRIMARY KEY,
+                user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                mentor_slug     VARCHAR(60) NOT NULL,
+                image_id        INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                intent          TEXT NOT NULL,
+                payment_method  VARCHAR(20) DEFAULT 'points',
+                points_used     INTEGER DEFAULT 0,
+                amount_paise    INTEGER DEFAULT 0,
+                payment_status  VARCHAR(20) DEFAULT 'pending',
+                status          VARCHAR(20) DEFAULT 'pending',
+                deadline_at     TIMESTAMP,
+                reminder_sent   BOOLEAN DEFAULT FALSE,
+                review_text     TEXT,
+                reviewed_at     TIMESTAMP,
+                created_at      TIMESTAMP DEFAULT NOW()
+            )
+        """))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    # Points balance
+    try:
+        from models import PointsWallet
+        wallet = PointsWallet.query.filter_by(user_id=current_user.id).first()
+        points_balance = wallet.balance if wallet else 0
+    except Exception:
+        points_balance = 0
+
+    # User's scored images
+    try:
+        user_images = (Image.query
+                       .filter_by(user_id=current_user.id, status='scored')
+                       .filter(Image.score != None, Image.thumb_url != None)
+                       .order_by(Image.scored_at.desc())
+                       .all())
+    except Exception:
+        user_images = []
+
+    if request.method == 'POST':
+        image_id = request.form.get('image_id', type=int)
+        intent   = (request.form.get('intent') or '').strip()
+        payment  = request.form.get('payment_method', 'points')
+
+        # Validate
+        if not image_id or not intent:
+            flash('Please select an image and describe what you want the mentor to focus on.', 'error')
+            return render_template('mentor_booking.html',
+                                   mentor=mentor,
+                                   points_balance=points_balance,
+                                   user_images=user_images)
+
+        if payment == 'points' and points_balance < mentor['points_cost']:
+            flash('Insufficient points. Upload more images to earn points.', 'error')
+            return render_template('mentor_booking.html',
+                                   mentor=mentor,
+                                   points_balance=points_balance,
+                                   user_images=user_images)
+
+        try:
+            from datetime import datetime, timedelta
+            deadline = datetime.utcnow() + timedelta(hours=72)
+
+            db.session.execute(db.text("""
+                INSERT INTO mentor_sessions
+                    (user_id, mentor_slug, image_id, intent, payment_method,
+                     points_used, payment_status, status, deadline_at)
+                VALUES
+                    (:uid, :slug, :iid, :intent, :method,
+                     :pts, 'paid', 'pending', :deadline)
+            """), {
+                'uid':      current_user.id,
+                'slug':     slug,
+                'iid':      image_id,
+                'intent':   intent,
+                'method':   payment,
+                'pts':      mentor['points_cost'] if payment == 'points' else 0,
+                'deadline': deadline,
+            })
+
+            # Deduct points if paying with points
+            if payment == 'points':
+                db.session.execute(db.text("""
+                    UPDATE points_wallet
+                    SET balance = balance - :cost
+                    WHERE user_id = :uid
+                """), {'cost': mentor['points_cost'], 'uid': current_user.id})
+
+            db.session.commit()
+            flash(f'Your image has been submitted to {mentor["name"]}. Review delivered within 72 hours.', 'success')
+            return redirect(url_for('dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[mentor_register] error: {e}')
+            flash('Something went wrong. Please try again.', 'error')
+
+    return render_template('mentor_booking.html',
+                           mentor=mentor,
+                           points_balance=points_balance,
+                           user_images=user_images)
 
 @app.route('/pricing')
 def pricing():
