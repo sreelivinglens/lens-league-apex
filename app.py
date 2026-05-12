@@ -216,6 +216,8 @@ app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_NAME']     = 'sl_session'
+app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_SECURE']   = True
 
@@ -441,9 +443,6 @@ with app.app_context():
                 "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
                 # v35 - Re-engagement email tracking
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
-                # v36 - Phone + address capture at onboarding
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
                 # v34 - Scoring flash notification
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
                 # v33 - Points/Loyalty Engine (Sprint 1)
@@ -1482,7 +1481,16 @@ def auth_google():
 
 @app.route('/auth/google/callback')
 def auth_google_callback():
-    token = google.authorize_access_token()
+    try:
+        token = google.authorize_access_token()
+    except Exception as e:
+        err = str(e)
+        app.logger.warning(f'[google_oauth] callback error: {err}')
+        if 'mismatching_state' in err or 'MismatchingState' in err or 'state' in err.lower():
+            flash('Sign-in session expired — please try again.', 'error')
+        else:
+            flash('Google sign-in failed. Please try again.', 'error')
+        return redirect(url_for('login'))
     userinfo = token.get('userinfo') or google.userinfo()
     google_id = userinfo.get('sub')
     email     = userinfo.get('email', '').lower().strip()
@@ -1553,19 +1561,11 @@ def onboarding():
         country = request.form.get('country', '').strip()
         state   = request.form.get('state', '').strip()
         city    = request.form.get('city', '').strip()
-        phone   = request.form.get('phone', '').strip()
-        address = request.form.get('address', '').strip()
         agreed  = request.form.get('agreed')
         terms   = request.form.get('terms')
 
         if not country or not state or not city:
             flash('Please select your country, state/province, and city.', 'error')
-            return redirect(url_for('onboarding'))
-        if not phone:
-            flash('Please enter your mobile number.', 'error')
-            return redirect(url_for('onboarding'))
-        if not address:
-            flash('Please enter your address.', 'error')
             return redirect(url_for('onboarding'))
         if not agreed:
             flash('Please accept the Member Agreement to continue.', 'error')
@@ -1578,8 +1578,6 @@ def onboarding():
         current_user.country             = country
         current_user.state               = state
         current_user.city                = city
-        current_user.phone               = phone
-        current_user.address             = address
         current_user.agreed_at           = now
         current_user.terms_accepted_at   = now
         current_user.terms_version       = TERMS_VERSION
@@ -3740,31 +3738,6 @@ def toggle_calibration_example(image_id):
 def admin_users():
     users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
     return render_template('admin_users.html', users=users)
-
-
-@app.route('/admin/user/<int:user_id>')
-@login_required
-@admin_required
-def admin_user_detail(user_id):
-    user = User.query.get_or_404(user_id)
-    image_count = db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid"),
-        {'uid': user_id}
-    ).scalar() or 0
-    scored_count = db.session.execute(
-        db.text("SELECT COUNT(*) FROM images WHERE user_id = :uid AND score IS NOT NULL"),
-        {'uid': user_id}
-    ).scalar() or 0
-    mentor_sessions = db.session.execute(
-        db.text("SELECT * FROM mentor_sessions WHERE user_id = :uid ORDER BY created_at DESC"),
-        {'uid': user_id}
-    ).fetchall()
-    return render_template('admin_user_detail.html',
-        user           = user,
-        image_count    = image_count,
-        scored_count   = scored_count,
-        mentor_sessions = mentor_sessions,
-    )
 
 
 @app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
