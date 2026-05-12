@@ -5136,7 +5136,7 @@ MENTORS = {
         'tier_class':  'legend',
         'price':       100,
         'points_cost': 1000,
-        'photo':       'mentor_ashok.jpg',
+        'photo':       'img/mentor_ashok.jpg',
         'genres':      'Conceptual · Fashion · Street · Nature',
         'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
     },
@@ -5147,7 +5147,7 @@ MENTORS = {
         'tier_class':  'expert',
         'price':       75,
         'points_cost': 750,
-        'photo':       'Gopal MS.jpeg',
+        'photo':       'img/Gopal MS.jpeg',
         'genres':      'Street · Documentary · Urban',
         'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
     },
@@ -5158,7 +5158,7 @@ MENTORS = {
         'tier_class':  'senior',
         'price':       50,
         'points_cost': 500,
-        'photo':       'Sreekumar.png',
+        'photo':       'img/Sreekumar.png',
         'genres':      'Wildlife · Street · Portrait · Mobile',
         'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
     },
@@ -5218,11 +5218,9 @@ def mentor_register(slug):
     except Exception:
         db.session.rollback()
 
-    # Points balance
+    # Points balance — stored directly on user.points_balance
     try:
-        from models import PointsWallet
-        wallet = PointsWallet.query.filter_by(user_id=current_user.id).first()
-        points_balance = wallet.balance if wallet else 0
+        points_balance = int(round(getattr(current_user, 'points_balance', 0) or 0))
     except Exception:
         points_balance = 0
 
@@ -5280,9 +5278,9 @@ def mentor_register(slug):
             # Deduct points if paying with points
             if payment == 'points':
                 db.session.execute(db.text("""
-                    UPDATE points_wallet
-                    SET balance = balance - :cost
-                    WHERE user_id = :uid
+                    UPDATE users
+                    SET points_balance = points_balance - :cost
+                    WHERE id = :uid
                 """), {'cost': mentor['points_cost'], 'uid': current_user.id})
 
             db.session.commit()
