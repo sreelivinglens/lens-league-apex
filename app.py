@@ -1269,18 +1269,6 @@ def index():
                            .order_by(db.func.random())
                            .limit(12).all())
         active_challenge = _get_active_challenge()
-        # BOW card thumbnail — Master+ scored image, score >= 8.0, random per visit
-        try:
-            bow_img = (Image.query
-                       .filter(Image.status=='scored', Image.score!=None,
-                               Image.is_public==True, Image.is_flagged==False,
-                               Image.thumb_url!=None,
-                               Image.tier.in_(['Master','Grandmaster','Legend']),
-                               Image.score>=8.0)
-                       .order_by(db.func.random())
-                       .first())
-        except Exception:
-            bow_img = None
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
         if active_challenge:
@@ -1302,7 +1290,6 @@ def index():
                            carousel_images=carousel_images,
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
-                           bow_img=bow_img,
                            now=datetime.utcnow()))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     resp.headers['Pragma']        = 'no-cache'
