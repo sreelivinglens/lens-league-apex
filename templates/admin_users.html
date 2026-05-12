@@ -11,21 +11,29 @@
   .stat-card { background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 22px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
   .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
   .stat-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-  .users-table { width: 100%; border-collapse: collapse; font-size: 17px; }
-  .users-table th { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
-  .users-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); }
+  .users-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+  .users-table th { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  .users-table td { padding: 10px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); overflow: hidden; }
   .users-table tr:last-child td { border-bottom: none; }
   .users-table tr:hover td { background: #F5F0E8; }
-  .user-name { font-weight: 600; color: var(--text-primary); }
+  .col-member  { width: 160px; }
+  .col-email   { width: 200px; }
+  .col-joined  { width: 90px; }
+  .col-images  { width: 60px; text-align: center; }
+  .col-status  { width: 70px; }
+  .col-action  { width: 200px; }
+  .col-delete  { width: 70px; }
+  .user-name { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-name a { color: var(--text-primary); text-decoration: none; }
   .user-name a:hover { color: var(--gold); text-decoration: underline; }
-  .user-handle { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); }
-  .badge { display: inline-block; font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+  .user-handle { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email  { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
   .badge-uat  { background: rgba(200,168,75,.15); color: var(--gold); border: 1px solid var(--gold-dark); }
   .badge-sub  { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
   .badge-free { background: #F5F0E8; color: var(--text-muted); border: 1px solid var(--border); }
-  .track-select { font-family: var(--font-mono); font-size: 16px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; color: var(--text-secondary); }
-  .btn-action { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
+  .track-select { font-family: var(--font-mono); font-size: 12px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 6px; color: var(--text-secondary); }
+  .btn-action { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 5px 10px; border-radius: var(--radius-sm); text-transform: uppercase; cursor: pointer; border: none; white-space: nowrap; }
   .btn-action.activate { background: var(--gold); color: #0D0D0B; }
   .btn-action.revoke   { background: #F5F0E8; color: var(--text-secondary); border: 1px solid var(--border); }
   .uat-explainer {
@@ -88,30 +96,30 @@
 
   <!-- Users table -->
   <div style="overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radius-md); border:1px solid var(--border);">
-  <table class="users-table" style="min-width:600px;">
+  <table class="users-table">
     <thead>
       <tr>
-        <th>Member</th>
-        <th>Email</th>
-        <th>Joined</th>
-        <th>Images</th>
-        <th>Status</th>
-        <th>UAT Track &amp; Action</th>
-        <th>Delete</th>
+        <th class="col-member">Member</th>
+        <th class="col-email">Email</th>
+        <th class="col-joined">Joined</th>
+        <th class="col-images">Imgs</th>
+        <th class="col-status">Status</th>
+        <th class="col-action">UAT Track &amp; Action</th>
+        <th class="col-delete">Delete</th>
       </tr>
     </thead>
     <tbody>
       {% for user in users %}
       <tr>
-        <td>
+        <td class="col-member">
           <div class="user-name">
             <a href="{{ url_for('admin_user_detail', user_id=user.id) }}">{{ user.full_name or user.username }}</a>
           </div>
           <div class="user-handle">@{{ user.username }}</div>
         </td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</td>
-        <td>{{ user.images|length if user.images else 0 }}</td>
+        <td class="col-email"><span class="user-email" title="{{ user.email }}">{{ user.email }}</span></td>
+        <td class="col-joined">{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</td>
+        <td class="col-images">{{ user.images|length if user.images else 0 }}</td>
         <td>
           {% if user.is_subscribed %}
             {% if user.subscription_plan in ('uat', 'beta') %}
