@@ -395,13 +395,25 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
     border-top: none;
     display: flex;
     flex-direction: row;
+    align-items: stretch;
   }
   .sl-mbk-photo {
-    width: 100px;
-    height: auto;
+    width: 120px;
+    min-width: 120px;
+    height: 180px;
     flex-shrink: 0;
+    position: relative;
   }
-  .sl-mbk-mentor-body { padding: 12px 14px; flex: 1; }
+  .sl-mbk-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+  .sl-mbk-mentor-body { padding: 12px 14px; flex: 1; min-width: 0; overflow: hidden; }
+  .sl-mbk-mentor-bio { display: none; }
+  .sl-mbk-mentor-rule { display: none; }
   .sl-mbk-mentor-name { font-size: 15px; }
   .sl-mbk-price-row { padding: 10px 0; margin-bottom: 10px; }
   .sl-mbk-price { font-size: 18px; }
