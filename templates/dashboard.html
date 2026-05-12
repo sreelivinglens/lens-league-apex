@@ -504,7 +504,7 @@ function dismissPotyBanner() {
           <span class="ann-tag">{{ ann.contest_type | upper }}</span>
           <span class="notif-title" style="white-space:normal;">{{ ann.title }}</span>
         </div>
-        <div class="notif-sub">{{ ann.body | truncate(100) }}</div>
+        <div class="notif-sub">{{ ann.body }}</div>
       </div>
       {% if ann.cta_label and ann.cta_url %}
       <a href="{{ ann.cta_url }}" class="notif-action">{{ ann.cta_label }} →</a>
