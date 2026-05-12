@@ -1189,7 +1189,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 
   <div class="sl-card">
-    {% if gallery_imgs and gallery_imgs[0].thumb_url %}
+    {% if bow_img and bow_img.thumb_url %}
+    <img class="sl-card-img" src="{{ bow_img.thumb_url }}" alt="Body of Work" loading="lazy" onerror="this.style.display='none'">
+    {% elif gallery_imgs and gallery_imgs[0].thumb_url %}
     <img class="sl-card-img" src="{{ gallery_imgs[0].thumb_url }}" alt="Body of Work" loading="lazy" onerror="this.style.display='none'">
     {% endif %}
     <div class="sl-card-overlay"></div>
@@ -1197,7 +1199,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <div class="sl-card-content">
       <div class="sl-card-heading">Some stories deserve<br>to be seen together.</div>
       <p class="sl-card-body">Curate, organize, and get feedback on your complete work.</p>
-      <a href="{{ url_for('contests') }}" class="sl-card-btn">EXPLORE BODY OF WORK &rarr;</a>
+      <a href="{{ url_for('bow_info') }}" class="sl-card-btn">EXPLORE BODY OF WORK &rarr;</a>
     </div>
   </div>
 
