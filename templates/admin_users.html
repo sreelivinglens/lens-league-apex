@@ -88,7 +88,7 @@
 
   <!-- Users table -->
   <div style="overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radius-md); border:1px solid var(--border);">
-  <table class="users-table" style="min-width:700px;">
+  <table class="users-table" style="min-width:600px;">
     <thead>
       <tr>
         <th>Member</th>
@@ -96,10 +96,8 @@
         <th>Joined</th>
         <th>Images</th>
         <th>Status</th>
-        <th>Track</th>
-        <th>Action</th>
-        <th>T&amp;C</th>
-        <th></th>
+        <th>UAT Track &amp; Action</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody>
@@ -139,15 +137,6 @@
             </button>
           </form>
         </td>
-        <td style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); white-space:nowrap;">
-          {% if user.terms_accepted_at %}
-            <span style="color:var(--green);">✓</span>
-            {{ user.terms_accepted_at.strftime('%d %b %y') }}<br>
-            <span style="font-size:11px;">{{ user.terms_version or '' }}</span>
-          {% else %}
-            <span style="color:var(--text-muted);">—</span>
-          {% endif %}
-        </td>
         <td>
           <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
                 onsubmit="return confirmDelete('{{ user.full_name or user.username }}', {{ user.images|length if user.images else 0 }}, {{ 'true' if user.is_subscribed else 'false' }})">
@@ -160,7 +149,7 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="8" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
+        <td colspan="6" class="empty-state">No members registered yet. Share the live URL with your testers.</td>
       </tr>
       {% endfor %}
     </tbody>
