@@ -1230,7 +1230,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
            loading="lazy">
       <div class="sl-gitem-overlay"></div>
       <div class="sl-gitem-info">
-        <span class="sl-gitem-score">{{ (img.score * 10)|round|int }}</span>
+        <span class="sl-gitem-score">{{ "%.2f"|format(img.score) }}</span>
         <span class="sl-gitem-title">{{ img.title or img.genre or 'Untitled' }}</span>
         <span class="sl-gitem-by">by {{ img.author.username }}</span>
       </div>
