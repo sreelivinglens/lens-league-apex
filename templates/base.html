@@ -202,6 +202,9 @@ nav {
   top: var(--nav-height);
   left: 0;
   right: 0;
+  max-height: calc(100vh - var(--nav-height));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: rgba(26,24,20,0.96);
   border-bottom: 1px solid var(--border);
   padding: 16px var(--page-pad);
