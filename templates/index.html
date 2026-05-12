@@ -114,7 +114,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   line-height: 1;
   display: block;
   margin-bottom: 10px;
-  font-family: Georgia, serif !important;
+  font-family: 'Inter', sans-serif !important;
 }
 .sl-co-body {
   font-size: 14px;
@@ -942,7 +942,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 {% block content %}
 {% set hero = carousel_images[0] if carousel_images else none %}
-{% set gallery_imgs = carousel_images[1:] if carousel_images|length > 1 else [] %}
+{% set gallery_imgs = recent_images if recent_images else (carousel_images[1:] if carousel_images|length > 1 else []) %}
 {% set soul_active = hero.get_audit().get('soul_bonus', false) if hero and hero.get_audit else false %}
 
 <div class="sl-home">
@@ -960,7 +960,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   <div class="sl-hero-text">
     <h1 class="sl-hero-h1">How good is<br>your photograph,<br>really?</h1>
-    <p class="sl-hero-sub">Honest photography feedback.<br>One improvement at a time.</p>
+      <p class="sl-hero-tagline">Honest photography feedback.<br>One improvement at a time.</p>
     <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
        class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
     <div class="sl-hero-micro">
@@ -1207,7 +1207,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <span class="sl-card-eyebrow">Photographer of the Year</span>
     <div class="sl-card-content">
       <div class="sl-card-heading">A year-long recognition<br>for real growth.</div>
-      <p class="sl-card-body">Earn points, climb the ranks, and compete for Photographer of the Year.</p>
+      <p class="sl-card-body">Earn points, climb the ranks, and participate in Photographer of the Year.</p>
       <a href="{{ url_for('poty') }}" class="sl-card-btn">VIEW POTY &amp; POINTS &rarr;</a>
     </div>
   </div>
@@ -1222,7 +1222,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All Galleries &rarr;</a>
   </div>
   <div class="sl-gallery-grid">
-    {% for img in gallery_imgs[:6] %}{% if img.thumb_url %}
+    {% for img in gallery_imgs[:12] %}{% if img.thumb_url %}
     <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gitem">
       <img class="sl-gitem-img"
            src="{{ img.thumb_url }}"
