@@ -537,12 +537,14 @@ body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; marg
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section class="sl-bow-hero">
+    {% if bow_hero and bow_hero.thumb_url %}
     <img
       class="sl-bow-hero-img"
-      src="{{ url_for('static', filename='img/bow_hero.jpg') }}"
-      alt="A photographer sitting on a Mumbai seawall looking at the city skyline"
+      src="{{ bow_hero.thumb_url }}"
+      alt="Photograph by a Shutter League member — Master level or above"
       onerror="this.style.display='none'"
     >
+    {% endif %}
     <div class="sl-bow-hero-fade"></div>
     <div class="sl-bow-hero-content">
       <p class="sl-bow-eyebrow">Body of Work</p>
