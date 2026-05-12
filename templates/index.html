@@ -492,6 +492,29 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   object-fit: cover;
   object-position: center;
 }
+
+/* ── BOW auto-scroll filmstrip ── */
+.sl-bow-strip-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.sl-bow-strip {
+  display: flex;
+  height: 100%;
+  animation: bowScroll 18s linear infinite;
+}
+.sl-bow-strip img {
+  height: 100%;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: cover;
+  display: block;
+}
+@keyframes bowScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-55%); }
+}
 .sl-card-overlay {
   position: absolute;
   inset: 0;
@@ -1189,11 +1212,18 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 
   <div class="sl-card">
-    {% if bow_img and bow_img.thumb_url %}
-    <img class="sl-card-img" src="{{ bow_img.thumb_url }}" alt="Body of Work" loading="lazy" onerror="this.style.display='none'">
-    {% elif gallery_imgs and gallery_imgs[0].thumb_url %}
-    <img class="sl-card-img" src="{{ gallery_imgs[0].thumb_url }}" alt="Body of Work" loading="lazy" onerror="this.style.display='none'">
-    {% endif %}
+    <div class="sl-bow-strip-wrap">
+      <div class="sl-bow-strip">
+        <img src="{{ url_for('static', filename='Toothbrush-in-the-mangroves_SRA2920.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename='Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename='Week-248-Mangrove-clean-up_SRA2850.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename='When-children-have-to-pick-your-Trash_People_SRA4720.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename='When-the-sea-throws-back-1000-school-bags_Conservation_IMG_9317-(1).jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <!-- duplicate for seamless loop -->
+        <img src="{{ url_for('static', filename='Toothbrush-in-the-mangroves_SRA2920.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+        <img src="{{ url_for('static', filename='Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg') }}" alt="Tides of Change" onerror="this.style.display='none'">
+      </div>
+    </div>
     <div class="sl-card-overlay"></div>
     <span class="sl-card-eyebrow">Body of Work</span>
     <div class="sl-card-content">
