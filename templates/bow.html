@@ -1,319 +1,790 @@
 {% extends "base.html" %}
 {% block title %}Body of Work — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="A Body of Work is not your best photographs. It is a story stitched across 6–10 connected images linked by a theme, event, or point of view.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  .bow-wrap { max-width: 720px; margin: 0 auto; padding: clamp(2rem,5vw,4rem) 0 clamp(3rem,6vw,5rem); }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BODY OF WORK — Session 19
+   Inter only · #F7F5F2 light · #EDEAE4 warm
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #0D0D0B hero bg
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-bow) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
-  .page-eyebrow {
-    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
-    letter-spacing: 0.2em; text-transform: uppercase; color: #A89BCE;
-    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
-  }
-  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: #6B5F8A; }
+.sl-bow, .sl-bow * {
+  font-family: 'Inter', sans-serif !important;
+}
 
-  .page-headline {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.15;
-    color: var(--text-primary); margin-bottom: 0.75rem;
-  }
-  .page-headline em { font-style: italic; color: #A89BCE; }
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-bow-hero {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  max-height: 480px;
+  background: #0D0D0B;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.sl-bow-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-bow-hero-img[src=""],
+.sl-bow-hero-img:not([src]) {
+  display: none;
+}
+.sl-bow-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,13,11,0.45);
+}
+.sl-bow-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 40px 48px;
+  width: 520px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(30,28,24,0.30);
+  backdrop-filter: blur(2px);
+  margin: 0 64px;
+}
+.sl-bow-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-bow-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-bow-hero-h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-bow-hero-body {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.6;
+  text-align: left;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.sl-bow-hero-body p {
+  margin-bottom: 6px;
+}
+.sl-bow-hero-body p:last-child {
+  margin-bottom: 0;
+}
 
-  .page-intro {
-    font-size: 1.05rem; color: var(--text-secondary); line-height: 1.85;
-    margin-bottom: 2.5rem; max-width: 600px;
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-bow-sec {
+  padding: 80px 64px;
+}
+.sl-bow-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-bow-sec-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 26px;
+}
+.sl-bow-h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+/* ━━ WHY CREATE — 5 icon cards ━━━━━━━━━━ */
+.sl-bow-why {
+  background: #FFFFFF;
+}
+.sl-bow-why-head {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1A1A18;
+  text-align: center;
+  letter-spacing: -0.02em;
+  margin-bottom: 52px;
+}
+.sl-bow-why-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid rgba(26,26,24,0.10);
+  border-left: 1px solid rgba(26,26,24,0.10);
+}
+.sl-bow-why-card {
+  padding: 36px 24px 32px;
+  text-align: center;
+  border-right: 1px solid rgba(26,26,24,0.10);
+  border-bottom: 1px solid rgba(26,26,24,0.10);
+}
+.sl-bow-why-icon {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sl-bow-why-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.sl-bow-why-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.65;
+  text-align: justify;
+}
+
+/* ━━ EXAMPLE — photo strip ━━━━━━━━━━━━━━ */
+.sl-bow-example {
+  background: #F7F5F2;
+}
+.sl-bow-ex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.sl-bow-ex-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: -0.02em;
+}
+.sl-bow-ex-attr {
+  font-size: 14px;
+  color: rgba(26,26,24,0.55);
+  text-align: right;
+  line-height: 1.55;
+}
+.sl-bow-ex-attr strong {
+  color: #1A1A18;
+  font-weight: 600;
+}
+.sl-bow-ex-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 28px;
+}
+.sl-bow-photo-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.sl-bow-photo {
+  height: 180px;
+  background: #1A1A18;
+  overflow: hidden;
+}
+.sl-bow-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-bow-scroll-hint {
+  display: none;
+}
+.sl-bow-caption {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.7;
+}
+
+/* ━━ HOW TO START — 6 steps ━━━━━━━━━━━━━ */
+.sl-bow-how {
+  background: #EDEAE4;
+}
+.sl-bow-steps {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr 24px 1fr;
+  align-items: start;
+}
+.sl-bow-step {
+  text-align: center;
+  padding: 0 8px;
+}
+.sl-bow-step-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #F5C518;
+  margin-bottom: 10px;
+}
+.sl-bow-step-icon {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.sl-bow-step-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.sl-bow-step-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+  text-align: center;
+}
+.sl-bow-arrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 42px;
+  font-size: 18px;
+  color: rgba(26,26,24,0.22);
+  font-family: sans-serif !important;
+}
+
+/* ━━ BOTTOM SPLIT ━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-bow-bottom {
+  background: #FFFFFF;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.sl-bow-quote {
+  padding: 72px 64px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.sl-bow-qmark {
+  font-size: 80px;
+  line-height: 0.65;
+  color: #F5C518;
+  font-weight: 800;
+  margin-bottom: 28px;
+}
+.sl-bow-qtext {
+  font-size: 18px;
+  font-weight: 400;
+  color: #1A1A18;
+  line-height: 1.8;
+  text-align: justify;
+}
+.sl-bow-cta-right {
+  padding: 72px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.sl-bow-cta-lines {
+  font-size: 34px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.sl-bow-cta-gold {
+  font-size: 20px;
+  font-weight: 700;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-bow-cta-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 16px;
+}
+.sl-bow-cta-sub {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.55);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  /* HERO — 16:9 image on top, #2C3E6B text block below */
+  .sl-bow-hero {
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-bow-hero-img {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  .sl-bow-hero-fade {
+    display: none;
+  }
+  .sl-bow-hero-content {
+    position: static;
+    background: #2C3E6B;
+    margin: 0;
+    padding: 12px 16px 20px;
+    width: 100%;
+    max-width: none;
+    min-height: auto;
+    display: block;
+    backdrop-filter: none;
+    text-shadow: none;
+  }
+  .sl-bow-hero-h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 0;
+    text-shadow: none;
+  }
+  .sl-bow-eyebrow {
+    text-shadow: none;
+  }
+  .sl-bow-hero-body {
+    display: none;
   }
 
-  /* Prereq bar */
-  .prereq-bar {
-    display: flex; align-items: flex-start; gap: 14px;
-    background: rgba(168,155,206,0.07);
-    border: 1px solid rgba(168,155,206,0.2);
-    border-left: 3px solid #A89BCE;
-    border-radius: var(--radius-md); padding: 18px 22px;
-    margin-bottom: 28px;
-  }
-  .prereq-icon {
-    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(168,155,206,0.12);
-    display: flex; align-items: center; justify-content: center;
-    color: #A89BCE;
-  }
-  .prereq-label {
-    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.14em;
-    text-transform: uppercase; color: #A89BCE; margin-bottom: 6px;
-  }
-  .prereq-text { font-size: 1rem; color: var(--text-secondary); line-height: 1.7; }
-  .prereq-text strong { color: var(--text-primary); }
-
-  /* Section heads */
-  .bow-section { margin-bottom: 2.5rem; }
-  .bow-section-title {
-    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
-    letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted);
-    margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+  /* SECTIONS */
+  .sl-bow-sec {
+    padding: 56px 20px;
   }
 
-  /* Instruction list */
-  .bow-rules { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-  .bow-rules li {
-    display: flex; align-items: flex-start; gap: 14px;
-    font-size: 1rem; color: var(--text-secondary); line-height: 1.8;
+  /* WHY — 2×2 + 1 full width */
+  .sl-bow-why-head {
+    font-size: 24px;
+    margin-bottom: 32px;
   }
-  .bow-rules li .rule-num {
-    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-    background: var(--surface-3); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
-    color: #A89BCE; margin-top: 2px;
+  .sl-bow-why-grid {
+    grid-template-columns: 1fr 1fr;
   }
-  .bow-rules li strong { color: var(--text-primary); }
+  .sl-bow-why-card {
+    padding: 24px 16px;
+  }
+  .sl-bow-why-card:nth-child(5) {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
 
-  /* Honours table */
-  .prize-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
-  .prize-table th {
-    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--text-muted);
-    padding: 10px 16px; text-align: left;
-    border-bottom: 1px solid var(--border);
+  /* EXAMPLE — horizontal scrollable filmstrip */
+  .sl-bow-ex-header {
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
   }
-  .prize-table td {
-    padding: 15px 16px; color: var(--text-secondary);
-    border-bottom: 1px solid var(--surface-3);
-    vertical-align: middle; font-size: 1rem;
+  .sl-bow-ex-title {
+    font-size: 20px;
   }
-  .prize-table tr:last-child td { border-bottom: none; }
-  .prize-table td:last-child { color: var(--gold); font-weight: 600; font-family: var(--font-mono); font-size: 1.05rem; }
-  .medal-gold   { color: #FFD700; font-size: 1.1rem; }
-  .medal-silver { color: #C0C0C0; font-size: 1.1rem; }
-  .medal-bronze { color: #CD7F32; font-size: 1.1rem; }
+  .sl-bow-ex-attr {
+    text-align: left;
+  }
+  .sl-bow-photo-strip {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    margin-bottom: 6px;
+  }
+  .sl-bow-photo {
+    display: inline-block;
+    width: 220px;
+    height: 147px;
+    margin-right: 6px;
+    vertical-align: top;
+  }
+  .sl-bow-photo:last-child {
+    margin-right: 0;
+  }
+  .sl-bow-scroll-hint {
+    display: block;
+    font-size: 11px;
+    color: rgba(26,26,24,0.40);
+    text-align: right;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
 
-  /* Timeline */
-  .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
-  .timeline::before {
-    content: ''; position: absolute; left: 15px; top: 12px; bottom: 12px;
-    width: 1px; background: var(--border);
+  /* HOW TO START — vertical rows: num+icon left, title+desc right */
+  .sl-bow-h2 {
+    font-size: 24px;
   }
-  .tl-item {
-    display: flex; gap: 20px; align-items: flex-start;
-    padding: 10px 0;
+  .sl-bow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
   }
-  .tl-dot {
-    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-    background: var(--surface-2); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-mono); font-size: 0.68rem; color: #A89BCE;
-    position: relative; z-index: 1;
+  .sl-bow-arrow {
+    display: none;
   }
-  .tl-dot.active { background: rgba(168,155,206,0.15); border-color: #A89BCE; }
-  .tl-content { padding-top: 6px; }
-  .tl-month { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
-  .tl-desc { font-size: 1rem; color: var(--text-secondary); line-height: 1.65; }
-  .tl-desc strong { color: var(--text-primary); }
-
-  /* Subscriber gate */
-  .gate-box {
-    margin-top: 2.5rem;
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-top: 3px solid #A89BCE;
-    border-radius: var(--radius-md); padding: 28px 32px;
+  .sl-bow-step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    grid-template-rows: auto auto;
+    text-align: left;
+    padding: 0;
+    gap: 0 14px;
+    align-items: start;
+  }
+  .sl-bow-step-num {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 4px;
     text-align: center;
   }
-  .gate-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
-    margin-bottom: 0.6rem;
+  .sl-bow-step-icon {
+    grid-column: 1;
+    grid-row: 2;
+    height: 32px;
+    justify-content: center;
+    margin-bottom: 0;
+    margin-top: 4px;
   }
-  .gate-sub { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.75; }
-  .gate-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .sl-bow-step-title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 16px;
+    padding-top: 2px;
+    margin-bottom: 4px;
+  }
+  .sl-bow-step-desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 14px;
+    text-align: left;
+    margin-top: 2px;
+  }
 
-  .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+  /* BOTTOM SPLIT — stack vertically */
+  .sl-bow-bottom {
+    grid-template-columns: 1fr;
+  }
+  .sl-bow-quote {
+    padding: 40px 20px 32px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-bow-qmark {
+    font-size: 56px;
+    margin-bottom: 18px;
+  }
+  .sl-bow-qtext {
+    font-size: 16px;
+  }
+  .sl-bow-cta-right {
+    padding: 32px 20px 56px;
+  }
+  .sl-bow-cta-lines {
+    font-size: 26px;
+  }
+  .sl-bow-cta-gold {
+    font-size: 16px;
+  }
+
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="bow-wrap">
+<div class="sl-bow">
 
-  <div class="page-eyebrow">Body of Work</div>
-  <h1 class="page-headline">The platform's<br>most <em>prestigious</em> competition.</h1>
-  <p class="page-intro">
-    Not a collection of your best images. A unified thematic series — with a single narrative arc, a coherent visual language, and a point of view that holds together from first frame to last. Judged exclusively by Jury Legends. No engine. No peer rating. Pure human judgement.
-  </p>
-
-  <!-- Pre-qualifying bar -->
-  <div class="prereq-bar">
-    <div class="prereq-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    </div>
-    <div>
-      <div class="prereq-label">Pre-qualifying Requirement</div>
-      <div class="prereq-text">
-        You must hold a <strong>rolling average of 7.5 or above</strong> across your last 20 scored images to unlock the Body of Work entry form. This ensures the jury reviews only work that has proven itself at the highest platform standard.
-        Subscribers only. Active subscription must be maintained through submission close.
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <section class="sl-bow-hero">
+    <img
+      class="sl-bow-hero-img"
+      src="{{ url_for('static', filename='img/bow_hero.jpg') }}"
+      alt="A photographer sitting on a Mumbai seawall looking at the city skyline"
+      onerror="this.style.display='none'"
+    >
+    <div class="sl-bow-hero-fade"></div>
+    <div class="sl-bow-hero-content">
+      <p class="sl-bow-eyebrow">Body of Work</p>
+      <div class="sl-bow-gold-rule"></div>
+      <h1 class="sl-bow-hero-h1">More than images.<br>A reason to tell<br>the world.</h1>
+      <div class="sl-bow-hero-body">
+        <p>A Body of Work is not your best photographs.</p>
+        <p>It is a story stitched across 6–10 connected images linked by a theme, event, or point of view.</p>
+        <p>Prepared, intentional, and held together with purpose.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- What to submit -->
-  <div class="bow-section">
-    <div class="bow-section-title">Submission Requirements</div>
-    <ul class="bow-rules">
-      <li>
-        <div class="rule-num">1</div>
-        <div>Submit between <strong>6 and 12 images</strong>. More is not better — the jury evaluates coherence and editorial restraint. Every image must earn its place in the series.</div>
-      </li>
-      <li>
-        <div class="rule-num">2</div>
-        <div>The series must be <strong>cross-genre</strong>. Images from a single genre are not accepted. The BOW is designed to demonstrate range within a unified vision.</div>
-      </li>
-      <li>
-        <div class="rule-num">3</div>
-        <div>You must submit a <strong>series statement</strong> of 80 to 200 words. This is read by every juror before they view a single image. It frames your intent — not your technique.</div>
-      </li>
-      <li>
-        <div class="rule-num">4</div>
-        <div>All images must have been <strong>previously scored on the platform</strong> with a minimum individual score of 6.5. You cannot submit work that has not gone through the Apex DDI Engine.</div>
-      </li>
-      <li>
-        <div class="rule-num">5</div>
-        <div>Image order matters. You will sequence your submission — the jury views images in the exact order you specify. <strong>Sequence is part of the judging criteria.</strong></div>
-      </li>
-      <li>
-        <div class="rule-num">6</div>
-        <div>One submission per photographer per year. You may <strong>not withdraw and resubmit</strong> once the submission window closes. Review your series carefully before submitting.</div>
-      </li>
-    </ul>
-  </div>
+  <!-- ── WHY CREATE A BODY OF WORK ─────────────────────────────── -->
+  <section class="sl-bow-sec sl-bow-why">
+    <div class="sl-bow-inner">
+      <p class="sl-bow-why-head">Why create a Body of Work?</p>
+      <div class="sl-bow-why-grid">
 
-  <!-- Prizes -->
-  <div class="bow-section">
-    <div class="bow-section-title">Honours Structure</div>
-    <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-      <table class="prize-table">
-      <thead>
-        <tr>
-          <th>Award</th>
-          <th>What it recognises</th>
-          <th>Honour</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="medal-gold">◆</span> &nbsp;Gold</td>
-          <td>The single most powerful unified body of work submitted that year</td>
-          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
-        </tr>
-        <tr>
-          <td><span class="medal-silver">◆</span> &nbsp;Silver</td>
-          <td>Outstanding series with exceptional coherence and narrative strength</td>
-          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
-        </tr>
-        <tr>
-          <td><span class="medal-bronze">◆</span> &nbsp;Bronze</td>
-          <td>Remarkable submission demonstrating distinctive visual voice</td>
-          <td><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></td>
-        </tr>
-      </tbody>
-    </table>
-    <p style="font-size:0.875rem; color:var(--text-muted); margin-top:10px; line-height:1.6;">
-      The jury may decline to award Gold if no submission meets the required standard. Highly commended citations may be awarded at the jury's discretion.
-    </p>
-  </div>
+        <div class="sl-bow-why-card">
+          <div class="sl-bow-why-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="16" cy="16" r="6"/>
+              <circle cx="16" cy="16" r="12" stroke-dasharray="3 2"/>
+            </svg>
+          </div>
+          <p class="sl-bow-why-title">Communicate<br>with Depth</p>
+          <p class="sl-bow-why-desc">Go beyond moments. Explore context, layers, and consequence.</p>
+        </div>
 
-  <!-- Timeline -->
-  <div class="bow-section">
-    <div class="bow-section-title">Annual Timeline</div>
-    <div class="timeline">
-      <div class="tl-item">
-        <div class="tl-dot">01</div>
-        <div class="tl-content">
-          <div class="tl-month">Month 1 – Month 9</div>
-          <div class="tl-desc"><strong>Build your average.</strong> Score images continuously. Maintain a rolling average ≥ 7.5 to stay eligible.</div>
+        <div class="sl-bow-why-card">
+          <div class="sl-bow-why-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M28 8H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4l4 4 4-4h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2z"/>
+            </svg>
+          </div>
+          <p class="sl-bow-why-title">Share Your<br>Perspective</p>
+          <p class="sl-bow-why-desc">Every photographer sees differently. Reveal how you see.</p>
         </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot active">10</div>
-        <div class="tl-content">
-          <div class="tl-month">Month 10 — Submissions Open</div>
-          <div class="tl-desc"><strong>Entry window opens.</strong> Eligible photographers (avg ≥ 7.5, active subscription) can access the submission form.</div>
+
+        <div class="sl-bow-why-card">
+          <div class="sl-bow-why-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="14" r="5"/>
+              <circle cx="21" cy="14" r="5"/>
+              <path d="M6 28c0-4 2.5-6 5-6h10c2.5 0 5 2 5 6"/>
+            </svg>
+          </div>
+          <p class="sl-bow-why-title">Create<br>Meaning</p>
+          <p class="sl-bow-why-desc">The strongest works speak about the human condition and our world.</p>
         </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot active">11</div>
-        <div class="tl-content">
-          <div class="tl-month">End of Month 11 — Submissions Close</div>
-          <div class="tl-desc"><strong>No late entries accepted.</strong> Jury review begins. Results announced in Month 12.</div>
+
+        <div class="sl-bow-why-card">
+          <div class="sl-bow-why-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 4c-2 4-8 6-8 12a8 8 0 0 0 16 0c0-6-6-8-8-12z"/>
+              <path d="M12 22c0 2 1.5 4 4 4s4-2 4-4"/>
+            </svg>
+          </div>
+          <p class="sl-bow-why-title">Make an<br>Impact</p>
+          <p class="sl-bow-why-desc">Photography can shift awareness, inspire thought, and evoke change.</p>
         </div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-dot">12</div>
-        <div class="tl-content">
-          <div class="tl-month">Month 12 — Results</div>
-          <div class="tl-desc"><strong>Gold, Silver, Bronze announced.</strong> Winning series published in the platform gallery. Honours confirmed within 14 working days.</div>
+
+        <div class="sl-bow-why-card">
+          <div class="sl-bow-why-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="16,3 20,12 30,13 23,20 25,30 16,25 7,30 9,20 2,13 12,12"/>
+            </svg>
+          </div>
+          <p class="sl-bow-why-title">Build Your<br>Legacy</p>
+          <p class="sl-bow-why-desc">A Body of Work is your contribution to the ongoing conversation through images.</p>
         </div>
+
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="divider"></div>
+  <!-- ── WHAT A BOW CAN LOOK LIKE ──────────────────────────────── -->
+  <section class="sl-bow-sec sl-bow-example">
+    <div class="sl-bow-inner">
+      <div class="sl-bow-ex-header">
+        <p class="sl-bow-ex-title">What a Body of Work can look like</p>
+        <p class="sl-bow-ex-attr"><strong>Mumbai Paused</strong><br>by Gopal D. Potdar</p>
+      </div>
+      <div class="sl-bow-ex-rule"></div>
 
-  <!-- Subscriber gate / CTA -->
-  {% if current_user.is_authenticated %}
-    {% if current_user.is_subscribed %}
-      {% set avg = current_user.rolling_average or 0 %}
-      {% if avg >= 7.5 %}
-        <div class="gate-box">
-          <div class="gate-title">You're eligible to submit.</div>
-          <div class="gate-sub">
-            Your rolling average qualifies you for the Body of Work.<br>
-            Make sure your series is ready before you submit — there are no re-submissions.
-          </div>
-          <div class="gate-actions">
-            <a href="{{ url_for('bow_submit') }}" class="btn btn-solid" style="padding:13px 32px; font-size:1rem;">Submit My Body of Work →</a>
-          </div>
+      <div class="sl-bow-photo-strip">
+        <div class="sl-bow-photo">
+          <img
+            src="{{ url_for('static', filename='Toothbrush-in-the-mangroves_SRA2920.jpg') }}"
+            alt="Toothbrush in the mangroves"
+            onerror="this.style.display='none'"
+          >
         </div>
-      {% else %}
-        <div class="gate-box">
-          <div class="gate-title">Keep building your average.</div>
-          <div class="gate-sub">
-            Your current rolling average is <strong style="color:var(--text-primary);">{{ "%.1f"|format(avg) }}</strong>.
-            The Body of Work requires a rolling average of 7.5 or above across your last 20 scored images.<br><br>
-            Upload more images, focus on quality, and the submission form will unlock automatically when you qualify.
-          </div>
-          <div class="gate-actions">
-            <a href="{{ url_for('upload') }}" class="btn btn-solid" style="padding:11px 28px;">Upload an Image →</a>
-            <a href="{{ url_for('dashboard') }}" class="btn" style="padding:11px 20px;">Dashboard</a>
-          </div>
+        <div class="sl-bow-photo">
+          <img
+            src="{{ url_for('static', filename='Treasures-of-the-mangroves_Threat_Conservation_SRA2987.jpg') }}"
+            alt="Treasures of the mangroves"
+            onerror="this.style.display='none'"
+          >
         </div>
-      {% endif %}
-    {% else %}
-      <div class="gate-box">
-        <div class="gate-title">Active subscription required.</div>
-        <div class="gate-sub">
-          The Body of Work is open to subscribers only. An active subscription must be maintained through the end of Month 11 for your submission to remain eligible.
+        <div class="sl-bow-photo">
+          <img
+            src="{{ url_for('static', filename='Week-248-Mangrove-clean-up_SRA2850.jpg') }}"
+            alt="Mangrove clean up"
+            onerror="this.style.display='none'"
+          >
         </div>
-        <div class="gate-actions">
-          <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 28px;">View Pricing →</a>
+        <div class="sl-bow-photo">
+          <img
+            src="{{ url_for('static', filename='When-children-have-to-pick-your-Trash_People_SRA4720.jpg') }}"
+            alt="When children have to pick your trash"
+            onerror="this.style.display='none'"
+          >
+        </div>
+        <div class="sl-bow-photo">
+          <img
+            src="{{ url_for('static', filename='When-the-sea-throws-back-1000-school-bags_Conservation_IMG_9317-(1).jpg') }}"
+            alt="When the sea throws back 1000 school bags"
+            onerror="this.style.display='none'"
+          >
         </div>
       </div>
-    {% endif %}
-  {% else %}
-    <div class="gate-box">
-      <div class="gate-title">Join Shutter League.</div>
-      <div class="gate-sub">
-        Create a free account, start scoring your work, and build toward the Body of Work. It takes time — and that's the point.
-      </div>
-      <div class="gate-actions">
-        <a href="{{ url_for('register') }}" class="btn btn-solid" style="padding:11px 28px;">Create Free Account →</a>
-        <a href="{{ url_for('login') }}" class="btn" style="padding:11px 20px;">Log In</a>
+
+      <p class="sl-bow-scroll-hint" aria-hidden="true">scroll ›</p>
+      <p class="sl-bow-caption">Different scenes. One city. Connected by a moment in time.<br>A theme, an atmosphere, a point of view.</p>
+    </div>
+  </section>
+
+  <!-- ── HOW TO START ───────────────────────────────────────────── -->
+  <section class="sl-bow-sec sl-bow-how">
+    <div class="sl-bow-inner">
+      <h2 class="sl-bow-h2">How to start your Body of Work</h2>
+      <div class="sl-bow-sec-rule"></div>
+      <div class="sl-bow-steps">
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">01</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="13" cy="13" r="8"/>
+              <line x1="19" y1="19" x2="27" y2="27"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Find Your Theme</p>
+          <p class="sl-bow-step-desc">Start with something that matters to you.</p>
+        </div>
+
+        <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">02</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="8" width="24" height="18" rx="2"/>
+              <circle cx="15" cy="17" r="5"/>
+              <path d="M10 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Observe &amp; Create</p>
+          <p class="sl-bow-step-desc">Photograph with intention. Return. Keep exploring.</p>
+        </div>
+
+        <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">03</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="10" height="10" rx="1"/>
+              <rect x="17" y="3" width="10" height="10" rx="1"/>
+              <rect x="3" y="17" width="10" height="10" rx="1"/>
+              <rect x="17" y="17" width="10" height="10" rx="1"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Curate &amp; Sequence</p>
+          <p class="sl-bow-step-desc">Select 6–10 images that work together as a whole.</p>
+        </div>
+
+        <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">04</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="5,14 15,4 25,14"/>
+              <line x1="15" y1="4" x2="15" y2="24"/>
+              <line x1="4" y1="26" x2="26" y2="26"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Submit Your Body</p>
+          <p class="sl-bow-step-desc">Upload with a short description of your theme and intent.</p>
+        </div>
+
+        <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">05</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="15" cy="15" r="11"/>
+              <circle cx="15" cy="15" r="4"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Jury Evaluation</p>
+          <p class="sl-bow-step-desc">Receive in-depth feedback from Jury Legends.</p>
+        </div>
+
+        <div class="sl-bow-arrow" aria-hidden="true">&rarr;</div>
+
+        <div class="sl-bow-step">
+          <div class="sl-bow-step-num">06</div>
+          <div class="sl-bow-step-icon">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#1A1A18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="3,22 10,15 16,19 27,6"/>
+              <line x1="3" y1="26" x2="27" y2="26"/>
+            </svg>
+          </div>
+          <p class="sl-bow-step-title">Grow &amp; Refine</p>
+          <p class="sl-bow-step-desc">Use feedback. Evolve. Create more meaningful work.</p>
+        </div>
+
       </div>
     </div>
-  {% endif %}
+  </section>
 
-  <div style="margin-top:1.75rem; text-align:center;">
-    <a href="/contests" style="font-size:0.82rem; color:var(--text-muted); text-decoration:none; border-bottom:1px solid var(--border);">← All Programmes</a>
-  </div>
+  <!-- ── BOTTOM SPLIT ───────────────────────────────────────────── -->
+  <section class="sl-bow-bottom">
 
-</div>
+    <div class="sl-bow-quote">
+      <div class="sl-bow-qmark">&ldquo;</div>
+      <p class="sl-bow-qtext">When more photographers begin creating work with meaning and intent, photography evolves.<br><br>Stories are told.<br>Perspectives are shared.<br>Minds are opened.<br><br>That is how the art of photography elevates.</p>
+    </div>
+
+    <div class="sl-bow-cta-right">
+      <p class="sl-bow-cta-lines">Your story.<br>Your perspective.<br>Your contribution.</p>
+      <p class="sl-bow-cta-gold">Make images that matter.</p>
+      <div class="sl-bow-cta-rule"></div>
+      <p class="sl-bow-cta-sub">Begin your journey today.</p>
+    </div>
+
+  </section>
+
+</div>{# end sl-bow #}
 {% endblock %}
