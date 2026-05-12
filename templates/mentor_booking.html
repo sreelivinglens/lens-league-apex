@@ -489,7 +489,7 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
         <p class="sl-mbk-form-sub">Your image and full DDI breakdown are sent to {{ mentor.name }} together. You'll receive structured feedback within 72 hours.</p>
 
         <form method="POST" action="{{ url_for('mentor_register', slug=mentor.slug) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
 
           <!-- PAYMENT -->
           <div class="sl-mbk-section">
