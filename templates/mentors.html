@@ -211,9 +211,10 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
 .sl-men-card-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
+  object-position: center;
   display: block;
+  background: #1A1A18;
 }
 .sl-men-card-badge {
   position: absolute;
@@ -494,6 +495,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   .sl-men-choose-sub { font-size: 13px; margin-bottom: 28px; }
   .sl-men-cards { grid-template-columns: 1fr; gap: 16px; }
   .sl-men-card-photo { height: 180px; }
+  .sl-men-card-photo img { object-fit: contain; object-position: center; background: #1A1A18; }
 
   /* HOW IT WORKS — vertical */
   .sl-men-how-head { font-size: 24px; margin-bottom: 32px; }
