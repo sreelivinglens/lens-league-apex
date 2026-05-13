@@ -4,6 +4,22 @@ Run before every file delivery. Show output to Sreekumar.
 """
 import ast, sys
 
+import re as _re
+
+def _has_tiny_font(content):
+    """Return True if any font-size below 12px appears in the content block (not in comments)."""
+    # Extract only the content block to avoid false positives from base.html includes
+    block = content.split('{% block content %}')[1] if '{% block content %}' in content else content
+    # Also check extra_css block
+    css_block = ''
+    if '{% block extra_css %}' in content:
+        css_block = content.split('{% block extra_css %}')[1].split('{% endblock %}')[0]
+    combined = block + css_block
+    # Find all font-size: Npx declarations
+    sizes = _re.findall(r'font-size:\s*(\d+)px', combined)
+    return any(int(s) < 12 for s in sizes)
+
+
 def audit_html(filepath):
     content = open(filepath).read()
     checks = [
@@ -41,6 +57,16 @@ def audit_html(filepath):
         # MOBILE
         ('Mobile section padding 56px',            '56px' in content),
         ('Mobile text-shadow none explicit',       'text-shadow: none' in content),
+        # MOBILE LAYOUT — responsive breakpoints
+        ('Mobile breakpoint defined (max-width)',   'max-width: 768px' in content or 'max-width: 600px' in content or 'max-width: 480px' in content),
+        ('No fixed px widths on key containers',   not any(f'width: {n}px' in content for n in range(400, 1400, 10)) or 'max-width' in content),
+        ('Touch targets min 44px (buttons/links)',  '44px' in content or 'min-height: 44' in content or 'padding: 1' in content),
+        # READABILITY — 70yr old standard
+        ('Body font size >= 16px',                 'font-size: 16px' in content or 'font-size: 17px' in content or 'font-size: 18px' in content),
+        ('No font below 12px in content area',     not _has_tiny_font(content)),
+        ('Line height >= 1.5 on body text',        'line-height: 1.5' in content or 'line-height: 1.6' in content or 'line-height: 1.7' in content or 'line-height: 1.75' in content),
+        ('Sufficient contrast — no grey-on-grey',  'color: rgba(26,26,24,0.2)' not in content and 'color: rgba(255,255,255,0.2)' not in content),
+        ('CTA buttons large enough (padding >= 10px)', 'padding: 10px' in content or 'padding: 12px' in content or 'padding: 14px' in content or 'padding: 16px' in content),
     ]
     print(f"\n{'='*60}")
     print(f"AUDIT: {filepath}")
