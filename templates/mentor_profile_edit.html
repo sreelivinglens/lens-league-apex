@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Edit My Profile — Mentor — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-mpe) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-mpe { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif !important; }
+.sl-mpe * { font-family: 'Inter', sans-serif !important; }
+
+.sl-mpe-back { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); text-decoration: none; margin-bottom: 28px; }
+.sl-mpe-back:hover { color: #1A1A18; }
+
+.sl-mpe-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(26,26,24,0.10); }
+.sl-mpe-title { font-size: 26px; font-weight: 700; color: #1A1A18; margin-bottom: 4px; }
+.sl-mpe-sub { font-size: 14px; color: rgba(26,26,24,0.50); }
+
+.sl-mpe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 860px; }
+.sl-mpe-full { grid-column: 1 / -1; }
+
+.sl-mpe-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; }
+.sl-mpe-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(26,26,24,0.07); }
+
+.form-group { margin-bottom: 18px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label { font-size: 12px; font-weight: 600; color: rgba(26,26,24,0.60); display: block; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 14px; color: #1A1A18; font-family: 'Inter', sans-serif; line-height: 1.6; }
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: #1A2744; background: #fff; }
+.form-group textarea { resize: vertical; }
+.form-group .hint { font-size: 12px; color: rgba(26,26,24,0.45); margin-top: 5px; line-height: 1.5; }
+
+/* Photo preview */
+.sl-mpe-photo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.sl-mpe-photo-slot { display: flex; flex-direction: column; gap: 8px; }
+.sl-mpe-photo-slot label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); }
+.sl-mpe-photo-preview { width: 100%; aspect-ratio: 1; object-fit: cover; background: #EDEAE4; display: block; }
+.sl-mpe-photo-placeholder { width: 100%; aspect-ratio: 1; background: #EDEAE4; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(26,26,24,0.30); text-align: center; padding: 12px; }
+
+/* Fixed tier notice */
+.sl-mpe-tier-notice { background: #EDEAE4; border: 1px solid rgba(26,26,24,0.10); padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.sl-mpe-tier-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; }
+.badge-legend { background: #f0e8f8; color: #5b2d8a; }
+.badge-expert  { background: #e0f0f8; color: #1a5f7a; }
+.badge-senior  { background: #e0f4e8; color: #2d7a3a; }
+.sl-mpe-tier-note { font-size: 13px; color: rgba(26,26,24,0.55); }
+
+.sl-mpe-submit { background: #1A2744; color: #FFFFFF; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 32px; border: none; cursor: pointer; margin-top: 8px; }
+.sl-mpe-submit:hover { background: #243260; }
+
+@media (max-width: 768px) {
+  .sl-mpe { padding: 20px 16px 56px; }
+  .sl-mpe-grid { grid-template-columns: 1fr; }
+  .sl-mpe-full { grid-column: 1; }
+  .sl-mpe-photo-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-mpe">
+
+  <a href="{{ url_for('mentor_dashboard') }}" class="sl-mpe-back">← Back to Dashboard</a>
+
+  <div class="sl-mpe-header">
+    <div class="sl-mpe-title">Edit My Profile</div>
+    <div class="sl-mpe-sub">This information appears on the Mentors page and your public profile.</div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data">
+
+    <div class="sl-mpe-grid">
+
+      <!-- Tier (fixed, read-only) -->
+      <div class="sl-mpe-card sl-mpe-full">
+        <div class="sl-mpe-card-title">Tier — Fixed by Admin</div>
+        <div class="sl-mpe-tier-notice">
+          <span class="sl-mpe-tier-badge badge-{{ profile.tier_class }}">{{ profile.tier_label }}</span>
+          <span class="sl-mpe-tier-note">₹{{ profile.price }} per session · {{ profile.points_cost }} points · Your tier is set by Shutter League and cannot be changed.</span>
+        </div>
+      </div>
+
+      <!-- Basic info -->
+      <div class="sl-mpe-card">
+        <div class="sl-mpe-card-title">Basic Information</div>
+        <div class="form-group">
+          <label>Display Name <span style="color:var(--red)">*</span></label>
+          <input type="text" name="display_name" value="{{ profile.display_name or '' }}" required placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label>Genres</label>
+          <input type="text" name="genres" value="{{ profile.genres or '' }}" placeholder="e.g. Street · Wildlife · Portrait">
+          <p class="hint">Separate with · (middle dot)</p>
+        </div>
+        <div class="form-group">
+          <label>Short Bio</label>
+          <textarea name="bio" rows="3" placeholder="One or two lines — shown on the mentor card.">{{ profile.bio or '' }}</textarea>
+          <p class="hint">Keep this under 150 characters.</p>
+        </div>
+      </div>
+
+      <!-- Social links -->
+      <div class="sl-mpe-card">
+        <div class="sl-mpe-card-title">Social &amp; Web</div>
+        <div class="form-group">
+          <label>Instagram URL</label>
+          <input type="url" name="instagram_url" value="{{ profile.instagram_url or '' }}" placeholder="https://instagram.com/yourhandle">
+        </div>
+        <div class="form-group">
+          <label>Website</label>
+          <input type="url" name="website_url" value="{{ profile.website_url or '' }}" placeholder="https://yourwebsite.com">
+        </div>
+        <div class="form-group">
+          <label>YouTube Channel</label>
+          <input type="url" name="youtube_url" value="{{ profile.youtube_url or '' }}" placeholder="https://youtube.com/@yourchannel">
+        </div>
+      </div>
+
+      <!-- Extended bio -->
+      <div class="sl-mpe-card sl-mpe-full">
+        <div class="sl-mpe-card-title">Extended Bio (shown on full profile)</div>
+        <div class="form-group">
+          <textarea name="bio_extended" rows="6" placeholder="Write a fuller biography — your background, achievements, approach to photography and mentoring. This appears when a photographer views your full profile.">{{ profile.bio_extended or '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- Photos -->
+      <div class="sl-mpe-card sl-mpe-full">
+        <div class="sl-mpe-card-title">Photos (Primary portrait + up to 2 portfolio shots)</div>
+        <div class="sl-mpe-photo-row">
+          <div class="sl-mpe-photo-slot">
+            <label>Primary Photo</label>
+            {% if profile.photo_url %}
+              <img src="{{ profile.photo_url }}" class="sl-mpe-photo-preview" alt="Primary photo" onerror="this.style.display='none'">
+            {% else %}
+              <div class="sl-mpe-photo-placeholder">No photo<br>uploaded</div>
+            {% endif %}
+            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp">
+          </div>
+          <div class="sl-mpe-photo-slot">
+            <label>Portfolio Photo 2</label>
+            {% if profile.photo_2_url %}
+              <img src="{{ profile.photo_2_url }}" class="sl-mpe-photo-preview" alt="Portfolio 2" onerror="this.style.display='none'">
+            {% else %}
+              <div class="sl-mpe-photo-placeholder">No photo<br>uploaded</div>
+            {% endif %}
+            <input type="file" name="photo_2" accept="image/jpeg,image/png,image/webp">
+          </div>
+          <div class="sl-mpe-photo-slot">
+            <label>Portfolio Photo 3</label>
+            {% if profile.photo_3_url %}
+              <img src="{{ profile.photo_3_url }}" class="sl-mpe-photo-preview" alt="Portfolio 3" onerror="this.style.display='none'">
+            {% else %}
+              <div class="sl-mpe-photo-placeholder">No photo<br>uploaded</div>
+            {% endif %}
+            <input type="file" name="photo_3" accept="image/jpeg,image/png,image/webp">
+          </div>
+        </div>
+        <p class="hint" style="margin-top:12px;">JPEG or PNG · Max 10MB per photo · Will be resized to 1200px automatically.</p>
+      </div>
+
+    </div>
+
+    <div style="margin-top: 24px;">
+      <button type="submit" class="sl-mpe-submit">Save Profile</button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

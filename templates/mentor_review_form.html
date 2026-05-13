@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Write Review — Mentor — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-mrf) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-mrf { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif !important; }
+.sl-mrf * { font-family: 'Inter', sans-serif !important; }
+
+.sl-mrf-back { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); text-decoration: none; margin-bottom: 28px; }
+.sl-mrf-back:hover { color: #1A1A18; }
+
+.sl-mrf-grid { display: grid; grid-template-columns: 340px 1fr; gap: 28px; max-width: 1000px; align-items: start; }
+
+/* Left: image + context */
+.sl-mrf-context { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); overflow: hidden; }
+.sl-mrf-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: #1A2744; }
+.sl-mrf-img-placeholder { width: 100%; aspect-ratio: 4/3; background: #1A2744; display: flex; align-items: center; justify-content: center; font-size: 12px; color: rgba(255,255,255,0.3); }
+.sl-mrf-ctx-body { padding: 20px; }
+.sl-mrf-ctx-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 12px; }
+.sl-mrf-ctx-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid rgba(26,26,24,0.06); }
+.sl-mrf-ctx-row:last-child { border-bottom: none; }
+.sl-mrf-ctx-key { font-size: 12px; color: rgba(26,26,24,0.45); }
+.sl-mrf-ctx-val { font-size: 13px; font-weight: 600; color: #1A1A18; text-align: right; }
+.sl-mrf-intent { background: #F7F5F2; border-left: 3px solid #F5C518; padding: 12px 14px; margin-top: 12px; }
+.sl-mrf-intent-label { font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 5px; }
+.sl-mrf-intent-text { font-size: 13px; color: #1A1A18; line-height: 1.65; text-align: justify; }
+
+/* Deadline */
+.sl-mrf-deadline { background: #EDEAE4; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(26,26,24,0.08); }
+.sl-mrf-dl-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); }
+.sl-mrf-dl-val { font-size: 14px; font-weight: 700; color: #1A1A18; }
+.sl-mrf-dl-val.urgent { color: #c0392b; }
+
+/* Right: review form */
+.sl-mrf-form-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; }
+.sl-mrf-form-title { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 6px; }
+.sl-mrf-form-subtitle { font-size: 14px; color: rgba(26,26,24,0.55); line-height: 1.6; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { font-size: 12px; font-weight: 600; color: rgba(26,26,24,0.60); display: block; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+.form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 15px; color: #1A1A18; line-height: 1.75; resize: vertical; font-family: 'Inter', sans-serif; text-align: justify; }
+.form-group textarea:focus { outline: none; border-color: #1A2744; background: #fff; }
+.form-group .hint { font-size: 12px; color: rgba(26,26,24,0.45); margin-top: 5px; line-height: 1.5; }
+
+/* Guidelines */
+.sl-mrf-guidelines { background: #F7F5F2; border: 1px solid rgba(26,26,24,0.08); padding: 16px 20px; margin-bottom: 24px; }
+.sl-mrf-gl-title { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.45); margin-bottom: 10px; }
+.sl-mrf-gl-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sl-mrf-gl-list li { font-size: 13px; color: rgba(26,26,24,0.65); line-height: 1.55; padding-left: 16px; position: relative; }
+.sl-mrf-gl-list li::before { content: '·'; position: absolute; left: 0; color: #F5C518; font-weight: 700; }
+
+.sl-mrf-submit { background: #1A2744; color: #FFFFFF; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 32px; border: none; cursor: pointer; width: 100%; }
+.sl-mrf-submit:hover { background: #243260; }
+.sl-mrf-char-count { font-size: 12px; color: rgba(26,26,24,0.40); text-align: right; margin-top: 5px; }
+.sl-mrf-char-count.ok { color: #2d7a3a; }
+
+@media (max-width: 768px) {
+  .sl-mrf { padding: 20px 16px 56px; }
+  .sl-mrf-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-mrf">
+
+  <a href="{{ url_for('mentor_dashboard') }}" class="sl-mrf-back">← Back to Dashboard</a>
+
+  <div class="sl-mrf-grid">
+
+    <!-- Left: image + context -->
+    <div>
+      <div class="sl-mrf-context">
+        {% if session.thumb_url %}
+          <img src="{{ session.thumb_url }}" class="sl-mrf-img"
+               alt="{{ session.asset_name }}"
+               onerror="this.style.display='none'">
+        {% else %}
+          <div class="sl-mrf-img-placeholder">No image preview</div>
+        {% endif %}
+
+        <div class="sl-mrf-ctx-body">
+          <div class="sl-mrf-ctx-title">Submission Details</div>
+          <div class="sl-mrf-ctx-row">
+            <span class="sl-mrf-ctx-key">Photographer</span>
+            <span class="sl-mrf-ctx-val">{{ session.full_name or session.username }}</span>
+          </div>
+          <div class="sl-mrf-ctx-row">
+            <span class="sl-mrf-ctx-key">Image</span>
+            <span class="sl-mrf-ctx-val">{{ session.asset_name or '—' }}</span>
+          </div>
+          <div class="sl-mrf-ctx-row">
+            <span class="sl-mrf-ctx-key">Genre</span>
+            <span class="sl-mrf-ctx-val">{{ session.genre or '—' }}</span>
+          </div>
+          <div class="sl-mrf-ctx-row">
+            <span class="sl-mrf-ctx-key">DDI Score</span>
+            <span class="sl-mrf-ctx-val">{{ "%.2f"|format(session.score) if session.score else '—' }} — {{ session.tier or '' }}</span>
+          </div>
+          {% if session.improvement_note %}
+          <div class="sl-mrf-ctx-row">
+            <span class="sl-mrf-ctx-key">AI Improvement Note</span>
+            <span class="sl-mrf-ctx-val" style="font-size:12px;font-weight:400;max-width:160px;text-align:right;line-height:1.5;">{{ session.improvement_note }}</span>
+          </div>
+          {% endif %}
+
+          <div class="sl-mrf-intent">
+            <div class="sl-mrf-intent-label">What they want feedback on</div>
+            <div class="sl-mrf-intent-text">{{ session.intent }}</div>
+          </div>
+        </div>
+
+        <div class="sl-mrf-deadline">
+          <span class="sl-mrf-dl-label">Deadline</span>
+          <span class="sl-mrf-dl-val">
+            {{ session.deadline_at.strftime('%d %b %Y, %H:%M UTC') if session.deadline_at else '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: review form -->
+    <div class="sl-mrf-form-card">
+      <div class="sl-mrf-form-title">Your Review</div>
+      <div class="sl-mrf-form-subtitle">Write a structured, honest review. Address what they asked for. Be specific.</div>
+
+      <div class="sl-mrf-guidelines">
+        <div class="sl-mrf-gl-title">Review Guidelines</div>
+        <ul class="sl-mrf-gl-list">
+          <li>Address the photographer's specific question or intent directly</li>
+          <li>Acknowledge what works — be specific about strengths</li>
+          <li>Give one or two concrete, actionable improvements</li>
+          <li>Reference the DDI score if relevant — help them understand why</li>
+          <li>Keep tone constructive — honest, not harsh</li>
+          <li>Minimum 50 characters · Recommended 200–500 words</li>
+        </ul>
+      </div>
+
+      <form method="POST">
+        <div class="form-group">
+          <label>Review <span style="color:var(--red)">*</span></label>
+          <textarea name="review_text" id="reviewText" rows="16"
+                    placeholder="Write your full review here. Be specific, honest, and constructive. Address what the photographer asked for, acknowledge strengths, and give clear improvements they can act on."
+                    required minlength="50">{{ request.form.get('review_text', '') }}</textarea>
+          <div class="sl-mrf-char-count" id="charCount">0 characters</div>
+          <p class="hint">Your review will be emailed to the photographer immediately on submission.</p>
+        </div>
+        <button type="submit" class="sl-mrf-submit">Submit Review &amp; Notify Photographer</button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var ta = document.getElementById('reviewText');
+var cc = document.getElementById('charCount');
+if (ta && cc) {
+  function updateCount() {
+    var n = ta.value.length;
+    cc.textContent = n + ' character' + (n !== 1 ? 's' : '');
+    cc.className = 'sl-mrf-char-count' + (n >= 50 ? ' ok' : '');
+  }
+  ta.addEventListener('input', updateCount);
+  updateCount();
+}
+</script>
+{% endblock %}

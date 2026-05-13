@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Mentor Dashboard — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-md) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-md { background: #F7F5F2; min-height: 100vh; font-family: 'Inter', sans-serif !important; }
+.sl-md * { font-family: 'Inter', sans-serif !important; }
+
+/* Header bar */
+.sl-md-header { background: #1A2744; padding: 28px 48px 24px; }
+.sl-md-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #F5C518; margin-bottom: 6px; }
+.sl-md-name { font-size: 26px; font-weight: 700; color: #FFFFFF; }
+.sl-md-tier { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+.sl-md-header-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.sl-md-btn-outline { display: inline-block; background: transparent; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 18px; border: 1px solid rgba(255,255,255,0.35); text-decoration: none; cursor: pointer; }
+.sl-md-btn-outline:hover { border-color: rgba(255,255,255,0.70); }
+
+/* Stats row */
+.sl-md-stats { background: #EDEAE4; padding: 20px 48px; display: flex; gap: 40px; border-bottom: 1px solid rgba(26,26,24,0.08); flex-wrap: wrap; }
+.sl-md-stat { display: flex; flex-direction: column; gap: 3px; }
+.sl-md-stat-val { font-size: 24px; font-weight: 700; color: #1A1A18; line-height: 1; }
+.sl-md-stat-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); }
+
+/* Section */
+.sl-md-sec { padding: 36px 48px; max-width: 1080px; margin: 0 auto; }
+.sl-md-sec-title { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(26,26,24,0.08); }
+
+/* Session cards — pending */
+.sl-md-session-list { display: flex; flex-direction: column; gap: 16px; }
+.sl-md-session { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 20px 24px; display: grid; grid-template-columns: 80px 1fr auto; gap: 20px; align-items: start; }
+.sl-md-session-img { width: 80px; height: 80px; object-fit: cover; background: #EDEAE4; flex-shrink: 0; }
+.sl-md-session-meta { }
+.sl-md-session-name { font-size: 15px; font-weight: 700; color: #1A1A18; margin-bottom: 4px; }
+.sl-md-session-detail { font-size: 13px; color: rgba(26,26,24,0.55); line-height: 1.5; margin-bottom: 8px; }
+.sl-md-session-intent { font-size: 13px; color: #1A1A18; line-height: 1.6; background: #F7F5F2; padding: 10px 14px; border-left: 3px solid #F5C518; }
+.sl-md-session-intent-label { font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 4px; }
+.sl-md-deadline { font-size: 12px; font-weight: 700; text-align: right; }
+.sl-md-deadline.urgent { color: #c0392b; }
+.sl-md-deadline.ok { color: #2d7a3a; }
+.sl-md-deadline-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.40); display: block; margin-bottom: 4px; }
+
+.sl-md-review-btn { display: inline-block; background: #1A2744; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 18px; text-decoration: none; margin-top: 10px; white-space: nowrap; }
+.sl-md-review-btn:hover { background: #243260; }
+
+/* Completed sessions table */
+.sl-md-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sl-md-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(26,26,24,0.10); }
+.sl-md-table td { padding: 10px 12px; border-bottom: 0.5px solid rgba(26,26,24,0.07); color: #1A1A18; vertical-align: middle; }
+.sl-md-table tr:last-child td { border-bottom: none; }
+.sl-md-table tr:hover td { background: rgba(26,26,24,0.02); }
+
+.sl-md-empty { font-size: 14px; color: rgba(26,26,24,0.35); padding: 24px 0; }
+
+@media (max-width: 768px) {
+  .sl-md-header { padding: 20px 16px; }
+  .sl-md-stats { padding: 16px; gap: 24px; }
+  .sl-md-sec { padding: 24px 16px; }
+  .sl-md-session { grid-template-columns: 60px 1fr; }
+  .sl-md-deadline { grid-column: 1 / -1; text-align: left; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-md">
+
+  <div class="sl-md-header">
+    <div class="sl-md-eyebrow">Mentor Dashboard</div>
+    <div class="sl-md-name">{{ profile.display_name if profile else current_user.full_name or current_user.username }}</div>
+    <div class="sl-md-tier">{{ profile.tier_label if profile else '—' }}</div>
+    <div class="sl-md-header-actions">
+      <a href="{{ url_for('mentor_profile_edit') }}" class="sl-md-btn-outline">Edit My Profile</a>
+    </div>
+  </div>
+
+  <div class="sl-md-stats">
+    <div class="sl-md-stat">
+      <div class="sl-md-stat-val">{{ pending|length }}</div>
+      <div class="sl-md-stat-lbl">Pending Reviews</div>
+    </div>
+    <div class="sl-md-stat">
+      <div class="sl-md-stat-val">{{ completed|length }}</div>
+      <div class="sl-md-stat-lbl">Reviews Delivered</div>
+    </div>
+    <div class="sl-md-stat">
+      <div class="sl-md-stat-val">
+        {% if profile %}
+          {% if profile.instagram_url or profile.website_url %}✓{% else %}—{% endif %}
+        {% else %}—{% endif %}
+      </div>
+      <div class="sl-md-stat-lbl">Profile Complete</div>
+    </div>
+  </div>
+
+  <!-- Pending sessions -->
+  <div class="sl-md-sec">
+    <div class="sl-md-sec-title">Pending Reviews ({{ pending|length }})</div>
+    {% if pending %}
+    <div class="sl-md-session-list">
+      {% for s in pending %}
+      {% set now_utc = namespace(h=0) %}
+      <div class="sl-md-session">
+        {% if s.thumb_url %}
+          <img src="{{ s.thumb_url }}" class="sl-md-session-img" alt="{{ s.asset_name }}" onerror="this.style.display='none'">
+        {% else %}
+          <div class="sl-md-session-img"></div>
+        {% endif %}
+        <div class="sl-md-session-meta">
+          <div class="sl-md-session-name">{{ s.full_name or s.username }}</div>
+          <div class="sl-md-session-detail">
+            {{ s.genre or 'Photography' }} &nbsp;·&nbsp; Score: {{ "%.2f"|format(s.score) if s.score else '—' }} &nbsp;·&nbsp; {{ s.tier or '—' }}
+          </div>
+          <div class="sl-md-session-intent-label">What they want feedback on</div>
+          <div class="sl-md-session-intent">{{ s.intent }}</div>
+          <a href="{{ url_for('mentor_review_session', session_id=s.id) }}" class="sl-md-review-btn">
+            Write Review →
+          </a>
+        </div>
+        <div class="sl-md-deadline">
+          <span class="sl-md-deadline-label">Deadline</span>
+          {% if s.deadline_at %}
+            <span class="{{ 'urgent' if (s.deadline_at - now()) < timedelta(hours=24) else 'ok' }}">
+              {{ s.deadline_at.strftime('%d %b, %H:%M') }}
+            </span>
+          {% else %}
+            <span>—</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="sl-md-empty">No pending reviews. New sessions will appear here when photographers book you.</p>
+    {% endif %}
+  </div>
+
+  <!-- Completed sessions -->
+  {% if completed %}
+  <div class="sl-md-sec" style="padding-top: 0;">
+    <div class="sl-md-sec-title">Completed Reviews</div>
+    <table class="sl-md-table">
+      <thead>
+        <tr>
+          <th>Photographer</th>
+          <th>Image</th>
+          <th>Genre</th>
+          <th>Reviewed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in completed %}
+        <tr>
+          <td>{{ s.full_name or s.username }}</td>
+          <td>{{ s.asset_name or '—' }}</td>
+          <td>{{ s.genre or '—' }}</td>
+          <td>{{ s.reviewed_at.strftime('%d %b %Y') if s.reviewed_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

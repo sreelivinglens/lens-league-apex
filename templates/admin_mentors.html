@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Mentor Management — Admin — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-ment-admin) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-ment-admin { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif; }
+.sl-ment-admin * { font-family: 'Inter', sans-serif; }
+
+.sl-ma-back { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); text-decoration: none; margin-bottom: 28px; }
+.sl-ma-back:hover { color: #1A1A18; }
+
+.sl-ma-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid rgba(26,26,24,0.10); }
+.sl-ma-title { font-size: 26px; font-weight: 700; color: #1A1A18; }
+.sl-ma-sub { font-size: 14px; color: rgba(26,26,24,0.50); margin-top: 4px; }
+
+/* Create form */
+.sl-ma-create { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; margin-bottom: 32px; }
+.sl-ma-create-title { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 20px; }
+.sl-ma-create-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; align-items: end; }
+.form-group label { font-size: 12px; font-weight: 600; color: rgba(26,26,24,0.60); display: block; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+.form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 14px; color: #1A1A18; font-family: 'Inter', sans-serif; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #1A2744; background: #fff; }
+
+/* Mentor cards */
+.sl-ma-cards { display: flex; flex-direction: column; gap: 20px; }
+.sl-ma-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; }
+.sl-ma-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 0.5px solid rgba(26,26,24,0.08); }
+.sl-ma-card-left { display: flex; align-items: center; gap: 16px; }
+.sl-ma-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #EDEAE4; flex-shrink: 0; }
+.sl-ma-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; background: #EDEAE4; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: rgba(26,26,24,0.30); flex-shrink: 0; }
+.sl-ma-name { font-size: 18px; font-weight: 700; color: #1A1A18; }
+.sl-ma-slug { font-size: 12px; color: rgba(26,26,24,0.45); font-family: monospace; margin-top: 2px; }
+.sl-ma-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.sl-ma-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; }
+.badge-legend { background: #f0e8f8; color: #5b2d8a; }
+.badge-expert  { background: #e0f0f8; color: #1a5f7a; }
+.badge-senior  { background: #e0f4e8; color: #2d7a3a; }
+.badge-active  { background: #e8f5ec; color: #2d7a3a; }
+.badge-inactive{ background: #fde8e8; color: #c0392b; }
+.badge-linked  { background: #e8edf8; color: #1A2744; }
+.badge-unlinked{ background: #f5f0e8; color: rgba(26,26,24,0.55); }
+.badge-onboarded { background: #fff8e1; color: #b8700a; }
+
+.sl-ma-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.sl-ma-info-item { }
+.sl-ma-info-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 3px; }
+.sl-ma-info-val { font-size: 14px; font-weight: 600; color: #1A1A18; }
+.sl-ma-info-val.missing { color: rgba(26,26,24,0.30); font-weight: 400; font-style: italic; }
+
+.sl-ma-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-top: 0.5px solid rgba(26,26,24,0.08); padding-top: 16px; }
+.sl-ma-link-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sl-ma-link-form select { padding: 6px 10px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 13px; color: #1A1A18; font-family: 'Inter', sans-serif; min-width: 200px; }
+
+.btn-sm { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 14px; border: none; cursor: pointer; white-space: nowrap; }
+.btn-primary { background: #1A2744; color: #FFFFFF; }
+.btn-primary:hover { background: #243260; }
+.btn-gold { background: #F5C518; color: #FFFFFF; }
+.btn-gold:hover { opacity: 0.88; }
+.btn-danger { background: rgba(220,50,50,.12); color: #c0392b; border: 1px solid rgba(220,50,50,.25); }
+.btn-muted { background: #F7F5F2; color: rgba(26,26,24,0.55); border: 1px solid rgba(26,26,24,0.15); }
+.btn-muted:hover { background: #EDEAE4; }
+
+.sl-ma-empty { text-align: center; padding: 48px; color: rgba(26,26,24,0.35); font-size: 15px; background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.08); }
+
+@media (max-width: 768px) {
+  .sl-ment-admin { padding: 20px 16px 56px; }
+  .sl-ma-create-grid { grid-template-columns: 1fr; }
+  .sl-ma-info-grid { grid-template-columns: 1fr 1fr; }
+  .sl-ma-card-header { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-ment-admin">
+
+  <a href="{{ url_for('admin_dashboard') }}" class="sl-ma-back">← Back to Admin</a>
+
+  <div class="sl-ma-header">
+    <div>
+      <div class="sl-ma-title">Mentor Management</div>
+      <div class="sl-ma-sub">Create mentor profiles · Link user accounts · Manage tiers</div>
+    </div>
+  </div>
+
+  <!-- Create new mentor -->
+  <div class="sl-ma-create">
+    <div class="sl-ma-create-title">Create New Mentor Profile</div>
+    <form method="POST" action="{{ url_for('admin_mentor_create') }}">
+      <div class="sl-ma-create-grid">
+        <div class="form-group">
+          <label>Slug (unique ID)</label>
+          <input type="text" name="slug" placeholder="e.g. ashok" required pattern="[a-z0-9_-]+">
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" name="display_name" placeholder="e.g. Ashok Kochhar" required>
+        </div>
+        <div class="form-group">
+          <label>Tier</label>
+          <select name="tier_class">
+            {% for tc, tl, price, pts in tier_options %}
+            <option value="{{ tc }}">{{ tl }} — ₹{{ price }} / {{ pts }} pts</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="btn-sm btn-primary" style="width:100%;padding:10px 14px;">Create Profile</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Existing profiles -->
+  {% if profiles %}
+  <div class="sl-ma-cards">
+    {% for p in profiles %}
+    <div class="sl-ma-card">
+      <div class="sl-ma-card-header">
+        <div class="sl-ma-card-left">
+          {% if p.photo_url %}
+            <img src="{{ p.photo_url }}" class="sl-ma-photo" alt="{{ p.display_name }}" onerror="this.style.display='none'">
+          {% else %}
+            <div class="sl-ma-photo-placeholder">{{ (p.display_name or p.slug or '?')[0].upper() }}</div>
+          {% endif %}
+          <div>
+            <div class="sl-ma-name">{{ p.display_name or p.slug }}</div>
+            <div class="sl-ma-slug">slug: {{ p.slug }}</div>
+            <div class="sl-ma-badges">
+              <span class="sl-ma-badge badge-{{ p.tier_class }}">{{ p.tier_label }}</span>
+              {% if p.is_active %}
+                <span class="sl-ma-badge badge-active">Active</span>
+              {% else %}
+                <span class="sl-ma-badge badge-inactive">Inactive</span>
+              {% endif %}
+              {% if p.user_id %}
+                <span class="sl-ma-badge badge-linked">Linked</span>
+              {% else %}
+                <span class="sl-ma-badge badge-unlinked">Not linked</span>
+              {% endif %}
+              {% if p.onboarding_complete %}
+                <span class="sl-ma-badge badge-onboarded">Profile complete</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+          <form method="POST" action="{{ url_for('admin_mentor_toggle_active', slug=p.slug) }}">
+            <button type="submit" class="btn-sm btn-muted">
+              {{ 'Deactivate' if p.is_active else 'Activate' }}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="sl-ma-info-grid">
+        <div class="sl-ma-info-item">
+          <div class="sl-ma-info-label">Price</div>
+          <div class="sl-ma-info-val">₹{{ p.price }} / {{ p.points_cost }} pts</div>
+        </div>
+        <div class="sl-ma-info-item">
+          <div class="sl-ma-info-label">Linked User</div>
+          <div class="sl-ma-info-val {% if not p.user_id %}missing{% endif %}">
+            {{ p.user_email if p.user_id else 'Not linked' }}
+          </div>
+        </div>
+        <div class="sl-ma-info-item">
+          <div class="sl-ma-info-label">Social</div>
+          <div class="sl-ma-info-val {% if not p.instagram_url and not p.website_url %}missing{% endif %}">
+            {% if p.instagram_url %}Instagram ✓{% endif %}
+            {% if p.website_url %} · Web ✓{% endif %}
+            {% if p.youtube_url %} · YT ✓{% endif %}
+            {% if not p.instagram_url and not p.website_url and not p.youtube_url %}Not set{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="sl-ma-actions">
+        {% if p.user_id %}
+          <form method="POST" action="{{ url_for('admin_mentor_unlink_user', slug=p.slug) }}"
+                onsubmit="return confirm('Unlink this user from mentor profile?')">
+            <button type="submit" class="btn-sm btn-danger">Unlink User</button>
+          </form>
+        {% else %}
+          <form class="sl-ma-link-form" method="POST" action="{{ url_for('admin_mentor_link_user', slug=p.slug) }}">
+            <select name="user_id" required>
+              <option value="" disabled selected>Select user to link…</option>
+              {% for m in members %}
+              <option value="{{ m.id }}">{{ m.full_name or m.username }} — {{ m.email }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn-sm btn-gold">Link as Mentor</button>
+          </form>
+        {% endif %}
+        <span style="font-size:12px;color:rgba(26,26,24,0.40);">
+          Updated: {{ p.updated_at.strftime('%d %b %Y') if p.updated_at else '—' }}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sl-ma-empty">No mentor profiles yet. Create one above.</div>
+  {% endif %}
+
+</div>
+{% endblock %}
