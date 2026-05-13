@@ -6829,7 +6829,7 @@ def admin_weekly_challenge():
 
 
 # ---------------------------------------------------------------------------
-# Razorpay subscription
+# Payment subscription
 # ---------------------------------------------------------------------------
 
 @app.route('/subscribe/<track>', methods=['GET', 'POST'])
@@ -6914,7 +6914,7 @@ def subscribe(track):
             return redirect(url_for('subscribe', track=track, plan=plan))
 
     # GET  -  Payment gateway finalisation in progress
-    # Razorpay/PayU onboarding pending — show coming soon wall
+    # Payment gateway onboarding pending — show coming soon wall
     # Once gateway is confirmed, remove this block and restore subscription creation below
     PAYMENT_GATEWAY_LIVE = os.getenv('PAYMENT_GATEWAY_LIVE', '0') == '1'
     if not PAYMENT_GATEWAY_LIVE:
@@ -6936,7 +6936,7 @@ def subscribe(track):
             track_description=track_descriptions.get(track, ''),
         )
 
-    # GET  -  create Razorpay subscription (live when PAYMENT_GATEWAY_LIVE=1)
+    # GET  -  create payment subscription (live when PAYMENT_GATEWAY_LIVE=1)
     subscription = None
     if razorpay_key and plan_id:
         try:
@@ -7020,8 +7020,8 @@ def razorpay_webhook():
 def cancel_subscription():
     """
     GET   -  confirmation page (user must confirm before cancelling)
-    POST  -  actually cancel: call Razorpay API, clear DB fields, redirect to dashboard
-    RBI / Razorpay compliance: user must be able to self-cancel without contacting support.
+    POST  -  actually cancel: call payment gateway API, clear DB fields, redirect to dashboard
+    RBI compliance: user must be able to self-cancel without contacting support.
     """
     if request.method == 'GET':
         return render_template('cancel_subscription.html')
@@ -7031,16 +7031,16 @@ def cancel_subscription():
     razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET', '')
     sub_id          = current_user.razorpay_sub_id
 
-    # Cancel on Razorpay's end if we have a live subscription ID
+    # Cancel on payment gateway end if we have a live subscription ID
     if sub_id and razorpay_key:
         try:
             import razorpay as _rz
             client = _rz.Client(auth=(razorpay_key, razorpay_secret))
             # cancel_at_cycle_end=1 means access continues until end of paid period
             client.subscription.cancel(sub_id, {'cancel_at_cycle_end': 1})
-            app.logger.info(f'[cancel] Razorpay subscription {sub_id} cancelled for user {current_user.id}')
+            app.logger.info(f'[cancel] Payment subscription {sub_id} cancelled for user {current_user.id}')
         except Exception as e:
-            app.logger.error(f'[cancel] Razorpay cancel failed for {sub_id}: {e}')
+            app.logger.error(f'[cancel] Payment subscription cancel failed for {sub_id}: {e}')
             # Still cancel locally  -  don't leave user stuck
             flash('Your subscription has been cancelled. If you continue to be charged, contact '+CONTACT_EMAIL+'.', 'warning')
 
@@ -7631,16 +7631,16 @@ def admin_contests():
                 'brand_judging':  'judging',
                 'brand_publish':  'results_published',
             }
-            # ── PayU compliance gate: block activation if cash prize_value set
+            # ── Payment compliance gate: block activation if cash prize_value set
             # without explicit compliance acknowledgement.
-            # Monetary prizes require PayU Promotional Contests category approval.
+            # Monetary prizes require payment gateway Promotional Contests category approval.
             if action == 'brand_activate':
                 prize_val = getattr(bc, 'prize_value', None)
                 payu_ack  = request.form.get('payu_prize_compliance_ack') == '1'
                 if prize_val and not payu_ack:
                     flash(
                         f'Brand programme "{bc.title}" has a monetary award value set (₹{prize_val}). '
-                        'Programmes with cash awards require PayU Promotional Programmes category approval '
+                        'Programmes with cash awards require payment gateway Promotional Programmes category approval '
                         'before going live. Check the compliance acknowledgement box to proceed.',
                         'error'
                     )
