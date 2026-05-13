@@ -1,333 +1,191 @@
 {% extends "base.html" %}
-{% block title %}Terms & Conditions — {{ platform_name }}{% endblock %}
+{% block title %}Terms &amp; Conditions — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
-  :root {
-    --gold:           #F5C518 !important;
-    --gold-light:     #F5C518 !important;
-    --gold-dark:      #F5C518 !important;
-    --gold-subtle:    rgba(245,197,24,0.12) !important;
-    --gold-glow:      rgba(245,197,24,0.22) !important;
-    --text-secondary: var(--text-primary) !important;
-    --text-muted:     var(--text-primary) !important;
-    --text-disabled:  #888888 !important;
+  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
+  .policy-hero { margin-bottom:48px; }
+  .policy-hero h1 { font-size:36px; font-weight:800; color:var(--text-primary); margin-bottom:12px; }
+  .policy-hero p  { font-size:18px; color:var(--text-muted); line-height:1.6; }
+  .policy-section { margin-bottom:40px; }
+  .policy-section h2 { font-size:22px; font-weight:700; color:#2C3E6B; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .policy-section p  { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:14px; }
+  .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section ul li { margin-bottom:8px; }
+  .policy-section ol { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section ol li { margin-bottom:8px; }
+  /* Warning box — used for prohibited content and liability sections */
+  .policy-alert { background:#FFF8EC; border:1px solid #E8C84A; border-left:4px solid #F5C518; border-radius:8px; padding:18px 22px; margin-bottom:22px; }
+  .policy-alert p { margin-bottom:8px; font-size:16px; color:var(--text-primary); line-height:1.75; }
+  .policy-alert p:last-child { margin-bottom:0; }
+  .policy-alert strong { color:#1A1A18; }
+  /* Liability box — slate */
+  .policy-slate { background:#1A2744; border-radius:8px; padding:22px 26px; margin-bottom:22px; }
+  .policy-slate p { font-size:16px; color:rgba(255,255,255,0.78); line-height:1.75; margin-bottom:12px; }
+  .policy-slate p:last-child { margin-bottom:0; }
+  .policy-slate strong { color:#FFFFFF; }
+  .policy-slate .slate-label { font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#F5C518; margin-bottom:10px; display:block; }
+  /* Consent callout */
+  .policy-consent { background:#F0F4FA; border:1px solid #C5D3E8; border-radius:8px; padding:18px 22px; margin-bottom:22px; }
+  .policy-consent p { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:8px; }
+  .policy-consent p:last-child { margin-bottom:0; }
+  .policy-consent strong { color:#2C3E6B; }
+  .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .policy-links a { font-size:16px; color:#2C3E6B; text-decoration:none; }
+  .policy-links a:hover { text-decoration:underline; }
+  @media (max-width:600px) {
+    .policy-hero h1 { font-size:28px; }
+    .policy-alert, .policy-slate, .policy-consent { padding:14px 16px; }
   }
-
-  .terms-wrap { max-width: 760px; margin: 0 auto; }
-  .terms-section { margin-bottom: 40px; }
-  .terms-section h2 {
-    font-size: 18px; font-weight: 700; color: var(--text-primary);
-    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-  }
-  .terms-section h2 span {
-    font-family: var(--font-mono); font-size: 16px;
-    color: #2C3E6B; margin-right: 10px; font-weight: 600;
-  }
-  .terms-section h3 {
-    font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 20px 0 10px;
-  }
-  .terms-section p {
-    font-size: 16px; color: var(--text-primary); line-height: 1.8; margin-bottom: 12px;
-  }
-  .terms-section ul, .terms-section ol {
-    padding-left: 22px; margin-bottom: 12px;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .terms-section li { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-  .terms-section strong { color: var(--text-primary); }
-  .terms-highlight {
-    background: var(--surface-3); border: 1px solid var(--border);
-    border-left: 3px solid var(--gold-dark);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: 16px 20px; margin: 16px 0;
-    font-size: 16px; color: var(--text-primary); line-height: 1.7;
-  }
-  .terms-highlight strong { color: #2C3E6B; }
-  .terms-highlight.ip { border-left-color: var(--gold); background: rgba(245,197,24,0.15); }
-  .terms-highlight.legal { border-left-color: var(--red); background: rgba(224,85,85,0.05); }
-  .terms-highlight.warning { border-left-color: var(--amber); background: rgba(224,153,64,0.06); }
-  .toc {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 24px; margin-bottom: 40px;
-  }
-  .toc-title {
-    font-family: var(--font-mono); font-size: 16px; font-weight: 600;
-  }
-  .toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
-  .toc li { font-size: 16px; }
-  .toc a { color: var(--text-primary); text-decoration: none; transition: color 0.2s; }
-  .toc a:hover { color: #2C3E6B; }
 </style>
 {% endblock %}
+
 {% block content %}
-<div class="terms-wrap">
+<div class="policy-wrap">
 
-  <div class="page-header">
+  <div class="policy-hero">
     <h1>Terms &amp; Conditions</h1>
-    <p>Last updated: April 2026 &nbsp;·&nbsp; {{ platform_name }}</p>
+    <p>Please read these Terms and Conditions carefully before using Shutter League. By registering, uploading any image, or using any feature of the platform, you agree to be bound by these Terms in their entirety.</p>
   </div>
 
-  <div class="terms-highlight legal">
-    <strong>Legal Notice:</strong> By registering an account or uploading any image to {{ platform_name }}, you agree to be bound by these Terms &amp; Conditions in full. If you do not agree, do not use the platform.
+  <!-- ── 1. ACCEPTANCE ──────────────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>1. Acceptance of Terms</h2>
+    <p>These Terms and Conditions ("Terms") govern your access to and use of the Shutter League platform, including the website at <a href="https://shutterleague.com" style="color:#2C3E6B;">shutterleague.com</a>, all associated mobile applications, and all services provided thereunder (collectively, the "Platform").</p>
+    <p>By creating an account, uploading any content, or making any payment, you confirm that you are at least 18 years of age, have read and understood these Terms, and agree to be bound by them. If you do not agree, do not use the Platform.</p>
+    <p>Shutter League reserves the right to amend these Terms at any time. Continued use of the Platform after any amendment constitutes acceptance of the revised Terms.</p>
   </div>
 
-  <div class="toc">
-    <div class="toc-title">Contents</div>
+  <!-- ── 2. PLATFORM DESCRIPTION ───────────────────────────────── -->
+  <div class="policy-section">
+    <h2>2. Platform Description</h2>
+    <p>Shutter League is a digital photography skill assessment platform. All services provided are digital in nature and include AI-powered image scoring, feedback, progress tracking, and access to structured photography programmes. No physical goods are sold or shipped.</p>
+    <p>The Platform uses the Dimensional Depth Index (DDI) engine to evaluate photographs across five dimensions: Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are generated programmatically and are not expressions of personal opinion.</p>
+  </div>
+
+  <!-- ── 3. PROHIBITED CONTENT ─────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>3. Prohibited Content — Image Upload Policy</h2>
+
+    <div class="policy-alert">
+      <p><strong>By uploading any image to Shutter League, you expressly confirm that the image does not fall into any prohibited category listed below.</strong> Violation of this policy will result in immediate removal of the content, permanent suspension of your account, and may result in reporting to law enforcement authorities where required by law.</p>
+    </div>
+
+    <p>The following categories of content are <strong>strictly prohibited</strong> on the Platform under any circumstances:</p>
+
+    <ul>
+      <li><strong>Nudity and sexually explicit material</strong> — Any image containing full or partial nudity, sexually suggestive content, or pornographic material of any kind, regardless of claimed artistic intent.</li>
+      <li><strong>Child sexual abuse material (CSAM)</strong> — Any image that sexualises, exploits, or endangers a minor in any way. This is an absolute prohibition. Shutter League will report any such content to the Cyber Crime Cell of India, the National Centre for Missing &amp; Exploited Children (NCMEC), and any other applicable law enforcement authority without prior notice to the uploader.</li>
+      <li><strong>Child trafficking or exploitation</strong> — Any image that depicts, facilitates, promotes, or is associated with the trafficking, abuse, or exploitation of children.</li>
+      <li><strong>Derogatory or hate content</strong> — Any image that demeans, degrades, or dehumanises individuals or groups on the basis of religion, caste, ethnicity, nationality, gender, sexual orientation, disability, or any other protected characteristic.</li>
+      <li><strong>Content offensive to religious sentiments</strong> — Any image that intentionally mocks, desecrates, or is designed to cause offence to the religious beliefs, symbols, or practices of any community. This includes but is not limited to depictions that violate provisions of Sections 153A and 295A of the Indian Penal Code.</li>
+      <li><strong>Violence and graphic content</strong> — Any image depicting graphic violence, gore, torture, mutilation, or the aftermath of violent acts.</li>
+      <li><strong>Illegal content</strong> — Any image that depicts, promotes, or facilitates any activity that is illegal under Indian law or the laws of the jurisdiction from which the image is uploaded.</li>
+      <li><strong>Non-consensual intimate imagery</strong> — Any image depicting a person in an intimate context without their explicit consent, including images obtained through surveillance, voyeurism, or interception.</li>
+    </ul>
+
+    <p>Shutter League uses both automated and human moderation. Users may report prohibited content at any time by using the Report function on any image or by writing to <a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a>. All reports are reviewed within 48 hours.</p>
+  </div>
+
+  <!-- ── 4. MODEL CONSENT ───────────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>4. Model Consent and Release — Programme Submissions</h2>
+
+    <div class="policy-consent">
+      <p><strong>Where an image submitted to any Shutter League programme — including the Photographer of the Year (POTY), Body of Work (BOW), Weekly Challenges, Juried Programmes, or Brand Programmes — contains an identifiable person, the uploader is solely responsible for having obtained the written consent of that person (or their legal guardian if a minor) prior to submission.</strong></p>
+    </div>
+
+    <p>By submitting any image containing an identifiable person to any Shutter League programme, you represent and warrant that:</p>
+
     <ol>
-      <li><a href="#definitions">Definitions</a></li>
-      <li><a href="#eligibility">Eligibility &amp; Account</a></li>
-      <li><a href="#subscriptions">Subscriptions &amp; Payments</a></li>
-      <li><a href="#scoring">DDI Scoring Engine</a></li>
-      <li><a href="#ip">Intellectual Property</a></li>
-      <li><a href="#content">User Content &amp; Conduct</a></li>
-      <li><a href="#raw">RAW Verification</a></li>
-      <li><a href="#contests">Programme Participation</a></li>
-      <li><a href="#peer">Peer Rating System</a></li>
-      <li><a href="#liability">Limitation of Liability</a></li>
-      <li><a href="#termination">Termination</a></li>
-      <li><a href="#disputes">Disputes &amp; Governing Law</a></li>
-      <li><a href="#amendments">Amendments</a></li>
-      <li><a href="#payments-security">Payments &amp; Card Security</a></li>
-      <li><a href="#prohibited-use">Prohibited Use &amp; Anti-Fraud</a></li>
-      <li><a href="#grievance">Grievance Redressal</a></li>
+      <li>You have obtained a valid written model release or consent from every identifiable person depicted in the image, granting permission for the image to be displayed, evaluated, and published on the Platform and in any associated communications.</li>
+      <li>Where the subject is under 18 years of age, written consent has been obtained from a parent or legal guardian.</li>
+      <li>No model depicted in the image has subsequently revoked their consent.</li>
+      <li>The consent obtained covers use of the image for photographic skill assessment, publication on the Shutter League platform, and inclusion in programme-related communications and promotional materials.</li>
     </ol>
+
+    <p>Shutter League does not require you to submit model release documents at the time of upload but reserves the right to request proof of model consent for any image at any time, including after publication. Failure to produce such documentation within 7 days of a request will result in removal of the image from all programmes and, where applicable, disqualification from programme standings.</p>
+
+    <p>Images uploaded solely for personal DDI scoring (outside of any programme entry) are not subject to mandatory model consent requirements but must still comply with all other provisions of these Terms, including the Prohibited Content policy in Section 3.</p>
   </div>
 
-  <!-- 1 -->
-    <details class="sl-accordion" open id="nature-of-services">
-      <summary class="sl-accordion-trigger">00 — Nature of Services <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>Shutter League is a software-as-a-service (SaaS) platform providing AI-powered photography skill assessment tools as a digital subscription service. Subscribers pay a recurring fee for access to platform features including automated image scoring, dimensional analysis, personalised improvement recommendations, and community rankings.</p>
-    <p>The subscription fee represents payment for software tool access only. No physical goods are delivered. No element of chance determines subscription value or scoring outcomes — all assessments are produced by a deterministic AI scoring engine applied uniformly to all submissions.</p>
-    <p>The term &#39;League&#39; in the Shutter League name refers to the platform&#39;s tiered skill progression system (Rookie through Legend) and does not indicate a gaming, wagering, or chance-based activity of any kind. Photography Programmes available on the platform are skill-based juried evaluations, not lotteries or contests of chance.</p>
-        </div>
-    </details>
+  <!-- ── 5. PLATFORM LIABILITY ──────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>5. Platform Liability — User-Generated Content</h2>
 
-<details class="sl-accordion" id="definitions">
-      <summary class="sl-accordion-trigger">01 — Definitions <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p><strong>"{{ platform_name }}"</strong> refers to the photography scoring and learning platform operated from Bengaluru, India, accessible at this domain.</p>
-    <p><strong>"Member"</strong> means any registered user of the platform, whether on a free or paid subscription.</p>
-    <p><strong>"DDI Score"</strong> means the numerical score generated by the Apex DDI Engine for a submitted image, reflecting assessment across multiple photographic dimensions.</p>
-    <p><strong>"Subscription"</strong> means a paid Camera League (₹199/month or ₹1,999/year) or Mobile League (₹99/month or ₹999/year) plan.</p>
-    <p><strong>"Content"</strong> means any image, text, metadata, or other material uploaded or submitted by a Member.</p>
-        </div>
-    </details>
-
-  <!-- 2 -->
-  <details class="sl-accordion" id="eligibility">
-      <summary class="sl-accordion-trigger">02 — Eligibility &amp; Account <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <ul>
-      <li>You must be 18 years of age or older to register. By registering, you confirm you meet this requirement.</li>
-      <li>You are responsible for maintaining the confidentiality of your login credentials. You are liable for all activity conducted under your account.</li>
-      <li>Each person may hold only one account. Multiple accounts created for competitive advantage will result in permanent suspension of all associated accounts.</li>
-      <li>You must provide accurate information during registration. {{ platform_name }} reserves the right to suspend accounts where information is found to be false.</li>
-    </ul>
-        </div>
-    </details>
-
-  <!-- 3 -->
-  <details class="sl-accordion" id="subscriptions">
-      <summary class="sl-accordion-trigger">03 — Subscriptions &amp; Payments <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>Subscriptions are billed in advance via our payment gateway provider. By subscribing, you authorise {{ platform_name }} to charge the applicable fee to your payment method on a recurring basis.</p>
-    <ul>
-      <li>Subscription fees are non-refundable except as set out in our <a href="{{ url_for('refund_policy') }}" style="color:#2C3E6B;">Refund Policy</a>.</li>
-      <li>You may cancel at any time from your dashboard. Access continues to the end of the current billing period.</li>
-      <li>{{ platform_name }} reserves the right to change subscription pricing with 30 days' notice.</li>
-      <li>Taxes applicable under Indian law (GST) will be added where required.</li>
-    </ul>
-        </div>
-    </details>
-
-  <!-- 4 -->
-  <details class="sl-accordion" id="scoring">
-      <summary class="sl-accordion-trigger">04 — DDI Scoring Engine <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <div class="terms-highlight">
-      <strong>The DDI Score is an opinion, not a guarantee.</strong> Scores reflect the automated assessment of the Apex DDI Engine at the time of submission. They do not constitute a warranty of artistic merit or market value.
+    <div class="policy-slate">
+      <span class="slate-label">Important — Please Read Carefully</span>
+      <p><strong>Shutter League is a platform that enables users to upload and display their own photographic content.</strong> Shutter League does not pre-screen every image prior to publication and is not the author, creator, or publisher of user-generated content in the legal sense.</p>
+      <p>To the maximum extent permitted by applicable law, <strong>Shutter League, its officers, employees, contractors, and technology partners expressly disclaim all liability</strong> for any content uploaded by users that is found to be offensive, illegal, derogatory, defamatory, or in breach of any third party's rights, including but not limited to:</p>
     </div>
+
     <ul>
-      <li>DDI Scores are generated by AI analysis and are subject to revision through calibration updates.</li>
-      <li>{{ platform_name }} does not guarantee that scores will remain static over time. Historical scores are preserved and changes are logged.</li>
-      <li>Members may not reproduce, sell, or misrepresent DDI Scores in a manner that implies they are independent third-party assessments.</li>
-      <li>Score cards bearing {{ platform_name }} branding may be shared freely on personal channels provided branding is intact and unaltered.</li>
+      <li>Images that are obscene, pornographic, or sexually explicit.</li>
+      <li>Images that are derogatory toward any individual, community, religion, caste, or group.</li>
+      <li>Images that infringe the intellectual property rights of any third party.</li>
+      <li>Images that violate any person's right to privacy, dignity, or image.</li>
+      <li>Images depicting or facilitating illegal activity of any kind.</li>
+      <li>Images that cause offence to religious or cultural sentiments.</li>
     </ul>
-        </div>
-    </details>
 
-  <!-- 5 -->
-  <details class="sl-accordion" id="ip">
-      <summary class="sl-accordion-trigger">05 — Intellectual Property <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <h3>Your Content</h3>
-    <p>You retain full copyright in all images you upload. Uploading an image to {{ platform_name }} does not transfer ownership or copyright to {{ platform_name }}.</p>
-    <p>By uploading, you grant {{ platform_name }} a <strong>non-exclusive, royalty-free, worldwide licence</strong> to display, reproduce, and use your image for platform operation, including displaying it to other Members, using it in promotional materials, and including it in annual showcases. Attribution will always be given. This licence does not permit {{ platform_name }} to sell your images or sublicense them to third parties.</p>
-    <p>You may revoke this licence at any time by deleting your image from the platform or by writing to <span style="color:#2C3E6B;">{{ contact_email }}</span>. Removal from promotional materials will be completed within 30 days.</p>
-    <h3>Platform IP</h3>
-    <div class="terms-highlight ip">
-      <strong>Proprietary Technology:</strong> The Apex DDI Engine, its scoring methodology, weighting systems, DDI dimensions (DoD, Disruption, DM, Wonder, AQ), all platform software, and all competition structures are the exclusive intellectual property of {{ platform_name }}. Reverse engineering, scraping, or reproducing any part of the scoring system is strictly prohibited.
-    </div>
-    <h3>Automated Access &amp; Data Harvesting</h3>
-    <div class="terms-highlight legal">
-      <strong>Prohibited automated access:</strong> You may not access {{ platform_name }} by any automated means, including bots, scrapers, crawlers, spiders, or data extraction tools, without prior written authorisation. Bulk harvesting of scores, images, member data, or any platform content — whether through automated tools or manual systematic collection — is strictly prohibited and constitutes a material breach of these Terms. {{ platform_name }} reserves the right to pursue all available legal remedies, including injunctive relief and damages, against any person or entity found to be engaging in unauthorised automated access or data harvesting.
-    </div>
-        </div>
-    </details>
+    <p>The legal responsibility for any uploaded content rests entirely and solely with the user who uploaded it. By uploading any content to the Platform, you agree to indemnify, defend, and hold harmless Shutter League, its officers, employees, and agents from and against any and all claims, damages, losses, costs, and expenses (including reasonable legal fees) arising out of or in connection with your uploaded content or your violation of these Terms.</p>
 
-  <!-- 6 -->
-  <details class="sl-accordion" id="content">
-      <summary class="sl-accordion-trigger">06 — User Content &amp; Conduct <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>You warrant that all images you upload are:</p>
-    <ul>
-      <li>Original photographs taken by you personally</li>
-      <li>Free from third-party intellectual property claims</li>
-      <li>Not previously submitted to {{ platform_name }} by another user</li>
-      <li>Not AI-generated or primarily composed using generative AI tools</li>
-    </ul>
-    <p>The following content is strictly prohibited and will result in immediate account suspension:</p>
-    <ul>
-      <li>Images containing child sexual abuse material or any illegal content</li>
-      <li>Images stolen from other photographers</li>
-      <li>Images submitted under a false identity or on behalf of another person without their written consent</li>
-      <li>Spam, coordinated manipulation of peer ratings, or any attempt to game the scoring system</li>
-    </ul>
-        </div>
-    </details>
+    <p>Shutter League operates a reactive moderation system and will remove prohibited content upon becoming aware of it, whether through user reports, automated detection, or any other means. However, the existence of this system does not constitute a guarantee that all prohibited content will be identified and removed immediately, and does not impose liability on Shutter League for content that has not been brought to its attention.</p>
 
-  <!-- 7 -->
-  <details class="sl-accordion" id="raw">
-      <summary class="sl-accordion-trigger">07 — RAW Verification <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>All provisional top-placed finalists in {{ platform_name }} programmes are required to submit their original RAW or full-resolution source file for verification before any award is confirmed. By entering any competition, you agree to this requirement.</p>
-    <div class="terms-highlight warning">
-      <strong>How RAW submission works:</strong> When you are selected as a finalist or winner, you will receive a notification prompting you to upload your RAW file directly through the platform. The upload link is available on your submission detail page. Do not email RAW files — all verification is handled in-platform.
-    </div>
-    <ul>
-      <li>RAW files are uploaded directly through the {{ platform_name }} platform and stored securely on Cloudflare R2. No email submission is required or accepted.</li>
-      <li>RAW files are used solely for verification purposes and are never displayed publicly.</li>
-      <li>Failure to upload within the stated verification window results in disqualification. The award passes to the next placed entry.</li>
-      <li>Random spot-check verification may be conducted on any submission at any time, regardless of competition standing. You may be prompted to upload your RAW file through the platform at any point.</li>
-      <li>Submitting a RAW file that does not correspond to the submitted JPEG — including AI-generated files, composites, or files with mismatched metadata — constitutes a material breach of these Terms and will result in permanent account suspension.</li>
-    </ul>
-        </div>
-    </details>
+    <p>Shutter League complies with takedown requests submitted under applicable Indian law, including the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021. To submit a takedown request, write to <a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a> with the subject line "Content Takedown Request".</p>
+  </div>
 
-  <!-- 8 -->
-  <details class="sl-accordion" id="contests">
-      <summary class="sl-accordion-trigger">08 — Programme Participation <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>All competitions on {{ platform_name }} are governed by the <a href="{{ url_for('contest_rules') }}" style="color:#2C3E6B;">Programme Rules &amp; Legal Framework</a>, which form part of these Terms &amp; Conditions. In the event of conflict, the Programme Rules prevail in respect of programme matters.</p>
-    <ul>
-      <li>An active subscription is required to participate in Monthly Programmes, POTY, and BOW.</li>
-      <li>{{ platform_name }} reserves the right to disqualify any entry, withhold any award, and permanently suspend any account found to have violated these terms or the Programme Rules.</li>
-      <li>Award decisions by the jury are final and binding.</li>
-    </ul>
-        </div>
-    </details>
+  <!-- ── 6. USER CONTENT LICENCE ───────────────────────────────── -->
+  <div class="policy-section">
+    <h2>6. User Content and Licence</h2>
+    <p>You retain full ownership of all photographs you upload to the Platform. By uploading an image, you grant Shutter League a non-exclusive, royalty-free, worldwide licence to display, reproduce, and use the image solely for the purpose of operating the Platform, delivering the scoring service, and displaying your work in programme contexts (leaderboards, results pages, and marketing materials that reference the Platform's programmes).</p>
+    <p>This licence does not grant Shutter League the right to sell your images, license them to third parties for commercial use, or use them for any purpose unrelated to the operation of the Platform.</p>
+    <p>You represent and warrant that you are the original creator of every image you upload and that you hold all necessary rights to grant this licence.</p>
+  </div>
 
-  <!-- 9 -->
-  <details class="sl-accordion" id="peer">
-      <summary class="sl-accordion-trigger">09 — Peer Rating System <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <ul>
-      <li>Peer ratings are submitted by subscribers and are blind — raters do not see the photographer's identity or DDI score.</li>
-      <li>Rating credits are issued monthly and do not carry over. Credits have no cash value.</li>
-      <li>Systematic bias, manipulation, or coordinated rating of specific photographers may result in account suspension and forfeiture of all credits and pool entries.</li>
-      <li>{{ platform_name }} may audit peer rating patterns and flag accounts exhibiting abnormal behaviour.</li>
-    </ul>
-      <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:16px 20px; margin:16px 0; font-size:16px; color:var(--text-secondary); line-height:1.7;">
-      <strong style="color:var(--text-primary);">Third-party outage remedy:</strong> In the event of platform unavailability exceeding 72 consecutive hours caused solely by third-party infrastructure failure (including authentication providers, cloud hosting, or payment processors), subscribers may request a pro-rata credit applied to their next billing cycle. This credit is the sole remedy for third-party-caused unavailability and does not constitute a right to a cash refund.
-    </div>
-        </div>
-    </details>
+  <!-- ── 7. SUBSCRIPTIONS AND PAYMENTS ─────────────────────────── -->
+  <div class="policy-section">
+    <h2>7. Subscriptions and Payments</h2>
+    <p>Shutter League offers monthly and annual subscription plans providing access to Platform features. All subscription amounts are in Indian Rupees (INR) and are inclusive of applicable taxes. Current plan pricing is listed on the <a href="{{ url_for('pricing') }}" style="color:#2C3E6B;">Pricing page</a>.</p>
+    <p>Subscriptions are processed through our payment partners and renew automatically unless cancelled. You may cancel your subscription at any time from your account settings. Cancellation takes effect at the end of the current billing period; no partial refunds are issued for unused days within a billing period.</p>
+    <p>Refunds are governed by the <a href="{{ url_for('refund_policy') }}" style="color:#2C3E6B;">Refund Policy</a>. All transactions are for digital services only. No physical goods are sold or shipped.</p>
+  </div>
 
-  <!-- 10 -->
-  <details class="sl-accordion" id="liability">
-      <summary class="sl-accordion-trigger">10 — Limitation of Liability <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>{{ platform_name }}, its directors, employees, agents, and appointed judges shall not be liable for any indirect, incidental, special, or consequential loss arising from use of the platform, including but not limited to: loss of scores due to technical failure; inaccuracy of DDI scores; loss of programme standing; or decisions made by peer raters or jury members acting in good faith.</p>
-    <p>{{ platform_name }}'s total liability to any Member for any claim shall not exceed the total subscription fees paid by that Member in the 3 months preceding the claim.</p>
-    <p>{{ platform_name }} does not guarantee uninterrupted access to the platform. Scheduled and unscheduled maintenance may occur.</p>
-    <p><strong>Third-party services:</strong> {{ platform_name }} relies on third-party infrastructure including cloud hosting, payment processors, email providers, and authentication services (including Google OAuth). {{ platform_name }} shall not be liable for any interruption, loss of access, or data loss caused by the failure, unavailability, or termination of any third-party service, including but not limited to the unavailability of Google OAuth sign-in.</p>
-    <p><strong>Third-party outage remedy:</strong> In the event of platform unavailability exceeding 72 consecutive hours caused solely by third-party infrastructure failure, subscribers may request a pro-rata credit applied to their next billing cycle. This credit is the sole remedy for third-party-caused unavailability and does not constitute a right to a cash refund.</p>
-    <p><strong>Force majeure:</strong> {{ platform_name }} shall not be liable for any failure or delay in performing its obligations where such failure results from circumstances beyond its reasonable control, including natural disasters, pandemics, government action, power failures, internet infrastructure failures, cyberattacks, failure or unavailability of third-party authentication services (including OAuth providers such as Google), or any other event outside {{ platform_name }}'s reasonable control.</p>
-        </div>
-    </details>
+  <!-- ── 8. PROGRAMME ELIGIBILITY AND CONDUCT ──────────────────── -->
+  <div class="policy-section">
+    <h2>8. Programme Eligibility and Conduct</h2>
+    <p>Participation in Shutter League programmes — including POTY, BOW, Weekly Challenges, and Juried Programmes — is subject to eligibility requirements published on the relevant programme pages. Shutter League reserves the right to modify programme rules, eligibility criteria, and timelines at any time.</p>
+    <p>Programme evaluations are conducted by human jury panels for all formal annual programmes. AI scoring (DDI) is used for initial assessment and weekly practice submissions. Where jury evaluation applies, it is disclosed explicitly on the programme page.</p>
+    <p>Shutter League programmes are assessment and learning programmes. They are not games of chance. Outcomes are determined by the quality of photographic work as assessed by trained human jury members or the DDI engine, not by random selection.</p>
+    <p>Any attempt to manipulate scores, submit images not taken by the entrant, submit altered images contrary to programme rules, or otherwise subvert programme integrity will result in immediate disqualification and account suspension.</p>
+  </div>
 
-  <!-- 11 -->
-  <details class="sl-accordion" id="termination">
-      <summary class="sl-accordion-trigger">11 — Termination <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>{{ platform_name }} reserves the right to suspend or permanently terminate any account at any time for violation of these Terms &amp; Conditions, the Programme Rules, or applicable law, without prior notice and without refund.</p>
-    <p>You may close your account at any time by contacting <span style="color:#2C3E6B;">{{ contact_email }}</span>. Upon closure, your images and data will be deleted within 30 days, except where retention is required by law.</p>
-        </div>
-    </details>
+  <!-- ── 9. PRIVACY ─────────────────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>9. Privacy</h2>
+    <p>Your use of the Platform is also governed by the <a href="{{ url_for('privacy') }}" style="color:#2C3E6B;">Privacy Policy</a>, which is incorporated into these Terms by reference. Please read it carefully.</p>
+  </div>
 
-  <!-- 12 -->
-  <details class="sl-accordion" id="disputes">
-      <summary class="sl-accordion-trigger">12 — Disputes &amp; Governing Law <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>These Terms &amp; Conditions are governed by the laws of the Republic of India. Any dispute arising out of or in connection with these terms shall first be referred to good-faith negotiation. If unresolved within 30 days, the dispute shall be referred to arbitration under the <strong>Arbitration and Conciliation Act, 1996</strong> (India). The seat of arbitration shall be <strong>Bengaluru, Karnataka</strong>.</p>
-    <p>Subject to the arbitration clause, the courts at <strong>Bengaluru, Karnataka</strong> shall have exclusive jurisdiction.</p>
-        </div>
-    </details>
+  <!-- ── 10. GOVERNING LAW ──────────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>10. Governing Law and Jurisdiction</h2>
+    <p>These Terms are governed by and construed in accordance with the laws of India. Any disputes arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of Bengaluru, Karnataka, India.</p>
+    <p>For any queries, disputes, or grievances, please contact us at <a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a>. We aim to respond to all formal grievances within 2 business days.</p>
+  </div>
 
-  <!-- 13 -->
-  <details class="sl-accordion" id="amendments">
-      <summary class="sl-accordion-trigger">13 — Amendments <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-      <p>{{ platform_name }} reserves the right to amend these Terms &amp; Conditions at any time. Material changes will be communicated to registered Members via the platform with a minimum of 14 days' notice. Continued use of the platform after the effective date of any change constitutes acceptance of the amended terms.</p>
+  <!-- ── 11. CHANGES TO TERMS ───────────────────────────────────── -->
+  <div class="policy-section">
+    <h2>11. Changes to These Terms</h2>
+    <p>Shutter League may revise these Terms at any time by posting an updated version on this page. The date of last revision is noted at the bottom of this page. Your continued use of the Platform after any revision constitutes your acceptance of the new Terms.</p>
+    <p><em>Last updated: May 2026</em></p>
+  </div>
 
-    </div></details>
-    <details class="sl-accordion" id="payments-security">
-      <summary class="sl-accordion-trigger">14 — Payments &amp; Card Security <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-    <p>All payments on {{ platform_name }} are processed exclusively through RBI-authorised third-party payment gateways. <strong>{{ platform_name }} does not collect, process, or store your card number, CVV, UPI PIN, net banking credentials, or any other payment authentication data.</strong> All such data is handled directly and securely by the relevant payment gateway under their own PCI-DSS compliance framework.</p>
-    <p>By making a payment, you agree to the terms and privacy policy of the relevant payment gateway. Subscription fees are charged at the start of each billing period and are non-refundable except as expressly stated in the <a href="{{ url_for('refund_policy') }}" style="color:#2C3E6B;">Refund Policy</a>.</p>
-
-    </div></details>
-    <details class="sl-accordion" id="prohibited-use">
-      <summary class="sl-accordion-trigger">15 — Prohibited Use &amp; Anti-Fraud <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-    <p>You must not use {{ platform_name }} or its payment infrastructure for any unlawful, fraudulent, or prohibited purpose including but not limited to:</p>
-    <ul>
-      <li>Using stolen, unauthorised, or fraudulently obtained payment credentials.</li>
-      <li>Initiating chargebacks or payment reversals in bad faith after receiving services.</li>
-      <li>Laundering money or using the platform to disguise the proceeds of unlawful activity.</li>
-      <li>Creating multiple accounts to circumvent subscription limits or programme eligibility rules.</li>
-      <li>Any activity that violates applicable Indian law, including the Prevention of Money Laundering Act, 2002 (PMLA) and the Information Technology Act, 2000.</li>
-    </ul>
-    <p>{{ platform_name }} reserves the right to suspend accounts, withhold funds, and report suspected fraudulent activity to the relevant authorities without prior notice.</p>
-
-    </div></details>
-    <details class="sl-accordion" id="grievance">
-      <summary class="sl-accordion-trigger">16 — Grievance Redressal <span class="sl-accordion-icon">▾</span></summary>
-      <div class="sl-accordion-body">
-    <p>In accordance with the Consumer Protection (E-Commerce) Rules, 2020 and the Information Technology (Intermediary Guidelines) Rules, {{ platform_name }} has designated a Grievance Officer to address user complaints and concerns.</p>
-    <p><strong>Grievance Officer</strong><br>
-    Shutter League<br>
-    Bengaluru, Karnataka, India<br>
-    Email: <span style="color:#2C3E6B;">{{ contact_email }}</span><br>
-    Subject line: <strong>Grievance — [your username]</strong></p>
-    <p>All grievances will be acknowledged within <strong>48 hours</strong> of receipt and resolved within <strong>30 days</strong>. If you are not satisfied with the resolution, you may approach the relevant consumer forum or regulatory authority.</p>
-        </div>
-    </details>
-
-  <div style="margin-top:48px; padding:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); text-align:center;">
-    <p style="font-size:16px; color:var(--text-muted); margin-bottom:16px;">
-      Questions? Email <span style="color:#2C3E6B;">{{ contact_email }}</span>
-    </p>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a href="{{ url_for('contest_rules') }}" class="btn btn-solid">Programme Rules &rarr;</a>
-      <a href="{{ url_for('refund_policy') }}" class="btn">Refund Policy</a>
-      <a href="{{ url_for('privacy') }}" class="btn">Privacy Policy</a>
-      <a href="{{ url_for('index') }}" class="btn">&larr; Back to Home</a>
-    </div>
+  <div class="policy-links">
+    <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+    <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
+    <a href="{{ url_for('shipping_policy') }}">Shipping &amp; Returns Policy</a>
+    <a href="{{ url_for('about') }}">About Us</a>
+    <a href="{{ url_for('contact') }}">Contact Us</a>
   </div>
 
 </div>
