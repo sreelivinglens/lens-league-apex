@@ -5919,6 +5919,22 @@ def mentor_register(slug):
             from datetime import datetime, timedelta
             deadline = datetime.utcnow() + timedelta(hours=72)
 
+            # P4 — Same-image-same-mentor guard
+            existing_session = db.session.execute(db.text("""
+                SELECT id FROM mentor_sessions
+                WHERE user_id = :uid
+                  AND mentor_slug = :slug
+                  AND image_id = :iid
+                  AND status != 'reviewed'
+            """), {'uid': current_user.id, 'slug': slug, 'iid': image_id}).fetchone()
+
+            if existing_session:
+                flash(f'You have already submitted this image to {mentor["name"]}. Please choose a different image or wait for the current review to be completed.', 'warning')
+                return render_template('mentor_booking.html',
+                                       mentor=mentor,
+                                       points_balance=points_balance,
+                                       user_images=user_images)
+
             db.session.execute(db.text("""
                 INSERT INTO mentor_sessions
                     (user_id, mentor_slug, image_id, intent, payment_method,
@@ -11783,7 +11799,127 @@ def run_daily_signup_digest():
             app.logger.error('[digest] Error: ' + str(e))
 
 
-# Guard: only one Gunicorn worker should run the scheduler.
+def run_mentor_reminders():
+    """
+    Runs every hour via APScheduler.
+    Finds mentor_sessions where:
+      - status = 'pending' (not yet reviewed)
+      - deadline_at is within the next 24 hours
+      - reminder_sent = FALSE
+    Sends a reminder email to the mentor and marks reminder_sent = TRUE.
+    """
+    with app.app_context():
+        try:
+            now      = datetime.utcnow()
+            in_24hrs = now + timedelta(hours=24)
+
+            pending = db.session.execute(db.text("""
+                SELECT ms.id, ms.mentor_slug, ms.deadline_at,
+                       u.full_name, u.username,
+                       i.asset_name, i.genre, i.score, i.thumb_url,
+                       mp.display_name AS mentor_name, mp.user_id AS mentor_user_id
+                FROM mentor_sessions ms
+                JOIN users u  ON u.id  = ms.user_id
+                JOIN images i ON i.id  = ms.image_id
+                LEFT JOIN mentor_profiles mp ON mp.slug = ms.mentor_slug
+                WHERE ms.status      = 'pending'
+                  AND ms.reminder_sent = FALSE
+                  AND ms.deadline_at IS NOT NULL
+                  AND ms.deadline_at BETWEEN :now AND :cutoff
+            """), {'now': now, 'cutoff': in_24hrs}).fetchall()
+
+            sent = 0
+            for row in pending:
+                try:
+                    # Get mentor's email from their linked user account
+                    mentor_user = User.query.get(row.mentor_user_id) if row.mentor_user_id else None
+                    if not mentor_user or not mentor_user.email:
+                        app.logger.warning(f'[mentor_reminder] No email for mentor {row.mentor_slug} — skipping session {row.id}')
+                        continue
+
+                    site_url       = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    review_url     = f'{site_url}/mentor/session/{row.id}/review'
+                    dashboard_url  = f'{site_url}/mentor/dashboard'
+                    photographer   = row.full_name or row.username
+                    mentor_name    = row.mentor_name or row.mentor_slug.title()
+                    image_title    = row.asset_name or 'Untitled'
+                    genre          = row.genre or 'Photography'
+                    score_str      = f'{row.score:.2f}' if row.score else '—'
+                    deadline_ist   = (row.deadline_at + timedelta(hours=5, minutes=30)).strftime('%d %b %Y, %I:%M %p IST')
+
+                    html_body = (
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                        '<tr><td align="center">'
+                        '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:560px;width:100%;">'
+                        '<tr><td style="background:#1A2744;padding:24px 32px;">'
+                        '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE · MENTOR</p>'
+                        '</td></tr>'
+                        '<tr><td style="background:#1A2744;padding:0 32px 24px;">'
+                        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Review Deadline Reminder</p>'
+                        '<h1 style="margin:0;font-size:22px;color:#FFFFFF;font-weight:700;line-height:1.2;">You have a review due in less than 24 hours.</h1>'
+                        '</td></tr>'
+                        '<tr><td style="padding:28px 32px;">'
+                        '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi ' + mentor_name + ',</p>'
+                        '<p style="font-size:16px;line-height:1.7;color:#4A4840;">'
+                        '<strong>' + photographer + '</strong> submitted their <strong>' + genre + '</strong> image '
+                        '<strong>&ldquo;' + image_title + '&rdquo;</strong> (DDI Score: ' + score_str + ') for your review.'
+                        '</p>'
+                        '<div style="background:#FFF8E1;border:1px solid #F5C518;border-radius:6px;padding:14px 20px;margin:20px 0;">'
+                        '<p style="margin:0;font-family:Courier New,monospace;font-size:14px;font-weight:700;color:#1A1A18;">'
+                        '⏰ Deadline: ' + deadline_ist + '</p>'
+                        '</div>'
+                        '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
+                        'Please complete your review before the deadline to ensure the photographer receives their feedback on time.'
+                        '</p>'
+                        '<a href="' + review_url + '" '
+                        'style="display:inline-block;background:#F5C518;color:#000000;'
+                        'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
+                        'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
+                        'text-decoration:none;margin:8px 0 16px;">'
+                        'Write Review Now →</a>'
+                        '<p style="font-size:14px;color:#8a8070;">'
+                        'Or go to your <a href="' + dashboard_url + '" style="color:#C4A35A;">Mentor Dashboard</a> to see all pending sessions.'
+                        '</p>'
+                        '</td></tr>'
+                        '</table></td></tr></table></body></html>'
+                    )
+                    text_body = (
+                        'SHUTTER LEAGUE — Mentor Review Reminder\n\n'
+                        'Hi ' + mentor_name + ',\n\n'
+                        'You have a review due in less than 24 hours.\n\n'
+                        'Photographer: ' + photographer + '\n'
+                        'Image: ' + image_title + ' (' + genre + ') · Score: ' + score_str + '\n'
+                        'Deadline: ' + deadline_ist + '\n\n'
+                        'Write your review: ' + review_url + '\n\n'
+                        '— Shutter League'
+                    )
+
+                    ok = send_email(
+                        mentor_user.email,
+                        f'[Shutter League] Review reminder — deadline in less than 24 hours',
+                        html_body,
+                        text_body
+                    )
+                    if ok:
+                        db.session.execute(db.text(
+                            "UPDATE mentor_sessions SET reminder_sent = TRUE WHERE id = :sid"
+                        ), {'sid': row.id})
+                        db.session.commit()
+                        sent += 1
+                        app.logger.info(f'[mentor_reminder] Sent to {mentor_user.email} for session {row.id}')
+
+                except Exception as _re:
+                    app.logger.error(f'[mentor_reminder] Error for session {row.id}: {_re}')
+
+            app.logger.info(f'[mentor_reminder] Run complete. {sent} reminders sent.')
+
+        except Exception as e:
+            app.logger.error(f'[mentor_reminder] Fatal error: {e}')
+
+
+# ---------------------------------------------------------------------------
 # We use a lock file in /tmp — first worker to create it wins; others skip.
 import fcntl as _fcntl
 _sched_lock_path = '/tmp/sl_scheduler.lock'
@@ -11834,6 +11970,14 @@ if _sched_lock_held:
         trigger          = CronTrigger(hour=3, minute=30, timezone='UTC'),
         id               = 'daily_signup_digest',
         name             = 'Daily admin digest — new member signups',
+        replace_existing = True,
+    )
+    # Mentor 72hr reminder — runs every hour, fires when deadline < 24hrs away
+    _scheduler.add_job(
+        func             = run_mentor_reminders,
+        trigger          = CronTrigger(minute=45, timezone='UTC'),
+        id               = 'mentor_reminders',
+        name             = 'Mentor review deadline reminders (24hr warning)',
         replace_existing = True,
     )
     _scheduler.start()
