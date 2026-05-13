@@ -5554,7 +5554,20 @@ def poty():
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    try:
+        about_hero = (Image.query
+                      .filter(Image.status == 'scored',
+                              Image.score != None,
+                              Image.is_public == True,
+                              Image.is_flagged == False,
+                              Image.thumb_url != None,
+                              Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                              Image.score >= 8.0)
+                      .order_by(db.func.random())
+                      .first())
+    except Exception:
+        about_hero = None
+    return render_template('about.html', about_hero=about_hero)
 
 
 @app.route('/shipping-policy')
