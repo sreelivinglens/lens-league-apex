@@ -11057,8 +11057,19 @@ def admin_release_weekly_results(week_ref):
     return page_html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
-# Workers fork after this runs, so the scheduler is inherited, not duplicated.
-if True:
+# Guard: only one Gunicorn worker should run the scheduler.
+# We use a lock file in /tmp — first worker to create it wins; others skip.
+import fcntl as _fcntl
+_sched_lock_path = '/tmp/sl_scheduler.lock'
+_sched_lock_fh   = open(_sched_lock_path, 'w')
+_sched_lock_held = False
+try:
+    _fcntl.flock(_sched_lock_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+    _sched_lock_held = True
+except OSError:
+    pass  # another worker already holds the lock
+
+if _sched_lock_held:
     _scheduler = BackgroundScheduler(timezone='UTC')
     _scheduler.add_job(
         func             = auto_publish_weekly_challenge,
