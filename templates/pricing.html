@@ -1,333 +1,996 @@
 {% extends "base.html" %}
 {% block title %}Pricing — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Two leagues. One scientific standard. Get three free scored images to begin. Camera League ₹199/month. Mobile League ₹99/month.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
 {% block extra_css %}
 <style>
-  :root {
-    --gold: #F5C518;
-    --slate: #2C3E6B;
-    --cream: #FDFCF8;
-    --mint: #EAF3DE;
-    --mint-border: #C0DD97;
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PRICING — Session 23
+   Inter only · #F7F5F2 bg · #1A1A18 text
+   #1A2744 slate blue (dark sections)
+   #F5C518 gold (dark bg only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-pr, .sl-pr * { font-family: 'Inter', sans-serif !important; }
+
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-hero {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background: #1A2744;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.sl-pr-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.sl-pr-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,13,11,0.45);
+}
+.sl-pr-hero-content {
+  position: relative;
+  z-index: 2;
+  margin: 0 64px;
+  max-width: 560px;
+}
+.sl-pr-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  display: block;
+  margin-bottom: 14px;
+}
+.sl-pr-hero h1 {
+  font-size: 42px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+}
+.sl-pr-hero h1 em {
+  font-style: italic;
+  color: #F5C518;
+}
+.sl-pr-hero-copy {
+  font-size: 17px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.6;
+  margin-bottom: 6px;
+  text-align: left;
+}
+.sl-pr-hero-note {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  margin: 14px 0 28px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(245,197,24,0.4);
+}
+.sl-pr-hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ━━ BUTTONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-btn-gold {
+  display: inline-block;
+  background: #F5C518;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 15px 28px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.sl-pr-btn-ghost {
+  display: inline-block;
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,0.40);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.sl-pr-btn-outline {
+  display: inline-block;
+  background: transparent;
+  color: #1A1A18;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  text-decoration: none;
+  border: 1.5px solid rgba(26,26,24,0.25);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+/* ━━ SECTION SHARED ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-sec {
+  padding: 64px;
+  background: #F7F5F2;
+}
+.sl-pr-sec-warm {
+  padding: 64px;
+  background: #EDEAE4;
+  border-top: 1px solid rgba(26,26,24,0.08);
+  border-bottom: 1px solid rgba(26,26,24,0.08);
+}
+.sl-pr-sec-slate {
+  padding: 64px;
+  background: #1A2744;
+}
+.sl-pr-sec-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  display: block;
+  margin-bottom: 10px;
+}
+.sl-pr-sec-eyebrow-light {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  display: block;
+  margin-bottom: 10px;
+}
+.sl-pr-h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.sl-pr-h2-light {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+/* ━━ FREE ASSESSMENT ━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-free-card {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(26,26,24,0.12);
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 0;
+  align-items: stretch;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.sl-pr-free-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #EDEAE4;
+  width: 80px;
+  flex-shrink: 0;
+}
+.sl-pr-free-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: rgba(26,26,24,0.35);
+}
+.sl-pr-free-copy {
+  padding: 24px 28px;
+  border-right: 0.5px solid rgba(26,26,24,0.10);
+}
+.sl-pr-free-copy h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 4px;
+}
+.sl-pr-free-copy strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  display: block;
+  margin-bottom: 8px;
+}
+.sl-pr-free-copy p {
+  font-size: 14px;
+  color: rgba(26,26,24,0.60);
+  line-height: 1.6;
+  text-align: justify;
+}
+.sl-pr-free-right {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 220px;
+}
+.sl-pr-free-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  display: block;
+  margin-bottom: 14px;
+}
+.sl-pr-free-checklist {
+  list-style: none;
+  margin-bottom: 16px;
+}
+.sl-pr-free-checklist li {
+  font-size: 14px;
+  color: rgba(26,26,24,0.70);
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.5;
+}
+.sl-pr-free-checklist li::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(26,26,24,0.25);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath stroke='%232d7a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M3 8l3 3 7-7'/%3E%3C/svg%3E") center/12px no-repeat;
+}
+.sl-pr-free-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.sl-pr-free-price .num {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-pr-free-price .dur {
+  font-size: 13px;
+  color: rgba(26,26,24,0.40);
+}
+
+/* ━━ LEAGUE CARDS ━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-league-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 32px;
+}
+.sl-pr-league-header p {
+  font-size: 15px;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.65;
+  text-align: justify;
+  margin-top: 28px;
+}
+.sl-pr-league-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.sl-pr-league-card {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(26,26,24,0.12);
+  padding: 32px;
+}
+.sl-pr-league-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.sl-pr-league-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(26,26,24,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #F7F5F2;
+}
+.sl-pr-league-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: rgba(26,26,24,0.55);
+}
+.sl-pr-league-for {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  display: block;
+  margin-bottom: 4px;
+}
+.sl-pr-league-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+.sl-pr-league-meta {
+  font-size: 13px;
+  color: rgba(26,26,24,0.45);
+}
+.sl-pr-league-pricing {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 0.5px solid rgba(26,26,24,0.08);
+  border-bottom: 0.5px solid rgba(26,26,24,0.08);
+  margin-bottom: 20px;
+}
+.sl-pr-league-alloc {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(26,26,24,0.55);
+  flex: 1;
+}
+.sl-pr-league-alloc strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A18;
+  display: block;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.sl-pr-league-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.sl-pr-league-price .num {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-pr-league-price .mo {
+  font-size: 13px;
+  color: rgba(26,26,24,0.40);
+}
+.sl-pr-league-features {
+  list-style: none;
+  margin-bottom: 24px;
+}
+.sl-pr-league-features li {
+  font-size: 14px;
+  color: rgba(26,26,24,0.70);
+  padding: 7px 0;
+  border-bottom: 0.5px solid rgba(26,26,24,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+}
+.sl-pr-league-features li::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' stroke='%23rgba(26,26,24,0.20)' stroke-width='1.5' fill='none'/%3E%3Cpath stroke='%232d7a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M4.5 8l2.5 2.5 4.5-5'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+
+/* ━━ PROGRAMMES ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-prog-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 32px;
+}
+.sl-pr-prog-card {
+  padding: 20px;
+  border-top: 2px solid rgba(26,26,24,0.10);
+}
+.sl-pr-prog-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 14px;
+  stroke: rgba(26,26,24,0.40);
+}
+.sl-pr-prog-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 8px;
+}
+.sl-pr-prog-card p {
+  font-size: 14px;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.55;
+  margin-bottom: 12px;
+  text-align: justify;
+}
+.sl-pr-prog-tag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C4A35A;
+}
+
+/* ━━ TOPUP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-topup-inner {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(26,26,24,0.12);
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 0;
+  align-items: center;
+  max-width: 780px;
+}
+.sl-pr-topup-icon-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  background: #EDEAE4;
+  padding: 0 14px;
+}
+.sl-pr-topup-icon-col svg {
+  width: 24px;
+  height: 24px;
+  stroke: rgba(26,26,24,0.40);
+}
+.sl-pr-topup-copy {
+  padding: 22px 24px;
+  border-right: 0.5px solid rgba(26,26,24,0.10);
+}
+.sl-pr-topup-copy h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 4px;
+}
+.sl-pr-topup-copy p {
+  font-size: 14px;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.55;
+}
+.sl-pr-topup-right {
+  padding: 22px 24px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sl-pr-topup-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-pr-topup-price span {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(26,26,24,0.45);
+}
+
+/* ━━ LEARNING + FAQ ROW ━━━━━━━━━━━━━━━━━ */
+.sl-pr-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid rgba(26,26,24,0.08);
+}
+.sl-pr-learning {
+  padding: 56px 64px;
+  background: #EDEAE4;
+  border-right: 1px solid rgba(26,26,24,0.08);
+}
+.sl-pr-learning h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+.sl-pr-learning p {
+  font-size: 14px;
+  color: rgba(26,26,24,0.55);
+  line-height: 1.65;
+  margin-bottom: 20px;
+  text-align: justify;
+}
+.sl-pr-learning-list {
+  list-style: none;
+  margin-bottom: 20px;
+}
+.sl-pr-learning-list li {
+  font-size: 14px;
+  color: rgba(26,26,24,0.70);
+  padding: 6px 0;
+  border-bottom: 0.5px solid rgba(26,26,24,0.07);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sl-pr-learning-list li::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' stroke='%23rgba(26,26,24,0.20)' stroke-width='1.5' fill='none'/%3E%3Cpath stroke='%232d7a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M4.5 8l2.5 2.5 4.5-5'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+.sl-pr-learning-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 16px;
+}
+.sl-pr-learning-price span {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(26,26,24,0.45);
+}
+
+/* FAQ */
+.sl-pr-faq {
+  padding: 56px 64px;
+  background: #F7F5F2;
+}
+.sl-pr-faq-list {
+  margin-top: 20px;
+  border-top: 0.5px solid rgba(26,26,24,0.10);
+}
+.sl-pr-faq-item {
+  border-bottom: 0.5px solid rgba(26,26,24,0.10);
+  padding: 16px 0;
+}
+.sl-pr-faq-item h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A1A18;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.sl-pr-faq-item h3::after {
+  content: '↓';
+  font-size: 14px;
+  color: rgba(26,26,24,0.35);
+  flex-shrink: 0;
+}
+.sl-pr-faq-item p {
+  font-size: 14px;
+  color: rgba(26,26,24,0.60);
+  line-height: 1.65;
+  text-align: justify;
+}
+
+/* ━━ FINAL CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-pr-final {
+  position: relative;
+  background: #1A2744;
+  padding: 72px 64px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 48px;
+  align-items: center;
+  overflow: hidden;
+  min-height: 280px;
+}
+.sl-pr-final-img {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 45%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  opacity: 0.25;
+}
+.sl-pr-final-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #1A2744 45%, transparent 100%);
+}
+.sl-pr-final-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 440px;
+}
+.sl-pr-final-copy h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.15;
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+.sl-pr-final-copy h2 em {
+  font-style: italic;
+  color: #F5C518;
+}
+.sl-pr-final-copy p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.7;
+  text-align: justify;
+}
+.sl-pr-final-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+  .sl-pr-hero { height: auto; min-height: 360px; }
+  .sl-pr-hero-content { margin: 0 20px; padding: 48px 0; }
+  .sl-pr-hero h1 { font-size: 30px; text-shadow: none; }
+  .sl-pr-hero-copy { font-size: 16px; }
+
+  .sl-pr-sec,
+  .sl-pr-sec-warm,
+  .sl-pr-sec-slate { padding: 56px 20px; }
+
+  .sl-pr-free-card {
+    grid-template-columns: 1fr;
   }
+  .sl-pr-free-icon { width: 100%; height: 56px; }
+  .sl-pr-free-copy { border-right: none; border-bottom: 0.5px solid rgba(26,26,24,0.10); }
+  .sl-pr-free-right { min-width: 0; }
 
-  .pricing-page { max-width: 880px; margin: 0 auto; padding: 0 var(--page-pad); }
-  
-  /* Toggle */
-  .pricing-toggle { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 40px; }
-  .toggle-label { font-family: var(--font-mono); font-size: 16px; font-weight: 600; letter-spacing: 1.5px; color: var(--text-primary); text-transform: uppercase; cursor: pointer; transition: .2s; }
-  .toggle-label.active { color: var(--slate); }
-  .toggle-switch { position: relative; width: 52px; height: 28px; cursor: pointer; }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 99px; transition: .3s; }
-  .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: var(--gold); border-radius: 50%; transition: .3s; }
-  input:checked + .toggle-slider:before { transform: translateX(24px); }
-  .save-badge { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #000; background: var(--gold); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; margin-left: 6px; }
+  .sl-pr-league-header { grid-template-columns: 1fr; gap: 0; }
+  .sl-pr-league-header p { margin-top: 12px; }
+  .sl-pr-league-grid { grid-template-columns: 1fr; }
 
-  /* Plan Rows */
-  .plans-section { margin-bottom: 48px; }
-  .plan-row { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 40px 1fr auto auto auto; align-items: center; gap: 20px; transition: .2s; }
-  .plan-row:hover { border-color: var(--gold); }
-  .plan-row.featured { border: 2px solid var(--gold); background: rgba(245, 197, 24, 0.03); }
-  .plan-row.greyed { opacity: 0.5; pointer-events: none; }
-  .plan-icon { font-size: 28px; }
-  .plan-for { font-size: 16px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
-  .plan-name { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .plan-sub { font-size: 16px; color: var(--text-primary); }
-  .plan-images { text-align: center; }
-  .plan-images strong { display: block; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .plan-images-label { font-size: 16px; color: var(--text-primary); white-space: nowrap; }
-  .plan-price { text-align: right; }
-  .plan-amount { font-size: 32px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .plan-period { font-size: 16px; color: var(--text-primary); margin-top: 2px; }
-  .plan-cta { display: inline-block; padding: 12px 24px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: .2s; }
-  .plan-cta.primary { background: var(--slate); color: #fff; border: none; }
-  .plan-cta.primary:hover { opacity: .85; }
-  .plan-cta.gold { background: var(--gold); color: #000; border: none; }
-  .plan-cta.gold:hover { opacity: .85; }
-  .plan-cta.secondary { background: transparent; color: var(--slate); border: 1px solid var(--slate); }
-  .plan-cta.secondary:hover { background: rgba(44, 62, 107, 0.05); }
-  .plan-mobile-meta { display: none; font-size: 16px; color: var(--text-primary); margin-top: 6px; font-weight: 600; }
+  .sl-pr-prog-grid { grid-template-columns: 1fr 1fr; }
 
-  /* What You Can Enter */
-  .compete-section { margin-bottom: 48px; }
-  .section-label { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
-  .compete-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .compete-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; display: flex; gap: 12px; align-items: flex-start; }
-  .compete-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-  .compete-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .compete-desc { font-size: 16px; color: var(--text-primary); line-height: 1.6; margin-bottom: 6px; }
-  .compete-pill { display: inline-block; font-size: 16px; font-weight: 600; padding: 4px 10px; border-radius: 99px; border: 1px solid; }
-  .pill-open { background: var(--mint); color: #27500A; border-color: var(--mint-border); }
-  .pill-soon { background: var(--surface-3); color: var(--text-secondary); border-color: var(--border-secondary); }
+  .sl-pr-topup-inner { grid-template-columns: 1fr; }
+  .sl-pr-topup-icon-col { display: none; }
+  .sl-pr-topup-copy { border-right: none; border-bottom: 0.5px solid rgba(26,26,24,0.10); }
+  .sl-pr-topup-right { min-width: 0; }
 
-  /* Top-up */
-  .topup-section { margin-bottom: 48px; }
-  .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .topup-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
-  .topup-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .topup-desc { font-size: 16px; color: var(--text-primary); }
-  .topup-price { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+  .sl-pr-bottom-row { grid-template-columns: 1fr; }
+  .sl-pr-learning { padding: 56px 20px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.08); }
+  .sl-pr-faq { padding: 56px 20px; }
 
-  /* FAQ */
-  .faq-section { max-width: 880px; margin: 0 auto 64px; }
-  .faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; }
-  .faq-q { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-  .faq-a { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-  .faq-a a { color: var(--slate); text-decoration: none; font-weight: 600; }
-  .faq-a a:hover { text-decoration: underline; }
+  .sl-pr-final { grid-template-columns: 1fr; padding: 56px 20px; gap: 28px; }
+  .sl-pr-final-img { width: 100%; opacity: 0.15; }
+  .sl-pr-final-fade { background: rgba(26,39,68,0.80); }
+  .sl-pr-final-copy h2 { font-size: 26px; text-shadow: none; }
+  .sl-pr-final-actions { flex-direction: row; flex-wrap: wrap; }
+}
 
-  /* Mobile */
-  @media (max-width: 768px) {
-    .plan-row { grid-template-columns: 32px 1fr; gap: 12px; padding: 16px 18px; }
-    .plan-images, .plan-price { display: none; }
-    .plan-mobile-meta { display: block; }
-    .plan-cta { grid-column: 2; margin-top: 12px; width: 100%; text-align: center; }
-    .compete-grid { grid-template-columns: 1fr; }
-    .topup-grid { grid-template-columns: 1fr; }
-    .topup-card { flex-direction: column; align-items: stretch; gap: 16px; }
-    .topup-card > div:last-child { flex-direction: column; gap: 12px; }
-    .topup-card .plan-cta { width: 100%; }
-    .pricing-toggle { margin-bottom: 32px; }
-    .toggle-label { font-size: 16px; letter-spacing: 1px; }
-    .save-badge { font-size: 16px; padding: 2px 6px; }
-  }
+@media (max-width: 480px) {
+  .sl-pr-prog-grid { grid-template-columns: 1fr; }
+  .sl-pr-hero h1 { font-size: 26px; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="pricing-page">
+<div class="sl-pr">
 
-  <div class="page-header" style="margin-bottom: 40px;">
-    <h1>Two Leagues. One Scientific Standard.</h1>
-    <p>Get 3 free scored images to start. No credit card. When you're ready to compete, pick your League.</p>
+  <!-- ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-hero">
+    {% if poty_hero and poty_hero.thumb_url %}
+    <img
+      src="{{ poty_hero.thumb_url }}"
+      alt="Photography"
+      class="sl-pr-hero-img"
+      onerror="this.style.display='none'"
+    >
+    {% endif %}
+    <div class="sl-pr-hero-fade"></div>
+    <div class="sl-pr-hero-content">
+      <span class="sl-pr-eyebrow">Pricing &amp; Participation</span>
+      <h1>Two leagues.<br><em>One scientific</em> standard.</h1>
+      <p class="sl-pr-hero-copy">Get three free scored images to begin.</p>
+      <p class="sl-pr-hero-copy" style="color:rgba(255,255,255,0.65);font-size:15px;">When you're ready to participate consistently, choose the League that matches how you photograph.</p>
+      <p class="sl-pr-hero-note">Every image is evaluated through the same DDI framework — regardless of device, experience, or genre.</p>
+      <div class="sl-pr-hero-actions">
+        <a href="{{ url_for('register') }}" class="sl-pr-btn-gold">Get Started Free</a>
+        <a href="{{ url_for('how_it_works') }}" class="sl-pr-btn-ghost">Explore How Scoring Works</a>
+      </div>
+    </div>
   </div>
 
-  <div class="pricing-toggle">
-    <span class="toggle-label active" id="lbl-monthly">Monthly</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
-      <span class="toggle-slider"></span>
-    </label>
-    <span class="toggle-label" id="lbl-annual">Annual <span class="save-badge">Save 30%</span></span>
+  <!-- ━━ FREE ASSESSMENT ━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-sec-warm">
+    <div class="sl-pr-free-card">
+      <div class="sl-pr-free-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="8" width="18" height="13" rx="1"/>
+          <path d="M12 8V5m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1 4 0"/>
+          <path d="M9 13h6M12 11v4"/>
+        </svg>
+      </div>
+      <div class="sl-pr-free-copy">
+        <h3>Start with three scored images.</h3>
+        <strong>No credit card required.</strong>
+        <p>Upload your work, understand how the evaluation system works, and experience the platform before committing to a League.</p>
+      </div>
+      <div class="sl-pr-free-right">
+        <span class="sl-pr-free-label">Free Assessment</span>
+        <ul class="sl-pr-free-checklist">
+          <li>3 lifetime scored images</li>
+          <li>Leaderboard access</li>
+          <li>Science / DDI access</li>
+        </ul>
+        <div class="sl-pr-free-price">
+          <span class="num">₹0</span>
+          <span class="dur">forever</span>
+        </div>
+        <a href="{{ url_for('register') }}" class="sl-pr-btn-gold">Begin Free Assessment</a>
+      </div>
+    </div>
   </div>
 
-  <div class="plans-section">
-    
-    <!-- Camera -->
-    <div class="plan-row featured">
-      <div class="plan-icon">📷</div>
+  <!-- ━━ LEAGUES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-sec">
+    <div class="sl-pr-league-header">
       <div>
-        <div class="plan-for">For the</div>
-        <div class="plan-name">DSLR / Mirrorless photographer</div>
-        <div class="plan-sub">Camera · Film · All dedicated cameras</div>
-        <div class="plan-mobile-meta">5 images/mo · <span class="monthly-content">₹199/month</span><span class="annual-content" style="display:none;">₹166/month</span></div>
+        <span class="sl-pr-sec-eyebrow">Leagues</span>
+        <h2 class="sl-pr-h2">Choose your League</h2>
       </div>
-      <div class="plan-images">
-        <strong>5</strong>
-        <div class="plan-images-label">images/mo</div>
-      </div>
-      <div class="plan-price">
-        <div class="monthly-content">
-          <div class="plan-amount">₹199</div>
-          <div class="plan-period">/month</div>
-        </div>
-        <div class="annual-content" style="display:none;">
-          <div class="plan-amount">₹166</div>
-          <div class="plan-period">/month</div>
-        </div>
-      </div>
-      <a href="{{ url_for('subscribe', track='camera') }}?plan=monthly" class="plan-cta primary monthly-content">Join Camera →</a>
-      <a href="{{ url_for('subscribe', track='camera') }}?plan=annual" class="plan-cta primary annual-content" style="display:none;">Join Camera →</a>
+      <p>Both Leagues use the same DDI evaluation framework. The distinction is simply how you photograph.</p>
     </div>
+    <div class="sl-pr-league-grid">
 
-    <!-- Mobile -->
-    <div class="plan-row">
-      <div class="plan-icon">📱</div>
-      <div>
-        <div class="plan-for">For the</div>
-        <div class="plan-name">Mobile photographer</div>
-        <div class="plan-sub">iPhone · Android · Smartphone</div>
-        <div class="plan-mobile-meta">8 images/mo · <span class="monthly-content">₹99/month</span><span class="annual-content" style="display:none;">₹83/month</span></div>
-      </div>
-      <div class="plan-images">
-        <strong>8</strong>
-        <div class="plan-images-label">images/mo</div>
-      </div>
-      <div class="plan-price">
-        <div class="monthly-content">
-          <div class="plan-amount">₹99</div>
-          <div class="plan-period">/month</div>
+      <!-- CAMERA -->
+      <div class="sl-pr-league-card">
+        <div class="sl-pr-league-top">
+          <div class="sl-pr-league-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <div>
+            <span class="sl-pr-league-for">For the</span>
+            <div class="sl-pr-league-name">DSLR / Mirrorless<br>photographer</div>
+            <div class="sl-pr-league-meta">Camera · Film · Dedicated cameras</div>
+          </div>
         </div>
-        <div class="annual-content" style="display:none;">
-          <div class="plan-amount">₹83</div>
-          <div class="plan-period">/month</div>
+        <div class="sl-pr-league-pricing">
+          <div class="sl-pr-league-alloc">
+            <strong>5</strong>
+            images / month
+          </div>
+          <div class="sl-pr-league-price">
+            <span class="num">₹199</span>
+            <span class="mo">/ month</span>
+          </div>
         </div>
+        <ul class="sl-pr-league-features">
+          <li>DDI evaluation included</li>
+          <li>Weekly Challenge access</li>
+          <li>Annual Excellence eligibility</li>
+          <li>Rankings participation</li>
+        </ul>
+        <a href="{{ url_for('register') }}?league=camera" class="sl-pr-btn-gold" style="width:100%;text-align:center;display:block">Join Camera League</a>
       </div>
-      <a href="{{ url_for('subscribe', track='mobile') }}?plan=monthly" class="plan-cta primary monthly-content">Join Mobile →</a>
-      <a href="{{ url_for('subscribe', track='mobile') }}?plan=annual" class="plan-cta primary annual-content" style="display:none;">Join Mobile →</a>
-    </div>
 
-    <!-- Learning -->
-    <div class="plan-row greyed">
-      <div class="plan-icon">📚</div>
-      <div>
-        <div class="plan-for">Want to improve without competing?</div>
-        <div class="plan-name">Learning Only</div>
-        <div class="plan-sub">AI Mentor · Improvement Paths</div>
-        <div class="plan-mobile-meta">12 images/mo · ₹100/month</div>
-      </div>
-      <div class="plan-images">
-        <strong>12</strong>
-        <div class="plan-images-label">images/mo</div>
-      </div>
-      <div class="plan-price">
-        <div class="plan-amount">₹100</div>
-        <div class="plan-period">/month</div>
-      </div>
-      <span class="plan-cta secondary">Coming Soon</span>
-    </div>
-
-    <!-- Free -->
-    <div class="plan-row">
-      <div class="plan-icon">🎯</div>
-      <div>
-        <div class="plan-for">Free Assessment</div>
-        <div class="plan-name">Free</div>
-        <div class="plan-sub">Initial Assessment · Leaderboard · Science</div>
-        <div class="plan-mobile-meta">3 images lifetime · ₹0 forever</div>
-      </div>
-      <div class="plan-images">
-        <strong>3</strong>
-        <div class="plan-images-label">lifetime</div>
-      </div>
-      <div class="plan-price">
-        <div class="plan-amount">₹0</div>
-        <div class="plan-period">forever</div>
-      </div>
-      <a href="{{ url_for('register') }}" class="plan-cta gold">Get Started →</a>
-    </div>
-
-  </div>
-
-  <!-- What You Can Enter -->
-  <div class="compete-section">
-    <div class="section-label">What You Can Enter</div>
-    <div class="compete-grid">
-      
-      <div class="compete-card">
-        <div class="compete-icon">🏆</div>
-        <div>
-          <div class="compete-name">Weekly Challenge</div>
-          <div class="compete-desc">Submit up to 3 images every week. Best score wins.</div>
-          <span class="pill-open compete-pill">Open · Free for subscribers</span>
+      <!-- MOBILE -->
+      <div class="sl-pr-league-card">
+        <div class="sl-pr-league-top">
+          <div class="sl-pr-league-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/>
+              <circle cx="12" cy="17" r="1"/>
+            </svg>
+          </div>
+          <div>
+            <span class="sl-pr-league-for">For the</span>
+            <div class="sl-pr-league-name">Mobile<br>photographer</div>
+            <div class="sl-pr-league-meta">iPhone · Android · Smartphone</div>
+          </div>
         </div>
-      </div>
-
-      <div class="compete-card">
-        <div class="compete-icon">🎖️</div>
-        <div>
-          <div class="compete-name"><a href="{{ url_for('poty') }}" style="color:inherit;text-decoration:none;">Annual Excellence Award</a></div>
-          <div class="compete-desc">Year-round. Top 6 images in your strongest genre.</div>
-          <span class="pill-open compete-pill">Open · Subscribers only</span>
+        <div class="sl-pr-league-pricing">
+          <div class="sl-pr-league-alloc">
+            <strong>8</strong>
+            images / month
+          </div>
+          <div class="sl-pr-league-price">
+            <span class="num">₹99</span>
+            <span class="mo">/ month</span>
+          </div>
         </div>
-      </div>
-
-      <div class="compete-card">
-        <div class="compete-icon">📸</div>
-        <div>
-          <div class="compete-name"><a href="{{ url_for('bow_info') }}" style="color:inherit;text-decoration:none;">Body of Work</a></div>
-          <div class="compete-desc">Annual curated series. 6-12 images, one story.</div>
-          <span class="pill-soon compete-pill">Opens Q3 2026</span>
-        </div>
-      </div>
-
-      <div class="compete-card">
-        <div class="compete-icon">🌍</div>
-        <div>
-          <div class="compete-name">Open Programme</div>
-          <div class="compete-desc">Annual single-image submission. Camera & Mobile together.</div>
-          <span class="pill-soon compete-pill">Opens Q3 2026</span>
-        </div>
+        <ul class="sl-pr-league-features">
+          <li>DDI evaluation included</li>
+          <li>Weekly Challenge access</li>
+          <li>Annual Excellence eligibility</li>
+          <li>Rankings participation</li>
+        </ul>
+        <a href="{{ url_for('register') }}?league=mobile" class="sl-pr-btn-gold" style="width:100%;text-align:center;display:block">Join Mobile League</a>
       </div>
 
     </div>
   </div>
 
-  <!-- Top-up -->
-  <div class="topup-section">
-    <div class="section-label">Need More Images?</div>
-    <div style="max-width:600px;margin:0 auto;">
-      
-      <div class="topup-card">
-        <div>
-          <div class="topup-name">Image Top-up</div>
-          <div class="topup-desc">+5 scored images · Any League · ₹99 cash or 1,000 points</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          <div class="topup-price">₹99</div>
-          <a href="{{ url_for('dashboard') }}" class="plan-cta primary" style="padding:10px 20px;font-size:16px;">Purchase →</a>
-        </div>
+  <!-- ━━ PROGRAMMES ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-sec-warm">
+    <span class="sl-pr-sec-eyebrow">What you can enter</span>
+    <h2 class="sl-pr-h2">Programmes</h2>
+    <div class="sl-pr-prog-grid">
+      <div class="sl-pr-prog-card">
+        <svg class="sl-pr-prog-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 21l4-4 4 4"/><path d="M12 17V3"/><path d="M3 9l3 3-3 3"/><path d="M21 9l-3 3 3 3"/>
+        </svg>
+        <h3>Weekly Challenge</h3>
+        <p>Submit up to 3 images every week. Best score counts.</p>
+        <span class="sl-pr-prog-tag">Open · Free for subscribers</span>
       </div>
-
+      <div class="sl-pr-prog-card">
+        <svg class="sl-pr-prog-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+        <h3>Annual Excellence Award</h3>
+        <p>Year-round recognition based on your strongest work.</p>
+        <span class="sl-pr-prog-tag">Subscribers only</span>
+      </div>
+      <div class="sl-pr-prog-card">
+        <svg class="sl-pr-prog-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="1"/><path d="M2 7h20M7 2v5M17 2v5"/>
+        </svg>
+        <h3>Body of Work</h3>
+        <p>6–12 connected images. One story. One perspective.</p>
+        <span class="sl-pr-prog-tag">Opens Q3 2026</span>
+      </div>
+      <div class="sl-pr-prog-card">
+        <svg class="sl-pr-prog-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z" stroke-dasharray="2 2"/>
+        </svg>
+        <h3>Open Programme</h3>
+        <p>Annual single-image submission across all Leagues.</p>
+        <span class="sl-pr-prog-tag">Opens Q3 2026</span>
+      </div>
     </div>
   </div>
 
-  <!-- FAQ -->
-  <div class="faq-section">
-    <div class="section-label">Frequently Asked Questions</div>
-    
-    <div class="faq-item">
-      <div class="faq-q">Can I switch between Camera and Mobile League?</div>
-      <div class="faq-a">You can upgrade from Mobile to Camera anytime. Switching the other direction requires contacting support. Your scoring history carries over.</div>
+  <!-- ━━ TOP-UP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-sec">
+    <span class="sl-pr-sec-eyebrow">Top-up</span>
+    <h2 class="sl-pr-h2" style="margin-bottom:24px">Need more scored images?</h2>
+    <div class="sl-pr-topup-inner">
+      <div class="sl-pr-topup-icon-col">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+        </svg>
+      </div>
+      <div class="sl-pr-topup-copy">
+        <h3>Add images anytime</h3>
+        <p>Purchase additional scored uploads without changing your League or billing cycle.</p>
+      </div>
+      <div class="sl-pr-topup-right">
+        <div class="sl-pr-topup-price">+5 scored images <span>per pack</span></div>
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">₹99 cash <span style="font-weight:400;color:rgba(26,26,24,0.45)">or</span> 1,000 pts</div>
+        <a href="{{ url_for('redeem') }}" class="sl-pr-btn-gold">Purchase Top-up</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ━━ LEARNING + FAQ ━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-bottom-row">
+
+    <div class="sl-pr-learning">
+      <span class="sl-pr-sec-eyebrow">Coming Soon</span>
+      <h2>Improve without<br>participating.</h2>
+      <p>For photographers focused entirely on growth, critique, and learning — without rankings or programme participation.</p>
+      <ul class="sl-pr-learning-list">
+        <li>AI Mentor</li>
+        <li>Improvement Paths</li>
+        <li>12 images / month</li>
+      </ul>
+      <div class="sl-pr-learning-price">₹100 <span>/ month</span></div>
+      <button class="sl-pr-btn-outline">Notify Me</button>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-q">What if I run out of monthly images?</div>
-      <div class="faq-a">Purchase a top-up pack (₹99 for Mobile, ₹199 for Camera) — adds 5 scored images to your account for that month. Or wait until next billing cycle.</div>
+    <div class="sl-pr-faq">
+      <span class="sl-pr-sec-eyebrow">Frequently asked questions</span>
+      <h2 class="sl-pr-h2" style="margin-bottom:0">FAQ</h2>
+      <div class="sl-pr-faq-list">
+        <div class="sl-pr-faq-item">
+          <h3>Can I switch between Camera and Mobile League?</h3>
+          <p>You can upgrade from Mobile to Camera anytime. Your scoring history carries over.</p>
+        </div>
+        <div class="sl-pr-faq-item">
+          <h3>Do unused images roll over to next month?</h3>
+          <p>No. Allocations reset on your billing date.</p>
+        </div>
+        <div class="sl-pr-faq-item">
+          <h3>What if I run out of monthly images?</h3>
+          <p>You can purchase a top-up pack anytime to add more scored uploads.</p>
+        </div>
+        <div class="sl-pr-faq-item">
+          <h3>What's included in the Annual Excellence Award?</h3>
+          <p>Recognition is based on your highest-scoring images across the year. All subscribers are automatically eligible.</p>
+        </div>
+        <div class="sl-pr-faq-item">
+          <h3>Can I cancel anytime?</h3>
+          <p>Yes. Access continues until the end of the billing cycle.</p>
+        </div>
+        <div class="sl-pr-faq-item">
+          <h3>What payment methods do you accept?</h3>
+          <p>UPI, cards, and net banking via PayU. Points can also be used for top-ups and mentor sessions.</p>
+        </div>
+      </div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-q">Do unused images roll over to next month?</div>
-      <div class="faq-a">No. Your allocation resets on your billing date. Upload regularly to maximize value.</div>
-    </div>
+  </div>
 
-    <div class="faq-item">
-      <div class="faq-q">What's included in the Annual Excellence Award?</div>
-      <div class="faq-a">All subscribers are automatically entered. Your top 6 DDI scores in your strongest genre determine your ranking. See <a href="{{ url_for('poty') }}">Annual Excellence Award details</a>.</div>
+  <!-- ━━ FINAL CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="sl-pr-final">
+    {% if poty_hero and poty_hero.thumb_url %}
+    <img
+      src="{{ poty_hero.thumb_url }}"
+      alt=""
+      class="sl-pr-final-img"
+      onerror="this.style.display='none'"
+    >
+    <div class="sl-pr-final-fade"></div>
+    {% endif %}
+    <div class="sl-pr-final-copy">
+      <h2>One photograph can change<br>how you <em>see</em>.</h2>
+      <p>The goal is not simply to upload more images. It is to understand what makes a photograph communicate, resonate, and endure.</p>
     </div>
-
-    <div class="faq-item">
-      <div class="faq-q">Can I cancel anytime?</div>
-      <div class="faq-a">Yes. Cancel from your <a href="{{ url_for('dashboard') }}">Dashboard</a>. Access continues until the end of your current billing period. No refunds for partial months.</div>
+    <div class="sl-pr-final-actions">
+      <a href="{{ url_for('register') }}" class="sl-pr-btn-gold">Get Started Free</a>
+      <a href="{{ url_for('science') }}" class="sl-pr-btn-ghost">Learn About DDI</a>
     </div>
-
-    <div class="faq-item">
-      <div class="faq-q">What payment methods do you accept?</div>
-      <div class="faq-a">Credit/debit cards, UPI, net banking via PayU. We never store card details — all payments processed through RBI-authorised gateways.</div>
-    </div>
-
   </div>
 
 </div>
-
-<script>
-function toggleBilling() {
-  const toggle = document.getElementById('billing-toggle');
-  const isAnnual = toggle.checked;
-  
-  // Update labels
-  document.getElementById('lbl-monthly').classList.toggle('active', !isAnnual);
-  document.getElementById('lbl-annual').classList.toggle('active', isAnnual);
-  
-  // Toggle content
-  document.querySelectorAll('.monthly-content').forEach(el => {
-    el.style.display = isAnnual ? 'none' : 'block';
-  });
-  document.querySelectorAll('.annual-content').forEach(el => {
-    el.style.display = isAnnual ? 'block' : 'none';
-  });
-}
-</script>
-
 {% endblock %}
