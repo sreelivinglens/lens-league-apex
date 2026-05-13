@@ -1,121 +1,815 @@
 {% extends "base.html" %}
 {% block title %}About Us — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="India's first AI-powered photography skill assessment platform — built for photographers who take their craft seriously.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
 {% block extra_css %}
 <style>
-  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
-  .policy-hero { margin-bottom:48px; }
-  .policy-hero h1 { font-size:36px; font-weight:800; color:var(--text-primary); margin-bottom:12px; }
-  .policy-hero p  { font-size:18px; color:var(--text-muted); line-height:1.6; }
-  .policy-section { margin-bottom:40px; }
-  .policy-section h2 { font-size:22px; font-weight:700; color:#2C3E6B; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
-  .policy-section p  { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:14px; }
-  .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
-  .policy-section ul li { margin-bottom:6px; }
-  .info-bar { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:40px; }
-  .info-bar-row { display:flex; gap:12px; align-items:flex-start; margin-bottom:10px; }
-  .info-bar-row:last-child { margin-bottom:0; }
-  .info-bar-label { font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); min-width:120px; padding-top:2px; }
-  .info-bar-value { font-size:16px; color:var(--text-primary); }
-  .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
-  .policy-links a { font-size:16px; color:#2C3E6B; text-decoration:none; }
-  .policy-links a:hover { text-decoration:underline; }
-  @media (max-width:600px) {
-    .policy-hero h1 { font-size:28px; }
-    .info-bar-row { flex-direction:column; gap:4px; }
-    .info-bar-label { min-width:auto; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ABOUT — Session 24
+   Inter only · #F7F5F2 light · #EDEAE4 warm
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #1A2744 slate blue (never black for dark sections)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-about) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+
+.sl-about, .sl-about * {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-ab-hero {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  max-height: 480px;
+  background: #1A2744;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.sl-ab-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-ab-hero-img[src=""],
+.sl-ab-hero-img:not([src]) {
+  display: none;
+}
+.sl-ab-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: rgba(26,39,68,0.52);
+}
+.sl-ab-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 40px 48px;
+  width: 520px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(26,39,68,0.30);
+  backdrop-filter: blur(2px);
+  margin: 0 64px;
+}
+.sl-ab-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-ab-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-ab-hero-h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-ab-hero-h1 em {
+  font-style: normal;
+  color: #F5C518;
+}
+.sl-ab-hero-sub {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-ab-hero-body {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.6;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-ab-sec {
+  padding: 80px 64px;
+}
+.sl-ab-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-ab-sec-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 26px;
+}
+
+/* ━━ ORIGIN: WHO WE ARE + WHY WE EXIST ━━ */
+.sl-ab-origin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: start;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-ab-col-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  margin-bottom: 16px;
+}
+.sl-ab-col-h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1A1A18;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+}
+
+/* Info table */
+.sl-ab-info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sl-ab-info-table tr {
+  border-bottom: 1px solid rgba(26,26,24,0.10);
+}
+.sl-ab-info-table tr:first-child {
+  border-top: 1px solid rgba(26,26,24,0.10);
+}
+.sl-ab-info-table td {
+  padding: 14px 0;
+  vertical-align: middle;
+}
+.sl-ab-ik {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 16px;
+  min-width: 128px;
+}
+.sl-ab-ik svg {
+  flex-shrink: 0;
+  opacity: 0.32;
+}
+.sl-ab-ilab {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(26,26,24,0.42);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.sl-ab-ival {
+  font-size: 15px;
+  color: #1A1A18;
+  line-height: 1.5;
+}
+.sl-ab-ival a {
+  color: #2C3E6B;
+  text-decoration: none;
+}
+.sl-ab-ival a:hover {
+  text-decoration: underline;
+}
+
+/* Story copy */
+.sl-ab-story p {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(26,26,24,0.74);
+  line-height: 1.8;
+  margin-bottom: 14px;
+  text-align: justify;
+}
+.sl-ab-story p:last-child {
+  margin-bottom: 0;
+}
+.sl-ab-story p strong {
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-ab-story p em {
+  font-style: italic;
+  color: rgba(26,26,24,0.85);
+}
+
+/* ━━ WHAT WE OFFER ━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-ab-offer-head {
+  text-align: center;
+  margin-bottom: 52px;
+}
+.sl-ab-offer-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.40);
+  margin-bottom: 8px;
+}
+.sl-ab-offer-h2 {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #1A1A18;
+  margin-bottom: 14px;
+}
+.sl-ab-offer-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin: 0 auto;
+}
+.sl-ab-offer-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+.sl-ab-offer-card {
+  background: #F7F5F2;
+  padding: 30px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sl-ab-offer-icon {
+  width: 38px;
+  height: 38px;
+  background: #1A2744;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sl-ab-offer-icon svg {
+  display: block;
+}
+.sl-ab-offer-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.50;
+}
+.sl-ab-offer-desc {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+}
+
+/* ━━ COMMITMENT + BUSINESS ━━━━━━━━━━━━━━ */
+.sl-ab-trust-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+}
+.sl-ab-trust-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 14px;
+}
+.sl-ab-trust-rule {
+  width: 24px;
+  height: 2px;
+  background: rgba(245,197,24,0.35);
+  margin-bottom: 22px;
+}
+.sl-ab-trust-h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+  line-height: 1.25;
+}
+.sl-ab-trust-body p {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.62);
+  line-height: 1.8;
+  margin-bottom: 12px;
+  text-align: justify;
+}
+.sl-ab-trust-body p:last-child {
+  margin-bottom: 0;
+}
+.sl-ab-trust-body strong {
+  color: rgba(255,255,255,0.90);
+  font-weight: 600;
+}
+
+/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-ab-cta-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+}
+.sl-ab-cta-h {
+  font-size: 34px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.sl-ab-cta-h em {
+  font-style: normal;
+  color: #F5C518;
+}
+.sl-ab-cta-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sl-ab-cta-sub {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.52);
+  line-height: 1.7;
+}
+.sl-ab-cta-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sl-ab-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5C518;
+  color: #1A1A18;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  text-decoration: none;
+  min-height: 44px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-ab-btn-gold:hover { opacity: 0.88; }
+.sl-ab-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #FFFFFF;
+  border: 1.5px solid rgba(255,255,255,0.32);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  text-decoration: none;
+  min-height: 44px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-ab-btn-outline:hover { border-color: rgba(255,255,255,0.60); }
+
+/* ━━ CONTACT + POLICY LINKS ━━━━━━━━━━━━━ */
+.sl-ab-contact-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+}
+.sl-ab-contact-h {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 20px;
+}
+.sl-ab-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sl-ab-contact-item svg {
+  flex-shrink: 0;
+  color: #2C3E6B;
+}
+.sl-ab-contact-item a,
+.sl-ab-contact-item span {
+  font-size: 16px;
+  color: #1A1A18;
+  line-height: 1.5;
+}
+.sl-ab-contact-item a {
+  color: #2C3E6B;
+  text-decoration: none;
+}
+.sl-ab-contact-item a:hover { text-decoration: underline; }
+.sl-ab-contact-note {
+  font-size: 14px;
+  color: rgba(26,26,24,0.42);
+  margin-top: 6px;
+  line-height: 1.6;
+}
+.sl-ab-policy-links {
+  display: flex;
+  flex-direction: column;
+}
+.sl-ab-policy-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(26,26,24,0.08);
+  font-size: 16px;
+  color: #2C3E6B;
+  text-decoration: none;
+  line-height: 1.5;
+  min-height: 44px;
+}
+.sl-ab-policy-link:last-child { border-bottom: none; }
+.sl-ab-policy-link svg { opacity: 0.38; flex-shrink: 0; }
+.sl-ab-policy-link:hover { text-decoration: underline; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+   Hero: 16:9 image on top, #2C3E6B text below
+   All grids collapse to single column
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  /* HERO */
+  .sl-ab-hero {
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
   }
+  .sl-ab-hero-img {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    display: block;
+  }
+  .sl-ab-hero-fade { display: none; }
+  .sl-ab-hero-content {
+    position: static;
+    background: #2C3E6B;
+    margin: 0;
+    padding: 16px 16px 24px;
+    width: 100%;
+    max-width: none;
+    min-height: auto;
+    backdrop-filter: none;
+  }
+  .sl-ab-hero-h1 {
+    font-size: 26px;
+    text-shadow: none;
+    margin-bottom: 0;
+  }
+  .sl-ab-hero-body { display: none; }
+  .sl-ab-hero-sub  { display: none; }
+
+  /* SECTIONS */
+  .sl-ab-sec { padding: 48px 20px; }
+
+  /* ORIGIN — stack */
+  .sl-ab-origin-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* OFFER — 2-col on mobile */
+  .sl-ab-offer-grid { grid-template-columns: 1fr 1fr; }
+
+  /* TRUST */
+  .sl-ab-trust-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* CTA */
+  .sl-ab-cta-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .sl-ab-cta-h { font-size: 26px; }
+  .sl-ab-cta-btns { flex-direction: column; }
+  .sl-ab-btn-gold,
+  .sl-ab-btn-outline { width: 100%; }
+
+  /* CONTACT */
+  .sl-ab-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sl-ab-offer-grid { grid-template-columns: 1fr; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="policy-wrap">
+<div class="sl-about">
 
-  <div class="policy-hero">
-    <h1>About Shutter League</h1>
-    <p>India&#39;s first AI-powered photography skill assessment platform — built for photographers who take their craft seriously.</p>
-  </div>
-
-  <div class="info-bar">
-    <div class="info-bar-row">
-      <span class="info-bar-label">Legal Name</span>
-      <span class="info-bar-value">Shutter League</span>
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <section class="sl-ab-hero">
+    {% if about_hero and about_hero.thumb_url %}
+    <img
+      class="sl-ab-hero-img"
+      src="{{ about_hero.thumb_url }}"
+      alt="Photograph by a Shutter League member"
+      onerror="this.style.display='none'"
+    >
+    {% endif %}
+    <div class="sl-ab-hero-fade"></div>
+    <div class="sl-ab-hero-content">
+      <p class="sl-ab-eyebrow">About Shutter League</p>
+      <div class="sl-ab-gold-rule"></div>
+      <h1 class="sl-ab-hero-h1">We exist to give photographers <em>the truth</em> about their work.</h1>
+      <p class="sl-ab-hero-sub">HONEST FEEDBACK. REAL IMPROVEMENT.</p>
+      <p class="sl-ab-hero-body">India&#39;s first AI-powered photography skill assessment platform — built for photographers who take their craft seriously.</p>
     </div>
-    <div class="info-bar-row">
-      <span class="info-bar-label">Website</span>
-      <span class="info-bar-value"><a href="https://shutterleague.com" style="color:#2C3E6B;">shutterleague.com</a></span>
+  </section>
+
+  <!-- ── WHO WE ARE (left) + WHY WE EXIST (right) ─────────────── -->
+  <section class="sl-ab-sec" style="background:#F7F5F2;">
+    <div class="sl-ab-origin-grid">
+
+      <!-- LEFT: WHO WE ARE -->
+      <div>
+        <p class="sl-ab-col-eyebrow">Who We Are</p>
+        <div class="sl-ab-sec-rule"></div>
+        <h2 class="sl-ab-col-h2">About Shutter League</h2>
+        <table class="sl-ab-info-table">
+          <tr>
+            <td>
+              <div class="sl-ab-ik">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span class="sl-ab-ilab">Legal Name</span>
+              </div>
+            </td>
+            <td><span class="sl-ab-ival">Shutter League</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="sl-ab-ik">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="sl-ab-ilab">Website</span>
+              </div>
+            </td>
+            <td><span class="sl-ab-ival"><a href="https://shutterleague.com">shutterleague.com</a></span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="sl-ab-ik">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span class="sl-ab-ilab">Business Type</span>
+              </div>
+            </td>
+            <td><span class="sl-ab-ival">Digital Platform — Photography Skill Assessment &amp; Learning</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="sl-ab-ik">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span class="sl-ab-ilab">Location</span>
+              </div>
+            </td>
+            <td><span class="sl-ab-ival">Bengaluru, Karnataka, India</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="sl-ab-ik">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span class="sl-ab-ilab">Contact</span>
+              </div>
+            </td>
+            <td><span class="sl-ab-ival"><a href="mailto:info@shutterleague.com">info@shutterleague.com</a></span></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- RIGHT: WHY WE EXIST -->
+      <div>
+        <p class="sl-ab-col-eyebrow">Why We Exist</p>
+        <div class="sl-ab-sec-rule"></div>
+        <div class="sl-ab-story">
+          <p>The first photograph was taken in 1826.</p>
+          <p>In the 200 years since, photography has become the most widely practised creative skill on earth. Chefs have Michelin stars. Tennis players have ATP rankings. Cricketers have ICC ratings. Wine has Robert Parker. Chess has Elo.</p>
+          <p><strong>Photographers have likes.</strong></p>
+          <p>Likes from family. Encouragement from friends. Polite silence from strangers. And if you are lucky, a club judge who says &#39;lovely bokeh&#39; before moving on to the next image without explaining what was actually wrong.</p>
+          <p>Nobody tells you the truth about your photography. Not because people do not care. Because photography is personal. Criticism of the image feels like criticism of the person. And so the honest feedback never comes. Photographers stay stuck. They improve slowly, invisibly, with no way to measure how far they have come or how far they have to go.</p>
+          <p><strong>Shutter League was built to fix that.</strong></p>
+          <p>We are a photography skill assessment platform. Every photograph uploaded to Shutter League is evaluated across five dimensions — Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient — by an AI engine trained on photographic principles. The score is specific, the feedback is actionable, and unlike a club judge, the engine has no ego, no favourites, and no social relationship to protect.</p>
+          <p><em>For the first time in 200 years of photography, photographers have a rating.</em></p>
+          <p>We are based in Bengaluru, India. Built by photographers, for photographers. Every serious photographer deserves an honest answer to the question they have always wanted to ask: <em>how good is my work, really?</em></p>
+        </div>
+      </div>
+
     </div>
-    <div class="info-bar-row">
-      <span class="info-bar-label">Business Type</span>
-      <span class="info-bar-value">Digital Platform — Photography Skill Assessment &amp; Learning</span>
+  </section>
+
+  <!-- ── WHAT WE OFFER ─────────────────────────────────────────── -->
+  <section class="sl-ab-sec" style="background:#EDEAE4;">
+    <div class="sl-ab-offer-head">
+      <p class="sl-ab-offer-eyebrow">What We Offer</p>
+      <h2 class="sl-ab-offer-h2">Digital services for serious photographers</h2>
+      <div class="sl-ab-offer-rule"></div>
     </div>
-    <div class="info-bar-row">
-      <span class="info-bar-label">Location</span>
-      <span class="info-bar-value">Bengaluru, Karnataka, India</span>
+    <div class="sl-ab-offer-grid">
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">AI-Powered Image Scoring (DDI)</p>
+        <p class="sl-ab-offer-desc">Every uploaded photograph is scored across five dimensions: Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are on a 0–10 scale per dimension.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">AI Mentor Feedback</p>
+        <p class="sl-ab-offer-desc">Every scored image receives specific, dimension-level feedback and improvement paths. Available on all paid tiers.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Score History &amp; Progress Tracking</p>
+        <p class="sl-ab-offer-desc">Track your improvement arc across uploads, genres, and dimensions over time.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Weekly Practice Submissions</p>
+        <p class="sl-ab-offer-desc">A themed weekly prompt open to all members. DDI-scored, no jury. Positioned as structured practice, not formal evaluation.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Photographer of the Year (POTY)</p>
+        <p class="sl-ab-offer-desc">A year-long scoring programme tracking each member&#39;s top-6 scores per genre. Results evaluated by a human jury at year end. Eligibility requires a Camera or Mobile subscription.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Juried Photography Programmes</p>
+        <p class="sl-ab-offer-desc">Periodic open submission programmes evaluated by a panel of photography professionals. Human jury required for all formal evaluations.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Peer Rating</p>
+        <p class="sl-ab-offer-desc">Subscribed members can participate in blind peer evaluation of each other&#39;s work.</p>
+      </div>
+
+      <div class="sl-ab-offer-card">
+        <div class="sl-ab-offer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <p class="sl-ab-offer-title">Subscriptions</p>
+        <p class="sl-ab-offer-desc">Monthly plans (Mobile League at &#8377;99/month, Camera League at &#8377;199/month) providing platform access, scoring, feedback, and programme eligibility.</p>
+      </div>
+
     </div>
-    <div class="info-bar-row">
-      <span class="info-bar-label">Contact</span>
-      <span class="info-bar-value"><a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a></span>
+  </section>
+
+  <!-- ── OUR COMMITMENT + BUSINESS CATEGORY ───────────────────── -->
+  <section class="sl-ab-sec" style="background:#1A2744;">
+    <div class="sl-ab-trust-grid">
+
+      <div>
+        <p class="sl-ab-trust-label">Our Commitment</p>
+        <div class="sl-ab-trust-rule"></div>
+        <h3 class="sl-ab-trust-h3">Transparency in scoring.<br>Integrity in evaluation.</h3>
+        <div class="sl-ab-trust-body">
+          <p>We are committed to transparency in scoring, integrity in evaluation, and privacy in how we handle member data. Every score is generated by the same engine, applied consistently across all images, with no human subjectivity in the initial assessment.</p>
+          <p>Where human jury evaluation applies — in formal annual programmes — it is disclosed explicitly.</p>
+          <p><strong>We are building the infrastructure that photography has lacked for 200 years. We intend to do it honestly.</strong></p>
+        </div>
+      </div>
+
+      <div>
+        <p class="sl-ab-trust-label">Business Category</p>
+        <div class="sl-ab-trust-rule"></div>
+        <h3 class="sl-ab-trust-h3">Digital services platform.</h3>
+        <div class="sl-ab-trust-body">
+          <p>Shutter League operates as a <strong>digital services platform</strong> in the category of <strong>Software &amp; Technology — Photography Skill Assessment</strong>. All transactions on this platform are for digital services including subscription plans and platform access.</p>
+          <p>No physical goods are sold or shipped.</p>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </section>
 
-  <div class="policy-section">
-    <h2>Why We Exist</h2>
-    <p>The first photograph was taken in 1826.</p>
-    <p>In the 200 years since, photography has become the most widely practised creative skill on earth. Chefs have Michelin stars. Tennis players have ATP rankings. Cricketers have ICC ratings. Wine has Robert Parker. Chess has Elo.</p>
-    <p>Photographers have likes.</p>
-    <p>Likes from family. Encouragement from friends. Polite silence from strangers. And if you are lucky, a club judge who says &#39;lovely bokeh&#39; before moving on to the next image without explaining what was actually wrong.</p>
-    <p>Nobody tells you the truth about your photography. Not because people do not care. Because photography is personal. Criticism of the image feels like criticism of the person. And so the honest feedback never comes. Photographers stay stuck. They improve slowly, invisibly, with no way to measure how far they have come or how far they have to go.</p>
-    <p>Shutter League was built to fix that.</p>
-    <p>We are a photography skill assessment platform. Every photograph uploaded to Shutter League is evaluated across five dimensions — Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient — by an AI engine trained on photographic principles. The score is specific, the feedback is actionable, and unlike a club judge, the engine has no ego, no favourites, and no social relationship to protect.</p>
-    <p>For the first time in 200 years of photography, photographers have a rating.</p>
-    <p>We are based in Bengaluru, India. Built by photographers, for photographers. Every serious photographer deserves an honest answer to the question they have always wanted to ask: <em>how good is my work, really?</em></p>
-  </div>
+  <!-- ── CTA BANNER ────────────────────────────────────────────── -->
+  <section class="sl-ab-sec" style="background:#1A2744; border-top:1px solid rgba(255,255,255,0.08);">
+    <div class="sl-ab-cta-inner">
+      <h2 class="sl-ab-cta-h">Let&#39;s build a <em>stronger</em><br>photography community.</h2>
+      <div class="sl-ab-cta-right">
+        <p class="sl-ab-cta-sub">Join photographers who are serious about honest feedback and real improvement.</p>
+        <div class="sl-ab-cta-btns">
+          <a href="{{ url_for('register') }}" class="sl-ab-btn-gold">Join Shutter League</a>
+          <a href="{{ url_for('how_it_works') }}" class="sl-ab-btn-outline">Explore the Science</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <div class="policy-section">
-    <h2>What We Offer</h2>
-    <p>Shutter League offers the following digital services to registered members:</p>
-    <ul>
-      <li><strong>AI-Powered Image Scoring (DDI)</strong> — Every uploaded photograph is scored across five dimensions: Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are on a 0–10 scale per dimension.</li>
-      <li><strong>AI Mentor Feedback</strong> — Every scored image receives specific, dimension-level feedback and improvement paths. Available on all paid tiers.</li>
-      <li><strong>Score History &amp; Progress Tracking</strong> — Members can track their improvement arc across uploads, genres, and dimensions over time.</li>
-      <li><strong>Weekly Practice Submissions</strong> — A themed weekly prompt open to all members. DDI-scored, no jury. Positioned as structured practice, not formal evaluation.</li>
-      <li><strong>Photographer of the Year (POTY)</strong> — A year-long scoring programme tracking each member&#39;s top-6 scores per genre. Results evaluated by a human jury at year end. Eligibility requires a Camera or Mobile subscription.</li>
-      <li><strong>Juried Photography Programmes</strong> — Periodic open submission programmes evaluated by a panel of photography professionals. Human jury required for all formal evaluations.</li>
-      <li><strong>Peer Rating</strong> — Subscribed members can participate in blind peer evaluation of each other&#39;s work.</li>
-      <li><strong>Subscriptions</strong> — Monthly plans (Mobile League at &#8377;99/month, Camera League at &#8377;199/month) providing platform access, scoring, feedback, and programme eligibility.</li>
-    </ul>
-  </div>
+  <!-- ── CONTACT + POLICY LINKS ────────────────────────────────── -->
+  <section class="sl-ab-sec" style="background:#F7F5F2; border-top:1px solid rgba(26,26,24,0.08);">
+    <div class="sl-ab-contact-grid">
 
-  <div class="policy-section">
-    <h2>Our Commitment</h2>
-    <p>We are committed to transparency in scoring, integrity in evaluation, and privacy in how we handle member data. Every score is generated by the same engine, applied consistently across all images, with no human subjectivity in the initial assessment. Where human jury evaluation applies — in formal annual programmes — it is disclosed explicitly.</p>
-    <p>We are building the infrastructure that photography has lacked for 200 years. We intend to do it honestly.</p>
-  </div>
+      <div>
+        <p class="sl-ab-contact-h">Contact Us</p>
+        <div class="sl-ab-contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <a href="mailto:info@shutterleague.com">info@shutterleague.com</a>
+        </div>
+        <div class="sl-ab-contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <a href="{{ url_for('contact') }}">shutterleague.com/contact</a>
+        </div>
+        <div class="sl-ab-contact-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Bengaluru, Karnataka, India</span>
+        </div>
+        <p class="sl-ab-contact-note">We aim to respond to all queries within 2 business days.</p>
+      </div>
 
-  <div class="policy-section">
-    <h2>Business Category</h2>
-    <p>Shutter League operates as a <strong>digital services platform</strong> in the category of <strong>Software &amp; Technology — Photography Skill Assessment</strong>. All transactions on this platform are for digital services including subscription plans and platform access. No physical goods are sold or shipped.</p>
-  </div>
+      <div>
+        <p class="sl-ab-contact-h">Legal &amp; Policies</p>
+        <div class="sl-ab-policy-links">
+          <a href="{{ url_for('privacy') }}" class="sl-ab-policy-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            Privacy Policy
+          </a>
+          <a href="{{ url_for('terms') }}" class="sl-ab-policy-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            Terms &amp; Conditions
+          </a>
+          <a href="{{ url_for('refund_policy') }}" class="sl-ab-policy-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            Refund Policy
+          </a>
+          <a href="{{ url_for('shipping_policy') }}" class="sl-ab-policy-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            Shipping &amp; Returns Policy
+          </a>
+          <a href="{{ url_for('contact') }}" class="sl-ab-policy-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2C3E6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            Contact Us
+          </a>
+        </div>
+      </div>
 
-  <div class="policy-section">
-    <h2>Contact Us</h2>
-    <p>For any queries, support requests, or grievances, please reach out to us:</p>
-    <ul>
-      <li><strong>Email:</strong> <a href="mailto:info@shutterleague.com" style="color:#2C3E6B;">info@shutterleague.com</a></li>
-      <li><strong>Website:</strong> <a href="https://shutterleague.com/contact" style="color:#2C3E6B;">shutterleague.com/contact</a></li>
-      <li><strong>Location:</strong> Bengaluru, Karnataka, India</li>
-    </ul>
-    <p>We aim to respond to all queries within 2 business days.</p>
-  </div>
+    </div>
+  </section>
 
-  <div class="policy-links">
-    <a href="{{ url_for('privacy') }}">Privacy Policy</a>
-    <a href="{{ url_for('terms') }}">Terms &amp; Conditions</a>
-    <a href="{{ url_for('refund_policy') }}">Refund Policy</a>
-    <a href="{{ url_for('shipping_policy') }}">Shipping &amp; Returns Policy</a>
-    <a href="{{ url_for('contact') }}">Contact Us</a>
-  </div>
-
-</div>
+</div>{# end sl-about #}
 {% endblock %}
