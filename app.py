@@ -5828,6 +5828,28 @@ def mentor_register(slug):
         flash('Mentor not found.', 'error')
         return redirect(url_for('mentors'))
 
+    # Merge DB profile data over hardcoded defaults
+    mentor = dict(mentor)
+    try:
+        row = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles WHERE slug = :s AND is_active = TRUE"),
+            {'s': slug}
+        ).fetchone()
+        if row:
+            r = dict(row._mapping)
+            if r.get('display_name'):   mentor['name']          = r['display_name']
+            if r.get('bio'):            mentor['bio']           = r['bio']
+            if r.get('genres'):         mentor['genres']        = r['genres']
+            if r.get('photo_url'):      mentor['photo_url']     = r['photo_url']
+            if r.get('photo_2_url'):    mentor['photo_2_url']   = r['photo_2_url']
+            if r.get('photo_3_url'):    mentor['photo_3_url']   = r['photo_3_url']
+            if r.get('instagram_url'):  mentor['instagram_url'] = r['instagram_url']
+            if r.get('website_url'):    mentor['website_url']   = r['website_url']
+            if r.get('youtube_url'):    mentor['youtube_url']   = r['youtube_url']
+            if r.get('bio_extended'):   mentor['bio_extended']  = r['bio_extended']
+    except Exception as _e:
+        app.logger.warning(f'[mentor_register] DB profile merge failed: {_e}')
+
     # Ensure mentor_sessions table exists
     try:
         db.session.execute(db.text("""
