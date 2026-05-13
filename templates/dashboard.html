@@ -781,11 +781,34 @@ function toggleNotifStrip() {
 {% if true %}
 <div class="mentor-nudge">
   <div class="mentor-nudge-left">
-    <div class="mentor-nudge-eyebrow">Human Mentor Review · Pay Per Session</div>
-    <div class="mentor-nudge-title">Get your Images Reviewed by our Mentors.</div>
-    <div class="mentor-nudge-sub">Experienced photography Mentors. Genuine feedback.</div>
+    <div class="mentor-nudge-eyebrow">
+      {% if stats.scored >= 3 and stats.avg_score %}
+        Avg Score: {{ '%.2f'|format(stats.avg_score) }} · {{ stats.scored }} image{{ 's' if stats.scored != 1 else '' }} scored
+      {% else %}
+        Human Mentor Review · Pay Per Session
+      {% endif %}
+    </div>
+    <div class="mentor-nudge-title">
+      {% if poty_tracker and poty_tracker.genre_rows %}
+        {% set _weakest_row = poty_tracker.genre_rows | sort(attribute='top6_avg') | first %}
+        {% if _weakest_row and _weakest_row.top6_avg %}
+          Your {{ _weakest_row.genre }} needs work — get a mentor review.
+        {% else %}
+          Get your images reviewed by our mentors.
+        {% endif %}
+      {% else %}
+        Get your images reviewed by our mentors.
+      {% endif %}
+    </div>
+    <div class="mentor-nudge-sub">
+      {% if stats.best_score %}
+        Best score: {{ stats.best_score }} · A mentor can help you push further.
+      {% else %}
+        Experienced photography mentors. Genuine feedback.
+      {% endif %}
+    </div>
   </div>
-  <a href="{{ url_for('learning') }}" class="btn btn-solid"
+  <a href="{{ url_for('mentors') }}" class="btn btn-solid"
      style="font-size:16px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
     Choose your Mentor →
   </a>
