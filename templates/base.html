@@ -628,7 +628,7 @@ tbody tr:hover { background: rgba(245,197,24,0.12); }
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 /* TODO: Add social media icons (Instagram, YouTube, Facebook) to footer — Session 16 */
 footer {
-  background: #0D0D0B;
+  background: #1A2744;
   border-top: none;
   padding: 0;
   font-family: 'Inter', sans-serif;
@@ -687,9 +687,10 @@ footer {
   color: rgba(255,255,255,0.38);
 }
 @media (max-width: 768px) {
-  .footer-top { height: auto; padding: 16px var(--page-pad); flex-direction: column; align-items: flex-start; gap: 12px; }
-  .footer-links { justify-content: flex-start; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .footer-top { height: auto; padding: 16px var(--page-pad) 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .footer-links { justify-content: flex-start; gap: 2px; }
+  .footer-links a { font-size: 13px; padding: 5px 8px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 12px; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
@@ -980,9 +981,13 @@ img {
       <a href="/privacy">Privacy Policy</a>
       <a href="/refund-policy">Refund Policy</a>
       <a href="/shipping-policy">Shipping &amp; Returns</a>
+      <a href="{{ url_for('how_it_works') }}">How It Works</a>
+      <a href="{{ url_for('science') }}">Science</a>
+      <a href="{{ url_for('learning') }}">Learning</a>
+      <a href="{{ url_for('mentors') }}">Mentors</a>
+      <a href="{{ url_for('bow_info') }}">Body of Work</a>
       <a href="/contact">Contact Us</a>
       <a href="/faq">FAQ</a>
-      <a href="{{ url_for('poty') }}">Awards</a>
       <a href="/programme-rules">Programme Rules</a>
     </div>
   </div>
