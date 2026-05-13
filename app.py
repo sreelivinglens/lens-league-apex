@@ -4883,7 +4883,25 @@ def stats_page():
 
 @app.route('/science')
 def science():
-    return render_template('science.html')
+    try:
+        _sci_base = (Image.query
+                     .filter(Image.status == 'scored',
+                             Image.score  != None,
+                             Image.is_public == True,
+                             Image.is_flagged == False,
+                             Image.thumb_url  != None,
+                             Image.tier.in_(['Master', 'Grandmaster', 'Legend']),
+                             Image.score >= 8.0)
+                     .order_by(db.func.random()))
+        sci_hero = _sci_base.first()
+        sci_mid  = _sci_base.offset(1).first()
+        sci_cta  = _sci_base.offset(2).first()
+    except Exception:
+        sci_hero = sci_mid = sci_cta = None
+    return render_template('science.html',
+                           sci_hero=sci_hero,
+                           sci_mid=sci_mid,
+                           sci_cta=sci_cta)
 
 @app.route('/sree-admin', methods=['GET', 'POST'])
 def sree_admin_login():
