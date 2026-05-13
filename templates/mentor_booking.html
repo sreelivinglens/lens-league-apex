@@ -149,6 +149,9 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
   margin-bottom: 6px;
 }
 .sl-mbk-meta-item strong { color: #1A1A18; }
+.sl-mbk-social { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid rgba(26,26,24,0.08); }
+.sl-mbk-social-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(26,26,24,0.55); text-decoration: none; padding: 5px 10px; border: 1px solid rgba(26,26,24,0.15); border-radius: 2px; transition: color 0.2s, border-color 0.2s; }
+.sl-mbk-social-link:hover { color: #1A1A18; border-color: rgba(26,26,24,0.35); }
 .sl-mbk-meta-item:last-child { margin-bottom: 0; }
 
 /* ━━ RIGHT — BOOKING FORM ━━━━━━━━━━━━━━━ */
@@ -463,7 +466,7 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
       <div class="sl-mbk-mentor">
         <div class="sl-mbk-photo">
           <img
-            src="{{ url_for('static', filename=mentor.photo) }}"
+            src="{{ mentor.photo_url if mentor.photo_url else url_for('static', filename=mentor.photo) }}"
             alt="{{ mentor.name }}"
             onerror="this.style.display='none'"
           >
@@ -492,6 +495,28 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             <strong>15-day cooldown</strong> with same mentor
           </div>
+          {% if mentor.instagram_url or mentor.website_url or mentor.youtube_url %}
+          <div class="sl-mbk-social">
+            {% if mentor.instagram_url %}
+            <a href="{{ mentor.instagram_url }}" target="_blank" rel="noopener" class="sl-mbk-social-link" aria-label="Instagram">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              Instagram
+            </a>
+            {% endif %}
+            {% if mentor.website_url %}
+            <a href="{{ mentor.website_url }}" target="_blank" rel="noopener" class="sl-mbk-social-link" aria-label="Website">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Website
+            </a>
+            {% endif %}
+            {% if mentor.youtube_url %}
+            <a href="{{ mentor.youtube_url }}" target="_blank" rel="noopener" class="sl-mbk-social-link" aria-label="YouTube">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+              YouTube
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
       </div>
 
