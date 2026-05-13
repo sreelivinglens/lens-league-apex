@@ -890,6 +890,7 @@ img {
       {% endif %}
     {% else %}
       <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}nav-active{% endif %}">How It Works</a>
+      <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
       <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learning</a>
       <a href="/mentors" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
       <a href="{{ url_for('bow_info') }}" class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
@@ -932,6 +933,7 @@ img {
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+      <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
       <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Mentors</a>
       <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
