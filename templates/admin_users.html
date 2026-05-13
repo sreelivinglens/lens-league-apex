@@ -7,7 +7,7 @@
   .page-header { padding: clamp(32px,5vw,56px) 0 32px; }
   .page-header h1 { font-size: clamp(22px,4vw,36px); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
   .page-header p { font-size: 17px; color: var(--text-secondary); }
-  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 32px; }
+  .stats-row { display: grid; grid-template-columns: repeat(6,1fr); gap: 14px; margin-bottom: 32px; }
   .stat-card { background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 22px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
   .stat-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
   .stat-lbl { font-family: var(--font-mono); font-size: 15px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
@@ -91,6 +91,14 @@
     <div class="stat-card">
       <div class="stat-val">{{ users|rejectattr('is_subscribed')|list|length }}</div>
       <div class="stat-lbl">Free Tier</div>
+    </div>
+    <div class="stat-card" style="border-top: 3px solid var(--gold);">
+      <div class="stat-val">{{ new_today }}</div>
+      <div class="stat-lbl">Joined Today</div>
+    </div>
+    <div class="stat-card" style="border-top: 3px solid var(--gold);">
+      <div class="stat-val">{{ new_7days }}</div>
+      <div class="stat-lbl">Last 7 Days</div>
     </div>
   </div>
 
