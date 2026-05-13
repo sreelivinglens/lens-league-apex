@@ -72,9 +72,9 @@ body:has(.sl-mrf) main { padding: 0 !important; max-width: none !important; marg
     <!-- Left: image + context -->
     <div>
       <div class="sl-mrf-context">
-        {% if session.thumb_url %}
-          <img src="{{ session.thumb_url }}" class="sl-mrf-img"
-               alt="{{ session.asset_name }}"
+        {% if session_row.thumb_url %}
+          <img src="{{ session_row.thumb_url }}" class="sl-mrf-img"
+               alt="{{ session_row.asset_name }}"
                onerror="this.style.display='none'">
         {% else %}
           <div class="sl-mrf-img-placeholder">No image preview</div>
@@ -84,37 +84,30 @@ body:has(.sl-mrf) main { padding: 0 !important; max-width: none !important; marg
           <div class="sl-mrf-ctx-title">Submission Details</div>
           <div class="sl-mrf-ctx-row">
             <span class="sl-mrf-ctx-key">Photographer</span>
-            <span class="sl-mrf-ctx-val">{{ session.full_name or session.username }}</span>
+            <span class="sl-mrf-ctx-val">{{ session_row.full_name or session_row.username }}</span>
           </div>
           <div class="sl-mrf-ctx-row">
             <span class="sl-mrf-ctx-key">Image</span>
-            <span class="sl-mrf-ctx-val">{{ session.asset_name or '—' }}</span>
+            <span class="sl-mrf-ctx-val">{{ session_row.asset_name or '—' }}</span>
           </div>
           <div class="sl-mrf-ctx-row">
             <span class="sl-mrf-ctx-key">Genre</span>
-            <span class="sl-mrf-ctx-val">{{ session.genre or '—' }}</span>
+            <span class="sl-mrf-ctx-val">{{ session_row.genre or '—' }}</span>
           </div>
           <div class="sl-mrf-ctx-row">
             <span class="sl-mrf-ctx-key">DDI Score</span>
-            <span class="sl-mrf-ctx-val">{{ "%.2f"|format(session.score) if session.score else '—' }} — {{ session.tier or '' }}</span>
+            <span class="sl-mrf-ctx-val">{{ "%.2f"|format(session_row.score) if session_row.score else '—' }} — {{ session_row.tier or '' }}</span>
           </div>
-          {% if session.improvement_note %}
-          <div class="sl-mrf-ctx-row">
-            <span class="sl-mrf-ctx-key">AI Improvement Note</span>
-            <span class="sl-mrf-ctx-val" style="font-size:12px;font-weight:400;max-width:160px;text-align:right;line-height:1.5;">{{ session.improvement_note }}</span>
-          </div>
-          {% endif %}
-
           <div class="sl-mrf-intent">
-            <div class="sl-mrf-intent-label">What they want feedback on</div>
-            <div class="sl-mrf-intent-text">{{ session.intent }}</div>
+            <div class="sl-mrf-intent-label">How They Shot This Image</div>
+            <div class="sl-mrf-intent-text">{{ session_row.intent }}</div>
           </div>
         </div>
 
         <div class="sl-mrf-deadline">
           <span class="sl-mrf-dl-label">Deadline</span>
           <span class="sl-mrf-dl-val">
-            {{ session.deadline_at.strftime('%d %b %Y, %H:%M UTC') if session.deadline_at else '—' }}
+            {{ session_row.deadline_at.strftime('%d %b %Y, %H:%M UTC') if session_row.deadline_at else '—' }}
           </span>
         </div>
       </div>

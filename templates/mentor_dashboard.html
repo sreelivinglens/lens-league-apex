@@ -111,7 +111,7 @@ body:has(.sl-md) main { padding: 0 !important; max-width: none !important; margi
           <div class="sl-md-session-detail">
             {{ s.genre or 'Photography' }} &nbsp;·&nbsp; Score: {{ "%.2f"|format(s.score) if s.score else '—' }} &nbsp;·&nbsp; {{ s.tier or '—' }}
           </div>
-          <div class="sl-md-session-intent-label">What they want feedback on</div>
+          <div class="sl-md-session-intent-label">How They Shot This Image</div>
           <div class="sl-md-session-intent">{{ s.intent }}</div>
           <a href="{{ url_for('mentor_review_session', session_id=s.id) }}" class="sl-md-review-btn">
             Write Review →
