@@ -1,643 +1,857 @@
 {% extends "base.html" %}
-{% block title %}The Science of Imaging — Shutter League{% endblock %}
+{% block title %}The Science of Photographic Evaluation — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Beyond opinion. Toward photographic understanding. The DDI Engine — five dimensions that evaluate how photographs communicate, resonate, and hold attention.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
 
 {% block extra_css %}
 <style>
-  body:has(.sci-page) main { padding:0 !important; max-width:none !important; }
-  .sci-page { background:#FEFCF8; overflow-x:hidden; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SCIENCE PAGE
+   Inter only · #F7F5F2 light · #EDEAE4 warm
+   #1A1A18 text · #F5C518 gold (dark bg only)
+   #1A2744 slate — ALL dark sections (no black)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 
-  /* ── PAGE HEADER ── */
-  .sci-page-header {
-    max-width:880px; margin:0 auto;
-    padding:clamp(32px,5vw,48px) var(--page-pad) 0;
+.sl-sci, .sl-sci * {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-hero {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  max-height: 480px;
+  background: #1A2744;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.sl-sci-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-sci-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,13,11,0.45);
+}
+.sl-sci-hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 40px 48px;
+  width: 520px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(20, 30, 56, 0.40);
+  backdrop-filter: blur(2px);
+  margin: 0 64px;
+}
+.sl-sci-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F5C518;
+  margin-bottom: 8px;
+}
+.sl-sci-gold-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 22px;
+}
+.sl-sci-hero-h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.sl-sci-hero-h1 em {
+  font-style: normal;
+  color: #F5C518;
+}
+.sl-sci-hero-body {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.76);
+  line-height: 1.65;
+  text-align: left;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+/* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-sec {
+  padding: 80px 64px;
+}
+.sl-sci-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-sci-sec-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(26,26,24,0.45);
+  margin-bottom: 6px;
+}
+.sl-sci-sec-rule {
+  width: 32px;
+  height: 2px;
+  background: #F5C518;
+  margin-bottom: 26px;
+}
+.sl-sci-h2 {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #1A1A18;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.sl-sci-h2 em {
+  font-style: normal;
+  color: #F5C518;
+}
+.sl-sci-body {
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.72);
+  line-height: 1.78;
+  text-align: justify;
+  margin-bottom: 14px;
+}
+.sl-sci-body-bold {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.78;
+  text-align: justify;
+}
+
+/* ━━ WHY DDI — 2 col ━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-why-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+/* ━━ FIVE DIMENSIONS ━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-dims-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 6px;
+}
+.sl-sci-dims-sub {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+  margin-bottom: 48px;
+}
+.sl-sci-dims-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.sl-sci-dim {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.sl-sci-dim-icon {
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid rgba(26,26,24,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.sl-sci-dim-num {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(26,26,24,0.40);
+  margin-bottom: 6px;
+}
+.sl-sci-dim-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  margin-bottom: 10px;
+}
+.sl-sci-dim-body {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+  text-align: center;
+}
+.sl-sci-dim-detail {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(26,26,24,0.45);
+  line-height: 1.6;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ━━ HUMAN + DDI — image left / text right ━━ */
+.sl-sci-feature {
+  background: #EDEAE4;
+}
+.sl-sci-feature-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+.sl-sci-feature-img {
+  min-height: 400px;
+  overflow: hidden;
+  background: #1A2744;
+  position: relative;
+}
+.sl-sci-feature-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-sci-feature-text {
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #EDEAE4;
+}
+
+/* ━━ INTEGRITY 4-COL ━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-integ-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 48px;
+}
+.sl-sci-integ-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  max-width: 1080px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  padding-top: 40px;
+}
+.sl-sci-integ-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 16px;
+  border-right: 1px solid rgba(26,26,24,0.10);
+}
+.sl-sci-integ-card:last-child {
+  border-right: none;
+}
+.sl-sci-integ-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A18;
+}
+.sl-sci-integ-body {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.62);
+  line-height: 1.65;
+  text-align: justify;
+}
+
+/* ━━ WHAT DDI DOES NOT DO ━━━━━━━━━━━━━━ */
+.sl-sci-not-head {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #1A1A18;
+  margin-bottom: 48px;
+}
+.sl-sci-not-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(26,26,24,0.10);
+  padding-top: 40px;
+}
+.sl-sci-not-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.sl-sci-not-x {
+  font-size: 20px;
+  font-weight: 300;
+  color: rgba(26,26,24,0.28);
+  line-height: 1;
+}
+.sl-sci-not-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A18;
+  line-height: 1.4;
+}
+.sl-sci-not-body {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(26,26,24,0.58);
+  line-height: 1.65;
+}
+
+/* ━━ CTA BANNER ━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sl-sci-cta {
+  background: #1A2744;
+  padding: 0;
+}
+.sl-sci-cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+.sl-sci-cta-img {
+  min-height: 360px;
+  overflow: hidden;
+  background: #243260;
+  position: relative;
+}
+.sl-sci-cta-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sl-sci-cta-text {
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.sl-sci-cta-h {
+  font-size: 38px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.sl-sci-cta-h em {
+  font-style: normal;
+  color: #F5C518;
+}
+.sl-sci-cta-body {
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.58);
+  line-height: 1.78;
+  margin-bottom: 32px;
+  text-align: justify;
+}
+.sl-sci-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.sl-sci-cta-btn {
+  display: inline-block;
+  background: #F5C518;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-sci-cta-btn:hover { opacity: 0.88; }
+.sl-sci-cta-btn-ghost {
+  display: inline-block;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 13px 28px;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,0.40);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-sci-cta-btn-ghost:hover { border-color: rgba(255,255,255,0.70); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE — max-width 768px
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+
+  /* HERO */
+  .sl-sci-hero {
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sl-sci-hero-img {
+    position: static;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    display: block;
+  }
+  .sl-sci-hero-fade {
+    display: none;
+  }
+  .sl-sci-hero-content {
+    position: static;
+    background: #2C3E6B;
+    margin: 0;
+    padding: 12px 16px 20px;
+    width: 100%;
+    max-width: none;
+    min-height: auto;
+    display: block;
+    backdrop-filter: none;
+    text-shadow: none;
+  }
+  .sl-sci-hero-h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 0;
+    text-shadow: none;
+  }
+  .sl-sci-hero-h1 em { color: #F5C518; }
+  .sl-sci-eyebrow { text-shadow: none; }
+  .sl-sci-hero-body { display: none; }
+
+  /* SECTIONS */
+  .sl-sci-sec {
+    padding: 56px 20px;
   }
 
-  /* ── SECTION LAYOUT ── */
-  .sci-section {
-    display:grid;
-    grid-template-columns:220px 1fr;
-    border-bottom:1px solid #E0D8C8;
+  /* WHY DDI */
+  .sl-sci-why-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
-  .sci-meta {
-    padding:clamp(24px,3vw,36px) clamp(18px,2vw,28px);
-    border-right:1px solid #E0D8C8;
-    display:flex; flex-direction:column; justify-content:center;
-    background:#FEFCF8; min-width:0;
-  }
-  .sci-label {
-    font-family:var(--font-mono); font-size:16px; font-weight:700;
-    letter-spacing:3px; color:#2C3E6B; text-transform:uppercase;
-    margin-bottom:10px; display:block;
-  }
-  .sci-title {
-    font-size:clamp(18px,2.2vw,24px); font-weight:700;
-    color:var(--text-primary); line-height:1.25;
-  }
-  .sci-title em { font-style:normal; color:#2C3E6B; }
-  .sci-body {
-    padding:clamp(20px,3vw,32px) clamp(20px,3vw,36px);
-    display:flex; flex-direction:column; justify-content:center;
+  .sl-sci-h2 {
+    font-size: 30px;
   }
 
-  /* ── FIXED STAGE ── */
-  .stage {
-    position:relative;
-    height:260px;
-    overflow:hidden;
+  /* FIVE DIMENSIONS — vertical list */
+  .sl-sci-dims-head {
+    font-size: 26px;
+    text-align: left;
   }
-  .slide {
-    position:absolute; inset:0;
-    opacity:0; transition:opacity 0.45s ease;
-    display:flex; flex-direction:column; justify-content:center;
-    pointer-events:none;
+  .sl-sci-dims-sub {
+    text-align: left;
+    font-size: 16px;
+    margin-bottom: 32px;
   }
-  .slide.active { opacity:1; pointer-events:auto; }
+  .sl-sci-dims-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .sl-sci-dim {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    grid-template-rows: auto auto auto auto;
+    text-align: left;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(26,26,24,0.08);
+    gap: 0 16px;
+    align-items: start;
+  }
+  .sl-sci-dim:last-child { border-bottom: none; }
+  .sl-sci-dim-icon {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    margin-bottom: 0;
+    margin-top: 2px;
+    width: 36px;
+    height: 36px;
+  }
+  .sl-sci-dim-num {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: left;
+    margin-bottom: 2px;
+  }
+  .sl-sci-dim-title {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 17px;
+    margin-bottom: 6px;
+    text-align: left;
+  }
+  .sl-sci-dim-body {
+    grid-column: 2;
+    grid-row: 3;
+    font-size: 16px;
+    text-align: left;
+  }
+  .sl-sci-dim-detail {
+    grid-column: 2;
+    grid-row: 4;
+    text-align: left;
+    margin-top: 4px;
+    font-size: 14px;
+  }
 
-  /* ── DOTS ── */
-  .s-dots { display:flex; gap:7px; margin-top:14px; }
-  .s-dot {
-    width:7px; height:7px; border-radius:50%;
-    background:#D0D8EC; cursor:pointer;
-    transition:background 0.3s; flex-shrink:0;
-    border:none; padding:0;
+  /* HUMAN + DDI */
+  .sl-sci-feature-grid {
+    grid-template-columns: 1fr;
   }
-  .s-dot.on { background:#2C3E6B; }
+  .sl-sci-feature-img {
+    min-height: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .sl-sci-feature-text {
+    padding: 40px 20px;
+  }
 
-  /* ── SCORE TABLE ── */
-  .score-table { width:100%; border-collapse:collapse; }
-  .score-table tr { border-bottom:1px solid #D8DFF0; }
-  .score-table tr:last-child { border-bottom:none; }
-  .score-table td { padding:10px 8px; vertical-align:middle; }
-  .tc-name { font-family:var(--font-mono); font-size:16px; font-weight:700; width:115px; white-space:nowrap; }
-  .tc-range { font-family:var(--font-mono); font-size:16px; color:#5a7aaa; width:80px; white-space:nowrap; }
-  .tc-desc { font-size:16px; color:#555; line-height:1.4; }
+  /* INTEGRITY */
+  .sl-sci-integ-head {
+    font-size: 26px;
+    text-align: left;
+  }
+  .sl-sci-integ-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .sl-sci-integ-card {
+    padding: 20px 16px;
+    border-right: none;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-sci-integ-card:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-sci-integ-card:nth-child(3),
+  .sl-sci-integ-card:nth-child(4) {
+    border-bottom: none;
+  }
 
-  /* ── STAT CARD ── */
-  .stat-card {
-    background:#D0DCF0; border-radius:10px;
-    padding:16px 20px; text-align:center; flex-shrink:0;
+  /* WHAT DDI NOT */
+  .sl-sci-not-head {
+    font-size: 26px;
+    text-align: left;
   }
-  .stat-num { font-size:clamp(36px,5vw,54px); font-weight:700; color:#2C3E6B; line-height:1; }
-  .stat-lbl { font-family:var(--font-mono); font-size:16px; color:#5a7aaa; letter-spacing:1.5px; margin-top:5px; font-weight:700; }
+  .sl-sci-not-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: none;
+    padding-top: 0;
+  }
+  .sl-sci-not-card {
+    padding: 16px 12px;
+    border-bottom: 1px solid rgba(26,26,24,0.08);
+  }
+  .sl-sci-not-card:nth-child(odd) {
+    border-right: 1px solid rgba(26,26,24,0.08);
+  }
+  .sl-sci-not-card:nth-child(3),
+  .sl-sci-not-card:nth-child(4) {
+    border-bottom: none;
+  }
 
-  /* ── PILLAR CARDS ── */
-  .pillar-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-  .pillar-card {
-    background:#fff; border-radius:8px; padding:16px;
-    border-top:3px solid #2C3E6B;
+  /* CTA */
+  .sl-sci-cta-grid {
+    grid-template-columns: 1fr;
   }
-  .pillar-title { font-size:17px; font-weight:700; color:#1a1a18; margin-bottom:6px; }
-  .pillar-body { font-size:16px; color:#555; line-height:1.5; }
-
-  /* ── SAFEGUARD GRID ── */
-  .sg-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .sg-card {
-    background:#fff; border-radius:8px; padding:14px 16px;
-    border-left:3px solid #2C3E6B;
+  .sl-sci-cta-img {
+    min-height: auto;
+    aspect-ratio: 16 / 9;
   }
-  .sg-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:4px; }
-  .sg-body { font-size:16px; color:#555; line-height:1.5; }
-
-  /* ── VERIFY TIMELINE ── */
-  .vt-wrap { display:flex; gap:16px; align-items:stretch; }
-  .vt-spine { display:flex; flex-direction:column; align-items:center; }
-  .vt-node {
-    width:30px; height:30px; border-radius:50%;
-    border:2px solid #2C3E6B; background:#D0DCF0;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-    font-family:var(--font-mono); font-size:16px; font-weight:700; color:#2C3E6B;
+  .sl-sci-cta-text {
+    padding: 40px 20px 56px;
   }
-  .vt-line { width:2px; flex:1; background:#C5D0E8; margin:4px 0; }
-  .vt-items { flex:1; display:flex; flex-direction:column; gap:10px; }
-  .vt-item {
-    background:#fff; border-radius:8px; padding:12px 16px;
-    border-left:3px solid #C5D0E8;
+  .sl-sci-cta-h {
+    font-size: 30px;
   }
-  .vt-title { font-size:16px; font-weight:700; color:#1a1a18; margin-bottom:2px; }
-  .vt-body { font-size:16px; color:#555; line-height:1.5; }
-
-  /* ── ARCHETYPE GRID ── */
-  .arch-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .arch-card {
-    background:#fff; border-radius:8px; padding:14px;
+  .sl-sci-cta-body {
+    font-size: 17px;
   }
-  .arch-title { font-size:17px; font-weight:700; margin-bottom:4px; }
-  .arch-body { font-size:16px; color:#555; }
-
-  /* ── STATEMENT SLIDE ── */
-  .stmt-head { font-size:clamp(18px,2.5vw,24px); font-weight:700; color:#1E2D52; line-height:1.3; margin-bottom:10px; }
-  .stmt-body { font-size:16px; color:#4a5e80; line-height:1.75; }
-
-  /* ── IP NOTICE ── */
-  .ip-section {
-    padding:clamp(32px,5vw,56px) var(--page-pad);
-    background:#FEFCF8; border-top:1px solid #E0D8C8;
+  .sl-sci-cta-btn,
+  .sl-sci-cta-btn-ghost {
+    width: 100%;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 13px;
   }
-  .ip-wrap { max-width:860px; margin:0 auto; }
-  .ip-box {
-    background:#EDF0F7; border:1px solid #C5D0E8;
-    border-left:4px solid #2C3E6B;
-    border-radius:0 8px 8px 0; padding:22px 26px; margin-top:18px;
+  .sl-sci-cta-row {
+    flex-direction: column;
+    gap: 12px;
   }
-  .ip-box h3 { font-size:18px; font-weight:700; color:#1a1a18; margin-bottom:10px; }
-  .ip-box p { font-size:16px; color:#444; line-height:1.8; }
-
-  /* ── CTA ── */
-  .sci-cta {
-    text-align:center; padding:clamp(40px,6vw,64px) var(--page-pad);
-    background:#EDF0F7; border-top:1px solid #C5D0E8;
-  }
-  .sci-cta-eyebrow {
-    font-family:var(--font-mono); font-size:16px; font-weight:600;
-    letter-spacing:4px; color:#2C3E6B; text-transform:uppercase; margin-bottom:14px;
-  }
-  .sci-cta h2 { font-size:clamp(22px,4vw,36px); font-weight:700; color:#1a1a18; margin-bottom:12px; }
-  .sci-cta p { font-size:17px; color:#555; max-width:480px; margin:0 auto 28px; line-height:1.8; }
-
-  /* ── MOBILE ── */
-  @media (max-width:768px) {
-    .sci-section { grid-template-columns:1fr; }
-    .sci-meta { border-right:none; border-bottom:1px solid #E0D8C8; padding:18px 16px; }
-    .sci-body { padding:16px; }
-    .stage { height:300px; }
-    #s5 { height:440px !important; }
-    #s6 { height:380px !important; }
-    .pillar-grid { grid-template-columns:1fr; gap:8px; }
-    .sg-grid { grid-template-columns:1fr; gap:8px; }
-    .arch-grid { grid-template-columns:1fr 1fr; }
-    .score-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .tc-name { width:90px; font-size:16px; }
-    .tc-range { width:70px; font-size:16px; }
-    .tc-desc { font-size:16px; }
-    .stat-num { font-size:36px; }
-    .vt-item { padding:10px 12px; }
-    .sg-card { padding:12px 14px; }
-  }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="sci-page">
+<div class="sl-sci">
 
-  <!-- HERO -->
-  <div class="sci-page-header">
-    <div class="page-header" style="margin-bottom:48px;">
-      <h1>The Science of Imaging</h1>
-      <p>Photography has always been judged — but never measured. Five dimensions. One honest score.</p>
+  <!-- ── HERO ──────────────────────────────────────────────────── -->
+  <section class="sl-sci-hero">
+    {% if sci_hero and sci_hero.thumb_url %}
+    <img
+      class="sl-sci-hero-img"
+      src="{{ sci_hero.thumb_url }}"
+      alt="Photograph by a Shutter League member — Master level or above"
+      onerror="this.style.display='none'"
+    >
+    {% endif %}
+    <div class="sl-sci-hero-fade"></div>
+    <div class="sl-sci-hero-content">
+      <p class="sl-sci-eyebrow">Science of Photographic Evaluation</p>
+      <div class="sl-sci-gold-rule"></div>
+      <h1 class="sl-sci-hero-h1">Beyond opinion.<br>Toward photographic<br><em>understanding.</em></h1>
+      <p class="sl-sci-hero-body">DDI Analysis was developed to evaluate the dimensions that shape photographic impact — beyond technical perfection alone. It examines how images communicate, resonate, and hold attention through multiple photographic dimensions.</p>
     </div>
-  </div>
+  </section>
 
-  <!-- S1: THE PROBLEM -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">The Problem</span>
-      <div class="sci-title">Opinion is not<br><em>a standard.</em></div>
-    </div>
-    <div class="sci-body" style="background:#F0F3F9;">
-      <div class="stage" id="s1">
-        <div class="slide active">
-          <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-            <div class="stat-card">
-              <div class="stat-num" id="s1n">0</div>
-              <div class="stat-lbl">JUDGES</div>
-            </div>
-            <div style="flex:1; min-width:140px;">
-              <div style="font-size:17px; font-weight:700; color:#1E2D52; margin-bottom:8px;">Same photo. Different verdict.</div>
-              <div style="font-size:16px; color:#4a5e80; line-height:1.65;">Subjectivity isn't a feature — it's the problem the DDI Engine was built to eliminate.</div>
-            </div>
-          </div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">The DDI answers one question.</div>
-          <div class="stmt-body" style="font-style:italic;">"What does this photograph actually do, independent of who is looking at it?"</div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Built on perceptual science.</div>
-          <div class="stmt-body">Visual psychology and documented principles of photographic craft — calibrated per genre, not a single homogenised rubric.</div>
-        </div>
+  <!-- ── WHY DDI EXISTS ─────────────────────────────────────────── -->
+  <section class="sl-sci-sec" style="background: #F7F5F2;">
+    <div class="sl-sci-why-grid">
+      <div>
+        <p class="sl-sci-sec-eyebrow">Why DDI Exists</p>
+        <div class="sl-sci-sec-rule"></div>
+        <h2 class="sl-sci-h2">Most photographs today<br>are validated. Very few<br>are <em>evaluated.</em></h2>
       </div>
-      <div class="s-dots" id="s1d"></div>
-    </div>
-  </div>
-
-  <!-- S2: THE FRAMEWORK -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">The Framework</span>
-      <div class="sci-title">Five dimensions.<br><em>One score.</em></div>
-    </div>
-    <div class="sci-body" style="background:#EDF5F0;">
-      <div class="stage" id="s2">
-        <div class="slide active">
-          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-            <svg width="110" height="110" viewBox="0 0 130 130" style="flex-shrink:0;">
-              <circle cx="65" cy="65" r="28" fill="none" stroke="#B8D9CC" stroke-width="1.5"/>
-              <circle cx="65" cy="65" r="8" fill="#2E7D5A"/>
-              <text x="65" y="69" text-anchor="middle" font-size="6" fill="#fff" font-weight="700" font-family="monospace">DDI</text>
-              <circle cx="65" cy="24" r="15" fill="#C8E4D8"/><text x="65" y="21" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DoD</text>
-              <circle cx="106" cy="47" r="15" fill="#C8E4D8"/><text x="106" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">VD</text>
-              <circle cx="90" cy="98" r="15" fill="#C8E4D8"/><text x="90" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">DM</text>
-              <circle cx="40" cy="98" r="15" fill="#C8E4D8"/><text x="40" y="95" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">WF</text>
-              <circle cx="24" cy="47" r="15" fill="#C8E4D8"/><text x="24" y="44" text-anchor="middle" font-size="7" fill="#1a4a35" font-weight="700" font-family="monospace">AQ</text>
-            </svg>
-            <div style="flex:1; min-width:140px;" id="s2desc">
-              <div style="background:#C8E4D8; border-radius:8px; padding:14px; border-left:3px solid #2E7D5A;">
-                <div style="font-size:17px; font-weight:700; color:#1a4a35; margin-bottom:6px;">DoD — Depth of Difficulty</div>
-                <div style="font-size:16px; color:#2E7D5A; line-height:1.6;">Technical and situational difficulty of capturing the image.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="s-dots" id="s2d"></div>
-    </div>
-  </div>
-
-  <!-- S3: THREE PILLARS -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">Design Principles</span>
-      <div class="sci-title">Built on<br><em>three pillars.</em></div>
-    </div>
-    <div class="sci-body" style="background:#F5F2EC;">
-      <div class="stage" id="s3">
-        <div class="slide active">
-          <div class="pillar-grid">
-            <div class="pillar-card">
-              <div class="pillar-title">Objectivity</div>
-              <div class="pillar-body">Same image scores the same — always</div>
-            </div>
-            <div class="pillar-card">
-              <div class="pillar-title">Repeatability</div>
-              <div class="pillar-body">Grounded in principle, not mood</div>
-            </div>
-            <div class="pillar-card">
-              <div class="pillar-title">Genre aware</div>
-              <div class="pillar-body">Wildlife ≠ Portrait rubric</div>
-            </div>
-          </div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">No preferences. No agenda.</div>
-          <div class="stmt-body">The engine has no awareness of who took the photograph. It responds only to what is in the frame. A name cannot influence a score.</div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Excellence is genre-specific.</div>
-          <div class="stmt-body">Each genre carries its own calibrated weight profile, built from the documented standards of that discipline. There is no single universal rubric.</div>
-        </div>
-      </div>
-      <div class="s-dots" id="s3d"></div>
-    </div>
-  </div>
-
-  <!-- S4: TIERS -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">Tier Classification</span>
-      <div class="sci-title">Eight tiers.<br><em>One honest position.</em></div>
-    </div>
-    <div class="sci-body" style="background:#EDF0F7;">
-      <div class="stage" id="s4">
-        <div class="slide active">
-          <div class="score-table-wrap"><table class="score-table">
-            <tr><td class="tc-name" style="color:#8898AA;">Apprentice</td><td class="tc-range">0 – 5.0</td><td class="tc-desc">Learning the fundamentals</td></tr>
-            <tr><td class="tc-name" style="color:#6B7FA8;">Contender</td><td class="tc-range">5.0 – 5.9</td><td class="tc-desc">Craft is developing</td></tr>
-            <tr><td class="tc-name" style="color:#5470A0;">Craftsman</td><td class="tc-range">6.0 – 6.9</td><td class="tc-desc">Consistent execution</td></tr>
-            <tr><td class="tc-name" style="color:#3D5B90;">Maverick</td><td class="tc-range">7.0 – 7.9</td><td class="tc-desc">Distinctive style emerging</td></tr>
-          </table></div>
-        </div>
-        <div class="slide">
-          <div class="score-table-wrap"><table class="score-table">
-            <tr><td class="tc-name" style="color:#2C3E6B;">Master</td><td class="tc-range">8.0 – 8.9</td><td class="tc-desc">Intentional vision, technical command</td></tr>
-            <tr><td class="tc-name" style="color:#1E2D52;">Grandmaster</td><td class="tc-range">9.0 – 9.6</td><td class="tc-desc">Rare — frontier of the discipline</td></tr>
-            <tr style="background:#FFF8DC;"><td class="tc-name" style="color:#7A5800; padding-left:6px;">Legend</td><td class="tc-range" style="color:#7A5800;">9.7 – 9.9</td><td class="tc-desc" style="color:#7A5800;">Images that redefine the genre</td></tr>
-          </table></div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Boundaries never move.</div>
-          <div class="stmt-body">Tiers don't drift with platform population. A Master-tier image today means exactly the same thing in five years. Your progress is real — not relative.</div>
-        </div>
-      </div>
-      <div class="s-dots" id="s4d"></div>
-    </div>
-  </div>
-
-  <!-- S5: SCORING INTEGRITY -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">Scoring Integrity</span>
-      <div class="sci-title">Four safeguards.<br><em>Zero bias.</em></div>
-    </div>
-    <div class="sci-body" style="background:#F2F0ED;">
-      <div class="stage" id="s5" style="height:300px;">
-        <div class="slide active">
-          <div class="sg-grid">
-            <div class="sg-card">
-              <div class="sg-title">Soul Bonus</div>
-              <div class="sg-body">Exceptional emotional resonance protects against technical deductions</div>
-            </div>
-            <div class="sg-card">
-              <div class="sg-title">Humanity Check</div>
-              <div class="sg-body">Technically competent but emotionally hollow images are corrected</div>
-            </div>
-            <div class="sg-card">
-              <div class="sg-title">Plateau Penalty</div>
-              <div class="sg-body">Technical perfection without creative ambition is capped</div>
-            </div>
-            <div class="sg-card">
-              <div class="sg-title">Iconic Wall</div>
-              <div class="sg-body">The highest tier requires disruption and authenticity together</div>
-            </div>
-          </div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Genre-calibrated weights.</div>
-          <div class="stmt-body">Wildlife demands different priorities than Wedding or Macro. Not a single rubric applied to everything — each genre scored against its own standards.</div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Peer divergence flagging.</div>
-          <div class="stmt-body">When peer rating and DDI score diverge significantly, the system flags automatically. No score goes unchallenged when the signals conflict.</div>
-        </div>
-      </div>
-      <div class="s-dots" id="s5d"></div>
-    </div>
-  </div>
-
-  <!-- S6: VERIFICATION LAYER -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">Verification Layer</span>
-      <div class="sci-title">Three-tier<br><em>judging.</em></div>
-    </div>
-    <div class="sci-body" style="background:#F5F0E8;">
-      <div class="stage" id="s6" style="height:300px;">
-        <div class="slide active">
-          <div class="vt-wrap">
-            <div class="vt-spine">
-              <div class="vt-node">1</div>
-              <div class="vt-line"></div>
-              <div class="vt-node">2</div>
-              <div class="vt-line"></div>
-              <div class="vt-node">3</div>
-            </div>
-            <div class="vt-items">
-              <div class="vt-item">
-                <div class="vt-title">DDI Engine</div>
-                <div class="vt-body">Instant, automatic, consistent — every image, every time</div>
-              </div>
-              <div class="vt-item">
-                <div class="vt-title">Blind peer rating</div>
-                <div class="vt-body">Five independent raters, no names or scores visible</div>
-              </div>
-              <div class="vt-item">
-                <div class="vt-title">Jury Legends</div>
-                <div class="vt-body">Triggered on divergence or formal dispute — decisions final</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">The engine is the start, not the end.</div>
-          <div class="stmt-body">Machine objectivity combined with the perceptual authority of trained human evaluators. Neither alone is sufficient.</div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">Outlier ratings excluded automatically.</div>
-          <div class="stmt-body">Rater identity is concealed. Outliers removed before aggregation. The result reflects genuine human perception — not one strong opinion.</div>
-        </div>
-      </div>
-      <div class="s-dots" id="s6d"></div>
-    </div>
-  </div>
-
-  <!-- S7: EMOTIONAL CLASSIFICATION -->
-  <div class="sci-section">
-    <div class="sci-meta">
-      <span class="sci-label">Emotional Classification</span>
-      <div class="sci-title">Beyond<br><em>the score.</em></div>
-    </div>
-    <div class="sci-body" style="background:#F3F1EE;">
-      <div class="stage" id="s7">
-        <div class="slide active">
-          <div class="arch-grid">
-            <div class="arch-card" style="border-top:3px solid #2C3E6B;">
-              <div class="arch-title" style="color:#1E2D52;">Kinetic</div>
-              <div class="arch-body">Motion &amp; energy</div>
-            </div>
-            <div class="arch-card" style="border-top:3px solid #3B6D11;">
-              <div class="arch-title" style="color:#27500A;">Serene</div>
-              <div class="arch-body">Stillness &amp; calm</div>
-            </div>
-            <div class="arch-card" style="border-top:3px solid #844821;">
-              <div class="arch-title" style="color:#633806;">Dramatic</div>
-              <div class="arch-body">Tension &amp; conflict</div>
-            </div>
-            <div class="arch-card" style="border-top:3px solid #7A5800;">
-              <div class="arch-title" style="color:#7A5800;">Sublime</div>
-              <div class="arch-body">Awe &amp; wonder</div>
-            </div>
-          </div>
-        </div>
-        <div class="slide">
-          <div class="stmt-head">The Archetype is not a label you choose.</div>
-          <div class="stmt-body">It is a recognition of what the image itself communicates — derived from Wonder and AQ module scores. It appears on your rating card and image detail.</div>
-        </div>
-      </div>
-      <div class="s-dots" id="s7d"></div>
-    </div>
-  </div>
-
-  <!-- IP NOTICE -->
-  <div class="ip-section">
-    <div class="ip-wrap">
-      <span class="sci-label">Intellectual Property</span>
-      <h2 style="font-size:clamp(20px,3vw,28px); font-weight:700; color:#1a1a18; margin-bottom:0;">What is disclosed. <em style="font-style:normal; color:#2C3E6B;">What is protected.</em></h2>
-      <div class="ip-box">
-        <h3>Proprietary Technology Notice</h3>
-        <p>The Apex DDI Engine — including its genre-calibrated weight tables, tier boundary parameters, safeguard trigger logic, archetype taxonomy, calibration benchmarks, and all associated AI prompt architecture — constitutes original intellectual property exclusively owned by Shutter League. Reverse engineering, reproduction, or use of any element of this methodology as the basis of a competing scoring system is strictly prohibited. Full legal terms in the <a href="{{ url_for('terms') }}" style="color:#2C3E6B; text-decoration:underline;">Terms &amp; Conditions</a>.</p>
+      <div>
+        <p class="sl-sci-body">Social approval is not the same as photographic impact. DDI was created to examine the deeper dimensions that influence how an image communicates — including timing, emotional response, difficulty, composition, and visual attention.</p>
+        <p class="sl-sci-body">The goal is not to replace human judgment.</p>
+        <p class="sl-sci-body-bold">The goal is to make photographic evaluation more consistent, structured, and honest.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- CTA -->
-  <div class="sci-cta">
-    <div class="sci-cta-eyebrow">See it applied to your work</div>
-    <h2>Your image. Measured honestly.</h2>
-    <p>Up to 3 free scored images. Full five-module DDI breakdown. No credit card. No human bias.</p>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px; padding:14px 28px;">Upload an Image &rarr;</a>
-        <a href="{{ url_for('dashboard') }}" class="btn" style="font-size:16px; padding:14px 28px;">My Dashboard</a>
-      {% else %}
-        <a href="{{ url_for('register') }}" class="btn btn-solid" style="font-size:16px; padding:14px 28px;">Get My Free Score &rarr;</a>
-        <a href="{{ url_for('pricing') }}" class="btn" style="font-size:16px; padding:14px 28px;">View Pricing</a>
-      {% endif %}
+  <!-- ── FIVE DIMENSIONS ───────────────────────────────────────── -->
+  <section class="sl-sci-sec" style="background: #EDEAE4;">
+    <div class="sl-sci-dims-head">The five dimensions of photographic impact</div>
+    <p class="sl-sci-dims-sub">Every photograph communicates differently.<br>DDI examines the dimensions that contribute to that communication.</p>
+    <div class="sl-sci-dims-grid">
+
+      <div class="sl-sci-dim">
+        <div class="sl-sci-dim-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l4-8 4 4 3-6 4 10"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+        </div>
+        <p class="sl-sci-dim-num">1.</p>
+        <p class="sl-sci-dim-title">Depth of Difficulty</p>
+        <p class="sl-sci-dim-body">How difficult was it to create this image?</p>
+        <p class="sl-sci-dim-detail">Includes access, rarity, timing, environmental challenge, and technical execution difficulty.</p>
+      </div>
+
+      <div class="sl-sci-dim">
+        <div class="sl-sci-dim-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <p class="sl-sci-dim-num">2.</p>
+        <p class="sl-sci-dim-title">Visual Display</p>
+        <p class="sl-sci-dim-body">How effectively does the image communicate visually?</p>
+        <p class="sl-sci-dim-detail">Includes composition, structure, balance, visual clarity, and tonal control.</p>
+      </div>
+
+      <div class="sl-sci-dim">
+        <div class="sl-sci-dim-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <p class="sl-sci-dim-num">3.</p>
+        <p class="sl-sci-dim-title">Decisive Moment</p>
+        <p class="sl-sci-dim-body">Was the right moment captured?</p>
+        <p class="sl-sci-dim-detail">Includes timing, anticipation, gesture, emotional peak, and fleeting interaction.</p>
+      </div>
+
+      <div class="sl-sci-dim">
+        <div class="sl-sci-dim-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <p class="sl-sci-dim-num">4.</p>
+        <p class="sl-sci-dim-title">Wonder Factor</p>
+        <p class="sl-sci-dim-body">Does the image create curiosity or hold attention?</p>
+        <p class="sl-sci-dim-detail">Includes uniqueness, surprise, visual intrigue, and memorability.</p>
+      </div>
+
+      <div class="sl-sci-dim">
+        <div class="sl-sci-dim-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <p class="sl-sci-dim-num">5.</p>
+        <p class="sl-sci-dim-title">Affective Quotient</p>
+        <p class="sl-sci-dim-body">What emotional response does the image create?</p>
+        <p class="sl-sci-dim-detail">Includes emotional resonance, empathy, atmosphere, and psychological impact.</p>
+      </div>
+
     </div>
-  </div>
+  </section>
 
-</div>
-{% endblock %}
+  <!-- ── HUMAN + DDI — image left / text right ──────────────────── -->
+  <section class="sl-sci-feature">
+    <div class="sl-sci-feature-grid">
 
-{% block extra_js %}
-<script>
-(function(){
+      <div class="sl-sci-feature-img">
+        {% if sci_mid and sci_mid.thumb_url %}
+        <img
+          src="{{ sci_mid.thumb_url }}"
+          alt="Shutter League community photograph — high-scoring image"
+          onerror="this.style.display='none'"
+        >
+        {% endif %}
+      </div>
 
-  if (!('IntersectionObserver' in window)) return;
+      <div class="sl-sci-feature-text">
+        <p class="sl-sci-sec-eyebrow">Human + DDI</p>
+        <div class="sl-sci-sec-rule"></div>
+        <h2 class="sl-sci-h2" style="font-size:32px;">Technology can measure patterns.<br>Humans understand <em>meaning.</em></h2>
+        <p class="sl-sci-body">DDI does not replace photographers, mentors, or jury members.</p>
+        <p class="sl-sci-body">It exists to create a more structured foundation for evaluation — helping reduce inconsistency while preserving human interpretation, context, and artistic judgment.</p>
+        <p class="sl-sci-body">Human review remains essential across mentor feedback, Body of Work evaluation, and final recognitions.</p>
+      </div>
 
-  var modules = [
-    { abbr:'DoD', name:'Depth of Difficulty',  desc:'Technical and situational difficulty of capturing the image.' },
-    { abbr:'VD',  name:'Visual Disruption',    desc:'How strongly the image breaks from visual convention intentionally.' },
-    { abbr:'DM',  name:'Decisive Moment',      desc:'Timing, irreversibility, and completeness of the captured moment.' },
-    { abbr:'WF',  name:'Wonder Factor',        desc:'Capacity to arrest attention, provoke curiosity, sustain engagement.' },
-    { abbr:'AQ',  name:'Affective Quotient',   desc:'Emotional truth and human resonance — the soul of the score.' }
-  ];
+    </div>
+  </section>
 
-  /* registry: each entry = { sectionEl, start } */
-  var registry = [];
+  <!-- ── BUILT ON INTEGRITY ────────────────────────────────────── -->
+  <section class="sl-sci-sec" style="background: #F7F5F2;">
+    <div class="sl-sci-integ-head">Built on photographic integrity</div>
+    <div class="sl-sci-integ-grid">
 
-  /* ── Generic slide cycler: builds dots, returns { sectionEl, start } ── */
-  function prepSlider(stageId, dotsId, interval) {
-    var stage = document.getElementById(stageId);
-    var dotsEl = document.getElementById(dotsId);
-    if (!stage || !dotsEl) return;
-    var slides = stage.querySelectorAll('.slide');
-    var n = slides.length;
-    if (n < 2) return;
-    var cur = 0, started = false;
+      <div class="sl-sci-integ-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <p class="sl-sci-integ-title">AI Authenticity Checks</p>
+        <p class="sl-sci-integ-body">Multi-layer analysis helps identify manipulated or synthetic imagery. Photography remains a human pursuit.</p>
+      </div>
 
-    for (var i = 0; i < n; i++) {
-      var btn = document.createElement('button');
-      btn.className = 's-dot' + (i === 0 ? ' on' : '');
-      btn.setAttribute('aria-label', 'Slide ' + (i+1));
-      btn.dataset.idx = i;
-      dotsEl.appendChild(btn);
-    }
-    var dotEls = dotsEl.querySelectorAll('.s-dot');
+      <div class="sl-sci-integ-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+        <p class="sl-sci-integ-title">Metadata &amp; File Integrity</p>
+        <p class="sl-sci-integ-body">EXIF and structural validation help maintain submission consistency.</p>
+      </div>
 
-    function goTo(idx) {
-      slides[cur].classList.remove('active');
-      dotEls[cur].classList.remove('on');
-      cur = idx;
-      slides[cur].classList.add('active');
-      dotEls[cur].classList.add('on');
-    }
-    dotEls.forEach(function(btn){
-      btn.addEventListener('click', function(){ goTo(parseInt(this.dataset.idx)); });
-    });
+      <div class="sl-sci-integ-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <p class="sl-sci-integ-title">RAW Verification</p>
+        <p class="sl-sci-integ-body">Finalist-level submissions may undergo additional RAW review. Fairness always comes first.</p>
+      </div>
 
-    var sectionEl = stage.closest('.sci-section');
-    registry.push({
-      sectionEl: sectionEl,
-      start: function(){
-        if (started) return;
-        started = true;
-        setInterval(function(){ goTo((cur + 1) % n); }, interval);
-      }
-    });
-  }
+      <div class="sl-sci-integ-card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><polyline points="16 11 17 13 21 9"/></svg>
+        <p class="sl-sci-integ-title">Human Escalation Review</p>
+        <p class="sl-sci-integ-body">Complex cases are reviewed internally when required. Fairness always comes first.</p>
+      </div>
 
-  /* ── S1: counter animation ── */
-  (function(){
-    var s1n = document.getElementById('s1n');
-    var stage = document.getElementById('s1');
-    if (!s1n || !stage) return;
-    var started = false;
-    var sectionEl = stage.closest('.sci-section');
-    registry.push({
-      sectionEl: sectionEl,
-      start: function(){
-        if (started) return;
-        started = true;
-        var v = 0;
-        var ct = setInterval(function(){
-          v += 5;
-          if (v > 247) { v = 247; clearInterval(ct); }
-          s1n.textContent = v;
-        }, 25);
-      }
-    });
-  })();
+    </div>
+  </section>
 
-  /* ── S2: module wheel — dots cycle description, no slide change ── */
-  (function(){
-    var s2desc = document.getElementById('s2desc');
-    var s2dotsEl = document.getElementById('s2d');
-    var stage = document.getElementById('s2');
-    if (!s2desc || !s2dotsEl || !stage) return;
+  <!-- ── WHAT DDI DOES NOT DO ──────────────────────────────────── -->
+  <section class="sl-sci-sec" style="background: #F7F5F2; padding-top: 0;">
+    <div class="sl-sci-not-head">What DDI does NOT do</div>
+    <div class="sl-sci-not-grid">
 
-    /* build 5 dots */
-    for (var i = 0; i < modules.length; i++) {
-      var btn = document.createElement('button');
-      btn.className = 's-dot' + (i === 0 ? ' on' : '');
-      btn.setAttribute('aria-label', modules[i].abbr);
-      btn.dataset.mi = i;
-      s2dotsEl.appendChild(btn);
-    }
-    var mdots = s2dotsEl.querySelectorAll('.s-dot');
-    var mi = 0;
+      <div class="sl-sci-not-card">
+        <span class="sl-sci-not-x">✕</span>
+        <p class="sl-sci-not-title">DDI does not replace artistic interpretation.</p>
+        <p class="sl-sci-not-body">Photography remains subjective and deeply human.</p>
+      </div>
 
-    function setModule(idx) {
-      mdots[mi].classList.remove('on');
-      mi = idx;
-      mdots[mi].classList.add('on');
-      var m = modules[mi];
-      s2desc.style.opacity = '0';
-      setTimeout(function(){
-        s2desc.innerHTML = '<div style="background:#C8E4D8;border-radius:8px;padding:14px;border-left:3px solid #2E7D5A;">'
-          + '<div style="font-size:17px;font-weight:700;color:#1a4a35;margin-bottom:6px;">' + m.abbr + ' — ' + m.name + '</div>'
-          + '<div style="font-size:16px;color:#2E7D5A;line-height:1.6;">' + m.desc + '</div></div>';
-        s2desc.style.transition = 'opacity 0.4s';
-        s2desc.style.opacity = '1';
-      }, 220);
-    }
+      <div class="sl-sci-not-card">
+        <span class="sl-sci-not-x">✕</span>
+        <p class="sl-sci-not-title">DDI is not designed to reward trends.</p>
+        <p class="sl-sci-not-body">Images are evaluated for communication and impact — not popularity.</p>
+      </div>
 
-    mdots.forEach(function(btn){
-      btn.addEventListener('click', function(){ setModule(parseInt(this.dataset.mi)); });
-    });
+      <div class="sl-sci-not-card">
+        <span class="sl-sci-not-x">✕</span>
+        <p class="sl-sci-not-title">DDI is not social voting.</p>
+        <p class="sl-sci-not-body">Scores are independent of followers, reach, or engagement.</p>
+      </div>
 
-    var started = false;
-    var sectionEl = stage.closest('.sci-section');
-    registry.push({
-      sectionEl: sectionEl,
-      start: function(){
-        if (started) return;
-        started = true;
-        setInterval(function(){ setModule((mi + 1) % modules.length); }, 2200);
-      }
-    });
-  })();
+      <div class="sl-sci-not-card">
+        <span class="sl-sci-not-x">✕</span>
+        <p class="sl-sci-not-title">DDI is not perfect.</p>
+        <p class="sl-sci-not-body">It is an evolving evaluation framework designed to improve consistency and fairness over time.</p>
+      </div>
 
-  /* ── Prep all other slide sections ── */
-  prepSlider('s1', 's1d', 3000);
-  prepSlider('s3', 's3d', 3000);
-  prepSlider('s4', 's4d', 3000);
-  prepSlider('s5', 's5d', 3000);
-  prepSlider('s6', 's6d', 3000);
-  prepSlider('s7', 's7d', 3500);
+    </div>
+  </section>
 
-  /* ── Single observer watches .sci-section wrappers ── */
-  /* On enter: fade in + fire start() for any registered handler in that section */
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (!e.isIntersecting) return;
-      /* fade in */
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-      /* start animations belonging to this section */
-      registry.forEach(function(r){
-        if (r.sectionEl === e.target) r.start();
-      });
-      obs.unobserve(e.target);
-    });
-  }, { threshold: 0.2 });
+  <!-- ── CTA BANNER ────────────────────────────────────────────── -->
+  <section class="sl-sci-cta">
+    <div class="sl-sci-cta-grid">
 
-  document.querySelectorAll('.sci-section, .ip-section').forEach(function(el){
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(16px)';
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    obs.observe(el);
-  });
+      <div class="sl-sci-cta-img">
+        {% if sci_cta and sci_cta.thumb_url %}
+        <img
+          src="{{ sci_cta.thumb_url }}"
+          alt="Shutter League — photographic excellence"
+          onerror="this.style.display='none'"
+        >
+        {% endif %}
+      </div>
 
-})();
-</script>
+      <div class="sl-sci-cta-text">
+        <h2 class="sl-sci-cta-h">Photography deserves<br><em>more than validation.</em></h2>
+        <p class="sl-sci-cta-body">The purpose of Shutter League is not simply to score photographs. It is to help photographers understand how their work communicates — and how it can grow stronger over time.</p>
+        <div class="sl-sci-cta-row">
+          <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}" class="sl-sci-cta-btn">GET MY FIRST REVIEW</a>
+          <a href="{{ url_for('mentors') }}" class="sl-sci-cta-btn-ghost">EXPLORE MENTOR PERSPECTIVES →</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>{# end sl-sci #}
 {% endblock %}
