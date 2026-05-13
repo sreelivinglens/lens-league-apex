@@ -307,8 +307,27 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
   text-overflow: ellipsis;
 }
 .sl-mbk-img-thumb.selected .sl-mbk-img-photo {
-  outline: 2px solid #1A1A18;
+  outline: 3px solid #2d7a3a;
   outline-offset: 0;
+}
+.sl-mbk-img-thumb.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: #2d7a3a;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 2;
+  line-height: 20px;
+  text-align: center;
 }
 .sl-mbk-img-hint {
   font-size: 12px;
@@ -610,16 +629,16 @@ body:has(.sl-mbk) main { padding: 0 !important; max-width: none !important; marg
 
           <!-- INTENT -->
           <div class="sl-mbk-section">
-            <span class="sl-mbk-label">What should {{ mentor.name }} focus on?</span>
+            <span class="sl-mbk-label">How I Shot This Image</span>
             <textarea
               class="sl-mbk-intent"
               name="intent"
-              placeholder="e.g. I struggled with the balance between subject and background. The light felt right but I'm not sure the composition holds up. Would love to understand what is working and what isn't."
+              placeholder="Tell {{ mentor.name }} the context behind this shot:&#10;&#10;• Location and time of day&#10;• Light conditions (golden hour, overcast, harsh midday, artificial, etc.)&#10;• Gear used (camera body, lens, focal length, tripod, flash, etc.)&#10;• Any challenges or limitations (fast-moving subject, low light, restricted access, etc.)&#10;• What you were trying to achieve — and what you feel didn't quite work&#10;• Any other details that will help the mentor understand the image"
               required
               minlength="40"
-              maxlength="800"
+              maxlength="1200"
             ></textarea>
-            <p class="sl-mbk-intent-hint">80–200 words. {{ mentor.name }} reads this before looking at your image.</p>
+            <p class="sl-mbk-intent-hint">The more context you give, the more specific the feedback. {{ mentor.name }} reads this before looking at your image.</p>
           </div>
 
           <!-- SUBMIT -->
