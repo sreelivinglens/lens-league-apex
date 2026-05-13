@@ -5976,7 +5976,17 @@ def mentor_register(slug):
 
 @app.route('/pricing')
 def pricing():
-    return render_template('pricing.html', open_contest_active=is_open_contest_active())
+    try:
+        poty_hero = (Image.query
+                     .filter(Image.status == 'scored', Image.is_public == True,
+                             Image.thumb_url != None)
+                     .order_by(Image.score.desc())
+                     .first())
+    except Exception:
+        poty_hero = None
+    return render_template('pricing.html',
+                           open_contest_active=is_open_contest_active(),
+                           poty_hero=poty_hero)
 
 
 # ---------------------------------------------------------------------------
