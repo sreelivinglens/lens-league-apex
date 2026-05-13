@@ -469,6 +469,33 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_started_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_tier VARCHAR(60)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
+                # v37 — mentor profiles system
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_mentor BOOLEAN DEFAULT FALSE",
+                """CREATE TABLE IF NOT EXISTS mentor_profiles (
+                    id               SERIAL PRIMARY KEY,
+                    slug             VARCHAR(60) UNIQUE NOT NULL,
+                    user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                    tier_label       VARCHAR(40) NOT NULL DEFAULT 'Senior Mentor',
+                    tier_class       VARCHAR(20) NOT NULL DEFAULT 'senior',
+                    price            INTEGER NOT NULL DEFAULT 50,
+                    points_cost      INTEGER NOT NULL DEFAULT 500,
+                    display_name     VARCHAR(120),
+                    genres           VARCHAR(255),
+                    bio              TEXT,
+                    bio_extended     TEXT,
+                    photo_url        VARCHAR(512),
+                    photo_2_url      VARCHAR(512),
+                    photo_3_url      VARCHAR(512),
+                    instagram_url    VARCHAR(255),
+                    website_url      VARCHAR(255),
+                    youtube_url      VARCHAR(255),
+                    onboarding_complete BOOLEAN DEFAULT FALSE,
+                    is_active        BOOLEAN DEFAULT TRUE,
+                    created_at       TIMESTAMP DEFAULT NOW(),
+                    updated_at       TIMESTAMP DEFAULT NOW()
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
+                "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
             ]
             for sql in _migrations:
                 try:
@@ -476,6 +503,31 @@ with app.app_context():
                 except Exception as _e:
                     print(f'[migration] {_e}')
             conn.commit()
+
+        # Seed existing mentors into mentor_profiles if not already present
+        try:
+            with db.engine.connect() as _mc:
+                for _slug, _m in MENTORS.items():
+                    _mc.execute(db.text("""
+                        INSERT INTO mentor_profiles
+                            (slug, tier_label, tier_class, price, points_cost, display_name,
+                             genres, bio)
+                        VALUES
+                            (:slug, :tl, :tc, :price, :pts, :name, :genres, :bio)
+                        ON CONFLICT (slug) DO NOTHING
+                    """), {
+                        'slug':   _slug,
+                        'tl':     _m['tier_label'],
+                        'tc':     _m['tier_class'],
+                        'price':  _m['price'],
+                        'pts':    _m['points_cost'],
+                        'name':   _m['name'],
+                        'genres': _m['genres'],
+                        'bio':    _m['bio'],
+                    })
+                _mc.commit()
+        except Exception as _se:
+            print(f'[mentor seed] {_se}')
 
         # Fix calibration_logs  -  force correct schema on every startup
         try:
@@ -4890,6 +4942,471 @@ def stats_page():
     genre_stats = compute_calibration_stats(Image.query.filter_by(status='scored').all())
     return render_template('stats.html', stats=stats, genre_stats=genre_stats)
 
+
+# ---------------------------------------------------------------------------
+# MENTOR SYSTEM — admin management + mentor dashboard
+# ---------------------------------------------------------------------------
+
+def _get_mentor_profile(slug):
+    """Return mentor_profiles row as dict, or None."""
+    try:
+        row = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles WHERE slug = :s"),
+            {'s': slug}
+        ).fetchone()
+        return dict(row._mapping) if row else None
+    except Exception:
+        return None
+
+
+def _all_mentor_profiles():
+    """Return all mentor_profiles rows as list of dicts."""
+    try:
+        rows = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles ORDER BY tier_class, display_name")
+        ).fetchall()
+        return [dict(r._mapping) for r in rows]
+    except Exception:
+        return []
+
+
+@app.route('/admin/mentors')
+@login_required
+@admin_required
+def admin_mentors():
+    profiles = _all_mentor_profiles()
+    # Enrich with user info
+    for p in profiles:
+        if p.get('user_id'):
+            try:
+                u = User.query.get(p['user_id'])
+                p['user_email']    = u.email if u else '—'
+                p['user_username'] = u.username if u else '—'
+            except Exception:
+                p['user_email'] = p['user_username'] = '—'
+        else:
+            p['user_email'] = p['user_username'] = '—'
+    # All members for linking
+    try:
+        members = User.query.filter(
+            User.role.in_(['member', 'mentor']),
+            User.is_active == True
+        ).order_by(User.full_name).all()
+    except Exception:
+        members = []
+    return render_template('admin_mentors.html',
+                           profiles=profiles,
+                           members=members,
+                           tier_options=[
+                               ('legend', 'Legend Mentor', 100, 1000),
+                               ('expert', 'Expert Mentor', 75, 750),
+                               ('senior', 'Senior Mentor', 50, 500),
+                           ])
+
+
+@app.route('/admin/mentors/create', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_create():
+    slug        = (request.form.get('slug') or '').strip().lower()
+    tier_class  = request.form.get('tier_class', 'senior')
+    display_name = (request.form.get('display_name') or '').strip()
+
+    tier_map = {
+        'legend': ('Legend Mentor', 100, 1000),
+        'expert': ('Expert Mentor', 75,  750),
+        'senior': ('Senior Mentor', 50,  500),
+    }
+    tier_label, price, points_cost = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
+
+    if not slug or not display_name:
+        flash('Slug and display name are required.', 'error')
+        return redirect(url_for('admin_mentors'))
+
+    try:
+        db.session.execute(db.text("""
+            INSERT INTO mentor_profiles
+                (slug, tier_label, tier_class, price, points_cost, display_name)
+            VALUES
+                (:slug, :tier_label, :tier_class, :price, :points_cost, :name)
+            ON CONFLICT (slug) DO NOTHING
+        """), {
+            'slug': slug, 'tier_label': tier_label, 'tier_class': tier_class,
+            'price': price, 'points_cost': points_cost, 'name': display_name,
+        })
+        db.session.commit()
+        flash(f'Mentor profile created for {display_name}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_mentor_create] {e}')
+        flash('Error creating mentor profile.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
+@app.route('/admin/mentors/<slug>/link-user', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_link_user(slug):
+    user_id = request.form.get('user_id', type=int)
+    if not user_id:
+        flash('Please select a user to link.', 'error')
+        return redirect(url_for('admin_mentors'))
+    try:
+        user = User.query.get_or_404(user_id)
+        # Set mentor role on user
+        user.role = 'mentor'
+        db.session.execute(db.text("""
+            UPDATE mentor_profiles
+            SET user_id = :uid, updated_at = NOW()
+            WHERE slug = :slug
+        """), {'uid': user_id, 'slug': slug})
+        db.session.commit()
+        flash(f'Linked {user.full_name or user.username} as mentor for {slug}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_mentor_link_user] {e}')
+        flash('Error linking user.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
+@app.route('/admin/mentors/<slug>/unlink-user', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_unlink_user(slug):
+    try:
+        row = db.session.execute(
+            db.text("SELECT user_id FROM mentor_profiles WHERE slug = :s"),
+            {'s': slug}
+        ).fetchone()
+        if row and row.user_id:
+            user = User.query.get(row.user_id)
+            if user and user.role == 'mentor':
+                user.role = 'member'
+        db.session.execute(db.text("""
+            UPDATE mentor_profiles
+            SET user_id = NULL, updated_at = NOW()
+            WHERE slug = :slug
+        """), {'slug': slug})
+        db.session.commit()
+        flash(f'User unlinked from {slug}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_mentor_unlink_user] {e}')
+        flash('Error unlinking user.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
+@app.route('/admin/mentors/<slug>/toggle-active', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_toggle_active(slug):
+    try:
+        db.session.execute(db.text("""
+            UPDATE mentor_profiles
+            SET is_active = NOT is_active, updated_at = NOW()
+            WHERE slug = :slug
+        """), {'slug': slug})
+        db.session.commit()
+        flash(f'Mentor {slug} active status toggled.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error toggling status.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
+# ── Mentor Dashboard ─────────────────────────────────────────────────────────
+
+def mentor_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        if current_user.role not in ('mentor', 'admin'):
+            flash('Access restricted to mentors.', 'error')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/mentor/dashboard')
+@login_required
+@mentor_required
+def mentor_dashboard():
+    # Find this mentor's profile
+    try:
+        profile = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles WHERE user_id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        profile = dict(profile._mapping) if profile else None
+    except Exception:
+        profile = None
+
+    if not profile and current_user.role != 'admin':
+        flash('Your mentor profile is not set up yet. Contact admin.', 'error')
+        return redirect(url_for('dashboard'))
+
+    slug = profile['slug'] if profile else None
+
+    # Pending sessions — status = 'pending', ordered by deadline
+    try:
+        pending = db.session.execute(db.text("""
+            SELECT ms.*, u.full_name, u.username, u.email,
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier
+            FROM mentor_sessions ms
+            JOIN users u  ON u.id  = ms.user_id
+            JOIN images i ON i.id  = ms.image_id
+            WHERE ms.mentor_slug = :slug
+              AND ms.status = 'pending'
+            ORDER BY ms.deadline_at ASC
+        """), {'slug': slug}).fetchall()
+        pending = [dict(r._mapping) for r in pending]
+    except Exception:
+        pending = []
+
+    # Completed sessions — last 20
+    try:
+        completed = db.session.execute(db.text("""
+            SELECT ms.*, u.full_name, u.username,
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier
+            FROM mentor_sessions ms
+            JOIN users u  ON u.id  = ms.user_id
+            JOIN images i ON i.id  = ms.image_id
+            WHERE ms.mentor_slug = :slug
+              AND ms.status = 'reviewed'
+            ORDER BY ms.reviewed_at DESC
+            LIMIT 20
+        """), {'slug': slug}).fetchall()
+        completed = [dict(r._mapping) for r in completed]
+    except Exception:
+        completed = []
+
+    return render_template('mentor_dashboard.html',
+                           profile=profile,
+                           pending=pending,
+                           completed=completed)
+
+
+@app.route('/mentor/profile', methods=['GET', 'POST'])
+@login_required
+@mentor_required
+def mentor_profile_edit():
+    try:
+        profile = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles WHERE user_id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        profile = dict(profile._mapping) if profile else None
+    except Exception:
+        profile = None
+
+    if not profile:
+        flash('Your mentor profile is not set up yet. Contact admin.', 'error')
+        return redirect(url_for('mentor_dashboard'))
+
+    if request.method == 'POST':
+        display_name   = (request.form.get('display_name') or '').strip()
+        genres         = (request.form.get('genres') or '').strip()
+        bio            = (request.form.get('bio') or '').strip()
+        bio_extended   = (request.form.get('bio_extended') or '').strip()
+        instagram_url  = (request.form.get('instagram_url') or '').strip()
+        website_url    = (request.form.get('website_url') or '').strip()
+        youtube_url    = (request.form.get('youtube_url') or '').strip()
+
+        # Photo upload → R2
+        photo_url    = profile.get('photo_url')
+        photo_2_url  = profile.get('photo_2_url')
+        photo_3_url  = profile.get('photo_3_url')
+
+        import uuid, tempfile
+        from PIL import Image as PILImage
+
+        def _upload_mentor_photo(file_field, slot):
+            f = request.files.get(file_field)
+            if not f or not f.filename:
+                return None
+            try:
+                uid = 'mentor_' + profile['slug'] + '_' + slot + '_' + uuid.uuid4().hex[:8]
+                ext = os.path.splitext(f.filename)[1].lower() or '.jpg'
+                with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                    f.save(tmp.name)
+                    # Resize to max 1200px wide
+                    img = PILImage.open(tmp.name)
+                    img.thumbnail((1200, 1200), PILImage.LANCZOS)
+                    img.save(tmp.name, quality=88)
+                    url = r2.upload_file(tmp.name, f'mentor_photos/{uid}{ext}',
+                                        content_type='image/jpeg')
+                os.unlink(tmp.name)
+                return url
+            except Exception as e:
+                app.logger.error(f'[mentor_photo_upload] {e}')
+                return None
+
+        new_photo    = _upload_mentor_photo('photo',   'p1')
+        new_photo_2  = _upload_mentor_photo('photo_2', 'p2')
+        new_photo_3  = _upload_mentor_photo('photo_3', 'p3')
+
+        if new_photo:   photo_url   = new_photo
+        if new_photo_2: photo_2_url = new_photo_2
+        if new_photo_3: photo_3_url = new_photo_3
+
+        try:
+            db.session.execute(db.text("""
+                UPDATE mentor_profiles SET
+                    display_name    = :name,
+                    genres          = :genres,
+                    bio             = :bio,
+                    bio_extended    = :bio_ext,
+                    instagram_url   = :ig,
+                    website_url     = :web,
+                    youtube_url     = :yt,
+                    photo_url       = :p1,
+                    photo_2_url     = :p2,
+                    photo_3_url     = :p3,
+                    onboarding_complete = TRUE,
+                    updated_at      = NOW()
+                WHERE user_id = :uid
+            """), {
+                'name': display_name, 'genres': genres,
+                'bio': bio, 'bio_ext': bio_extended,
+                'ig': instagram_url or None,
+                'web': website_url or None,
+                'yt': youtube_url or None,
+                'p1': photo_url, 'p2': photo_2_url, 'p3': photo_3_url,
+                'uid': current_user.id,
+            })
+            db.session.commit()
+            flash('Profile updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[mentor_profile_edit] {e}')
+            flash('Error saving profile.', 'error')
+
+        return redirect(url_for('mentor_profile_edit'))
+
+    return render_template('mentor_profile_edit.html', profile=profile)
+
+
+@app.route('/mentor/session/<int:session_id>/review', methods=['GET', 'POST'])
+@login_required
+@mentor_required
+def mentor_review_session(session_id):
+    try:
+        profile = db.session.execute(
+            db.text("SELECT * FROM mentor_profiles WHERE user_id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        profile = dict(profile._mapping) if profile else None
+    except Exception:
+        profile = None
+
+    try:
+        session_row = db.session.execute(db.text("""
+            SELECT ms.*, u.full_name, u.username, u.email,
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
+                   i.improvement_note
+            FROM mentor_sessions ms
+            JOIN users u  ON u.id  = ms.user_id
+            JOIN images i ON i.id  = ms.image_id
+            WHERE ms.id = :sid
+        """), {'sid': session_id}).fetchone()
+        session_row = dict(session_row._mapping) if session_row else None
+    except Exception:
+        session_row = None
+
+    if not session_row:
+        flash('Session not found.', 'error')
+        return redirect(url_for('mentor_dashboard'))
+
+    # Verify this mentor owns this session
+    if profile and session_row['mentor_slug'] != profile['slug'] and current_user.role != 'admin':
+        flash('Access denied.', 'error')
+        return redirect(url_for('mentor_dashboard'))
+
+    if request.method == 'POST':
+        review_text = (request.form.get('review_text') or '').strip()
+        if len(review_text) < 50:
+            flash('Review must be at least 50 characters.', 'error')
+            return render_template('mentor_review_form.html',
+                                   profile=profile, session=session_row)
+        try:
+            db.session.execute(db.text("""
+                UPDATE mentor_sessions
+                SET review_text = :txt,
+                    status      = 'reviewed',
+                    reviewed_at = NOW()
+                WHERE id = :sid
+            """), {'txt': review_text, 'sid': session_id})
+            db.session.commit()
+
+            # Notify photographer by email
+            try:
+                photographer = User.query.get(session_row['user_id'])
+                if photographer and photographer.email:
+                    site_url   = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    mentor_name = profile['display_name'] if profile else 'Your mentor'
+                    html_body = (
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                        '<tr><td align="center">'
+                        '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:560px;width:100%;">'
+                        '<tr><td style="background:#1A2744;padding:24px 32px;">'
+                        '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE</p>'
+                        '</td></tr>'
+                        '<tr><td style="background:#1A2744;padding:0 32px 24px;">'
+                        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Mentor Review</p>'
+                        '<h1 style="margin:0;font-size:22px;color:#FFFFFF;font-weight:700;">Your mentor review is ready.</h1>'
+                        '</td></tr>'
+                        '<tr><td style="padding:28px 32px;">'
+                        '<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">'
+                        'Hi ' + (photographer.full_name or photographer.username) + ','
+                        '</p>'
+                        '<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">'
+                        '<strong>' + mentor_name + '</strong> has reviewed your image <strong>&#34;'
+                        + (session_row.get('asset_name') or 'Untitled') + '&#34;</strong>.'
+                        '</p>'
+                        '<p style="margin:0 0 24px;font-size:16px;color:#4A4840;line-height:1.7;">'
+                        'Log in to your dashboard to read the full review.'
+                        '</p>'
+                        '<a href="' + site_url + '/dashboard" '
+                        'style="display:inline-block;background:#F5C518;color:#FFFFFF;'
+                        'font-family:Courier New,monospace;font-size:12px;font-weight:700;'
+                        'letter-spacing:2px;text-transform:uppercase;padding:12px 24px;text-decoration:none;">'
+                        'VIEW MY REVIEW</a>'
+                        '</td></tr>'
+                        '</table></td></tr></table></body></html>'
+                    )
+                    text_body = (
+                        'SHUTTER LEAGUE - Mentor Review Ready\n\n'
+                        'Hi ' + (photographer.full_name or photographer.username) + ',\n\n'
+                        + mentor_name + ' has reviewed your image "'
+                        + (session_row.get('asset_name') or 'Untitled') + '".\n\n'
+                        'Log in to read the full review:\n'
+                        + site_url + '/dashboard\n'
+                    )
+                    send_email(
+                        photographer.email,
+                        '[Shutter League] Your mentor review is ready',
+                        html_body,
+                        text_body
+                    )
+            except Exception as mail_err:
+                app.logger.error(f'[mentor_review_notify] {mail_err}')
+
+            flash('Review submitted. Photographer has been notified.', 'success')
+            return redirect(url_for('mentor_dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[mentor_review_session] {e}')
+            flash('Error submitting review.', 'error')
+
+    return render_template('mentor_review_form.html',
+                           profile=profile, session=session_row)
+
+
 @app.route('/science')
 def science():
     try:
@@ -5273,7 +5790,33 @@ def mentors():
                     .first())
     except Exception:
         men_hero = None
-    return render_template('mentors.html', men_hero=men_hero)
+
+    # Merge DB profiles into MENTORS dict — DB values override hardcoded defaults
+    mentors_data = {}
+    for slug, base in MENTORS.items():
+        merged = dict(base)
+        try:
+            row = db.session.execute(
+                db.text("SELECT * FROM mentor_profiles WHERE slug = :s AND is_active = TRUE"),
+                {'s': slug}
+            ).fetchone()
+            if row:
+                r = dict(row._mapping)
+                if r.get('display_name'):  merged['name']         = r['display_name']
+                if r.get('bio'):           merged['bio']          = r['bio']
+                if r.get('genres'):        merged['genres']       = r['genres']
+                if r.get('photo_url'):     merged['photo']        = r['photo_url']
+                if r.get('photo_2_url'):   merged['photo_2']      = r['photo_2_url']
+                if r.get('photo_3_url'):   merged['photo_3']      = r['photo_3_url']
+                if r.get('instagram_url'): merged['instagram_url']= r['instagram_url']
+                if r.get('website_url'):   merged['website_url']  = r['website_url']
+                if r.get('youtube_url'):   merged['youtube_url']  = r['youtube_url']
+                if r.get('bio_extended'):  merged['bio_extended'] = r['bio_extended']
+        except Exception:
+            pass
+        mentors_data[slug] = merged
+
+    return render_template('mentors.html', men_hero=men_hero, mentors_data=mentors_data)
 
 # ---------------------------------------------------------------------------
 
