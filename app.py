@@ -5604,8 +5604,6 @@ def robots_txt():
         "Disallow: /rate\n"
         "Disallow: /raw\n"
         "Disallow: /judge\n"
-        "Disallow: /subscribe\n"
-        "Disallow: /subscription\n"
         "Crawl-delay: 10\n"
         "\n"
         "# Automated scraping, bulk harvesting, and data extraction are\n"
@@ -5630,7 +5628,6 @@ def sitemap():
         ('/mentors', '0.8', 'weekly'),
         ('/science', '0.7', 'monthly'),
         ('/learning', '0.7', 'weekly'),
-        ('/how-it-works', '0.8', 'monthly'),
     ]
     base = 'https://shutterleague.com'
     urls = ''
