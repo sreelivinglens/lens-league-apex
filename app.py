@@ -7594,7 +7594,7 @@ def admin_contests():
             max_entries = request.form.get('max_entries_per_user', 3, type=int)
 
             if not all([brand_name, title, brief, prize_desc, opens_str, closes_str]):
-                flash('All fields except prize value are required.', 'error')
+                flash('All fields except award value are required.', 'error')
                 return redirect(url_for('admin_contests'))
 
             try:
@@ -7631,11 +7631,25 @@ def admin_contests():
                 'brand_judging':  'judging',
                 'brand_publish':  'results_published',
             }
+            # ── PayU compliance gate: block activation if cash prize_value set
+            # without explicit compliance acknowledgement.
+            # Monetary prizes require PayU Promotional Contests category approval.
+            if action == 'brand_activate':
+                prize_val = getattr(bc, 'prize_value', None)
+                payu_ack  = request.form.get('payu_prize_compliance_ack') == '1'
+                if prize_val and not payu_ack:
+                    flash(
+                        f'Brand programme "{bc.title}" has a monetary award value set (₹{prize_val}). '
+                        'Programmes with cash awards require PayU Promotional Programmes category approval '
+                        'before going live. Check the compliance acknowledgement box to proceed.',
+                        'error'
+                    )
+                    return redirect(url_for('admin_contests'))
             bc.status = status_map[action]
             if action == 'brand_publish':
                 bc.results_published_at = datetime.utcnow()
             db.session.commit()
-            flash(f'Brand contest "{bc.title}" status updated to {bc.status}.', 'success')
+            flash(f'Brand programme "{bc.title}" status updated to {bc.status}.', 'success')
             return redirect(url_for('admin_contests'))
 
         # ── Announcement — create ──────────────────────────────────────────
@@ -8915,7 +8929,7 @@ def admin_contest_go_live():
             continue
         send_email(
             photographer.email,
-            f'🏆 You placed {ordinals[rank]} in {contest_ref} -- Shutter League',
+            f'🏆 You placed {ordinals[rank]} in {contest_ref} — Shutter League',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
              f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
@@ -8925,7 +8939,7 @@ def admin_contest_go_live():
              f'</div>')
         )
 
-    flash(f'Leaderboard published for {contest_ref}. Results are now live. {len(winners)} winner(s) notified by email.', 'success')
+    flash(f'Leaderboard published for {contest_ref}. Results are now live. {len(winners)} top scorer(s) notified by email.', 'success')
     return redirect(url_for('admin_judge_config'))
 
 
@@ -10764,11 +10778,11 @@ def admin_notify_winners():
 
         send_email(
             photographer.email,
-            f'Congratulations -- provisional winner in {contest_ref}',
+            f'Congratulations — provisional top scorer in {contest_ref}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional winning position in <strong>{contest_ref}</strong>.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> ({img.genre}) has achieved a provisional top-scoring position in <strong>{contest_ref}</strong>.</p>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">To confirm your result, submit the original RAW file within <strong>{raw_hours} hours</strong>.</p>'
              f'<a href="{site_url}/raw/submit/{contest_type}/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:16px 0;">Submit RAW File</a>'
              f'<p style="font-size:14px;color:#8a8070;">Deadline: {deadline.strftime("%d %B %Y, %H:%M UTC")} ({raw_hours} hours from now). Results will not be published until RAW verification is complete.</p>'
@@ -10894,9 +10908,9 @@ def cron_raw_reminders():
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">We are sorry -- your image could not be considered</h2>'
              f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>"{row.asset_name}"</strong> was not considered for this competition because the RAW file was not received within the required deadline.</p>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional winners to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional top scorers to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
              f'<div style="background:#F5F0E8;border-left:3px solid #C8A84B;padding:16px 20px;margin:20px 0;font-size:16px;color:#4A4840;line-height:1.7;">'
-             f'<strong style="color:#1a1a18;">You are welcome to continue competing.</strong> The same image may be entered again in future contests. If your image achieves a provisional winning position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
+             f'<strong style="color:#1a1a18;">You are welcome to continue entering.</strong> The same image may be entered again in future programmes. If your image achieves a provisional top-scoring position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
              f'</div>'
              f'<p style="font-size:15px;color:#8A8478;line-height:1.7;">If you believe this notice was sent in error, please write to <a href="mailto:'+CONTACT_EMAIL+'" style="color:#C8A84B;">'+CONTACT_EMAIL+'</a> within 48 hours.</p>'
              f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Your account remains active and your DDI scores are unaffected.</p>'
@@ -11557,12 +11571,12 @@ def admin_release_weekly_results(week_ref):
 
         app.logger.info(
             '[release] ' + week_ref + ' released by ' + current_user.email
-            + ' — ' + str(sent) + ' announcement emails, ' + str(wsent) + ' winner emails'
+            + ' — ' + str(sent) + ' announcement emails, ' + str(wsent) + ' top scorer emails'
         )
         flash(
             'Results for ' + week_ref + ' released. '
             + str(sent) + ' announcement email(s) sent, '
-            + str(wsent) + ' winner email(s) sent.',
+            + str(wsent) + ' top scorer email(s) sent.',
             'success'
         )
         return redirect(url_for('admin_weekly_challenge'))
