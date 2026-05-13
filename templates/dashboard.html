@@ -314,25 +314,30 @@
 
   /* ── DDI Progress block (mirrors profile page) ── */
   .dash-ddi { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px 28px; margin-bottom: 28px; }
-  .dash-ddi-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
+  .dash-ddi-label { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
   .dash-ddi-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
-  .dash-ddi-stat-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.1; }
-  .dash-ddi-stat-lbl { font-size: 11px; color: var(--text-primary); margin-top: 4px; }
+  .dash-ddi-stat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1.1; }
+  .dash-ddi-stat-lbl { font-size: 14px; color: var(--text-primary); margin-top: 4px; }
   .dash-ddi-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-  .dash-ddi-chart-title { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; }
-  .dash-ddi-radar-wrap { position: relative; width: 100%; aspect-ratio: 1/1; max-height: 220px; }
-  .dash-ddi-trend-wrap { position: relative; width: 100%; aspect-ratio: 2/1; max-height: 160px; margin-top: auto; }
+  .dash-ddi-chart-title { font-family: var(--font-mono); font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; }
+  .dash-ddi-radar-wrap { position: relative; width: 100%; aspect-ratio: 1/1; max-height: 240px; }
+  .dash-ddi-trend-wrap { position: relative; width: 100%; aspect-ratio: 2/1; max-height: 180px; margin-top: auto; }
   .dash-ddi-callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .dash-ddi-callout { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
-  .dash-ddi-callout-tag { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .dash-ddi-callout { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
+  .dash-ddi-callout-tag { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
   .dash-ddi-callout-tag.strength { color: #4CAF73; }
   .dash-ddi-callout-tag.growth   { color: var(--gold); }
-  .dash-ddi-callout-dim { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-  .dash-ddi-callout-sub { font-size: 12px; color: var(--text-primary); line-height: 1.4; }
+  .dash-ddi-callout-dim { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .dash-ddi-callout-sub { font-size: 14px; color: var(--text-primary); line-height: 1.5; }
   @media (max-width: 600px) {
+    .dash-ddi { padding: 18px 16px; }
     .dash-ddi-charts { grid-template-columns: 1fr; }
     .dash-ddi-callouts { grid-template-columns: 1fr; }
     .dash-ddi-summary { grid-template-columns: repeat(3,1fr); }
+    .dash-ddi-radar-wrap { max-height: 260px; }
+    .dash-ddi-trend-wrap { max-height: 200px; }
+    .dash-ddi-callout-dim { font-size: 20px; }
+    .dash-ddi-callout-sub { font-size: 15px; }
   }
   .mentor-nudge {
     display: flex; align-items: center; justify-content: space-between;
@@ -1129,9 +1134,9 @@ function toggleNotifStrip() {
         responsive: true, maintainAspectRatio: true,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.raw.toFixed(1) + ' / 10' }}},
         scales: { r: { min: 0, max: 10,
-          ticks: { stepSize: 2, color: muted, font: { size: 9 }, backdropColor: 'transparent' },
+          ticks: { stepSize: 2, color: muted, font: { size: 12 }, backdropColor: 'transparent' },
           grid: { color: border }, angleLines: { color: border },
-          pointLabels: { color: muted, font: { size: 10 }, padding: 8 }
+          pointLabels: { color: muted, font: { size: 13 }, padding: 10 }
         }}
       }
     });
@@ -1154,8 +1159,8 @@ function toggleNotifStrip() {
         responsive: true, maintainAspectRatio: true,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Score: ' + c.raw }}},
         scales: {
-          y: { min: 0, max: 10, ticks: { stepSize: 2, color: muted, font: { size: 9 } }, grid: { color: border } },
-          x: { ticks: { color: muted, font: { size: 9 } }, grid: { display: false } }
+          y: { min: 0, max: 10, ticks: { stepSize: 2, color: muted, font: { size: 12 } }, grid: { color: border } },
+          x: { ticks: { color: muted, font: { size: 12 } }, grid: { display: false } }
         }
       }
     });
