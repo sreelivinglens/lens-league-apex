@@ -322,6 +322,47 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'cards'),  exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'raw'),    exist_ok=True)
 
+# ---------------------------------------------------------------------------
+# MENTOR DATA — defined here (before app_context) so the seed block can
+# reference it. The dict near the /mentors route is removed — this is the
+# single source of truth.
+# ---------------------------------------------------------------------------
+MENTORS = {
+    'ashok': {
+        'slug':        'ashok',
+        'name':        'Ashok Kochhar',
+        'tier_label':  'Legend Mentor',
+        'tier_class':  'legend',
+        'price':       100,
+        'points_cost': 1000,
+        'photo':       'img/mentor_ashok.jpg',
+        'genres':      'Conceptual · Fashion · Street · Nature',
+        'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
+    },
+    'gopal': {
+        'slug':        'gopal',
+        'name':        'Gopal MS',
+        'tier_label':  'Expert Mentor',
+        'tier_class':  'expert',
+        'price':       75,
+        'points_cost': 750,
+        'photo':       'img/Gopal MS.jpeg',
+        'genres':      'Street · Documentary · Urban',
+        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
+    },
+    'sreekumar': {
+        'slug':        'sreekumar',
+        'name':        'Sreekumar Krishnan',
+        'tier_label':  'Senior Mentor',
+        'tier_class':  'senior',
+        'price':       50,
+        'points_cost': 500,
+        'photo':       'img/Sreekumar.png',
+        'genres':      'Wildlife · Street · Portrait · Mobile',
+        'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
+    },
+}
+
 with app.app_context():
     try:
         db.create_all()
@@ -1595,6 +1636,9 @@ def auth_google_callback():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
+        # Mentor users go to their dashboard
+        if getattr(user, 'role', None) == 'mentor':
+            return redirect(url_for('mentor_dashboard'))
         # Redirect to stored next URL if available
         post_next = session.pop('post_login_next', None)
         if post_next:
@@ -1695,6 +1739,8 @@ def login():
         ).fetchone()
         if _jc:
             return redirect(url_for('judge_dashboard'))
+        if getattr(current_user, 'role', None) == 'mentor':
+            return redirect(url_for('mentor_dashboard'))
         return redirect(url_for('dashboard'))
 
 
@@ -1744,6 +1790,9 @@ def login():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
+        # Mentor users go to their dashboard
+        if getattr(user, 'role', None) == 'mentor':
+            return redirect(url_for('mentor_dashboard'))
         return redirect(url_for('dashboard'))
 
     return render_template('login.html')
@@ -5735,46 +5784,6 @@ def learning():
                            learning_hero=learning_hero)
 
 # ---------------------------------------------------------------------------
-# MENTOR DATA — source of truth; move to DB when roster grows
-# ---------------------------------------------------------------------------
-MENTORS = {
-    'ashok': {
-        'slug':        'ashok',
-        'name':        'Ashok Kochhar',
-        'tier_label':  'Legend Mentor',
-        'tier_class':  'legend',
-        'price':       100,
-        'points_cost': 1000,
-        'photo':       'img/mentor_ashok.jpg',
-        'genres':      'Conceptual · Fashion · Street · Nature',
-        'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
-    },
-    'gopal': {
-        'slug':        'gopal',
-        'name':        'Gopal MS',
-        'tier_label':  'Expert Mentor',
-        'tier_class':  'expert',
-        'price':       75,
-        'points_cost': 750,
-        'photo':       'img/Gopal MS.jpeg',
-        'genres':      'Street · Documentary · Urban',
-        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
-    },
-    'sreekumar': {
-        'slug':        'sreekumar',
-        'name':        'Sreekumar Krishnan',
-        'tier_label':  'Senior Mentor',
-        'tier_class':  'senior',
-        'price':       50,
-        'points_cost': 500,
-        'photo':       'img/Sreekumar.png',
-        'genres':      'Wildlife · Street · Portrait · Mobile',
-        'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
-    },
-}
-
-# ---------------------------------------------------------------------------
-
 @app.route('/mentors')
 def mentors():
     try:
