@@ -312,7 +312,28 @@
   .empty-state h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 10px; }
   .empty-state p { font-size: 16px; line-height: 1.7; }
 
-  /* ── Mentor nudge banner ── */
+  /* ── DDI Progress block (mirrors profile page) ── */
+  .dash-ddi { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px 28px; margin-bottom: 28px; }
+  .dash-ddi-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 16px; }
+  .dash-ddi-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+  .dash-ddi-stat-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--gold); line-height: 1.1; }
+  .dash-ddi-stat-lbl { font-size: 11px; color: var(--text-primary); margin-top: 4px; }
+  .dash-ddi-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .dash-ddi-chart-title { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; }
+  .dash-ddi-radar-wrap { position: relative; width: 100%; aspect-ratio: 1/1; max-height: 220px; }
+  .dash-ddi-trend-wrap { position: relative; width: 100%; aspect-ratio: 2/1; max-height: 160px; margin-top: auto; }
+  .dash-ddi-callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dash-ddi-callout { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
+  .dash-ddi-callout-tag { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .dash-ddi-callout-tag.strength { color: #4CAF73; }
+  .dash-ddi-callout-tag.growth   { color: var(--gold); }
+  .dash-ddi-callout-dim { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+  .dash-ddi-callout-sub { font-size: 12px; color: var(--text-primary); line-height: 1.4; }
+  @media (max-width: 600px) {
+    .dash-ddi-charts { grid-template-columns: 1fr; }
+    .dash-ddi-callouts { grid-template-columns: 1fr; }
+    .dash-ddi-summary { grid-template-columns: repeat(3,1fr); }
+  }
   .mentor-nudge {
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; flex-wrap: wrap;
@@ -598,6 +619,63 @@ function toggleNotifStrip() {
 </div>
 {% endif %}
 
+{# ── DDI Progress (shown when >= 5 scored images) ────────────────────────── #}
+{% if progress_data %}
+<div class="dash-ddi">
+  <div class="dash-ddi-label">Your DDI Progress</div>
+
+  <div class="dash-ddi-summary">
+    <div>
+      <div class="dash-ddi-stat-val">{{ progress_data.count }}</div>
+      <div class="dash-ddi-stat-lbl">Images scored</div>
+    </div>
+    <div>
+      <div class="dash-ddi-stat-val">{{ progress_data.avg_tier }}</div>
+      <div class="dash-ddi-stat-lbl">Avg tier</div>
+    </div>
+    <div>
+      <div class="dash-ddi-stat-val">{{ progress_data.top_genre or '—' }}</div>
+      <div class="dash-ddi-stat-lbl">Top genre</div>
+    </div>
+  </div>
+
+  <div class="dash-ddi-charts">
+    <div>
+      <div class="dash-ddi-chart-title">Dimension Signature</div>
+      <div class="dash-ddi-radar-wrap">
+        <canvas id="dashRadarChart"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="dash-ddi-chart-title">Score Trend</div>
+      <div class="dash-ddi-trend-wrap">
+        <canvas id="dashTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-ddi-callouts">
+    <div class="dash-ddi-callout">
+      <div class="dash-ddi-callout-tag strength">▲ Strength</div>
+      <div class="dash-ddi-callout-dim">{{ progress_data.dim_labels[progress_data.strongest] }}</div>
+      <div class="dash-ddi-callout-sub">Your highest-scoring dimension on average — keep leaning in.</div>
+    </div>
+    <div class="dash-ddi-callout">
+      <div class="dash-ddi-callout-tag growth">◎ Growth area</div>
+      <div class="dash-ddi-callout-dim">{{ progress_data.dim_labels[progress_data.weakest] }}</div>
+      <div class="dash-ddi-callout-sub">The biggest lever to move your overall tier upward.</div>
+      <a href="{{ url_for('mentors') }}"
+         style="display:inline-block; margin-top:10px; background:#F5C518; color:#000;
+                font-family:var(--font-mono); font-size:12px; font-weight:700;
+                letter-spacing:1px; text-transform:uppercase; padding:8px 14px;
+                text-decoration:none; border-radius:4px; white-space:nowrap;">
+        Get Mentor Feedback →
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {# ── Wallet HUD (Sprint 4 — investor doc 16d) ───────────────────────────── #}
 {% if wallet_hud %}
 <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px; overflow:hidden;">
@@ -777,36 +855,19 @@ function toggleNotifStrip() {
 
 
 
-{# ── Mentor nudge (non-mentor subscribers only) ─────────────────────────── #}
+{# ── Mentor nudge ────────────────────────────────────────────────────────── #}
 {% if true %}
 <div class="mentor-nudge">
   <div class="mentor-nudge-left">
-    <div class="mentor-nudge-eyebrow">
-      {% if stats.scored >= 3 and stats.avg_score %}
-        Avg Score: {{ '%.2f'|format(stats.avg_score) }} · {{ stats.scored }} image{{ 's' if stats.scored != 1 else '' }} scored
-      {% else %}
-        Human Mentor Review · Pay Per Session
-      {% endif %}
-    </div>
+    <div class="mentor-nudge-eyebrow">Human Mentor Review · Pay Per Session</div>
     <div class="mentor-nudge-title">
-      {% if poty_tracker and poty_tracker.genre_rows %}
-        {% set _weakest_row = poty_tracker.genre_rows | sort(attribute='top6_avg') | first %}
-        {% if _weakest_row and _weakest_row.top6_avg %}
-          Your {{ _weakest_row.genre }} needs work — get a mentor review.
-        {% else %}
-          Get your images reviewed by our mentors.
-        {% endif %}
+      {% if progress_data %}
+        Your {{ progress_data.dim_labels[progress_data.weakest] }} needs work — a mentor can help.
       {% else %}
         Get your images reviewed by our mentors.
       {% endif %}
     </div>
-    <div class="mentor-nudge-sub">
-      {% if stats.best_score %}
-        Best score: {{ stats.best_score }} · A mentor can help you push further.
-      {% else %}
-        Experienced photography mentors. Genuine feedback.
-      {% endif %}
-    </div>
+    <div class="mentor-nudge-sub">Experienced photographers. Structured feedback within 72 hours.</div>
   </div>
   <a href="{{ url_for('mentors') }}" class="btn btn-solid"
      style="font-size:16px; background:#F5C518; color:#000000; border:none; white-space:nowrap; flex-shrink:0;">
@@ -1034,4 +1095,70 @@ function toggleNotifStrip() {
 </div>
 {% endif %}
 
+
+{% block extra_js %}
+{% if progress_data %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+  const style   = getComputedStyle(document.documentElement);
+  const gold    = style.getPropertyValue('--gold').trim()       || '#F5C518';
+  const muted   = style.getPropertyValue('--text-muted').trim() || '#888';
+  const border  = style.getPropertyValue('--border').trim()     || '#ccc';
+  const TIER_COLORS = {
+    'Legend': '#FFD700', 'Grandmaster': '#F5C518', 'Master': '#4CAF73',
+    'Maverick': '#F5C518', 'Craftsman': '#F5C518', 'Contender': '#aaa',
+    'Shooter': '#888', 'Rookie': '#666',
+  };
+  const radarCtx = document.getElementById('dashRadarChart');
+  if (radarCtx) {
+    const dimAvgs   = {{ progress_data.dim_avgs | tojson }};
+    const dimLabels = {{ progress_data.dim_labels | tojson }};
+    const dimOrder  = ['dod', 'disruption', 'dm', 'wonder', 'aq'];
+    new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: dimOrder.map(k => dimLabels[k]),
+        datasets: [{ data: dimOrder.map(k => dimAvgs[k]),
+          backgroundColor: gold + '22', borderColor: gold, borderWidth: 2,
+          pointBackgroundColor: gold, pointRadius: 4, pointHoverRadius: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.raw.toFixed(1) + ' / 10' }}},
+        scales: { r: { min: 0, max: 10,
+          ticks: { stepSize: 2, color: muted, font: { size: 9 }, backdropColor: 'transparent' },
+          grid: { color: border }, angleLines: { color: border },
+          pointLabels: { color: muted, font: { size: 10 }, padding: 8 }
+        }}
+      }
+    });
+  }
+  const trendCtx = document.getElementById('dashTrendChart');
+  if (trendCtx) {
+    const trend = {{ progress_data.trend | tojson }};
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: trend.map(t => t.label),
+        datasets: [{ data: trend.map(t => t.score),
+          borderColor: gold, borderWidth: 2, backgroundColor: gold + '18',
+          fill: true, tension: 0.35,
+          pointBackgroundColor: trend.map(t => TIER_COLORS[t.tier] || '#888'),
+          pointBorderColor:     trend.map(t => TIER_COLORS[t.tier] || '#888'),
+          pointRadius: 5, pointHoverRadius: 7 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Score: ' + c.raw }}},
+        scales: {
+          y: { min: 0, max: 10, ticks: { stepSize: 2, color: muted, font: { size: 9 } }, grid: { color: border } },
+          x: { ticks: { color: muted, font: { size: 9 } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}
