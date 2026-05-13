@@ -933,7 +933,6 @@ img {
       <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
       <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
-      <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
       <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learn</a>
       <a href="{{ url_for('mentors') }}" onclick="toggleNav()">Mentors</a>
       <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
@@ -943,6 +942,7 @@ img {
     {% endif %}
   {% else %}
     <a href="{{ url_for('how_it_works') }}" onclick="toggleNav()">How It Works</a>
+    <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
     <a href="/mentors" onclick="toggleNav()">Mentors</a>
     <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
