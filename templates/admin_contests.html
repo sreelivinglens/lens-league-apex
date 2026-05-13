@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Contests — Admin{% endblock %}
+{% block title %}Programmes — Admin{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -111,13 +111,13 @@
 
 {% block content %}
 
-<div class="c-page-title">🏆 Contest Management</div>
-<div class="c-page-sub">Set up and manage POTY, Body of Work, Open, and Brand contests — and send announcements to members.</div>
+<div class="c-page-title">🏆 Programme Management</div>
+<div class="c-page-sub">Set up and manage POTY, Body of Work, Open, and Brand programmes — and send announcements to members.</div>
 
 <nav class="c-nav">
   <a href="{{ url_for('admin_dashboard') }}">← Admin Home</a>
   <a href="{{ url_for('admin_weekly_challenge') }}">📅 Weekly Challenge</a>
-  <a href="{{ url_for('admin_contests') }}" class="active">🏆 Contests</a>
+  <a href="{{ url_for('admin_contests') }}" class="active">🏆 Programmes</a>
 </nav>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -137,7 +137,7 @@
     <div class="c-card-head-row">
       <div>
         <div class="c-card-head-title">📆 Contest Period — {{ current_year }}</div>
-        <div class="c-card-head-sub">Set the dates for POTY, Body of Work, and Open Contest. These dates control when each contest opens, closes, and when winners are announced.</div>
+        <div class="c-card-head-sub">Set the dates for POTY, Body of Work, and Open Programme. These dates control when each programme opens, closes, and when results are announced.</div>
       </div>
       <span class="c-chev" id="chev-period">▾</span>
     </div>
@@ -157,7 +157,7 @@
         <div class="c-summary-sub">{% if period.bow_entry_opens_at %}{{ (period.bow_entry_opens_at + ist).strftime('%-d %b') }} – {{ (period.bow_entry_closes_at + ist).strftime('%-d %b %Y') }}{% else %}Dates not set{% endif %}</div>
       </div>
       <div class="c-summary-item">
-        <div class="c-summary-label">Winners Announced</div>
+        <div class="c-summary-label">Results Announced</div>
         <div class="c-summary-value" style="font-size:16px; color:var(--gold);">{% if period.winners_announced_at %}{{ (period.winners_announced_at + ist).strftime('%-d %b %Y') }}{% else %}Not set{% endif %}</div>
         <div class="c-summary-sub">Cooling ends: {% if period.open_cooling_ends_at %}{{ (period.open_cooling_ends_at + ist).strftime('%-d %b %Y') }}{% else %}Not set{% endif %}</div>
       </div>
@@ -226,15 +226,15 @@
       </div>
 
       <div class="c-form-section">
-        <div class="c-form-section-title">🌐 Open Contest</div>
+        <div class="c-form-section-title">🌐 Open Programme</div>
         <div class="c-hint">Any member can enter. First image free, Rs. 200 per additional image. 15-day cooling period in January before results.</div>
         <div class="c-field-row">
           <div class="c-field">
-            <label class="c-label">Open Contest Opens</label>
+            <label class="c-label">Open Programme Opens</label>
             <input type="datetime-local" name="open_opens_at" value="{{ (period.open_opens_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_opens_at else '2026-06-01T00:00' }}">
           </div>
           <div class="c-field">
-            <label class="c-label">Open Contest Closes</label>
+            <label class="c-label">Open Programme Closes</label>
             <input type="datetime-local" name="open_closes_at" value="{{ (period.open_closes_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.open_closes_at else '2026-12-31T23:59' }}">
           </div>
         </div>
@@ -257,10 +257,10 @@
       </div>
 
       <div class="c-form-section">
-        <div class="c-form-section-title">🏆 Winners Announcement</div>
-        <div class="c-hint">All winners — POTY, BOW, and Open — are announced on the same date. Standard date is 1 February.</div>
+        <div class="c-form-section-title">🏆 Results Announcement</div>
+        <div class="c-hint">All results — POTY, BOW, and Open — are announced on the same date. Standard date is 1 February.</div>
         <div class="c-field" style="max-width:360px;">
-          <label class="c-label">Winners Announced On</label>
+          <label class="c-label">Results Announced On</label>
           <input type="datetime-local" name="winners_announced_at" value="{{ (period.winners_announced_at + ist).strftime('%Y-%m-%dT%H:%M') if period and period.winners_announced_at else '2027-02-01T10:00' }}">
         </div>
       </div>
@@ -291,8 +291,8 @@
   <div class="c-card-head" onclick="toggleCard('brand')">
     <div class="c-card-head-row">
       <div>
-        <div class="c-card-head-title">🎯 Brand Contests <span style="font-size:14px; font-weight:400; color:var(--text-muted);">{{ brand_contests|length }} contest{{ 's' if brand_contests|length != 1 else '' }}</span></div>
-        <div class="c-card-head-sub">Sponsored contests open to subscribers only — free to enter. Create a contest, activate it when ready, move it to Judging, then publish results.</div>
+        <div class="c-card-head-title">🎯 Brand Programmes <span style="font-size:14px; font-weight:400; color:var(--text-muted);">{{ brand_contests|length }} contest{{ 's' if brand_contests|length != 1 else '' }}</span></div>
+        <div class="c-card-head-sub">Sponsored programmes open to subscribers only — free to enter. Create a contest, activate it when ready, move it to Judging, then publish results.</div>
       </div>
       <span class="c-chev" id="chev-brand">▾</span>
     </div>
@@ -309,16 +309,25 @@
             <div class="bc-meta">
               {{ (bc.opens_at + ist).strftime('%-d %b %Y') }} — {{ (bc.closes_at + ist).strftime('%-d %b %Y') }}
               &nbsp;·&nbsp; <strong style="color:var(--gold);">{{ bc.entry_count }}</strong> {{ 'entry' if bc.entry_count == 1 else 'entries' }}
-              {% if bc.prize_value %}&nbsp;·&nbsp; Prize: {{ bc.prize_value }}{% endif %}
+              {% if bc.prize_value %}&nbsp;·&nbsp; Award: {{ bc.prize_value }}{% endif %}
             </div>
           </div>
           <span class="s-badge s-{{ bc.status }}">{{ bc.status | replace('_', ' ') | title }}</span>
         </div>
         <div class="bc-actions">
           {% if bc.status == 'draft' %}
-          <form method="POST" action="{{ url_for('admin_contests') }}" style="display:inline;">
+          <form method="POST" action="{{ url_for('admin_contests') }}">
             <input type="hidden" name="action" value="brand_activate">
             <input type="hidden" name="brand_contest_id" value="{{ bc.id }}">
+            {% if bc.prize_value %}
+            <div class="c-checkbox" style="margin-bottom:12px; padding:12px 14px; background:rgba(245,197,24,0.06); border:1px solid var(--gold); border-radius:8px;">
+              <input type="checkbox" id="payu_ack_{{ bc.id }}" name="payu_prize_compliance_ack" value="1" required>
+              <label for="payu_ack_{{ bc.id }}" style="font-size:14px; line-height:1.5;">
+                <strong>This programme has a cash award value set ({{ bc.prize_value }}).</strong>
+                I confirm that payment gateway Promotional Programmes category approval has been obtained before going live.
+              </label>
+            </div>
+            {% endif %}
             <button type="submit" class="c-btn c-btn-gold">▶ Activate — make it live</button>
           </form>
           {% endif %}
@@ -351,7 +360,7 @@
     {% endif %}
 
     <hr class="c-divider">
-    <div style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:20px;">Create a New Brand Contest</div>
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:20px;">Create a New Brand Programme</div>
 
     <form method="POST" action="{{ url_for('admin_contests') }}">
       <input type="hidden" name="action" value="create_brand">
@@ -361,7 +370,7 @@
           <input type="text" name="brand_name" placeholder="e.g. Sony India" required>
         </div>
         <div class="c-field">
-          <label class="c-label">Contest Title</label>
+          <label class="c-label">Programme Title</label>
           <input type="text" name="title" placeholder="e.g. Wildlife through a Sony lens" required>
         </div>
       </div>
@@ -382,8 +391,8 @@
           <input type="number" name="max_entries_per_user" value="3" min="1" max="10">
         </div>
         <div class="c-field">
-          <label class="c-label">Prize Value (shown to members)</label>
-          <input type="text" name="prize_value" placeholder="e.g. Rs. 50,000 + trophy">
+          <label class="c-label">Award Value (shown to members)</label>
+          <input type="text" name="prize_value" placeholder="e.g. Rs. 50,000 + trophy (leave blank if no cash award)">
         </div>
       </div>
       <div class="c-field">
@@ -392,11 +401,11 @@
         <textarea name="brief" rows="3" placeholder="What the brand wants photographers to capture..." required></textarea>
       </div>
       <div class="c-field">
-        <label class="c-label">Prize Description</label>
-        <div class="c-hint">Full details of what the winner receives.</div>
-        <textarea name="prize_desc" rows="2" placeholder="Full prize details..." required></textarea>
+        <label class="c-label">Award Description</label>
+        <div class="c-hint">Full details of what the selected participant receives.</div>
+        <textarea name="prize_desc" rows="2" placeholder="Full award details..." required></textarea>
       </div>
-      <button type="submit" class="c-btn c-btn-gold">➕ Create Brand Contest</button>
+      <button type="submit" class="c-btn c-btn-gold">➕ Create Brand Programme</button>
     </form>
   </div>
 </div>
@@ -524,12 +533,12 @@
       <input type="hidden" name="action" value="create_announcement">
       <div class="c-field-row">
         <div class="c-field">
-          <label class="c-label">Which contest is this about?</label>
+          <label class="c-label">Which programme is this about?</label>
           <select name="contest_type">
             <option value="poty">POTY — Photographer of the Year</option>
             <option value="bow">BOW — Body of Work</option>
-            <option value="open">Open Contest</option>
-            <option value="brand">Brand Contest</option>
+            <option value="open">Open Programme</option>
+            <option value="brand">Brand Programme</option>
           </select>
         </div>
         <div class="c-field">
