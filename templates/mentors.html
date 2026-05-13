@@ -678,7 +678,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ m.get('photo') or url_for('static', filename='img/mentor_ashok.jpg') }}"
+              src="{{ m.photo if m.get('photo') and m.get('photo').startswith('http') else url_for('static', filename=m.get('photo', 'img/mentor_ashok.jpg')) }}"
               alt="{{ m.get('name', 'Ashok Kochhar') }}"
               onerror="this.style.display='none'"
             >
@@ -711,7 +711,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ m.get('photo') or url_for('static', filename='img/Gopal MS.jpeg') }}"
+              src="{{ m.photo if m.get('photo') and m.get('photo').startswith('http') else url_for('static', filename=m.get('photo', 'img/Gopal MS.jpeg')) }}"
               alt="{{ m.get('name', 'Gopal MS') }}"
               onerror="this.style.display='none'"
             >
@@ -744,7 +744,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ m.get('photo') or url_for('static', filename='img/Sreekumar.png') }}"
+              src="{{ m.photo if m.get('photo') and m.get('photo').startswith('http') else url_for('static', filename=m.get('photo', 'img/Sreekumar.png')) }}"
               alt="{{ m.get('name', 'Sreekumar Krishnan') }}"
               onerror="this.style.display='none'"
             >
