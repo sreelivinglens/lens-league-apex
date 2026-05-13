@@ -866,6 +866,10 @@ img {
       {% elif is_approved_judge %}
         <a href="{{ url_for('judge_dashboard') }}" class="{% if request.endpoint in ['judge_dashboard','judge_score_image','judge_history'] %}nav-active{% endif %}" style="color:var(--gold);">⚖️ Jury Dashboard</a>
         <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      {% elif current_user.role == 'mentor' %}
+        <a href="{{ url_for('mentor_dashboard') }}" class="{% if request.endpoint == 'mentor_dashboard' %}nav-active{% endif %}" style="color:var(--gold);">📸 Mentor Dashboard</a>
+        <a href="{{ url_for('mentor_profile_edit') }}" class="{% if request.endpoint == 'mentor_profile_edit' %}nav-active{% endif %}">My Profile</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout" style="margin-left:8px;" title="Log out" aria-label="Log out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       {% else %}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
@@ -924,6 +928,10 @@ img {
     {% elif is_approved_judge %}
       <a href="{{ url_for('judge_dashboard') }}" onclick="toggleNav()" style="color:var(--gold);">⚖️ Jury Dashboard</a>
       <a href="{{ url_for('judge_history') }}" onclick="toggleNav()">Scoring History</a>
+      <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:rgba(255,100,80,0.85); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
+    {% elif current_user.role == 'mentor' %}
+      <a href="{{ url_for('mentor_dashboard') }}" onclick="toggleNav()" style="color:var(--gold);">📸 Mentor Dashboard</a>
+      <a href="{{ url_for('mentor_profile_edit') }}" onclick="toggleNav()">My Profile</a>
       <a href="{{ url_for('logout') }}" onclick="toggleNav()" style="color:rgba(255,100,80,0.85); display:flex; align-items:center; gap:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log out</a>
     {% else %}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
