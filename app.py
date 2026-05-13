@@ -322,602 +322,545 @@ os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'cards'),  exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'raw'),    exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# MENTOR DATA — defined here (before app_context) so the seed block can
-# reference it. The dict near the /mentors route is removed — this is the
-# single source of truth.
-# ---------------------------------------------------------------------------
-MENTORS = {
-    'ashok': {
-        'slug':        'ashok',
-        'name':        'Ashok Kochhar',
-        'tier_label':  'Legend Mentor',
-        'tier_class':  'legend',
-        'price':       100,
-        'points_cost': 1000,
-        'photo':       'img/mentor_ashok.jpg',
-        'genres':      'Conceptual · Fashion · Street · Nature',
-        'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
-    },
-    'gopal': {
-        'slug':        'gopal',
-        'name':        'Gopal MS',
-        'tier_label':  'Expert Mentor',
-        'tier_class':  'expert',
-        'price':       75,
-        'points_cost': 750,
-        'photo':       'img/Gopal MS.jpeg',
-        'genres':      'Street · Documentary · Urban',
-        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
-    },
-    'sreekumar': {
-        'slug':        'sreekumar',
-        'name':        'Sreekumar Krishnan',
-        'tier_label':  'Senior Mentor',
-        'tier_class':  'senior',
-        'price':       50,
-        'points_cost': 500,
-        'photo':       'img/Sreekumar.png',
-        'genres':      'Wildlife · Street · Portrait · Mobile',
-        'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
-    },
-}
-
 with app.app_context():
-    # ── Advisory lock: only one worker runs migrations on startup.
-    # The other workers skip cleanly — all columns/tables already exist.
-    # Lock key 20260001 is arbitrary but unique to this app.
-    _run_migrations = False
     try:
-        with db.engine.connect() as _lock_conn:
-            _got_lock = _lock_conn.execute(
-                db.text("SELECT pg_try_advisory_lock(20260001)")
-            ).scalar()
-            _run_migrations = bool(_got_lock)
-    except Exception as _le:
-        print(f'[advisory_lock] {_le}')
-        _run_migrations = True  # fallback: try anyway on lock failure
+        db.create_all()
+        with db.engine.connect() as conn:
+            _migrations = [
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'member'",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_path VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_url VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_lens VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_settings VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_warning TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS soul_bonus BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS audit_json TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS conditions VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS camera_track VARCHAR(20) DEFAULT 'camera'",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_track VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
+                "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
+                "CREATE TABLE IF NOT EXISTS flagged_phashes (id SERIAL PRIMARY KEY, phash VARCHAR(64) NOT NULL, image_id INTEGER, flagged_by INTEGER, flagged_at TIMESTAMP DEFAULT NOW(), note TEXT)",
+                # v27 peer rating columns  -  updated
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_ratings_given INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_flag BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_note TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_rating_count INTEGER DEFAULT 0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS blended_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dod FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_disruption FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dm FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_wonder FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_aq FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_review_pending BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_pool_unlocks INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_sub_id VARCHAR(64)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS pool_entry_chosen_at TIMESTAMP",
+                # v28  -  location + league integrity
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(80)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS declared_camera VARCHAR(120)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS camera_mismatch_count INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
+                # v52  -  legal consent tracking
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
+                # v53  -  POTY banner + contest framework
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS poty_banner_dismissed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token VARCHAR(64)",
+                # v53  -  BOW submission fields
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS location VARCHAR(180)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS period_of_work VARCHAR(120)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS significance VARCHAR(300)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS other_details TEXT",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS images_agreed BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS is_subscriber BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS amount_paise INTEGER DEFAULT 0",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_ref VARCHAR(120)",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'free'",
+                "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
+                # v53  -  open contest entry fixes
+                "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS is_free_slot BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
+                # v53  -  new contest tables
+                "CREATE TABLE IF NOT EXISTS contest_periods (id SERIAL PRIMARY KEY, platform_year INTEGER UNIQUE NOT NULL, poty_opens_at TIMESTAMP, poty_closes_at TIMESTAMP, poty_status VARCHAR(20) DEFAULT 'upcoming', bow_entry_opens_at TIMESTAMP, bow_entry_closes_at TIMESTAMP, bow_judging_ends_at TIMESTAMP, bow_status VARCHAR(20) DEFAULT 'upcoming', open_opens_at TIMESTAMP, open_closes_at TIMESTAMP, open_cooling_ends_at TIMESTAMP, open_status VARCHAR(20) DEFAULT 'upcoming', winners_announced_at TIMESTAMP, announcement_banner TEXT, banner_active BOOLEAN DEFAULT FALSE, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS brand_contests (id SERIAL PRIMARY KEY, title VARCHAR(180) NOT NULL, brand_name VARCHAR(120) NOT NULL, brief TEXT NOT NULL, prize_desc TEXT NOT NULL, prize_value VARCHAR(80), opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, max_entries_per_user INTEGER DEFAULT 3, status VARCHAR(20) DEFAULT 'draft', results_published_at TIMESTAMP, announcement_sent_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS brand_entries (id SERIAL PRIMARY KEY, contest_id INTEGER NOT NULL REFERENCES brand_contests(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id), image_id INTEGER NOT NULL REFERENCES images(id), entered_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, result_emailed BOOLEAN DEFAULT FALSE, CONSTRAINT uq_brand_entry UNIQUE(contest_id, user_id, image_id))",
+                "CREATE TABLE IF NOT EXISTS contest_announcements (id SERIAL PRIMARY KEY, contest_type VARCHAR(20) NOT NULL, contest_ref VARCHAR(40), title VARCHAR(180) NOT NULL, body TEXT NOT NULL, cta_label VARCHAR(80), cta_url VARCHAR(255), audience VARCHAR(20) DEFAULT 'all', delivery VARCHAR(20) DEFAULT 'both', status VARCHAR(20) DEFAULT 'draft', send_at TIMESTAMP, sent_at TIMESTAMP, banner_active BOOLEAN DEFAULT FALSE, banner_expires_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE INDEX IF NOT EXISTS ix_brand_contests_status ON brand_contests(status)",
+                "CREATE INDEX IF NOT EXISTS ix_contest_announcements_banner ON contest_announcements(banner_active)",
+                # v29  -  weekly challenge
+                "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
+                "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
+                "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
+                # v29b  -  weekly challenge 24-hour hold
+                "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_hold_until TIMESTAMP",
+                "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_published BOOLEAN DEFAULT FALSE",
+                # v30  -  image columns for jury + RAW verification
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verification_required BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verified BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_disqualified BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS in_judge_pool BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_final_score FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_flagged BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_flag_type VARCHAR(40)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS contest_result_status VARCHAR(20)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_width INTEGER",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_height INTEGER",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_capture_datetime VARCHAR(40)",
+                # v31 - jury flag resolution
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decision VARCHAR(20)",
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_note TEXT",
+                "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decided_at TIMESTAMP",
+                # v32 - automated RAW verification + appeal system
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decision VARCHAR(20)",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decided_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_flag_reasons TEXT",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_submitted_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decision VARCHAR(20)",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
+                "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
+                # v35 - Re-engagement email tracking
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
+                # v34 - Scoring flash notification
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
+                # v33 - Points/Loyalty Engine (Sprint 1)
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_last_expiry DATE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_months INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_started_at TIMESTAMP",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_tier VARCHAR(60)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
+                # v37 — mentor profiles system
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_mentor BOOLEAN DEFAULT FALSE",
+                """CREATE TABLE IF NOT EXISTS mentor_profiles (
+                    id               SERIAL PRIMARY KEY,
+                    slug             VARCHAR(60) UNIQUE NOT NULL,
+                    user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                    tier_label       VARCHAR(40) NOT NULL DEFAULT 'Senior Mentor',
+                    tier_class       VARCHAR(20) NOT NULL DEFAULT 'senior',
+                    price            INTEGER NOT NULL DEFAULT 50,
+                    points_cost      INTEGER NOT NULL DEFAULT 500,
+                    display_name     VARCHAR(120),
+                    genres           VARCHAR(255),
+                    bio              TEXT,
+                    bio_extended     TEXT,
+                    photo_url        VARCHAR(512),
+                    photo_2_url      VARCHAR(512),
+                    photo_3_url      VARCHAR(512),
+                    instagram_url    VARCHAR(255),
+                    website_url      VARCHAR(255),
+                    youtube_url      VARCHAR(255),
+                    onboarding_complete BOOLEAN DEFAULT FALSE,
+                    is_active        BOOLEAN DEFAULT TRUE,
+                    created_at       TIMESTAMP DEFAULT NOW(),
+                    updated_at       TIMESTAMP DEFAULT NOW()
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
+                "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
+            ]
+            for sql in _migrations:
+                try:
+                    conn.execute(db.text(sql))
+                except Exception as _e:
+                    print(f'[migration] {_e}')
+            conn.commit()
 
-    if _run_migrations:
+        # Seed existing mentors into mentor_profiles if not already present
         try:
-            db.create_all()
-            with db.engine.connect() as conn:
-                _migrations = [
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(120)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'member'",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_at TIMESTAMP",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_path VARCHAR(512)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS card_url VARCHAR(512)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS thumb_url VARCHAR(512)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS legal_declaration BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_camera VARCHAR(120)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_lens VARCHAR(180)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_date_taken VARCHAR(60)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_settings VARCHAR(180)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_warning TEXT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS soul_bonus BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS audit_json TEXT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS conditions VARCHAR(180)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS photographer_name VARCHAR(120)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS phash VARCHAR(64)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_calibration_example BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_referral BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS camera_track VARCHAR(20) DEFAULT 'camera'",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_track VARCHAR(20)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(20)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscribed_at TIMESTAMP",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_uploads_used INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_reset_date DATE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
-                    "CREATE TABLE IF NOT EXISTS image_reports (id SERIAL PRIMARY KEY, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, reason VARCHAR(40) NOT NULL, detail TEXT, reported_at TIMESTAMP DEFAULT NOW(), status VARCHAR(20) DEFAULT 'open', UNIQUE(image_id, reporter_id))",
-                    "CREATE TABLE IF NOT EXISTS flagged_phashes (id SERIAL PRIMARY KEY, phash VARCHAR(64) NOT NULL, image_id INTEGER, flagged_by INTEGER, flagged_at TIMESTAMP DEFAULT NOW(), note TEXT)",
-                    # v27 peer rating columns  -  updated
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_credits INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits_reset_date DATE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS lifetime_ratings_given INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_flag BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS rating_bias_note TEXT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_score FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_rating_count INTEGER DEFAULT 0",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS blended_score FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dod FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_disruption FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_dm FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_wonder FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_avg_aq FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS peer_review_pending BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS peer_pool_unlocks INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_sub_id VARCHAR(64)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_in_peer_pool BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS pool_entry_chosen_at TIMESTAMP",
-                    # v28  -  location + league integrity
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(80)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(80)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(80)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS declared_camera VARCHAR(120)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS camera_mismatch_count INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_at TIMESTAMP",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
-                    # v52  -  legal consent tracking
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_ip VARCHAR(45)",
-                    # v53  -  POTY banner + contest framework
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS poty_banner_dismissed BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token VARCHAR(64)",
-                    # v53  -  BOW submission fields
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS location VARCHAR(180)",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS period_of_work VARCHAR(120)",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS significance VARCHAR(300)",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS other_details TEXT",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS images_agreed BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS is_subscriber BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS amount_paise INTEGER DEFAULT 0",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_ref VARCHAR(120)",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'free'",
-                    "ALTER TABLE bow_submissions ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
-                    # v53  -  open contest entry fixes
-                    "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS is_free_slot BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE open_contest_entries ADD COLUMN IF NOT EXISTS qualifier_emailed BOOLEAN DEFAULT FALSE",
-                    # v53  -  new contest tables
-                    "CREATE TABLE IF NOT EXISTS contest_periods (id SERIAL PRIMARY KEY, platform_year INTEGER UNIQUE NOT NULL, poty_opens_at TIMESTAMP, poty_closes_at TIMESTAMP, poty_status VARCHAR(20) DEFAULT 'upcoming', bow_entry_opens_at TIMESTAMP, bow_entry_closes_at TIMESTAMP, bow_judging_ends_at TIMESTAMP, bow_status VARCHAR(20) DEFAULT 'upcoming', open_opens_at TIMESTAMP, open_closes_at TIMESTAMP, open_cooling_ends_at TIMESTAMP, open_status VARCHAR(20) DEFAULT 'upcoming', winners_announced_at TIMESTAMP, announcement_banner TEXT, banner_active BOOLEAN DEFAULT FALSE, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
-                    "CREATE TABLE IF NOT EXISTS brand_contests (id SERIAL PRIMARY KEY, title VARCHAR(180) NOT NULL, brand_name VARCHAR(120) NOT NULL, brief TEXT NOT NULL, prize_desc TEXT NOT NULL, prize_value VARCHAR(80), opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, max_entries_per_user INTEGER DEFAULT 3, status VARCHAR(20) DEFAULT 'draft', results_published_at TIMESTAMP, announcement_sent_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
-                    "CREATE TABLE IF NOT EXISTS brand_entries (id SERIAL PRIMARY KEY, contest_id INTEGER NOT NULL REFERENCES brand_contests(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id), image_id INTEGER NOT NULL REFERENCES images(id), entered_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, result_emailed BOOLEAN DEFAULT FALSE, CONSTRAINT uq_brand_entry UNIQUE(contest_id, user_id, image_id))",
-                    "CREATE TABLE IF NOT EXISTS contest_announcements (id SERIAL PRIMARY KEY, contest_type VARCHAR(20) NOT NULL, contest_ref VARCHAR(40), title VARCHAR(180) NOT NULL, body TEXT NOT NULL, cta_label VARCHAR(80), cta_url VARCHAR(255), audience VARCHAR(20) DEFAULT 'all', delivery VARCHAR(20) DEFAULT 'both', status VARCHAR(20) DEFAULT 'draft', send_at TIMESTAMP, sent_at TIMESTAMP, banner_active BOOLEAN DEFAULT FALSE, banner_expires_at TIMESTAMP, created_by INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TIMESTAMP DEFAULT NOW())",
-                    "CREATE INDEX IF NOT EXISTS ix_brand_contests_status ON brand_contests(status)",
-                    "CREATE INDEX IF NOT EXISTS ix_contest_announcements_banner ON contest_announcements(banner_active)",
-                    # v29  -  weekly challenge
-                    "CREATE TABLE IF NOT EXISTS weekly_challenges (id SERIAL PRIMARY KEY, week_ref VARCHAR(10) UNIQUE NOT NULL, prompt_title VARCHAR(120) NOT NULL, prompt_body TEXT, opens_at TIMESTAMP NOT NULL, closes_at TIMESTAMP NOT NULL, results_at TIMESTAMP, sponsor_name VARCHAR(120), sponsor_prize TEXT, is_active BOOLEAN DEFAULT TRUE, created_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
-                    "CREATE TABLE IF NOT EXISTS weekly_submissions (id SERIAL PRIMARY KEY, challenge_id INTEGER NOT NULL REFERENCES weekly_challenges(id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE, is_subscriber BOOLEAN DEFAULT FALSE, submitted_at TIMESTAMP DEFAULT NOW(), result_rank INTEGER, result_note TEXT, CONSTRAINT uq_weekly_sub_image UNIQUE(challenge_id, image_id))",
-                    "CREATE INDEX IF NOT EXISTS ix_weekly_challenges_week_ref ON weekly_challenges(week_ref)",
-                    # v29b  -  weekly challenge 24-hour hold
-                    "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_hold_until TIMESTAMP",
-                    "ALTER TABLE weekly_challenges ADD COLUMN IF NOT EXISTS results_published BOOLEAN DEFAULT FALSE",
-                    # v30  -  image columns for jury + RAW verification
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verification_required BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verified BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_disqualified BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS in_judge_pool BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_score FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_final_score FLOAT",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_flagged BOOLEAN DEFAULT FALSE",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_flag_type VARCHAR(40)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS contest_result_status VARCHAR(20)",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_width INTEGER",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_original_height INTEGER",
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_capture_datetime VARCHAR(40)",
-                    # v31 - jury flag resolution
-                    "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decision VARCHAR(20)",
-                    "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_note TEXT",
-                    "ALTER TABLE judge_assignments ADD COLUMN IF NOT EXISTS admin_flag_decided_at TIMESTAMP",
-                    # v32 - automated RAW verification + appeal system
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decision VARCHAR(20)",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_decided_at TIMESTAMP",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS auto_flag_reasons TEXT",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_submitted_at TIMESTAMP",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decision VARCHAR(20)",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_at TIMESTAMP",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_admin_note TEXT",
-                    "ALTER TABLE raw_submissions ADD COLUMN IF NOT EXISTS appeal_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
-                    # v35 - Re-engagement email tracking
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
-                    # v34 - Scoring flash notification
-                    "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
-                    # v33 - Points/Loyalty Engine (Sprint 1)
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_last_expiry DATE",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_months INTEGER DEFAULT 0",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS residency_started_at TIMESTAMP",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_tier VARCHAR(60)",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
-                    # v37 — mentor profiles system
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_mentor BOOLEAN DEFAULT FALSE",
-                    """CREATE TABLE IF NOT EXISTS mentor_profiles (
-                        id               SERIAL PRIMARY KEY,
-                        slug             VARCHAR(60) UNIQUE NOT NULL,
-                        user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                        tier_label       VARCHAR(40) NOT NULL DEFAULT 'Senior Mentor',
-                        tier_class       VARCHAR(20) NOT NULL DEFAULT 'senior',
-                        price            INTEGER NOT NULL DEFAULT 50,
-                        points_cost      INTEGER NOT NULL DEFAULT 500,
-                        display_name     VARCHAR(120),
-                        genres           VARCHAR(255),
-                        bio              TEXT,
-                        bio_extended     TEXT,
-                        photo_url        VARCHAR(512),
-                        photo_2_url      VARCHAR(512),
-                        photo_3_url      VARCHAR(512),
-                        instagram_url    VARCHAR(255),
-                        website_url      VARCHAR(255),
-                        youtube_url      VARCHAR(255),
-                        onboarding_complete BOOLEAN DEFAULT FALSE,
-                        is_active        BOOLEAN DEFAULT TRUE,
-                        created_at       TIMESTAMP DEFAULT NOW(),
-                        updated_at       TIMESTAMP DEFAULT NOW()
-                    )""",
-                    "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
-                    "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
-                ]
-                for sql in _migrations:
-                    try:
-                        conn.execute(db.text(sql))
-                    except Exception as _e:
-                        print(f'[migration] {_e}')
-                conn.commit()
+            with db.engine.connect() as _mc:
+                for _slug, _m in MENTORS.items():
+                    _mc.execute(db.text("""
+                        INSERT INTO mentor_profiles
+                            (slug, tier_label, tier_class, price, points_cost, display_name,
+                             genres, bio)
+                        VALUES
+                            (:slug, :tl, :tc, :price, :pts, :name, :genres, :bio)
+                        ON CONFLICT (slug) DO NOTHING
+                    """), {
+                        'slug':   _slug,
+                        'tl':     _m['tier_label'],
+                        'tc':     _m['tier_class'],
+                        'price':  _m['price'],
+                        'pts':    _m['points_cost'],
+                        'name':   _m['name'],
+                        'genres': _m['genres'],
+                        'bio':    _m['bio'],
+                    })
+                _mc.commit()
+        except Exception as _se:
+            print(f'[mentor seed] {_se}')
 
-            # Seed existing mentors into mentor_profiles if not already present
-            try:
-                with db.engine.connect() as _mc:
-                    for _slug, _m in MENTORS.items():
-                        _mc.execute(db.text("""
-                            INSERT INTO mentor_profiles
-                                (slug, tier_label, tier_class, price, points_cost, display_name,
-                                 genres, bio)
-                            VALUES
-                                (:slug, :tl, :tc, :price, :pts, :name, :genres, :bio)
-                            ON CONFLICT (slug) DO NOTHING
-                        """), {
-                            'slug':   _slug,
-                            'tl':     _m['tier_label'],
-                            'tc':     _m['tier_class'],
-                            'price':  _m['price'],
-                            'pts':    _m['points_cost'],
-                            'name':   _m['name'],
-                            'genres': _m['genres'],
-                            'bio':    _m['bio'],
-                        })
-                    _mc.commit()
-            except Exception as _se:
-                print(f'[mentor seed] {_se}')
+        # Fix calibration_logs  -  force correct schema on every startup
+        try:
+            with db.engine.connect() as conn2:
+                conn2.execute(db.text("""
+                    DO $$
+                    BEGIN
+                      IF EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name='calibration_logs' AND column_name='category'
+                      ) THEN
+                        DROP TABLE IF EXISTS calibration_logs CASCADE;
+                      END IF;
+                    END $$;
+                """))
+                conn2.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS calibration_logs (
+                        id SERIAL PRIMARY KEY,
+                        genre VARCHAR(60) NOT NULL,
+                        image_count INTEGER,
+                        avg_score FLOAT,
+                        avg_dod FLOAT,
+                        avg_dis FLOAT,
+                        avg_dm FLOAT,
+                        avg_wonder FLOAT,
+                        avg_aq FLOAT,
+                        note TEXT,
+                        logged_by INTEGER,
+                        logged_at TIMESTAMP DEFAULT NOW()
+                    )
+                """))
+                conn2.commit()
+            print('calibration_logs schema OK.')
+        except Exception as ce:
+            print(f'calibration_logs migration warning: {ce}')
 
-            # Fix calibration_logs  -  force correct schema on every startup
-            try:
-                with db.engine.connect() as conn2:
-                    conn2.execute(db.text("""
-                        DO $$
-                        BEGIN
-                          IF EXISTS (
-                            SELECT 1 FROM information_schema.columns
-                            WHERE table_name='calibration_logs' AND column_name='category'
-                          ) THEN
-                            DROP TABLE IF EXISTS calibration_logs CASCADE;
-                          END IF;
-                        END $$;
-                    """))
-                    conn2.execute(db.text("""
-                        CREATE TABLE IF NOT EXISTS calibration_logs (
-                            id SERIAL PRIMARY KEY,
-                            genre VARCHAR(60) NOT NULL,
-                            image_count INTEGER,
-                            avg_score FLOAT,
-                            avg_dod FLOAT,
-                            avg_dis FLOAT,
-                            avg_dm FLOAT,
-                            avg_wonder FLOAT,
-                            avg_aq FLOAT,
-                            note TEXT,
-                            logged_by INTEGER,
-                            logged_at TIMESTAMP DEFAULT NOW()
-                        )
-                    """))
-                    conn2.commit()
-                print('calibration_logs schema OK.')
-            except Exception as ce:
-                print(f'calibration_logs migration warning: {ce}')
+        # contest_entries table
+        try:
+            with db.engine.connect() as conn3:
+                conn3.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS contest_entries (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        genre VARCHAR(60) NOT NULL,
+                        track VARCHAR(20) NOT NULL,
+                        contest_month VARCHAR(7) NOT NULL,
+                        contest_type VARCHAR(20) DEFAULT \'monthly\',
+                        entered_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(user_id, genre, track, contest_month, contest_type)
+                    )
+                '''))
+                conn3.commit()
+            print('contest_entries schema OK.')
+        except Exception as ce:
+            print(f'contest_entries migration warning: {ce}')
 
-            # contest_entries table
-            try:
-                with db.engine.connect() as conn3:
-                    conn3.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS contest_entries (
-                            id SERIAL PRIMARY KEY,
-                            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                            image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                            genre VARCHAR(60) NOT NULL,
-                            track VARCHAR(20) NOT NULL,
-                            contest_month VARCHAR(7) NOT NULL,
-                            contest_type VARCHAR(20) DEFAULT \'monthly\',
-                            entered_at TIMESTAMP DEFAULT NOW(),
-                            UNIQUE(user_id, genre, track, contest_month, contest_type)
-                        )
-                    '''))
-                    conn3.commit()
-                print('contest_entries schema OK.')
-            except Exception as ce:
-                print(f'contest_entries migration warning: {ce}')
+        # open_contest_entries table
+        try:
+            with db.engine.connect() as conn4:
+                conn4.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS open_contest_entries (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        genre VARCHAR(60) NOT NULL,
+                        platform_year INTEGER NOT NULL,
+                        amount_paise INTEGER DEFAULT 5000,
+                        payment_ref VARCHAR(120),
+                        status VARCHAR(20) DEFAULT 'confirmed',
+                        entered_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(user_id, genre, platform_year)
+                    )
+                '''))
+                conn4.commit()
+            print('open_contest_entries schema OK.')
+        except Exception as ce:
+            print(f'open_contest_entries migration warning: {ce}')
 
-            # open_contest_entries table
-            try:
-                with db.engine.connect() as conn4:
-                    conn4.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS open_contest_entries (
-                            id SERIAL PRIMARY KEY,
-                            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                            image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                            genre VARCHAR(60) NOT NULL,
-                            platform_year INTEGER NOT NULL,
-                            amount_paise INTEGER DEFAULT 5000,
-                            payment_ref VARCHAR(120),
-                            status VARCHAR(20) DEFAULT 'confirmed',
-                            entered_at TIMESTAMP DEFAULT NOW(),
-                            UNIQUE(user_id, genre, platform_year)
-                        )
-                    '''))
-                    conn4.commit()
-                print('open_contest_entries schema OK.')
-            except Exception as ce:
-                print(f'open_contest_entries migration warning: {ce}')
+        # Fix open_contest_entries unique constraint: user+genre+year → user+image+year
+        try:
+            with db.engine.connect() as conn_fix:
+                conn_fix.execute(db.text(
+                    "ALTER TABLE open_contest_entries DROP CONSTRAINT IF EXISTS open_contest_entries_user_id_genre_platform_year_key"
+                ))
+                conn_fix.commit()
+            print('open_contest_entries old constraint dropped.')
+        except Exception as ce:
+            print(f'open_contest_entries drop constraint warning: {ce}')
+        try:
+            with db.engine.connect() as conn_fix2:
+                conn_fix2.execute(db.text("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM pg_constraint
+                            WHERE conname = 'uq_oce_user_image_year'
+                        ) THEN
+                            ALTER TABLE open_contest_entries
+                            ADD CONSTRAINT uq_oce_user_image_year
+                            UNIQUE (user_id, image_id, platform_year);
+                        END IF;
+                    END$$;
+                """))
+                conn_fix2.commit()
+            print('open_contest_entries constraint fix OK.')
+        except Exception as ce:
+            print(f'open_contest_entries add constraint warning: {ce}')
 
-            # Fix open_contest_entries unique constraint: user+genre+year → user+image+year
-            try:
-                with db.engine.connect() as conn_fix:
-                    conn_fix.execute(db.text(
-                        "ALTER TABLE open_contest_entries DROP CONSTRAINT IF EXISTS open_contest_entries_user_id_genre_platform_year_key"
-                    ))
-                    conn_fix.commit()
-                print('open_contest_entries old constraint dropped.')
-            except Exception as ce:
-                print(f'open_contest_entries drop constraint warning: {ce}')
-            try:
-                with db.engine.connect() as conn_fix2:
-                    conn_fix2.execute(db.text("""
-                        DO $$
-                        BEGIN
-                            IF NOT EXISTS (
-                                SELECT 1 FROM pg_constraint
-                                WHERE conname = 'uq_oce_user_image_year'
-                            ) THEN
-                                ALTER TABLE open_contest_entries
-                                ADD CONSTRAINT uq_oce_user_image_year
-                                UNIQUE (user_id, image_id, platform_year);
-                            END IF;
-                        END$$;
-                    """))
-                    conn_fix2.commit()
-                print('open_contest_entries constraint fix OK.')
-            except Exception as ce:
-                print(f'open_contest_entries add constraint warning: {ce}')
+        # v27  -  peer rating tables
+        try:
+            with db.engine.connect() as conn5:
+                conn5.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS rating_assignments (
+                        id SERIAL PRIMARY KEY,
+                        rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        assigned_at TIMESTAMP DEFAULT NOW(),
+                        started_at TIMESTAMP,
+                        submitted_at TIMESTAMP,
+                        time_spent_seconds INTEGER,
+                        dod FLOAT, disruption FLOAT, dm FLOAT, wonder FLOAT, aq FLOAT,
+                        peer_ll_score FLOAT,
+                        status VARCHAR(20) DEFAULT \'assigned\',
+                        UNIQUE(rater_id, image_id)
+                    )
+                '''))
+                conn5.commit()
+            print('rating_assignments schema OK.')
+        except Exception as ce:
+            print(f'rating_assignments migration warning: {ce}')
 
-            # v27  -  peer rating tables
-            try:
-                with db.engine.connect() as conn5:
-                    conn5.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS rating_assignments (
-                            id SERIAL PRIMARY KEY,
-                            rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                            image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                            assigned_at TIMESTAMP DEFAULT NOW(),
-                            started_at TIMESTAMP,
-                            submitted_at TIMESTAMP,
-                            time_spent_seconds INTEGER,
-                            dod FLOAT, disruption FLOAT, dm FLOAT, wonder FLOAT, aq FLOAT,
-                            peer_ll_score FLOAT,
-                            status VARCHAR(20) DEFAULT \'assigned\',
-                            UNIQUE(rater_id, image_id)
-                        )
-                    '''))
-                    conn5.commit()
-                print('rating_assignments schema OK.')
-            except Exception as ce:
-                print(f'rating_assignments migration warning: {ce}')
+        try:
+            with db.engine.connect() as conn6:
+                conn6.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS peer_ratings (
+                        id SERIAL PRIMARY KEY,
+                        rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                        genre VARCHAR(60) NOT NULL,
+                        dod FLOAT NOT NULL, disruption FLOAT NOT NULL,
+                        dm FLOAT NOT NULL, wonder FLOAT NOT NULL, aq FLOAT NOT NULL,
+                        peer_ll_score FLOAT NOT NULL,
+                        delta_from_ddi FLOAT,
+                        time_spent_seconds INTEGER,
+                        rated_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(rater_id, image_id)
+                    )
+                '''))
+                conn6.commit()
+            print('peer_ratings schema OK.')
+        except Exception as ce:
+            print(f'peer_ratings migration warning: {ce}')
 
-            try:
-                with db.engine.connect() as conn6:
-                    conn6.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS peer_ratings (
-                            id SERIAL PRIMARY KEY,
-                            rater_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                            image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
-                            genre VARCHAR(60) NOT NULL,
-                            dod FLOAT NOT NULL, disruption FLOAT NOT NULL,
-                            dm FLOAT NOT NULL, wonder FLOAT NOT NULL, aq FLOAT NOT NULL,
-                            peer_ll_score FLOAT NOT NULL,
-                            delta_from_ddi FLOAT,
-                            time_spent_seconds INTEGER,
-                            rated_at TIMESTAMP DEFAULT NOW(),
-                            UNIQUE(rater_id, image_id)
-                        )
-                    '''))
-                    conn6.commit()
-                print('peer_ratings schema OK.')
-            except Exception as ce:
-                print(f'peer_ratings migration warning: {ce}')
+        # v30  -  judges table
+        try:
+            with db.engine.connect() as conn7:
+                conn7.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS judges (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        status VARCHAR(20) DEFAULT \'invited\',
+                        invite_token VARCHAR(64) UNIQUE,
+                        invite_sent_at TIMESTAMP,
+                        invite_expires_at TIMESTAMP,
+                        name VARCHAR(120),
+                        email VARCHAR(120) UNIQUE NOT NULL,
+                        phone VARCHAR(40),
+                        address TEXT,
+                        city VARCHAR(80),
+                        country VARCHAR(80),
+                        photo_key VARCHAR(512),
+                        years_experience INTEGER,
+                        judged_before BOOLEAN DEFAULT FALSE,
+                        bio TEXT,
+                        agreed_terms BOOLEAN DEFAULT FALSE,
+                        agreed_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        approved_at TIMESTAMP,
+                        approved_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+                    )
+                '''))
+                conn7.commit()
+            print('judges schema OK.')
+        except Exception as ce:
+            print(f'judges migration warning: {ce}')
 
-            # v30  -  judges table
-            try:
-                with db.engine.connect() as conn7:
-                    conn7.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS judges (
-                            id SERIAL PRIMARY KEY,
-                            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                            status VARCHAR(20) DEFAULT \'invited\',
-                            invite_token VARCHAR(64) UNIQUE,
-                            invite_sent_at TIMESTAMP,
-                            invite_expires_at TIMESTAMP,
-                            name VARCHAR(120),
-                            email VARCHAR(120) UNIQUE NOT NULL,
-                            phone VARCHAR(40),
-                            address TEXT,
-                            city VARCHAR(80),
-                            country VARCHAR(80),
-                            photo_key VARCHAR(512),
-                            years_experience INTEGER,
-                            judged_before BOOLEAN DEFAULT FALSE,
-                            bio TEXT,
-                            agreed_terms BOOLEAN DEFAULT FALSE,
-                            agreed_at TIMESTAMP,
-                            created_at TIMESTAMP DEFAULT NOW(),
-                            approved_at TIMESTAMP,
-                            approved_by INTEGER REFERENCES users(id) ON DELETE SET NULL
-                        )
-                    '''))
-                    conn7.commit()
-                print('judges schema OK.')
-            except Exception as ce:
-                print(f'judges migration warning: {ce}')
+        # v30  -  judge_category_assignments table
+        try:
+            with db.engine.connect() as conn8:
+                conn8.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS judge_category_assignments (
+                        id SERIAL PRIMARY KEY,
+                        judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
+                        category VARCHAR(60) NOT NULL,
+                        contest_type VARCHAR(20) DEFAULT \'all\',
+                        assigned_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        assigned_at TIMESTAMP DEFAULT NOW(),
+                        active BOOLEAN DEFAULT TRUE
+                    )
+                '''))
+                conn8.commit()
+            print('judge_category_assignments schema OK.')
+        except Exception as ce:
+            print(f'judge_category_assignments migration warning: {ce}')
 
-            # v30  -  judge_category_assignments table
-            try:
-                with db.engine.connect() as conn8:
-                    conn8.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS judge_category_assignments (
-                            id SERIAL PRIMARY KEY,
-                            judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
-                            category VARCHAR(60) NOT NULL,
-                            contest_type VARCHAR(20) DEFAULT \'all\',
-                            assigned_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                            assigned_at TIMESTAMP DEFAULT NOW(),
-                            active BOOLEAN DEFAULT TRUE
-                        )
-                    '''))
-                    conn8.commit()
-                print('judge_category_assignments schema OK.')
-            except Exception as ce:
-                print(f'judge_category_assignments migration warning: {ce}')
+        # v30  -  contest_judge_configs table
+        try:
+            with db.engine.connect() as conn9:
+                conn9.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS contest_judge_configs (
+                        id SERIAL PRIMARY KEY,
+                        contest_ref VARCHAR(40) NOT NULL,
+                        contest_type VARCHAR(20) NOT NULL,
+                        score_threshold FLOAT DEFAULT 8.0,
+                        weighting_mode VARCHAR(20) DEFAULT \'tiebreaker\',
+                        ddi_weight INTEGER DEFAULT 100,
+                        judge_weight INTEGER DEFAULT 0,
+                        cooling_period_hours INTEGER DEFAULT 48,
+                        pool_populated_at TIMESTAMP,
+                        results_emailed_at TIMESTAMP,
+                        leaderboard_published_at TIMESTAMP,
+                        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(contest_ref, contest_type)
+                    )
+                '''))
+                conn9.commit()
+            print('contest_judge_configs schema OK.')
+        except Exception as ce:
+            print(f'contest_judge_configs migration warning: {ce}')
 
-            # v30  -  contest_judge_configs table
-            try:
-                with db.engine.connect() as conn9:
-                    conn9.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS contest_judge_configs (
-                            id SERIAL PRIMARY KEY,
-                            contest_ref VARCHAR(40) NOT NULL,
-                            contest_type VARCHAR(20) NOT NULL,
-                            score_threshold FLOAT DEFAULT 8.0,
-                            weighting_mode VARCHAR(20) DEFAULT \'tiebreaker\',
-                            ddi_weight INTEGER DEFAULT 100,
-                            judge_weight INTEGER DEFAULT 0,
-                            cooling_period_hours INTEGER DEFAULT 48,
-                            pool_populated_at TIMESTAMP,
-                            results_emailed_at TIMESTAMP,
-                            leaderboard_published_at TIMESTAMP,
-                            created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                            created_at TIMESTAMP DEFAULT NOW(),
-                            UNIQUE(contest_ref, contest_type)
-                        )
-                    '''))
-                    conn9.commit()
-                print('contest_judge_configs schema OK.')
-            except Exception as ce:
-                print(f'contest_judge_configs migration warning: {ce}')
+        # v30  -  judge_assignments table
+        try:
+            with db.engine.connect() as conn10:
+                conn10.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS judge_assignments (
+                        id SERIAL PRIMARY KEY,
+                        judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
+                        image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                        contest_ref VARCHAR(40),
+                        contest_type VARCHAR(20),
+                        assigned_at TIMESTAMP DEFAULT NOW(),
+                        deadline TIMESTAMP,
+                        status VARCHAR(20) DEFAULT \'pending\',
+                        reminder_48_sent BOOLEAN DEFAULT FALSE,
+                        reminder_24_sent BOOLEAN DEFAULT FALSE,
+                        UNIQUE(judge_id, image_id)
+                    )
+                '''))
+                conn10.commit()
+            print('judge_assignments schema OK.')
+        except Exception as ce:
+            print(f'judge_assignments migration warning: {ce}')
 
-            # v30  -  judge_assignments table
-            try:
-                with db.engine.connect() as conn10:
-                    conn10.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS judge_assignments (
-                            id SERIAL PRIMARY KEY,
-                            judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
-                            image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
-                            contest_ref VARCHAR(40),
-                            contest_type VARCHAR(20),
-                            assigned_at TIMESTAMP DEFAULT NOW(),
-                            deadline TIMESTAMP,
-                            status VARCHAR(20) DEFAULT \'pending\',
-                            reminder_48_sent BOOLEAN DEFAULT FALSE,
-                            reminder_24_sent BOOLEAN DEFAULT FALSE,
-                            UNIQUE(judge_id, image_id)
-                        )
-                    '''))
-                    conn10.commit()
-                print('judge_assignments schema OK.')
-            except Exception as ce:
-                print(f'judge_assignments migration warning: {ce}')
+        # v30  -  judge_scores table
+        try:
+            with db.engine.connect() as conn11:
+                conn11.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS judge_scores (
+                        id SERIAL PRIMARY KEY,
+                        judge_assignment_id INTEGER NOT NULL REFERENCES judge_assignments(id) ON DELETE CASCADE,
+                        judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
+                        image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                        dod_score FLOAT,
+                        disruption_score FLOAT,
+                        dm_score FLOAT,
+                        wonder_score FLOAT,
+                        aq_score FLOAT,
+                        judge_total FLOAT,
+                        submitted_at TIMESTAMP DEFAULT NOW(),
+                        flag_type VARCHAR(40),
+                        flag_notes TEXT,
+                        UNIQUE(judge_assignment_id)
+                    )
+                '''))
+                conn11.commit()
+            print('judge_scores schema OK.')
+        except Exception as ce:
+            print(f'judge_scores migration warning: {ce}')
 
-            # v30  -  judge_scores table
-            try:
-                with db.engine.connect() as conn11:
-                    conn11.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS judge_scores (
-                            id SERIAL PRIMARY KEY,
-                            judge_assignment_id INTEGER NOT NULL REFERENCES judge_assignments(id) ON DELETE CASCADE,
-                            judge_id INTEGER NOT NULL REFERENCES judges(id) ON DELETE CASCADE,
-                            image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
-                            dod_score FLOAT,
-                            disruption_score FLOAT,
-                            dm_score FLOAT,
-                            wonder_score FLOAT,
-                            aq_score FLOAT,
-                            judge_total FLOAT,
-                            submitted_at TIMESTAMP DEFAULT NOW(),
-                            flag_type VARCHAR(40),
-                            flag_notes TEXT,
-                            UNIQUE(judge_assignment_id)
-                        )
-                    '''))
-                    conn11.commit()
-                print('judge_scores schema OK.')
-            except Exception as ce:
-                print(f'judge_scores migration warning: {ce}')
+        # v30  -  raw_submissions table
+        try:
+            with db.engine.connect() as conn12:
+                conn12.execute(db.text('''
+                    CREATE TABLE IF NOT EXISTS raw_submissions (
+                        id SERIAL PRIMARY KEY,
+                        image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        contest_ref VARCHAR(40),
+                        contest_type VARCHAR(20),
+                        submission_method VARCHAR(20) DEFAULT \'upload\',
+                        raw_file_key VARCHAR(512),
+                        raw_link TEXT,
+                        submitted_at TIMESTAMP,
+                        deadline TIMESTAMP,
+                        reminder_48_sent BOOLEAN DEFAULT FALSE,
+                        reminder_24_sent BOOLEAN DEFAULT FALSE,
+                        analysis_status VARCHAR(20) DEFAULT \'pending\',
+                        analysis_run_at TIMESTAMP,
+                        exif_match BOOLEAN,
+                        crop_percentage FLOAT,
+                        crop_flagged BOOLEAN DEFAULT FALSE,
+                        dimension_match BOOLEAN,
+                        raw_original_width INTEGER,
+                        raw_original_height INTEGER,
+                        vision_ai_detected BOOLEAN,
+                        vision_objects_removed BOOLEAN,
+                        vision_objects_added BOOLEAN,
+                        vision_logo_trademark BOOLEAN,
+                        vision_meaning_changed BOOLEAN,
+                        vision_painterly BOOLEAN,
+                        vision_crop_consistent BOOLEAN,
+                        vision_notes TEXT,
+                        overall_flag BOOLEAN DEFAULT FALSE,
+                        flag_reasons TEXT,
+                        admin_decision VARCHAR(20),
+                        admin_notes TEXT,
+                        admin_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                        admin_decided_at TIMESTAMP,
+                        disqualified BOOLEAN DEFAULT FALSE,
+                        notified_at TIMESTAMP,
+                        UNIQUE(image_id, contest_ref, contest_type)
+                    )
+                '''))
+                conn12.commit()
+            print('raw_submissions schema OK.')
+        except Exception as ce:
+            print(f'raw_submissions migration warning: {ce}')
 
-            # v30  -  raw_submissions table
-            try:
-                with db.engine.connect() as conn12:
-                    conn12.execute(db.text('''
-                        CREATE TABLE IF NOT EXISTS raw_submissions (
-                            id SERIAL PRIMARY KEY,
-                            image_id INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
-                            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                            contest_ref VARCHAR(40),
-                            contest_type VARCHAR(20),
-                            submission_method VARCHAR(20) DEFAULT \'upload\',
-                            raw_file_key VARCHAR(512),
-                            raw_link TEXT,
-                            submitted_at TIMESTAMP,
-                            deadline TIMESTAMP,
-                            reminder_48_sent BOOLEAN DEFAULT FALSE,
-                            reminder_24_sent BOOLEAN DEFAULT FALSE,
-                            analysis_status VARCHAR(20) DEFAULT \'pending\',
-                            analysis_run_at TIMESTAMP,
-                            exif_match BOOLEAN,
-                            crop_percentage FLOAT,
-                            crop_flagged BOOLEAN DEFAULT FALSE,
-                            dimension_match BOOLEAN,
-                            raw_original_width INTEGER,
-                            raw_original_height INTEGER,
-                            vision_ai_detected BOOLEAN,
-                            vision_objects_removed BOOLEAN,
-                            vision_objects_added BOOLEAN,
-                            vision_logo_trademark BOOLEAN,
-                            vision_meaning_changed BOOLEAN,
-                            vision_painterly BOOLEAN,
-                            vision_crop_consistent BOOLEAN,
-                            vision_notes TEXT,
-                            overall_flag BOOLEAN DEFAULT FALSE,
-                            flag_reasons TEXT,
-                            admin_decision VARCHAR(20),
-                            admin_notes TEXT,
-                            admin_decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-                            admin_decided_at TIMESTAMP,
-                            disqualified BOOLEAN DEFAULT FALSE,
-                            notified_at TIMESTAMP,
-                            UNIQUE(image_id, contest_ref, contest_type)
-                        )
-                    '''))
-                    conn12.commit()
-                print('raw_submissions schema OK.')
-            except Exception as ce:
-                print(f'raw_submissions migration warning: {ce}')
-
-            print('Columns migrated OK.')
-        except Exception as e:
-            print(f'Migration warning: {e}')
-    # end if _run_migrations
+        print('Columns migrated OK.')
+    except Exception as e:
+        print(f'Migration warning: {e}')
 
     try:
         with db.engine.connect() as conn:
@@ -1652,9 +1595,6 @@ def auth_google_callback():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
-        # Mentor users go to their dashboard
-        if getattr(user, 'role', None) == 'mentor':
-            return redirect(url_for('mentor_dashboard'))
         # Redirect to stored next URL if available
         post_next = session.pop('post_login_next', None)
         if post_next:
@@ -1755,8 +1695,6 @@ def login():
         ).fetchone()
         if _jc:
             return redirect(url_for('judge_dashboard'))
-        if getattr(current_user, 'role', None) == 'mentor':
-            return redirect(url_for('mentor_dashboard'))
         return redirect(url_for('dashboard'))
 
 
@@ -1806,9 +1744,6 @@ def login():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
-        # Mentor users go to their dashboard
-        if getattr(user, 'role', None) == 'mentor':
-            return redirect(url_for('mentor_dashboard'))
         return redirect(url_for('dashboard'))
 
     return render_template('login.html')
@@ -5369,8 +5304,7 @@ def mentor_review_session(session_id):
     try:
         session_row = db.session.execute(db.text("""
             SELECT ms.*, u.full_name, u.username, u.email,
-                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
-                   i.improvement_note
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier
             FROM mentor_sessions ms
             JOIN users u  ON u.id  = ms.user_id
             JOIN images i ON i.id  = ms.image_id
@@ -5394,7 +5328,7 @@ def mentor_review_session(session_id):
         if len(review_text) < 50:
             flash('Review must be at least 50 characters.', 'error')
             return render_template('mentor_review_form.html',
-                                   profile=profile, session=session_row)
+                                   profile=profile, session_row=session_row)
         try:
             db.session.execute(db.text("""
                 UPDATE mentor_sessions
@@ -5469,7 +5403,7 @@ def mentor_review_session(session_id):
             flash('Error submitting review.', 'error')
 
     return render_template('mentor_review_form.html',
-                           profile=profile, session=session_row)
+                           profile=profile, session_row=session_row)
 
 
 @app.route('/science')
@@ -5800,6 +5734,46 @@ def learning():
                            learning_hero=learning_hero)
 
 # ---------------------------------------------------------------------------
+# MENTOR DATA — source of truth; move to DB when roster grows
+# ---------------------------------------------------------------------------
+MENTORS = {
+    'ashok': {
+        'slug':        'ashok',
+        'name':        'Ashok Kochhar',
+        'tier_label':  'Legend Mentor',
+        'tier_class':  'legend',
+        'price':       100,
+        'points_cost': 1000,
+        'photo':       'img/mentor_ashok.jpg',
+        'genres':      'Conceptual · Fashion · Street · Nature',
+        'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
+    },
+    'gopal': {
+        'slug':        'gopal',
+        'name':        'Gopal MS',
+        'tier_label':  'Expert Mentor',
+        'tier_class':  'expert',
+        'price':       75,
+        'points_cost': 750,
+        'photo':       'img/Gopal MS.jpeg',
+        'genres':      'Street · Documentary · Urban',
+        'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
+    },
+    'sreekumar': {
+        'slug':        'sreekumar',
+        'name':        'Sreekumar Krishnan',
+        'tier_label':  'Senior Mentor',
+        'tier_class':  'senior',
+        'price':       50,
+        'points_cost': 500,
+        'photo':       'img/Sreekumar.png',
+        'genres':      'Wildlife · Street · Portrait · Mobile',
+        'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
+    },
+}
+
+# ---------------------------------------------------------------------------
+
 @app.route('/mentors')
 def mentors():
     try:
