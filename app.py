@@ -3763,7 +3763,16 @@ def toggle_calibration_example(image_id):
 @admin_required
 def admin_users():
     users = User.query.filter(User.role != 'admin').order_by(User.created_at.desc()).all()
-    return render_template('admin_users.html', users=users)
+    try:
+        _now   = datetime.utcnow()
+        _today = _now.replace(hour=0, minute=0, second=0, microsecond=0)
+        _7days = _now - timedelta(days=7)
+        new_today  = User.query.filter(User.role != 'admin', User.created_at >= _today).count()
+        new_7days  = User.query.filter(User.role != 'admin', User.created_at >= _7days).count()
+    except Exception:
+        new_today = new_7days = 0
+    return render_template('admin_users.html', users=users,
+                           new_today=new_today, new_7days=new_7days)
 
 
 @app.route('/admin/user/<int:user_id>')
@@ -11075,6 +11084,136 @@ def admin_release_weekly_results(week_ref):
     return page_html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
+def run_daily_signup_digest():
+    """
+    Daily admin digest — runs at 09:00 IST (03:30 UTC).
+    Sends one email to admin listing all new signups from the past 24 hours.
+    Zero signups = no email sent.
+    """
+    with app.app_context():
+        try:
+            now        = datetime.utcnow()
+            since      = now - timedelta(hours=24)
+            new_users  = User.query.filter(
+                User.role     != 'admin',
+                User.created_at >= since
+            ).order_by(User.created_at.desc()).all()
+
+            if not new_users:
+                app.logger.info('[digest] No new signups in last 24h — skipping digest')
+                return
+
+            admin_emails = _admin_notify_emails()
+            if not admin_emails:
+                app.logger.warning('[digest] No admin emails configured — skipping digest')
+                return
+
+            site_url   = os.getenv('SITE_URL', 'https://shutterleague.com')
+            count      = len(new_users)
+            date_label = now.strftime('%d %b %Y')
+
+            rows_html = ''
+            rows_text = ''
+            for u in new_users:
+                joined    = u.created_at.strftime('%H:%M UTC') if u.created_at else '—'
+                onboarded = '&#10003;' if u.onboarding_complete else '—'
+                detail_url = site_url + '/admin/user/' + str(u.id)
+                rows_html += (
+                    '<tr>'
+                    '<td style="padding:8px 12px;border-bottom:1px solid #E0D8C8;font-size:14px;color:#1a1a18;">'
+                    + (u.full_name or u.username) +
+                    '</td>'
+                    '<td style="padding:8px 12px;border-bottom:1px solid #E0D8C8;font-size:13px;color:#5a5248;">'
+                    + u.email +
+                    '</td>'
+                    '<td style="padding:8px 12px;border-bottom:1px solid #E0D8C8;font-size:13px;color:#5a5248;text-align:center;">'
+                    + joined +
+                    '</td>'
+                    '<td style="padding:8px 12px;border-bottom:1px solid #E0D8C8;font-size:13px;color:#5a5248;text-align:center;">'
+                    + onboarded +
+                    '</td>'
+                    '<td style="padding:8px 12px;border-bottom:1px solid #E0D8C8;font-size:13px;">'
+                    '<a href="' + detail_url + '" style="color:#C8A84B;text-decoration:none;">View</a>'
+                    '</td>'
+                    '</tr>'
+                )
+                rows_text += (
+                    '  - ' + (u.full_name or u.username) + ' <' + u.email + '>'
+                    + ' joined ' + joined
+                    + (' [onboarded]' if u.onboarding_complete else '') + '\n'
+                )
+
+            html_body = (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                '<tr><td align="center">'
+                '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;max-width:600px;width:100%;">'
+
+                '<tr><td style="background:#1A2744;padding:20px 32px;">'
+                '<p style="margin:0;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
+                'letter-spacing:3px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE</p>'
+                '</td></tr>'
+
+                '<tr><td style="background:#1A2744;padding:0 32px 24px;">'
+                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;'
+                'letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Daily Signup Digest</p>'
+                '<h1 style="margin:0;font-size:24px;color:#FFFFFF;font-weight:700;line-height:1.2;">'
+                + str(count) + ' new member' + ('s' if count != 1 else '') + ' joined today'
+                '</h1>'
+                '<p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.50);">' + date_label + '</p>'
+                '</td></tr>'
+
+                '<tr><td style="padding:28px 32px;">'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E0D8C8;">'
+                '<thead>'
+                '<tr style="background:#F5F0E8;">'
+                '<th style="padding:8px 12px;font-family:Courier New,monospace;font-size:11px;'
+                'letter-spacing:1px;color:#8a8070;text-align:left;border-bottom:1px solid #E0D8C8;">Name</th>'
+                '<th style="padding:8px 12px;font-family:Courier New,monospace;font-size:11px;'
+                'letter-spacing:1px;color:#8a8070;text-align:left;border-bottom:1px solid #E0D8C8;">Email</th>'
+                '<th style="padding:8px 12px;font-family:Courier New,monospace;font-size:11px;'
+                'letter-spacing:1px;color:#8a8070;text-align:center;border-bottom:1px solid #E0D8C8;">Joined</th>'
+                '<th style="padding:8px 12px;font-family:Courier New,monospace;font-size:11px;'
+                'letter-spacing:1px;color:#8a8070;text-align:center;border-bottom:1px solid #E0D8C8;">Onboarded</th>'
+                '<th style="padding:8px 12px;font-family:Courier New,monospace;font-size:11px;'
+                'letter-spacing:1px;color:#8a8070;text-align:left;border-bottom:1px solid #E0D8C8;"></th>'
+                '</tr>'
+                '</thead>'
+                '<tbody>' + rows_html + '</tbody>'
+                '</table>'
+                '</td></tr>'
+
+                '<tr><td style="padding:0 32px 32px;">'
+                '<a href="' + site_url + '/admin/users" '
+                'style="display:inline-block;background:#F5C518;color:#FFFFFF;'
+                'font-family:Courier New,monospace;font-size:12px;font-weight:700;'
+                'letter-spacing:2px;text-transform:uppercase;padding:12px 24px;text-decoration:none;">'
+                'VIEW ALL MEMBERS</a>'
+                '</td></tr>'
+
+                '</table></td></tr></table></body></html>'
+            )
+
+            text_body = (
+                'SHUTTER LEAGUE - Daily Signup Digest\n'
+                + date_label + '\n\n'
+                + str(count) + ' new member' + ('s' if count != 1 else '') + ' joined in the last 24 hours:\n\n'
+                + rows_text
+                + '\nView all members: ' + site_url + '/admin/users\n'
+            )
+
+            subject = '[Shutter League] ' + str(count) + ' new member' + ('s' if count != 1 else '') + ' — ' + date_label
+            ok = send_email(admin_emails, subject, html_body, text_body)
+            if ok:
+                app.logger.info('[digest] Daily signup digest sent — ' + str(count) + ' new user(s)')
+            else:
+                app.logger.error('[digest] Failed to send daily signup digest')
+
+        except Exception as e:
+            app.logger.error('[digest] Error: ' + str(e))
+
+
 # Guard: only one Gunicorn worker should run the scheduler.
 # We use a lock file in /tmp — first worker to create it wins; others skip.
 import fcntl as _fcntl
@@ -11118,6 +11257,14 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute=15, timezone='UTC'),
         id               = 'reengagement_emailer',
         name             = '24hr re-engagement email trigger',
+        replace_existing = True,
+    )
+    # Daily signup digest — 09:00 IST = 03:30 UTC
+    _scheduler.add_job(
+        func             = run_daily_signup_digest,
+        trigger          = CronTrigger(hour=3, minute=30, timezone='UTC'),
+        id               = 'daily_signup_digest',
+        name             = 'Daily admin digest — new member signups',
         replace_existing = True,
     )
     _scheduler.start()
