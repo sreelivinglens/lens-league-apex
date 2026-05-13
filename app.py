@@ -233,8 +233,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_NAME']     = 'sl_session'
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
-app.config['REMEMBER_COOKIE_DURATION']   = 2592000  # 30 days
+app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_SECURE']   = True
 
@@ -1517,7 +1516,6 @@ def verify_email(token):
     user.email_verify_token  = None
     db.session.commit()
     login_user(user)
-    session.permanent = True
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -1588,7 +1586,6 @@ def auth_google_callback():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
-        session.permanent = True
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -1629,7 +1626,6 @@ def auth_google_callback():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        session.permanent = True
         return redirect(url_for('onboarding'))
 
 
@@ -1735,7 +1731,6 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
-        session.permanent = True
 
         next_url = request.args.get('next')
         if next_url:
@@ -2106,6 +2101,9 @@ def dashboard():
         }
     # ── End Wallet HUD ────────────────────────────────────────────────────
 
+    # DDI Progress (same data as profile page)
+    progress_data = _build_progress_data(current_user)
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2117,7 +2115,8 @@ def dashboard():
                            show_poty_banner=show_poty_banner,
                            contest_banners=contest_banners,
                            raw_pending=raw_pending,
-                           wallet_hud=wallet_hud)
+                           wallet_hud=wallet_hud,
+                           progress_data=progress_data)
 
 
 # ---------------------------------------------------------------------------
@@ -5309,7 +5308,8 @@ def mentor_review_session(session_id):
     try:
         session_row = db.session.execute(db.text("""
             SELECT ms.*, u.full_name, u.username, u.email,
-                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
+                   i.improvement_note
             FROM mentor_sessions ms
             JOIN users u  ON u.id  = ms.user_id
             JOIN images i ON i.id  = ms.image_id
@@ -5333,7 +5333,7 @@ def mentor_review_session(session_id):
         if len(review_text) < 50:
             flash('Review must be at least 50 characters.', 'error')
             return render_template('mentor_review_form.html',
-                                   profile=profile, session_row=session_row)
+                                   profile=profile, session=session_row)
         try:
             db.session.execute(db.text("""
                 UPDATE mentor_sessions
@@ -5408,7 +5408,7 @@ def mentor_review_session(session_id):
             flash('Error submitting review.', 'error')
 
     return render_template('mentor_review_form.html',
-                           profile=profile, session_row=session_row)
+                           profile=profile, session=session_row)
 
 
 @app.route('/science')
@@ -5465,7 +5465,6 @@ def sree_admin_login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
-        session.permanent = True
         return redirect(url_for('admin_dashboard'))
 
     return render_template('sree_admin_login.html')
