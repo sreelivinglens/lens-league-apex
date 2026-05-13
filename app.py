@@ -5613,6 +5613,45 @@ def robots_txt():
     )
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
+@app.route('/sitemap.xml')
+def sitemap():
+    from datetime import date
+    today = date.today().strftime('%Y-%m-%d')
+    pages = [
+        ('/', '1.0', 'weekly'),
+        ('/about', '0.9', 'monthly'),
+        ('/how-it-works', '0.9', 'monthly'),
+        ('/pricing', '0.9', 'weekly'),
+        ('/terms', '0.8', 'monthly'),
+        ('/privacy', '0.8', 'monthly'),
+        ('/refund-policy', '0.8', 'monthly'),
+        ('/shipping-policy', '0.8', 'monthly'),
+        ('/contact', '0.7', 'monthly'),
+        ('/mentors', '0.8', 'weekly'),
+        ('/science', '0.7', 'monthly'),
+        ('/learning', '0.7', 'weekly'),
+        ('/how-it-works', '0.8', 'monthly'),
+    ]
+    base = 'https://shutterleague.com'
+    urls = ''
+    seen = set()
+    for path, priority, freq in pages:
+        if path in seen:
+            continue
+        seen.add(path)
+        urls += f'''  <url>
+    <loc>{base}{path}</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>{freq}</changefreq>
+    <priority>{priority}</priority>
+  </url>
+'''
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}</urlset>'''
+    return xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
+
+
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
