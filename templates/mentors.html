@@ -290,6 +290,37 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   color: #FFFFFF;
   border-color: #1A2744;
 }
+/* Social links */
+.sl-men-card-social {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sl-men-card-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(26,26,24,0.45);
+  transition: color 0.2s;
+  text-decoration: none;
+}
+.sl-men-card-social a:hover {
+  color: #1A2744;
+}
+/* Portfolio strip — two small sample shots */
+.sl-men-card-portfolio {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.sl-men-card-portfolio img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 2px;
+  background: #1A1A18;
+}
 .sl-men-view-all {
   text-align: center;
   font-size: 15px;
@@ -643,59 +674,101 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
       <p class="sl-men-choose-sub">Select the mentor whose perspective will help you the most.</p>
       <div class="sl-men-cards">
 
+        {% set m = mentors_data.get('ashok', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-              alt="Ashok Kochhar"
+              src="{{ m.get('photo') or url_for('static', filename='img/mentor_ashok.jpg') }}"
+              alt="{{ m.get('name', 'Ashok Kochhar') }}"
               onerror="this.style.display='none'"
             >
             <span class="sl-men-card-badge legend">Legend Mentor</span>
           </div>
           <div class="sl-men-card-body">
-            <p class="sl-men-card-name">Ashok Kochhar</p>
-            <p class="sl-men-card-genres">Conceptual · Fashion · Street · Nature</p>
+            <p class="sl-men-card-name">{{ m.get('name', 'Ashok Kochhar') }}</p>
+            <p class="sl-men-card-genres">{{ m.get('genres', 'Conceptual · Fashion · Street · Nature') }}</p>
+            {% if m.get('photo_2') or m.get('photo_3') %}
+            <div class="sl-men-card-portfolio">
+              {% if m.get('photo_2') %}<img src="{{ m.photo_2 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+              {% if m.get('photo_3') %}<img src="{{ m.photo_3 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+            </div>
+            {% endif %}
             <div class="sl-men-card-rule"></div>
-            <p class="sl-men-card-bio">Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.</p>
-            <p class="sl-men-card-price">₹100 <span>per session</span></p>
+            <p class="sl-men-card-bio">{{ m.get('bio', 'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.') }}</p>
+            {% if m.get('instagram_url') or m.get('website_url') or m.get('youtube_url') %}
+            <div class="sl-men-card-social">
+              {% if m.get('instagram_url') %}<a href="{{ m.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>{% endif %}
+              {% if m.get('website_url') %}<a href="{{ m.website_url }}" target="_blank" rel="noopener" aria-label="Website"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>{% endif %}
+              {% if m.get('youtube_url') %}<a href="{{ m.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>{% endif %}
+            </div>
+            {% endif %}
+            <p class="sl-men-card-price">₹{{ m.get('price', 100) }} <span>per session</span></p>
             <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
 
+        {% set m = mentors_data.get('gopal', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ url_for('static', filename='img/Gopal MS.jpeg') }}"
-              alt="Gopal MS"
+              src="{{ m.get('photo') or url_for('static', filename='img/Gopal MS.jpeg') }}"
+              alt="{{ m.get('name', 'Gopal MS') }}"
               onerror="this.style.display='none'"
             >
             <span class="sl-men-card-badge expert">Expert Mentor</span>
           </div>
           <div class="sl-men-card-body">
-            <p class="sl-men-card-name">Gopal MS</p>
-            <p class="sl-men-card-genres">Street · Documentary · Urban</p>
+            <p class="sl-men-card-name">{{ m.get('name', 'Gopal MS') }}</p>
+            <p class="sl-men-card-genres">{{ m.get('genres', 'Street · Documentary · Urban') }}</p>
+            {% if m.get('photo_2') or m.get('photo_3') %}
+            <div class="sl-men-card-portfolio">
+              {% if m.get('photo_2') %}<img src="{{ m.photo_2 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+              {% if m.get('photo_3') %}<img src="{{ m.photo_3 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+            </div>
+            {% endif %}
             <div class="sl-men-card-rule"></div>
-            <p class="sl-men-card-bio">Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.</p>
-            <p class="sl-men-card-price">₹75 <span>per session</span></p>
+            <p class="sl-men-card-bio">{{ m.get('bio', "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.") }}</p>
+            {% if m.get('instagram_url') or m.get('website_url') or m.get('youtube_url') %}
+            <div class="sl-men-card-social">
+              {% if m.get('instagram_url') %}<a href="{{ m.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>{% endif %}
+              {% if m.get('website_url') %}<a href="{{ m.website_url }}" target="_blank" rel="noopener" aria-label="Website"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>{% endif %}
+              {% if m.get('youtube_url') %}<a href="{{ m.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>{% endif %}
+            </div>
+            {% endif %}
+            <p class="sl-men-card-price">₹{{ m.get('price', 75) }} <span>per session</span></p>
             <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
 
+        {% set m = mentors_data.get('sreekumar', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
             <img
-              src="{{ url_for('static', filename='img/Sreekumar.png') }}"
-              alt="Sreekumar Krishnan"
+              src="{{ m.get('photo') or url_for('static', filename='img/Sreekumar.png') }}"
+              alt="{{ m.get('name', 'Sreekumar Krishnan') }}"
               onerror="this.style.display='none'"
             >
             <span class="sl-men-card-badge senior">Senior Mentor</span>
           </div>
           <div class="sl-men-card-body">
-            <p class="sl-men-card-name">Sreekumar Krishnan</p>
-            <p class="sl-men-card-genres">Wildlife · Street · Portrait · Mobile</p>
+            <p class="sl-men-card-name">{{ m.get('name', 'Sreekumar Krishnan') }}</p>
+            <p class="sl-men-card-genres">{{ m.get('genres', 'Wildlife · Street · Portrait · Mobile') }}</p>
+            {% if m.get('photo_2') or m.get('photo_3') %}
+            <div class="sl-men-card-portfolio">
+              {% if m.get('photo_2') %}<img src="{{ m.photo_2 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+              {% if m.get('photo_3') %}<img src="{{ m.photo_3 }}" alt="Portfolio" onerror="this.style.display='none'">{% endif %}
+            </div>
+            {% endif %}
             <div class="sl-men-card-rule"></div>
-            <p class="sl-men-card-bio">International award-winning photographer &amp; filmmaker. IPPA Gold 2019. Sanctuary Asia &amp; National Geographic featured.</p>
-            <p class="sl-men-card-price">₹50 <span>per session</span></p>
+            <p class="sl-men-card-bio">{{ m.get('bio', 'International award-winning photographer &amp; filmmaker. IPPA Gold 2019. Sanctuary Asia &amp; National Geographic featured.') }}</p>
+            {% if m.get('instagram_url') or m.get('website_url') or m.get('youtube_url') %}
+            <div class="sl-men-card-social">
+              {% if m.get('instagram_url') %}<a href="{{ m.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>{% endif %}
+              {% if m.get('website_url') %}<a href="{{ m.website_url }}" target="_blank" rel="noopener" aria-label="Website"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>{% endif %}
+              {% if m.get('youtube_url') %}<a href="{{ m.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg></a>{% endif %}
+            </div>
+            {% endif %}
+            <p class="sl-men-card-price">₹{{ m.get('price', 50) }} <span>per session</span></p>
             <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
