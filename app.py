@@ -233,7 +233,8 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_NAME']     = 'sl_session'
-app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+app.config['REMEMBER_COOKIE_DURATION']   = 2592000  # 30 days
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_SECURE']   = True
 
@@ -1516,6 +1517,7 @@ def verify_email(token):
     user.email_verify_token  = None
     db.session.commit()
     login_user(user)
+    session.permanent = True
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -1586,6 +1588,7 @@ def auth_google_callback():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
+        session.permanent = True
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -1626,6 +1629,7 @@ def auth_google_callback():
         db.session.add(user)
         db.session.commit()
         login_user(user)
+        session.permanent = True
         return redirect(url_for('onboarding'))
 
 
@@ -1731,6 +1735,7 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
+        session.permanent = True
 
         next_url = request.args.get('next')
         if next_url:
@@ -5460,6 +5465,7 @@ def sree_admin_login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         login_user(user)
+        session.permanent = True
         return redirect(url_for('admin_dashboard'))
 
     return render_template('sree_admin_login.html')
