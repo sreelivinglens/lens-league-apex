@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% block title %}My Portfolio — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+.sl-pmgr { background: #F7F5F2; min-height: 100vh; padding: 36px 48px 80px; font-family: 'Inter', sans-serif !important; text-align: justify; }
+.sl-pmgr * { font-family: 'Inter', sans-serif !important; }
+
+.sl-pmgr-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
+.sl-pmgr-title { font-size: 22px; font-weight: 700; color: #1A1A18; margin-bottom: 4px; text-shadow: none; }
+.sl-pmgr-sub { font-size: 16px; color: rgba(26,26,24,0.50); }
+
+.sl-pmgr-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 24px; margin-bottom: 20px; }
+.sl-pmgr-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 16px; }
+
+/* Profile section */
+.sl-pmgr-profile-inner { display: flex; align-items: flex-start; gap: 24px; }
+.sl-pmgr-avatar-wrap { position: relative; flex-shrink: 0; text-align: center; }
+.sl-pmgr-avatar { width: 80px; height: 80px; border-radius: 50%; background: #1A2744; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.sl-pmgr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.sl-pmgr-avatar-initials { font-size: 24px; font-weight: 700; color: #F5C518; font-family: 'Courier New', monospace !important; }
+.sl-pmgr-avatar-edit { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; background: #F5C518; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #F7F5F2; }
+.sl-pmgr-avatar-hint { font-size: 11px; color: rgba(26,26,24,0.38); margin-top: 6px; width: 80px; line-height: 1.4; }
+.sl-pmgr-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sl-pmgr-field-full { grid-column: 1 / -1; }
+.sl-pmgr-field label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); display: block; margin-bottom: 5px; }
+.sl-pmgr-field input, .sl-pmgr-field textarea { width: 100%; padding: 10px 12px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 16px; color: #1A1A18; font-family: 'Inter', sans-serif !important; }
+.sl-pmgr-field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.sl-pmgr-field input:focus, .sl-pmgr-field textarea:focus { outline: none; border-color: #1A2744; background: #fff; }
+.sl-pmgr-field-hint { font-size: 12px; color: rgba(26,26,24,0.38); margin-top: 4px; }
+.sl-pmgr-char-count { font-size: 12px; color: rgba(26,26,24,0.38); text-align: right; margin-top: 3px; }
+.sl-pmgr-char-count.ok { color: #2d7a3a; }
+
+/* Toggle rows */
+.sl-pmgr-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-top: 1px solid rgba(26,26,24,0.08); gap: 16px; }
+.sl-pmgr-toggle-label { font-size: 16px; font-weight: 700; color: #1A1A18; }
+.sl-pmgr-toggle-sub { font-size: 12px; color: rgba(26,26,24,0.45); margin-top: 2px; }
+.sl-pmgr-toggle { width: 44px; height: 24px; border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0; border: none; transition: background 0.15s; }
+.sl-pmgr-toggle.on { background: #1A2744; }
+.sl-pmgr-toggle.off { background: rgba(26,26,24,0.18); }
+.sl-pmgr-toggle-knob { width: 18px; height: 18px; border-radius: 50%; position: absolute; top: 3px; transition: left 0.15s; }
+.sl-pmgr-toggle.on .sl-pmgr-toggle-knob { background: #F5C518; left: auto; right: 3px; }
+.sl-pmgr-toggle.off .sl-pmgr-toggle-knob { background: rgba(26,26,24,0.35); left: 3px; }
+
+/* Curation grid */
+.sl-pmgr-curation-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.sl-pmgr-curation-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(26,26,24,0.40); }
+.sl-pmgr-curation-count { font-size: 16px; color: rgba(26,26,24,0.50); }
+.sl-pmgr-curation-hint { font-size: 12px; color: rgba(26,26,24,0.40); margin-bottom: 14px; }
+.sl-pmgr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.sl-pmgr-img-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.10); overflow: hidden; position: relative; cursor: pointer; }
+.sl-pmgr-img-card.selected { border: 2px solid #1A2744; }
+.sl-pmgr-img-card.unscored { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+.sl-pmgr-img-card.unscored .sl-pmgr-img-ph { background: #EEEBE6; }
+.sl-pmgr-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: #EDEAE4; }
+.sl-pmgr-img-ph { width: 100%; aspect-ratio: 1/1; background: #EDEAE4; display: flex; align-items: center; justify-content: center; }
+.sl-pmgr-img-ph i { font-size: 24px; color: rgba(26,26,24,0.15); }
+.sl-pmgr-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: #1A2744; display: flex; align-items: center; justify-content: center; }
+.sl-pmgr-check i { font-size: 13px; color: #F5C518; }
+.sl-pmgr-uncheck { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: rgba(255,255,255,0.85); border: 1px solid rgba(26,26,24,0.20); }
+.sl-pmgr-unscored-pill { position: absolute; top: 8px; left: 8px; background: rgba(26,26,24,0.14); font-family: 'Courier New', monospace !important; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(26,26,24,0.50); padding: 2px 7px; }
+.sl-pmgr-img-body { padding: 8px 10px; }
+.sl-pmgr-img-title { font-size: 12px; font-weight: 700; color: #1A1A18; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-pmgr-img-score { font-family: 'Courier New', monospace !important; font-size: 11px; color: rgba(26,26,24,0.55); margin-top: 2px; }
+.sl-pmgr-img-tier { font-size: 10px; font-family: 'Courier New', monospace !important; font-weight: 700; padding: 1px 6px; background: #1A2744; color: #F5C518; display: inline-block; }
+
+/* Footer */
+.sl-pmgr-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(26,26,24,0.08); flex-wrap: wrap; gap: 12px; }
+.sl-pmgr-footer-link { font-family: 'Courier New', monospace !important; font-size: 12px; color: rgba(26,26,24,0.40); letter-spacing: 0.04em; }
+.sl-pmgr-footer-btns { display: flex; gap: 10px; }
+.sl-pmgr-btn-primary { background: #1A2744; color: #fff; font-family: 'Courier New', monospace !important; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 22px; border: none; cursor: pointer; min-height: 44px; }
+.sl-pmgr-btn-primary:hover { background: #243260; }
+.sl-pmgr-btn-secondary { background: transparent; color: #1A2744; font-family: 'Courier New', monospace !important; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 20px; border: 1px solid #1A2744; cursor: pointer; min-height: 44px; text-decoration: none; display: inline-flex; align-items: center; }
+
+/* Upload progress */
+.sl-pmgr-upload-bar { display: none; height: 3px; background: #F5C518; margin-top: 8px; transition: width 0.2s; }
+
+@media (max-width: 768px) {
+  .sl-pmgr { padding: 20px 16px 56px; }
+  .sl-pmgr-profile-inner { flex-direction: column; }
+  .sl-pmgr-fields { grid-template-columns: 1fr; }
+  .sl-pmgr-field-full { grid-column: 1; }
+  .sl-pmgr-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .sl-pmgr-header { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sl-pmgr">
+
+  <div class="sl-pmgr-header">
+    <div>
+      <div class="sl-pmgr-title">My portfolio</div>
+      <div class="sl-pmgr-sub">Manage what appears on your public portfolio page</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      {% if user_data.portfolio_public %}
+        <a href="{{ url_for('portfolio_public', username=current_user.username) }}" target="_blank" class="sl-pmgr-btn-secondary">
+          Preview public page →
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="POST" id="portfolio-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- Profile card -->
+    <div class="sl-pmgr-card">
+      <div class="sl-pmgr-card-title">Profile</div>
+      <div class="sl-pmgr-profile-inner">
+        <div class="sl-pmgr-avatar-wrap">
+          <div class="sl-pmgr-avatar" id="avatar-preview">
+            {% if user_data.portfolio_photo_url %}
+              <img src="{{ user_data.portfolio_photo_url }}" id="avatar-img" alt="Profile photo">
+            {% else %}
+              <span class="sl-pmgr-avatar-initials">{{ (current_user.full_name or current_user.username)[:2]|upper }}</span>
+            {% endif %}
+          </div>
+          <div class="sl-pmgr-avatar-edit" onclick="document.getElementById('photo-input').click()" title="Upload photo">
+            <i class="ti ti-camera" style="font-size:13px;color:#1A1A18;" aria-hidden="true"></i>
+          </div>
+          <input type="file" id="photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="handlePhotoUpload(this)">
+          <input type="hidden" name="portfolio_photo_url" id="portfolio_photo_url" value="{{ user_data.portfolio_photo_url or '' }}">
+          <div class="sl-pmgr-avatar-hint">Square · min 400×400px · JPG or PNG</div>
+          <div class="sl-pmgr-upload-bar" id="upload-bar" style="width:0%;"></div>
+        </div>
+
+        <div class="sl-pmgr-fields">
+          <div class="sl-pmgr-field sl-pmgr-field-full">
+            <label for="portfolio_bio">Bio</label>
+            <textarea name="portfolio_bio" id="portfolio_bio" rows="3"
+                      maxlength="200"
+                      placeholder="A short description visible on your public portfolio…">{{ user_data.portfolio_bio or '' }}</textarea>
+            <div class="sl-pmgr-char-count" id="bio-count">{{ (user_data.portfolio_bio or '')|length }} / 200</div>
+            <div class="sl-pmgr-field-hint">Max 200 characters · No email, phone, or social handles</div>
+          </div>
+          <div class="sl-pmgr-field">
+            <label for="portfolio_years">Years of photography</label>
+            <input type="number" name="portfolio_years" id="portfolio_years"
+                   min="1" max="60" value="{{ user_data.portfolio_years or '' }}"
+                   placeholder="e.g. 5">
+          </div>
+          <div class="sl-pmgr-field">
+            <label for="portfolio_genres">Primary genres</label>
+            <input type="text" name="portfolio_genres" id="portfolio_genres"
+                   value="{{ user_data.portfolio_genres or '' }}"
+                   placeholder="e.g. People, Street, Documentary">
+            <div class="sl-pmgr-field-hint">Auto-suggested from scored images, or edit freely</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">Portfolio is public</div>
+          <div class="sl-pmgr-toggle-sub">Anyone with the link can view — no login required</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_public else 'off' }}"
+                id="toggle-public" onclick="toggleField(this, 'portfolio_public')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_public" id="portfolio_public"
+               value="{{ '1' if user_data.portfolio_public else '0' }}">
+      </div>
+    </div>
+
+    <!-- Visibility card -->
+    <div class="sl-pmgr-card">
+      <div class="sl-pmgr-card-title">What to show publicly</div>
+      <p style="font-size:13px;color:rgba(26,26,24,0.45);margin-bottom:0;">Control which sections and scores are visible to anyone viewing your portfolio.</p>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">DDI scores on images</div>
+          <div class="sl-pmgr-toggle-sub">Show the DDI score and tier label on each image card</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_scores != False else 'off' }}"
+                onclick="toggleField(this, 'portfolio_show_scores')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_show_scores" id="portfolio_show_scores"
+               value="{{ '1' if user_data.portfolio_show_scores != False else '0' }}">
+      </div>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">Highest tier badge</div>
+          <div class="sl-pmgr-toggle-sub">Show your highest tier reached in the hero section</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_tier != False else 'off' }}"
+                onclick="toggleField(this, 'portfolio_show_tier')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_show_tier" id="portfolio_show_tier"
+               value="{{ '1' if user_data.portfolio_show_tier != False else '0' }}">
+      </div>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">Stats bar</div>
+          <div class="sl-pmgr-toggle-sub">Show images scored, average DDI, and best score</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_stats != False else 'off' }}"
+                onclick="toggleField(this, 'portfolio_show_stats')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_show_stats" id="portfolio_show_stats"
+               value="{{ '1' if user_data.portfolio_show_stats != False else '0' }}">
+      </div>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">Genre proficiency</div>
+          <div class="sl-pmgr-toggle-sub">Show genre breakdown and average scores per genre</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_genres != False else 'off' }}"
+                onclick="toggleField(this, 'portfolio_show_genres')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_show_genres" id="portfolio_show_genres"
+               value="{{ '1' if user_data.portfolio_show_genres != False else '0' }}">
+      </div>
+
+      <div class="sl-pmgr-toggle-row">
+        <div>
+          <div class="sl-pmgr-toggle-label">Awards &amp; commendations</div>
+          <div class="sl-pmgr-toggle-sub">Show contest wins and judge commendations</div>
+        </div>
+        <button type="button" class="sl-pmgr-toggle {{ 'on' if user_data.portfolio_show_awards != False else 'off' }}"
+                onclick="toggleField(this, 'portfolio_show_awards')">
+          <div class="sl-pmgr-toggle-knob"></div>
+        </button>
+        <input type="hidden" name="portfolio_show_awards" id="portfolio_show_awards"
+               value="{{ '1' if user_data.portfolio_show_awards != False else '0' }}">
+      </div>
+    </div>
+
+    <!-- Image curation -->
+    <div class="sl-pmgr-curation-hdr">
+      <span class="sl-pmgr-curation-title">Select images to display</span>
+      <span class="sl-pmgr-curation-count" id="selected-count">
+        {{ selected_ids|length }} of {{ all_images|selectattr('status','equalto','scored')|list|length }} selected
+      </span>
+    </div>
+    <div class="sl-pmgr-curation-hint">Only scored images can be added. Unscored images are shown greyed out.</div>
+
+    <div class="sl-pmgr-grid">
+      {% for img in all_images %}
+        {% set is_scored = img.status == 'scored' and img.score is not none %}
+        {% set is_selected = img.id in selected_ids %}
+        <div class="sl-pmgr-img-card {% if is_selected %}selected{% endif %} {% if not is_scored %}unscored{% endif %}"
+             {% if is_scored %}onclick="toggleImage(this, {{ img.id }})"{% endif %}>
+          {% if img.thumb_url %}
+            <img src="{{ img.thumb_url }}" class="sl-pmgr-img"
+                 alt="{{ img.asset_name }}"
+                 onerror="this.style.display='none'">
+          {% else %}
+            <div class="sl-pmgr-img-ph"><i class="ti ti-photo" aria-hidden="true"></i></div>
+          {% endif %}
+
+          {% if is_scored %}
+            {% if is_selected %}
+            <div class="sl-pmgr-check"><i class="ti ti-check" aria-hidden="true"></i></div>
+            {% else %}
+            <div class="sl-pmgr-uncheck"></div>
+            {% endif %}
+          {% else %}
+            <div class="sl-pmgr-unscored-pill">Not scored</div>
+          {% endif %}
+
+          <div class="sl-pmgr-img-body">
+            <div class="sl-pmgr-img-title">{{ img.asset_name or 'Untitled' }}</div>
+            {% if is_scored %}
+            <div class="sl-pmgr-img-score">
+              {{ "%.2f"|format(img.score|float) }} ·
+              <span class="sl-pmgr-img-tier">{{ img.tier or '' }}</span>
+            </div>
+            {% else %}
+            <div class="sl-pmgr-img-score" style="color:rgba(26,26,24,0.30);">Awaiting score</div>
+            {% endif %}
+          </div>
+
+          {% if is_scored %}
+          <input type="checkbox" name="selected_images" value="{{ img.id }}"
+                 {% if is_selected %}checked{% endif %}
+                 style="display:none;" class="img-checkbox" id="chk-{{ img.id }}">
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="sl-pmgr-footer">
+      <span class="sl-pmgr-footer-link">shutterleague.com/portfolio/{{ current_user.username }}</span>
+      <div class="sl-pmgr-footer-btns">
+        <a href="{{ url_for('dashboard') }}" class="sl-pmgr-btn-secondary">← Dashboard</a>
+        <button type="submit" class="sl-pmgr-btn-primary">Save &amp; publish</button>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleField(btn, fieldId) {
+  var isOn = btn.classList.contains('on');
+  btn.classList.toggle('on', !isOn);
+  btn.classList.toggle('off', isOn);
+  document.getElementById(fieldId).value = isOn ? '0' : '1';
+}
+
+function toggleImage(card, imgId) {
+  var isSelected = card.classList.contains('selected');
+  card.classList.toggle('selected', !isSelected);
+  var chk = document.getElementById('chk-' + imgId);
+  if (chk) chk.checked = !isSelected;
+  var check = card.querySelector('.sl-pmgr-check');
+  var uncheck = card.querySelector('.sl-pmgr-uncheck');
+  if (check) check.style.display = isSelected ? 'none' : 'flex';
+  if (uncheck) uncheck.style.display = isSelected ? 'flex' : 'none';
+  updateCount();
+}
+
+function updateCount() {
+  var total = document.querySelectorAll('.sl-pmgr-img-card:not(.unscored)').length;
+  var selected = document.querySelectorAll('.sl-pmgr-img-card.selected').length;
+  var el = document.getElementById('selected-count');
+  if (el) el.textContent = selected + ' of ' + total + ' selected';
+}
+
+var bioTa = document.getElementById('portfolio_bio');
+var bioCount = document.getElementById('bio-count');
+if (bioTa && bioCount) {
+  bioTa.addEventListener('input', function() {
+    var n = bioTa.value.length;
+    bioCount.textContent = n + ' / 200';
+    bioCount.className = 'sl-pmgr-char-count' + (n <= 200 ? ' ok' : '');
+  });
+}
+
+function handlePhotoUpload(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var bar = document.getElementById('upload-bar');
+  bar.style.display = 'block';
+  bar.style.width = '10%';
+
+  var filename = encodeURIComponent(file.name);
+  fetch('/portfolio/presign?filename=' + filename)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { alert('Upload error: ' + data.error); bar.style.display='none'; return; }
+      bar.style.width = '40%';
+      return fetch(data.url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type }
+      }).then(function() {
+        bar.style.width = '100%';
+        document.getElementById('portfolio_photo_url').value = data.public_url;
+        var preview = document.getElementById('avatar-preview');
+        preview.innerHTML = '<img src="' + data.public_url + '" id="avatar-img" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;">';
+        setTimeout(function() { bar.style.display='none'; bar.style.width='0%'; }, 600);
+      });
+    })
+    .catch(function(e) {
+      alert('Upload failed. Please try again.');
+      bar.style.display = 'none';
+    });
+}
+</script>
+{% endblock %}

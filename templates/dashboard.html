@@ -247,14 +247,14 @@
   .ann-tag {
     font-family: var(--font-mono); font-size:16px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
-    background: #1a1a18; color: var(--gold);
+    background: #1A2744; color: var(--gold);
     padding: 4px 10px; border-radius: 3px;
     display: inline-block; margin-bottom: 3px; flex-shrink: 0;
   }
   /* Rank badge next to username */
   .rank-badge {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #1a1a18; border: 1px solid var(--gold);
+    background: #1A2744; border: 1px solid var(--gold);
     border-radius: 4px; padding: 6px 14px; margin-top: 8px;
   }
   .rank-badge-num {
@@ -456,6 +456,31 @@ function dismissPotyBanner() {
   document.getElementById('poty-welcome-banner').style.display = 'none';
   fetch('/dismiss-poty-banner', {method:'POST', headers:{'X-CSRFToken': document.querySelector('meta[name=csrf-token]') ? document.querySelector('meta[name=csrf-token]').content : ''}})
     .catch(function(){});
+}
+</script>
+{% endif %}
+
+{% if show_portfolio_banner %}
+<div id="portfolio-banner" style="background:#1A2744;border:1px solid rgba(245,197,24,0.35);padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;">
+    <div style="width:40px;height:40px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.30);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    </div>
+    <div>
+      <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.40);margin-bottom:3px;">New feature</div>
+      <div style="font-size:16px;font-weight:700;color:#FFFFFF;margin-bottom:2px;">Your portfolio page is ready to set up</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.5;">Share your best scored images with clients using a public link — you control what's visible.</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <a href="{{ url_for('portfolio_manager') }}" style="background:#F5C518;color:#1A1A18;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:11px 18px;text-decoration:none;display:inline-block;min-height:44px;line-height:22px;">Set up portfolio →</a>
+    <button onclick="dismissPortfolioBanner()" aria-label="Dismiss" style="background:none;border:none;color:rgba(255,255,255,0.40);font-size:22px;cursor:pointer;padding:4px 8px;min-width:44px;min-height:44px;line-height:1;">&times;</button>
+  </div>
+</div>
+<script>
+function dismissPortfolioBanner() {
+  document.getElementById('portfolio-banner').style.display = 'none';
+  fetch('/dismiss-portfolio-banner', {method:'POST', headers:{'X-CSRFToken': document.querySelector('meta[name=csrf-token]') ? document.querySelector('meta[name=csrf-token]').content : ''}}).catch(function(){});
 }
 </script>
 {% endif %}
