@@ -136,10 +136,16 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
         <div class="sl-port-name">{{ user.full_name or user.username }}</div>
         <div class="sl-port-meta">
           {% if user.portfolio_years %}
-            <span class="sl-port-meta-item"><i class="sl-icon-camera"></i> {{ user.portfolio_years }} year{{ 's' if user.portfolio_years != 1 else '' }}</span>
+            <span class="sl-port-meta-item">{{ user.portfolio_years }} year{{ 's' if user.portfolio_years != 1 else '' }}</span>
+          {% endif %}
+          {% if user.city %}
+            <span class="sl-port-meta-item" style="display:inline-flex;align-items:center;gap:4px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ user.city }}{% if user.state %}, {{ user.state }}{% endif %}
+            </span>
           {% endif %}
           {% if user.portfolio_genres %}
-            <span class="sl-port-meta-item"><i class="sl-icon-category"></i> {{ user.portfolio_genres }}</span>
+            <span class="sl-port-meta-item">{{ user.portfolio_genres }}</span>
           {% endif %}
         </div>
       </div>
