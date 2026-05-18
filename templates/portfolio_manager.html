@@ -57,8 +57,7 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
 .sl-pmgr-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: #EDEAE4; }
 .sl-pmgr-img-ph { width: 100%; aspect-ratio: 1/1; background: #EDEAE4; display: flex; align-items: center; justify-content: center; }
 .sl-pmgr-img-ph i { font-size: 24px; color: rgba(26,26,24,0.15); }
-.sl-pmgr-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: #1A2744; display: flex; align-items: center; justify-content: center; }
-.sl-pmgr-check { font-size: 16px; font-weight: 700; color: #F5C518; line-height: 22px; text-align: center; }
+.sl-pmgr-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: #1A2744; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #F5C518; line-height: 22px; text-align: center; }
 .sl-pmgr-uncheck { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: rgba(255,255,255,0.85); border: 1px solid rgba(26,26,24,0.20); }
 .sl-pmgr-unscored-pill { position: absolute; top: 8px; left: 8px; background: rgba(26,26,24,0.14); font-family: 'Courier New', monospace !important; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(26,26,24,0.50); padding: 2px 7px; }
 .sl-pmgr-img-body { padding: 8px 10px; }
@@ -263,11 +262,8 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
           {% endif %}
 
           {% if is_scored %}
-            {% if is_selected %}
-            <div class="sl-pmgr-check">&#10003;</div>
-            {% else %}
-            <div class="sl-pmgr-uncheck"></div>
-            {% endif %}
+            <div class="sl-pmgr-check" style="display:{% if is_selected %}flex{% else %}none{% endif %};">&#10003;</div>
+            <div class="sl-pmgr-uncheck" style="display:{% if is_selected %}none{% else %}flex{% endif %};"></div>
           {% else %}
             <div class="sl-pmgr-unscored-pill">Not scored</div>
           {% endif %}
