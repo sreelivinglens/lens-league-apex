@@ -97,6 +97,26 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
   .sl-port-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .sl-port-footer { padding: 20px 16px; }
 }
+
+/* Lightbox */
+.sl-lightbox { display: none; position: fixed; inset: 0; background: rgba(26,26,24,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+.sl-lightbox.open { display: flex; }
+.sl-lightbox-inner { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; }
+.sl-lightbox-img { max-width: 90vw; max-height: 80vh; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; }
+.sl-lightbox-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: #F5C518; font-size: 28px; cursor: pointer; line-height: 1; padding: 4px 8px; min-height: 44px; min-width: 44px; }
+.sl-lightbox-caption { margin-top: 12px; text-align: center; }
+.sl-lightbox-title { font-size: 16px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
+.sl-lightbox-meta { font-family: 'Courier New', monospace !important; font-size: 12px; color: rgba(255,255,255,0.50); letter-spacing: 0.06em; }
+.sl-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(26,26,24,0.60); border: 1px solid rgba(255,255,255,0.15); color: #F5C518; font-size: 20px; cursor: pointer; padding: 12px 14px; min-height: 44px; min-width: 44px; line-height: 1; }
+.sl-lightbox-prev { left: -56px; }
+.sl-lightbox-next { right: -56px; }
+@media (max-width: 768px) {
+  .sl-lightbox-prev { left: 4px; }
+  .sl-lightbox-next { right: 4px; }
+}
+/* Right-click protection */
+.sl-port-card-img, .sl-lightbox-img { pointer-events: none; }
+.sl-port-card { cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -201,11 +221,14 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 
     <div class="sl-port-grid" id="portfolio-grid">
       {% for img in images %}
-      <div class="sl-port-card" data-genre="{{ img.genre or '' }}">
+      <div class="sl-port-card" data-genre="{{ img.genre or '' }}"
+           onclick="openLightbox({{ loop.index0 }})"
+           data-index="{{ loop.index0 }}">
         {% if img.thumb_url %}
           <img src="{{ img.thumb_url }}" class="sl-port-card-img"
                alt="{{ img.asset_name }}" loading="lazy"
-               onerror="this.style.display='none'">
+               onerror="this.style.display='none'"
+               oncontextmenu="return false;" draggable="false">
         {% else %}
           <div class="sl-port-card-img-ph"><i class="sl-icon-photo"></i></div>
         {% endif %}
@@ -248,6 +271,21 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 
   </div>
 
+  <!-- Lightbox -->
+  <div class="sl-lightbox" id="sl-lightbox" onclick="closeLightboxOnBg(event)">
+    <div class="sl-lightbox-inner" id="sl-lightbox-inner">
+      <button class="sl-lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+      <button class="sl-lightbox-nav sl-lightbox-prev" onclick="lightboxNav(-1)" aria-label="Previous">&#8592;</button>
+      <img src="" class="sl-lightbox-img" id="sl-lightbox-img" alt=""
+           oncontextmenu="return false;" draggable="false">
+      <button class="sl-lightbox-nav sl-lightbox-next" onclick="lightboxNav(1)" aria-label="Next">&#8594;</button>
+      <div class="sl-lightbox-caption">
+        <div class="sl-lightbox-title" id="sl-lightbox-title"></div>
+        <div class="sl-lightbox-meta" id="sl-lightbox-meta"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="sl-port-footer">
     <div class="sl-port-footer-badge">
       <span>Verified on</span>
@@ -260,6 +298,85 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
 
 {% block extra_js %}
 <script>
+// Portfolio image data for lightbox
+var SL_IMAGES = [
+  {% for img in images %}
+  {
+    src: "{{ img.card_url or img.thumb_url or '' }}",
+    thumb: "{{ img.thumb_url or '' }}",
+    title: "{{ img.asset_name or 'Untitled' }}",
+    genre: "{{ img.genre or '' }}",
+    score: "{{ '%.2f'|format(img.score|float) if img.score else '' }}",
+    tier: "{{ img.tier or '' }}",
+    show_score: {{ 'true' if user.portfolio_show_scores and img.score else 'false' }}
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+var _lbCurrent = 0;
+var _lbFiltered = [];
+
+function _getVisibleIndices() {
+  var cards = document.querySelectorAll('.sl-port-card:not([style*="display: none"])');
+  var indices = [];
+  cards.forEach(function(c) { indices.push(parseInt(c.dataset.index)); });
+  return indices;
+}
+
+function openLightbox(idx) {
+  _lbFiltered = _getVisibleIndices();
+  var pos = _lbFiltered.indexOf(idx);
+  if (pos === -1) pos = 0;
+  _lbCurrent = pos;
+  _showLightboxAt(_lbCurrent);
+  document.getElementById('sl-lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function _showLightboxAt(pos) {
+  var idx = _lbFiltered[pos];
+  var img = SL_IMAGES[idx];
+  if (!img) return;
+  document.getElementById('sl-lightbox-img').src = img.src || img.thumb;
+  document.getElementById('sl-lightbox-img').alt = img.title;
+  document.getElementById('sl-lightbox-title').textContent = img.title;
+  var meta = img.genre;
+  if (img.show_score && img.score) meta += (meta ? ' · ' : '') + img.score + ' — ' + img.tier;
+  document.getElementById('sl-lightbox-meta').textContent = meta;
+  var prev = document.querySelector('.sl-lightbox-prev');
+  var next = document.querySelector('.sl-lightbox-next');
+  prev.style.visibility = pos > 0 ? 'visible' : 'hidden';
+  next.style.visibility = pos < _lbFiltered.length - 1 ? 'visible' : 'hidden';
+}
+
+function lightboxNav(dir) {
+  _lbCurrent = Math.max(0, Math.min(_lbFiltered.length - 1, _lbCurrent + dir));
+  _showLightboxAt(_lbCurrent);
+}
+
+function closeLightbox() {
+  document.getElementById('sl-lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeLightboxOnBg(e) {
+  if (e.target === document.getElementById('sl-lightbox')) closeLightbox();
+}
+
+// Keyboard nav
+document.addEventListener('keydown', function(e) {
+  var lb = document.getElementById('sl-lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+});
+
+// Right-click protection on entire portfolio
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+});
+
 function copyPortfolioLink() {
   var url = window.location.href;
   if (navigator.clipboard) {
