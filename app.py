@@ -471,6 +471,25 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_jump_last_checked_at TIMESTAMP",
                 # v37 — mentor profiles system
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_mentor BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_bio TEXT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_photo_url VARCHAR(512)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_years INTEGER",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_genres VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_public BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_scores BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_tier BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_stats BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_genres BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_awards BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_banner_dismissed BOOLEAN DEFAULT FALSE",
+                """CREATE TABLE IF NOT EXISTS portfolio_images (
+                    id         SERIAL PRIMARY KEY,
+                    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    image_id   INTEGER NOT NULL REFERENCES images(id) ON DELETE CASCADE,
+                    sort_order INTEGER DEFAULT 0,
+                    UNIQUE(user_id, image_id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_portfolio_images_user_id ON portfolio_images(user_id)",
                 """CREATE TABLE IF NOT EXISTS mentor_profiles (
                     id               SERIAL PRIMARY KEY,
                     slug             VARCHAR(60) UNIQUE NOT NULL,
@@ -2016,6 +2035,11 @@ def dashboard():
 
     # POTY welcome banner
     show_poty_banner = not getattr(current_user, 'poty_banner_dismissed', False)
+    show_portfolio_banner = (
+        current_user.role != 'admin' and
+        not getattr(current_user, 'portfolio_banner_dismissed', False) and
+        not getattr(current_user, 'portfolio_public', False)
+    )
 
     # Contest announcement banners — active banners matching user audience
     _is_sub = getattr(current_user, 'is_subscribed', False)
@@ -2104,7 +2128,7 @@ def dashboard():
     # DDI Progress (same data as profile page)
     progress_data = _build_progress_data(current_user)
 
-    # Mentor reviews delivered — show notification banner for newly reviewed sessions
+    # Mentor reviews — for notif strip
     mentor_reviews = []
     if current_user.role != 'admin':
         try:
@@ -2137,6 +2161,7 @@ def dashboard():
                            raw_pending=raw_pending,
                            wallet_hud=wallet_hud,
                            progress_data=progress_data,
+                           show_portfolio_banner=show_portfolio_banner,
                            mentor_reviews=mentor_reviews)
 
 
@@ -2148,6 +2173,14 @@ def dashboard():
 @login_required
 def dismiss_poty_banner():
     current_user.poty_banner_dismissed = True
+    db.session.commit()
+    return ('', 204)
+
+
+@app.route('/dismiss-portfolio-banner', methods=['POST'])
+@login_required
+def dismiss_portfolio_banner():
+    current_user.portfolio_banner_dismissed = True
     db.session.commit()
     return ('', 204)
 
@@ -5610,6 +5643,230 @@ def faq():
 @app.route('/refund-policy')
 def refund_policy():
     return render_template('refund_policy.html')
+
+# ---------------------------------------------------------------------------
+# PORTFOLIO — public page + private manager
+# ---------------------------------------------------------------------------
+
+@app.route('/portfolio/<username>')
+def portfolio_public(username):
+    try:
+        user = db.session.execute(
+            db.text("SELECT * FROM users WHERE username = :u"),
+            {'u': username}
+        ).fetchone()
+        user = dict(user._mapping) if user else None
+    except Exception:
+        user = None
+
+    if not user:
+        abort(404)
+    if not user.get('portfolio_public'):
+        abort(404)
+
+    uid = user['id']
+
+    try:
+        images = db.session.execute(db.text("""
+            SELECT i.id, i.asset_name, i.thumb_url, i.genre, i.score, i.tier
+            FROM portfolio_images pi
+            JOIN images i ON i.id = pi.image_id
+            WHERE pi.user_id = :uid
+              AND i.status = 'scored'
+              AND i.score IS NOT NULL
+            ORDER BY pi.sort_order ASC, i.score DESC
+        """), {'uid': uid}).fetchall()
+        images = [dict(r._mapping) for r in images]
+    except Exception:
+        images = []
+
+    awards = []
+    if user.get('portfolio_show_awards'):
+        try:
+            _wins = db.session.execute(db.text("""
+                SELECT asset_name, genre, judge_final_score, contest_ref, contest_type
+                FROM images
+                WHERE user_id = :uid
+                  AND contest_result_status = 'published'
+                  AND judge_final_score IS NOT NULL
+                ORDER BY judge_final_score DESC
+                LIMIT 5
+            """), {'uid': uid}).fetchall()
+            awards = [dict(r._mapping) for r in _wins]
+        except Exception:
+            awards = []
+
+    genre_stats = []
+    if user.get('portfolio_show_genres'):
+        try:
+            _genres = db.session.execute(db.text("""
+                SELECT genre,
+                       ROUND(AVG(score)::numeric, 2) AS avg_score,
+                       MAX(score) AS best_score,
+                       COUNT(*) AS img_count
+                FROM images
+                WHERE user_id = :uid
+                  AND status = 'scored'
+                  AND score IS NOT NULL
+                  AND genre IS NOT NULL
+                GROUP BY genre
+                HAVING COUNT(*) >= 3
+                ORDER BY avg_score DESC
+                LIMIT 6
+            """), {'uid': uid}).fetchall()
+            genre_stats = [dict(r._mapping) for r in _genres]
+        except Exception:
+            genre_stats = []
+
+    stats = {}
+    if user.get('portfolio_show_stats'):
+        try:
+            row = db.session.execute(db.text("""
+                SELECT COUNT(*) AS total,
+                       ROUND(AVG(score)::numeric, 2) AS avg_score,
+                       ROUND(MAX(score)::numeric, 2) AS best_score
+                FROM images
+                WHERE user_id = :uid AND status = 'scored' AND score IS NOT NULL
+            """), {'uid': uid}).fetchone()
+            if row:
+                stats = dict(row._mapping)
+        except Exception:
+            pass
+
+    highest_tier = None
+    if user.get('portfolio_show_tier'):
+        try:
+            _tier_row = db.session.execute(db.text("""
+                SELECT tier FROM images
+                WHERE user_id = :uid AND score IS NOT NULL
+                ORDER BY score DESC LIMIT 1
+            """), {'uid': uid}).fetchone()
+            if _tier_row:
+                highest_tier = _tier_row.tier
+        except Exception:
+            pass
+
+    return render_template('portfolio.html',
+                           user=user,
+                           images=images,
+                           awards=awards,
+                           genre_stats=genre_stats,
+                           stats=stats,
+                           highest_tier=highest_tier)
+
+
+@app.route('/dashboard/portfolio', methods=['GET', 'POST'])
+@login_required
+def portfolio_manager():
+    uid = current_user.id
+
+    if request.method == 'POST':
+        bio      = (request.form.get('portfolio_bio') or '').strip()[:200]
+        years    = request.form.get('portfolio_years', '').strip()
+        genres   = (request.form.get('portfolio_genres') or '').strip()[:255]
+        public   = request.form.get('portfolio_public') == '1'
+        sh_scores = request.form.get('portfolio_show_scores') == '1'
+        sh_tier   = request.form.get('portfolio_show_tier')   == '1'
+        sh_stats  = request.form.get('portfolio_show_stats')  == '1'
+        sh_genres = request.form.get('portfolio_show_genres') == '1'
+        sh_awards = request.form.get('portfolio_show_awards') == '1'
+        photo_url = request.form.get('portfolio_photo_url', '').strip() or None
+
+        try:
+            years_int = int(years) if years and years.isdigit() else None
+        except Exception:
+            years_int = None
+
+        try:
+            db.session.execute(db.text("""
+                UPDATE users SET
+                    portfolio_bio         = :bio,
+                    portfolio_years       = :years,
+                    portfolio_genres      = :genres,
+                    portfolio_public      = :pub,
+                    portfolio_show_scores = :sh_sc,
+                    portfolio_show_tier   = :sh_ti,
+                    portfolio_show_stats  = :sh_st,
+                    portfolio_show_genres = :sh_ge,
+                    portfolio_show_awards = :sh_aw,
+                    portfolio_photo_url   = COALESCE(:photo, portfolio_photo_url)
+                WHERE id = :uid
+            """), {
+                'bio': bio, 'years': years_int, 'genres': genres,
+                'pub': public,
+                'sh_sc': sh_scores, 'sh_ti': sh_tier, 'sh_st': sh_stats,
+                'sh_ge': sh_genres, 'sh_aw': sh_awards,
+                'photo': photo_url, 'uid': uid
+            })
+
+            selected_ids = request.form.getlist('selected_images')
+            db.session.execute(db.text(
+                "DELETE FROM portfolio_images WHERE user_id = :uid"
+            ), {'uid': uid})
+            for order, img_id in enumerate(selected_ids):
+                try:
+                    db.session.execute(db.text("""
+                        INSERT INTO portfolio_images (user_id, image_id, sort_order)
+                        VALUES (:uid, :iid, :ord)
+                        ON CONFLICT (user_id, image_id) DO UPDATE SET sort_order = :ord
+                    """), {'uid': uid, 'iid': int(img_id), 'ord': order})
+                except Exception:
+                    pass
+
+            db.session.commit()
+            flash('Portfolio saved.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[portfolio_manager] {e}')
+            flash('Error saving portfolio.', 'error')
+
+        return redirect(url_for('portfolio_manager'))
+
+    try:
+        user_row = db.session.execute(
+            db.text("SELECT * FROM users WHERE id = :uid"), {'uid': uid}
+        ).fetchone()
+        user_data = dict(user_row._mapping) if user_row else {}
+    except Exception:
+        user_data = {}
+
+    try:
+        all_images = db.session.execute(db.text("""
+            SELECT i.id, i.asset_name, i.thumb_url, i.genre, i.score, i.tier, i.status
+            FROM images i
+            WHERE i.user_id = :uid
+            ORDER BY i.score DESC NULLS LAST, i.created_at DESC
+        """), {'uid': uid}).fetchall()
+        all_images = [dict(r._mapping) for r in all_images]
+    except Exception:
+        all_images = []
+
+    try:
+        selected = db.session.execute(db.text("""
+            SELECT image_id FROM portfolio_images
+            WHERE user_id = :uid ORDER BY sort_order ASC
+        """), {'uid': uid}).fetchall()
+        selected_ids = {r.image_id for r in selected}
+    except Exception:
+        selected_ids = set()
+
+    return render_template('portfolio_manager.html',
+                           user_data=user_data,
+                           all_images=all_images,
+                           selected_ids=selected_ids)
+
+
+@app.route('/portfolio/presign', methods=['GET'])
+@login_required
+def portfolio_photo_presign():
+    filename = secure_filename(request.args.get('filename', 'photo.jpg'))
+    key = f'portfolio_photos/{current_user.id}_{uuid.uuid4().hex}_{filename}'
+    presigned_url = r2.generate_presigned_put(key, expires=900)
+    if not presigned_url:
+        return jsonify({'error': 'Could not generate upload URL'}), 500
+    public_url = f'{r2.R2_PUBLIC_URL}/{key}'
+    return jsonify({'url': presigned_url, 'key': key, 'public_url': public_url})
+
 
 @app.route('/robots.txt')
 def robots_txt():
@@ -11223,15 +11480,15 @@ def send_welcome_email(user):
         ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
         'overflow:hidden;max-width:560px;width:100%;">'
 
-        '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+        '<tr><td style="background:#1A2744;padding:24px 32px;">'
         '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
-        'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+        'font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">'
         'SHUTTER LEAGUE</p></td></tr>'
 
-        '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+        '<tr><td style="background:#1A2744;padding:0 32px 28px;">'
         '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
-        'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Welcome</p>'
-        '<h1 style="margin:0;font-size:28px;font-style:italic;color:#C8A84B;line-height:1.2;">'
+        'letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Welcome</p>'
+        '<h1 style="margin:0;font-size:28px;font-style:italic;color:#F5C518;line-height:1.2;">'
         'You&#39;re in, ' + name + '.</h1>'
         '</td></tr>'
 
@@ -11285,6 +11542,15 @@ def send_welcome_email(user):
         '</a></td></tr>'
         '</table>'
 
+        '<tr><td style="padding:10px 0;">'
+        '<a href="' + site_url + '/dashboard/portfolio' + '" style="text-decoration:none;">'
+        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
+        '🖼 Build your portfolio page</p>'
+        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
+        'Once you have scored images, share your best work with a public link.</p>'
+        '</a></td></tr>'
+        '</table>'
+
         '<a href="' + upload_url + '"'
         ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
         'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
@@ -11311,6 +11577,7 @@ def send_welcome_email(user):
         '- Enter the weekly challenge: ' + challenge_url + '\n'
         '- Your dashboard: ' + dashboard_url + '\n'
         '- How scoring works: ' + hiw_url + '\n\n'
+        '- Build your portfolio page: ' + site_url + '/dashboard/portfolio' + '\n\n'
         'Questions? Write to info@shutterleague.com\n\n'
         ' -  Shutter League'
     )
