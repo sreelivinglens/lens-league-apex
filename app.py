@@ -5684,7 +5684,7 @@ def portfolio_public(username):
     if user.get('portfolio_show_awards'):
         try:
             _wins = db.session.execute(db.text("""
-                SELECT asset_name, genre, judge_final_score, contest_ref, contest_type
+                SELECT asset_name, genre, judge_final_score
                 FROM images
                 WHERE user_id = :uid
                   AND contest_result_status = 'published'
