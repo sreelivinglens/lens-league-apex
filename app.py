@@ -5668,7 +5668,7 @@ def portfolio_public(username):
 
     try:
         images = db.session.execute(db.text("""
-            SELECT i.id, i.asset_name, i.thumb_url, i.genre, i.score, i.tier
+            SELECT i.id, i.asset_name, i.thumb_url, i.card_url, i.genre, i.score, i.tier
             FROM portfolio_images pi
             JOIN images i ON i.id = pi.image_id
             WHERE pi.user_id = :uid
