@@ -177,7 +177,7 @@ body:has(.sl-port) main { padding: 0 !important; max-width: none !important; mar
           <div class="sl-port-award-icon"><i class="sl-icon-trophy"></i></div>
           <div>
             <div class="sl-port-award-title">{{ award.asset_name or 'Untitled' }}</div>
-            <div class="sl-port-award-sub">{{ award.genre or '' }}{% if award.contest_ref %} · {{ award.contest_ref }}{% endif %}</div>
+            <div class="sl-port-award-sub">{{ award.genre or '' }}</div>
           </div>
         </div>
         {% endfor %}
