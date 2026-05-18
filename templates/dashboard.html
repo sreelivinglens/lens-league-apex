@@ -161,6 +161,9 @@
   .notif-strip.has-urgent {
     border-color: #c0392b; border-left: 3px solid #c0392b;
   }
+  .notif-strip.has-mentor {
+    border-color: #F5C518; border-left: 3px solid #F5C518;
+  }
   .notif-strip-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 16px 20px; cursor: pointer; user-select: none;
@@ -175,6 +178,7 @@
   }
   .notif-lbl.urgent { color: #c0392b; }
   .notif-lbl.normal { color: var(--text-primary); }
+  .notif-lbl.mentor { color: #1A2744; font-weight: 700; }
   .notif-lbl-dot { color: var(--border); font-size:16px; margin: 0 4px; }
   .notif-badge {
     font-family: var(--font-mono); font-size:16px; font-weight: 700;
@@ -182,6 +186,7 @@
   }
   .notif-badge.urgent { background: #c0392b; color: #fff; }
   .notif-badge.normal { background: #4a4840; color: #F5F0E8; }
+  .notif-badge.mentor { background: #F5C518; color: #1A1A18; }
   /* Expand/collapse: clear text button, not a tiny arrow */
   .notif-strip-chevron {
     font-family: var(--font-mono); font-size:16px; font-weight: 700;
@@ -458,9 +463,10 @@ function dismissPotyBanner() {
 {# ── Notification strip ─────────────────────────────────────────────────── #}
 {%- set _urgent_count = (zone3_flagged|length) + (zone2_pending|length) + (raw_pending|length) -%}
 {%- set _ann_count = contest_banners|length -%}
-{%- set _total_count = _urgent_count + _ann_count -%}
+{%- set _mentor_count = mentor_reviews|length if mentor_reviews else 0 -%}
+{%- set _total_count = _urgent_count + _ann_count + _mentor_count -%}
 {% if _total_count > 0 %}
-<div class="notif-strip{% if _urgent_count > 0 %} has-urgent{% endif %}" id="notif-strip">
+<div class="notif-strip{% if _urgent_count > 0 %} has-urgent{% elif _mentor_count > 0 %} has-mentor{% endif %}" id="notif-strip">
 
   <div class="notif-strip-header" onclick="toggleNotifStrip()" id="notif-strip-header">
     <div class="notif-strip-left">
@@ -468,7 +474,14 @@ function dismissPotyBanner() {
         <span class="notif-lbl urgent">Urgent Notifications</span>
         <span class="notif-badge urgent">{{ _urgent_count }}</span>
       {% endif %}
-      {% if _urgent_count > 0 and _ann_count > 0 %}
+      {% if _urgent_count > 0 and (_ann_count > 0 or _mentor_count > 0) %}
+        <span class="notif-lbl-dot">·</span>
+      {% endif %}
+      {% if _mentor_count > 0 %}
+        <span class="notif-lbl mentor">Mentor Review</span>
+        <span class="notif-badge mentor">{{ _mentor_count }}</span>
+      {% endif %}
+      {% if _mentor_count > 0 and _ann_count > 0 %}
         <span class="notif-lbl-dot">·</span>
       {% endif %}
       {% if _ann_count > 0 %}
@@ -538,6 +551,35 @@ function dismissPotyBanner() {
     </div>
     {% endfor %}
     {% endif %}{# /announcements section #}
+
+    {# ── MENTOR REVIEWS section ── #}
+    {% if _mentor_count > 0 %}
+    <div class="notif-sec-hdr" style="{% if _urgent_count > 0 or _ann_count > 0 %}border-top:1px solid var(--border);{% endif %}color:#1A2744;">Mentor Review Ready</div>
+    {% for rev in mentor_reviews %}
+    <div class="notif-row" style="background:#fffdf0;border-left:3px solid #F5C518;" id="mentor-review-{{ rev.id }}">
+      {% if rev.thumb_url %}
+      <img src="{{ rev.thumb_url }}" alt="{{ rev.asset_name }}"
+           style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;"
+           onerror="this.style.display='none'">
+      {% endif %}
+      <div class="notif-text">
+        <div class="notif-title">{{ rev.mentor_name }} reviewed <strong>{{ rev.asset_name or 'your image' }}</strong></div>
+        <div class="notif-sub" style="font-style:italic;">{{ rev.review_text[:160] }}{% if rev.review_text|length > 160 %}…{% endif %}</div>
+      </div>
+      <a href="#mentor-review-full-{{ rev.id }}" class="notif-action"
+         style="background:#F5C518;border-color:#F5C518;color:#1A1A18;"
+         onclick="document.getElementById('mentor-review-full-{{ rev.id }}').style.display='block';this.style.display='none';return false;">
+        Read Review →
+      </a>
+    </div>
+    <div id="mentor-review-full-{{ rev.id }}" style="display:none;padding:18px 20px;background:#fffdf0;border-top:1px solid rgba(245,197,24,0.25);border-left:3px solid #F5C518;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,26,24,0.40);margin-bottom:10px;">
+        Full Review — {{ rev.asset_name or 'Untitled' }} · by {{ rev.mentor_name }}{% if rev.reviewed_at %} · {{ rev.reviewed_at.strftime('%d %b %Y') }}{% endif %}
+      </div>
+      <div style="font-size:15px;color:#1A1A18;line-height:1.8;white-space:pre-line;">{{ rev.review_text }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}{# /mentor reviews section #}
 
   </div>{# /notif-strip-body #}
 </div>{# /notif-strip #}
