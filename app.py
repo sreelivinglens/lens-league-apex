@@ -5308,8 +5308,7 @@ def mentor_review_session(session_id):
     try:
         session_row = db.session.execute(db.text("""
             SELECT ms.*, u.full_name, u.username, u.email,
-                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
-                   i.improvement_note
+                   i.thumb_url, i.asset_name, i.genre, i.score, i.tier
             FROM mentor_sessions ms
             JOIN users u  ON u.id  = ms.user_id
             JOIN images i ON i.id  = ms.image_id
