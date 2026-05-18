@@ -3588,6 +3588,30 @@ def admin_dashboard():
 
     open_reports_count = ImageReport.query.filter_by(status='open').count()
 
+    # New signup stats for admin dashboard
+    try:
+        from datetime import timedelta as _td
+        _now   = datetime.utcnow()
+        _today = _now.replace(hour=0, minute=0, second=0, microsecond=0)
+        _7d    = _now - _td(days=7)
+        _30d   = _now - _td(days=30)
+        new_signups_today    = User.query.filter(User.role != 'admin', User.created_at >= _today).count()
+        new_signups_7days    = User.query.filter(User.role != 'admin', User.created_at >= _7d).count()
+        new_signups_30days   = User.query.filter(User.role != 'admin', User.created_at >= _30d).count()
+        new_signups_onboarded = User.query.filter(
+            User.role != 'admin',
+            User.created_at >= _today,
+            User.onboarding_complete == True
+        ).count()
+        recent_signups = User.query.filter(
+            User.role != 'admin',
+            User.created_at >= _30d
+        ).order_by(User.created_at.desc()).limit(50).all()
+    except Exception as _se:
+        app.logger.error(f'[admin_signups] {_se}')
+        new_signups_today = new_signups_7days = new_signups_30days = new_signups_onboarded = 0
+        recent_signups = []
+
     # League integrity summary
     suspended_users = User.query.filter_by(league_suspended=True).all()
     mismatch_users  = User.query.filter(
@@ -3616,7 +3640,12 @@ def admin_dashboard():
                            all_users=all_users, open_reports_count=open_reports_count,
                            suspended_users=suspended_users, mismatch_users=mismatch_users,
                            stats=stats_sub,
-                           active_contest_banners=active_contest_banners)
+                           active_contest_banners=active_contest_banners,
+                           new_signups_today=new_signups_today,
+                           new_signups_7days=new_signups_7days,
+                           new_signups_30days=new_signups_30days,
+                           new_signups_onboarded=new_signups_onboarded,
+                           recent_signups=recent_signups)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
