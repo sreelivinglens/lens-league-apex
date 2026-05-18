@@ -2104,6 +2104,26 @@ def dashboard():
     # DDI Progress (same data as profile page)
     progress_data = _build_progress_data(current_user)
 
+    # Mentor reviews delivered — show notification banner for newly reviewed sessions
+    mentor_reviews = []
+    if current_user.role != 'admin':
+        try:
+            _reviews = db.session.execute(db.text("""
+                SELECT ms.id, ms.review_text, ms.reviewed_at,
+                       i.asset_name, i.thumb_url, i.genre,
+                       mp.display_name AS mentor_name
+                FROM mentor_sessions ms
+                JOIN images i        ON i.id  = ms.image_id
+                JOIN mentor_profiles mp ON mp.slug = ms.mentor_slug
+                WHERE ms.user_id = :uid
+                  AND ms.status  = 'reviewed'
+                ORDER BY ms.reviewed_at DESC
+                LIMIT 5
+            """), {'uid': current_user.id}).fetchall()
+            mentor_reviews = [dict(r._mapping) for r in _reviews]
+        except Exception as _mre:
+            app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2116,7 +2136,8 @@ def dashboard():
                            contest_banners=contest_banners,
                            raw_pending=raw_pending,
                            wallet_hud=wallet_hud,
-                           progress_data=progress_data)
+                           progress_data=progress_data,
+                           mentor_reviews=mentor_reviews)
 
 
 # ---------------------------------------------------------------------------
