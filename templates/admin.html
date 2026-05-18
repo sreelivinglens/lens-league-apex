@@ -534,6 +534,93 @@
   </div>
 
   {# ══════════════════════════════════════════════════════════════════
+     SECTION — NEW SIGNUPS
+  ══════════════════════════════════════════════════════════════════ #}
+  <div class="admin-section{% if new_signups_today %} urgent{% endif %}" id="section-signups">
+    <div class="admin-section-header" onclick="toggleSection('signups')">
+      <div class="admin-section-title">
+        👥 New Members
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="admin-section-meta">
+          {{ new_signups_today }} today · {{ new_signups_7days }} this week · {{ new_signups_30days }} this month
+        </span>
+        <span class="admin-chevron" id="chev-signups">▼</span>
+      </div>
+    </div>
+    <div class="admin-section-body{% if not new_signups_today %} collapsed{% endif %}" id="body-signups">
+
+      <div class="stats-grid" style="margin-bottom:20px;">
+        <div class="stat-box">
+          <div class="stat-val" style="{% if new_signups_today %}color:var(--gold);{% endif %}">{{ new_signups_today }}</div>
+          <div class="stat-lbl">Today</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ new_signups_7days }}</div>
+          <div class="stat-lbl">Last 7 days</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ new_signups_30days }}</div>
+          <div class="stat-lbl">Last 30 days</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ new_signups_onboarded }}</div>
+          <div class="stat-lbl">Onboarded today</div>
+        </div>
+      </div>
+
+      {% if recent_signups %}
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead>
+          <tr style="background:var(--surface-2);">
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Name</th>
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Email</th>
+            <th style="padding:8px 12px;text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Joined (IST)</th>
+            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Onboarded</th>
+            <th style="padding:8px 12px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);">Subscribed</th>
+            <th style="padding:8px 12px;border-bottom:1px solid var(--border);"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in recent_signups %}
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px 12px;font-weight:700;color:var(--text-primary);">{{ u.full_name or u.username }}</td>
+            <td style="padding:8px 12px;color:var(--text-muted);font-size:13px;">{{ u.email }}</td>
+            <td style="padding:8px 12px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">
+              {{ u.created_at.strftime('%d %b %Y %H:%M') ~ ' UTC' if u.created_at else '—' }}
+            </td>
+            <td style="padding:8px 12px;text-align:center;">
+              {% if u.onboarding_complete %}
+                <span style="color:#2d7a3a;font-weight:700;">✓</span>
+              {% else %}
+                <span style="color:var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px 12px;text-align:center;">
+              {% if u.is_subscribed %}
+                <span style="background:var(--gold);color:#1a1a18;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;">PRO</span>
+              {% else %}
+                <span style="color:var(--text-muted);font-size:12px;">Free</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px 12px;">
+              <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" style="color:var(--gold);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;">VIEW →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="padding:12px 0 4px;display:flex;justify-content:flex-end;">
+        <a href="{{ url_for('admin_users') }}" style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);text-decoration:none;">VIEW ALL MEMBERS →</a>
+      </div>
+      {% else %}
+      <p style="color:var(--text-muted);font-size:14px;padding:12px 0;">No new signups in the last 30 days.</p>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════
      SECTION 2 — PLATFORM STATS & CALIBRATION (collapsed)
   ══════════════════════════════════════════════════════════════════ #}
   <div class="admin-section" id="section-stats">
