@@ -5333,7 +5333,7 @@ def mentor_review_session(session_id):
         if len(review_text) < 50:
             flash('Review must be at least 50 characters.', 'error')
             return render_template('mentor_review_form.html',
-                                   profile=profile, session=session_row)
+                                   profile=profile, mentor_session=session_row)
         try:
             db.session.execute(db.text("""
                 UPDATE mentor_sessions
@@ -5408,7 +5408,7 @@ def mentor_review_session(session_id):
             flash('Error submitting review.', 'error')
 
     return render_template('mentor_review_form.html',
-                           profile=profile, session=session_row)
+                           profile=profile, mentor_session=session_row)
 
 
 @app.route('/science')
