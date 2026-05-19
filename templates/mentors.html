@@ -674,6 +674,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
       <p class="sl-men-choose-sub">Select the mentor whose perspective will help you the most.</p>
       <div class="sl-men-cards">
 
+        {% if 'ashok' in mentors_data %}
         {% set m = mentors_data.get('ashok', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
@@ -706,7 +707,9 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
             <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
+        {% endif %}{# /ashok #}
 
+        {% if 'gopal' in mentors_data %}
         {% set m = mentors_data.get('gopal', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
@@ -739,7 +742,9 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
             <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
+        {% endif %}{# /gopal #}
 
+        {% if 'sreekumar' in mentors_data %}
         {% set m = mentors_data.get('sreekumar', {}) %}
         <div class="sl-men-card">
           <div class="sl-men-card-photo">
@@ -772,6 +777,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
             <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-men-card-btn">Review My Image</a>
           </div>
         </div>
+        {% endif %}{# /sreekumar #}
 
       </div>
     </div>
