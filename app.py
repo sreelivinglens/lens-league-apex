@@ -6256,16 +6256,20 @@ def mentors():
         men_hero = None
 
     # Merge DB profiles into MENTORS dict — DB values override hardcoded defaults
+    # Skip any mentor whose DB profile exists and is_active = FALSE
     mentors_data = {}
     for slug, base in MENTORS.items():
         merged = dict(base)
         try:
             row = db.session.execute(
-                db.text("SELECT * FROM mentor_profiles WHERE slug = :s AND is_active = TRUE"),
+                db.text("SELECT * FROM mentor_profiles WHERE slug = :s"),
                 {'s': slug}
             ).fetchone()
             if row:
                 r = dict(row._mapping)
+                # If DB record exists and is inactive, hide this mentor entirely
+                if not r.get('is_active', True):
+                    continue
                 if r.get('display_name'):  merged['name']         = r['display_name']
                 if r.get('bio'):           merged['bio']          = r['bio']
                 if r.get('genres'):        merged['genres']       = r['genres']
@@ -6276,6 +6280,7 @@ def mentors():
                 if r.get('website_url'):   merged['website_url']  = r['website_url']
                 if r.get('youtube_url'):   merged['youtube_url']  = r['youtube_url']
                 if r.get('bio_extended'):  merged['bio_extended'] = r['bio_extended']
+            # No DB record at all — show mentor (legacy/seed state)
         except Exception:
             pass
         mentors_data[slug] = merged
@@ -6293,14 +6298,18 @@ def mentor_register(slug):
         return redirect(url_for('mentors'))
 
     # Merge DB profile data over hardcoded defaults
+    # Block booking if DB profile exists and is inactive
     mentor = dict(mentor)
     try:
         row = db.session.execute(
-            db.text("SELECT * FROM mentor_profiles WHERE slug = :s AND is_active = TRUE"),
+            db.text("SELECT * FROM mentor_profiles WHERE slug = :s"),
             {'s': slug}
         ).fetchone()
         if row:
             r = dict(row._mapping)
+            if not r.get('is_active', True):
+                flash('This mentor is not currently available for bookings.', 'error')
+                return redirect(url_for('mentors'))
             if r.get('display_name'):   mentor['name']          = r['display_name']
             if r.get('bio'):            mentor['bio']           = r['bio']
             if r.get('genres'):         mentor['genres']        = r['genres']
