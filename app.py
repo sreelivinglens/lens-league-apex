@@ -5201,6 +5201,111 @@ def admin_mentor_toggle_active(slug):
     return redirect(url_for('admin_mentors'))
 
 
+@app.route('/admin/mentors/<slug>/edit', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_edit(slug):
+    tier_class   = request.form.get('tier_class', 'senior')
+    display_name = (request.form.get('display_name') or '').strip()
+    bio          = (request.form.get('bio') or '').strip()
+    genres       = (request.form.get('genres') or '').strip()
+    price        = request.form.get('price', type=int)
+    points_cost  = request.form.get('points_cost', type=int)
+    instagram_url = (request.form.get('instagram_url') or '').strip() or None
+    website_url   = (request.form.get('website_url') or '').strip() or None
+    youtube_url   = (request.form.get('youtube_url') or '').strip() or None
+
+    tier_map = {
+        'legend': ('Legend Mentor', 100, 1000),
+        'expert': ('Expert Mentor', 75,  750),
+        'senior': ('Senior Mentor', 50,  500),
+    }
+    tier_label, default_price, default_points = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
+    if price is None:
+        price = default_price
+    if points_cost is None:
+        points_cost = default_points
+
+    if not display_name:
+        flash('Display name is required.', 'error')
+        return redirect(url_for('admin_mentors'))
+
+    try:
+        db.session.execute(db.text("""
+            UPDATE mentor_profiles SET
+                tier_class    = :tier_class,
+                tier_label    = :tier_label,
+                display_name  = :name,
+                bio           = :bio,
+                genres        = :genres,
+                price         = :price,
+                points_cost   = :points_cost,
+                instagram_url = :ig,
+                website_url   = :web,
+                youtube_url   = :yt,
+                updated_at    = NOW()
+            WHERE slug = :slug
+        """), {
+            'tier_class': tier_class, 'tier_label': tier_label,
+            'name': display_name, 'bio': bio or None, 'genres': genres or None,
+            'price': price, 'points_cost': points_cost,
+            'ig': instagram_url, 'web': website_url, 'yt': youtube_url,
+            'slug': slug,
+        })
+        db.session.commit()
+        flash(f'Mentor {display_name} updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_mentor_edit] {e}')
+        flash('Error updating mentor profile.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
+@app.route('/admin/mentors/<slug>/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_mentor_delete(slug):
+    # Safety check — block delete if any sessions exist for this mentor
+    try:
+        session_count = db.session.execute(
+            db.text("SELECT COUNT(*) FROM mentor_sessions WHERE mentor_slug = :s"),
+            {'s': slug}
+        ).scalar() or 0
+    except Exception:
+        session_count = 0
+
+    if session_count > 0:
+        flash(
+            f'Cannot delete mentor "{slug}" — {session_count} session record(s) exist. '
+            'Deactivate the mentor instead to hide them from bookings.',
+            'error'
+        )
+        return redirect(url_for('admin_mentors'))
+
+    try:
+        # Downgrade linked user role back to member before deleting profile
+        row = db.session.execute(
+            db.text("SELECT user_id, display_name FROM mentor_profiles WHERE slug = :s"),
+            {'s': slug}
+        ).fetchone()
+        if row and row.user_id:
+            user = User.query.get(row.user_id)
+            if user and user.role == 'mentor':
+                user.role = 'member'
+        db.session.execute(
+            db.text("DELETE FROM mentor_profiles WHERE slug = :s"),
+            {'s': slug}
+        )
+        db.session.commit()
+        name = row.display_name if row else slug
+        flash(f'Mentor profile "{name}" deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[admin_mentor_delete] {e}')
+        flash('Error deleting mentor profile.', 'error')
+    return redirect(url_for('admin_mentors'))
+
+
 # ── Mentor Dashboard ─────────────────────────────────────────────────────────
 
 def mentor_required(f):
