@@ -1,208 +1,905 @@
 {% extends "base.html" %}
-{% block title %}Mentor Management — Admin — Shutter League{% endblock %}
+{% block title %}Mentor Management — Admin{% endblock %}
 
 {% block extra_css %}
 <style>
-body:has(.sl-ment-admin) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
-.sl-ment-admin { background: #F7F5F2; min-height: 100vh; padding: 40px 48px 80px; font-family: 'Inter', sans-serif; }
-.sl-ment-admin * { font-family: 'Inter', sans-serif; }
+  /* ── Page shell ── */
+  .am-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    font-family: 'Inter', sans-serif !important;
+  }
 
-.sl-ma-back { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.45); text-decoration: none; margin-bottom: 28px; }
-.sl-ma-back:hover { color: #1A1A18; }
+  .am-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
 
-.sl-ma-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid rgba(26,26,24,0.10); }
-.sl-ma-title { font-size: 26px; font-weight: 700; color: #1A1A18; }
-.sl-ma-sub { font-size: 14px; color: rgba(26,26,24,0.50); margin-top: 4px; }
+  .am-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1A18;
+    letter-spacing: -0.3px;
+  }
 
-/* Create form */
-.sl-ma-create { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; margin-bottom: 32px; }
-.sl-ma-create-title { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 20px; }
-.sl-ma-create-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; align-items: end; }
-.form-group label { font-size: 12px; font-weight: 600; color: rgba(26,26,24,0.60); display: block; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
-.form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 14px; color: #1A1A18; font-family: 'Inter', sans-serif; }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: #1A2744; background: #fff; }
+  .am-back {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .am-back:hover { border-color: var(--gold); color: #1a1a18; }
 
-/* Mentor cards */
-.sl-ma-cards { display: flex; flex-direction: column; gap: 20px; }
-.sl-ma-card { background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.12); padding: 28px; }
-.sl-ma-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 0.5px solid rgba(26,26,24,0.08); }
-.sl-ma-card-left { display: flex; align-items: center; gap: 16px; }
-.sl-ma-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #EDEAE4; flex-shrink: 0; }
-.sl-ma-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; background: #EDEAE4; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: rgba(26,26,24,0.30); flex-shrink: 0; }
-.sl-ma-name { font-size: 18px; font-weight: 700; color: #1A1A18; }
-.sl-ma-slug { font-size: 12px; color: rgba(26,26,24,0.45); font-family: monospace; margin-top: 2px; }
-.sl-ma-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.sl-ma-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; }
-.badge-legend { background: #f0e8f8; color: #5b2d8a; }
-.badge-expert  { background: #e0f0f8; color: #1a5f7a; }
-.badge-senior  { background: #e0f4e8; color: #2d7a3a; }
-.badge-active  { background: #e8f5ec; color: #2d7a3a; }
-.badge-inactive{ background: #fde8e8; color: #c0392b; }
-.badge-linked  { background: #e8edf8; color: #1A2744; }
-.badge-unlinked{ background: #f5f0e8; color: rgba(26,26,24,0.55); }
-.badge-onboarded { background: #fff8e1; color: #b8700a; }
+  /* ── Flash messages ── */
+  .am-flash {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+  }
+  .am-flash.success { background: #eafaf0; border: 1px solid #3aab65; color: #1a5c35; }
+  .am-flash.error   { background: #fdf0f0; border: 1px solid #c0392b; color: #7a1a1a; }
 
-.sl-ma-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.sl-ma-info-item { }
-.sl-ma-info-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,24,0.40); margin-bottom: 3px; }
-.sl-ma-info-val { font-size: 14px; font-weight: 600; color: #1A1A18; }
-.sl-ma-info-val.missing { color: rgba(26,26,24,0.30); font-weight: 400; font-style: italic; }
+  /* ── Section card ── */
+  .am-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+    background: var(--surface-1);
+  }
 
-.sl-ma-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-top: 0.5px solid rgba(26,26,24,0.08); padding-top: 16px; }
-.sl-ma-link-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.sl-ma-link-form select { padding: 6px 10px; border: 1px solid rgba(26,26,24,0.18); background: #F7F5F2; font-size: 13px; color: #1A1A18; font-family: 'Inter', sans-serif; min-width: 200px; }
+  .am-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
 
-.btn-sm { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 14px; border: none; cursor: pointer; white-space: nowrap; }
-.btn-primary { background: #1A2744; color: #FFFFFF; }
-.btn-primary:hover { background: #243260; }
-.btn-gold { background: #F5C518; color: #FFFFFF; }
-.btn-gold:hover { opacity: 0.88; }
-.btn-danger { background: rgba(220,50,50,.12); color: #c0392b; border: 1px solid rgba(220,50,50,.25); }
-.btn-muted { background: #F7F5F2; color: rgba(26,26,24,0.55); border: 1px solid rgba(26,26,24,0.15); }
-.btn-muted:hover { background: #EDEAE4; }
+  .am-card-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-.sl-ma-empty { text-align: center; padding: 48px; color: rgba(26,26,24,0.35); font-size: 15px; background: #FFFFFF; border: 0.5px solid rgba(26,26,24,0.08); }
+  .am-card-title .badge {
+    background: #1A2744;
+    color: #F5C518;
+    border-radius: 99px;
+    padding: 1px 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
 
-@media (max-width: 768px) {
-  .sl-ment-admin { padding: 20px 16px 56px; }
-  .sl-ma-create-grid { grid-template-columns: 1fr; }
-  .sl-ma-info-grid { grid-template-columns: 1fr 1fr; }
-  .sl-ma-card-header { flex-direction: column; }
-}
+  .am-chevron {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+  .am-chevron.open { transform: rotate(180deg); }
+
+  .am-card-body { padding: 20px 24px; }
+  .am-card-body.collapsed { display: none; }
+
+  /* ── Mentor roster table ── */
+  .am-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .am-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .am-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: #1A1A18;
+    line-height: 1.5;
+  }
+
+  .am-table tr:last-child td { border-bottom: none; }
+  .am-table tr:hover td { background: var(--surface-2); }
+
+  /* ── Tier badge ── */
+  .tier-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tier-legend { background: #1A2744; color: #F5C518; }
+  .tier-expert { background: #2d1a00; color: #e0a030; }
+  .tier-senior { background: #f0f0e8; color: #555; border: 1px solid #ccc; }
+
+  /* ── Status pill ── */
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-active   { background: #eafaf0; color: #1a5c35; border: 1px solid #3aab65; }
+  .status-inactive { background: #fdf0f0; color: #7a1a1a; border: 1px solid #c0392b; }
+  .status-unlinked { background: #f5f5f0; color: #888; border: 1px solid #ccc; }
+
+  /* ── Action buttons row ── */
+  .am-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .am-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    background: none;
+    text-decoration: none;
+    white-space: nowrap;
+    min-height: 28px;
+  }
+
+  .am-btn-edit   { border-color: #1A2744; color: #1A2744; }
+  .am-btn-edit:hover   { background: #1A2744; color: #fff; }
+
+  .am-btn-toggle { border-color: var(--gold-dark); color: #8a6800; }
+  .am-btn-toggle:hover { background: #F5C518; color: #1a1a18; border-color: #F5C518; }
+
+  .am-btn-link   { border-color: #3aab65; color: #1a5c35; }
+  .am-btn-link:hover   { background: #3aab65; color: #fff; }
+
+  .am-btn-unlink { border-color: #bbb; color: #555; }
+  .am-btn-unlink:hover { background: #eee; color: #1a1a18; }
+
+  .am-btn-delete { border-color: #c0392b; color: #c0392b; }
+  .am-btn-delete:hover { background: #c0392b; color: #fff; }
+
+  /* ── Link-user inline form ── */
+  .am-link-form {
+    display: none;
+    gap: 6px;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .am-link-form.visible { display: flex; }
+
+  .am-select {
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    background: #fff;
+    color: #1a1a18;
+    min-height: 32px;
+  }
+
+  /* ── Create mentor form ── */
+  .am-create-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .am-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+
+  .am-field input,
+  .am-field select,
+  .am-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif !important;
+    color: #1a1a18;
+    background: #fff;
+    box-sizing: border-box;
+    min-height: 38px;
+    line-height: 1.5;
+  }
+
+  .am-field textarea { min-height: 80px; resize: vertical; }
+
+  .am-field input:focus,
+  .am-field select:focus,
+  .am-field textarea:focus {
+    outline: none;
+    border-color: #1A2744;
+    box-shadow: 0 0 0 2px rgba(26,39,68,0.08);
+  }
+
+  .am-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background: #1A2744;
+    color: #F5C518;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    min-height: 44px;
+    transition: background 0.2s;
+  }
+  .am-submit:hover { background: #253660; }
+
+  /* ── Edit modal ── */
+  .am-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .am-modal-overlay.open { display: flex; }
+
+  .am-modal {
+    background: #fff;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+
+  .am-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #1A2744;
+  }
+
+  .am-modal-head-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #F5C518;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+
+  .am-modal-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color 0.15s;
+  }
+  .am-modal-close:hover { color: #fff; }
+
+  .am-modal-body {
+    padding: 24px;
+  }
+
+  .am-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .am-modal-full { grid-column: 1 / -1; }
+
+  .am-modal-foot {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .am-btn-cancel {
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-secondary);
+    min-height: 44px;
+    transition: border-color 0.15s;
+  }
+  .am-btn-cancel:hover { border-color: #aaa; }
+
+  /* ── Delete confirm modal ── */
+  .am-delete-modal {
+    background: #fff;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+
+  .am-delete-modal-head {
+    padding: 18px 24px;
+    background: #7a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .am-delete-modal-head-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    font-family: var(--font-mono);
+  }
+
+  .am-delete-modal-body {
+    padding: 20px 24px;
+    font-size: 15px;
+    color: #1a1a18;
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .am-delete-modal-body strong { color: #7a1a1a; }
+
+  .am-delete-modal-foot {
+    display: flex;
+    gap: 10px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    justify-content: flex-end;
+  }
+
+  .am-btn-confirm-delete {
+    padding: 10px 20px;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    min-height: 44px;
+    transition: background 0.15s;
+  }
+  .am-btn-confirm-delete:hover { background: #922b21; }
+
+  /* ── Empty state ── */
+  .am-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* ── Summary stats bar ── */
+  .am-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .am-stat {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    flex: 1;
+    min-width: 110px;
+    text-align: center;
+  }
+
+  .am-stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1A2744;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .am-stat-label {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+  }
+
+  /* ── Audit compliance ── */
+  .am-wrap { font-size: 16px; line-height: 1.6; }
+  .am-delete-modal-body p { text-align: justify; }
+  .am-card-body p { text-align: justify; }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .am-wrap { padding: 56px 16px 60px; }
+    h1, h2, h3 { text-shadow: none; }
+    .am-create-grid { grid-template-columns: 1fr; }
+    .am-modal-grid { grid-template-columns: 1fr; }
+    .am-table { font-size: 13px; }
+    .am-table th, .am-table td { padding: 8px 6px; }
+    .am-stats { gap: 10px; }
+    .am-stat { min-width: 80px; padding: 10px 12px; }
+    .am-stat-num { font-size: 20px; }
+  }
+
+  @media (max-width: 600px) {
+    .am-actions { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .am-modal { max-height: 95vh; }
+  }
+
+  @media (max-width: 480px) {
+    .am-table { display: block; overflow-x: auto; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="sl-ment-admin">
+<div class="am-wrap">
 
-  <a href="{{ url_for('admin_dashboard') }}" class="sl-ma-back">← Back to Admin</a>
-
-  <div class="sl-ma-header">
+  <!-- Header -->
+  <div class="am-header">
     <div>
-      <div class="sl-ma-title">Mentor Management</div>
-      <div class="sl-ma-sub">Create mentor profiles · Link user accounts · Manage tiers</div>
+      <div class="am-title">Mentor Management</div>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="am-back">&#8592; Admin Dashboard</a>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="am-flash {{ category }}" style="text-align:left">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Stats bar -->
+  {% set total     = profiles | length %}
+  {% set active    = profiles | selectattr('is_active') | list | length %}
+  {% set linked    = profiles | selectattr('user_id') | list | length %}
+  {% set unlinked  = total - linked %}
+  <div class="am-stats">
+    <div class="am-stat">
+      <div class="am-stat-num">{{ total }}</div>
+      <div class="am-stat-label">Total</div>
+    </div>
+    <div class="am-stat">
+      <div class="am-stat-num" style="color:#1a5c35">{{ active }}</div>
+      <div class="am-stat-label">Active</div>
+    </div>
+    <div class="am-stat">
+      <div class="am-stat-num">{{ linked }}</div>
+      <div class="am-stat-label">Linked</div>
+    </div>
+    <div class="am-stat">
+      <div class="am-stat-num" style="color:#888">{{ unlinked }}</div>
+      <div class="am-stat-label">Unlinked</div>
     </div>
   </div>
 
-  <!-- Create new mentor -->
-  <div class="sl-ma-create">
-    <div class="sl-ma-create-title">Create New Mentor Profile</div>
-    <form method="POST" action="{{ url_for('admin_mentor_create') }}">
-      <div class="sl-ma-create-grid">
-        <div class="form-group">
-          <label>Slug (unique ID)</label>
-          <input type="text" name="slug" placeholder="e.g. ashok" required pattern="[a-z0-9_-]+">
+  <!-- ── Mentor Roster ── -->
+  <div class="am-card">
+    <div class="am-card-header" onclick="toggleSection(this)">
+      <div class="am-card-title">
+        Mentor Roster
+        <span class="badge">{{ total }}</span>
+      </div>
+      <span class="am-chevron open">&#9660;</span>
+    </div>
+    <div class="am-card-body">
+      {% if profiles %}
+      <table class="am-table">
+        <thead>
+          <tr>
+            <th>Mentor</th>
+            <th>Tier</th>
+            <th>Price / Points</th>
+            <th>Linked User</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in profiles %}
+          <tr>
+            <!-- Name + slug -->
+            <td>
+              <div style="font-weight:600;color:#1A1A18">{{ p.display_name or '—' }}</div>
+              <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">{{ p.slug }}</div>
+            </td>
+
+            <!-- Tier -->
+            <td>
+              <span class="tier-badge tier-{{ p.tier_class }}">{{ p.tier_label }}</span>
+            </td>
+
+            <!-- Price -->
+            <td style="font-family:var(--font-mono);font-size:13px">
+              &#8377;{{ p.price }} / {{ p.points_cost }}pts
+            </td>
+
+            <!-- Linked user -->
+            <td>
+              {% if p.user_id %}
+                <div style="font-size:13px">{{ p.user_username or '—' }}</div>
+                <div style="font-size:12px;color:var(--text-muted)">{{ p.user_email or '' }}</div>
+              {% else %}
+                <span style="color:var(--text-muted);font-size:13px">Not linked</span>
+              {% endif %}
+            </td>
+
+            <!-- Status -->
+            <td>
+              {% if p.user_id %}
+                {% if p.is_active %}
+                  <span class="status-pill status-active">Active</span>
+                {% else %}
+                  <span class="status-pill status-inactive">Inactive</span>
+                {% endif %}
+              {% else %}
+                <span class="status-pill status-unlinked">No user</span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="am-actions">
+                <!-- Edit -->
+                <button type="button" class="am-btn am-btn-edit"
+                  onclick="openEditModal(
+                    '{{ p.slug }}',
+                    {{ p.display_name | tojson }},
+                    '{{ p.tier_class }}',
+                    {{ p.price }},
+                    {{ p.points_cost }},
+                    {{ (p.bio or '') | tojson }},
+                    {{ (p.genres or '') | tojson }},
+                    {{ (p.instagram_url or '') | tojson }},
+                    {{ (p.website_url or '') | tojson }},
+                    {{ (p.youtube_url or '') | tojson }}
+                  )">
+                  &#9998; Edit
+                </button>
+
+                <!-- Toggle active -->
+                <form method="POST"
+                  action="{{ url_for('admin_mentor_toggle_active', slug=p.slug) }}"
+                  style="display:inline">
+                  <button type="submit" class="am-btn am-btn-toggle">
+                    {% if p.is_active %}&#9632; Deactivate{% else %}&#9654; Activate{% endif %}
+                  </button>
+                </form>
+
+                <!-- Link / Unlink user -->
+                {% if p.user_id %}
+                  <form method="POST"
+                    action="{{ url_for('admin_mentor_unlink_user', slug=p.slug) }}"
+                    style="display:inline">
+                    <button type="submit" class="am-btn am-btn-unlink"
+                      onclick="return confirm('Unlink user from {{ p.slug }}?')">
+                      &#128279; Unlink
+                    </button>
+                  </form>
+                {% else %}
+                  <button type="button" class="am-btn am-btn-link"
+                    onclick="toggleLinkForm('link-{{ p.slug }}')">
+                    &#128279; Link User
+                  </button>
+                {% endif %}
+
+                <!-- Delete -->
+                <button type="button" class="am-btn am-btn-delete"
+                  onclick="openDeleteModal('{{ p.slug }}', {{ p.display_name | tojson }})">
+                  &#128465; Delete
+                </button>
+              </div>
+
+              <!-- Link-user inline form -->
+              {% if not p.user_id %}
+              <form method="POST"
+                action="{{ url_for('admin_mentor_link_user', slug=p.slug) }}"
+                class="am-link-form" id="link-{{ p.slug }}">
+                <select name="user_id" class="am-select" required>
+                  <option value="">— Select user —</option>
+                  {% for m in members %}
+                    <option value="{{ m.id }}">{{ m.full_name or m.username }} ({{ m.email }})</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="am-btn am-btn-link" style="min-height:32px">&#10003; Confirm</button>
+                <button type="button" class="am-btn am-btn-unlink" style="min-height:32px"
+                  onclick="toggleLinkForm('link-{{ p.slug }}')">Cancel</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="am-empty">No mentor profiles yet. Create one below.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Create New Mentor ── -->
+  <div class="am-card">
+    <div class="am-card-header" onclick="toggleSection(this)">
+      <div class="am-card-title">+ Create New Mentor Profile</div>
+      <span class="am-chevron">&#9660;</span>
+    </div>
+    <div class="am-card-body collapsed">
+      <form method="POST" action="{{ url_for('admin_mentor_create') }}">
+        <div class="am-create-grid">
+          <div class="am-field">
+            <label>Display Name *</label>
+            <input type="text" name="display_name" placeholder="e.g. Ashok Kumar" required>
+          </div>
+          <div class="am-field">
+            <label>Slug * (URL key)</label>
+            <input type="text" name="slug" placeholder="e.g. ashok-kumar"
+              pattern="[a-z0-9\-]+" title="Lowercase letters, numbers and hyphens only">
+          </div>
+          <div class="am-field">
+            <label>Tier</label>
+            <select name="tier_class">
+              {% for value, label, price, pts in tier_options %}
+                <option value="{{ value }}">{{ label }} — &#8377;{{ price }} / {{ pts }}pts</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Display Name</label>
-          <input type="text" name="display_name" placeholder="e.g. Ashok Kochhar" required>
+        <div style="margin-top:4px;font-size:13px;color:var(--text-muted);margin-bottom:16px;text-align:left">
+          Price and points default from tier. You can override them after creation via Edit.
         </div>
-        <div class="form-group">
-          <label>Tier</label>
-          <select name="tier_class">
-            {% for tc, tl, price, pts in tier_options %}
-            <option value="{{ tc }}">{{ tl }} — ₹{{ price }} / {{ pts }} pts</option>
-            {% endfor %}
-          </select>
+        <button type="submit" class="am-submit">Create Mentor Profile</button>
+      </form>
+    </div>
+  </div>
+
+</div><!-- /am-wrap -->
+
+
+<!-- ════════════════════════════════════════════════════
+     EDIT MODAL
+════════════════════════════════════════════════════ -->
+<div class="am-modal-overlay" id="editModalOverlay" onclick="closeEditOnOverlay(event)">
+  <div class="am-modal" id="editModal">
+    <div class="am-modal-head">
+      <div class="am-modal-head-title">&#9998; Edit Mentor — <span id="editModalSlugLabel"></span></div>
+      <button class="am-modal-close" onclick="closeEditModal()" type="button">&times;</button>
+    </div>
+    <form method="POST" id="editModalForm" action="">
+      <div class="am-modal-body">
+
+        <div class="am-modal-grid">
+          <div class="am-field am-modal-full">
+            <label>Display Name *</label>
+            <input type="text" name="display_name" id="editName" required>
+          </div>
+
+          <div class="am-field">
+            <label>Tier</label>
+            <select name="tier_class" id="editTier">
+              {% for value, label, price, pts in tier_options %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="am-field">
+            <label>Genres</label>
+            <input type="text" name="genres" id="editGenres" placeholder="e.g. Landscape, Street, Portrait">
+          </div>
+
+          <div class="am-field">
+            <label>Price (&#8377;)</label>
+            <input type="number" name="price" id="editPrice" min="1" max="9999">
+          </div>
+
+          <div class="am-field">
+            <label>Points Cost</label>
+            <input type="number" name="points_cost" id="editPoints" min="1" max="99999">
+          </div>
+
+          <div class="am-field am-modal-full">
+            <label>Bio</label>
+            <textarea name="bio" id="editBio" placeholder="Short public-facing bio…"></textarea>
+          </div>
+
+          <div class="am-field">
+            <label>Instagram URL</label>
+            <input type="url" name="instagram_url" id="editInstagram" placeholder="https://instagram.com/…">
+          </div>
+
+          <div class="am-field">
+            <label>Website URL</label>
+            <input type="url" name="website_url" id="editWebsite" placeholder="https://…">
+          </div>
+
+          <div class="am-field am-modal-full">
+            <label>YouTube URL</label>
+            <input type="url" name="youtube_url" id="editYoutube" placeholder="https://youtube.com/…">
+          </div>
         </div>
-        <div>
-          <button type="submit" class="btn-sm btn-primary" style="width:100%;padding:10px 14px;">Create Profile</button>
-        </div>
+
+      </div>
+      <div class="am-modal-foot">
+        <button type="button" class="am-btn-cancel" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="am-submit" style="min-height:44px">Save Changes</button>
       </div>
     </form>
   </div>
-
-  <!-- Existing profiles -->
-  {% if profiles %}
-  <div class="sl-ma-cards">
-    {% for p in profiles %}
-    <div class="sl-ma-card">
-      <div class="sl-ma-card-header">
-        <div class="sl-ma-card-left">
-          {% if p.photo_url %}
-            <img src="{{ p.photo_url }}" class="sl-ma-photo" alt="{{ p.display_name }}" onerror="this.style.display='none'">
-          {% else %}
-            <div class="sl-ma-photo-placeholder">{{ (p.display_name or p.slug or '?')[0].upper() }}</div>
-          {% endif %}
-          <div>
-            <div class="sl-ma-name">{{ p.display_name or p.slug }}</div>
-            <div class="sl-ma-slug">slug: {{ p.slug }}</div>
-            <div class="sl-ma-badges">
-              <span class="sl-ma-badge badge-{{ p.tier_class }}">{{ p.tier_label }}</span>
-              {% if p.is_active %}
-                <span class="sl-ma-badge badge-active">Active</span>
-              {% else %}
-                <span class="sl-ma-badge badge-inactive">Inactive</span>
-              {% endif %}
-              {% if p.user_id %}
-                <span class="sl-ma-badge badge-linked">Linked</span>
-              {% else %}
-                <span class="sl-ma-badge badge-unlinked">Not linked</span>
-              {% endif %}
-              {% if p.onboarding_complete %}
-                <span class="sl-ma-badge badge-onboarded">Profile complete</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-          <form method="POST" action="{{ url_for('admin_mentor_toggle_active', slug=p.slug) }}">
-            <button type="submit" class="btn-sm btn-muted">
-              {{ 'Deactivate' if p.is_active else 'Activate' }}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div class="sl-ma-info-grid">
-        <div class="sl-ma-info-item">
-          <div class="sl-ma-info-label">Price</div>
-          <div class="sl-ma-info-val">₹{{ p.price }} / {{ p.points_cost }} pts</div>
-        </div>
-        <div class="sl-ma-info-item">
-          <div class="sl-ma-info-label">Linked User</div>
-          <div class="sl-ma-info-val {% if not p.user_id %}missing{% endif %}">
-            {{ p.user_email if p.user_id else 'Not linked' }}
-          </div>
-        </div>
-        <div class="sl-ma-info-item">
-          <div class="sl-ma-info-label">Social</div>
-          <div class="sl-ma-info-val {% if not p.instagram_url and not p.website_url %}missing{% endif %}">
-            {% if p.instagram_url %}Instagram ✓{% endif %}
-            {% if p.website_url %} · Web ✓{% endif %}
-            {% if p.youtube_url %} · YT ✓{% endif %}
-            {% if not p.instagram_url and not p.website_url and not p.youtube_url %}Not set{% endif %}
-          </div>
-        </div>
-      </div>
-
-      <div class="sl-ma-actions">
-        {% if p.user_id %}
-          <form method="POST" action="{{ url_for('admin_mentor_unlink_user', slug=p.slug) }}"
-                onsubmit="return confirm('Unlink this user from mentor profile?')">
-            <button type="submit" class="btn-sm btn-danger">Unlink User</button>
-          </form>
-        {% else %}
-          <form class="sl-ma-link-form" method="POST" action="{{ url_for('admin_mentor_link_user', slug=p.slug) }}">
-            <select name="user_id" required>
-              <option value="" disabled selected>Select user to link…</option>
-              {% for m in members %}
-              <option value="{{ m.id }}">{{ m.full_name or m.username }} — {{ m.email }}</option>
-              {% endfor %}
-            </select>
-            <button type="submit" class="btn-sm btn-gold">Link as Mentor</button>
-          </form>
-        {% endif %}
-        <span style="font-size:12px;color:rgba(26,26,24,0.40);">
-          Updated: {{ p.updated_at.strftime('%d %b %Y') if p.updated_at else '—' }}
-        </span>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="sl-ma-empty">No mentor profiles yet. Create one above.</div>
-  {% endif %}
-
 </div>
+
+
+<!-- ════════════════════════════════════════════════════
+     DELETE CONFIRM MODAL
+════════════════════════════════════════════════════ -->
+<div class="am-modal-overlay" id="deleteModalOverlay" onclick="closeDeleteOnOverlay(event)">
+  <div class="am-delete-modal" id="deleteModal">
+    <div class="am-delete-modal-head">
+      <span style="font-size:20px">&#9888;</span>
+      <div class="am-delete-modal-head-title">Delete Mentor Profile</div>
+    </div>
+    <div class="am-delete-modal-body">
+      <p>You are about to permanently delete the mentor profile for <strong id="deleteModalName"></strong>.</p>
+      <p style="margin-top:10px;font-size:14px;color:#555">
+        This action cannot be undone. If this mentor has any session history, the delete will be blocked — use <em>Deactivate</em> instead to hide them from new bookings.
+      </p>
+    </div>
+    <div class="am-delete-modal-foot">
+      <button type="button" class="am-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form method="POST" id="deleteModalForm" action="" style="display:inline">
+        <button type="submit" class="am-btn-confirm-delete">&#128465; Delete Permanently</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ── Section collapse toggle ── */
+  function toggleSection(header) {
+    const body    = header.nextElementSibling;
+    const chevron = header.querySelector('.am-chevron');
+    body.classList.toggle('collapsed');
+    chevron.classList.toggle('open');
+  }
+
+  /* ── Link-user inline form ── */
+  function toggleLinkForm(id) {
+    const form = document.getElementById(id);
+    if (form) form.classList.toggle('visible');
+  }
+
+  /* ── Edit modal ── */
+  function openEditModal(slug, name, tier, price, points, bio, genres, ig, web, yt) {
+    document.getElementById('editModalSlugLabel').textContent = slug;
+    document.getElementById('editModalForm').action =
+      '/admin/mentors/' + encodeURIComponent(slug) + '/edit';
+    document.getElementById('editName').value    = name  || '';
+    document.getElementById('editTier').value    = tier  || 'senior';
+    document.getElementById('editPrice').value   = price  || '';
+    document.getElementById('editPoints').value  = points || '';
+    document.getElementById('editBio').value     = bio    || '';
+    document.getElementById('editGenres').value  = genres || '';
+    document.getElementById('editInstagram').value = ig  || '';
+    document.getElementById('editWebsite').value   = web || '';
+    document.getElementById('editYoutube').value   = yt  || '';
+    document.getElementById('editModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeEditOnOverlay(e) {
+    if (e.target === document.getElementById('editModalOverlay')) closeEditModal();
+  }
+
+  /* ── Delete modal ── */
+  function openDeleteModal(slug, name) {
+    document.getElementById('deleteModalName').textContent = name || slug;
+    document.getElementById('deleteModalForm').action =
+      '/admin/mentors/' + encodeURIComponent(slug) + '/delete';
+    document.getElementById('deleteModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeDeleteOnOverlay(e) {
+    if (e.target === document.getElementById('deleteModalOverlay')) closeDeleteModal();
+  }
+
+  /* Keyboard: Escape closes any open modal */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeEditModal();
+      closeDeleteModal();
+    }
+  });
+</script>
 {% endblock %}
