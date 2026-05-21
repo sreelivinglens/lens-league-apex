@@ -1843,10 +1843,17 @@ def onboarding():
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
 
+    try:
+        _ref_discount_ob = db.session.execute(
+            db.text('SELECT referred_discount FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar() or False
+    except Exception:
+        _ref_discount_ob = False
     return render_template('onboarding.html',
         countries          = get_countries(),
         location_data_json = json.dumps(_loc),
-        referred_discount  = getattr(current_user, 'referred_discount', False),
+        referred_discount  = _ref_discount_ob,
     )
 
 
@@ -2294,6 +2301,15 @@ def dashboard():
         except Exception as _mre:
             app.logger.error(f'[dashboard_mentor_reviews] {_mre}')
 
+    # referred_discount is a migration-only column — not in ORM model, must read directly
+    try:
+        _ref_discount = db.session.execute(
+            db.text('SELECT referred_discount FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar() or False
+    except Exception:
+        _ref_discount = False
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2312,7 +2328,7 @@ def dashboard():
                            referral_code=get_or_create_referral_code(current_user),
                            referral_stats=get_referral_stats(current_user),
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
-                           referred_discount=getattr(current_user, 'referred_discount', False))
+                           referred_discount=_ref_discount)
 
 
 # ---------------------------------------------------------------------------
@@ -7590,7 +7606,13 @@ def subscribe(track):
             'learning': '12 scored images/month · AI mentor · Improvement paths',
             'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
         }
-        _ref_disc    = getattr(current_user, 'referred_discount', False)
+        try:
+            _ref_disc = db.session.execute(
+                db.text('SELECT referred_discount FROM users WHERE id = :uid'),
+                {'uid': current_user.id}
+            ).scalar() or False
+        except Exception:
+            _ref_disc = False
         _disc_prices = REFERRAL_DISCOUNT_PRICES.get(track, {})
         _disc_amount = _disc_prices.get(plan) if _ref_disc else None
         return render_template('subscribe_coming_soon.html',
@@ -11249,7 +11271,15 @@ def referral_generate():
 @login_required
 def referral_apply():
     """Self-service: referred user manually enters a referral code to claim their discount."""
-    if getattr(current_user, 'referred_discount', False):
+    # referred_discount is migration-only — must read direct from DB
+    try:
+        _cur_ref_disc = db.session.execute(
+            db.text('SELECT referred_discount FROM users WHERE id = :uid'),
+            {'uid': current_user.id}
+        ).scalar() or False
+    except Exception:
+        _cur_ref_disc = False
+    if _cur_ref_disc:
         return jsonify({'error': 'You already have a referral discount active.'})
     if getattr(current_user, 'is_subscribed', False):
         return jsonify({'error': 'You are already subscribed.'})
@@ -11274,7 +11304,7 @@ def referral_apply():
         ).fetchone()
         if _existing:
             # Referral row exists but discount flag may not have been set — fix it silently
-            if not getattr(current_user, 'referred_discount', False):
+            if not _cur_ref_disc:
                 db.session.execute(
                     db.text('UPDATE users SET referred_discount = TRUE WHERE id = :uid'),
                     {'uid': current_user.id}
