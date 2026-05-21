@@ -234,8 +234,9 @@ app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_NAME']     = 'sl_session'
 app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
-app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
-app.config['REMEMBER_COOKIE_SECURE']   = True
+app.config['REMEMBER_COOKIE_DURATION']   = 60 * 60 * 24 * 30  # 30 days
+app.config['REMEMBER_COOKIE_SAMESITE']   = 'Lax'
+app.config['REMEMBER_COOKIE_SECURE']     = True
 
 uri = app.config['SQLALCHEMY_DATABASE_URI']
 if uri and uri.startswith('postgres://'):
@@ -1641,7 +1642,7 @@ def verify_email(token):
                     app.logger.info(f'[referral] signup: referrer={_ref_row[0]} referred={user.id}')
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
-    login_user(user)
+    login_user(user, remember=True)
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
 
@@ -1711,7 +1712,7 @@ def auth_google_callback():
             user.google_id = google_id
         user.last_login = datetime.utcnow()
         db.session.commit()
-        login_user(user)
+        login_user(user, remember=True)
         if not getattr(user, 'onboarding_complete', True):
             return redirect(url_for('onboarding'))
         # Check if this user is an approved judge -- send to jury dashboard
@@ -1751,7 +1752,7 @@ def auth_google_callback():
         )
         db.session.add(user)
         db.session.commit()
-        login_user(user)
+        login_user(user, remember=True)
         return redirect(url_for('onboarding'))
 
 
@@ -1856,7 +1857,7 @@ def login():
 
         user.last_login = datetime.utcnow()
         db.session.commit()
-        login_user(user)
+        login_user(user, remember=True)
 
         next_url = request.args.get('next')
         if next_url:
@@ -5791,7 +5792,7 @@ def sree_admin_login():
 
         user.last_login = datetime.utcnow()
         db.session.commit()
-        login_user(user)
+        login_user(user, remember=True)
         return redirect(url_for('admin_dashboard'))
 
     return render_template('sree_admin_login.html')
