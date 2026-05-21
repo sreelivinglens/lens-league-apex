@@ -476,13 +476,13 @@ function dismissPotyBanner() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     </div>
     <div class="pb-text">
-      <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.40);margin-bottom:3px;">New feature</div>
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.40);margin-bottom:3px;">New feature</div>
       <div style="font-size:16px;font-weight:700;color:#FFFFFF;margin-bottom:4px;">Your portfolio page is ready to set up</div>
       <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Share your best scored images with clients using a public link — you control what's visible.</div>
     </div>
   </div>
   <div class="pb-cta-row" style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-    <a href="{{ url_for('portfolio_manager') }}" style="background:#F5C518;color:#1A1A18;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:11px 18px;text-decoration:none;display:inline-block;min-height:44px;line-height:22px;">Set up portfolio →</a>
+    <a href="{{ url_for('portfolio_manager') }}" style="background:#F5C518;color:#1A1A18;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:11px 18px;text-decoration:none;display:inline-block;min-height:44px;line-height:22px;">Set up portfolio →</a>
     <button onclick="dismissPortfolioBanner()" aria-label="Dismiss" style="background:none;border:none;color:rgba(255,255,255,0.40);font-size:22px;cursor:pointer;padding:4px 8px;min-width:44px;min-height:44px;line-height:1;">&times;</button>
   </div>
 </div>
@@ -607,7 +607,7 @@ function dismissPortfolioBanner() {
       </a>
     </div>
     <div id="mentor-review-full-{{ rev.id }}" style="display:none;padding:18px 20px;background:#fffdf0;border-top:1px solid rgba(245,197,24,0.25);border-left:3px solid #F5C518;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,26,24,0.40);margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(26,26,24,0.40);margin-bottom:10px;">
         Full Review — {{ rev.asset_name or 'Untitled' }} · by {{ rev.mentor_name }}{% if rev.reviewed_at %} · {{ rev.reviewed_at.strftime('%d %b %Y') }}{% endif %}
       </div>
       <div style="font-size:15px;color:#1A1A18;line-height:1.8;white-space:pre-line;">{{ rev.review_text }}</div>
@@ -910,6 +910,41 @@ function toggleNotifStrip() {
     <a href="{{ url_for('redeem') }}" style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:10px 20px;border-radius:4px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
   </div>
 
+</div>
+{% endif %}
+
+{# ── Referral widget ─────────────────────────────────────────────────────── #}
+{% if referral_code %}
+<div style="background:#F7F5F2; border:1px solid rgba(245,197,24,0.30); border-radius:8px;
+            padding:20px 22px; margin-bottom:20px;" text-align:left;>
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+    <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary);">
+      &#128101; Referrals
+    </div>
+    <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.5px; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
+  </div>
+  <div style="background:#fff; border:1px solid rgba(26,39,68,0.15); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+    <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:var(--text-primary);">{{ referral_code }}</span>
+    <a href="#" onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.5px; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
+  </div>
+  <div style="font-size:14px; color:var(--text-primary); margin-bottom:14px; word-break:break-all;">{{ referral_url }}</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+    <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px;">
+      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Referred</div>
+      <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.total_referred }}</div>
+    </div>
+    <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px;">
+      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Converted</div>
+      <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.subscribed }}</div>
+    </div>
+  </div>
+  <div style="font-size:14px; color:var(--text-primary); line-height:1.6;">
+    +500 points credited to your wallet when a referred user makes their first payment.
+    {% if referral_stats.bonus_uploads > 0 %}
+    &nbsp;&#183;&nbsp; Bonus uploads earned: <strong>{{ referral_stats.bonus_uploads }}</strong>
+    {% endif %}
+  </div>
 </div>
 {% endif %}
 
