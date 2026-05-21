@@ -1762,7 +1762,6 @@ def auth_google_callback():
         )
         db.session.add(user)
         db.session.commit()
-        # ── Referral: record signup + set discount flag ────────────────────
         try:
             _ref_code = request.cookies.get('sl_ref')
             if _ref_code:
@@ -3241,7 +3240,6 @@ def retry_score(image_id):
                 db.session.commit()
         except Exception as _spe:
             app.logger.error(f'[points hook] score_image error: {_spe}')
-        # ── Referral: first scored image — +20 pts to referrer ───────────
         try:
             _scored_total = Image.query.filter_by(
                 user_id=img.user_id, status='scored'
@@ -6881,7 +6879,6 @@ def contest_enter_monthly(genre):
             db.session.commit()
             flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)}  -  {track.title()} Track . {now.strftime("%B %Y")}.', 'success')
 
-        # ── RAW verification trigger at contest entry ─────────────────────
         # Wildlife, Landscapes, Drone scoring >= 7.5 require RAW on POTY entry.
         # Weekly challenges are excluded — engagement-first, no prizes.
         _raw_genres = {'Wildlife', 'Landscapes', 'Drone'}
@@ -8233,7 +8230,6 @@ def admin_contests():
     if request.method == 'POST':
         action = request.form.get('action', '')
 
-        # ── Save / update contest period ────────────────────────────────────
         if action == 'save_period':
             year = request.form.get('platform_year', type=int) or current_year
 
@@ -8269,7 +8265,6 @@ def admin_contests():
             flash('Contest period saved.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Brand contest — create ──────────────────────────────────────────
         elif action == 'create_brand':
             brand_name  = request.form.get('brand_name', '').strip()
             title       = request.form.get('title', '').strip()
@@ -8308,7 +8303,6 @@ def admin_contests():
             flash(f'Brand contest "{title}" created as draft.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Brand contest — status transitions ─────────────────────────────
         elif action in ('brand_activate', 'brand_close', 'brand_judging', 'brand_publish'):
             bc_id = request.form.get('brand_contest_id', type=int)
             bc    = BrandContest.query.get_or_404(bc_id)
@@ -8339,7 +8333,6 @@ def admin_contests():
             flash(f'Brand programme "{bc.title}" status updated to {bc.status}.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Announcement — create ──────────────────────────────────────────
         elif action == 'create_announcement':
             title        = request.form.get('title', '').strip()
             body         = request.form.get('body', '').strip()
@@ -8371,7 +8364,6 @@ def admin_contests():
             flash(f'Announcement "{title}" created.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Announcement — toggle banner ───────────────────────────────────
         elif action in ('banner_activate', 'banner_deactivate'):
             ann_id = request.form.get('announcement_id', type=int)
             ann    = ContestAnnouncement.query.get_or_404(ann_id)
@@ -8380,7 +8372,6 @@ def admin_contests():
             flash('Banner ' + ('activated.' if ann.banner_active else 'deactivated.'), 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Announcement — send email ──────────────────────────────────────
         elif action == 'send_announcement':
             ann_id = request.form.get('announcement_id', type=int)
             ann    = ContestAnnouncement.query.get_or_404(ann_id)
@@ -8417,7 +8408,6 @@ def admin_contests():
             flash('Announcement queued — emails sending in background.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Announcement — edit ───────────────────────────────────────────
         elif action == 'edit_announcement':
             ann_id   = request.form.get('announcement_id', type=int)
             ann      = ContestAnnouncement.query.get_or_404(ann_id)
@@ -8440,7 +8430,6 @@ def admin_contests():
             flash('Announcement updated.', 'success')
             return redirect(url_for('admin_contests'))
 
-        # ── Announcement — delete ─────────────────────────────────────────
         elif action == 'delete_announcement':
             ann_id = request.form.get('announcement_id', type=int)
             ann    = ContestAnnouncement.query.get_or_404(ann_id)
@@ -11944,128 +11933,198 @@ def send_winners_email(challenge, winners):
 
 def send_welcome_email(user):
     """
-    Send a welcome email to a new user after they complete onboarding.
-    Confirms T&C acceptance, links to dashboard, upload, how-it-works, challenge, support.
+    Welcome email sent after onboarding completes.
+    DDI = Dimensional Depth Index (source: shutterleague.com/science).
+    Five dimensions: Depth of Difficulty, Visual Display, Decisive Moment,
+    Wonder Factor, Affective Quotient.
+    Leagues: Mobile (smartphone) and Camera (DSLR/mirrorless) only.
     """
-    site_url     = os.getenv('SITE_URL', 'https://shutterleague.com')
-    name         = user.full_name or user.username
-    dashboard_url = site_url + '/dashboard'
+    site_url      = os.getenv('SITE_URL', 'https://shutterleague.com')
+    name          = user.full_name or user.username
     upload_url    = site_url + '/upload'
+    science_url   = site_url + '/science'
     hiw_url       = site_url + '/how-it-works'
-    challenge_url = site_url + '/challenge'
     terms_url     = site_url + '/terms'
     accepted_date = user.terms_accepted_at.strftime('%d %b %Y') if user.terms_accepted_at else 'today'
+    master_img    = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b0ce03d1-b5b1-4b42-914f-8964b4a6ca43.jpg'
 
-    html_body = (
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
-        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
-        '<table width="100%" cellpadding="0" cellspacing="0"'
-        ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
-        '<table width="560" cellpadding="0" cellspacing="0"'
-        ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
-        'overflow:hidden;max-width:560px;width:100%;">'
+    p = []  # html parts — avoids nested quote issues
 
-        '<tr><td style="background:#1A2744;padding:24px 32px;">'
-        '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
-        'font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">'
-        'SHUTTER LEAGUE</p></td></tr>'
+    # Wrapper open
+    p.append('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+             '<meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no"></head>'
+             '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+             '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+             '<tr><td align="center">'
+             '<table cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;'
+             'border-radius:8px;overflow:hidden;max-width:560px;width:100%;">')
 
-        '<tr><td style="background:#1A2744;padding:0 32px 28px;">'
-        '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
-        'letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase;">Welcome</p>'
-        '<h1 style="margin:0;font-size:28px;font-style:italic;color:#F5C518;line-height:1.2;">'
-        'You&#39;re in, ' + name + '.</h1>'
-        '</td></tr>'
+    # Header
+    p.append('<tr><td style="background:#1A2744;padding:24px 32px 0;">'
+             '<p style="margin:0;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
+             'letter-spacing:4px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE</p>'
+             '</td></tr>')
+    p.append('<tr><td style="background:#1A2744;padding:12px 32px 28px;">'
+             '<h1 style="margin:0;font-size:26px;font-style:italic;font-weight:700;color:#F5C518;line-height:1.25;">'
+             'Welcome to Shutter League, ' + name + '.</h1>'
+             '</td></tr>')
 
-        '<tr><td style="padding:32px 32px 8px;">'
-        '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Your account is live. Get scored. See what to improve. Compete when ready.</p>'
+    # Master image
+    p.append('<tr><td style="padding:0;line-height:0;">'
+             '<img src="' + master_img + '" width="560" alt="Master-level photograph — Shutter League"'
+             ' style="display:block;width:100%;max-width:560px;height:auto;border:0;"'
+             ' onerror="this.style.display=\'none\'">'
+             '</td></tr>')
 
-        '<table cellpadding="0" cellspacing="0"'
-        ' style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;'
-        'padding:16px 20px;margin-bottom:28px;width:100%;">'
-        '<tr><td>'
-        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;'
-        'letter-spacing:1px;color:#8a8070;text-transform:uppercase;">Agreement confirmed</p>'
-        '<p style="margin:0;font-size:14px;color:#1a1a18;">Member Agreement &amp; '
-        '<a href="' + terms_url + '" style="color:#C8A84B;">Terms &amp; Conditions</a>'
-        ' accepted on ' + accepted_date + '.</p>'
-        '</td></tr></table>'
+    # Opening copy
+    p.append('<tr><td style="padding:32px 32px 8px;">'
+             '<p style="margin:0 0 12px;font-size:17px;color:#1a1a18;line-height:1.75;font-weight:700;">'
+             'Photography has always deserved an honest mirror.</p>'
+             '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.75;">'
+             'Not likes. Not &#8220;great shot.&#8221; Not follower counts. '
+             'A score. A diagnosis. A specific reason to get better &#8212; tonight, on this photograph, right now.</p>'
+             '<p style="margin:0 0 28px;font-size:16px;color:#4A4840;line-height:1.75;">'
+             'That&#39;s what you just joined. Every image you upload is evaluated by the '
+             '<strong style="color:#1a1a18;">Apex DDI Engine</strong> &#8212; '
+             'five dimensions, scored 0&#8211;10, with specific feedback on exactly where your work is strong '
+             'and exactly what to improve next.</p>'
+             '</td></tr>')
 
-        '<p style="margin:0 0 12px;font-family:Courier New,monospace;font-size:12px;'
-        'font-weight:700;letter-spacing:2px;color:#1a1a18;text-transform:uppercase;">'
-        'What you can do now</p>'
+    # DDI block
+    p.append('<tr><td style="padding:0 32px 28px;">'
+             '<table cellpadding="0" cellspacing="0" style="background:#1A2744;border-radius:6px;'
+             'width:100%;padding:24px 24px 20px;"><tr><td>'
+             '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:11px;font-weight:700;'
+             'letter-spacing:3px;color:#F5C518;text-transform:uppercase;">The Dimensional Depth Index</p>'
+             '<p style="margin:0 0 16px;font-size:15px;color:rgba(255,255,255,0.70);line-height:1.6;">'
+             'DDI was developed to evaluate the dimensions that shape how photographs communicate, '
+             'resonate, and hold attention &#8212; beyond technical perfection alone.</p>'
+             '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">'
+             '<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.10);">'
+             '<p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#F5C518;">1. Depth of Difficulty</p>'
+             '<p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">'
+             'Access, rarity, timing, environmental challenge, and technical execution difficulty.</p></td></tr>'
+             '<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.10);">'
+             '<p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#F5C518;">2. Visual Display</p>'
+             '<p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">'
+             'Composition, structure, balance, visual clarity, and tonal control.</p></td></tr>'
+             '<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.10);">'
+             '<p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#F5C518;">3. Decisive Moment</p>'
+             '<p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">'
+             'Timing, anticipation, gesture, emotional peak, and fleeting interaction.</p></td></tr>'
+             '<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.10);">'
+             '<p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#F5C518;">4. Wonder Factor</p>'
+             '<p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">'
+             'Uniqueness, surprise, visual intrigue, and memorability.</p></td></tr>'
+             '<tr><td style="padding:10px 0;">'
+             '<p style="margin:0 0 2px;font-size:15px;font-weight:700;color:#F5C518;">5. Affective Quotient</p>'
+             '<p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">'
+             'Emotional resonance, empathy, atmosphere, and psychological impact.</p></td></tr>'
+             '</table>'
+             '<p style="margin:16px 0 0;font-size:14px;color:rgba(255,255,255,0.50);line-height:1.6;">'
+             'Your score shows exactly which dimension is strong &#8212; and which to work on next.</p>'
+             '<p style="margin:12px 0 0;">'
+             '<a href="' + science_url + '" style="color:#F5C518;font-size:14px;text-decoration:underline;margin-right:20px;">&#8594; Read the science</a>'
+             '<a href="' + hiw_url + '" style="color:#F5C518;font-size:14px;text-decoration:underline;">&#8594; How it works</a></p>'
+             '</td></tr></table></td></tr>')
 
-        '<table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:28px;">'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<a href="' + upload_url + '" style="text-decoration:none;">'
-        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
-        '📸 Upload your first photo</p>'
-        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
-        'Get your DDI score — composition, light, emotion, difficulty, all scored.</p>'
-        '</a></td></tr>'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<a href="' + challenge_url + '" style="text-decoration:none;">'
-        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
-        '🏆 Enter the weekly challenge</p>'
-        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
-        'Submit your best shot. Top 3 win. Results every Monday.</p>'
-        '</a></td></tr>'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<a href="' + dashboard_url + '" style="text-decoration:none;">'
-        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
-        '📊 Your dashboard</p>'
-        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
-        'Track scores, tier, leaderboard position, and POTY standings.</p>'
-        '</a></td></tr>'
-        '<tr><td style="padding:10px 0;">'
-        '<a href="' + hiw_url + '" style="text-decoration:none;">'
-        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
-        '📖 How scoring works</p>'
-        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
-        'Understand your DDI score and what each dimension means.</p>'
-        '</a></td></tr>'
-        '</table>'
+    # Rank block
+    p.append('<tr><td style="padding:0 32px 28px;">'
+             '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
+             '<tr><td>'
+             '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:11px;font-weight:700;'
+             'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Rank</p>'
+             '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
+             'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
+             'Photography has never had the equivalent &#8212; until now.</p>'
+             '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
+             'Your best scores build your POTY average across eight tiers:</p>'
+             '<p style="margin:0 0 12px;font-size:15px;color:#1a1a18;line-height:2.0;">'
+             'Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman<br>'
+             'Maverick &#8594; Master &#8594; Grandmaster &#8594; <strong>Legend</strong></p>'
+             '<p style="margin:0;font-size:15px;color:#4A4840;line-height:1.75;font-style:italic;">'
+             'Consistency wins. One great image is not enough.</p>'
+             '</td></tr></table></td></tr>')
 
-        '<tr><td style="padding:10px 0;">'
-        '<a href="' + site_url + '/dashboard/portfolio' + '" style="text-decoration:none;">'
-        '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a18;">'
-        '🖼 Build your portfolio page</p>'
-        '<p style="margin:2px 0 0;font-size:14px;color:#4A4840;">'
-        'Once you have scored images, share your best work with a public link.</p>'
-        '</a></td></tr>'
-        '</table>'
+    # Upload rules
+    p.append('<tr><td style="padding:0 32px 28px;">'
+             '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
+             '<tr><td>'
+             '<p style="margin:0 0 12px;font-family:Courier New,monospace;font-size:11px;font-weight:700;'
+             'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Before You Upload</p>'
+             '<table cellpadding="0" cellspacing="0" style="width:100%;">'
+             '<tr><td style="padding:6px 0;border-bottom:1px solid #E0D8C8;font-size:15px;color:#4A4840;line-height:1.6;">'
+             '&#10003;&nbsp; Your original photograph &#8212; no AI generation, no compositing</td></tr>'
+             '<tr><td style="padding:6px 0;border-bottom:1px solid #E0D8C8;font-size:15px;color:#4A4840;line-height:1.6;">'
+             '&#10003;&nbsp; Minimum 1500px on the long edge</td></tr>'
+             '<tr><td style="padding:6px 0;border-bottom:1px solid #E0D8C8;font-size:15px;color:#4A4840;line-height:1.6;">'
+             '&#10003;&nbsp; Mobile League &#8212; smartphone photographs only</td></tr>'
+             '<tr><td style="padding:6px 0;border-bottom:1px solid #E0D8C8;font-size:15px;color:#4A4840;line-height:1.6;">'
+             '&#10003;&nbsp; Camera League &#8212; DSLR or mirrorless only</td></tr>'
+             '<tr><td style="padding:6px 0;font-size:15px;color:#4A4840;line-height:1.6;">'
+             '&#10003;&nbsp; Keep your RAW files &#8212; may be requested for verification</td></tr>'
+             '</table></td></tr></table></td></tr>')
 
-        '<a href="' + upload_url + '"'
-        ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
-        'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
-        'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
-        'text-decoration:none;border-radius:4px;">Upload Your First Photo &rarr;</a>'
-        '</td></tr>'
+    # First goal + CTA
+    p.append('<tr><td style="padding:0 32px 32px;">'
+             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;font-weight:700;'
+             'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your First Goal</p>'
+             '<p style="margin:0 0 24px;font-size:16px;color:#4A4840;line-height:1.75;">'
+             'Upload 3 images. After your third scored image, your shadow rank is revealed &#8212; '
+             'you&#39;ll see exactly where you stand among photographers like you. '
+             'Subscribe to lock in your rank and start your official 6-month clock.</p>'
+             '<a href="' + upload_url + '" style="display:block;background:#F5C518;color:#1a1a18;'
+             'font-family:Courier New,monospace;font-size:14px;font-weight:700;letter-spacing:2px;'
+             'text-transform:uppercase;padding:16px 28px;text-decoration:none;border-radius:4px;'
+             'text-align:center;">UPLOAD YOUR FIRST IMAGE &#8594;</a>'
+             '</td></tr>')
 
-        '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;margin-top:16px;">'
-        '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
-        'Questions? Reply to this email or write to '
-        '<a href="mailto:info@shutterleague.com" style="color:#C8A84B;">info@shutterleague.com</a>.<br>'
-        '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a>'
-        '</p></td></tr>'
+    # Footer
+    p.append('<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;background:#F5F0E8;">'
+             '<p style="margin:0 0 6px;font-size:13px;color:#8a8070;line-height:1.6;">'
+             '<strong style="color:#1a1a18;">Agreement confirmed</strong> &#8212; '
+             'Member Agreement &amp; <a href="' + terms_url + '" style="color:#C8A84B;">Terms &amp; Conditions</a>'
+             ' accepted on ' + accepted_date + '.</p>'
+             '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
+             'Questions? Reply to this email or write to '
+             '<a href="mailto:info@shutterleague.com" style="color:#C8A84B;">info@shutterleague.com</a> &#8212; '
+             '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+             '</td></tr>')
 
-        '</table></td></tr></table></body></html>'
-    )
+    # Wrapper close
+    p.append('</table></td></tr></table></body></html>')
+
+    html_body = ''.join(p)
 
     text_body = (
-        'SHUTTER LEAGUE  -  Welcome, ' + name + '!\n\n'
-        'Your account is live. Get scored. See what to improve. Compete when ready.\n\n'
-        'Agreement confirmed: Member Agreement & Terms and Conditions accepted on ' + accepted_date + '.\n\n'
-        'WHAT YOU CAN DO NOW\n'
-        '- Upload your first photo: ' + upload_url + '\n'
-        '- Enter the weekly challenge: ' + challenge_url + '\n'
-        '- Your dashboard: ' + dashboard_url + '\n'
-        '- How scoring works: ' + hiw_url + '\n\n'
-        '- Build your portfolio page: ' + site_url + '/dashboard/portfolio' + '\n\n'
-        'Questions? Write to info@shutterleague.com\n\n'
-        ' -  Shutter League'
+        'SHUTTER LEAGUE\n'
+        'Welcome to Shutter League, ' + name + '.\n\n'
+        'Photography has always deserved an honest mirror. Not likes. Not opinions.\n'
+        'A score. A diagnosis. A reason to get better tonight.\n\n'
+        'THE DIMENSIONAL DEPTH INDEX (DDI)\n'
+        'Every image is scored across five dimensions:\n'
+        '1. Depth of Difficulty - access, rarity, timing, technical challenge\n'
+        '2. Visual Display - composition, structure, balance, tonal control\n'
+        '3. Decisive Moment - timing, anticipation, gesture, emotional peak\n'
+        '4. Wonder Factor - uniqueness, surprise, visual intrigue, memorability\n'
+        '5. Affective Quotient - emotional resonance, empathy, atmosphere\n\n'
+        'Read the science: ' + science_url + '\n'
+        'How it works: ' + hiw_url + '\n\n'
+        'YOUR RANK\n'
+        'Eight tiers: Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
+        'Consistency wins. One great image is not enough.\n\n'
+        'BEFORE YOU UPLOAD\n'
+        '- Your original photograph. No AI generation, no compositing.\n'
+        '- Minimum 1500px on the long edge.\n'
+        '- Mobile League: smartphone photographs only.\n'
+        '- Camera League: DSLR or mirrorless only.\n'
+        '- Keep your RAW files. May be requested for verification.\n\n'
+        'YOUR FIRST GOAL\n'
+        'Upload 3 images. Your shadow rank is revealed after image 3.\n'
+        'Upload now: ' + upload_url + '\n\n'
+        'Agreement confirmed: Member Agreement & Terms accepted on ' + accepted_date + '.\n'
+        'Questions? info@shutterleague.com\n'
+        'shutterleague.com'
     )
     if send_email(user.email, 'Welcome to Shutter League — you are in', html_body, text_body):
         app.logger.info('[welcome_email] Sent to ' + user.email)
@@ -12073,9 +12132,6 @@ def send_welcome_email(user):
         app.logger.warning('[welcome_email] Failed to send to ' + user.email)
 
 
-# ===========================================================================
-# Scheduled jobs
-# ===========================================================================
 
 def auto_publish_weekly_challenge():
     """
