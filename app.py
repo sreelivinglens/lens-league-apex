@@ -542,7 +542,10 @@ with app.app_context():
             ]
             for sql in _migrations:
                 try:
-                    conn.execute(db.text('COMMIT'))  # close any open txn
+                    try:
+                        conn.execute(db.text('COMMIT'))  # close any open txn
+                    except Exception:
+                        pass  # no active transaction — expected on already-run migrations
                     conn.execute(db.text('BEGIN'))
                     conn.execute(db.text(sql))
                     conn.execute(db.text('COMMIT'))
