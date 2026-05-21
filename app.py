@@ -484,6 +484,7 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_banner_dismissed BOOLEAN DEFAULT FALSE",
                 # ── Referral system (Session 28) ──────────────────────────
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_bonus_uploads INTEGER DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_discount BOOLEAN DEFAULT FALSE",
                 """CREATE TABLE IF NOT EXISTS referral_codes (
                     id         SERIAL PRIMARY KEY,
                     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -500,8 +501,7 @@ with app.app_context():
                     referred_at      TIMESTAMP DEFAULT NOW(),
                     first_image_at   TIMESTAMP,
                     first_payment_at TIMESTAMP,
-                    upload_reward_granted   BOOLEAN DEFAULT FALSE,
-                    points_reward_granted   BOOLEAN DEFAULT FALSE,
+                    points_reward_granted    BOOLEAN DEFAULT FALSE,
                     UNIQUE(referred_user_id)
                 )""",
                 "CREATE INDEX IF NOT EXISTS ix_referrals_referrer_id ON referrals(referrer_id)",
@@ -1062,6 +1062,11 @@ _TIER_JUMP_POINTS = {
 
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
+REFERRAL_DISCOUNT_PRICES = {
+    'mobile': {'monthly': 85,  'annual': 850},
+    'camera': {'monthly': 169, 'annual': 1690},
+}
+
 def _generate_referral_code():
     import secrets as _rsec, string as _rstr
     chars = _rstr.ascii_uppercase + _rstr.digits
@@ -1100,23 +1105,19 @@ def get_referral_stats(user):
         row = db.session.execute(
             db.text(
                 "SELECT COUNT(*), COUNT(first_image_at), COUNT(first_payment_at), "
-                "COUNT(CASE WHEN upload_reward_granted THEN 1 END), "
                 "COUNT(CASE WHEN points_reward_granted THEN 1 END) "
                 "FROM referrals WHERE referrer_id = :uid"
             ), {'uid': user.id}
         ).fetchone()
-        bonus = getattr(user, 'referral_bonus_uploads', 0) or 0
         return {
             'total_referred': row[0] if row else 0,
             'signed_up':      row[1] if row else 0,
             'subscribed':     row[2] if row else 0,
-            'bonus_uploads':  bonus,
-            'points_earned':  (row[4] if row else 0) * 500,
+            'points_earned':  (row[3] if row else 0) * 500,
         }
     except Exception as _e:
         app.logger.error(f'[referral] get_referral_stats: {_e}')
-        return {'total_referred': 0, 'signed_up': 0, 'subscribed': 0,
-                'bonus_uploads': 0, 'points_earned': 0}
+        return {'total_referred': 0, 'signed_up': 0, 'subscribed': 0, 'points_earned': 0}
 
 
 def award_points(user, amount, reason, commit=True):
@@ -1616,7 +1617,7 @@ def verify_email(token):
     user.is_active           = True
     user.email_verify_token  = None
     db.session.commit()
-    # ── Referral: record signup if cookie present ──────────────────────
+    # ── Referral: record signup + set discount flag ────────────────────
     try:
         _ref_code = request.cookies.get('sl_ref')
         if _ref_code:
@@ -1635,8 +1636,9 @@ def verify_email(token):
                                 'VALUES (:rid, :nid, :code)'),
                         {'rid': _ref_row[0], 'nid': user.id, 'code': _ref_code}
                     )
+                    user.referred_discount = True
                     db.session.commit()
-                    app.logger.info(f'[referral] signup recorded: referrer={_ref_row[0]} referred={user.id}')
+                    app.logger.info(f'[referral] signup: referrer={_ref_row[0]} referred={user.id}')
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user)
@@ -3183,34 +3185,27 @@ def retry_score(image_id):
                 db.session.commit()
         except Exception as _spe:
             app.logger.error(f'[points hook] score_image error: {_spe}')
-        # ── Referral: first scored image — grant +2 uploads to both ──────
+        # ── Referral: first scored image — +20 pts to referrer ───────────
         try:
             _scored_total = Image.query.filter_by(
                 user_id=img.user_id, status='scored'
             ).count()
             if _scored_total == 1:
                 _ref_rec = db.session.execute(
-                    db.text('SELECT id, referrer_id, upload_reward_granted '
+                    db.text('SELECT id, referrer_id, points_reward_granted '
                             'FROM referrals WHERE referred_user_id = :uid'),
                     {'uid': img.user_id}
                 ).fetchone()
                 if _ref_rec and not _ref_rec[2]:
                     _referrer = User.query.get(_ref_rec[1])
-                    _referred = User.query.get(img.user_id)
                     if _referrer:
-                        _referrer.referral_bonus_uploads = (_referrer.referral_bonus_uploads or 0) + 2
-                    if _referred:
-                        _referred.referral_bonus_uploads = (_referred.referral_bonus_uploads or 0) + 2
+                        award_points(_referrer, 20, 'referral_first_image')
                     db.session.execute(
-                        db.text('UPDATE referrals SET first_image_at = NOW(), '
-                                'upload_reward_granted = TRUE WHERE id = :rid'),
+                        db.text('UPDATE referrals SET first_image_at = NOW() WHERE id = :rid'),
                         {'rid': _ref_rec[0]}
                     )
                     db.session.commit()
-                    app.logger.info(
-                        f'[referral] upload reward granted: '
-                        f'referrer={_ref_rec[1]} referred={img.user_id}'
-                    )
+                    app.logger.info(f'[referral] +20pts: referrer={_ref_rec[1]} referred={img.user_id}')
         except Exception as _rse:
             app.logger.error(f'[referral] score hook: {_rse}')
 
@@ -7494,13 +7489,14 @@ def subscribe(track):
             if not _hmac.compare_digest(expected_sig, signature):
                 raise Exception('Payment signature verification failed')
 
-            current_user.subscription_track = track
-            current_user.subscription_plan  = plan
-            current_user.subscribed_at       = datetime.utcnow()
-            current_user.is_subscribed       = True
-            current_user.razorpay_sub_id     = subscription_id
+            current_user.subscription_track  = track
+            current_user.subscription_plan   = plan
+            current_user.subscribed_at        = datetime.utcnow()
+            current_user.is_subscribed        = True
+            current_user.razorpay_sub_id      = subscription_id
+            current_user.referred_discount    = False  # discount used — clear
             db.session.commit()
-            # ── Referral: first payment — award +500 pts to referrer ──────
+            # ── Referral: first payment — +500 pts to referrer ────────────
             try:
                 _ref_rec2 = db.session.execute(
                     db.text('SELECT id, referrer_id, points_reward_granted '
@@ -7517,10 +7513,7 @@ def subscribe(track):
                         {'rid': _ref_rec2[0]}
                     )
                     db.session.commit()
-                    app.logger.info(
-                        f'[referral] points reward granted: '
-                        f'referrer={_ref_rec2[1]} referred={current_user.id}'
-                    )
+                    app.logger.info(f'[referral] +500pts: referrer={_ref_rec2[1]} referred={current_user.id}')
             except Exception as _rpe:
                 app.logger.error(f'[referral] subscribe hook: {_rpe}')
 
@@ -7554,10 +7547,15 @@ def subscribe(track):
             'learning': '12 scored images/month · AI mentor · Improvement paths',
             'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
         }
+        _ref_disc    = getattr(current_user, 'referred_discount', False)
+        _disc_prices = REFERRAL_DISCOUNT_PRICES.get(track, {})
+        _disc_amount = _disc_prices.get(plan) if _ref_disc else None
         return render_template('subscribe_coming_soon.html',
             track=track, plan=plan, amount=amount,
             track_label=track_labels.get(track, track.title()),
             track_description=track_descriptions.get(track, ''),
+            referred_discount=_ref_disc,
+            discount_amount=_disc_amount,
         )
 
     # GET  -  create payment subscription (live when PAYMENT_GATEWAY_LIVE=1)
@@ -11163,9 +11161,7 @@ def _auto_decide_raw(image_id, submission_id):
 
 @app.route('/ref/<code>')
 def referral_landing(code):
-    """Landing page for referred users. Sets cookie and shows invite card."""
     from flask import make_response
-    # Look up referrer
     row = db.session.execute(
         db.text("SELECT u.username, u.full_name FROM referral_codes rc "
                 "JOIN users u ON u.id = rc.user_id WHERE rc.code = :c"),
@@ -11175,7 +11171,7 @@ def referral_landing(code):
         return redirect(url_for('register'))
     referrer_name = row[1] or row[0] or 'A photographer'
     if current_user.is_authenticated:
-        flash(f'{referrer_name} invited you! Sign up to claim your bonus uploads.', 'info')
+        flash(f'{referrer_name} invited you! Sign up to claim your referral discount.', 'info')
         return redirect(url_for('dashboard'))
     resp = make_response(render_template(
         'referral_landing.html',
@@ -11189,21 +11185,16 @@ def referral_landing(code):
 @app.route('/referral')
 @login_required
 def referral_page():
-    """Dedicated referral page."""
     ref_code = get_or_create_referral_code(current_user)
     stats    = get_referral_stats(current_user)
     site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
     ref_url  = f'{site_url}/ref/{ref_code}' if ref_code else None
-    return render_template('referral.html',
-                           ref_code=ref_code,
-                           ref_url=ref_url,
-                           stats=stats)
+    return render_template('referral.html', ref_code=ref_code, ref_url=ref_url, stats=stats)
 
 
 @app.route('/referral/generate', methods=['POST'])
 @login_required
 def referral_generate():
-    """Generate referral code on demand (AJAX)."""
     code = get_or_create_referral_code(current_user)
     if not code:
         return jsonify({'error': 'Could not generate code'}), 500
