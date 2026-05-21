@@ -1644,7 +1644,10 @@ def verify_email(token):
                                 'VALUES (:rid, :nid, :code)'),
                         {'rid': _ref_row[0], 'nid': user.id, 'code': _ref_code}
                     )
-                    user.referred_discount = True
+                    db.session.execute(
+                        db.text('UPDATE users SET referred_discount = TRUE WHERE id = :uid'),
+                        {'uid': user.id}
+                    )
                     db.session.commit()
                     app.logger.info(f'[referral] signup: referrer={_ref_row[0]} referred={user.id}')
     except Exception as _rve:
@@ -1778,7 +1781,10 @@ def auth_google_callback():
                                     'VALUES (:rid, :nid, :code)'),
                             {'rid': _ref_row[0], 'nid': user.id, 'code': _ref_code}
                         )
-                        user.referred_discount = True
+                        db.session.execute(
+                            db.text('UPDATE users SET referred_discount = TRUE WHERE id = :uid'),
+                            {'uid': user.id}
+                        )
                         db.session.commit()
                         app.logger.info(f'[referral] google signup: referrer={_ref_row[0]} referred={user.id}')
         except Exception as _rgo:
@@ -7528,7 +7534,10 @@ def subscribe(track):
             current_user.subscribed_at        = datetime.utcnow()
             current_user.is_subscribed        = True
             current_user.razorpay_sub_id      = subscription_id
-            current_user.referred_discount    = False  # discount used — clear
+            db.session.execute(
+                db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
+                {'uid': current_user.id}
+            )  # discount used — clear
             db.session.commit()
             # ── Referral: first payment — +500 pts to referrer ────────────
             try:
@@ -11266,7 +11275,10 @@ def referral_apply():
         if _existing:
             # Referral row exists but discount flag may not have been set — fix it silently
             if not getattr(current_user, 'referred_discount', False):
-                current_user.referred_discount = True
+                db.session.execute(
+                    db.text('UPDATE users SET referred_discount = TRUE WHERE id = :uid'),
+                    {'uid': current_user.id}
+                )
                 db.session.commit()
                 app.logger.info(f'[referral] apply: fixed missing discount flag for user={current_user.id}')
                 return jsonify({'ok': True})
@@ -11277,7 +11289,10 @@ def referral_apply():
                     'VALUES (:rid, :nid, :code)'),
             {'rid': _ref_row[0], 'nid': current_user.id, 'code': code}
         )
-        current_user.referred_discount = True
+        db.session.execute(
+            db.text('UPDATE users SET referred_discount = TRUE WHERE id = :uid'),
+            {'uid': current_user.id}
+        )
         db.session.commit()
         app.logger.info(f'[referral] manual apply: referrer={_ref_row[0]} referred={current_user.id} code={code}')
         return jsonify({'ok': True})
