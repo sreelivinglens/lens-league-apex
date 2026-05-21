@@ -12099,7 +12099,7 @@ def send_welcome_email(user):
         'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Rank</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
         'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
-        'Photography has never had the equivalent &#8212; until now.</p>'
+        'Photography has never had the equivalent for 200 years &#8212; until now.</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
         'Your best scores build your Photographer of the Year (POTY) average across eight tiers:</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#1a1a18;line-height:2.1;">'
