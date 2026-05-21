@@ -421,16 +421,122 @@
     <div style="font-size:14px; color:var(--text-primary); margin-bottom:14px; word-break:break-all; line-height:1.5;">{{ referral_url }}</div>
 
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-      <a href="https://wa.me/?text={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
-         target="_blank" rel="noopener"
-         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#25D366; padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+      <button onclick="slProfModal('whatsapp')"
+         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#25D366; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
         &#128242; WhatsApp
-      </a>
-      <a href="mailto:?subject=Join me on Shutter League&body={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
-         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#1A2744; background:#F7F5F2; border:1px solid rgba(26,39,68,0.25); padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
-        &#9993; Email
-      </a>
+      </button>
+      <button onclick="slProfModal('gmail')"
+         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#EA4335; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+        &#9993; Gmail
+      </button>
+      <button onclick="slProfModal('outlook')"
+         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#0078D4; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+        &#9993; Outlook
+      </button>
     </div>
+
+    {# Share modal #}
+    <div id="slProfModalWrap" style="position:relative;">
+    <div id="slProfModalBg" onclick="if(event.target===this)slProfClose()"
+         style="display:none; position:absolute; top:-20px; left:-22px; right:-22px; background:rgba(0,0,0,0.60); z-index:400; padding:20px; box-sizing:border-box; border-radius:8px;">
+      <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:24px; width:100%; box-sizing:border-box;">
+        <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
+        <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:14px;">Edit freely — change the greeting, add their name, anything you like.</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
+          <input id="slProfGreeting" type="text" value="Hey,"
+            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
+          <textarea id="slProfBody" rows="5"
+            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all;" id="slProfUrlDisp"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div>
+            <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
+            <input id="slProfClosing" type="text" value="Thank you,"
+              style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
+            <input id="slProfSender" type="text" placeholder="Your name"
+              style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a id="slProfSendBtn" href="#" target="_blank" rel="noopener"
+            style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+            Send &#8594;
+          </a>
+          <button onclick="slProfClose()"
+            style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:rgba(26,26,24,0.55); background:#fff; border:1px solid rgba(26,39,68,0.20); padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px;">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <script>
+    (function(){
+      var _ru   = {{ referral_url | tojson }};
+      var _db   = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).";
+      var _ch   = 'whatsapp';
+      var _subj = encodeURIComponent('Join me on Shutter League');
+
+      function _full() {
+        var g = (document.getElementById('slProfGreeting').value||'').trim();
+        var b = (document.getElementById('slProfBody').value||'').trim();
+        var c = (document.getElementById('slProfClosing').value||'').trim();
+        var s = (document.getElementById('slProfSender').value||'').trim();
+        var f = g + "\n\n" + b + "\n\n" + _ru;
+        if (c||s) f += "\n\n" + (c ? c+"\n" : "") + s;
+        return f;
+      }
+
+      function _update() {
+        var f   = _full();
+        var btn = document.getElementById('slProfSendBtn');
+        if (_ch === 'whatsapp') {
+          btn.href            = 'https://wa.me/?text=' + encodeURIComponent(f);
+          btn.style.background = '#25D366';
+          btn.innerHTML       = 'Open in WhatsApp &#8594;';
+        } else if (_ch === 'gmail') {
+          btn.href            = 'https://mail.google.com/mail/?view=cm&su=' + _subj + '&body=' + encodeURIComponent(f);
+          btn.style.background = '#EA4335';
+          btn.innerHTML       = 'Open in Gmail &#8594;';
+        } else {
+          btn.href            = 'https://outlook.live.com/mail/0/deeplink/compose?subject=' + _subj + '&body=' + encodeURIComponent(f);
+          btn.style.background = '#0078D4';
+          btn.innerHTML       = 'Open in Outlook &#8594;';
+        }
+      }
+
+      window.slProfModal = function(channel) {
+        _ch = channel;
+        document.getElementById('slProfBody').value = _db;
+        document.getElementById('slProfUrlDisp').textContent = _ru;
+        document.getElementById('slProfModalBg').style.display = 'block';
+        _update();
+        setTimeout(function(){ document.getElementById('slProfGreeting').focus(); }, 100);
+      };
+
+      window.slProfClose = function() {
+        document.getElementById('slProfModalBg').style.display = 'none';
+      };
+
+      ['slProfGreeting','slProfBody','slProfClosing','slProfSender'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', _update);
+      });
+
+      document.addEventListener('keydown', function(e){
+        if (e.key==='Escape') slProfClose();
+      });
+    })();
+    </script>
 
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px; margin-bottom:14px;">
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">How it works</div>

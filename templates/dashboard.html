@@ -528,7 +528,30 @@ function dismissPortfolioBanner() {
 
   <div class="notif-strip-body collapsed" id="notif-strip-body">
 
-    {# ── URGENT NOTIFICATIONS section ── #}
+    {# ── Referral discount banner — shown to referred users who haven't subscribed yet #}
+{% if referred_discount and not current_user.is_subscribed %}
+<div style="background:#1A2744; border-radius:8px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+  <div>
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:4px;">&#127881; You have a referral discount</div>
+    <div style="font-size:16px; color:rgba(255,255,255,0.90); line-height:1.5;">
+      Subscribe now and get your first month at <strong style="color:#F5C518;">&#8377;85</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">&#8377;99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">&#8377;169</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">&#8377;199</span> (Camera).
+    </div>
+    <div style="font-size:13px; color:rgba(255,255,255,0.45); margin-top:4px;">Only available via your referral link. Renews at standard price from month 2.</div>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="{{ url_for('subscribe', track='mobile', plan='monthly') }}"
+       style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#1A2744; background:#F5C518; padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
+      Mobile &#8377;85 &#8594;
+    </a>
+    <a href="{{ url_for('subscribe', track='camera', plan='monthly') }}"
+       style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; white-space:nowrap;">
+      Camera &#8377;169 &#8594;
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{# ── URGENT NOTIFICATIONS section ── #}
     {% if _urgent_count > 0 %}
     <div class="notif-sec-hdr urgent">Urgent Notifications</div>
 

@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Subscribe — {{ track_label }} · Shutter League{% endblock %}
 
+{% block extra_css %}
+<style>
+  body { font-size: 16px; line-height: 1.6; text-align: justify; }
+  p, li { text-align: justify; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  @media (max-width: 768px) {
+    div[style*="max-width:560px"] { padding: 0 8px; }
+  }
+  .notify-btn { padding: 14px 28px; min-height: 44px; font-size: 14px; line-height: 1.6; }
+</style>
+{% endblock %}
 {% block content %}
 <div style="background:#F5F0E8;min-height:100vh;padding:48px 16px 80px;">
   <div style="max-width:560px;margin:0 auto;">
 
     <!-- Header bar -->
-    <div style="background:#1a1a18;border-radius:8px 8px 0 0;padding:28px 36px;">
-      <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;
+    <div style="background:#1a1a18;border-radius:8px 8px 0 0;padding:28px 36px">
+      <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:12px;
                 letter-spacing:3px;color:#6a6458;text-transform:uppercase;">
         Subscription
       </p>
@@ -15,7 +25,7 @@
                  font-style:italic;color:#C8A84B;line-height:1.2;">
         {{ track_label }}
       </h1>
-      <p style="margin:8px 0 0;font-family:'Courier New',monospace;font-size:13px;
+      <p style="margin:8px 0 0;font-family:'Courier New',monospace;font-size:14px;
                 color:#6a6458;letter-spacing:1px;">
         {{ track_description }}
       </p>
@@ -23,12 +33,21 @@
 
     <!-- Price pill -->
     <div style="background:#1a1a18;padding:0 36px 28px;">
+      {% if referred_discount and discount_amount and plan == 'monthly' %}
+      <div style="display:inline-flex;align-items:baseline;gap:8px;margin-bottom:6px;">
+        <span style="font-family:'Courier New',monospace;font-size:32px;font-weight:700;color:#F5C518;">&#8377;{{ discount_amount }}</span>
+        <span style="font-family:'Courier New',monospace;font-size:18px;color:rgba(255,255,255,0.35);text-decoration:line-through;">&#8377;{{ amount }}</span>
+        <span style="font-family:'Courier New',monospace;font-size:14px;color:#6a6458;letter-spacing:1px;">/{{ plan }}</span>
+      </div>
+      <div style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-top:4px;">&#127881; Referral discount &mdash; first month only</div>
+      {% else %}
       <div style="display:inline-flex;align-items:baseline;gap:4px;">
         <span style="font-family:'Courier New',monospace;font-size:32px;
                      font-weight:700;color:#C8A84B;">&#8377;{{ amount }}</span>
-        <span style="font-family:'Courier New',monospace;font-size:13px;
+        <span style="font-family:'Courier New',monospace;font-size:14px;
                      color:#6a6458;letter-spacing:1px;">/{{ plan }}</span>
       </div>
+      {% endif %}
     </div>
 
     <!-- Body card -->
@@ -38,18 +57,18 @@
       <!-- Coming soon notice -->
       <div style="border-left:3px solid #C8A84B;padding:16px 20px;
                   background:#FDFAF4;margin-bottom:28px;border-radius:0 4px 4px 0;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;
+        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:12px;
                   letter-spacing:2px;text-transform:uppercase;color:#8a8070;">
           Payment Gateway
         </p>
         <p style="margin:0;font-family:Georgia,serif;font-size:16px;
-                  color:#1a1a18;line-height:1.6;">
+                  color:#1a1a18;line-height: 1.6;">
           We are finalising our payment partner. Subscriptions will open very shortly.
         </p>
       </div>
 
       <!-- What you get -->
-      <p style="margin:0 0 16px;font-family:'Courier New',monospace;font-size:11px;
+      <p style="margin:0 0 16px;font-family:']ourier New',monospace;font-size:12px;
                 letter-spacing:2px;text-transform:uppercase;color:#8a8070;">
         What you get
       </p>
@@ -57,26 +76,26 @@
       {% if track == 'mobile' %}
       <ul style="margin:0 0 28px;padding:0;list-style:none;">
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           8 scored images per month
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Full DDI scoring — 5 dimensions
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Annual Excellence Award — Photographer of the Year &amp; Weekly Challenge access
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Points wallet — earn &amp; redeem
         </li>
-        <li style="padding:10px 0;font-family:Georgia,serif;font-size:15px;color:#4A4840;">
+        <li style="padding:10px 0;font-family:Georgia,serif;font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Official world rank after 6 months
         </li>
@@ -84,26 +103,26 @@
       {% elif track == 'camera' %}
       <ul style="margin:0 0 28px;padding:0;list-style:none;">
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           5 scored images per month — RAW eligible
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Full DDI scoring — 5 dimensions
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Annual Excellence Award — Photographer of the Year &amp; Weekly Challenge access
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Points wallet — 2.5× tier jump bonus
         </li>
-        <li style="padding:10px 0;font-family:Georgia,serif;font-size:15px;color:#4A4840;">
+        <li style="padding:10px 0;font-family:Georgia,serif;font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Official world rank after 6 months
         </li>
@@ -111,16 +130,16 @@
       {% elif track == 'learning' %}
       <ul style="margin:0 0 28px;padding:0;list-style:none;">
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           12 scored images per month
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           AI improvement pathways
         </li>
-        <li style="padding:10px 0;font-family:Georgia,serif;font-size:15px;color:#4A4840;">
+        <li style="padding:10px 0;font-family:Georgia,serif;font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Structured learning progression
         </li>
@@ -128,16 +147,16 @@
       {% elif track == 'mentor' %}
       <ul style="margin:0 0 28px;padding:0;list-style:none;">
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           12 scored images per month
         </li>
         <li style="padding:10px 0;border-bottom:1px solid #E0D8C8;font-family:Georgia,serif;
-                   font-size:15px;color:#4A4840;">
+                   font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Weekly 1-on-1 mentor session
         </li>
-        <li style="padding:10px 0;font-family:Georgia,serif;font-size:15px;color:#4A4840;">
+        <li style="padding:10px 0;font-family:Georgia,serif;font-size:16px;color:#4A4840;">
           <span style="color:#C8A84B;margin-right:10px;">&#8594;</span>
           Human + AI feedback combined
         </li>
@@ -145,8 +164,8 @@
       {% endif %}
 
       <!-- Notify me form -->
-      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:15px;
-                color:#4A4840;line-height:1.6;">
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;
+                color:#4A4840;line-height: 1.6;">
         Leave your email and we will notify you the moment subscriptions open.
       </p>
       <form method="POST" action="{{ url_for('notify_me') }}"
@@ -157,23 +176,23 @@
           <input type="hidden" name="email" value="{{ current_user.email }}">
           <button type="submit"
                   style="background:#C8A84B;color:#1a1a18;border:none;cursor:pointer;
-                         font-family:'Courier New',monospace;font-size:13px;font-weight:700;
-                         letter-spacing:1px;text-transform:uppercase;padding:14px 28px;
+                         font-family:'Courier New',monospace;font-size:14px;font-weight:700;
+                         letter-spacing:1px;text-transform:uppercase;padding: 14px 28px;
                          border-radius:4px;white-space:nowrap;">
             Notify Me &#8594;
           </button>
-          <p style="margin:10px 0 0;font-size:13px;font-family:Georgia,serif;color:#8a8070;">
+          <p style="margin:10px 0 0;font-size:14px;font-family:Georgia,serif;color:#8a8070;">
             We will notify {{ current_user.email }} when payments go live.
           </p>
         {% else %}
           <input type="email" name="email" required placeholder="your@email.com"
                  style="flex:1;min-width:200px;padding:13px 16px;border:1px solid #E0D8C8;
-                        border-radius:4px;font-family:Georgia,serif;font-size:15px;
+                        border-radius:4px;font-family:Georgia,serif;font-size:16px;
                         color:#1a1a18;background:#fff;outline:none;">
           <button type="submit"
                   style="background:#C8A84B;color:#1a1a18;border:none;cursor:pointer;
-                         font-family:'Courier New',monospace;font-size:13px;font-weight:700;
-                         letter-spacing:1px;text-transform:uppercase;padding:14px 28px;
+                         font-family:'Courier New',monospace;font-size:14px;font-weight:700;
+                         letter-spacing:1px;text-transform:uppercase;padding: 14px 28px;
                          border-radius:4px;white-space:nowrap;">
             Notify Me &#8594;
           </button>
@@ -183,7 +202,7 @@
       <!-- Back link -->
       <div style="margin-top:32px;padding-top:24px;border-top:1px solid #E0D8C8;">
         <a href="{{ url_for('pricing') }}"
-           style="font-family:'Courier New',monospace;font-size:13px;
+           style="font-family:']ourier New',monospace;font-size:14px;
                   color:#8a8070;text-decoration:none;letter-spacing:1px;">
           &#8592; Back to pricing
         </a>
