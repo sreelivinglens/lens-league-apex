@@ -23,6 +23,16 @@
       </p>
     </div>
 
+    {% if referred_discount %}
+    <div style="background:#1A2744; border-radius:8px; padding:16px 20px; margin-bottom:24px;">
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:6px;">🎉 You have a referral discount</div>
+      <div style="font-size:16px; color:rgba(255,255,255,0.90); line-height:1.6;">
+        Your first month is <strong style="color:#F5C518;">₹85</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">₹99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">₹169</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">₹199</span> (Camera).
+      </div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.50); margin-top:6px; line-height:1.5;">Complete setup below — your discount will be waiting on your dashboard.</div>
+    </div>
+    {% endif %}
+
     <div class="card">
       <form method="POST" action="{{ url_for('onboarding') }}">
 
