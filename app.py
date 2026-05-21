@@ -1756,7 +1756,6 @@ def auth_google_callback():
             onboarding_complete=False,
             agreed_at=datetime.utcnow(),
             is_active=True,
-            referred_discount=False,
         )
         db.session.add(user)
         db.session.commit()
