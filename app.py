@@ -11934,10 +11934,11 @@ def send_winners_email(challenge, winners):
 def send_welcome_email(user):
     """
     Welcome email sent after onboarding completes.
-    DDI = Dimensional Depth Index (source: shutterleague.com/science).
-    Five dimensions: Depth of Difficulty, Visual Display, Decisive Moment,
-    Wonder Factor, Affective Quotient.
+    Content sources: shutterleague.com/science, /bow, investor doc v8.
+    DDI = Dimensional Depth Index. Five dimensions per science page.
     Leagues: Mobile (smartphone) and Camera (DSLR/mirrorless) only.
+    Points: score x10 per upload, +2 per peer rating (investor doc s12).
+    Weekly challenge: +10 participation, +20/30/50 for 3rd/2nd/1st (investor doc s12).
     Score card: static Master-level example (Flowers, Ashok Kochhar, 8.84).
     """
     site_url      = os.getenv('SITE_URL', 'https://shutterleague.com')
@@ -11945,6 +11946,10 @@ def send_welcome_email(user):
     upload_url    = site_url + '/upload'
     science_url   = site_url + '/science'
     hiw_url       = site_url + '/how-it-works'
+    bow_url       = site_url + '/bow'
+    challenge_url = site_url + '/challenge'
+    portfolio_url = site_url + '/dashboard/portfolio'
+    dashboard_url = site_url + '/dashboard'
     terms_url     = site_url + '/terms'
     accepted_date = user.terms_accepted_at.strftime('%d %b %Y') if user.terms_accepted_at else 'today'
     master_img    = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b0ce03d1-b5b1-4b42-914f-8964b4a6ca43.jpg'
@@ -11974,7 +11979,7 @@ def send_welcome_email(user):
         '</td></tr>'
     )
 
-    # Score card — photo full width, then score details, then dimension tiles
+    # Score card
     p.append(
         '<tr><td style="background:#F5F0E8;border-bottom:1px solid #E0D8C8;">'
         '<img src="' + master_img + '" width="560" alt="Flowers — Master level, Ashok Kochhar"'
@@ -12023,20 +12028,20 @@ def send_welcome_email(user):
         '</td></tr>'
     )
 
-    # Opening copy
+    # Opening copy — Option A
     p.append(
         '<tr><td style="padding:24px 24px 8px;">'
         '<p style="margin:0 0 12px;font-size:17px;color:#1a1a18;line-height:1.7;font-weight:700;">'
         'Photography has always deserved an honest mirror.</p>'
-        '<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Not likes. Not &#8220;great shot.&#8221; Not follower counts. '
-        'Every image you submit receives a score, a diagnosis, and a specific reason to get better &#8212; '
-        'on that photograph, after that shoot, when the feedback actually means something.</p>'
+        '<p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.75;">'
+        'You joined because you want to know if your photograph is actually good.</p>'
+        '<p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.75;">'
+        'Not whether it gets likes. Not whether your friends say &#8220;wow.&#8221; '
+        'The honest answer &#8212; the one most platforms are built to avoid giving you.</p>'
         '<p style="margin:0 0 24px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'That&#39;s what you just joined. Every image you upload is evaluated by the '
-        '<strong style="color:#1a1a18;">Apex DDI Engine</strong> &#8212; '
-        'five dimensions, scored 0&#8211;10, with specific feedback on exactly where your work '
-        'is strong and exactly what to improve next.</p>'
+        'Shutter League gives you that answer. Every image you upload is evaluated by the '
+        '<strong style="color:#1a1a18;">Apex DDI Engine</strong> across five dimensions, scored 0&#8211;10. '
+        'You see exactly what&#39;s working and exactly what to fix. Then you shoot again.</p>'
         '</td></tr>'
     )
 
@@ -12078,7 +12083,7 @@ def send_welcome_email(user):
         'Emotional resonance, empathy, atmosphere, and psychological impact.</p>'
         '</td></tr>'
         '</table>'
-        '<p style="margin:14px 0 0;font-size:16px;color:#1A2744;line-height:1.6;">'
+        '<p style="margin:14px 0 0;font-size:16px;color:#1A2744;">'
         '<a href="' + science_url + '" style="color:#1A2744;text-decoration:underline;margin-right:20px;">&#8594; Read the science</a>'
         '<a href="' + hiw_url + '" style="color:#1A2744;text-decoration:underline;">&#8594; How it works</a></p>'
         '</td></tr></table>'
@@ -12103,6 +12108,52 @@ def send_welcome_email(user):
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.75;font-style:italic;">'
         'Consistency wins. One great image is not enough.</p>'
         '</td></tr></table>'
+        '</td></tr>'
+    )
+
+    # Go Further block — 4 sections
+    p.append(
+        '<tr><td style="padding:0 24px 24px;">'
+        '<p style="margin:0 0 16px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
+        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">What Awaits You</p>'
+        '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">'
+
+        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
+        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Weekly Challenge</p>'
+        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
+        'Every week, a theme. Submit your best image &#8212; every entry earns points just for participating. '
+        'Top 3 earn additional points. Results every Monday. '
+        'It is the fastest way to stretch your eye &#8212; one theme, one week, one image that has to say everything.</p>'
+        '<a href="' + challenge_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; See this week&#39;s challenge</a>'
+        '</td></tr>'
+
+        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
+        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Body of Work</p>'
+        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
+        'Not your best photographs &#8212; a story. Six to ten images connected by a theme, event, or point of view. '
+        'Submitted in December, evaluated by Legend-tier jury photographers. '
+        'Your most intentional work, recognised.</p>'
+        '<a href="' + bow_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; Learn about Body of Work</a>'
+        '</td></tr>'
+
+        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
+        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Your Portfolio Page</p>'
+        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
+        'Free for every member. A public link you control. Each image displays its DDI score &#8212; '
+        'an independently verifiable credential you can share with clients, not just a gallery.</p>'
+        '<a href="' + portfolio_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; Set up your portfolio</a>'
+        '</td></tr>'
+
+        '<tr><td style="padding:14px 0;">'
+        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Points Wallet</p>'
+        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
+        'Every scored image earns points proportional to your score. '
+        'Rate another member&#39;s image and earn more. '
+        'Redeem for extra uploads, or a mentor session with the photographer of your choice.</p>'
+        '<a href="' + dashboard_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; View your wallet on the dashboard</a>'
+        '</td></tr>'
+
+        '</table>'
         '</td></tr>'
     )
 
@@ -12167,21 +12218,32 @@ def send_welcome_email(user):
     text_body = (
         'SHUTTER LEAGUE\n'
         'Welcome to Shutter League, ' + name + '.\n\n'
-        'Photography has always deserved an honest mirror. Not likes. Not opinions.\n'
-        'Every image you submit receives a score, a diagnosis, and a specific reason to get better.\n\n'
+        'Photography has always deserved an honest mirror.\n\n'
+        'You joined because you want to know if your photograph is actually good.\n'
+        'Not whether it gets likes. Not whether your friends say wow.\n'
+        'Shutter League gives you that answer. Every image is evaluated by the Apex DDI Engine\n'
+        'across five dimensions, scored 0-10. You see exactly what\'s working and what to fix.\n\n'
         'THE DIMENSIONAL DEPTH INDEX (DDI)\n'
-        'Every image is scored across five dimensions:\n'
         '1. Depth of Difficulty - access, rarity, timing, environmental challenge\n'
         '2. Visual Display - composition, structure, balance, tonal control\n'
         '3. Decisive Moment - timing, anticipation, gesture, emotional peak\n'
         '4. Wonder Factor - uniqueness, surprise, visual intrigue, memorability\n'
-        '5. Affective Quotient - emotional resonance, empathy, atmosphere\n\n'
+        '5. Affective Quotient - emotional resonance, empathy, atmosphere\n'
         'Read the science: ' + science_url + '\n'
         'How it works: ' + hiw_url + '\n\n'
         'YOUR RANK\n'
         'Eight tiers: Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
         'Your best scores build your Photographer of the Year (POTY) average.\n'
         'Consistency wins. One great image is not enough.\n\n'
+        'WHAT AWAITS YOU\n'
+        'Weekly Challenge: Every week, a theme. Every entry earns points. Top 3 earn additional points.\n'
+        + challenge_url + '\n\n'
+        'Body of Work: 6-10 images. One story. Jury evaluation in December.\n'
+        + bow_url + '\n\n'
+        'Your Portfolio Page: Free. Public link. DDI scores on every image.\n'
+        + portfolio_url + '\n\n'
+        'Points Wallet: Earn on every upload and every peer rating. Redeem for uploads or mentor sessions.\n'
+        + dashboard_url + '\n\n'
         'BEFORE YOU UPLOAD\n'
         '- Your original photograph. No AI generation, no compositing.\n'
         '- Minimum 1500px on the long edge.\n'
