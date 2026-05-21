@@ -2273,7 +2273,8 @@ def dashboard():
                            mentor_reviews=mentor_reviews,
                            referral_code=get_or_create_referral_code(current_user),
                            referral_stats=get_referral_stats(current_user),
-                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')))
+                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
+                           referred_discount=getattr(current_user, 'referred_discount', False))
 
 
 # ---------------------------------------------------------------------------
