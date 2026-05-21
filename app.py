@@ -1753,9 +1753,34 @@ def auth_google_callback():
             onboarding_complete=False,
             agreed_at=datetime.utcnow(),
             is_active=True,
+            referred_discount=False,
         )
         db.session.add(user)
         db.session.commit()
+        # ── Referral: record signup + set discount flag ────────────────────
+        try:
+            _ref_code = request.cookies.get('sl_ref')
+            if _ref_code:
+                _ref_row = db.session.execute(
+                    db.text('SELECT user_id FROM referral_codes WHERE code = :c'),
+                    {'c': _ref_code}
+                ).fetchone()
+                if _ref_row and _ref_row[0] != user.id:
+                    _existing = db.session.execute(
+                        db.text('SELECT id FROM referrals WHERE referred_user_id = :uid'),
+                        {'uid': user.id}
+                    ).fetchone()
+                    if not _existing:
+                        db.session.execute(
+                            db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
+                                    'VALUES (:rid, :nid, :code)'),
+                            {'rid': _ref_row[0], 'nid': user.id, 'code': _ref_code}
+                        )
+                        user.referred_discount = True
+                        db.session.commit()
+                        app.logger.info(f'[referral] google signup: referrer={_ref_row[0]} referred={user.id}')
+        except Exception as _rgo:
+            app.logger.error(f'[referral] auth_google_callback hook: {_rgo}')
         login_user(user, remember=True)
         return redirect(url_for('onboarding'))
 
@@ -1813,6 +1838,7 @@ def onboarding():
     return render_template('onboarding.html',
         countries          = get_countries(),
         location_data_json = json.dumps(_loc),
+        referred_discount  = getattr(current_user, 'referred_discount', False),
     )
 
 
