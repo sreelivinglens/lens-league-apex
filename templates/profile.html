@@ -406,24 +406,40 @@
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
       <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary);">Refer a friend</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.5px; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
-        <span style="background:#fff; border:1px solid rgba(26,39,68,0.20); font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.5px; color:var(--text-primary); padding:3px 10px; border-radius:99px;">+2 uploads free</span>
+        <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
+        <span style="background:#fff; border:1px solid rgba(26,39,68,0.20); font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--text-primary); padding:3px 10px; border-radius:99px;">+20 pts on signup</span>
       </div>
     </div>
+
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:8px;">Your referral link</div>
     <div style="background:#fff; border:1px solid rgba(26,39,68,0.15); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
       <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:var(--text-primary);">{{ referral_code }}</span>
-      <a href="#" onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
-         style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.5px; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
+      <a href="#"
+         onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
+         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
     </div>
-    <div style="font-size:14px; color:var(--text-primary); margin-bottom:16px; word-break:break-all; line-height:1.5;">{{ referral_url }}</div>
+    <div style="font-size:14px; color:var(--text-primary); margin-bottom:14px; word-break:break-all; line-height:1.5;">{{ referral_url }}</div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <a href="https://wa.me/?text={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
+         target="_blank" rel="noopener"
+         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#25D366; padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+        &#128242; WhatsApp
+      </a>
+      <a href="mailto:?subject=Join me on Shutter League&body={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
+         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#1A2744; background:#F7F5F2; border:1px solid rgba(26,39,68,0.25); padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+        &#9993; Email
+      </a>
+    </div>
+
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px; margin-bottom:14px;">
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">How it works</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; Share your link with a photographer friend</div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They sign up using your link</div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They score their first image — <strong>you get 2 extra image uploads free</strong></div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">&#10003;&nbsp; If they subscribe — <strong>you earn +500 loyalty points</strong> (credited to your wallet)</div>
+      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They sign up using your link — they get a <strong>special first-month price</strong></div>
+      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They score their first image — <strong>you earn +20 loyalty points</strong></div>
+      <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">&#10003;&nbsp; They subscribe — <strong>you earn +500 loyalty points</strong> (credited to your wallet)</div>
     </div>
+
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px;">
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">Your referral stats</div>
       <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px;">
@@ -442,9 +458,6 @@
       </div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">
         Points earned from referrals: <strong>{{ referral_stats.points_earned }}</strong>
-        {% if referral_stats.bonus_uploads > 0 %}
-        &nbsp;&#183;&nbsp; Bonus uploads earned: <strong>{{ referral_stats.bonus_uploads }}</strong>
-        {% endif %}
       </div>
     </div>
   </div>

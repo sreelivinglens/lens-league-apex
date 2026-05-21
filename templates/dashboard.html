@@ -913,10 +913,11 @@ function toggleNotifStrip() {
 </div>
 {% endif %}
 
+
 {# ── Referral widget ─────────────────────────────────────────────────────── #}
 {% if referral_code %}
 <div style="background:#F7F5F2; border:1px solid rgba(245,197,24,0.30); border-radius:8px;
-            padding:20px 22px; margin-bottom:20px;" text-align:left;>
+            padding:20px 22px; margin-bottom:20px; text-align:left;">
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
     <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary);">
       &#128101; Referrals
@@ -925,10 +926,22 @@ function toggleNotifStrip() {
   </div>
   <div style="background:#fff; border:1px solid rgba(26,39,68,0.15); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
     <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:var(--text-primary);">{{ referral_code }}</span>
-    <a href="#" onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
-       style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:0.5px; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
+    <a href="#" id="dash-ref-copy"
+       onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
   </div>
   <div style="font-size:14px; color:var(--text-primary); margin-bottom:14px; word-break:break-all;">{{ referral_url }}</div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+    <a href="https://wa.me/?text={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
+       target="_blank" rel="noopener"
+       style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:0.5px; color:#fff; background:#25D366; padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+      &#128242; WhatsApp
+    </a>
+    <a href="mailto:?subject=Join me on Shutter League&body={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
+       style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:0.5px; color:#1A2744; background:#F7F5F2; border:1px solid rgba(26,39,68,0.25); padding:8px 14px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+      &#9993; Email
+    </a>
+  </div>
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
     <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px;">
       <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Referred</div>
@@ -940,9 +953,9 @@ function toggleNotifStrip() {
     </div>
   </div>
   <div style="font-size:14px; color:var(--text-primary); line-height:1.6;">
-    +500 points credited to your wallet when a referred user makes their first payment.
-    {% if referral_stats.bonus_uploads > 0 %}
-    &nbsp;&#183;&nbsp; Bonus uploads earned: <strong>{{ referral_stats.bonus_uploads }}</strong>
+    You earn +20 pts when they score their first image, +500 pts when they subscribe.
+    {% if referral_stats.points_earned > 0 %}
+    &nbsp;&#183;&nbsp; Total earned: <strong>{{ referral_stats.points_earned + (referral_stats.signed_up * 20) }} pts</strong>
     {% endif %}
   </div>
 </div>
