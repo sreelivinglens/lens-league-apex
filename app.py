@@ -542,10 +542,14 @@ with app.app_context():
             ]
             for sql in _migrations:
                 try:
+                    conn.execute(db.text('COMMIT'))  # close any open txn
+                    conn.execute(db.text('BEGIN'))
                     conn.execute(db.text(sql))
+                    conn.execute(db.text('COMMIT'))
                 except Exception as _e:
                     print(f'[migration] {_e}')
-            conn.commit()
+                    try: conn.execute(db.text('ROLLBACK'))
+                    except: pass
 
         # Seed existing mentors into mentor_profiles if not already present
         try:
