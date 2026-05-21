@@ -952,14 +952,21 @@ function toggleNotifStrip() {
     </button>
   </div>
 
-  {# Editable message modal — uses absolute positioning inside wrapper, no position:fixed #}
+  {# Editable message modal #}
   <div id="slRefModalWrap" style="position:relative;">
-  <div id="slRefModalBg"
+  <div id="slRefModalBg" onclick="if(event.target===this)slRefModalClose()"
        style="display:none; position:absolute; top:-20px; left:-22px; right:-22px; background:rgba(0,0,0,0.60); z-index:400; padding:20px; box-sizing:border-box; border-radius:8px;">
     <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:24px; width:100%; box-sizing:border-box;">
 
       <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
       <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:16px;">Edit freely — change the greeting, add their name, anything you like.</div>
+
+      {# To email — only shown for email channel #}
+      <div id="slRefToWrap" style="margin-bottom:10px; display:none;">
+        <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">To (email address)</label>
+        <input id="slRefTo" type="email" placeholder="friend@example.com"
+          style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+      </div>
 
       <div style="margin-bottom:10px;">
         <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
@@ -989,10 +996,11 @@ function toggleNotifStrip() {
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="slRefSendBtn"
-          style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1;">
+        {# Send button — an <a> tag so the browser treats it as a direct user click, not JS-triggered #}
+        <a id="slRefSendBtn" href="#"
+          style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
           Send &#8594;
-        </button>
+        </a>
         <button onclick="slRefModalClose()"
           style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:rgba(26,26,24,0.55); background:#fff; border:1px solid rgba(26,39,68,0.20); padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px;">
           Cancel
@@ -1003,58 +1011,72 @@ function toggleNotifStrip() {
   </div>
   </div>
 
-  {# Hidden links for WhatsApp and Email — clicked programmatically to avoid browser blocking #}
-  <a id="slRefWaLink"  href="#" target="_blank" rel="noopener" style="display:none;"></a>
-  <a id="slRefMailLink" href="#" style="display:none;"></a>
+  {# Hidden WA link #}
+  <a id="slRefWaLink" href="#" target="_blank" rel="noopener" style="display:none;"></a>
 
   <script>
   (function(){
     var _refUrl  = {{ referral_url | tojson }};
-    var _defBody = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).\n\nSign up here: " + _refUrl;
+    var _defBody = "I’ve been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.
+
+Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile) or ₹169 instead of ₹199 (Camera).";
     var _channel = 'email';
 
-    document.addEventListener('DOMContentLoaded', function() {
-      var disp = document.getElementById('slRefUrlDisplay');
-      if (disp) disp.textContent = _refUrl;
-    });
+    function _buildFull() {
+      var greeting = (document.getElementById('slRefGreeting').value || '').trim();
+      var body     = (document.getElementById('slRefBody').value || '').trim();
+      var closing  = (document.getElementById('slRefClosing').value || '').trim();
+      var sender   = (document.getElementById('slRefSender').value || '').trim();
+      var full     = greeting + '
+
+' + body + '
+
+' + _refUrl;
+      if (closing || sender) { full += '
+
+' + (closing ? closing + '
+' : '') + sender; }
+      return full;
+    }
+
+    function _updateSendBtn() {
+      var btn  = document.getElementById('slRefSendBtn');
+      var full = _buildFull();
+      if (_channel === 'whatsapp') {
+        btn.href   = 'https://wa.me/?text=' + encodeURIComponent(full);
+        btn.target = '_blank';
+        btn.rel    = 'noopener';
+        btn.onclick = function(){ slRefModalClose(); };
+      } else {
+        var to = (document.getElementById('slRefTo').value || '').trim();
+        btn.href    = 'mailto:' + encodeURIComponent(to) +
+                      '?subject=' + encodeURIComponent('Join me on Shutter League') +
+                      '&body='    + encodeURIComponent(full);
+        btn.target  = '_self';
+        btn.onclick = function(){ setTimeout(slRefModalClose, 300); };
+      }
+    }
 
     window.slRefModal = function(channel) {
       _channel = channel;
-      document.getElementById('slRefBody').value = _defBody;
+      document.getElementById('slRefBody').value    = _defBody;
+      document.getElementById('slRefUrlDisplay').textContent = _refUrl;
+      document.getElementById('slRefToWrap').style.display = channel === 'email' ? 'block' : 'none';
+      document.getElementById('slRefSendBtn').textContent  = channel === 'whatsapp' ? 'Open in WhatsApp →' : 'Open in Mail →';
       document.getElementById('slRefModalBg').style.display = 'block';
-      document.getElementById('slRefSendBtn').textContent = channel === 'whatsapp' ? 'Open in WhatsApp \u2192' : 'Open in Mail \u2192';
-      setTimeout(function(){ document.getElementById('slRefGreeting').focus(); }, 100);
+      _updateSendBtn();
+      setTimeout(function(){
+        document.getElementById(channel === 'email' ? 'slRefTo' : 'slRefGreeting').focus();
+      }, 100);
     };
 
     window.slRefModalClose = function() {
       document.getElementById('slRefModalBg').style.display = 'none';
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
-      var sendBtn = document.getElementById('slRefSendBtn');
-      if (!sendBtn) return;
-      sendBtn.addEventListener('click', function() {
-        var greeting = (document.getElementById('slRefGreeting').value || '').trim();
-        var body     = (document.getElementById('slRefBody').value || '').trim();
-        var closing  = (document.getElementById('slRefClosing').value || '').trim();
-        var sender   = (document.getElementById('slRefSender').value || '').trim();
-
-        var full = greeting + '\n\n' + body + '\n\n' + _refUrl;
-        if (closing || sender) {
-          full += '\n\n' + (closing ? closing + '\n' : '') + sender;
-        }
-
-        if (_channel === 'whatsapp') {
-          var wa = document.getElementById('slRefWaLink');
-          wa.href = 'https://wa.me/?text=' + encodeURIComponent(full);
-          wa.click();
-        } else {
-          var ml = document.getElementById('slRefMailLink');
-          ml.href = 'mailto:?subject=' + encodeURIComponent('Join me on Shutter League') + '&body=' + encodeURIComponent(full);
-          ml.click();
-        }
-        slRefModalClose();
-      });
+    ['slRefGreeting','slRefBody','slRefClosing','slRefSender','slRefTo'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.addEventListener('input', _updateSendBtn); }
     });
 
     document.addEventListener('keydown', function(e) {
