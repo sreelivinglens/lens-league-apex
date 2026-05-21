@@ -426,6 +426,27 @@
 </div>
 {% endif %}
 
+{# ── Referral code self-service — shown to unsubscribed users without a discount #}
+{% if not referred_discount and not current_user.is_subscribed %}
+<div id="referral-code-widget" style="background:#1A2744; border-radius:8px; padding:16px 20px; margin-bottom:20px;">
+  <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:6px;">&#127873; Have a referral code?</div>
+  <div style="font-size:15px; color:rgba(255,255,255,0.80); line-height:1.6; margin-bottom:12px;">
+    Enter the code a friend shared with you to unlock first-month pricing: <strong style="color:#F5C518;">&#8377;85</strong> (Mobile) or <strong style="color:#F5C518;">&#8377;169</strong> (Camera).
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <input id="referral-code-input" type="text" maxlength="10" placeholder="SL-XXXXXX"
+           style="font-family:var(--font-mono); font-size:14px; padding:10px 14px; border-radius:4px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; min-width:160px; min-height:44px; letter-spacing:1px; text-transform:uppercase;"
+           oninput="this.value=this.value.toUpperCase()">
+    <button onclick="applyReferralCode()"
+            style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#1A2744; background:#F5C518; padding:10px 18px; border-radius:4px; border:none; cursor:pointer; min-height:44px; white-space:nowrap;">
+      APPLY CODE &#8594;
+    </button>
+    <span id="referral-code-msg" style="font-size:13px; color:rgba(255,255,255,0.60); display:none;"></span>
+  </div>
+  <div style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:8px;">Code format: SL-XXXXXX &mdash; check with the friend who invited you.</div>
+</div>
+{% endif %}
+
 
 {# ── POTY Welcome Banner — shown to users who have not dismissed it ───────── #}
 {% if show_poty_banner %}
@@ -1438,4 +1459,40 @@ function toggleNotifStrip() {
 })();
 </script>
 {% endif %}
+
+<script>
+function applyReferralCode() {
+  var code = document.getElementById('referral-code-input').value.trim().toUpperCase();
+  var msg  = document.getElementById('referral-code-msg');
+  if (!code || code.length < 6) {
+    msg.style.display = 'inline';
+    msg.style.color   = '#ffaaaa';
+    msg.textContent   = 'Please enter a valid code.';
+    return;
+  }
+  msg.style.display = 'inline';
+  msg.style.color   = 'rgba(255,255,255,0.60)';
+  msg.textContent   = 'Checking…';
+  fetch('/referral/apply', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      msg.style.color = '#7fff7f';
+      msg.textContent = '✅ Referral discount applied! Loading your offer…';
+      setTimeout(function(){ window.location.reload(); }, 1200);
+    } else {
+      msg.style.color   = '#ffaaaa';
+      msg.textContent   = data.error || 'Code not recognised — check with your friend.';
+    }
+  })
+  .catch(function() {
+    msg.style.color   = '#ffaaaa';
+    msg.textContent   = 'Something went wrong — please try again.';
+  });
+}
+</script>
 {% endblock %}
