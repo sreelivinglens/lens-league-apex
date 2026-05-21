@@ -11236,6 +11236,50 @@ def referral_generate():
     return jsonify({'code': code, 'url': f'{site_url}/ref/{code}'})
 
 
+@app.route('/referral/apply', methods=['POST'])
+@login_required
+def referral_apply():
+    """Self-service: referred user manually enters a referral code to claim their discount."""
+    if getattr(current_user, 'referred_discount', False):
+        return jsonify({'error': 'You already have a referral discount active.'})
+    if getattr(current_user, 'is_subscribed', False):
+        return jsonify({'error': 'You are already subscribed.'})
+    try:
+        data = request.get_json(silent=True) or {}
+        code = (data.get('code') or '').strip().upper()
+        if not code:
+            return jsonify({'error': 'Please enter a code.'})
+        # Look up the referral code
+        _ref_row = db.session.execute(
+            db.text('SELECT user_id FROM referral_codes WHERE code = :c'),
+            {'c': code}
+        ).fetchone()
+        if not _ref_row:
+            return jsonify({'error': 'Code not found — check with your friend.'})
+        if _ref_row[0] == current_user.id:
+            return jsonify({'error': 'You cannot use your own referral code.'})
+        # Check no existing referral row for this user
+        _existing = db.session.execute(
+            db.text('SELECT id FROM referrals WHERE referred_user_id = :uid'),
+            {'uid': current_user.id}
+        ).fetchone()
+        if _existing:
+            return jsonify({'error': 'A referral is already recorded for your account.'})
+        # All good — record and activate discount
+        db.session.execute(
+            db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
+                    'VALUES (:rid, :nid, :code)'),
+            {'rid': _ref_row[0], 'nid': current_user.id, 'code': code}
+        )
+        current_user.referred_discount = True
+        db.session.commit()
+        app.logger.info(f'[referral] manual apply: referrer={_ref_row[0]} referred={current_user.id} code={code}')
+        return jsonify({'ok': True})
+    except Exception as _e:
+        app.logger.error(f'[referral] apply error: {_e}')
+        return jsonify({'error': 'Something went wrong — please try again.'})
+
+
 @app.route('/raw/appeal/<int:image_id>', methods=['GET', 'POST'])
 @login_required
 def raw_appeal(image_id):
