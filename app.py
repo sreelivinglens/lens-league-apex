@@ -11264,7 +11264,13 @@ def referral_apply():
             {'uid': current_user.id}
         ).fetchone()
         if _existing:
-            return jsonify({'error': 'A referral is already recorded for your account.'})
+            # Referral row exists but discount flag may not have been set — fix it silently
+            if not getattr(current_user, 'referred_discount', False):
+                current_user.referred_discount = True
+                db.session.commit()
+                app.logger.info(f'[referral] apply: fixed missing discount flag for user={current_user.id}')
+                return jsonify({'ok': True})
+            return jsonify({'error': 'Your referral discount is already active — check your dashboard.'})
         # All good — record and activate discount
         db.session.execute(
             db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
