@@ -234,7 +234,7 @@ app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_NAME']     = 'sl_session'
 app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
-app.config['REMEMBER_COOKIE_DURATION']   = 60 * 60 * 24 * 30  # 30 days
+app.config['REMEMBER_COOKIE_DURATION']   = timedelta(days=30)  # 30 days
 app.config['REMEMBER_COOKIE_SAMESITE']   = 'Lax'
 app.config['REMEMBER_COOKIE_SECURE']     = True
 
