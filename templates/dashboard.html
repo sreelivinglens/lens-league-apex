@@ -1017,9 +1017,7 @@ function toggleNotifStrip() {
   <script>
   (function(){
     var _refUrl  = {{ referral_url | tojson }};
-    var _defBody = "I’ve been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.
-
-Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile) or ₹169 instead of ₹199 (Camera).";
+    var _defBody = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).";
     var _channel = 'email';
 
     function _buildFull() {
@@ -1027,15 +1025,8 @@ Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile)
       var body     = (document.getElementById('slRefBody').value || '').trim();
       var closing  = (document.getElementById('slRefClosing').value || '').trim();
       var sender   = (document.getElementById('slRefSender').value || '').trim();
-      var full     = greeting + '
-
-' + body + '
-
-' + _refUrl;
-      if (closing || sender) { full += '
-
-' + (closing ? closing + '
-' : '') + sender; }
+      var full     = greeting + "\n\n" + body + "\n\n" + _refUrl;
+      if (closing || sender) { full += "\n\n" + (closing ? closing + "\n" : "") + sender; }
       return full;
     }
 
@@ -1046,23 +1037,19 @@ Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile)
         btn.href   = 'https://wa.me/?text=' + encodeURIComponent(full);
         btn.target = '_blank';
         btn.rel    = 'noopener';
-        btn.onclick = function(){ slRefModalClose(); };
       } else {
-        var to = (document.getElementById('slRefTo').value || '').trim();
-        btn.href    = 'mailto:' + encodeURIComponent(to) +
-                      '?subject=' + encodeURIComponent('Join me on Shutter League') +
-                      '&body='    + encodeURIComponent(full);
-        btn.target  = '_self';
-        btn.onclick = function(){ setTimeout(slRefModalClose, 300); };
+        var to  = (document.getElementById('slRefTo').value || '').trim();
+        btn.href   = 'mailto:' + to + '?subject=' + encodeURIComponent('Join me on Shutter League') + '&body=' + encodeURIComponent(full);
+        btn.target = '_self';
       }
     }
 
     window.slRefModal = function(channel) {
       _channel = channel;
-      document.getElementById('slRefBody').value    = _defBody;
+      document.getElementById('slRefBody').value = _defBody;
       document.getElementById('slRefUrlDisplay').textContent = _refUrl;
-      document.getElementById('slRefToWrap').style.display = channel === 'email' ? 'block' : 'none';
-      document.getElementById('slRefSendBtn').textContent  = channel === 'whatsapp' ? 'Open in WhatsApp →' : 'Open in Mail →';
+      document.getElementById('slRefToWrap').style.display = (channel === 'email') ? 'block' : 'none';
+      document.getElementById('slRefSendBtn').innerHTML = (channel === 'whatsapp') ? 'Open in WhatsApp &rarr;' : 'Open in Mail &rarr;';
       document.getElementById('slRefModalBg').style.display = 'block';
       _updateSendBtn();
       setTimeout(function(){
@@ -1076,7 +1063,7 @@ Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile)
 
     ['slRefGreeting','slRefBody','slRefClosing','slRefSender','slRefTo'].forEach(function(id) {
       var el = document.getElementById(id);
-      if (el) { el.addEventListener('input', _updateSendBtn); }
+      if (el) el.addEventListener('input', _updateSendBtn);
     });
 
     document.addEventListener('keydown', function(e) {
