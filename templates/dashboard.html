@@ -916,170 +916,96 @@ function toggleNotifStrip() {
 
 {# ── Referral widget ─────────────────────────────────────────────────────── #}
 {% if referral_code %}
+{% set _wa_msg = "Hey,\n\nI've been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at Rs.85 instead of Rs.99 (Mobile) or Rs.169 instead of Rs.199 (Camera).\n\nSign up here: " + referral_url %}
+{% set _email_body = "Hey,\n\nI've been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at Rs.85 instead of Rs.99 (Mobile) or Rs.169 instead of Rs.199 (Camera).\n\nSign up here: " + referral_url %}
 <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:20px 22px; margin-bottom:20px; text-align:left;">
 
-  {# Header #}
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
     <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744;">
       &#128101; Referrals
     </div>
-    <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.5px; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
+    <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
   </div>
 
-  {# Sub-heading copy #}
   <div style="font-size:16px; color:#1A1A18; line-height:1.6; margin-bottom:16px;">
-    Share your link &#8212; your friend gets a special first-month price on their subscription. You earn <strong style="color:#1A2744;">+20 pts</strong> when they score their first image, and <strong style="color:#1A2744;">+500 pts</strong> when they subscribe (credited straight to your wallet).
+    Share your link &#8212; your friend gets a special first-month price. You earn <strong>+20 pts</strong> when they score their first image, and <strong>+500 pts</strong> when they subscribe (credited to your wallet).
   </div>
 
-  {# Referral code + copy button #}
   <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
     <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:#1A2744;">{{ referral_code }}</span>
-    <a href="#" id="dash-ref-copy"
-       onclick="navigator.clipboard.writeText('{{ referral_url }}').then(()=>{ this.textContent='Copied!'; setTimeout(()=>{ this.textContent='Copy link'; },2000); }); return false;"
+    <a href="#" onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ var t=this; t.textContent='Copied!'; setTimeout(function(){ t.textContent='Copy link'; },2000); }.bind(this)); return false;"
        style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; padding:8px 16px; border-radius:4px; text-decoration:none; white-space:nowrap; min-height:44px; display:inline-flex; align-items:center;">Copy link</a>
   </div>
   <div style="font-size:14px; color:rgba(26,26,24,0.55); margin-bottom:16px; word-break:break-all;">{{ referral_url }}</div>
 
-  {# Share buttons — open editable message modal #}
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-    <button onclick="slRefModal('whatsapp')"
+
+    {# WhatsApp — opens modal so user can personalise message #}
+    <button onclick="slRefWaModal()"
        style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; border:none; padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
       &#128242; WhatsApp
     </button>
-    <button onclick="slRefModal('email')"
-       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#fff; border:1.5px solid #1A2744; padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+
+    {# Email — fully static mailto rendered by Jinja, zero JS, guaranteed to open mail client #}
+    <a href="mailto:?subject={{ 'Join me on Shutter League' | urlencode }}&body={{ _email_body | urlencode }}"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#fff; border:1.5px solid #1A2744; padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
       &#9993; Email
-    </button>
+    </a>
+
   </div>
 
-  {# Editable message modal #}
-  <div id="slRefModalWrap" style="position:relative;">
-  <div id="slRefModalBg" onclick="if(event.target===this)slRefModalClose()"
+  {# WhatsApp modal — personalise message before sending #}
+  <div id="slWaModalWrap" style="position:relative;">
+  <div id="slWaModalBg" onclick="if(event.target===this)slWaClose()"
        style="display:none; position:absolute; top:-20px; left:-22px; right:-22px; background:rgba(0,0,0,0.60); z-index:400; padding:20px; box-sizing:border-box; border-radius:8px;">
     <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:24px; width:100%; box-sizing:border-box;">
-
-      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
-      <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:16px;">Edit freely — change the greeting, add their name, anything you like.</div>
-
-      {# To email — only shown for email channel #}
-      <div id="slRefToWrap" style="margin-bottom:10px; display:none;">
-        <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">To (email address)</label>
-        <input id="slRefTo" type="email" placeholder="friend@example.com"
-          style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
-      </div>
-
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">WhatsApp message</div>
+      <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:14px;">Edit freely before sending.</div>
       <div style="margin-bottom:10px;">
         <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
-        <input id="slRefGreeting" type="text" value="Hey,"
+        <input id="slWaGreeting" type="text" value="Hey,"
           style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
       </div>
-
       <div style="margin-bottom:10px;">
         <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
-        <textarea id="slRefBody"
-          style="width:100%; min-height:120px; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
+        <textarea id="slWaBody" rows="5"
+          style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
       </div>
-
-      <div id="slRefUrlDisplay" style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all; line-height:1.5;"></div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+      <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all;" id="slWaUrlDisp"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
         <div>
           <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
-          <input id="slRefClosing" type="text" value="Thank you,"
+          <input id="slWaClosing" type="text" value="Thank you,"
             style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
         </div>
         <div>
           <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
-          <input id="slRefSender" type="text" placeholder="Your name"
+          <input id="slWaSender" type="text" placeholder="Your name"
             style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
         </div>
       </div>
-
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        {# Send button — an <a> tag so the browser treats it as a direct user click, not JS-triggered #}
-        <a id="slRefSendBtn" href="#"
-          style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
-          Send &#8594;
+        <a id="slWaSendBtn" href="https://wa.me/" target="_blank" rel="noopener"
+           onclick="slWaClose()"
+           style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+          Open in WhatsApp &#8594;
         </a>
-        <button onclick="slRefModalClose()"
+        <button onclick="slWaClose()"
           style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:rgba(26,26,24,0.55); background:#fff; border:1px solid rgba(26,39,68,0.20); padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px;">
           Cancel
         </button>
       </div>
-
     </div>
   </div>
   </div>
 
-  {# Hidden WA link #}
-  <a id="slRefWaLink" href="#" target="_blank" rel="noopener" style="display:none;"></a>
-
-  <script>
-  (function(){
-    var _refUrl  = {{ referral_url | tojson }};
-    var _defBody = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).";
-    var _channel = 'email';
-
-    function _buildFull() {
-      var greeting = (document.getElementById('slRefGreeting').value || '').trim();
-      var body     = (document.getElementById('slRefBody').value || '').trim();
-      var closing  = (document.getElementById('slRefClosing').value || '').trim();
-      var sender   = (document.getElementById('slRefSender').value || '').trim();
-      var full     = greeting + "\n\n" + body + "\n\n" + _refUrl;
-      if (closing || sender) { full += "\n\n" + (closing ? closing + "\n" : "") + sender; }
-      return full;
-    }
-
-    function _updateSendBtn() {
-      var btn  = document.getElementById('slRefSendBtn');
-      var full = _buildFull();
-      if (_channel === 'whatsapp') {
-        btn.href   = 'https://wa.me/?text=' + encodeURIComponent(full);
-        btn.target = '_blank';
-        btn.rel    = 'noopener';
-      } else {
-        var to  = (document.getElementById('slRefTo').value || '').trim();
-        btn.href   = 'mailto:' + to + '?subject=' + encodeURIComponent('Join me on Shutter League') + '&body=' + encodeURIComponent(full);
-        btn.target = '_self';
-      }
-    }
-
-    window.slRefModal = function(channel) {
-      _channel = channel;
-      document.getElementById('slRefBody').value = _defBody;
-      document.getElementById('slRefUrlDisplay').textContent = _refUrl;
-      document.getElementById('slRefToWrap').style.display = (channel === 'email') ? 'block' : 'none';
-      document.getElementById('slRefSendBtn').innerHTML = (channel === 'whatsapp') ? 'Open in WhatsApp &rarr;' : 'Open in Mail &rarr;';
-      document.getElementById('slRefModalBg').style.display = 'block';
-      _updateSendBtn();
-      setTimeout(function(){
-        document.getElementById(channel === 'email' ? 'slRefTo' : 'slRefGreeting').focus();
-      }, 100);
-    };
-
-    window.slRefModalClose = function() {
-      document.getElementById('slRefModalBg').style.display = 'none';
-    };
-
-    ['slRefGreeting','slRefBody','slRefClosing','slRefSender','slRefTo'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.addEventListener('input', _updateSendBtn);
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') slRefModalClose();
-    });
-  })();
-  </script>
-
-  {# Stats #}
-  <div style="border-top:1px solid rgba(26,39,68,0.15); padding-top:14px;">
+  <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px;">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-      <div style="background:#fff; border:1px solid rgba(26,39,68,0.12); border-radius:6px; padding:10px 12px;">
+      <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px;">
         <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.50); margin-bottom:4px;">Referred</div>
         <div style="font-size:24px; font-weight:700; color:#1A2744;">{{ referral_stats.total_referred }}</div>
       </div>
-      <div style="background:#fff; border:1px solid rgba(26,39,68,0.12); border-radius:6px; padding:10px 12px;">
+      <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px;">
         <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.50); margin-bottom:4px;">Converted</div>
         <div style="font-size:24px; font-weight:700; color:#1A2744;">{{ referral_stats.subscribed }}</div>
       </div>
@@ -1090,6 +1016,48 @@ function toggleNotifStrip() {
   </div>
 
 </div>
+
+<script>
+(function(){
+  var _ru = {{ referral_url | tojson }};
+  var _db = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).";
+
+  function _waFull() {
+    var g = (document.getElementById('slWaGreeting').value||'').trim();
+    var b = (document.getElementById('slWaBody').value||'').trim();
+    var c = (document.getElementById('slWaClosing').value||'').trim();
+    var s = (document.getElementById('slWaSender').value||'').trim();
+    var f = g + "\n\n" + b + "\n\n" + _ru;
+    if (c||s) f += "\n\n" + (c ? c+"\n" : "") + s;
+    return f;
+  }
+
+  function _waUpdate() {
+    document.getElementById('slWaSendBtn').href = 'https://wa.me/?text=' + encodeURIComponent(_waFull());
+  }
+
+  window.slRefWaModal = function() {
+    document.getElementById('slWaBody').value = _db;
+    document.getElementById('slWaUrlDisp').textContent = _ru;
+    document.getElementById('slWaModalBg').style.display = 'block';
+    _waUpdate();
+    setTimeout(function(){ document.getElementById('slWaGreeting').focus(); }, 100);
+  };
+
+  window.slWaClose = function() {
+    document.getElementById('slWaModalBg').style.display = 'none';
+  };
+
+  ['slWaGreeting','slWaBody','slWaClosing','slWaSender'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', _waUpdate);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key==='Escape') slWaClose();
+  });
+})();
+</script>
 {% endif %}
 
 {# ── Set password nudge (Google OAuth users without a password) ─────────── #}
