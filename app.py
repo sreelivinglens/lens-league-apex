@@ -482,6 +482,29 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_genres BOOLEAN DEFAULT TRUE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_show_awards BOOLEAN DEFAULT TRUE",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_banner_dismissed BOOLEAN DEFAULT FALSE",
+                # ── Referral system (Session 28) ──────────────────────────
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_bonus_uploads INTEGER DEFAULT 0",
+                """CREATE TABLE IF NOT EXISTS referral_codes (
+                    id         SERIAL PRIMARY KEY,
+                    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    code       VARCHAR(10) UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_referral_codes_user_id ON referral_codes(user_id)",
+                "CREATE INDEX IF NOT EXISTS ix_referral_codes_code ON referral_codes(code)",
+                """CREATE TABLE IF NOT EXISTS referrals (
+                    id               SERIAL PRIMARY KEY,
+                    referrer_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    referred_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    code_used        VARCHAR(10) NOT NULL,
+                    referred_at      TIMESTAMP DEFAULT NOW(),
+                    first_image_at   TIMESTAMP,
+                    first_payment_at TIMESTAMP,
+                    upload_reward_granted   BOOLEAN DEFAULT FALSE,
+                    points_reward_granted   BOOLEAN DEFAULT FALSE,
+                    UNIQUE(referred_user_id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_referrals_referrer_id ON referrals(referrer_id)",
                 """CREATE TABLE IF NOT EXISTS portfolio_images (
                     id         SERIAL PRIMARY KEY,
                     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -1037,6 +1060,65 @@ _TIER_JUMP_POINTS = {
 }
 
 
+# ── Referral system helpers (Session 28) ──────────────────────────────────────
+
+def _generate_referral_code():
+    import secrets as _rsec, string as _rstr
+    chars = _rstr.ascii_uppercase + _rstr.digits
+    for _ in range(20):
+        code = 'SL-' + ''.join(_rsec.choice(chars) for _ in range(6))
+        existing = db.session.execute(
+            db.text("SELECT id FROM referral_codes WHERE code = :c"), {'c': code}
+        ).fetchone()
+        if not existing:
+            return code
+    raise RuntimeError('[referral] could not generate unique code')
+
+
+def get_or_create_referral_code(user):
+    try:
+        row = db.session.execute(
+            db.text("SELECT code FROM referral_codes WHERE user_id = :uid"),
+            {'uid': user.id}
+        ).fetchone()
+        if row:
+            return row[0]
+        code = _generate_referral_code()
+        db.session.execute(
+            db.text("INSERT INTO referral_codes (user_id, code) VALUES (:uid, :code)"),
+            {'uid': user.id, 'code': code}
+        )
+        db.session.commit()
+        return code
+    except Exception as _e:
+        app.logger.error(f'[referral] get_or_create_referral_code: {_e}')
+        return None
+
+
+def get_referral_stats(user):
+    try:
+        row = db.session.execute(
+            db.text(
+                "SELECT COUNT(*), COUNT(first_image_at), COUNT(first_payment_at), "
+                "COUNT(CASE WHEN upload_reward_granted THEN 1 END), "
+                "COUNT(CASE WHEN points_reward_granted THEN 1 END) "
+                "FROM referrals WHERE referrer_id = :uid"
+            ), {'uid': user.id}
+        ).fetchone()
+        bonus = getattr(user, 'referral_bonus_uploads', 0) or 0
+        return {
+            'total_referred': row[0] if row else 0,
+            'signed_up':      row[1] if row else 0,
+            'subscribed':     row[2] if row else 0,
+            'bonus_uploads':  bonus,
+            'points_earned':  (row[4] if row else 0) * 500,
+        }
+    except Exception as _e:
+        app.logger.error(f'[referral] get_referral_stats: {_e}')
+        return {'total_referred': 0, 'signed_up': 0, 'subscribed': 0,
+                'bonus_uploads': 0, 'points_earned': 0}
+
+
 def award_points(user, amount, reason, commit=True):
     """
     Credit points to user.points_balance and update lifetime total.
@@ -1534,6 +1616,29 @@ def verify_email(token):
     user.is_active           = True
     user.email_verify_token  = None
     db.session.commit()
+    # ── Referral: record signup if cookie present ──────────────────────
+    try:
+        _ref_code = request.cookies.get('sl_ref')
+        if _ref_code:
+            _ref_row = db.session.execute(
+                db.text('SELECT user_id FROM referral_codes WHERE code = :c'),
+                {'c': _ref_code}
+            ).fetchone()
+            if _ref_row and _ref_row[0] != user.id:
+                _existing = db.session.execute(
+                    db.text('SELECT id FROM referrals WHERE referred_user_id = :uid'),
+                    {'uid': user.id}
+                ).fetchone()
+                if not _existing:
+                    db.session.execute(
+                        db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
+                                'VALUES (:rid, :nid, :code)'),
+                        {'rid': _ref_row[0], 'nid': user.id, 'code': _ref_code}
+                    )
+                    db.session.commit()
+                    app.logger.info(f'[referral] signup recorded: referrer={_ref_row[0]} referred={user.id}')
+    except Exception as _rve:
+        app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user)
     flash('Email verified! Welcome to Shutter League.', 'success')
     return redirect(url_for('onboarding'))
@@ -2162,7 +2267,10 @@ def dashboard():
                            wallet_hud=wallet_hud,
                            progress_data=progress_data,
                            show_portfolio_banner=show_portfolio_banner,
-                           mentor_reviews=mentor_reviews)
+                           mentor_reviews=mentor_reviews,
+                           referral_code=get_or_create_referral_code(current_user),
+                           referral_stats=get_referral_stats(current_user),
+                           referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')))
 
 
 # ---------------------------------------------------------------------------
@@ -2293,7 +2401,12 @@ def profile():
             return redirect(url_for('login'))
 
     progress_data = _build_progress_data(current_user)
-    return render_template('profile.html', images_used=images_used, progress_data=progress_data)
+    _ref_code  = get_or_create_referral_code(current_user)
+    _ref_stats = get_referral_stats(current_user)
+    _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _ref_url   = f'{_site_url}/ref/{_ref_code}' if _ref_code else None
+    return render_template('profile.html', images_used=images_used, progress_data=progress_data,
+                           referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -2316,14 +2429,16 @@ def upload():
             _is_sub = getattr(current_user, 'is_subscribed', False)
 
             if not _is_sub:
-                # Free tier — 3 lifetime images (Initial Assessment Phase)
+                # Free tier — 3 lifetime images + referral bonus uploads
                 total_count = Image.query.filter(
                     Image.user_id == current_user.id,
                 ).count()
-                if total_count >= FREE_IMAGE_LIMIT:
+                _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+                if total_count >= (FREE_IMAGE_LIMIT + _bonus):
+                    _limit_shown = FREE_IMAGE_LIMIT + _bonus
                     flash(
-                        f'You have used all {FREE_IMAGE_LIMIT} free scored images. '
-                        'Upgrade to Mobile (₹99/mo) or Camera (₹599/mo) to keep uploading.',
+                        f'You have used all {_limit_shown} free scored images. '
+                        'Upgrade to Mobile (&#8377;99/mo) or Camera (&#8377;599/mo) to keep uploading.',
                         'warning'
                     )
                     return redirect(url_for('dashboard'))
@@ -3068,6 +3183,36 @@ def retry_score(image_id):
                 db.session.commit()
         except Exception as _spe:
             app.logger.error(f'[points hook] score_image error: {_spe}')
+        # ── Referral: first scored image — grant +2 uploads to both ──────
+        try:
+            _scored_total = Image.query.filter_by(
+                user_id=img.user_id, status='scored'
+            ).count()
+            if _scored_total == 1:
+                _ref_rec = db.session.execute(
+                    db.text('SELECT id, referrer_id, upload_reward_granted '
+                            'FROM referrals WHERE referred_user_id = :uid'),
+                    {'uid': img.user_id}
+                ).fetchone()
+                if _ref_rec and not _ref_rec[2]:
+                    _referrer = User.query.get(_ref_rec[1])
+                    _referred = User.query.get(img.user_id)
+                    if _referrer:
+                        _referrer.referral_bonus_uploads = (_referrer.referral_bonus_uploads or 0) + 2
+                    if _referred:
+                        _referred.referral_bonus_uploads = (_referred.referral_bonus_uploads or 0) + 2
+                    db.session.execute(
+                        db.text('UPDATE referrals SET first_image_at = NOW(), '
+                                'upload_reward_granted = TRUE WHERE id = :rid'),
+                        {'rid': _ref_rec[0]}
+                    )
+                    db.session.commit()
+                    app.logger.info(
+                        f'[referral] upload reward granted: '
+                        f'referrer={_ref_rec[1]} referred={img.user_id}'
+                    )
+        except Exception as _rse:
+            app.logger.error(f'[referral] score hook: {_rse}')
 
         try:
             uid       = str(uuid.uuid4())
@@ -7355,6 +7500,29 @@ def subscribe(track):
             current_user.is_subscribed       = True
             current_user.razorpay_sub_id     = subscription_id
             db.session.commit()
+            # ── Referral: first payment — award +500 pts to referrer ──────
+            try:
+                _ref_rec2 = db.session.execute(
+                    db.text('SELECT id, referrer_id, points_reward_granted '
+                            'FROM referrals WHERE referred_user_id = :uid'),
+                    {'uid': current_user.id}
+                ).fetchone()
+                if _ref_rec2 and not _ref_rec2[2]:
+                    _referrer2 = User.query.get(_ref_rec2[1])
+                    if _referrer2:
+                        award_points(_referrer2, 500, 'referral_conversion')
+                    db.session.execute(
+                        db.text('UPDATE referrals SET first_payment_at = NOW(), '
+                                'points_reward_granted = TRUE WHERE id = :rid'),
+                        {'rid': _ref_rec2[0]}
+                    )
+                    db.session.commit()
+                    app.logger.info(
+                        f'[referral] points reward granted: '
+                        f'referrer={_ref_rec2[1]} referred={current_user.id}'
+                    )
+            except Exception as _rpe:
+                app.logger.error(f'[referral] subscribe hook: {_rpe}')
 
             track_names = {
                 'camera':   'Camera League',
@@ -10986,6 +11154,61 @@ def _auto_decide_raw(image_id, submission_id):
                 db.session.commit()
             except Exception:
                 pass
+
+
+
+# ---------------------------------------------------------------------------
+# REFERRAL SYSTEM (Session 28)
+# ---------------------------------------------------------------------------
+
+@app.route('/ref/<code>')
+def referral_landing(code):
+    """Landing page for referred users. Sets cookie and shows invite card."""
+    from flask import make_response
+    # Look up referrer
+    row = db.session.execute(
+        db.text("SELECT u.username, u.full_name FROM referral_codes rc "
+                "JOIN users u ON u.id = rc.user_id WHERE rc.code = :c"),
+        {'c': code}
+    ).fetchone()
+    if not row:
+        return redirect(url_for('register'))
+    referrer_name = row[1] or row[0] or 'A photographer'
+    if current_user.is_authenticated:
+        flash(f'{referrer_name} invited you! Sign up to claim your bonus uploads.', 'info')
+        return redirect(url_for('dashboard'))
+    resp = make_response(render_template(
+        'referral_landing.html',
+        referrer_name=referrer_name,
+        code=code
+    ))
+    resp.set_cookie('sl_ref', code, max_age=30 * 24 * 3600, httponly=True, samesite='Lax')
+    return resp
+
+
+@app.route('/referral')
+@login_required
+def referral_page():
+    """Dedicated referral page."""
+    ref_code = get_or_create_referral_code(current_user)
+    stats    = get_referral_stats(current_user)
+    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+    ref_url  = f'{site_url}/ref/{ref_code}' if ref_code else None
+    return render_template('referral.html',
+                           ref_code=ref_code,
+                           ref_url=ref_url,
+                           stats=stats)
+
+
+@app.route('/referral/generate', methods=['POST'])
+@login_required
+def referral_generate():
+    """Generate referral code on demand (AJAX)."""
+    code = get_or_create_referral_code(current_user)
+    if not code:
+        return jsonify({'error': 'Could not generate code'}), 500
+    site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+    return jsonify({'code': code, 'url': f'{site_url}/ref/{code}'})
 
 
 @app.route('/raw/appeal/<int:image_id>', methods=['GET', 'POST'])
