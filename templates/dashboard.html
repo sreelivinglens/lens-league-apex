@@ -973,7 +973,7 @@ function toggleNotifStrip() {
           style="width:100%; min-height:120px; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
       </div>
 
-      <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all; line-height:1.5;">{{ referral_url }}</div>
+      <div id="slRefUrlDisplay" style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all; line-height:1.5;"></div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
         <div>
@@ -1009,19 +1009,20 @@ function toggleNotifStrip() {
 
   <script>
   (function(){
-    var _refUrl  = '{{ referral_url }}';
-    var _defBody = "I’ve been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.
-
-Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile) or ₹169 instead of ₹199 (Camera).
-
-Sign up here: " + _refUrl;
+    var _refUrl  = {{ referral_url | tojson }};
+    var _defBody = "I\u2019ve been using Shutter League \u2014 it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at \u20B985 instead of \u20B999 (Mobile) or \u20B9169 instead of \u20B9199 (Camera).\n\nSign up here: " + _refUrl;
     var _channel = 'email';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var disp = document.getElementById('slRefUrlDisplay');
+      if (disp) disp.textContent = _refUrl;
+    });
 
     window.slRefModal = function(channel) {
       _channel = channel;
       document.getElementById('slRefBody').value = _defBody;
       document.getElementById('slRefModalBg').style.display = 'block';
-      document.getElementById('slRefSendBtn').textContent = channel === 'whatsapp' ? 'Open in WhatsApp →' : 'Open in Mail →';
+      document.getElementById('slRefSendBtn').textContent = channel === 'whatsapp' ? 'Open in WhatsApp \u2192' : 'Open in Mail \u2192';
       setTimeout(function(){ document.getElementById('slRefGreeting').focus(); }, 100);
     };
 
@@ -1029,34 +1030,31 @@ Sign up here: " + _refUrl;
       document.getElementById('slRefModalBg').style.display = 'none';
     };
 
-    document.getElementById('slRefSendBtn').addEventListener('click', function() {
-      var greeting = (document.getElementById('slRefGreeting').value || '').trim();
-      var body     = (document.getElementById('slRefBody').value || '').trim();
-      var closing  = (document.getElementById('slRefClosing').value || '').trim();
-      var sender   = (document.getElementById('slRefSender').value || '').trim();
+    document.addEventListener('DOMContentLoaded', function() {
+      var sendBtn = document.getElementById('slRefSendBtn');
+      if (!sendBtn) return;
+      sendBtn.addEventListener('click', function() {
+        var greeting = (document.getElementById('slRefGreeting').value || '').trim();
+        var body     = (document.getElementById('slRefBody').value || '').trim();
+        var closing  = (document.getElementById('slRefClosing').value || '').trim();
+        var sender   = (document.getElementById('slRefSender').value || '').trim();
 
-      var full = greeting + '
+        var full = greeting + '\n\n' + body + '\n\n' + _refUrl;
+        if (closing || sender) {
+          full += '\n\n' + (closing ? closing + '\n' : '') + sender;
+        }
 
-' + body + '
-
-' + _refUrl;
-      if (closing || sender) {
-        full += '
-
-' + (closing ? closing + '
-' : '') + sender;
-      }
-
-      if (_channel === 'whatsapp') {
-        var wa = document.getElementById('slRefWaLink');
-        wa.href = 'https://wa.me/?text=' + encodeURIComponent(full);
-        wa.click();
-      } else {
-        var ml = document.getElementById('slRefMailLink');
-        ml.href = 'mailto:?subject=' + encodeURIComponent('Join me on Shutter League') + '&body=' + encodeURIComponent(full);
-        ml.click();
-      }
-      slRefModalClose();
+        if (_channel === 'whatsapp') {
+          var wa = document.getElementById('slRefWaLink');
+          wa.href = 'https://wa.me/?text=' + encodeURIComponent(full);
+          wa.click();
+        } else {
+          var ml = document.getElementById('slRefMailLink');
+          ml.href = 'mailto:?subject=' + encodeURIComponent('Join me on Shutter League') + '&body=' + encodeURIComponent(full);
+          ml.click();
+        }
+        slRefModalClose();
+      });
     });
 
     document.addEventListener('keydown', function(e) {
