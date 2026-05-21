@@ -916,8 +916,6 @@ function toggleNotifStrip() {
 
 {# ── Referral widget ─────────────────────────────────────────────────────── #}
 {% if referral_code %}
-{% set _wa_msg = "Hey,\n\nI've been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at Rs.85 instead of Rs.99 (Mobile) or Rs.169 instead of Rs.199 (Camera).\n\nSign up here: " + referral_url %}
-{% set _email_body = "Hey,\n\nI've been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.\n\nUse my referral link and get your first month at Rs.85 instead of Rs.99 (Mobile) or Rs.169 instead of Rs.199 (Camera).\n\nSign up here: " + referral_url %}
 <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:20px 22px; margin-bottom:20px; text-align:left;">
 
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
@@ -947,7 +945,7 @@ function toggleNotifStrip() {
     </button>
 
     {# Email — fully static mailto rendered by Jinja, zero JS, guaranteed to open mail client #}
-    <a href="mailto:?subject={{ 'Join me on Shutter League' | urlencode }}&body={{ _email_body | urlencode }}"
+    <a href="mailto:?subject=Join%20me%20on%20Shutter%20League&body=Hey%2C%0A%0AI%27ve%20been%20using%20Shutter%20League%20%E2%80%94%20it%20evaluates%20your%20photographs%20across%20five%20dimensions%20and%20tells%20you%20exactly%20what%20to%20improve.%20Honest%20feedback.%20Real%20improvement.%0A%0AUse%20my%20referral%20link%20and%20get%20your%20first%20month%20at%20%E2%82%B985%20instead%20of%20%E2%82%B999%20%28Mobile%29%20or%20%E2%82%B9169%20instead%20of%20%E2%82%B9199%20%28Camera%29.%0A%0ASign%20up%20here%3A%20{{ referral_url | urlencode }}"
        style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#fff; border:1.5px solid #1A2744; padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
       &#9993; Email
     </a>
