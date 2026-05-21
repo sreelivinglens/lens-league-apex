@@ -940,19 +940,123 @@ function toggleNotifStrip() {
   </div>
   <div style="font-size:14px; color:rgba(26,26,24,0.55); margin-bottom:16px; word-break:break-all;">{{ referral_url }}</div>
 
-  {# Share buttons #}
+  {# Share buttons — open editable message modal #}
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-    <a href="https://wa.me/?text={{ ('Hey! I use Shutter League to get my photography scored and ranked. Honest feedback, not likes. Sign up using my link and get your first month at a special price: ' + referral_url) | urlencode }}"
-       target="_blank" rel="noopener"
-       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+    <button onclick="slRefModal('whatsapp')"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; border:none; padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
       &#128242; WhatsApp
-    </a>
-    <a id="dash-email-share" href="#"
-       onclick="window.location.href='mailto:?subject=Join%20me%20on%20Shutter%20League&body=Hey!%20I%20use%20Shutter%20League%20to%20get%20my%20photography%20scored%20and%20ranked.%20Honest%20feedback%2C%20not%20likes.%20Sign%20up%20using%20my%20link%20and%20get%20your%20first%20month%20at%20a%20special%20price%3A%20{{ referral_url | urlencode }}'; return false;"
-       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#fff; border:1.5px solid #1A2744; padding:10px 16px; border-radius:4px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+    </button>
+    <button onclick="slRefModal('email')"
+       style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#fff; border:1.5px solid #1A2744; padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
       &#9993; Email
-    </a>
+    </button>
   </div>
+
+  {# Editable message modal #}
+  <div id="slRefModalBg" onclick="if(event.target===this)slRefModalClose()"
+       style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.60); z-index:500; align-items:flex-start; justify-content:center; padding:60px 20px 20px; box-sizing:border-box; overflow-y:auto;">
+    <div style="background:#F7F5F2; border:2px solid #F5C518; border-radius:8px; padding:24px; width:100%; max-width:500px; box-sizing:border-box;">
+
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
+      <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:16px;">Edit freely — change the greeting, add their name, anything you like.</div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
+        <input id="slRefGreeting" type="text" value="Hey,"
+          style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
+        <textarea id="slRefBody"
+          style="width:100%; min-height:120px; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
+      </div>
+
+      <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all; line-height:1.5;">
+        {{ referral_url }}
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <div>
+          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
+          <input id="slRefClosing" type="text" value="Thank you,"
+            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+        </div>
+        <div>
+          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
+          <input id="slRefSender" type="text" placeholder="Your name"
+            style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="slRefSendBtn"
+          style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#1A2744; background:#F5C518; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; min-height:44px; flex:1;">
+          Send &#8594;
+        </button>
+        <button onclick="slRefModalClose()"
+          style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:rgba(26,26,24,0.55); background:#fff; border:1px solid rgba(26,39,68,0.20); padding:10px 16px; border-radius:4px; cursor:pointer; min-height:44px;">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var _refUrl  = '{{ referral_url }}';
+    var _defBody = "I've been using Shutter League — it evaluates your photographs across five dimensions and tells you exactly what to improve. Honest feedback. Real improvement.
+
+Use my referral link and get your first month at ₹85 instead of ₹99 (Mobile) or ₹169 instead of ₹199 (Camera).
+
+Sign up here: " + _refUrl;
+    var _channel = 'email';
+
+    window.slRefModal = function(channel) {
+      _channel = channel;
+      document.getElementById('slRefBody').value = _defBody;
+      var bg = document.getElementById('slRefModalBg');
+      bg.style.display = 'flex';
+      document.getElementById('slRefGreeting').focus();
+      document.getElementById('slRefSendBtn').textContent = channel === 'whatsapp' ? 'Open in WhatsApp →' : 'Open in Mail →';
+    };
+
+    window.slRefModalClose = function() {
+      document.getElementById('slRefModalBg').style.display = 'none';
+    };
+
+    document.getElementById('slRefSendBtn').addEventListener('click', function() {
+      var greeting = (document.getElementById('slRefGreeting').value || '').trim();
+      var body     = (document.getElementById('slRefBody').value || '').trim();
+      var closing  = (document.getElementById('slRefClosing').value || '').trim();
+      var sender   = (document.getElementById('slRefSender').value || '').trim();
+
+      var full = greeting + '
+
+' + body;
+      if (closing || sender) {
+        full += '
+
+' + closing + (closing && sender ? '
+' : '') + sender;
+      }
+
+      if (_channel === 'whatsapp') {
+        window.open('https://wa.me/?text=' + encodeURIComponent(full), '_blank');
+      } else {
+        window.location.href = 'mailto:?subject=' +
+          encodeURIComponent('Join me on Shutter League') +
+          '&body=' + encodeURIComponent(full);
+      }
+      slRefModalClose();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') slRefModalClose();
+    });
+  })();
+  </script>
 
   {# Stats #}
   <div style="border-top:1px solid rgba(26,39,68,0.15); padding-top:14px;">
