@@ -1638,7 +1638,11 @@ def verify_email(token):
                     db.text('SELECT id FROM referrals WHERE referred_user_id = :uid'),
                     {'uid': user.id}
                 ).fetchone()
-                if not _existing:
+                _referrer_count = db.session.execute(
+                    db.text('SELECT COUNT(*) FROM referrals WHERE referrer_id = :rid'),
+                    {'rid': _ref_row[0]}
+                ).scalar() or 0
+                if not _existing and _referrer_count < 10:
                     db.session.execute(
                         db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
                                 'VALUES (:rid, :nid, :code)'),
@@ -1650,6 +1654,8 @@ def verify_email(token):
                     )
                     db.session.commit()
                     app.logger.info(f'[referral] signup: referrer={_ref_row[0]} referred={user.id}')
+                elif _referrer_count >= 10:
+                    app.logger.info(f'[referral] cap reached for referrer={_ref_row[0]} — skipping')
     except Exception as _rve:
         app.logger.error(f'[referral] verify_email hook: {_rve}')
     login_user(user, remember=True)
@@ -1774,7 +1780,11 @@ def auth_google_callback():
                         db.text('SELECT id FROM referrals WHERE referred_user_id = :uid'),
                         {'uid': user.id}
                     ).fetchone()
-                    if not _existing:
+                    _referrer_count = db.session.execute(
+                        db.text('SELECT COUNT(*) FROM referrals WHERE referrer_id = :rid'),
+                        {'rid': _ref_row[0]}
+                    ).scalar() or 0
+                    if not _existing and _referrer_count < 10:
                         db.session.execute(
                             db.text('INSERT INTO referrals (referrer_id, referred_user_id, code_used) '
                                     'VALUES (:rid, :nid, :code)'),
@@ -1786,6 +1796,8 @@ def auth_google_callback():
                         )
                         db.session.commit()
                         app.logger.info(f'[referral] google signup: referrer={_ref_row[0]} referred={user.id}')
+                    elif _referrer_count >= 10:
+                        app.logger.info(f'[referral] cap reached for referrer={_ref_row[0]} — skipping')
         except Exception as _rgo:
             app.logger.error(f'[referral] auth_google_callback hook: {_rgo}')
         login_user(user, remember=True)
