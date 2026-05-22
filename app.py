@@ -4230,6 +4230,14 @@ def admin_delete_user(user_id):
 
         # 9. Delete images + R2 cleanup
         for img in list(user.images):
+            # raw_submissions.image_id is NOT NULL — must delete before image row
+            try:
+                db.session.execute(
+                    db.text('DELETE FROM raw_submissions WHERE image_id = :iid'),
+                    {'iid': img.id}
+                )
+            except Exception:
+                pass
             if img.thumb_url:
                 try:
                     key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
