@@ -705,7 +705,9 @@
     xhr.onerror   = function () { showError('Network error — check your connection and try again.'); };
     xhr.ontimeout = function () { showError('Request timed out. Check your dashboard — your image may have been saved.'); };
 
-    xhr.send(new FormData(form));
+    var fd = new FormData(form);
+    fd.append('_xhr', '1');  // fallback XHR signal — X-Requested-With stripped by some iOS browsers
+    xhr.send(fd);
     } // end _fireUpload
   });
 
