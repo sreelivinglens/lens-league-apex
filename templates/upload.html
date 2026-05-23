@@ -593,6 +593,11 @@
   // ── Form submit — validate then XHR ─────────────────────────────────────
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+    // Disable button and strip action immediately — synchronous, before any async work.
+    // Prevents iOS WebKit native form submission during the async resolution check gap.
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking…';
+    form.removeAttribute('action');
 
     const file = fileInput.files[0];
     if (!file) { showError('Please select an image to upload.'); return; }
@@ -621,6 +626,7 @@
     if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
       return;
     }
 
@@ -629,6 +635,7 @@
       legalBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       legalCheck.addEventListener('change', () =>
         legalBox.classList.remove('error-highlight'), { once: true });
+      submitBtn.disabled = false; submitBtn.textContent = '⬆ Submit for Scoring';
       return;
     }
 
