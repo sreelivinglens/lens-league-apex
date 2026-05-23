@@ -226,16 +226,17 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['UPLOAD_FOLDER']       = os.getenv('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH']  = int(os.getenv('MAX_CONTENT_LENGTH', 20971520))
 
-# Session cookie settings  -  required for mobile Safari (iOS ITP)
-# SameSite=Lax allows cookies to be sent with same-site XHR requests
-# Secure=True ensures cookie is sent over HTTPS (Railway is always HTTPS)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# Session cookie settings
+# SameSite=None required so iOS WebKit sends the cookie on XHR POST requests.
+# SameSite=Lax only sends on top-level GET navigations — breaks XHR uploads on iPad/iPhone.
+# Secure=True is required when SameSite=None (Railway is always HTTPS).
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_NAME']     = 'sl_session'
-app.config['PERMANENT_SESSION_LIFETIME'] = 600   # 10 min — long enough for OAuth round-trip
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 min — covers long upload sessions
 app.config['REMEMBER_COOKIE_DURATION']   = timedelta(days=30)  # 30 days
-app.config['REMEMBER_COOKIE_SAMESITE']   = 'Lax'
+app.config['REMEMBER_COOKIE_SAMESITE']   = 'None'
 app.config['REMEMBER_COOKIE_SECURE']     = True
 
 uri = app.config['SQLALCHEMY_DATABASE_URI']
@@ -315,7 +316,13 @@ def block_railway_url():
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    # Check both header (desktop) and form field (iOS strips custom headers)
+    _is_xhr = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.form.get('_xhr') == '1'
+        or request.headers.get('Accept', '').startswith('application/json')
+    )
+    if _is_xhr:
         return jsonify({'error': True, 'message': 'Session expired. Please log in again.', 'redirect': url_for('login')}), 401
     return redirect(url_for('login', next=request.url))
 
