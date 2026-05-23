@@ -2467,6 +2467,12 @@ def profile():
 @login_required
 def upload():
     if request.method == 'POST':
+        # Diagnostic — log what the server actually receives
+        app.logger.info(
+            f'[upload] XHR={request.headers.get("X-Requested-With")} '
+            f'_xhr={request.form.get("_xhr")} '
+            f'user={current_user.id if current_user.is_authenticated else "anon"}'
+        )
         file = request.files.get('image')
         if not file or file.filename == '':
             flash('No file selected.', 'error')
