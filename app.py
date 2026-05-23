@@ -2491,7 +2491,9 @@ def upload():
             return redirect(request.url)
 
         # -- Free quota check (3 lifetime assessment images per investor doc) --
-        if current_user.role != 'admin':
+        # UAT/beta users get unlimited uploads — skip all quota checks.
+        _plan = getattr(current_user, 'subscription_plan', None) or ''
+        if current_user.role != 'admin' and _plan not in ('beta', 'uat'):
             from datetime import date as _date
             today       = _date.today()
             _track = getattr(current_user, 'subscription_track', None) or ''
