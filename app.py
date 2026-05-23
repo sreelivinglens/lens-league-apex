@@ -2541,7 +2541,7 @@ def upload():
             thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
         except Exception as e:
             if os.path.exists(raw_path): os.remove(raw_path)
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                 return jsonify({'error': True, 'message': str(e)}), 422
             flash(f'Image processing failed: {e}', 'error')
             return redirect(request.url)        # Extract EXIF from original file BEFORE deletion  -  raw_path still has full metadata
@@ -3084,7 +3084,7 @@ def upload():
 
         # XHR (upload.html) gets JSON — return 'processing' immediately.
         # Browser polls /score-status/<image_id> every 2s until scored.
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
             _next = request.args.get('next', '')
             return jsonify({
                 'status': 'processing',
