@@ -554,30 +554,8 @@ with app.app_context():
                     try: conn.execute(db.text('ROLLBACK'))
                     except: pass
 
-        # Seed existing mentors into mentor_profiles if not already present
-        try:
-            with db.engine.connect() as _mc:
-                for _slug, _m in MENTORS.items():
-                    _mc.execute(db.text("""
-                        INSERT INTO mentor_profiles
-                            (slug, tier_label, tier_class, price, points_cost, display_name,
-                             genres, bio)
-                        VALUES
-                            (:slug, :tl, :tc, :price, :pts, :name, :genres, :bio)
-                        ON CONFLICT (slug) DO NOTHING
-                    """), {
-                        'slug':   _slug,
-                        'tl':     _m['tier_label'],
-                        'tc':     _m['tier_class'],
-                        'price':  _m['price'],
-                        'pts':    _m['points_cost'],
-                        'name':   _m['name'],
-                        'genres': _m['genres'],
-                        'bio':    _m['bio'],
-                    })
-                _mc.commit()
-        except Exception as _se:
-            print(f'[mentor seed] {_se}')
+        # Mentor seed deferred — MENTORS dict is defined later in this module.
+        # _seed_mentors() is called after MENTORS is defined (see below).
 
         # Fix calibration_logs  -  force correct schema on every startup
         try:
@@ -3113,11 +3091,16 @@ def upload():
                 'image_id': img.id,
                 'next': _next
             })
-        # Non-XHR fallback — redirect straight to image detail
+        # Non-XHR fallback — redirect to dashboard.
+        # Redirecting to image_detail (login_required) in the same chain as
+        # the POST causes the session cookie to be dropped on some browsers,
+        # kicking the user to login. Dashboard is safe — it already shows
+        # pending/processing images and the score appears once ready.
         next_page = request.args.get('next', '')
         if next_page == 'challenge':
             return redirect(url_for('challenge_submit') + f'?highlight={img.id}')
-        return redirect(url_for('image_detail', image_id=img.id))
+        flash('Image uploaded — your score will appear shortly.', 'success')
+        return redirect(url_for('dashboard'))
 
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
                            next_page=request.args.get('next', ''))
@@ -3973,26 +3956,27 @@ def admin_delete_image(image_id):
             r2.delete_file(key)
         except Exception:
             pass
-    # Delete all related records first to avoid NOT NULL FK violations
-    try:
-        from models import CalibrationNote
-        CalibrationNote.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        ImageReport.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        RatingAssignment.query.filter_by(image_id=image_id).delete()
-        PeerRating.query.filter_by(image_id=image_id).delete()
-        PeerPoolEntry.query.filter_by(image_id=image_id).delete()
-    except Exception:
-        pass
-    try:
-        db.session.execute(db.text("DELETE FROM raw_submissions WHERE image_id = :iid"), {'iid': image_id})
-    except Exception:
-        pass
+    # Delete all related records first to avoid NOT NULL FK violations.
+    # Must match the full set in user-facing delete_image — 12 tables.
+    iid = image_id
+    for _sql in [
+        "DELETE FROM raw_submissions      WHERE image_id = :iid",
+        "DELETE FROM weekly_submissions   WHERE image_id = :iid",
+        "DELETE FROM contest_entries      WHERE image_id = :iid",
+        "DELETE FROM open_contest_entries WHERE image_id = :iid",
+        "DELETE FROM image_reports        WHERE image_id = :iid",
+        "DELETE FROM rating_assignments   WHERE image_id = :iid",
+        "DELETE FROM peer_ratings         WHERE image_id = :iid",
+        "DELETE FROM peer_pool_entries    WHERE image_id = :iid",
+        "DELETE FROM brand_entries        WHERE image_id = :iid",
+        "DELETE FROM calibration_notes    WHERE image_id = :iid",
+        "DELETE FROM judge_assignments    WHERE image_id = :iid",
+        "DELETE FROM judge_scores         WHERE image_id = :iid",
+    ]:
+        try:
+            db.session.execute(db.text(_sql), {'iid': iid})
+        except Exception:
+            pass
     db.session.delete(img)
     db.session.commit()
     flash(f'Image deleted.', 'success')
@@ -6450,6 +6434,37 @@ MENTORS = {
         'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
     },
 }
+
+# Seed mentor_profiles from MENTORS dict — runs here so MENTORS is defined.
+# ON CONFLICT DO NOTHING means existing DB customisations are never overwritten.
+def _seed_mentors():
+    try:
+        with app.app_context():
+            with db.engine.connect() as _mc:
+                for _slug, _m in MENTORS.items():
+                    _mc.execute(db.text("""
+                        INSERT INTO mentor_profiles
+                            (slug, tier_label, tier_class, price, points_cost, display_name,
+                             genres, bio)
+                        VALUES
+                            (:slug, :tl, :tc, :price, :pts, :name, :genres, :bio)
+                        ON CONFLICT (slug) DO NOTHING
+                    """), {
+                        'slug':   _slug,
+                        'tl':     _m['tier_label'],
+                        'tc':     _m['tier_class'],
+                        'price':  _m['price'],
+                        'pts':    _m['points_cost'],
+                        'name':   _m['name'],
+                        'genres': _m['genres'],
+                        'bio':    _m['bio'],
+                    })
+                _mc.commit()
+        print('[mentor seed] OK')
+    except Exception as _se:
+        print(f'[mentor seed] {_se}')
+
+_seed_mentors()
 
 # ---------------------------------------------------------------------------
 
