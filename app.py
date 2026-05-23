@@ -987,7 +987,16 @@ def is_bow_active() -> bool:
 def _r2_upload_thumb(local_path: str, uid: str) -> str | None:
     ext = os.path.splitext(local_path)[1].lower() or '.jpg'
     key = f'thumbs/{uid}{ext}'
-    return r2.upload_file(local_path, key, content_type='image/jpeg')
+    try:
+        result = r2.upload_file(local_path, key, content_type='image/jpeg')
+        if not result:
+            import logging
+            logging.error(f'[r2_upload_thumb] upload_file returned None for key={key}')
+        return result
+    except Exception as _r2e:
+        import logging
+        logging.error(f'[r2_upload_thumb] exception: {_r2e}')
+        return None
 
 def _r2_upload_card(local_path: str, uid: str) -> str | None:
     key = f'cards/{uid}.jpg'
@@ -2496,19 +2505,19 @@ def upload():
                 _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
                 if total_count >= (FREE_IMAGE_LIMIT + _bonus):
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
-                    flash(
-                        f'You have used all {_limit_shown} free scored images. '
-                        'Upgrade to Mobile (&#8377;99/mo) or Camera (&#8377;599/mo) to keep uploading.',
-                        'warning'
-                    )
+                    _msg = (f'You have used all {_limit_shown} free scored images. '
+                            'Upgrade to Mobile (&#8377;99/mo) or Camera (&#8377;599/mo) to keep uploading.')
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                        return jsonify({'error': True, 'message': _msg}), 403
+                    flash(_msg, 'warning')
                     return redirect(url_for('dashboard'))
             elif _track == 'dormant':
                 # Dormant mode — rank preserved, 0 uploads
-                flash(
-                    'Your subscription is in Dormant mode. Uploads are paused. '
-                    'Reactivate your Mobile or Camera subscription to resume.',
-                    'warning'
-                )
+                _msg = ('Your subscription is in Dormant mode. Uploads are paused. '
+                        'Reactivate your Mobile or Camera subscription to resume.')
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                    return jsonify({'error': True, 'message': _msg}), 403
+                flash(_msg, 'warning')
                 return redirect(url_for('dashboard'))
             elif _track in ('mobile', 'camera', 'learning'):
                 # Subscribed tracks — check monthly count
@@ -2520,28 +2529,28 @@ def upload():
                 if _track == 'mobile':
                     MOBILE_IMAGE_LIMIT = 8
                     if month_count >= MOBILE_IMAGE_LIMIT:
-                        flash(
-                            f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
-                            'Your quota resets on the 1st of next month.',
-                            'warning'
-                        )
+                        _msg = (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
+                                'Your quota resets on the 1st of next month.')
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _msg}), 403
+                        flash(_msg, 'warning')
                         return redirect(url_for('dashboard'))
                 elif _track == 'camera':
                     CAMERA_IMAGE_LIMIT = 5
                     if month_count >= CAMERA_IMAGE_LIMIT:
-                        flash(
-                            f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
-                            'Your quota resets on the 1st of next month.',
-                            'warning'
-                        )
+                        _msg = (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
+                                'Your quota resets on the 1st of next month.')
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _msg}), 403
+                        flash(_msg, 'warning')
                         return redirect(url_for('dashboard'))
                 elif _track == 'learning':
                     if month_count >= LEARNING_IMAGE_LIMIT:
-                        flash(
-                            f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
-                            'Upgrade to Mobile or Camera to upload more.',
-                            'warning'
-                        )
+                        _msg = (f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
+                                'Upgrade to Mobile or Camera to upload more.')
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _msg}), 403
+                        flash(_msg, 'warning')
                         return redirect(url_for('dashboard'))
             # Mentor track — unlimited, no check needed
 
@@ -2597,6 +2606,9 @@ def upload():
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
+            app.logger.error(f'[upload] R2 thumb upload failed for uid={uid}')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                return jsonify({'error': True, 'message': 'Storage upload failed. Please try again.'}), 500
             flash('Storage upload failed. Please try again.', 'error')
             return redirect(request.url)
 
