@@ -894,6 +894,20 @@ with app.app_context():
             print(f'raw_submissions migration warning: {ce}')
 
         print('Columns migrated OK.')
+
+        # UAT plan backfill — all subscribed users get 'uat' plan (unlimited uploads).
+        # Covers NULL, 'monthly', or any other value set before UAT default was applied.
+        try:
+            with db.engine.connect() as _uat_conn:
+                _r = _uat_conn.execute(db.text(
+                    "UPDATE users SET subscription_plan = 'uat' "
+                    "WHERE is_subscribed = TRUE AND (subscription_plan IS NULL OR subscription_plan != 'uat')"
+                ))
+                _uat_conn.commit()
+            print(f'[uat_backfill] OK — patched {_r.rowcount} users to uat plan.')
+        except Exception as _ub_e:
+            print(f'[uat_backfill] warning: {_ub_e}')
+
     except Exception as e:
         print(f'Migration warning: {e}')
 
@@ -4167,7 +4181,7 @@ def admin_toggle_subscription(user_id):
     user.is_subscribed = not getattr(user, 'is_subscribed', False)
     if user.is_subscribed:
         user.subscription_track = request.form.get('track', 'camera')
-        user.subscription_plan  = request.form.get('plan', 'monthly')
+        user.subscription_plan  = request.form.get('plan', 'uat')  # UAT default — unlimited uploads
         user.subscribed_at      = datetime.utcnow()
     else:
         user.subscription_track = None
