@@ -3218,7 +3218,7 @@ def score_status(image_id):
 @login_required
 def retry_score(image_id):
     img = Image.query.get_or_404(image_id)
-    if img.user_id != current_user.id:
+    if img.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
     if img.status == 'scored':
         flash('This image has already been scored.', 'info')
