@@ -28,7 +28,8 @@ from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEn
                     get_or_assign_next_image, submit_peer_rating)
 from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
                               normalise_genre, ARCHETYPES, compute_calibration_stats,
-                              OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES)
+                              OPEN_PRIZES, GENRE_LABELS, GENRE_CHOICES,
+                              SUBGENRE_MAP, VALID_SUBGENRES, get_subgenres)
 from engine.processor import ingest_image, allowed_file
 import storage as r2
 from location_data import (
@@ -469,6 +470,8 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
                 # v34 - Scoring flash notification
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
+                # v35 - DDI sub-genre support
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS sub_genre VARCHAR(60)",
                 # v33 - Points/Loyalty Engine (Sprint 1)
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
@@ -2630,6 +2633,8 @@ def upload():
 
         raw_genre = request.form.get('genre', 'Wildlife')
         genre     = normalise_genre(raw_genre)
+        raw_sub_genre = request.form.get('sub_genre', '').strip()
+        sub_genre = raw_sub_genre if raw_sub_genre in VALID_SUBGENRES else None
 
         img = Image(
             user_id           = current_user.id,
@@ -2658,6 +2663,7 @@ def upload():
             exif_settings=(exif_settings or '').replace('\x00', ''), exif_warning=(exif_warning or '').replace('\x00', ''),
         )
         db.session.add(img)
+        img.sub_genre = sub_genre
         db.session.commit()
 
         # -- League integrity check (three-strike system) ------------------
@@ -2944,6 +2950,7 @@ def upload():
 
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
+                            sub_genre=_img.sub_genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
                             subject=_img.subject, location=_img.location
                         )
@@ -3143,7 +3150,12 @@ def upload():
         flash('Image uploaded — your score will appear shortly.', 'success')
         return redirect(url_for('dashboard'))
 
+    import json as _json
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
+                           subgenre_map=SUBGENRE_MAP,
+                           subgenre_map_json=_json.dumps(
+                               {k: list(v) for k, v in SUBGENRE_MAP.items()}
+                           ),
                            next_page=request.args.get('next', ''))
 
 
@@ -3244,6 +3256,7 @@ def retry_score(image_id):
         result = auto_score(
             image_path   = thumb_path,
             genre        = img.genre,
+            sub_genre    = img.sub_genre,
             title        = img.asset_name,
             photographer = img.photographer_name,
             subject      = img.subject,
@@ -4437,6 +4450,7 @@ def score_single_image():
             try:
                 from engine.auto_score import auto_score, build_audit_data
                 scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                    sub_genre=img.sub_genre,
                                     title=img.asset_name, photographer=photographer)
                 img.dod_score        = float(scored.get('dod', 0))
                 img.disruption_score = float(scored.get('disruption', 0))
@@ -4561,6 +4575,7 @@ def admin_rescore_all():
             scored = auto_score(
                 image_path=img.thumb_path,
                 genre=img.genre or 'Wildlife',
+                sub_genre=img.sub_genre,
                 title=img.asset_name,
                 photographer=img.photographer_name
             )
@@ -7900,6 +7915,7 @@ def bulk_upload():
                     from engine.auto_score import auto_score, build_audit_data
                     from engine.compositor import build_card1 as _build_card
                     scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                        sub_genre=img.sub_genre,
                                         title=img.asset_name, photographer=photographer)
                     img.dod_score=float(scored.get('dod',0))
                     img.disruption_score=float(scored.get('disruption',0))
