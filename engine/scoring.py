@@ -88,6 +88,33 @@ GENRE_LABELS = {g['id']: g['label'] for g in GENRE_LIST}
 GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
 
 
+# ── Sub-genre definitions ──────────────────────────────────────────────────────
+# Only genres listed here will show a secondary dropdown on the upload form.
+# sub_types: list of (id, label) tuples — id stored in images.sub_genre column.
+# Extend this dict as additional genres are calibrated (Session 34+).
+SUBGENRE_MAP = {
+    'People': [
+        ('portrait_posed',    'Portrait – Posed / Studio'),
+        ('portrait_cultural', 'Portrait – Cultural / Documentary'),
+        ('portrait_candid',   'Portrait – Candid / Street'),
+        ('lifestyle',         'Lifestyle / Editorial'),
+        ('event_ceremony',    'Event / Ceremony'),
+    ],
+}
+
+# Flat validation set — all valid sub_genre values across all genres.
+# Use for form validation: sub_genre in VALID_SUBGENRES
+VALID_SUBGENRES = {sg_id for sgs in SUBGENRE_MAP.values() for sg_id, _ in sgs}
+
+
+def get_subgenres(genre: str) -> list:
+    """
+    Returns list of (id, label) tuples for a genre, or [] if none defined.
+    Use to populate the conditional sub-genre <select> on upload.html.
+    """
+    return SUBGENRE_MAP.get(genre, [])
+
+
 def normalise_genre(raw: str) -> str:
     """
     Map a raw genre string (from DB, form, or legacy data) to a canonical GENRE_IDS entry.

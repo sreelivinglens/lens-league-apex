@@ -329,7 +329,111 @@ GENRE_CONTEXT = {
 }
 
 
-def get_genre_context(genre):
+# ── People sub-genre context blocks ───────────────────────────────────────────
+# Injected into the scoring prompt when sub_genre is provided for a People image.
+# Each block replaces the flat People genre_context with sub-type-specific rubric
+# guidance for DM, DoD, and WF — the three dimensions most affected by sub-type.
+#
+# CRITICAL DESIGN NOTES:
+# - AQ weights and rubric are unchanged across sub-types (emotional resonance is
+#   universal — the People AQ=0.40 weight applies regardless of sub-type)
+# - VD (Visual Disruption) rubric is unchanged — composition is composition
+# - Weights in scoring.py are NOT changed — only rubric criteria text changes
+# - The sub-type block REPLACES the generic People genre_context in the prompt
+
+PEOPLE_SUBGENRE_CONTEXT = {
+    'portrait_posed': (
+        "This is People photography — sub-type: PORTRAIT (POSED / STUDIO).\n"
+        "The subject is collaborating with the photographer. Setup is deliberate. "
+        "Evaluate by the standards of intentional portraiture, not candid photography.\n\n"
+        "DoD: Score the emotional access and technical precision the setup demanded. "
+        "Controlled light rendering, depth management between subject layers, and "
+        "skin or fabric detail are primary DoD signals. A studio environment does not "
+        "reduce DoD — the difficulty is in achieving genuine revelation under control.\n\n"
+        "DM: Score the moment the subject reveals themselves — when expression, posture, "
+        "and gaze align into a single honest frame. Stillness is NOT a penalty. "
+        "A posed portrait earns a high DM score when the subject's inner state is fully "
+        "present in that specific frame. Being aware of the camera is EXPECTED and does "
+        "NOT reduce the DM score. Score whether the photographer found the right moment "
+        "within the session — not whether the subject was unaware.\n\n"
+        "WF: Score concept and styling originality. What elevates this above competent "
+        "execution? Unexpected light, cultural depth, an expression that surprises — "
+        "the wonder is in the controlled setup revealing something uncontrolled."
+    ),
+    'portrait_cultural': (
+        "This is People photography — sub-type: PORTRAIT (CULTURAL / DOCUMENTARY).\n"
+        "The subject exists in their cultural, religious, or ceremonial context. "
+        "Environmental authenticity and the subject's relationship to that context "
+        "are as important as the subject itself.\n\n"
+        "DoD: Score garment detail, contextual environmental elements, and cultural "
+        "signifiers rendered with accuracy and respect. Physical access to the context "
+        "and the trust required to photograph in it are valid DoD signals.\n\n"
+        "DM: Score authenticity of presence — how fully the subject inhabits their "
+        "cultural environment in this specific frame. Dignity and self-possession are "
+        "STRENGTHS, not indicators of a posed or less-valuable moment. "
+        "The subject being aware of the camera is NOT a deduction in this sub-type. "
+        "Cultural documentary work operates by different rules than street candid — "
+        "the decisive moment is the one where subject and environment are in complete accord.\n\n"
+        "WF: Score cultural resonance. Does this image create the feeling of genuine "
+        "encounter with a world the viewer might not otherwise access? "
+        "Ethnographic gravity, cultural specificity, and the sense that this moment "
+        "could only have been made by a photographer with real access — all count."
+    ),
+    'portrait_candid': (
+        "This is People photography — sub-type: PORTRAIT (CANDID / STREET).\n"
+        "The defining quality is the unguarded moment — subject unaware, or caught "
+        "in a real, unrepeatable expression of self. Timing is the primary criterion.\n\n"
+        "DoD: Score sharpness on a potentially moving subject, background separation "
+        "achieved in uncontrolled ambient light, and the physical challenge of working "
+        "fast in unpredictable conditions.\n\n"
+        "DM: Score the unrepeatable instant. The peak moment where expression, gesture, "
+        "and background alignment all converge. A half-second either side is lesser. "
+        "This is the sub-type where traditional decisive moment scoring applies fully — "
+        "reward the photograph that could not have been made a frame earlier or later.\n\n"
+        "WF: Score surprise — did the photographer catch something that could not have "
+        "been staged? The best candid portraits show the viewer something they could not "
+        "have planned. Unexpected gesture, rare expression, environmental coincidence — "
+        "the wonder is the world revealing itself."
+    ),
+    'lifestyle': (
+        "This is People photography — sub-type: LIFESTYLE / EDITORIAL.\n"
+        "Narrative and aspirational quality are the primary signals. The image may be "
+        "directed or styled but communicates a world, not just a subject.\n\n"
+        "DoD: Score environmental detail, prop and location specificity, and overall "
+        "production quality. The effort and access required to construct or find "
+        "the scene are valid DoD signals.\n\n"
+        "DM: Score the narrative peak — the single frame that implies the full story "
+        "without a caption. A lifestyle image with high DM needs no explanation; "
+        "the moment selected does all the communicative work.\n\n"
+        "WF: Score aspirational pull and visual world-building. Does the image create "
+        "a world the viewer wants to enter? Is the visual language specific and original, "
+        "or generic? Wonder here is the sense of a fully realised visual world."
+    ),
+    'event_ceremony': (
+        "This is People photography — sub-type: EVENT / CEREMONY.\n"
+        "Group or crowd moments, gatherings, performances. The challenge is extracting "
+        "a singular moment from collective activity.\n\n"
+        "DoD: Score clean subject separation in complex scenes, compression of crowd "
+        "elements into a coherent, readable image, and the physical demands of working "
+        "in busy, unpredictable, or restricted environments.\n\n"
+        "DM: Score the unrepeatable collective moment — the laugh, the tear, the gesture "
+        "that defines the event. One frame in five hundred. Reward the photographer who "
+        "found the emotional truth of the occasion in a single image.\n\n"
+        "WF: Score scale and energy. Does the image carry the emotional weight of being "
+        "present at something significant? The wonder is in the feeling that this moment "
+        "mattered and the photographer was there for it."
+    ),
+}
+
+
+def get_genre_context(genre, sub_genre=None):
+    """
+    Returns the genre context string for the scoring prompt.
+    For People images with a valid sub_genre, returns the sub-type-specific
+    context block instead of the generic People context.
+    """
+    if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
+        return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
@@ -423,7 +527,15 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location=""):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None):
+    """
+    Score an image using the Apex DDI Engine.
+
+    sub_genre: optional sub-type id (e.g. 'portrait_cultural') — used to inject
+               sub-type-specific rubric context for DM, DoD, and WF scoring.
+               Currently active for People genre only; ignored for all others.
+               Values must match VALID_SUBGENRES in engine/scoring.py.
+    """
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
 
@@ -438,7 +550,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
         title                = title,
         subject              = subject or "Not specified",
         location             = location or "Not specified",
-        genre_context        = get_genre_context(genre),
+        genre_context        = get_genre_context(genre, sub_genre=sub_genre),
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
     )
@@ -520,10 +632,13 @@ def auto_score(image_path, genre, title, photographer, subject="", location=""):
 
 
 def build_audit_data(result, image_obj):
-    genre    = image_obj.genre or "Wildlife"
-    fmt      = image_obj.format or "JPEG"
-    subject  = image_obj.subject or ""
-    location = image_obj.location or ""
+    genre      = image_obj.genre or "Wildlife"
+    sub_genre  = getattr(image_obj, 'sub_genre', None) or ""
+    fmt        = image_obj.format or "JPEG"
+    subject    = image_obj.subject or ""
+    location   = image_obj.location or ""
+
+    genre_tag_label = f"{genre.upper()}  ·  {sub_genre.replace('_', ' ').upper()}" if sub_genre else genre.upper()
 
     return {
         "asset":                image_obj.asset_name or "Untitled",
@@ -532,7 +647,7 @@ def build_audit_data(result, image_obj):
         "tier":                 result.get("tier", "Practitioner"),
         "dec":                  result.get("archetype", "Sovereign Momentum"),
         "credit":               image_obj.photographer_name or "",
-        "genre_tag":            f"{genre.upper()}  ·  {fmt.upper()}",
+        "genre_tag":            f"{genre_tag_label}  ·  {fmt.upper()}",
         "soul_bonus":           result.get("soul_bonus", False),
         "composition_technique": result.get("composition_technique", "NONE"),
         "iucn_tag":             result.get("iucn_tag"),
