@@ -322,6 +322,13 @@
         <div class="genre-hint" id="genre-hint"></div>
       </div>
 
+      <div class="form-group" id="sub-genre-row" style="display:none;">
+        <label for="sub_genre">Specify Type</label>
+        <select id="sub_genre" name="sub_genre">
+          <option value="">— Select type —</option>
+        </select>
+      </div>
+
       <div class="form-group shot-on-group">
         <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
         <div class="shot-on-options">
@@ -573,6 +580,27 @@
   }
 
   // ── Genre hints ──────────────────────────────────────────────────────────
+  const SUBGENRE_MAP = {{ subgenre_map_json | safe }};
+  const subGenreRow    = document.getElementById('sub-genre-row');
+  const subGenreSelect = document.getElementById('sub_genre');
+
+  function updateSubGenre(genreValue) {
+    var subs = SUBGENRE_MAP[genreValue] || [];
+    subGenreSelect.innerHTML = '<option value="">— Select type —</option>';
+    if (subs.length) {
+      subs.forEach(function (sg) {
+        var opt = document.createElement('option');
+        opt.value = sg[0];
+        opt.textContent = sg[1];
+        subGenreSelect.appendChild(opt);
+      });
+      subGenreRow.style.display = '';
+    } else {
+      subGenreRow.style.display = 'none';
+      subGenreSelect.value = '';
+    }
+  }
+
   const genreHints = {
     'Creative':       '🎨 Abstract · ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Experimental. If your image is technique-driven or non-literal, choose Creative.',
     'Drone & Aerial': '🚁 Aerial photography. Geometric patterns score highest.',
@@ -585,6 +613,7 @@
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
+    updateSubGenre(this.value);
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r =>
     r.addEventListener('change', () => { trackHint.style.display = 'none'; })
