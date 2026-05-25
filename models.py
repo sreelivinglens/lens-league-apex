@@ -221,6 +221,7 @@ class Image(db.Model):
     raw_verified              = db.Column(db.Boolean, default=False, nullable=False)
     raw_disqualified          = db.Column(db.Boolean, default=False, nullable=False)
     scoring_flash             = db.Column(db.Text,    nullable=True)   # v34 points flash
+    sub_genre                 = db.Column(db.String(60), nullable=True)  # v35 DDI sub-genre
 
     # v30: Jury scoring columns
     in_judge_pool         = db.Column(db.Boolean, default=False, nullable=False)
