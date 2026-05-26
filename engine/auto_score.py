@@ -158,6 +158,28 @@ Title: {title}
 Subject: {subject}
 Location: {location}
 
+MANDATORY STEP — SCENE ANALYSIS (complete this before any scoring):
+Before applying any rubric, examine the full image carefully and identify:
+1. ALL subjects visible in the frame — including background, shadow areas, and periphery.
+   Do not stop at the most obvious subject. Scan the entire frame.
+2. For each subject: what is it doing? Is it in motion, interacting with another subject,
+   carrying prey, displaying, fighting, feeding, or in contact with another animal?
+3. If the image title or subject field names a behavioural act (fight, catch, predation,
+   display, courtship), actively search for evidence of that act in the image.
+   If evidence is present but obscured (shadow, underexposure, partial crop), note it.
+   If evidence is genuinely absent, note that too — but do not default to "generic motion"
+   without first scanning all areas of the frame.
+4. Identify any prey, target, or secondary subject — fish in bill, animal in contact,
+   rival bird, competing male. These are decisive moment signals, not background elements.
+5. State explicitly: what is the behavioural act in progress, and is the decisive moment
+   the peak of that act or a generic motion frame?
+
+This scene analysis MUST be reflected in your DM and Wonder scores and text.
+If you identify prey, a second subject in conflict, or a specific behavioural act,
+score the DM and Wonder relative to THAT act — not relative to generic motion.
+A catch freeze with prey visible scores higher DM than a takeoff.
+Two birds in contact scores higher Wonder than one bird in flight.
+
 GENRE CONTEXT: {genre_context}
 {calibration_examples}
 {calibration_notes}
@@ -424,6 +446,7 @@ PEOPLE_SUBGENRE_CONTEXT = {
         "mattered and the photographer was there for it."
     ),
 }
+
 
 
 # ── Wildlife sub-genre context blocks ─────────────────────────────────────────
