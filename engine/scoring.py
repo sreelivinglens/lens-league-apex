@@ -100,6 +100,14 @@ SUBGENRE_MAP = {
         ('lifestyle',         'Lifestyle / Editorial'),
         ('event_ceremony',    'Event / Ceremony'),
     ],
+    'Wildlife': [
+        ('bird_in_flight',   'Bird – In Flight'),
+        ('bird_behaviour',   'Bird – Predation / Behaviour'),
+        ('predator_prey',    'Predator–Prey (Mammal)'),
+        ('flora',            'Flora / Botanical'),
+        ('marine',           'Marine / Underwater'),
+        ('macro_wildlife',   'Macro Wildlife'),
+    ],
 }
 
 # Flat validation set — all valid sub_genre values across all genres.

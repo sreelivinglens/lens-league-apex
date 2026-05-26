@@ -426,14 +426,155 @@ PEOPLE_SUBGENRE_CONTEXT = {
 }
 
 
+# ── Wildlife sub-genre context blocks ─────────────────────────────────────────
+# Mirrors the People sub-genre architecture exactly.
+# Injected into the scoring prompt when sub_genre is provided for a Wildlife image.
+# Each block replaces the flat Wildlife genre_context with sub-type-specific rubric
+# guidance for DM, DoD, and WF — the three dimensions most affected by sub-type.
+#
+# CRITICAL DESIGN NOTES:
+# - Weights in scoring.py are NOT changed — only rubric criteria text changes
+# - The sub-type block REPLACES the generic Wildlife genre_context in the prompt
+# - DM for all Wildlife sub-types: IDENTIFY THE BEHAVIOURAL ACT FIRST before scoring.
+#   Generic motion (takeoff, flight) scores lower than behavioural act (predation,
+#   display, conflict, feeding) captured at its precise completion point.
+
+WILDLIFE_SUBGENRE_CONTEXT = {
+    'bird_in_flight': (
+        "This is Wildlife photography — sub-type: BIRD IN FLIGHT.\n"
+        "The primary challenge is freezing motion at the peak of the flight arc "
+        "with accurate focus on the eye and primary feathers.\n\n"
+        "DoD: Score shutter speed precision, tracking accuracy at speed, and "
+        "exposure management on a fast-moving subject against variable backgrounds "
+        "(sky, water, foliage). Wing extension at full spread, primary feather "
+        "separation visible, and eye sharp are the three DoD gold standards.\n\n"
+        "DM: Score the peak of the flight arc — the single frame where wing "
+        "geometry is most resolved, the bird's body axis is cleanest, and the "
+        "relationship to the background is strongest. A half-frame earlier or "
+        "later produces a lesser image. IDENTIFY whether this is pure flight or "
+        "a behavioural act (landing approach, prey strike, territorial display) — "
+        "behavioural flight peaks score higher than generic transit.\n\n"
+        "WF: Score species rarity, behaviour rarity, and light quality. Common "
+        "garden birds in flat light score lower than rare species, unusual "
+        "plumage states, or flight captured in exceptional light. The wonder is "
+        "in the combination of access, timing, and conditions — not motion alone."
+    ),
+    'bird_behaviour': (
+        "This is Wildlife photography — sub-type: BIRD PREDATION / BEHAVIOUR.\n"
+        "A behavioural act is in progress — predation, feeding, display, conflict, "
+        "courtship, or nesting. The decisive moment is defined by THAT ACT, not "
+        "by generic motion or composition.\n\n"
+        "DoD: Score the technical difficulty of the specific act — predation at "
+        "water surface demands correct exposure for both dark plumage and bright "
+        "water simultaneously; display behaviour requires fast enough shutter to "
+        "freeze feather detail in full extension; conflict requires tracking two "
+        "moving subjects. IDENTIFY the prey or target if present: a fish, insect, "
+        "or rival in frame is a DoD signal — its absence when expected is a deduction.\n\n"
+        "DM: FIRST identify the behavioural act and its completion point before "
+        "scoring. Predation: is the prey visible and identifiable? Catch freeze "
+        "with prey in bill scores higher than catch freeze without prey visible. "
+        "Display: are the display features (crest, plumage, posture) at full "
+        "expression? Conflict: is the moment of contact, or the frame before "
+        "contact, captured? Generic motion (takeoff, landing) in this sub-type "
+        "scores LOWER — reward the photographer who captured the act, not the transit.\n\n"
+        "WF: Score behavioural rarity explicitly. Common takeoff = low WF. "
+        "Catch freeze with prey visible = moderate WF. Prey transfer mid-air, "
+        "cooperative hunting, rare display posture = high WF. The wonder is "
+        "in the completeness of the behavioural narrative — the image that tells "
+        "the story of the act without a caption."
+    ),
+    'predator_prey': (
+        "This is Wildlife photography — sub-type: PREDATOR–PREY (MAMMAL).\n"
+        "A predation, pursuit, or conflict moment between mammals. The "
+        "behavioural narrative — not the animal alone — is the primary subject.\n\n"
+        "DoD: Score the tracking difficulty of two or more fast-moving subjects, "
+        "correct exposure across different fur tones, and sharpness at the point "
+        "of maximum action. Dust, motion blur on non-key elements, and environmental "
+        "chaos are acceptable — the key subjects must be sharp.\n\n"
+        "DM: IDENTIFY the behavioural peak: the moment of contact, the instant "
+        "the prey changes direction, the predator's commitment point. A half-second "
+        "before contact is often the peak — reward the photographer who read the "
+        "sequence and pre-positioned for that frame. Both predator and prey must "
+        "be readable in the decisive frame.\n\n"
+        "WF: Score narrative completeness. Does the image tell the full story — "
+        "predator, prey, tension, environment — in a single frame? Rare species, "
+        "rare behavioural interactions, or documentation of scientifically "
+        "significant behaviour score highest. The wonder is the sense of witnessing "
+        "something that most humans will never see in person."
+    ),
+    'flora': (
+        "This is Wildlife photography — sub-type: FLORA / BOTANICAL.\n"
+        "Plant life, fungi, and botanical subjects. The challenge is revealing "
+        "structural and textural detail invisible to the casual eye.\n\n"
+        "DoD: Score depth of field control at close focus distances, light quality "
+        "on translucent or textured organic surfaces, and environmental context. "
+        "Background separation that isolates the subject while retaining habitat "
+        "context is the DoD gold standard for Flora.\n\n"
+        "DM: Score the moment of botanical peak — first light on morning dew, "
+        "the specific angle that reveals internal structure, the frame where "
+        "environmental conditions (light, wind stillness, dew) all align. "
+        "Unlike animal subjects, Flora DM rewards the photographer's choice of "
+        "angle, light, and timing rather than reaction speed.\n\n"
+        "WF: Score what the photograph reveals that the eye cannot see unaided — "
+        "structural geometry, translucency, colour relationships, or environmental "
+        "context that elevates the subject from record to revelation. Rare species, "
+        "unusual growth conditions, or scientific novelty all count."
+    ),
+    'marine': (
+        "This is Wildlife photography — sub-type: MARINE / UNDERWATER.\n"
+        "Aquatic or underwater subjects. The technical challenges of the medium — "
+        "colour shift, refraction, buoyancy — are inherent DoD signals.\n\n"
+        "DoD: Score colour correction in an inherently colour-shifting medium, "
+        "focus accuracy through water (refraction, particulates), correct exposure "
+        "without strobes washing the subject or ambient losing detail, and the "
+        "physical access challenge of the marine environment itself.\n\n"
+        "DM: Score the peak of animal behaviour or the ideal environmental "
+        "alignment — the frame where subject, light shaft, and background reef "
+        "or water column are all optimally placed. For surface/near-surface "
+        "subjects, apply the same behavioural identification test as bird_behaviour: "
+        "IDENTIFY the act (feeding, breach, social interaction) before scoring.\n\n"
+        "WF: Score access rarity and environmental revelation. Healthy reef "
+        "ecosystems, deep-water species, bioluminescence, or environmental "
+        "storytelling about marine habitat condition score highest. The wonder "
+        "is in showing the viewer a world they cannot physically access."
+    ),
+    'macro_wildlife': (
+        "This is Wildlife photography — sub-type: MACRO WILDLIFE.\n"
+        "Insects, arachnids, small reptiles, and micro-fauna at extreme "
+        "magnification. Precision focus and depth of field management are the "
+        "primary technical criteria.\n\n"
+        "DoD: Score focus accuracy at high magnification (eye or primary feature "
+        "sharp), depth of field control that renders the critical structure while "
+        "separating from the background, and lighting that reveals surface texture "
+        "without harsh specular reflections. Handheld macro in field conditions "
+        "scores higher DoD than studio macro.\n\n"
+        "DM: Score the behavioural or structural peak — the moment of eye contact, "
+        "the feeding posture, the mating display, the emergence from the chrysalis. "
+        "Macro Wildlife DM rewards the frame where behaviour and optimal focus "
+        "alignment coincide. A technically sharp macro of a static subject scores "
+        "lower DM than a slightly more challenging capture of a live behavioural moment.\n\n"
+        "WF: Score subject rarity, structural revelation, and the sense of entering "
+        "a hidden world. The best macro wildlife images show the viewer a face, "
+        "a structure, or a moment that is invisible without the photograph. "
+        "Common species in extraordinary detail score higher than rare species "
+        "in poor light."
+    ),
+}
+
+
 def get_genre_context(genre, sub_genre=None):
     """
     Returns the genre context string for the scoring prompt.
     For People images with a valid sub_genre, returns the sub-type-specific
     context block instead of the generic People context.
+    For Wildlife images with a valid sub_genre, returns the sub-type-specific
+    context block instead of the generic Wildlife context.
+    Falls back to generic genre context for unknown or missing sub_genre.
     """
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
+        return WILDLIFE_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
