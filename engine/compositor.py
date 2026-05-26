@@ -258,7 +258,7 @@ def build_card1(photo_path, data, out_path):
         col = GOLD if top else T1  # gold for top, dark text for rest
         if i>0:
             draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
-        draw.text((mx+12,LBL_Y), name.upper(), font=fnt(36,mono=True), fill=T3)
+        draw.text((mx+12,LBL_Y), name.upper(), font=fnt(36,mono=True), fill=T2)
         draw.text((mx+12,LBL_Y+lh(fnt(36,mono=True))+10), str(mscore), font=fnt(80,bold=True), fill=col)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
