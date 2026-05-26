@@ -490,125 +490,423 @@ PEOPLE_SUBGENRE_CONTEXT = {
 #   display, conflict, feeding) captured at its precise completion point.
 
 WILDLIFE_SUBGENRE_CONTEXT = {
+
+    # ── BIRDS ──────────────────────────────────────────────────────────────────
+
     'bird_in_flight': (
         "This is Wildlife photography — sub-type: BIRD IN FLIGHT.\n"
         "The primary challenge is freezing motion at the peak of the flight arc "
         "with accurate focus on the eye and primary feathers.\n\n"
         "DoD: Score shutter speed precision, tracking accuracy at speed, and "
-        "exposure management on a fast-moving subject against variable backgrounds "
-        "(sky, water, foliage). Wing extension at full spread, primary feather "
-        "separation visible, and eye sharp are the three DoD gold standards.\n\n"
-        "DM: Score the peak of the flight arc — the single frame where wing "
-        "geometry is most resolved, the bird's body axis is cleanest, and the "
-        "relationship to the background is strongest. A half-frame earlier or "
-        "later produces a lesser image. IDENTIFY whether this is pure flight or "
-        "a behavioural act (landing approach, prey strike, territorial display) — "
+        "exposure management on a fast-moving subject against variable backgrounds. "
+        "Wing extension at full spread, primary feather separation visible, and eye "
+        "sharp are the three DoD gold standards.\n\n"
+        "DM: Score the peak of the flight arc — the single frame where wing geometry "
+        "is most resolved and body axis cleanest. IDENTIFY whether this is pure transit "
+        "or a behavioural act (prey strike, territorial display, landing approach) — "
         "behavioural flight peaks score higher than generic transit.\n\n"
-        "WF: Score species rarity, behaviour rarity, and light quality. Common "
-        "garden birds in flat light score lower than rare species, unusual "
-        "plumage states, or flight captured in exceptional light. The wonder is "
-        "in the combination of access, timing, and conditions — not motion alone."
+        "WF: Score species rarity, behaviour rarity, and light quality. Common birds "
+        "in flat light score lower than rare species, unusual plumage states, or "
+        "exceptional light. Migration formations and murmurations score higher than "
+        "single-bird transit."
     ),
+
     'bird_behaviour': (
         "This is Wildlife photography — sub-type: BIRD PREDATION / BEHAVIOUR.\n"
         "A behavioural act is in progress — predation, feeding, display, conflict, "
-        "courtship, or nesting. The decisive moment is defined by THAT ACT, not "
-        "by generic motion or composition.\n\n"
-        "DoD: Score the technical difficulty of the specific act — predation at "
-        "water surface demands correct exposure for both dark plumage and bright "
-        "water simultaneously; display behaviour requires fast enough shutter to "
-        "freeze feather detail in full extension; conflict requires tracking two "
-        "moving subjects. IDENTIFY the prey or target if present: a fish, insect, "
-        "or rival in frame is a DoD signal — its absence when expected is a deduction.\n\n"
-        "DM: FIRST identify the behavioural act and its completion point before "
-        "scoring. Predation: is the prey visible and identifiable? Catch freeze "
-        "with prey in bill scores higher than catch freeze without prey visible. "
-        "Display: are the display features (crest, plumage, posture) at full "
-        "expression? Conflict: is the moment of contact, or the frame before "
-        "contact, captured? Generic motion (takeoff, landing) in this sub-type "
-        "scores LOWER — reward the photographer who captured the act, not the transit.\n\n"
-        "WF: Score behavioural rarity explicitly. Common takeoff = low WF. "
-        "Catch freeze with prey visible = moderate WF. Prey transfer mid-air, "
-        "cooperative hunting, rare display posture = high WF. The wonder is "
-        "in the completeness of the behavioural narrative — the image that tells "
-        "the story of the act without a caption."
+        "courtship, or nesting. The decisive moment is defined by THAT ACT.\n\n"
+        "DoD: Score the technical difficulty of the specific act. Predation at water "
+        "surface demands correct exposure for dark plumage and bright water simultaneously. "
+        "IDENTIFY prey or target if present — fish in bill, insect in talon, rival in "
+        "contact. Its absence when the title implies it is a deduction.\n\n"
+        "DM: FIRST identify the behavioural act and its completion point. Catch freeze "
+        "with prey visible scores higher than catch freeze without prey. Two birds in "
+        "contact scores higher than one bird in motion. Generic takeoff in this sub-type "
+        "scores LOWER — reward the act, not the transit.\n\n"
+        "WF: Score behavioural rarity explicitly. Common takeoff = low. Catch freeze "
+        "with prey visible = moderate. Mid-air prey transfer, cooperative hunting, "
+        "rare display = high. The wonder is the complete behavioural narrative."
     ),
-    'predator_prey': (
-        "This is Wildlife photography — sub-type: PREDATOR–PREY (MAMMAL).\n"
-        "A predation, pursuit, or conflict moment between mammals. The "
-        "behavioural narrative — not the animal alone — is the primary subject.\n\n"
-        "DoD: Score the tracking difficulty of two or more fast-moving subjects, "
-        "correct exposure across different fur tones, and sharpness at the point "
-        "of maximum action. Dust, motion blur on non-key elements, and environmental "
-        "chaos are acceptable — the key subjects must be sharp.\n\n"
-        "DM: IDENTIFY the behavioural peak: the moment of contact, the instant "
-        "the prey changes direction, the predator's commitment point. A half-second "
-        "before contact is often the peak — reward the photographer who read the "
-        "sequence and pre-positioned for that frame. Both predator and prey must "
-        "be readable in the decisive frame.\n\n"
-        "WF: Score narrative completeness. Does the image tell the full story — "
-        "predator, prey, tension, environment — in a single frame? Rare species, "
-        "rare behavioural interactions, or documentation of scientifically "
-        "significant behaviour score highest. The wonder is the sense of witnessing "
-        "something that most humans will never see in person."
+
+    'bird_family': (
+        "This is Wildlife photography — sub-type: BIRD FAMILY / JUVENILE.\n"
+        "Parent-offspring relationships, nest life, fledgling behaviour, chick "
+        "development, juvenile learning. The emotional and biological bond is the subject.\n\n"
+        "DoD: Score access to the nest or family group without disturbing behaviour, "
+        "exposure management in typically shaded or backlit nest environments, and "
+        "sharpness on small, fast-moving chick subjects. Nest photography at height "
+        "or in concealed locations raises DoD significantly.\n\n"
+        "DM: Score the peak of the relational moment — first feeding, fledgling's "
+        "first flight attempt, chick sheltering under parent's wing, juvenile copying "
+        "adult behaviour. The decisive moment is the one that communicates the bond "
+        "or the developmental stage most completely.\n\n"
+        "WF: Score species rarity and behavioural specificity. Common garden bird "
+        "feeding chicks scores lower than rare species at nest, unusual parental "
+        "behaviour, or documentation of a specific developmental milestone. "
+        "Cooperative breeding, allopreening, or adoption behaviour scores highest."
     ),
+
+    'bird_migration': (
+        "This is Wildlife photography — sub-type: BIRD MIGRATION / MURMURATION.\n"
+        "Mass movement, formations, murmurations, staging grounds. Scale and "
+        "collective behaviour are the primary subjects.\n\n"
+        "DoD: Score the logistical challenge of being in the right location at the "
+        "right time — migration timing is unpredictable, staging grounds are remote, "
+        "and murmurations are fleeting. Exposure management across a sky full of "
+        "moving subjects, and sharpness across the formation, are technical criteria.\n\n"
+        "DM: Score the peak of the collective behaviour — the moment the murmuration "
+        "forms its most complex shape, the instant the V-formation is most perfectly "
+        "resolved, the second the entire flock lifts from a staging ground simultaneously. "
+        "The decisive moment for migration is scale and geometry, not individual action.\n\n"
+        "WF: Score scale and rarity. A murmuration of millions is rarer than a flock "
+        "of hundreds. Species in genuine decline make migration documentation "
+        "scientifically significant. The wonder is in the collective intelligence "
+        "of the movement — shapes that no individual bird planned."
+    ),
+
+    # ── MAMMALS ────────────────────────────────────────────────────────────────
+
+    'mammal_behaviour': (
+        "This is Wildlife photography — sub-type: MAMMAL BEHAVIOUR / CONFLICT.\n"
+        "Adult mammal behaviour across the full range: predation, territorial conflict, "
+        "sparring, aggression, dominance display, scent marking, alarm response. "
+        "The behavioural act — not the animal alone — is the primary subject.\n\n"
+        "DoD: Score tracking difficulty of fast-moving subjects, correct exposure "
+        "across different fur tones, and sharpness at the point of maximum action. "
+        "Dangerous proximity to large predators, access to remote habitat, or night "
+        "photography all raise DoD significantly.\n\n"
+        "DM: IDENTIFY the specific behavioural act before scoring. Predation: is prey "
+        "visible and readable? Conflict: is the moment of contact or maximum threat "
+        "display captured? Both subjects must be readable in the decisive frame. "
+        "A half-second before contact is often the peak — reward the photographer "
+        "who pre-positioned for that frame.\n\n"
+        "WF: Score narrative completeness and species/behaviour rarity. Does the image "
+        "tell the full story — predator, prey, tension, environment? Rare species, "
+        "rarely documented interactions, or scientifically significant behaviour "
+        "scores highest. Tiger siblings sparring = juvenile play, not predation — "
+        "score DM on the peak of the play interaction, WF on the rarity of "
+        "documenting big cat juvenile behaviour in wild conditions."
+    ),
+
+    'mammal_family': (
+        "This is Wildlife photography — sub-type: MAMMAL FAMILY / JUVENILE.\n"
+        "Mother-offspring bonds, cub/calf/pup development, sibling interactions, "
+        "juvenile learning, play behaviour, nursing, protection. The biological "
+        "and emotional relationship is the subject.\n\n"
+        "DoD: Score access to family groups (typically highly protective and difficult "
+        "to approach), exposure in low light (dawn/dusk nursing behaviour), and "
+        "sharpness on fast-moving cubs. Wild family groups are significantly harder "
+        "to access than solitary adults.\n\n"
+        "DM: Score the peak of the relational or developmental moment — the first "
+        "steps of a calf, a mother lifting her cub by the scruff, siblings at play "
+        "with the exact moment of mock-attack frozen, a juvenile copying adult "
+        "behaviour for the first time. The decisive moment is the one that makes "
+        "the bond or the learning visible.\n\n"
+        "WF: Score species rarity and developmental specificity. Elephant calves "
+        "nursing are seen; elephant calves learning to use their trunk for the "
+        "first time is rarer. Document a specific milestone — first hunt attempt, "
+        "first water crossing, first independent kill — and WF climbs significantly."
+    ),
+
+    'mammal_migration': (
+        "This is Wildlife photography — sub-type: MAMMAL MIGRATION / HERD.\n"
+        "Mass movement, river crossings, seasonal aggregations, herd dynamics. "
+        "Scale, danger, and collective behaviour are the primary subjects.\n\n"
+        "DoD: Score location access (Mara river crossings require specific timing "
+        "and positioning), exposure management in dusty or chaotic conditions, "
+        "and the physical challenge of working around large moving animals. "
+        "Being in the right position for the crossing moment requires days of waiting.\n\n"
+        "DM: Score the peak of the collective movement — the moment the herd commits "
+        "to the crossing, the instant the lead animal enters the water, the frame "
+        "where predator and migrating prey are simultaneously readable. Migration "
+        "DM rewards scale and narrative over individual animal action.\n\n"
+        "WF: Score scale, species, and ecological significance. A wildebeest "
+        "crossing of thousands is less rare than the same image with crocodile "
+        "predation visible. Declining species in migration have conservation "
+        "documentary value. The wonder is witnessing a planetary biological rhythm."
+    ),
+
+    'primate_behaviour': (
+        "This is Wildlife photography — sub-type: PRIMATE SOCIAL / BEHAVIOUR.\n"
+        "All primates — great apes, monkeys, prosimians. Social intelligence, "
+        "hierarchy, grooming, aggression, tool use, play, infant care, "
+        "and the mirror of human behaviour in non-human primates.\n\n"
+        "DoD: Score the difficulty of working in dense forest or complex social "
+        "groups, maintaining focus on fast-moving subjects in dappled light, "
+        "and the access required to be trusted by a habituated primate group. "
+        "Wild unhabituated primates are maximum DoD.\n\n"
+        "DM: Score the peak of the social or behavioural moment — the exact "
+        "instant of aggressive display, the moment of reconciliation after conflict, "
+        "the precise gesture of tool use, the expression of play or fear. "
+        "Primate faces communicate emotion with human-like expressiveness — "
+        "the decisive moment is when that communication is at its most legible.\n\n"
+        "WF: Score behavioural complexity and the degree to which the image "
+        "reveals primate intelligence. Grooming = low WF. Tool use = moderate. "
+        "Problem-solving, coalition behaviour, deceptive behaviour, or "
+        "documented cultural transmission = high WF."
+    ),
+
+    'bat_behaviour': (
+        "This is Wildlife photography — sub-type: BAT BEHAVIOUR / EMERGENCE.\n"
+        "Bats are the most nocturnal and most technically challenging mammal subjects. "
+        "Emergence flights, echolocation hunting, roost behaviour, "
+        "mother-pup relationships, and cave colony documentation.\n\n"
+        "DoD: Score the extreme technical challenge of fast-moving subjects in "
+        "near-darkness, requiring high ISO, fast shutter, and accurate tracking "
+        "on erratic flight paths. Cave emergence photography — thousands of bats "
+        "exiting in low light — is among the highest DoD in wildlife photography. "
+        "Echolocation hunting freeze requires precise triggering.\n\n"
+        "DM: Score the peak of the specific behaviour — the moment of prey contact "
+        "for a hunting bat, the maximum density point of an emergence flight, "
+        "the instant a mother lands to nurse a pup. Bat DM rewards the photographer "
+        "who mastered the technical challenge AND found the behavioural peak.\n\n"
+        "WF: Score species rarity (many bat species are threatened or rarely "
+        "photographed), behavioural documentation value, and the sense of revealing "
+        "a hidden nocturnal world. Mass emergence from a cave at dusk = high WF. "
+        "Hunting bat catching a moth mid-air = very high WF."
+    ),
+
+    # ── AQUATIC / MARINE ───────────────────────────────────────────────────────
+
+    'dolphin_behaviour': (
+        "This is Wildlife photography — sub-type: DOLPHIN / CETACEAN BEHAVIOUR.\n"
+        "Dolphins, whales, orcas, porpoises. Social intelligence, cooperative "
+        "hunting, breach sequences, bow-riding, superpod formations, "
+        "mother-calf bonding, and cetacean play.\n\n"
+        "DoD: Score the unpredictability of cetacean behaviour at sea, exposure "
+        "management on fast-moving dark subjects against bright water, and "
+        "the access challenge of open ocean photography. Underwater cetacean "
+        "photography adds the additional medium challenge.\n\n"
+        "DM: IDENTIFY the specific behaviour — breach, spy-hop, bow-ride, hunt, "
+        "mother-calf interaction, play. Score the peak of THAT act. A breach "
+        "peaks at full airborne extension. A hunt peaks at prey contact. "
+        "A superpod peaks at maximum visible density with behavioural coherence.\n\n"
+        "WF: Score species rarity, behaviour rarity, and documentation value. "
+        "Orca cooperative hunting is rarer than dolphin bow-riding. "
+        "Humpback lunge-feeding, whale song behaviour above water, or "
+        "rare species documentation scores highest."
+    ),
+
+    'marine': (
+        "This is Wildlife photography — sub-type: MARINE / UNDERWATER.\n"
+        "Aquatic and underwater subjects across all marine environments. "
+        "The technical challenges of the medium — colour shift, refraction, "
+        "buoyancy control — are inherent DoD signals.\n\n"
+        "DoD: Score colour correction in a colour-shifting medium, focus through "
+        "water, correct exposure without strobes washing the subject, and the "
+        "physical access challenge of the marine environment — dive depth, "
+        "current, visibility, and equipment management.\n\n"
+        "DM: Score the peak of animal behaviour or ideal environmental alignment — "
+        "the frame where subject, light shaft, and background are optimally placed. "
+        "IDENTIFY the behavioural act (feeding, mating, predation, cleaning station "
+        "behaviour) before scoring. Apply the same behavioural identification test "
+        "as bird_behaviour — generic 'fish swimming' scores lower than behaviour.\n\n"
+        "WF: Score access rarity and environmental revelation. Healthy reef ecosystems, "
+        "deep-water species, bioluminescence, or documentation of threatened habitat "
+        "scores highest. The wonder is showing the viewer a world they cannot access."
+    ),
+
+    'marine_migration': (
+        "This is Wildlife photography — sub-type: MARINE MIGRATION / SHOALING.\n"
+        "Fish schools, whale migration routes, turtle aggregations, salmon runs, "
+        "sardine bait balls, and other mass aquatic movements.\n\n"
+        "DoD: Score the access challenge of being in the water during a mass "
+        "movement event, correct exposure on thousands of moving subjects, "
+        "and the physical challenge of the marine environment during biological "
+        "events (upwellings, spawning aggregations).\n\n"
+        "DM: Score the peak of the collective movement — the moment a bait ball "
+        "is at maximum compression, the frame where a salmon run is densest, "
+        "the instant predators and prey are simultaneously visible in the shoal. "
+        "Scale and narrative completeness define the decisive moment.\n\n"
+        "WF: Score ecological significance and rarity. Sardine bait ball with "
+        "multiple predator species visible = high WF. Documented species in "
+        "decline during their migration = conservation value. The wonder is "
+        "the scale of coordinated biological movement."
+    ),
+
+    # ── REPTILES & AMPHIBIANS ──────────────────────────────────────────────────
+
+    'reptile_amphibian': (
+        "This is Wildlife photography — sub-type: REPTILE / AMPHIBIAN BEHAVIOUR.\n"
+        "Snakes, lizards, crocodilians, turtles, frogs, salamanders. "
+        "Cold-blooded subjects with behaviour driven by thermoregulation, "
+        "ambush predation, and seasonal breeding events.\n\n"
+        "DoD: Score the access and patience required to work with ectothermic "
+        "subjects — reptiles require specific temperature conditions to be active, "
+        "and crocodilian predation photography requires proximity to large dangerous "
+        "animals. Frog breeding events are triggered by rain and last hours only.\n\n"
+        "DM: IDENTIFY the specific act — ambush strike, frog breeding mass, "
+        "snake-prey coiling, lizard territorial display, turtle egg-laying. "
+        "Score the peak of THAT act. An anaconda-caiman coil peaks at maximum "
+        "constriction force. A frog breeding event peaks at maximum density. "
+        "A strike peaks at point of contact.\n\n"
+        "WF: Score species rarity and behavioural documentation value. "
+        "Common garden lizard sunbathing = low WF. Rare frog species in "
+        "rain-triggered breeding aggregation = high WF. Snake predation on "
+        "a bat = very high WF. Conservation documentation of declining "
+        "amphibian species adds scientific value."
+    ),
+
+    # ── INVERTEBRATES ──────────────────────────────────────────────────────────
+
+    'butterfly_behaviour': (
+        "This is Wildlife photography — sub-type: BUTTERFLY / INSECT BEHAVIOUR.\n"
+        "Butterflies, moths, beetles, flies, and other winged insects. "
+        "Metamorphosis, mating, migration swarms, feeding, and "
+        "the extraordinary visual complexity of insect life.\n\n"
+        "DoD: Score focus precision on small, fast-moving subjects in ambient "
+        "conditions, depth of field control that renders wing detail while "
+        "separating from background, and the access challenge of finding "
+        "specific behaviours (metamorphosis emergence is brief and unpredictable).\n\n"
+        "DM: Score the behavioural peak — the exact moment of emergence from "
+        "chrysalis, the mating wheel formation locked, the monarch at maximum "
+        "migration density, the feeding posture at its most structured. "
+        "For migration swarms, DM rewards scale and collective geometry.\n\n"
+        "WF: Score what the image reveals that the naked eye cannot see unaided — "
+        "wing scale structure, compound eye geometry, mating behaviour complexity. "
+        "Rare species, migration documentation, or metamorphosis capture scores "
+        "highest. Bee mating balls, butterfly migration corridors, and "
+        "bioluminescent firefly displays are among the highest WF in invertebrate photography."
+    ),
+
+    'invertebrate_behaviour': (
+        "This is Wildlife photography — sub-type: INVERTEBRATE BEHAVIOUR.\n"
+        "Ants, bees, spiders, crabs, octopus, jellyfish, worms, and all "
+        "non-insect invertebrates. Collective intelligence, predation, "
+        "construction, and the alien complexity of invertebrate life.\n\n"
+        "DoD: Score the extreme close-focus challenge, lighting in tight spaces, "
+        "and the patience required to document invertebrate behaviour — ant colony "
+        "dismembering prey, spider web construction, octopus colour change. "
+        "Many invertebrate subjects require macro or super-macro technique.\n\n"
+        "DM: Score the specific behavioural peak — maximum dismemberment activity "
+        "on an ant prey item, the spider at the precise moment of web-tension "
+        "adjustment, the octopus at the instant of colour-change. "
+        "Invertebrate DM rewards the photographer who understood the behaviour "
+        "well enough to anticipate the peak.\n\n"
+        "WF: Score what the image reveals about invertebrate intelligence and "
+        "complexity. Ant trail = low WF. Ant colony cooperative prey transport = "
+        "moderate. Ant colony problem-solving or bee waggle dance documented = "
+        "high WF. The wonder is in the discovery that these small animals "
+        "have social structures as complex as any vertebrate."
+    ),
+
+    # ── PLANTS & FUNGI ─────────────────────────────────────────────────────────
+
     'flora': (
-        "This is Wildlife photography — sub-type: FLORA / BOTANICAL.\n"
-        "Plant life, fungi, and botanical subjects. The challenge is revealing "
-        "structural and textural detail invisible to the casual eye.\n\n"
+        "This is Wildlife photography — sub-type: FLORA / BOTANICAL / FUNGI.\n"
+        "Plant life, fungi, spore dispersal, germination, and botanical subjects. "
+        "The challenge is revealing structural and biological detail invisible "
+        "to the casual eye.\n\n"
         "DoD: Score depth of field control at close focus distances, light quality "
         "on translucent or textured organic surfaces, and environmental context. "
         "Background separation that isolates the subject while retaining habitat "
-        "context is the DoD gold standard for Flora.\n\n"
-        "DM: Score the moment of botanical peak — first light on morning dew, "
-        "the specific angle that reveals internal structure, the frame where "
-        "environmental conditions (light, wind stillness, dew) all align. "
-        "Unlike animal subjects, Flora DM rewards the photographer's choice of "
-        "angle, light, and timing rather than reaction speed.\n\n"
+        "context is the DoD gold standard. Spore dispersal photography requires "
+        "precise timing and triggering.\n\n"
+        "DM: Score the moment of botanical or fungal peak — first light on morning "
+        "dew, spores at maximum dispersal density, the specific angle that reveals "
+        "internal structure, germination at the exact moment of soil emergence. "
+        "Flora DM rewards timing and angle choice over reaction speed.\n\n"
         "WF: Score what the photograph reveals that the eye cannot see unaided — "
-        "structural geometry, translucency, colour relationships, or environmental "
-        "context that elevates the subject from record to revelation. Rare species, "
-        "unusual growth conditions, or scientific novelty all count."
+        "structural geometry, translucency, spore cloud physics, bioluminescent "
+        "fungi, or rare species documentation. Conservation significance of "
+        "threatened plant or fungal species adds scientific value."
     ),
-    'marine': (
-        "This is Wildlife photography — sub-type: MARINE / UNDERWATER.\n"
-        "Aquatic or underwater subjects. The technical challenges of the medium — "
-        "colour shift, refraction, buoyancy — are inherent DoD signals.\n\n"
-        "DoD: Score colour correction in an inherently colour-shifting medium, "
-        "focus accuracy through water (refraction, particulates), correct exposure "
-        "without strobes washing the subject or ambient losing detail, and the "
-        "physical access challenge of the marine environment itself.\n\n"
-        "DM: Score the peak of animal behaviour or the ideal environmental "
-        "alignment — the frame where subject, light shaft, and background reef "
-        "or water column are all optimally placed. For surface/near-surface "
-        "subjects, apply the same behavioural identification test as bird_behaviour: "
-        "IDENTIFY the act (feeding, breach, social interaction) before scoring.\n\n"
-        "WF: Score access rarity and environmental revelation. Healthy reef "
-        "ecosystems, deep-water species, bioluminescence, or environmental "
-        "storytelling about marine habitat condition score highest. The wonder "
-        "is in showing the viewer a world they cannot physically access."
-    ),
+
+    # ── MACRO ──────────────────────────────────────────────────────────────────
+
     'macro_wildlife': (
         "This is Wildlife photography — sub-type: MACRO WILDLIFE.\n"
         "Insects, arachnids, small reptiles, and micro-fauna at extreme "
-        "magnification. Precision focus and depth of field management are the "
-        "primary technical criteria.\n\n"
+        "magnification. Precision focus and depth of field management are "
+        "the primary technical criteria.\n\n"
         "DoD: Score focus accuracy at high magnification (eye or primary feature "
         "sharp), depth of field control that renders the critical structure while "
-        "separating from the background, and lighting that reveals surface texture "
-        "without harsh specular reflections. Handheld macro in field conditions "
-        "scores higher DoD than studio macro.\n\n"
-        "DM: Score the behavioural or structural peak — the moment of eye contact, "
-        "the feeding posture, the mating display, the emergence from the chrysalis. "
+        "separating from background, and lighting that reveals surface texture "
+        "without harsh specular reflections. Handheld field macro scores higher "
+        "DoD than studio macro.\n\n"
+        "DM: Score the behavioural or structural peak — eye contact moment, "
+        "feeding posture, mating display, emergence from chrysalis. "
         "Macro Wildlife DM rewards the frame where behaviour and optimal focus "
         "alignment coincide. A technically sharp macro of a static subject scores "
-        "lower DM than a slightly more challenging capture of a live behavioural moment.\n\n"
-        "WF: Score subject rarity, structural revelation, and the sense of entering "
-        "a hidden world. The best macro wildlife images show the viewer a face, "
-        "a structure, or a moment that is invisible without the photograph. "
-        "Common species in extraordinary detail score higher than rare species "
-        "in poor light."
+        "lower DM than a more challenging capture of a live behavioural moment.\n\n"
+        "WF: Score subject rarity and structural revelation — the hidden face, "
+        "the structure invisible without the photograph. Common species in "
+        "extraordinary detail scores higher than rare species in poor light."
     ),
+
+    # ── ENVIRONMENTAL / CONTEXTUAL ─────────────────────────────────────────────
+
+    'animals_in_environment': (
+        "This is Wildlife photography — sub-type: ANIMAL IN HABITAT / ENVIRONMENT.\n"
+        "The animal is in the frame but the habitat, ecosystem, or environmental "
+        "context is the co-subject. The relationship between creature and place "
+        "is the story.\n\n"
+        "DoD: Score location access (remote terrain, extreme weather, restricted "
+        "environments), the patience required for the right light-animal-landscape "
+        "alignment, and technical management of a wide dynamic range between "
+        "animal subject and landscape background.\n\n"
+        "DM: Score the peak of the environmental relationship — the moment the "
+        "animal's position within its habitat is most perfectly expressed. "
+        "A wolf silhouetted against an aurora, a bear in a salmon river at "
+        "last light, an elephant dwarfed by a dust storm. The decisive moment "
+        "is when subject and environment are in complete narrative accord.\n\n"
+        "WF: Score the environmental storytelling. Does the image communicate "
+        "something about the habitat, ecosystem health, or the animal's "
+        "relationship to its world that a portrait alone cannot? "
+        "Conservation context — habitat loss, climate impact, human encroachment "
+        "visible in the frame — raises WF significantly."
+    ),
+
+    'urban_wildlife': (
+        "This is Wildlife photography — sub-type: URBAN WILDLIFE.\n"
+        "Animals navigating human-built environments — foxes in cities, leopards "
+        "in Mumbai suburbs, peregrine falcons on skyscrapers, deer in car parks, "
+        "birds nesting on buildings. The human-wildlife interface is the story.\n\n"
+        "NOTE ON CAPTIVE/ZOO IMAGES: Urban wildlife specifically means wild animals "
+        "in urban environments, NOT captive animals in zoos, aquariums, or wildlife "
+        "parks. If cage bars, enclosure walls, zoo signage, unnatural substrate, "
+        "or feeding troughs are visible, this is NOT urban wildlife — DoD must be "
+        "penalised and the captive context noted in the score text.\n\n"
+        "DoD: Score the challenge of finding and photographing wild animals in "
+        "urban environments — unpredictable timing, mixed artificial and natural "
+        "light, cluttered backgrounds, and the ethical challenge of not habituating "
+        "wild animals to human presence.\n\n"
+        "DM: Score the peak of the human-wildlife interaction narrative — the fox "
+        "looking directly into a shop window, the leopard crossing a lit road, "
+        "the moment where the wildness of the animal and the artificiality of "
+        "the environment are in maximum visual tension.\n\n"
+        "WF: Score the environmental storytelling and the degree to which the "
+        "image prompts reflection on coexistence, habitat loss, or adaptation. "
+        "The wonder is in the surprise of wildness in a human space."
+    ),
+
+    'animal_portrait': (
+        "This is Wildlife photography — sub-type: ANIMAL PORTRAIT.\n"
+        "Frame-filling or close single-animal portraits where expression, "
+        "personality, and eye contact are the primary subjects. No specific "
+        "action required — the animal's presence and gaze are the story.\n\n"
+        "NOTE ON CAPTIVE SUBJECTS: If cage bars, enclosure walls, unnatural "
+        "substrate, or zoo infrastructure are visible in the frame, DoD must "
+        "be penalised — the access difficulty of a zoo enclosure is not "
+        "equivalent to a wild portrait. Note the captive context explicitly.\n\n"
+        "DoD: Score the access and proximity required for a frame-filling wild "
+        "portrait, correct exposure on fur/feather/scale texture, and the "
+        "challenge of achieving eye sharpness on an animal that may not "
+        "cooperate. Genuinely wild unhabituated subjects at portrait distance "
+        "represent maximum DoD.\n\n"
+        "DM: Score eye contact and expression — the single frame where the "
+        "animal's personality or inner state is most fully present. "
+        "Stillness is NOT a penalty. A portrait earns high DM when the "
+        "subject's awareness of the camera creates genuine visual tension, "
+        "or when an expression of alertness, curiosity, aggression, or calm "
+        "is perfectly resolved in that specific frame.\n\n"
+        "WF: Score species rarity, proximity rarity, and the degree to which "
+        "the portrait reveals something about the animal beyond its appearance. "
+        "Eye contact with a wild apex predator = high WF. The same contact "
+        "with a captive zoo animal = low WF. The wonder is in genuine wildness "
+        "meeting the camera."
+    ),
+
 }
 
 
@@ -661,6 +959,7 @@ Answer each question based ONLY on what you can actually see:
 6. Is there any object in any subject's bill, talons, or mouth? Describe it precisely.
 7. What is the lighting condition? (backlit, frontlit, sidelit, overcast)
 8. Is the primary subject sharp or soft?
+9. Is there any evidence the animal is captive? Look for: cage bars or mesh, enclosure walls, zoo signage, unnatural substrate (concrete, artificial grass), feeding troughs, unnaturally tame proximity to humans, identification tags or collars. Answer yes/no and describe evidence if present.
 
 Return this exact JSON:
 {
@@ -680,7 +979,9 @@ Return this exact JSON:
   "object_in_bill_or_talons": "<describe precisely, or null if none>",
   "lighting": "<backlit|frontlit|sidelit|overcast|mixed>",
   "primary_subject_sharp": <true|false>,
-  "scene_summary": "<2-3 sentences describing exactly what is happening in the image>"
+  "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
+  "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
+  "is_captive": <true if any captive indicators present, else false>
 }
 """
 
@@ -888,6 +1189,18 @@ def build_scene_context(vision: dict) -> str:
         lines.append("- Wonder must reflect predation behavioural rarity, not common takeoff behaviour.")
     if act in ("conflict", "predation", "display"):
         lines.append(f"- Behavioural act confirmed as: {act.upper()}. Score DM and Wonder relative to this act.")
+
+    # Captive/zoo detection
+    is_captive = vision.get("is_captive", False)
+    captive_indicators = vision.get("captive_indicators")
+    if is_captive and captive_indicators:
+        lines.append("")
+        lines.append("CAPTIVE SUBJECT DETECTED:")
+        lines.append(f"- Evidence: {captive_indicators}")
+        lines.append("- DoD MUST be penalised — captive access is not equivalent to wild access.")
+        lines.append("- Score text MUST explicitly note the captive context.")
+        lines.append("- Wonder MUST reflect that wildness and access difficulty are absent.")
+        lines.append("- Do NOT score as if this is a wild encounter.")
 
     return "\n".join(lines)
 

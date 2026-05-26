@@ -101,12 +101,34 @@ SUBGENRE_MAP = {
         ('event_ceremony',    'Event / Ceremony'),
     ],
     'Wildlife': [
-        ('bird_in_flight',   'Bird – In Flight'),
-        ('bird_behaviour',   'Bird – Predation / Behaviour'),
-        ('predator_prey',    'Predator–Prey (Mammal)'),
-        ('flora',            'Flora / Botanical'),
-        ('marine',           'Marine / Underwater'),
-        ('macro_wildlife',   'Macro Wildlife'),
+        # ── Birds ──────────────────────────────────────────────────────────────
+        ('bird_in_flight',       'Bird – In Flight'),
+        ('bird_behaviour',       'Bird – Predation / Behaviour'),
+        ('bird_family',          'Bird – Family / Juvenile'),
+        ('bird_migration',       'Bird – Migration / Murmuration'),
+        # ── Mammals ────────────────────────────────────────────────────────────
+        ('mammal_behaviour',     'Mammal – Behaviour / Conflict'),
+        ('mammal_family',        'Mammal – Family / Juvenile'),
+        ('mammal_migration',     'Mammal – Migration / Herd'),
+        ('primate_behaviour',    'Primate – Social / Behaviour'),
+        ('bat_behaviour',        'Bat – Behaviour / Emergence'),
+        # ── Aquatic / Marine ───────────────────────────────────────────────────
+        ('dolphin_behaviour',    'Dolphin / Cetacean – Behaviour'),
+        ('marine',               'Marine / Underwater'),
+        ('marine_migration',     'Marine – Migration / Shoaling'),
+        # ── Reptiles & Amphibians ──────────────────────────────────────────────
+        ('reptile_amphibian',    'Reptile / Amphibian – Behaviour'),
+        # ── Invertebrates ──────────────────────────────────────────────────────
+        ('butterfly_behaviour',  'Butterfly / Insect – Behaviour'),
+        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
+        # ── Plants & Fungi ─────────────────────────────────────────────────────
+        ('flora',                'Flora / Botanical / Fungi'),
+        # ── Macro ──────────────────────────────────────────────────────────────
+        ('macro_wildlife',       'Macro Wildlife'),
+        # ── Environmental / Contextual ─────────────────────────────────────────
+        ('animals_in_environment', 'Animal in Habitat / Environment'),
+        ('urban_wildlife',       'Urban Wildlife'),
+        ('animal_portrait',      'Animal Portrait'),
     ],
 }
 
