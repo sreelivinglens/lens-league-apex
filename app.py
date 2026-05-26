@@ -1252,6 +1252,7 @@ def run_annual_points_expiry():
             f'[points_expiry] Annual 20% expiry run. '
             f'{expired_count} users affected. Date: {today}'
         )
+        db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 
 # ── End of Points Engine ──────────────────────────────────────────────────────
@@ -1288,6 +1289,7 @@ def run_monthly_residency_clock():
             f'[residency_clock] Monthly increment complete. '
             f'{incremented} users incremented. Date: {now.date()}'
         )
+        db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 
 def backfill_residency_months():
@@ -1335,88 +1337,91 @@ def run_reengagement_emailer():
     Sends different copy for subscribed vs free tier users.
     """
     with app.app_context():
-        now = datetime.utcnow()
-        window_start = now - timedelta(hours=25)
-        window_end   = now - timedelta(hours=23)
+        try:
+            now = datetime.utcnow()
+            window_start = now - timedelta(hours=25)
+            window_end   = now - timedelta(hours=23)
 
-        # Find users with a scored image in the 23-25hr window
-        # who have NOT uploaded anything more recent
-        candidates = db.session.execute(db.text("""
-            SELECT DISTINCT u.id, u.email, u.full_name, u.username,
-                            u.is_subscribed, u.subscription_track,
-                            u.reengagement_sent_at,
-                            i.score, i.tier, i.genre, i.asset_name,
-                            i.scored_at,
-                            u.points_balance
-            FROM users u
-            JOIN images i ON i.user_id = u.id
-            WHERE i.status = 'scored'
-              AND i.scored_at BETWEEN :win_start AND :win_end
-              AND i.is_flagged = false
-              AND NOT EXISTS (
-                  SELECT 1 FROM images i2
-                  WHERE i2.user_id = u.id
-                    AND i2.created_at > i.scored_at
-              )
-              AND (
-                  u.reengagement_sent_at IS NULL
-                  OR u.reengagement_sent_at < :cutoff
-              )
-        """), {
-            'win_start': window_start,
-            'win_end':   window_end,
-            'cutoff':    now - timedelta(hours=48),
-        }).fetchall()
+            # Find users with a scored image in the 23-25hr window
+            # who have NOT uploaded anything more recent
+            candidates = db.session.execute(db.text("""
+                SELECT DISTINCT u.id, u.email, u.full_name, u.username,
+                                u.is_subscribed, u.subscription_track,
+                                u.reengagement_sent_at,
+                                i.score, i.tier, i.genre, i.asset_name,
+                                i.scored_at,
+                                u.points_balance
+                FROM users u
+                JOIN images i ON i.user_id = u.id
+                WHERE i.status = 'scored'
+                  AND i.scored_at BETWEEN :win_start AND :win_end
+                  AND i.is_flagged = false
+                  AND NOT EXISTS (
+                      SELECT 1 FROM images i2
+                      WHERE i2.user_id = u.id
+                        AND i2.created_at > i.scored_at
+                  )
+                  AND (
+                      u.reengagement_sent_at IS NULL
+                      OR u.reengagement_sent_at < :cutoff
+                  )
+            """), {
+                'win_start': window_start,
+                'win_end':   window_end,
+                'cutoff':    now - timedelta(hours=48),
+            }).fetchall()
 
-        sent = 0
-        for row in candidates:
-            try:
-                name      = row.full_name or row.username or 'Photographer'
-                score     = row.score
-                tier      = (row.tier or '').title()
-                genre     = row.genre or 'Photography'
-                img_name  = row.asset_name or 'your image'
-                pts       = round((row.points_balance or 0), 1)
-                is_sub    = row.is_subscribed
-                site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+            sent = 0
+            for row in candidates:
+                try:
+                    name      = row.full_name or row.username or 'Photographer'
+                    score     = row.score
+                    tier      = (row.tier or '').title()
+                    genre     = row.genre or 'Photography'
+                    img_name  = row.asset_name or 'your image'
+                    pts       = round((row.points_balance or 0), 1)
+                    is_sub    = row.is_subscribed
+                    site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
 
-                if is_sub:
-                    subject  = f'Your {genre} photo scored {score:.2f} — ready for round two?'
-                    pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
-                    cta_text = 'Upload Your Next Image'
-                else:
-                    subject  = f'Your {genre} photo scored {score:.2f} — keep building'
-                    pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your Official World Ranking.</p>'
-                    cta_text = 'Continue on Shutter League'
+                    if is_sub:
+                        subject  = f'Your {genre} photo scored {score:.2f} — ready for round two?'
+                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
+                        cta_text = 'Upload Your Next Image'
+                    else:
+                        subject  = f'Your {genre} photo scored {score:.2f} — keep building'
+                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your Official World Ranking.</p>'
+                        cta_text = 'Continue on Shutter League'
 
-                html_body = f"""
-<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
-  <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
-  <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
-  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
-  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
-  <p style="font-size:16px;line-height:1.7;color:#4A4840;">Upload your next shot and see how you compare.</p>
-  {pts_line}
-  <div style="margin:28px 0;">
-    <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
-  </div>
-  <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have an account on Shutter League.<br>
-  <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
-</div>"""
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Upload your next shot and see how you compare.</p>
+      {pts_line}
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have an account on Shutter League.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
 
-                ok = send_email(row.email, subject, html_body)
-                if ok:
-                    db.session.execute(db.text(
-                        "UPDATE users SET reengagement_sent_at = :now WHERE id = :uid"
-                    ), {'now': now, 'uid': row.id})
-                    db.session.commit()
-                    sent += 1
-                    app.logger.info(f'[reengagement] Sent to user {row.id} ({row.email})')
+                    ok = send_email(row.email, subject, html_body)
+                    if ok:
+                        db.session.execute(db.text(
+                            "UPDATE users SET reengagement_sent_at = :now WHERE id = :uid"
+                        ), {'now': now, 'uid': row.id})
+                        db.session.commit()
+                        sent += 1
+                        app.logger.info(f'[reengagement] Sent to user {row.id} ({row.email})')
 
-            except Exception as _re:
-                app.logger.error(f'[reengagement] Error for user {row.id}: {_re}')
+                except Exception as _re:
+                    app.logger.error(f'[reengagement] Error for user {row.id}: {_re}')
 
-        app.logger.info(f'[reengagement] Run complete. {sent} emails sent.')
+            app.logger.info(f'[reengagement] Run complete. {sent} emails sent.')
+        finally:
+            db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 # ── End of Re-engagement Emailer ─────────────────────────────────────────────
 
@@ -2493,12 +2498,6 @@ def profile():
 @login_required
 def upload():
     if request.method == 'POST':
-        # Diagnostic — log what the server actually receives
-        app.logger.info(
-            f'[upload] XHR={request.headers.get("X-Requested-With")} '
-            f'_xhr={request.form.get("_xhr")} '
-            f'user={current_user.id if current_user.is_authenticated else "anon"}'
-        )
         file = request.files.get('image')
         if not file or file.filename == '':
             flash('No file selected.', 'error')
@@ -12922,6 +12921,8 @@ def run_daily_signup_digest():
 
         except Exception as e:
             app.logger.error('[digest] Error: ' + str(e))
+        finally:
+            db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 
 def run_mentor_reminders():
@@ -13042,6 +13043,8 @@ def run_mentor_reminders():
 
         except Exception as e:
             app.logger.error(f'[mentor_reminder] Fatal error: {e}')
+        finally:
+            db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
 
 
 # ---------------------------------------------------------------------------
