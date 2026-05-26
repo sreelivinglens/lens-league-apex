@@ -15,6 +15,9 @@ from PIL import Image as PILImage
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
+# Vision call uses a more capable model — Haiku misses fine detail (small fish,
+# second bird in shadow). Sonnet handles this reliably. Scoring stays on Haiku.
+VISION_MODEL      = os.getenv("APEX_VISION_MODEL", "claude-sonnet-4-6")
 
 # Maximum dimension sent to the API.
 # Set to 1500 to match the platform minimum upload standard (1500px short side).
@@ -185,6 +188,8 @@ A catch freeze with prey visible scores higher DM than a takeoff.
 Two birds in contact scores higher Wonder than one bird in flight.
 
 GENRE CONTEXT: {genre_context}
+
+{scene_context}
 {calibration_examples}
 {calibration_notes}
 
@@ -623,6 +628,63 @@ def get_genre_context(genre, sub_genre=None):
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
+# ── Two-call vision architecture ──────────────────────────────────────────────
+# Call 1 (VISION): Model describes what it actually sees — subjects, behaviour,
+#                  prey, interactions. Returns structured JSON. No scoring.
+# Call 2 (SCORE):  Model scores using Call 1's scene description as ground truth.
+#                  Cannot contradict the verified scene description.
+# This prevents the model pattern-matching to "bird at water = takeoff" without
+# looking at the image — the scene description is injected as fact into scoring.
+
+VISION_SYSTEM = """
+You are a precise visual analyst for a wildlife photography platform.
+Your only job is to describe exactly what you see in the image.
+Do NOT score, evaluate, or give feedback.
+Do NOT infer or assume — only describe what is clearly visible.
+If something is ambiguous or partially obscured, say so explicitly.
+Respond ONLY with a valid JSON object. No preamble, no markdown.
+"""
+
+VISION_PROMPT = """Examine this photograph carefully. Scan the ENTIRE frame including:
+- Background, midground, and foreground
+- Shadow areas and dark regions
+- Edges and corners
+- Any partially visible subjects
+
+Answer each question based ONLY on what you can actually see:
+
+1. How many distinct subjects are in the frame? List each one.
+2. For each subject: what species/type is it, where is it in the frame, and what is it doing?
+3. Is any subject carrying, holding, or in contact with prey? If yes: describe the prey (species, size, position).
+4. Are any subjects in physical contact with each other? If yes: describe the contact.
+5. What behavioural act is in progress? (predation, conflict, display, takeoff, landing, feeding, roosting, transit — pick the most specific one that applies)
+6. Is there any object in any subject's bill, talons, or mouth? Describe it precisely.
+7. What is the lighting condition? (backlit, frontlit, sidelit, overcast)
+8. Is the primary subject sharp or soft?
+
+Return this exact JSON:
+{
+  "subject_count": <integer>,
+  "subjects": [
+    {
+      "type": "<species or description>",
+      "position": "<where in frame>",
+      "action": "<what it is doing>",
+      "carrying_prey": <true|false>,
+      "prey_description": "<describe if present, else null>",
+      "in_contact_with_other": <true|false>
+    }
+  ],
+  "behavioural_act": "<most specific act: predation|conflict|display|takeoff|landing|feeding|roosting|transit|unknown>",
+  "physical_contact_between_subjects": <true|false>,
+  "object_in_bill_or_talons": "<describe precisely, or null if none>",
+  "lighting": "<backlit|frontlit|sidelit|overcast|mixed>",
+  "primary_subject_sharp": <true|false>,
+  "scene_summary": "<2-3 sentences describing exactly what is happening in the image>"
+}
+"""
+
+
 def get_calibration_notes(genre, limit=5):
     try:
         from models import CalibrationNote
@@ -713,6 +775,123 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
+def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> dict:
+    """
+    Call 1 of the two-call architecture.
+    Sends the image to the API with a pure description prompt — no scoring.
+    Returns a dict with scene description facts (subjects, behaviour, prey, contact).
+    Falls back to an empty dict on any failure — scoring proceeds without it
+    rather than blocking entirely.
+    """
+    prompt = VISION_PROMPT
+    # Inject title and subject as hints — not as constraints
+    if title or subject:
+        hint = f"\nImage title: {title or 'Not provided'}. Subject field: {subject or 'Not provided'}.\nUse these as hints only — do not assume they are accurate. Describe what you actually see."
+        prompt = prompt + hint
+
+    payload = {
+        "model":       VISION_MODEL,
+        "max_tokens":  600,
+        "temperature": 0.1,
+        "system":      VISION_SYSTEM,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type":       "base64",
+                            "media_type": media_type,
+                            "data":       img_data,
+                        },
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    }
+
+    try:
+        response = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json=payload,
+            timeout=60,
+        )
+        if response.status_code != 200:
+            print(f"[vision_analyse] API error {response.status_code} — scoring will proceed without scene description")
+            return {}
+        content = response.json()
+        text = ""
+        for block in content.get("content", []):
+            if block.get("type") == "text":
+                text += block.get("text", "")
+        text = re.sub(r"```json|```", "", text).strip()
+        result = json.loads(text)
+        print(f"[vision_analyse] Scene: {result.get('behavioural_act','?')} | Subjects: {result.get('subject_count','?')} | Contact: {result.get('physical_contact_between_subjects','?')} | Bill/talons: {result.get('object_in_bill_or_talons','?')}")
+        return result
+    except Exception as e:
+        print(f"[vision_analyse] Failed ({e}) — scoring will proceed without scene description")
+        return {}
+
+
+def build_scene_context(vision: dict) -> str:
+    """
+    Converts the vision_analyse() result into a ground-truth block
+    injected into the scoring prompt. The scorer cannot contradict this.
+    Returns empty string if vision dict is empty (fallback path).
+    """
+    if not vision:
+        return ""
+
+    subjects = vision.get("subjects", [])
+    subject_lines = []
+    for i, s in enumerate(subjects, 1):
+        line = f"  Subject {i}: {s.get('type','unknown')} — {s.get('action','unknown')}"
+        if s.get("carrying_prey"):
+            line += f" — CARRYING PREY: {s.get('prey_description','unspecified')}"
+        if s.get("in_contact_with_other"):
+            line += " — IN CONTACT WITH ANOTHER SUBJECT"
+        subject_lines.append(line)
+
+    bill = vision.get("object_in_bill_or_talons")
+    contact = vision.get("physical_contact_between_subjects", False)
+    act = vision.get("behavioural_act", "unknown")
+    summary = vision.get("scene_summary", "")
+
+    lines = [
+        "VERIFIED SCENE DESCRIPTION — GROUND TRUTH (do not contradict this):",
+        f"Subject count: {vision.get('subject_count', 'unknown')}",
+    ]
+    lines.extend(subject_lines)
+    lines.append(f"Behavioural act: {act}")
+    lines.append(f"Physical contact between subjects: {'YES' if contact else 'NO'}")
+    if bill:
+        lines.append(f"Object in bill/talons: {bill}")
+    else:
+        lines.append("Object in bill/talons: none visible")
+    lines.append(f"Scene summary: {summary}")
+    lines.append("")
+    lines.append("SCORING RULES BASED ON SCENE DESCRIPTION:")
+    if contact:
+        lines.append("- Two subjects in physical contact are present. DM must reflect the conflict/interaction peak, not generic motion.")
+        lines.append("- Wonder must score the inter-subject behavioural rarity, not single-subject action.")
+        lines.append("- DO NOT describe this as a single-subject takeoff or suggest 'waiting for a second bird' — a second subject IS present.")
+    if bill:
+        lines.append(f"- Prey/object is present in bill/talons: {bill}. This is a predation/feeding moment.")
+        lines.append("- DM must score the catch/feeding freeze, not a generic water exit.")
+        lines.append("- Wonder must reflect predation behavioural rarity, not common takeoff behaviour.")
+    if act in ("conflict", "predation", "display"):
+        lines.append(f"- Behavioural act confirmed as: {act.upper()}. Score DM and Wonder relative to this act.")
+
+    return "\n".join(lines)
+
+
 def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None):
     """
     Score an image using the Apex DDI Engine.
@@ -727,6 +906,13 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     img_data, media_type = encode_image(image_path)
 
+    # ── Call 1: Vision analysis — identify scene facts before scoring ──────────
+    # This prevents the scorer from hallucinating scene content (e.g. describing
+    # a two-bird conflict as a single-bird takeoff). The scene description is
+    # injected as verified ground truth into the scoring prompt.
+    vision       = vision_analyse(img_data, media_type, title, subject)
+    scene_context = build_scene_context(vision)
+
     calibration_block = get_calibration_examples(genre)
     correction_block  = get_calibration_notes(genre)
 
@@ -737,6 +923,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         subject              = subject or "Not specified",
         location             = location or "Not specified",
         genre_context        = get_genre_context(genre, sub_genre=sub_genre),
+        scene_context        = scene_context,
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
     )
