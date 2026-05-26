@@ -16,8 +16,12 @@ from PIL import Image as PILImage
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
 
-# Maximum dimension sent to the API — keeps payload small and response fast
-API_MAX_PX = 800
+# Maximum dimension sent to the API.
+# Set to 1500 to match the platform minimum upload standard (1500px short side).
+# At 800px (previous value) a 2250×1500 image was downsampled to 800×533 —
+# losing 64% of resolution and making small subjects (prey in bill, second bird
+# in shadow, eye catchlights) invisible to the scoring model.
+API_MAX_PX = 1500
 
 SYSTEM_BRIEF = """
 You are the Apex DDI Engine for The Lens League photography rating platform.
