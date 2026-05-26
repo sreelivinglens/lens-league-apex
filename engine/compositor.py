@@ -242,7 +242,7 @@ def build_card1(photo_path, data, out_path):
     # Module scores — pinned to bottom, slate blue panel
     modules = data.get('modules',[])
     n = max(len(modules),1)
-    MOD_BLOCK_H = PAD + lh(fnt(36,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
+    MOD_BLOCK_H = PAD + lh(fnt(48,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
     MOD_Y = CH - FOOTER_H - MOD_BLOCK_H
 
     draw.rectangle([PHOTO_W,MOD_Y,CW,CH-FOOTER_H], fill=SURFACE)
@@ -258,8 +258,10 @@ def build_card1(photo_path, data, out_path):
         col = GOLD if top else T1  # gold for top, dark text for rest
         if i>0:
             draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
-        draw.text((mx+12,LBL_Y), name.upper(), font=fnt(36,mono=True), fill=T2)
-        draw.text((mx+12,LBL_Y+lh(fnt(36,mono=True))+10), str(mscore), font=fnt(80,bold=True), fill=col)
+        # Use short label so it fits the column width at legible size
+        short = {'Disruption': 'VD', 'Wonder': 'WF'}.get(name, name.upper())
+        draw.text((mx+12,LBL_Y), short, font=fnt(48,mono=True), fill=T2)
+        draw.text((mx+12,LBL_Y+lh(fnt(48,mono=True))+10), str(mscore), font=fnt(80,bold=True), fill=col)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
     draw_footer(canvas, draw, f"SL · {score} · {tier}")
