@@ -335,13 +335,8 @@
       </div>
       <div style="display:flex; align-items:center; gap:16px;">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <form method="POST" action="{{ url_for('backfill_hashes') }}">
-            <button type="submit" class="act-btn act-ref" style="font-size:11px; padding:4px 10px;">🔍 Backfill Hashes</button>
-          </form>
-          <form method="POST" action="{{ url_for('admin_cleanup') }}"
-                onsubmit="return confirm('Delete all images with no thumbnail? Cannot be undone.');">
-            <button type="submit" class="act-btn act-del" style="font-size:11px; padding:4px 10px;">🗑 Delete Broken</button>
-          </form>
+          <button type="button" class="act-btn act-ref" style="font-size:11px; padding:4px 10px;" onclick="adminPostUrl('{{ url_for('backfill_hashes') }}', 'Backfill hashes now?')">🔍 Backfill Hashes</button>
+          <button type="button" class="act-btn act-del" style="font-size:11px; padding:4px 10px;" onclick="adminPostUrl('{{ url_for('admin_cleanup') }}', 'Delete all images with no thumbnail? Cannot be undone.')">🗑 Delete Broken</button>
         </div>
         <span class="admin-chevron open" id="chev-review">▼</span>
       </div>
@@ -360,13 +355,13 @@
         {% endif %}
       </form>
 
-      <form method="POST" action="{{ url_for('admin_bulk_delete') }}" id="bulkForm" onsubmit="return confirmBulk();">
+      <form id="bulkForm" onsubmit="return false;">
         <div class="bulk-bar">
           <label>
             <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All
           </label>
           <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);" id="selectedCount">0 selected</span>
-          <button type="submit" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;">🗑 Delete Selected</button>
+          <button type="button" id="bulkDeleteBtn" disabled class="act-btn act-del" style="opacity:0.4;" onclick="adminBulkDelete()">🗑 Delete Selected</button>
           <button type="button" id="bulkRawBtn" disabled
                   style="opacity:0.4; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
@@ -470,24 +465,19 @@
             </div>
 
             <div class="admin-tile-actions">
-              <button type="submit" form="ref-form-{{ img.id }}"
+              <button type="button" onclick="adminPost('ref-form-' + {{ img.id }})"
                       class="act-btn act-ref {{ 'active' if img.is_calibration_example }}"
                       title="{{ 'Remove REF' if img.is_calibration_example else 'Set as REF' }}">
                 {{ '★' if img.is_calibration_example else '☆' }} REF
               </button>
               {% if img.is_flagged %}
-                <button type="submit" form="unflag-form-{{ img.id }}" class="act-btn act-unflag"
-                        onclick="return confirm('Unflag and restore?');">✓ Unflag</button>
+                <button type="button" onclick="adminPost('unflag-form-' + {{ img.id }}, 'Unflag and restore?')" class="act-btn act-unflag">✓ Unflag</button>
               {% elif img.needs_review %}
-                <button type="submit" form="approve-form-{{ img.id }}" class="act-btn act-approve"
-                        onclick="return confirm('Approve and make public?');">✓ OK</button>
-                <button type="submit" form="reject-form-{{ img.id }}" class="act-btn act-reject"
-                        onclick="return confirm('Reject? User notified.');">✗ Reject</button>
-                <button type="submit" form="flag-form-{{ img.id }}" class="act-btn act-flag"
-                        onclick="return confirm('Flag as AI-generated?');">🚫</button>
+                <button type="button" onclick="adminPost('approve-form-' + {{ img.id }}, 'Approve and make public?')" class="act-btn act-approve">✓ OK</button>
+                <button type="button" onclick="adminPost('reject-form-' + {{ img.id }}, 'Reject? User notified.')" class="act-btn act-reject">✗ Reject</button>
+                <button type="button" onclick="adminPost('flag-form-' + {{ img.id }}, 'Flag as AI-generated?')" class="act-btn act-flag">🚫</button>
               {% else %}
-                <button type="submit" form="flag-form-{{ img.id }}" class="act-btn act-flag"
-                        onclick="return confirm('Flag as AI-generated?');">🚫 Flag</button>
+                <button type="button" onclick="adminPost('flag-form-' + {{ img.id }}, 'Flag as AI-generated?')" class="act-btn act-flag">🚫 Flag</button>
               {% endif %}
               {% if img.status == 'scored' %}
                 {% if img.raw_verified %}
@@ -500,13 +490,11 @@
                   <button type="button" class="act-btn" disabled
                           style="cursor:default; border-color:#b8860b; background:#b8860b; color:#000; font-weight:700; font-size:11px;">⏳ PENDING</button>
                 {% else %}
-                  <button type="submit" form="raw-form-{{ img.id }}" class="act-btn"
-                          style="border-color:var(--gold); background:var(--gold); color:#000; font-weight:700;"
-                          onclick="return confirm('Request RAW file from photographer?');">📂 RAW</button>
+                  <button type="button" onclick="adminPost('raw-form-' + {{ img.id }}, 'Request RAW file from photographer?')" class="act-btn"
+                          style="border-color:var(--gold); background:var(--gold); color:#000; font-weight:700;">📂 RAW</button>
                 {% endif %}
               {% endif %}
-              <button type="submit" form="del-form-{{ img.id }}" class="act-btn act-del"
-                      onclick="return confirm('Delete? Cannot be undone.');">🗑</button>
+              <button type="button" onclick="adminPost('del-form-' + {{ img.id }}, 'Delete? Cannot be undone.')" class="act-btn act-del">🗑</button>
             </div>
 
           </div>
@@ -662,13 +650,8 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
         <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Calibration by Genre</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <form method="POST" action="{{ url_for('run_calibration') }}">
-            <button type="submit" class="btn btn-solid" style="padding:8px 18px; font-size:13px;">📸 Run Calibration Log</button>
-          </form>
-          <form method="POST" action="{{ url_for('fix_calibration_table') }}"
-                onsubmit="return confirm('Rebuild calibration_logs table? Clears all previous snapshots.');">
-            <button type="submit" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;">🔧 Fix Table</button>
-          </form>
+          <button type="button" class="btn btn-solid" style="padding:8px 18px; font-size:13px;" onclick="adminPostUrl('{{ url_for(\'run_calibration\') }}')">📸 Run Calibration Log</button>
+          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;" onclick="adminPostUrl('{{ url_for(\'fix_calibration_table\') }}', 'Rebuild calibration_logs table? Clears all previous snapshots.')">🔧 Fix Table</button>
         </div>
       </div>
 
@@ -742,10 +725,7 @@
             <div class="tool-label">Fix All Tiers</div>
             <div class="tool-desc">Recalculate all tier assignments from scores</div>
           </div>
-          <form method="POST" action="{{ url_for('fix_tiers') }}"
-                onsubmit="return confirm('Recalculate all tier assignments?')">
-            <button type="submit" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);">Run →</button>
-          </form>
+          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);" onclick="adminPostUrl('{{ url_for(\'fix_tiers\') }}', 'Recalculate all tier assignments?')">Run →</button>
         </div>
       </div>
 
@@ -753,31 +733,30 @@
 
       <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;">
         <div class="tool-label" style="margin-bottom:10px;">Fix Photographer Names</div>
-        <form method="POST" action="{{ url_for('fix_photographer_names') }}"
-              style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <div id="rename-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
           <div style="flex:1; min-width:140px;">
             <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Current name</div>
-            <input type="text" name="old_name" value="Admin" class="tool-input">
+            <input type="text" id="rename-old" value="Admin" class="tool-input">
           </div>
           <div style="flex:1; min-width:140px;">
             <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Replace with</div>
-            <input type="text" name="new_name" placeholder="New name" class="tool-input">
+            <input type="text" id="rename-new" placeholder="New name" class="tool-input">
           </div>
-          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
-                  onclick="return confirm('Rename all images? Cannot be undone.')">Rename →</button>
-        </form>
+          <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
+                  onclick="adminPostFields('{{ url_for(\'fix_photographer_names\') }}', {old_name: document.getElementById(\'rename-old\').value, new_name: document.getElementById(\'rename-new\').value}, \'Rename all images? Cannot be undone.\')">Rename →</button>
+        </div>
       </div>
 
       <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px;">
         <div class="tool-label" style="margin-bottom:10px;">Transfer Images to Photographer</div>
-        <form method="POST" action="{{ url_for('admin_transfer_images') }}"
-              style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
           <div style="flex:1; min-width:200px;">
             <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:1px;">Photographer name</div>
-            <input type="text" name="photographer_name" placeholder="e.g. Ashok Kochhar" class="tool-input">
+            <input type="text" id="transfer-name" placeholder="e.g. Ashok Kochhar" class="tool-input">
           </div>
-          <button type="submit" class="btn btn-solid" style="padding:9px 18px; font-size:13px;">Transfer →</button>
-        </form>
+          <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
+                  onclick="adminPostFields('{{ url_for(\'admin_transfer_images\') }}', {photographer_name: document.getElementById(\'transfer-name\').value})">Transfer →</button>
+        </div>
       </div>
 
     </div>
@@ -869,10 +848,7 @@
           <div class="danger-title">Rescore Images with Missing Data</div>
           <div class="danger-desc">Re-runs AI scoring on images with incomplete analysis. Uses API credits and may take several minutes.</div>
         </div>
-        <form method="POST" action="{{ url_for('admin_rescore_all') }}"
-              onsubmit="return confirm('Rescore all images with missing data? Uses API credits.');">
-          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Run Rescore</button>
-        </form>
+        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl('{{ url_for('admin_rescore_all') }}', 'Rescore all images with missing data? Uses API credits.')">Run Rescore</button>
       </div>
 
       <div class="danger-row">
@@ -880,10 +856,7 @@
           <div class="danger-title">Refresh AI Suspicion Scores</div>
           <div class="danger-desc">Re-runs AI detection only on all scored images. Does NOT change scores, tiers, or any other data. Run this after updating the detection prompt to backfill existing images. Images scoring &ge;0.7 are automatically moved to needs-review.</div>
         </div>
-        <form method="POST" action="{{ url_for('admin_refresh_ai_suspicion') }}"
-              onsubmit="return confirm('Refresh AI suspicion on all scored images? Uses API credits — one call per image.');">
-          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Refresh AI Detection</button>
-        </form>
+        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl('{{ url_for('admin_refresh_ai_suspicion') }}', 'Refresh AI suspicion on all scored images? Uses API credits — one call per image.')">Refresh AI Detection</button>
       </div>
 
       <div class="danger-row">
@@ -891,10 +864,7 @@
           <div class="danger-title">Fix Beta Plan Labels</div>
           <div class="danger-desc">Updates all manually-activated beta users to monthly plan so MRR calculates correctly.</div>
         </div>
-        <form method="POST" action="{{ url_for('admin_fix_beta_plans') }}"
-              onsubmit="return confirm('Update all beta users to monthly plan?');">
-          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Run Fix</button>
-        </form>
+        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl('{{ url_for('admin_fix_beta_plans') }}', 'Update all beta users to monthly plan?')">Run Fix</button>
       </div>
 
       <div class="danger-row" style="border-color:#8a0000;">
@@ -902,10 +872,7 @@
           <div class="danger-title">Reset All Peer Rating Credits &amp; Data</div>
           <div class="danger-desc">Resets all users' rating_credits to 0 and clears all peer rating data — assignments, ratings, pool entries, blended scores. Cannot be undone.</div>
         </div>
-        <form method="POST" action="{{ url_for('admin_reset_rating_credits') }}"
-              onsubmit="return confirm('Reset ALL peer rating credits and data to zero? This cannot be undone.');">
-          <button type="submit" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;">Reset All</button>
-        </form>
+        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl('{{ url_for('admin_reset_rating_credits') }}', 'Reset ALL peer rating credits and data to zero? This cannot be undone.')">Reset All</button>
       </div>
 
     </div>
@@ -943,21 +910,71 @@ function bulkRequestRaw() {
   const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(c => c.value);
   if (ids.length === 0) return;
   if (!confirm('Request RAW verification from ' + ids.length + ' photographer(s)?')) return;
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = '{{ url_for("admin_bulk_request_raw") }}';
-  ids.forEach(id => {
-    const inp = document.createElement('input');
-    inp.type = 'hidden'; inp.name = 'image_ids'; inp.value = id;
-    form.appendChild(inp);
-  });
-  document.body.appendChild(form);
-  form.submit();
+  const body = new URLSearchParams();
+  ids.forEach(id => body.append('image_ids', id));
+  fetch('{{ url_for("admin_bulk_request_raw") }}', {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Request failed (' + r.status + ')'); } })
+    .catch(e => alert('Network error: ' + e));
 }
-function confirmBulk() {
-  const count = document.querySelectorAll('.row-check:checked').length;
-  if (count === 0) return false;
-  return confirm('Delete ' + count + ' selected image(s)? This cannot be undone.');
+function adminBulkDelete() {
+  const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(c => c.value);
+  if (ids.length === 0) return;
+  if (!confirm('Delete ' + ids.length + ' selected image(s)? This cannot be undone.')) return;
+  const body = new URLSearchParams();
+  ids.forEach(id => body.append('image_ids', id));
+  fetch('{{ url_for("admin_bulk_delete") }}', {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Delete failed (' + r.status + ')'); } })
+    .catch(e => alert('Network error: ' + e));
 }
+
+/* ── v34: fetch() helpers — fixes admin POST 403 on iPad Safari ──────────────
+   All admin form POSTs now go through fetch() with credentials:'include'.
+   This ensures the session cookie is sent even on iOS WebKit where SameSite=None
+   doesn't propagate reliably to standard HTML form POSTs.
+   Routes still return redirect() — fetch follows it and we reload on success. */
+
+function adminPost(formId, confirmMsg) {
+  /* Submit a hidden <form> via fetch. formId is a string like 'del-form-42'. */
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  const form = document.getElementById(formId);
+  if (!form) { alert('Form not found: ' + formId); return; }
+  const body = new URLSearchParams(new FormData(form));
+  fetch(form.action, {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+    .catch(e => alert('Network error: ' + e));
+}
+
+function adminPostUrl(url, confirmMsg) {
+  /* POST to a URL with no extra body fields. */
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  fetch(url, {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: ''
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+    .catch(e => alert('Network error: ' + e));
+}
+
+function adminPostFields(url, fields, confirmMsg) {
+  /* POST to a URL with a plain-object fields dict. */
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  const body = new URLSearchParams(fields);
+  fetch(url, {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
+    .catch(e => alert('Network error: ' + e));
+}
+/* ── End v34 fetch helpers ─────────────────────────────────────────────────── */
 </script>
 {% endblock %}
