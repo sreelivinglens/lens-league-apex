@@ -478,7 +478,10 @@ class WeeklyChallenge(db.Model):
     results_hold_until = db.Column(db.DateTime, nullable=True)
     created_by         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
-    submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic')
+    submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic',
+                                  cascade='all, delete-orphan', passive_deletes=True)
+    topups      = db.relationship('ChallengeTopup',   backref='challenge_ref', lazy=True,
+                                  cascade='all, delete-orphan', passive_deletes=True)
 
     @property
     def is_open(self):
@@ -500,7 +503,7 @@ class WeeklyChallenge(db.Model):
 class WeeklySubmission(db.Model):
     __tablename__ = 'weekly_submissions'
     id           = db.Column(db.Integer, primary_key=True)
-    challenge_id = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id'), nullable=False)
+    challenge_id = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id', ondelete='CASCADE'), nullable=False)
     user_id      = db.Column(db.Integer, db.ForeignKey('users.id'),   nullable=False)
     image_id     = db.Column(db.Integer, db.ForeignKey('images.id'),  nullable=False)
     is_subscriber= db.Column(db.Boolean, default=False)
@@ -515,7 +518,7 @@ class WeeklySubmission(db.Model):
 class ChallengeTopup(db.Model):
     __tablename__ = 'challenge_topups'
     id                  = db.Column(db.Integer, primary_key=True)
-    challenge_id        = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id'), nullable=False)
+    challenge_id        = db.Column(db.Integer, db.ForeignKey('weekly_challenges.id', ondelete='CASCADE'), nullable=False)
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     quantity            = db.Column(db.Integer, nullable=False)
     amount_paise        = db.Column(db.Integer, nullable=False)
@@ -524,7 +527,7 @@ class ChallengeTopup(db.Model):
     status              = db.Column(db.String(20), default='pending')
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     user      = db.relationship('User',            foreign_keys=[user_id],      backref='challenge_topups', lazy=True)
-    challenge = db.relationship('WeeklyChallenge', foreign_keys=[challenge_id], backref='topups',           lazy=True)
+    challenge = db.relationship('WeeklyChallenge', foreign_keys=[challenge_id], lazy=True)
 
 
 # ── v30: Jury System + RAW Verification models ────────────────────────────────
