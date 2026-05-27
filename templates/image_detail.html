@@ -248,6 +248,29 @@
     {% if audit.byline_1 %}
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     {% endif %}
+
+    {# Edit Guide — Purist / Standard / Creative #}
+    {% if audit.edit_purist or audit.edit_standard or audit.edit_creative %}
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-subtle);">
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;color:var(--text-primary);text-transform:uppercase;margin-bottom:16px;">Edit Guide</div>
+      {% set edit_tiers = [
+        ('PURIST',   'rgba(180,190,210,1)',  'Capture only. No editing.',   audit.edit_purist),
+        ('STANDARD', 'var(--gold)',           'Balanced. Light editing.',    audit.edit_standard),
+        ('CREATIVE', 'var(--green)',          'Artistic. Heavy editing.',    audit.edit_creative),
+      ] %}
+      {% for tier_label, tier_col, tier_sub, tier_body in edit_tiers %}
+      {% if tier_body %}
+      <div style="margin-bottom:14px;padding:14px 18px;background:var(--surface-3);border-radius:var(--radius-sm);border:1px solid var(--border);">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+          <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;color:{{ tier_col }};text-transform:uppercase;">{{ tier_label }}</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">· {{ tier_sub }}</span>
+        </div>
+        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;">{{ tier_body }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
   {% endif %}
   {% endif %}{# end if scored #}
@@ -258,6 +281,13 @@
     <div class="meta-card">
       <div class="meta-label">Genre</div>
       <div class="meta-value">{{ image.genre }}</div>
+    </div>
+    {% endif %}
+    {% set audit_meta = image.get_audit() %}
+    {% if audit_meta and audit_meta.species_id %}
+    <div class="meta-card">
+      <div class="meta-label">Species</div>
+      <div class="meta-value">{{ audit_meta.species_id }}</div>
     </div>
     {% endif %}
     {% if image.subject %}
