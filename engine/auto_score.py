@@ -207,6 +207,7 @@ WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
 - NEVER open with observation. Open with the gap, the cost, or the fix.
 - Every sentence must either name a problem the photographer did not know they had, OR tell them exactly what to do about it.
 - If a field has no actionable content, return null — do not fill space.
+- UNCERTAIN SUBJECT RULE: If the scene description flags any element as uncertain or unidentified, do NOT reference that element in mentor_technical, mentor_moment, mentor_next, byline_1, byline_2, or hard_truth. Build the analysis around what is definitively known. A wrong identification is worse than a null field.
 - Write as a mentor talking to a photographer peer — direct, no hedging.
 - BANNED phrases: "the image demonstrates", "this photograph shows", "the composition features", "the subject is positioned", "the technique showcases", "the exposure captures", "the scene reveals", "the frame contains".
 - BAD: "The river carves an S-curve through the valley floor that pulls the eye from foreground to the vanishing point." — this is description. The photographer can see the river.
@@ -219,6 +220,8 @@ The EXIF data is provided with the image. Read it carefully before writing any t
 - If the camera make/model is a smartphone (iPhone, Samsung Galaxy, Pixel, Xiaomi, OnePlus etc.) NEVER describe the capture method as "drone", "aerial vehicle", "UAV", or "shot from a drone". It is a handheld or elevated mobile shot. Only reference drone/aerial if EXIF explicitly confirms a drone camera (DJI, Autel, Parrot etc.).
 - Do not assume subject matter or objects that are not clearly visible. If you see a colour boundary, describe it as a colour boundary — not a road unless you can clearly see it is a road.
 - Do not identify technical flaws (lens flare, dust, noise) unless you can clearly see them. A small coloured element may be part of the scene, not a flare. Describe what you see, not what you assume.
+- CRITICAL — small white or light objects at distance or in aerial shots: do NOT assume these are birds, animals, or wildlife. A small white speck could be a feather, debris, a boat, a vehicle, a person, or any other object. If you cannot clearly identify the object with confidence, label it as "unidentified object" or "possible [x] — uncertain" in your scene description. NEVER build scoring rationale or text fields around an uncertain identification.
+- If subject identity is uncertain: score MOMENT and set mentor_moment to null. Do not build mentor_next around an uncertain element. Score what is certain in the frame.
 - Never invent equipment, settings, or techniques not supported by the EXIF or the visible image.
 
 COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure used in this image.
@@ -256,7 +259,7 @@ Return this exact JSON structure:
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
-  "species_id": "<carry forward from the verified scene description — precise common name of the primary subject. Use exactly the same name. If not identified, null.>",
+  "species_id": "<For Wildlife and Nature genres only: carry forward the precise common name of the primary subject from the verified scene description. Use exactly the same name. If not identified with certainty, null. For Creative, Drone, Landscape, Street, and People genres: always null — do not attempt species identification.>",
   "edit_base":     "<BASE EDITS — post-processing only. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
 }}
@@ -314,12 +317,21 @@ GENRE_CONTEXT = {
     'Creative': (
         "This is Creative photography covering all technique-driven work: ICM, panning, zoom burst, "
         "intentional blur, long exposure, star trails, astrophotography, light painting, multiple "
-        "exposure, layered blur patterns, atmospheric mosaics, and any image where artistic or "
+        "exposure, layered blur patterns, atmospheric mosaics, aerial abstract, and any image where artistic or "
         "technical execution is the primary creative statement. "
         "Sharpness is NEVER penalised when absent. Sharpness IS rewarded when present as it "
         "demonstrates simultaneous technical and artistic control (highest DoD). "
         "Pure abstract/mosaic/atmospheric work can score equally high or higher on Disruption and Wonder. "
-        "Refer to STEP 0 for full DoD scoring guide."
+        "Refer to STEP 0 for full DoD scoring guide.\n\n"
+        "CRITICAL FOR CREATIVE GENRE — ABSTRACTION FIRST:\n"
+        "When the primary subject is geometric pattern, texture, colour field, or aerial abstraction, "
+        "DO NOT attempt to identify incidental small objects in the frame as wildlife or animals unless "
+        "they are unambiguously and clearly identifiable at full resolution. A small white or light shape "
+        "in an aerial abstract is likely a feather, debris, boat, vehicle, or other object — NOT a bird. "
+        "If you cannot confirm the identity of a small object with certainty, treat it as an unidentified "
+        "compositional element and describe only its geometric role (scale reference, anchor point, etc). "
+        "NEVER name it as a specific animal or wildlife subject. Score DM on the compositional decision "
+        "of including it — not on any assumed behavioural moment."
     ),
     'Drone': (
         "This is Drone photography. DoD reflects the physical and regulatory difficulty of aerial "
