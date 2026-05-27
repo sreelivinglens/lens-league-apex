@@ -180,7 +180,7 @@ def build_card1(photo_path, data, out_path):
     draw   = ImageDraw.Draw(canvas)
 
     INNER_H = CH - HEADER_H - FOOTER_H
-    PHOTO_W = int(CW * 0.52)
+    PHOTO_W = int(CW * 0.44)  # v34: reduced to allow full module labels
 
     # Photo — left half
     try:
@@ -242,7 +242,8 @@ def build_card1(photo_path, data, out_path):
     # Module scores — pinned to bottom, slate blue panel
     modules = data.get('modules',[])
     n = max(len(modules),1)
-    MOD_BLOCK_H = PAD + lh(fnt(48,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
+    # Two-line label: line1 + line2 + gap + score number
+    MOD_BLOCK_H = PAD + lh(fnt(32,mono=True)) + 4 + lh(fnt(32,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
     MOD_Y = CH - FOOTER_H - MOD_BLOCK_H
 
     draw.rectangle([PHOTO_W,MOD_Y,CW,CH-FOOTER_H], fill=SURFACE)
@@ -258,10 +259,18 @@ def build_card1(photo_path, data, out_path):
         col = GOLD if top else T1  # gold for top, dark text for rest
         if i>0:
             draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
-        # Use short label so it fits the column width at legible size
-        short = {'Disruption': 'VD', 'Wonder': 'WF'}.get(name, name.upper())
-        draw.text((mx+12,LBL_Y), short, font=fnt(48,mono=True), fill=T2)
-        draw.text((mx+12,LBL_Y+lh(fnt(48,mono=True))+10), str(mscore), font=fnt(80,bold=True), fill=col)
+        # Two-line label: full name split across two lines, abbreviation in brackets on line 2
+        _lbl_map = {
+            'DoD':        ('DEPTH OF',   'DETAIL (DOD)'),
+            'Disruption': ('VISUAL',      'DISRUPTION'),
+            'DM':         ('DECISIVE',    'MOMENT (DM)'),
+            'Wonder':     ('WONDER',      'FACTOR'),
+            'AQ':         ('AESTHETIC',   'QUALITY (AQ)'),
+        }
+        l1, l2 = _lbl_map.get(name, (name.upper(), ''))
+        draw.text((mx+12, LBL_Y), l1, font=fnt(32,mono=True), fill=T2)
+        draw.text((mx+12, LBL_Y+lh(fnt(32,mono=True))+4), l2, font=fnt(32,mono=True), fill=T2)
+        draw.text((mx+12, LBL_Y+lh(fnt(32,mono=True))*2+14), str(mscore), font=fnt(80,bold=True), fill=col)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
     draw_footer(canvas, draw, f"SL · {score} · {tier}")
