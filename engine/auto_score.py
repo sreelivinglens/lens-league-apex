@@ -252,7 +252,11 @@ Return this exact JSON structure:
   "badges_w": ["<specific gap in this image>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
-  "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>"
+  "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
+  "species_id": "<carry forward from the verified scene description — precise common name of the primary subject. Use exactly the same name. If not identified, null.>",
+  "edit_purist": "<PURIST — capture only, no editing. One specific instruction: reposition, change timing, adjust light, or wait for a cleaner background. What to do differently IN THE FIELD. No post-processing advice. 1-2 sentences.>",
+  "edit_standard": "<STANDARD — balanced, light editing. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
+  "edit_creative": "<CREATIVE — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -952,7 +956,7 @@ VISION_PROMPT = """Examine this photograph carefully. Scan the ENTIRE frame incl
 Answer each question based ONLY on what you can actually see:
 
 1. How many distinct subjects are in the frame? List each one.
-2. For each subject: what species/type is it, where is it in the frame, and what is it doing?
+2. For each subject: what species/type is it (use the precise common name — e.g. "Great Cormorant", "Indian Kingfisher", "Spotted Deer" — not just "bird" or "animal"), where is it in the frame, and what is it doing?
 3. Is any subject carrying, holding, or in contact with prey? If yes: describe the prey (species, size, position).
 4. Are any subjects in physical contact with each other? If yes: describe the contact.
 5. What behavioural act is in progress? (predation, conflict, display, takeoff, landing, feeding, roosting, transit — pick the most specific one that applies)
@@ -981,7 +985,8 @@ Return this exact JSON:
   "primary_subject_sharp": <true|false>,
   "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
-  "is_captive": <true if any captive indicators present, else false>
+  "is_captive": <true if any captive indicators present, else false>,
+  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. Use 'Unknown' if genuinely unidentifiable.>"
 }
 """
 
@@ -1165,10 +1170,16 @@ def build_scene_context(vision: dict) -> str:
     act = vision.get("behavioural_act", "unknown")
     summary = vision.get("scene_summary", "")
 
+    species_id = vision.get("species_id", "")
+
     lines = [
         "VERIFIED SCENE DESCRIPTION — GROUND TRUTH (do not contradict this):",
         f"Subject count: {vision.get('subject_count', 'unknown')}",
     ]
+    if species_id and species_id.lower() != "unknown":
+        lines.append(f"Primary subject species: {species_id}")
+        lines.append(f"- Use this species name in all text fields (hard_truth, row_wonder, row_dm, bylines).")
+        lines.append(f"- Do NOT write generic terms like 'the bird' or 'the animal' when the species is known.")
     lines.extend(subject_lines)
     lines.append(f"Behavioural act: {act}")
     lines.append(f"Physical contact between subjects: {'YES' if contact else 'NO'}")
@@ -1338,6 +1349,10 @@ def build_audit_data(result, image_obj):
         "composition_technique": result.get("composition_technique", "NONE"),
         "iucn_tag":             result.get("iucn_tag"),
         "hard_truth":           result.get("hard_truth", ""),
+        "species_id":           result.get("species_id", ""),
+        "edit_purist":          result.get("edit_purist", ""),
+        "edit_standard":        result.get("edit_standard", ""),
+        "edit_creative":        result.get("edit_creative", ""),
         "modules": [
             ("DoD",        result.get("dod", 0)),
             ("Disruption", result.get("disruption", 0)),

@@ -291,6 +291,10 @@ def build_card2(data, out_path):
     b2   = data.get('byline_2_body','').strip()
     bg   = [b for b in data.get('badges_g',[]) if b.strip()]
     bw   = [b for b in data.get('badges_w',[]) if b.strip()]
+    hard_truth    = data.get('hard_truth','').strip()
+    edit_purist   = data.get('edit_purist','').strip()
+    edit_standard = data.get('edit_standard','').strip()
+    edit_creative = data.get('edit_creative','').strip()
 
     def measure_section(dummy_draw, body, w):
         h  = lh(fnt(38,bold=True,mono=True)) + 20
@@ -311,11 +315,28 @@ def build_card2(data, out_path):
         left_h += sum(lh(fnt(44))+10 for _ in wrap_lines(dummy,', '.join(bw),fnt(44),COL_W))
 
     right_h = sum(measure_section(dummy,body,COL_W) for _,body in rows[3:])
+    # Hard Truth callout box
+    if hard_truth:
+        HT_PAD = 24
+        right_h += lh(fnt(38,bold=True,mono=True)) + 20
+        right_h += sum(lh(fnt(44,bold=True))+12 for _ in wrap_lines(dummy,hard_truth,fnt(44,bold=True),COL_W-HT_PAD*2))
+        right_h += HT_PAD*2 + 24
     right_h += lh(fnt(38,bold=True,mono=True))+20
     right_h += sum(lh(fnt(44))+12 for _ in wrap_lines(dummy,b1,fnt(44),COL_W))
     right_h += 28
     right_h += lh(fnt(38,bold=True,mono=True))+20
     right_h += sum(lh(fnt(44,bold=True))+12 for _ in wrap_lines(dummy,b2,fnt(44,bold=True),COL_W))
+    # Edit tiers
+    EDIT_PAD = 20
+    edit_inner_w = COL_W - EDIT_PAD*2
+    if edit_purist or edit_standard or edit_creative:
+        right_h += 32  # spacer
+        right_h += lh(fnt(38,bold=True,mono=True)) + 16  # EDIT GUIDE header
+        for label, body in [('PURIST', edit_purist), ('STANDARD', edit_standard), ('CREATIVE', edit_creative)]:
+            if body:
+                right_h += lh(fnt(32,bold=True,mono=True)) + 8
+                right_h += sum(lh(fnt(40))+10 for _ in wrap_lines(dummy,body,fnt(40),edit_inner_w))
+                right_h += EDIT_PAD
 
     content_h = max(left_h, right_h)
     DYN_H = HEADER_H + PAD + content_h + PAD*4 + FOOTER_H
@@ -352,6 +373,19 @@ def build_card2(data, out_path):
     for label,body in rows[3:]:
         RY = section(RX, RY, label, body, COL_W)
 
+    # Hard Truth — gold-bordered callout box above gap analysis
+    if hard_truth:
+        HT_PAD = 24
+        ht_lines = wrap_lines(draw, hard_truth, fnt(44,bold=True), COL_W - HT_PAD*2)
+        ht_h = lh(fnt(38,bold=True,mono=True)) + 20 + sum(lh(fnt(44,bold=True))+12 for _ in ht_lines) + HT_PAD*2
+        draw.rectangle([RX-8, RY, RX+COL_W+8, RY+ht_h], fill=SURFACE)
+        draw.rectangle([RX-8, RY, RX-4, RY+ht_h], fill=GOLD)  # gold left border
+        hy = RY + HT_PAD
+        draw.text((RX+HT_PAD, hy), 'HARD TRUTH', font=fnt(38,bold=True,mono=True), fill=GOLD_D)
+        hy += lh(fnt(38,bold=True,mono=True)) + 20
+        draw_text(draw, hard_truth, fnt(44,bold=True), T1, RX+HT_PAD, hy, COL_W-HT_PAD*2, 12)
+        RY += ht_h + 24
+
     # The One Improvement section — slate blue panel
     byline_top = RY
     # Apex Byline (gap analysis) — label + body
@@ -373,6 +407,36 @@ def build_card2(data, out_path):
 
     # Left border accent
     draw.rectangle([RX-24, byline_top, RX-16, RY], fill=GOLD_D)
+
+    # Edit Guide — Purist / Standard / Creative tiers
+    EDIT_PAD = 20
+    edit_inner_w = COL_W - EDIT_PAD*2
+    edit_entries = [
+        ('PURIST',   (180,190,210), edit_purist),
+        ('STANDARD', GOLD,          edit_standard),
+        ('CREATIVE', (160,180,140), edit_creative),
+    ]
+    has_edits = any(body for _,_,body in edit_entries)
+    if has_edits:
+        RY += 12
+        # Section header
+        draw.text((RX, RY), 'EDIT GUIDE', font=fnt(38,bold=True,mono=True), fill=SLATE)
+        RY += lh(fnt(38,bold=True,mono=True)) + 16
+        draw.rectangle([RX, RY, RX+COL_W, RY+1], fill=BORDER)
+        RY += 16
+        for tier_label, tier_col, body in edit_entries:
+            if not body:
+                continue
+            # Tier pill label
+            draw.text((RX, RY), tier_label, font=fnt(32,bold=True,mono=True), fill=tier_col)
+            sub_label = {'PURIST': 'Capture only. No editing.',
+                         'STANDARD': 'Balanced. Light editing.',
+                         'CREATIVE': 'Artistic. Heavy editing.'}[tier_label]
+            sub_x = RX + tw(draw, tier_label, fnt(32,bold=True,mono=True)) + 16
+            draw.text((sub_x, RY+4), f'· {sub_label}', font=fnt(28,mono=True), fill=T3)
+            RY += lh(fnt(32,bold=True,mono=True)) + 8
+            RY = draw_text(draw, body, fnt(40), T2, RX+EDIT_PAD, RY, edit_inner_w, 10)
+            RY += EDIT_PAD
 
     draw_footer(canvas, draw, f"SL · {data.get('score','')} · {data.get('tier','').upper()}", DYN_H)
     draw_header(canvas, draw,
