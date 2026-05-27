@@ -37,7 +37,7 @@
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
+  .ddi-lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.5px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; margin-top: 4px; }
   /* glink_inline — glossary links on light backgrounds */
   .glink-inline {
     color: var(--text-muted); text-decoration: underline; text-decoration-color: rgba(245,197,24,0.55);
@@ -170,16 +170,16 @@
     {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
     <div class="ddi-grid">
       {% set dims = [
-        ('DoD', image.dod_score, 'Depth of Detail'),
-        ('Disruption', image.disruption_score, 'Visual Disruption'),
-        ('DM', image.dm_score, 'Decisive Moment'),
-        ('Wonder', image.wonder_score, 'Wonder'),
-        ('AQ', image.aq_score, 'Aesthetic Quality'),
+        ('DoD', image.dod_score, 'Depth of Detail', 'DEPTH OF', 'DETAIL (DOD)'),
+        ('Disruption', image.disruption_score, 'Visual Disruption', 'VISUAL', 'DISRUPTION'),
+        ('DM', image.dm_score, 'Decisive Moment', 'DECISIVE', 'MOMENT (DM)'),
+        ('Wonder', image.wonder_score, 'Wonder Factor', 'WONDER', 'FACTOR'),
+        ('AQ', image.aq_score, 'Aesthetic Quality', 'AESTHETIC', 'QUALITY (AQ)'),
       ] %}
-      {% for lbl, val, title in dims %}
+      {% for lbl, val, title, line1, line2 in dims %}
       <div class="ddi-dim">
         <div class="ddi-val">{{ val or '—' }}</div>
-        <div class="ddi-lbl"><a href="/science#dimensions" class="glink-inline" title="{{ title }}">{{ lbl }}</a></div>
+        <div class="ddi-lbl"><a href="/science#dimensions" class="glink-inline" title="{{ title }}">{{ line1 }}<br>{{ line2 }}</a></div>
       </div>
       {% endfor %}
     </div>
