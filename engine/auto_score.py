@@ -202,12 +202,17 @@ genre rules (STEP 1). If detected, technique overrides genre DoD criteria.
 
 Score all five modules. Apply all Apex layer rules. Calculate final weighted score.
 
-WRITING STYLE FOR ALL TEXT FIELDS:
-Write as an experienced photographer and mentor — direct, specific, no hedging.
-Reference what you actually see in this specific image. No generic statements.
-Never say "the image demonstrates" or "this photograph shows" — speak directly.
-Examples of BAD output: "The technical execution demonstrates strong awareness of peak action."
-Examples of GOOD output: "The motion-frozen wingbeat at the top of the arc is the shot — everything else in the frame supports that instant."
+WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
+- NEVER describe what is visible in the image. The photographer knows what they shot.
+- NEVER open with observation. Open with the gap, the cost, or the fix.
+- Every sentence must either name a problem the photographer did not know they had, OR tell them exactly what to do about it.
+- If a field has no actionable content, return null — do not fill space.
+- Write as a mentor talking to a photographer peer — direct, no hedging.
+- BANNED phrases: "the image demonstrates", "this photograph shows", "the composition features", "the subject is positioned", "the technique showcases", "the exposure captures", "the scene reveals", "the frame contains".
+- BAD: "The river carves an S-curve through the valley floor that pulls the eye from foreground to the vanishing point." — this is description. The photographer can see the river.
+- GOOD: "The right-side peak is 30% heavier than the left — move your frame left until the river exit sits at the right third and the weight balances." — this is a diagnosis and a fix.
+- BAD: "The monochrome conversion removes colour information." — observation, not diagnosis.
+- GOOD: "Monochrome was the wrong call here — the colour temperature difference between the haze layers was the only thing separating them, and conversion collapsed three depth planes into one." — this is what it cost.
 
 CRITICAL — EQUIPMENT AND EXIF ACCURACY:
 The EXIF data is provided with the image. Read it carefully before writing any text.
@@ -240,23 +245,20 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<One punchy sentence — what this image IS. Written as a photographer would say it to a peer. No hedging. Start with what makes or breaks it. Example: 'The subtraction works — white background forces the eye to the rhythm of repeated forms, but the incoming bird is a beat too early to anchor the geometry.' Never start with 'This image' or 'The photograph'.>",
-  "row_technical": "<1-2 sentences MAX. State the one technical decision that defines this image — name it precisely, no buildup, no category labels. If it worked say why; if it didn't say what it cost. Example: 'High-key exposure held just below blowout — feather detail survives where most photographers would have blown it.' Never say 'the technique demonstrates' or 'the execution shows'. Write like a photographer talking to another photographer.>",
-  "row_geometric": "<1-2 sentences MAX. Name what the composition DOES, not what it contains. Start with the structure, end with whether it works. Example: 'The birds stack into a diagonal that pulls toward the gap in the upper right — the composition is unresolved until that gap closes.' Never say 'the subject is positioned' or describe what is visible. Say what the geometry is doing.>",
-  "row_dm": "<1-2 sentences MAX. Was this the right moment? Answer directly — yes or no — then name what the better moment would have been or confirm this was it. Example: 'This is the right frame — the wingbeat frozen at the top of the arc. A half-second either side and the geometry collapses.' Never explain what a decisive moment is. Never say 'there is no peak action'. Just say what this moment is or isn't.>",
-  "row_wonder": "<1-2 sentences MAX. If something is genuinely rare or surprising, name it and say why in one line. If nothing is, say so cleanly. Example: 'Colony behaviour in high-key monochrome is uncommon — the restraint is the wonder.' Never spend three sentences explaining an absence. One honest line is enough.>",
-  "row_aq": "<1-2 sentences MAX. Name the exact feeling this image creates — not its subject, not its technique, the feeling. Be precise and direct. Example: 'Serene but kinetic — the blur on the foreground bird creates unresolved tension against the stillness behind it.' Never say 'the image evokes' or 'the viewer experiences'. Say what it feels like, as if you are standing in front of it.",
-  "byline_1": "<One sentence — what specifically holds this image from the next tier. Name the exact gap. Example: 'The incoming bird placement is slightly too high — it floats outside the geometric connection to the perched group rather than completing it.'  >",
-  "byline_2": "<THE ONE IMPROVEMENT. Physical, specific, actionable. What to do differently next time — in the field or in processing. Example: 'Wait for the incoming bird to drop closer to the perched group before firing — the geometric connection that makes this composition complete is half a second away.'  >",
+  "hard_truth": "<ONE sentence. What this image IS — the single thing that makes or breaks it. Start with the verdict, not the scene. Never open with description of what is visible. BAD: 'The atmospheric layering and winding river create depth, but the monochrome conversion flattens tonal separation.' GOOD: 'Monochrome killed the depth — the colour temperature gap between the haze layers was the only separation between three planes, and conversion collapsed them.' Never start with 'This image' or 'The photograph'.>",
+  "mentor_technical": "<ONE sentence. Name the technical gap and what it cost — or, if technically clean, name the one decision that made it work. Never describe what is visible. Never open with observation. Start with the gap or the win. Example of gap: 'Exposure pushed half a stop too bright — highlights on the primary wing feathers are gone and cannot be recovered.' Example of win: 'ISO held at 1600 with a shutter fast enough to freeze the primary — the gamble paid.' If there is no actionable technical point, omit this field entirely (return null).>",
+  "mentor_moment": "<ONE sentence. Was this the right frame? If yes, say exactly why this instant and not the one before or after. If no, name the specific frame that was the shot. Never explain what a decisive moment is. Never say 'there is no peak action'. Example of right frame: 'Wingbeat at the top of the arc with the eye catching light — half a second earlier and the wing blocks the face.' Example of wrong frame: 'The bill has cleared the water here — the shot was the entry, when the spray was still rising.' If moment is irrelevant to the genre, omit (return null).>",
+  "mentor_next": "<TWO sentences MAX. First sentence: the field fix — what to do differently at the point of capture (position, timing, light, distance, angle). Second sentence: the processing fix — one specific adjustment that would change the read of this image (not generic; name the tool or method). This replaces The One Improvement and the Edit Guide as a single unified block. Example: 'Get lower — eye level with the subject removes the downward angle that flattens the depth. In post, pull the highlights on the water surface down 40 points to recover the reflection detail that anchors the foreground.' If only a field fix applies, one sentence is enough. Never give generic advice.>",
+  "byline_1": "<ONE sentence. What specifically holds this image from the next tier — name the exact gap, not a description of what is there. Start with the problem, not the scene. BAD: 'The incoming bird placement is slightly high.' GOOD: 'The incoming bird floats outside the geometric connection — drop it to the lower third and the composition locks.' Never describe what is visible.>",
+  "byline_2": "<THE ONE IMPROVEMENT. One specific, physical action — in the field or in processing. Name the exact move, not the problem. BAD: 'Wait for better light.' GOOD: 'Shoot this at golden hour from the ridge to the east — the low side-light will separate the valley floor from the peaks without needing monochrome.' Never use generic advice. Never describe what the image does.>",
   "badges_g": ["<specific strength visible in this image>", "<specific strength>", "<specific strength>"],
   "badges_w": ["<specific gap in this image>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
   "species_id": "<carry forward from the verified scene description — precise common name of the primary subject. Use exactly the same name. If not identified, null.>",
-  "edit_purist": "<PURIST — capture only, no editing. One specific instruction: reposition, change timing, adjust light, or wait for a cleaner background. What to do differently IN THE FIELD. No post-processing advice. 1-2 sentences.>",
-  "edit_standard": "<STANDARD — balanced, light editing. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
-  "edit_creative": "<CREATIVE — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
+  "edit_base":     "<BASE EDITS — post-processing only. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
+  "edit_creative": "<CREATIVE EDITS — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -1178,7 +1180,7 @@ def build_scene_context(vision: dict) -> str:
     ]
     if species_id and species_id.lower() != "unknown":
         lines.append(f"Primary subject species: {species_id}")
-        lines.append(f"- Use this species name in all text fields (hard_truth, row_wonder, row_dm, bylines).")
+        lines.append(f"- Use this species name in all text fields (hard_truth, mentor_technical, mentor_moment, mentor_next, bylines).")
         lines.append(f"- Do NOT write generic terms like 'the bird' or 'the animal' when the species is known.")
     lines.extend(subject_lines)
     lines.append(f"Behavioural act: {act}")
@@ -1350,8 +1352,7 @@ def build_audit_data(result, image_obj):
         "iucn_tag":             result.get("iucn_tag"),
         "hard_truth":           result.get("hard_truth", ""),
         "species_id":           result.get("species_id", ""),
-        "edit_purist":          result.get("edit_purist", ""),
-        "edit_standard":        result.get("edit_standard", ""),
+        "edit_base":            result.get("edit_base", ""),
         "edit_creative":        result.get("edit_creative", ""),
         "modules": [
             ("DoD",        result.get("dod", 0)),
@@ -1361,11 +1362,9 @@ def build_audit_data(result, image_obj):
             ("AQ",         result.get("aq", 0)),
         ],
         "rows": [
-            ("Technical Integrity", result.get("row_technical", "")),
-            ("Geometric Harmony",   result.get("row_geometric", "")),
-            ("Decisive Moment",     result.get("row_dm", "")),
-            ("Wonder Factor",       result.get("row_wonder", "")),
-            ("AQ — Soul",           result.get("row_aq", "")),
+            ("Technical",  result.get("mentor_technical", "")),
+            ("Moment",     result.get("mentor_moment", "")),
+            ("Next",       result.get("mentor_next", "")),
         ],
         "byline_1":      result.get("byline_1", ""),
         "byline_2_body": result.get("byline_2", ""),
