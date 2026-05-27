@@ -723,7 +723,7 @@
   </div>
   <div class="db-top-actions">
     {% if rating_widget and rating_widget.credits > 0 %}
-    <a href="{{ url_for('peer_rate') }}" class="btn">Rate Peers</a>
+    <a href="{{ url_for('rate') }}" class="btn">Rate Peers</a>
     {% endif %}
     {% if current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>{% endif %}
     <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
@@ -1124,7 +1124,7 @@
         <div><div class="db-peer-val">{{ rating_widget.unlocks_pending or 0 }}</div><div class="db-peer-lbl">Unlock</div></div>
       </div>
       {% if rating_widget.credits > 0 %}
-      <a href="{{ url_for('peer_rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
+      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
       {% if rating_widget.unlocks_pending > 0 %}
       <div style="font-size:13px;color:var(--text-primary);opacity:0.65;margin-top:8px;line-height:1.5;">
         Rate {{ rating_widget.unlocks_pending }} image{{ 's' if rating_widget.unlocks_pending != 1 }} to unlock your pool slot.
