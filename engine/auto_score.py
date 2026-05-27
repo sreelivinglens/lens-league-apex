@@ -14,7 +14,7 @@ import httpx
 from PIL import Image as PILImage
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-MODEL             = os.getenv("APEX_MODEL", "claude-haiku-4-5-20251001")
+MODEL             = os.getenv("APEX_MODEL", "claude-sonnet-4-6")
 # Vision call uses a more capable model — Haiku misses fine detail (small fish,
 # second bird in shadow). Sonnet handles this reliably. Scoring stays on Haiku.
 VISION_MODEL      = os.getenv("APEX_VISION_MODEL", "claude-sonnet-4-6")
