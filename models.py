@@ -479,9 +479,9 @@ class WeeklyChallenge(db.Model):
     created_by         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
     submissions = db.relationship('WeeklySubmission', backref='challenge', lazy='dynamic',
-                                  cascade='all, delete-orphan', passive_deletes=True)
-    topups      = db.relationship('ChallengeTopup',   backref='challenge_ref', lazy=True,
-                                  cascade='all, delete-orphan', passive_deletes=True)
+                                  cascade='all, delete-orphan')
+    topups      = db.relationship('ChallengeTopup',   lazy=True,
+                                  cascade='all, delete-orphan')
 
     @property
     def is_open(self):
@@ -527,7 +527,8 @@ class ChallengeTopup(db.Model):
     status              = db.Column(db.String(20), default='pending')
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     user      = db.relationship('User',            foreign_keys=[user_id],      backref='challenge_topups', lazy=True)
-    challenge = db.relationship('WeeklyChallenge', foreign_keys=[challenge_id], lazy=True)
+    challenge = db.relationship('WeeklyChallenge', foreign_keys=[challenge_id], lazy=True,
+                                overlaps='topups')
 
 
 # ── v30: Jury System + RAW Verification models ────────────────────────────────
