@@ -100,9 +100,6 @@
     </div>
     <div class="detail-actions">
       <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
-      {% if image.status == 'scored' and image.score and not image.is_flagged %}
-        <a href="{{ url_for('download_card', image_id=image.id) }}" class="btn" target="_blank">Download Card</a>
-      {% endif %}
       {% if image.status != 'scored' %}
         <form method="POST" action="{{ url_for('retry_score', image_id=image.id) }}" style="display:inline;">
           <button type="submit" class="btn btn-solid">Score Now</button>
@@ -249,7 +246,10 @@
     </div>
     {% endif %}
     {% if audit.byline_1 %}
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Gap Analysis</div>
+      <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
+    </div>
     {% endif %}
 
     {# Edit Guide — Base Edits / Creative Edits #}
@@ -361,6 +361,17 @@
     <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
     {% endif %}
   </div>
+
+  {# ── Download + Share row ────────────────────────────────────────── #}
+  {% if image.status == 'scored' and image.score and not image.is_flagged %}
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+    <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank"
+       class="btn btn-solid" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↓ Download Review</a>
+    <a href="{{ url_for('share_image', image_id=image.id) }}"
+       class="btn" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↑ Share Score</a>
+  </div>
+  <div style="font-size:12px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
+  {% endif %}
 
   {# ── Admin section ───────────────────────────────────────────────── #}
   {% if current_user.role == 'admin' %}
