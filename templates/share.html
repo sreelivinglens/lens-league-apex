@@ -188,7 +188,7 @@
   <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
     <div>
       <span class="brand-dark">SHUTTER LEAGUE</span>
-      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · FULL EVALUATION</span>
+      <span class="engine-tag" style="display:block; margin-top:2px;">APEX DDI ENGINE · RATED BY SCIENCE</span>
     </div>
     {% if current_user.is_authenticated and image.user_id != current_user.id and current_user.role != 'admin' %}
       {% if already_reported %}
@@ -208,14 +208,19 @@
   </div>
 
   <!-- Photo — always visible -->
-  <div class="photo-wrap">
+  <div class="photo-wrap" style="position:relative;">
     <img src="{{ image.thumb_url or url_for('serve_thumb', image_id=image.id) }}"
-         alt="{{ image.asset_name }}">
+         alt="{{ image.asset_name }}" style="display:block; width:100%;">
+    <!-- Watermark badge -->
+    <div style="position:absolute; bottom:12px; right:12px;
+                background:rgba(44,62,107,0.82); border-radius:6px;
+                padding:6px 12px; font-family:var(--font-mono);
+                font-size:12px; font-weight:700; letter-spacing:1.5px;
+                color:rgba(255,255,255,0.92); pointer-events:none;">
+      SHUTTER LEAGUE
+    </div>
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
     <div class="contest-badge">🏆</div>
-    {% endif %}
-    {% if current_user.is_authenticated and image.user_id == current_user.id %}
-    <div class="judge-badge">MY IMAGE</div>
     {% endif %}
   </div>
 
@@ -253,59 +258,9 @@
     </div>
   </div>
 
-  <!-- Analysis rows — owner + admin only -->
-  {% if show_score and audit and audit.get('rows') %}
-  <div class="analysis">
-    {% for label, body in audit.get('rows', []) %}
-    {% if body %}
-    <div class="analysis-row">
-      <div class="analysis-label">{{ label.replace('\n', ' ') }}</div>
-      <div class="analysis-body">{{ body }}</div>
-    </div>
-    {% endif %}
-    {% endfor %}
-  </div>
-  {% endif %}
+  <!-- Analysis intentionally not shown — share page shows score only -->
 
-  <!-- The One Improvement — owner + admin only -->
-  {% if show_score and audit and (audit.get('byline_1') or audit.get('byline_2_body')) %}
-  <div class="byline-section">
-    <div class="byline-tag">The One Improvement</div>
-    {% if audit.get('byline_1') %}
-    <div class="byline-text">{{ audit.byline_1 }}</div>
-    {% endif %}
-    {% if audit.get('byline_2_body') %}
-    <div class="improvement-tag">The One Improvement</div>
-    <div class="improvement-text">{{ audit.byline_2_body }}</div>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  <!-- Strength & Gap badges — owner + admin only -->
-  {% if show_score and audit %}
-  {% set strengths = audit.get('badges_g', []) %}
-  {% set gaps      = audit.get('badges_w', []) %}
-  {% if strengths or gaps %}
-  <div class="badges-section">
-    {% if strengths %}
-    <div class="badge-group">
-      <div class="badge-group-label">Strengths</div>
-      <div class="badge-list">
-        {% for b in strengths %}<span class="badge badge-strength">{{ b }}</span>{% endfor %}
-      </div>
-    </div>
-    {% endif %}
-    {% if gaps %}
-    <div class="badge-group">
-      <div class="badge-group-label">Areas to Develop</div>
-      <div class="badge-list">
-        {% for b in gaps %}<span class="badge badge-gap">{{ b }}</span>{% endfor %}
-      </div>
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-  {% endif %}
+  <!-- Badges intentionally not shown — share page shows score only -->
 
   <!-- Register CTA — logged-out only -->
   {% if not current_user.is_authenticated %}
@@ -324,9 +279,12 @@
   <div class="card-footer">
     <div>
       {% if image.archetype %}<div class="archetype-label">{{ image.archetype }}</div>{% endif %}
-      <div class="photographer-label">{{ image.photographer_name }}</div>
+      <div class="photographer-label" style="font-size:16px; font-weight:600; color:var(--text-1);">{{ image.photographer_name }}</div>
     </div>
-    <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
+    <div style="text-align:right;">
+      <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
+      <div style="font-size:11px; color:rgba(0,0,0,0.4); font-family:var(--font-mono); letter-spacing:0.5px; margin-top:2px;">shutterleague.com</div>
+    </div>
   </div>
   <div style="font-size:11px; color:rgba(0,0,0,0.35); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
     DDI scores are AI-assessed and consistent. Individual results may vary slightly.
@@ -343,7 +301,20 @@
   {% else %}
   <a href="{{ url_for('register') }}" class="action-btn action-primary">Get My Images Rated Free →</a>
   {% endif %}
-  <button onclick="shareThis()" class="action-btn action-secondary">⤴ Share</button>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%;">
+    <button onclick="shareWhatsApp()" class="action-btn action-secondary" style="flex:1; min-width:120px;">
+      <span style="font-size:16px;">💬</span> WhatsApp
+    </button>
+    <button onclick="shareEmail()" class="action-btn action-secondary" style="flex:1; min-width:120px;">
+      <span style="font-size:16px;">✉</span> Email
+    </button>
+    <button onclick="copyLink()" class="action-btn action-secondary" style="flex:1; min-width:120px;" id="copyLinkBtn">
+      <span style="font-size:16px;">🔗</span> Copy Link
+    </button>
+    <button onclick="shareNative()" class="action-btn action-secondary" style="flex:1; min-width:120px;" id="nativeShareBtn">
+      <span style="font-size:16px;">⤴</span> More
+    </button>
+  </div>
 </div>
 
 <!-- Report Modal -->
@@ -476,27 +447,43 @@
 })();
 {% endif %}
 
-function shareThis() {
-  const url   = window.location.href;
-  const title = "{{ image.asset_name }} — {{ image.tier }} · Shutter League";
-  const text  = "Rated by the Apex DDI Engine on Shutter League";
-  if (navigator.share) {
-    navigator.share({ title, text, url }).catch(() => copyFallback(url));
-  } else { copyFallback(url); }
+const shareUrl   = window.location.href;
+const shareTitle = "{{ image.asset_name }} — {{ image.tier }} · Shutter League";
+const shareText  = "Rated by the Apex DDI Engine on Shutter League";
+
+function shareWhatsApp() {
+  const msg = encodeURIComponent(`${shareTitle}\n${shareUrl}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
-function copyFallback(url) {
+function shareEmail() {
+  const subject = encodeURIComponent(shareTitle);
+  const body    = encodeURIComponent(`${shareText}\n\n${shareUrl}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+function copyLink() {
+  const btn = document.getElementById('copyLinkBtn');
+  const done = () => {
+    btn.innerHTML = '<span style="font-size:16px;">✓</span> Copied!';
+    setTimeout(() => { btn.innerHTML = '<span style="font-size:16px;">🔗</span> Copy Link'; }, 2000);
+  };
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => showFeedback());
+    navigator.clipboard.writeText(shareUrl).then(done);
   } else {
     const el = document.createElement('textarea');
-    el.value = url; document.body.appendChild(el); el.select();
-    document.execCommand('copy'); document.body.removeChild(el); showFeedback();
+    el.value = shareUrl; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el); done();
   }
 }
+function shareNative() {
+  if (navigator.share) {
+    navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
+      .catch(() => copyLink());
+  } else { copyLink(); }
+}
+function shareThis() { shareNative(); }
 function showFeedback() {
   const fb = document.getElementById('copyFeedback');
-  fb.style.display = 'block';
-  setTimeout(() => { fb.style.display = 'none'; }, 3000);
+  if (fb) { fb.style.display = 'block'; setTimeout(() => { fb.style.display = 'none'; }, 3000); }
 }
 </script>
 {% endblock %}
