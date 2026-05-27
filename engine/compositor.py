@@ -261,11 +261,11 @@ def build_card1(photo_path, data, out_path):
             draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
         # Two-line label: full name split across two lines, abbreviation in brackets on line 2
         _lbl_map = {
-            'DoD':        ('DEPTH OF',   'DETAIL (DOD)'),
-            'Disruption': ('VISUAL',      'DISRUPTION'),
-            'DM':         ('DECISIVE',    'MOMENT (DM)'),
-            'Wonder':     ('WONDER',      'FACTOR'),
-            'AQ':         ('AESTHETIC',   'QUALITY (AQ)'),
+            'DoD':  ('DEPTH OF',   'DETAIL (DOD)'),
+            'VD':   ('VISUAL',     'DISRUPTION'),
+            'DM':   ('DECISIVE',   'MOMENT (DM)'),
+            'WF':   ('WONDER',     'FACTOR'),
+            'AQ':   ('AESTHETIC',  'QUALITY (AQ)'),
         }
         l1, l2 = _lbl_map.get(name, (name.upper(), ''))
         draw.text((mx+12, LBL_Y), l1, font=fnt(32,mono=True), fill=T2)
