@@ -71,10 +71,10 @@
     letter-spacing: 3px; text-transform: uppercase; line-height: 1;
   }
   .tier-strip .tier-sub {
-    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
     letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
   }
-  .tier-engine { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 2px; text-transform: uppercase; }
+  .tier-engine { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); letter-spacing: 2px; text-transform: uppercase; }
   .tier-badge-wrap {
     width: 52px; height: 52px; border-radius: 50%;
     background: var(--surface-2); flex-shrink: 0;
@@ -148,7 +148,11 @@
   .photographer-label{ font-size: 15px; color: #1a1a18; margin-top: 3px; }
   .score-stamp       { font-family: var(--font-mono); font-size: 14px; color: #F5C518; letter-spacing: 1px; font-weight: 700; }
 
-  .actions { max-width: 680px; margin: 20px auto 0; display: flex; gap: 12px; }
+  .actions { max-width: 680px; margin: 20px auto 0; display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 520px) {
+    .card-header { padding: 10px 16px; }
+    .actions { gap: 8px; }
+  }
   .action-btn {
     flex: 1; padding: 15px 20px; text-align: center;
     font-family: var(--font-mono); font-size: 15px; font-weight: 600;
@@ -283,10 +287,10 @@
     </div>
     <div style="text-align:right;">
       <div class="score-stamp">{% if image.score %}{{ "%.2f"|format(image.score|float) }} · {% endif %}{{ image.tier.upper() if image.tier else '' }}</div>
-      <div style="font-size:11px; color:rgba(0,0,0,0.4); font-family:var(--font-mono); letter-spacing:0.5px; margin-top:2px;">shutterleague.com</div>
+      <div style="font-size:12px; color:rgba(0,0,0,0.4); font-family:var(--font-mono); letter-spacing:0.5px; margin-top:2px;">shutterleague.com</div>
     </div>
   </div>
-  <div style="font-size:11px; color:rgba(0,0,0,0.35); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
+  <div style="font-size:12px; color:rgba(0,0,0,0.35); text-align:center; padding:6px 20px 10px; font-family:var(--font-mono); letter-spacing:0.5px; line-height:1.5;">
     DDI scores are AI-assessed and consistent. Individual results may vary slightly.
   </div>
 
@@ -303,16 +307,13 @@
   {% endif %}
   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%;">
     <button onclick="shareWhatsApp()" class="action-btn action-secondary" style="flex:1; min-width:120px;">
-      <span style="font-size:16px;">💬</span> WhatsApp
-    </button>
-    <button onclick="shareEmail()" class="action-btn action-secondary" style="flex:1; min-width:120px;">
-      <span style="font-size:16px;">✉</span> Email
+      💬 WhatsApp
     </button>
     <button onclick="copyLink()" class="action-btn action-secondary" style="flex:1; min-width:120px;" id="copyLinkBtn">
-      <span style="font-size:16px;">🔗</span> Copy Link
+      🔗 Copy Link
     </button>
-    <button onclick="shareNative()" class="action-btn action-secondary" style="flex:1; min-width:120px;" id="nativeShareBtn">
-      <span style="font-size:16px;">⤴</span> More
+    <button onclick="shareNative()" class="action-btn action-secondary" style="flex:1; min-width:120px;">
+      ⤴ More
     </button>
   </div>
 </div>
@@ -454,11 +455,6 @@ const shareText  = "Rated by the Apex DDI Engine on Shutter League";
 function shareWhatsApp() {
   const msg = encodeURIComponent(`${shareTitle}\n${shareUrl}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
-}
-function shareEmail() {
-  const subject = encodeURIComponent(shareTitle);
-  const body    = encodeURIComponent(`${shareText}\n\n${shareUrl}`);
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 function copyLink() {
   const btn = document.getElementById('copyLinkBtn');
