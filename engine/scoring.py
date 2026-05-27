@@ -236,7 +236,7 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
     Returns (final_score, tier, soul_bonus, checks_dict).
 
     genre      : raw genre string — normalised internally via normalise_genre().
-    dod        : Depth of Detail score, float 0–10
+    dod        : Depth of Difficulty score, float 0–10
     disruption : Disruption score, float 0–10
     dm         : Decisive Moment score, float 0–10
     wonder     : Wonder score, float 0–10
