@@ -9316,7 +9316,7 @@ def judge_score_image(assignment_id):
         return redirect(url_for('judge_dashboard'))
 
     ddi_descriptions = {
-        'DoD':        'Depth of Detail -- technical precision, sharpness, compositional complexity',
+        'DoD':        'Depth of Difficulty -- technical precision, sharpness, compositional complexity',
         'Disruption': 'Disruption -- visual surprise, unconventional perspective, breaks convention',
         'DM':         'Decisive Moment -- the unrepeatable instant, timing, narrative peak',
         'Wonder':     'Wonder -- emotional impact, transcendence, the feeling it leaves',
