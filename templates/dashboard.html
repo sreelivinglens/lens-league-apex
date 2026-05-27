@@ -910,14 +910,23 @@
   {# ── LEFT: image grid ── #}
   <div style="min-width:0;">
 
-    {# Search + filters #}
-    <div class="db-search-row" style="flex-wrap:wrap;">
+    {# Search #}
+    <div class="db-search-row">
       <input type="text" id="db-search-input" value="{{ query or '' }}" placeholder="Search your images…"
              onkeydown="if(event.key==='Enter'){window.location=dbSearchUrl(this.value);}" />
+    </div>
+    {# Genre filters — from poty_tracker so they match actual user genres #}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
       <a href="{{ url_for('dashboard') }}" class="db-filter-btn{% if not query %} active{% endif %}">All</a>
-      {% for genre in ['portrait','street','landscape','wildlife','macro','abstract'] %}
-      <a href="{{ url_for('dashboard', q=genre) }}" class="db-filter-btn{% if query and query.lower()==genre %} active{% endif %}">{{ genre|title }}</a>
-      {% endfor %}
+      {% if poty_tracker and poty_tracker.genre_rows %}
+        {% for row in poty_tracker.genre_rows %}
+        <a href="{{ url_for('dashboard', q=row.genre) }}" class="db-filter-btn{% if query and query.lower()==row.genre.lower() %} active{% endif %}">{{ row.genre|title }}</a>
+        {% endfor %}
+      {% else %}
+        {% for genre in ['portrait','street','landscape','wildlife','macro','abstract'] %}
+        <a href="{{ url_for('dashboard', q=genre) }}" class="db-filter-btn{% if query and query.lower()==genre %} active{% endif %}">{{ genre|title }}</a>
+        {% endfor %}
+      {% endif %}
     </div>
 
     {# Image grid section #}
@@ -1076,9 +1085,11 @@
         {% for row in poty_tracker.genre_rows %}
         <div class="db-poty-row">
           <span class="db-poty-g">{{ row.genre }}</span>
-          <div class="db-poty-bw"><div class="db-poty-bf" style="width:{{ row.bar_pct }}%;"></div></div>
+          <div class="db-poty-bw">
+            <div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div>
+          </div>
           <span class="db-poty-avg">{{ row.top6_avg or '—' }}</span>
-          <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% endif %}</span>
+          <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% elif row.images_needed > 0 %} ({{ row.images_needed }} more){% endif %}</span>
         </div>
         {% endfor %}
       </div>
