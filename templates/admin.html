@@ -650,8 +650,8 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
         <div style="font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Calibration by Genre</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-solid" style="padding:8px 18px; font-size:13px;" onclick="adminPostUrl('{{ url_for(\'run_calibration\') }}')">📸 Run Calibration Log</button>
-          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;" onclick="adminPostUrl('{{ url_for(\'fix_calibration_table\') }}', 'Rebuild calibration_logs table? Clears all previous snapshots.')">🔧 Fix Table</button>
+          <button type="button" class="btn btn-solid" style="padding:8px 18px; font-size:13px;" onclick="adminPostUrl('{{ url_for('run_calibration') }}')">📸 Run Calibration Log</button>
+          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:#7a2222; color:#f88;" onclick="adminPostUrl('{{ url_for('fix_calibration_table') }}', 'Rebuild calibration_logs table? Clears all previous snapshots.')">🔧 Fix Table</button>
         </div>
       </div>
 
@@ -725,7 +725,7 @@
             <div class="tool-label">Fix All Tiers</div>
             <div class="tool-desc">Recalculate all tier assignments from scores</div>
           </div>
-          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);" onclick="adminPostUrl('{{ url_for(\'fix_tiers\') }}', 'Recalculate all tier assignments?')">Run →</button>
+          <button type="button" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold);" onclick="adminPostUrl('{{ url_for('fix_tiers') }}', 'Recalculate all tier assignments?')">Run →</button>
         </div>
       </div>
 
@@ -743,7 +743,7 @@
             <input type="text" id="rename-new" placeholder="New name" class="tool-input">
           </div>
           <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
-                  onclick="adminPostFields('{{ url_for(\'fix_photographer_names\') }}', {old_name: document.getElementById(\'rename-old\').value, new_name: document.getElementById(\'rename-new\').value}, \'Rename all images? Cannot be undone.\')">Rename →</button>
+                  onclick="adminPostFields('{{ url_for('fix_photographer_names') }}', {old_name: document.getElementById('rename-old').value, new_name: document.getElementById('rename-new').value}, 'Rename all images? Cannot be undone.')">Rename →</button>
         </div>
       </div>
 
@@ -755,7 +755,7 @@
             <input type="text" id="transfer-name" placeholder="e.g. Ashok Kochhar" class="tool-input">
           </div>
           <button type="button" class="btn btn-solid" style="padding:9px 18px; font-size:13px;"
-                  onclick="adminPostFields('{{ url_for(\'admin_transfer_images\') }}', {photographer_name: document.getElementById(\'transfer-name\').value})">Transfer →</button>
+                  onclick="adminPostFields('{{ url_for('admin_transfer_images') }}', {photographer_name: document.getElementById('transfer-name').value})">Transfer →</button>
         </div>
       </div>
 
