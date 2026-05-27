@@ -277,14 +277,19 @@
   {% endif %}
   {% endif %}{# end if scored #}
 
+  {# ── Mentor CTA ──────────────────────────────────────────────────── #}
+  {% if image.score %}
+  <div style="margin-bottom:28px; padding:24px 28px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+    <div>
+      <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.4; margin-bottom:4px;">Book Mentor Review</div>
+      <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Get your image reviewed additionally by our month's mentors</div>
+    </div>
+    <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:12px 24px; font-size:15px;">Book Mentor Review →</a>
+  </div>
+  {% endif %}
+
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
-    {% if image.genre %}
-    <div class="meta-card">
-      <div class="meta-label">Genre</div>
-      <div class="meta-value">{{ image.genre }}</div>
-    </div>
-    {% endif %}
     {% set audit_meta = image.get_audit() %}
     {% if audit_meta and audit_meta.species_id %}
     <div class="meta-card">
@@ -313,10 +318,6 @@
     <div class="meta-card">
       <div class="meta-label">Uploaded</div>
       <div class="meta-value">{{ image.created_at.strftime('%d %b %Y') if image.created_at else '—' }}</div>
-    </div>
-    <div class="meta-card">
-      <div class="meta-label">Dimensions</div>
-      <div class="meta-value">{{ image.width }}×{{ image.height }}px &nbsp;·&nbsp; {{ image.format or 'JPEG' }}</div>
     </div>
   </div>
 
