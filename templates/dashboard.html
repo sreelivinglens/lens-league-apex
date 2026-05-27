@@ -911,7 +911,7 @@
   <div style="min-width:0;">
 
     {# Search + filters #}
-    <div class="db-search-row">
+    <div class="db-search-row" style="flex-wrap:wrap;">
       <input type="text" id="db-search-input" value="{{ query or '' }}" placeholder="Search your images…"
              onkeydown="if(event.key==='Enter'){window.location=dbSearchUrl(this.value);}" />
       <a href="{{ url_for('dashboard') }}" class="db-filter-btn{% if not query %} active{% endif %}">All</a>
@@ -938,11 +938,11 @@
           <a href="{{ url_for('image_detail', image_id=img.id) }}"
              class="db-img-card{% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %} raw-pending{% endif %}">
             <div class="db-img-thumb">
-              <img src="{{ img.thumbnail_url or img.url }}"
-                   alt="{{ img.title or 'Image' }}"
+              <img src="{{ img.thumb_url }}"
+                   alt="{{ img.asset_name or img.original_filename or 'Image' }}"
                    onerror="this.style.display='none'">
-              {% if img.score is not none %}
-              <span class="db-img-score">{{ '%.1f'|format(img.score) }}</span>
+              {% if img.score %}
+              <span class="db-img-score">{{ "%.2f"|format(img.score) }}</span>
               {% endif %}
               {% if img.tier %}
               <span class="db-img-tier">{{ img.tier }}</span>
@@ -952,9 +952,9 @@
               {% endif %}
             </div>
             <div class="db-img-body">
-              <div class="db-img-title">{{ img.title or 'Untitled' }}</div>
+              <div class="db-img-title">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
               <div class="db-img-meta">
-                <span>{{ img.genre or '' }}</span>
+                <span>{{ img.genre or '' }}{% if img.camera_track %} · {{ img.camera_track|title }}{% endif %}</span>
                 <span>
                   {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
                     <span style="color:var(--red,#c0392b);font-weight:700;">RAW DUE</span>
@@ -1022,22 +1022,22 @@
     </div>
 
     {# Programme wins — collapsed by default #}
-    {% if programme_wins %}
+    {% if contest_wins %}
     <div class="db-section">
       <div class="db-section-hdr" onclick="dbToggle(this)">
         <div class="db-section-title">
           Programme Wins
-          <span class="db-count-badge gold">{{ programme_wins|length }}</span>
+          <span class="db-count-badge gold">{{ contest_wins|length }}</span>
         </div>
         <span class="db-chevron">▼</span>
       </div>
       <div class="db-section-body collapsed">
-        {% for win in programme_wins %}
+        {% for img in contest_wins %}
         <div class="db-win-card">
-          <span class="db-win-badge">{{ win.badge_label or 'Winner' }}</span>
+          <span class="db-win-badge">{{ img.tier or 'Winner' }}</span>
           <div>
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ win.title }}</div>
-            {% if win.description %}<div style="font-size:16px;color:var(--text-primary);opacity:0.7;margin-top:3px;line-height:1.5;">{{ win.description }}</div>{% endif %}
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
+            {% if img.genre %}<div style="font-size:16px;color:var(--text-primary);opacity:0.7;margin-top:3px;line-height:1.5;">{{ img.genre }}</div>{% endif %}
           </div>
         </div>
         {% endfor %}
@@ -1070,15 +1070,15 @@
       </div>
       {% endif %}
 
-      {% if poty_data %}
+      {% if poty_tracker and poty_tracker.genre_rows %}
       <div style="margin-top:14px;">
         <div class="db-plbl">POTY by genre</div>
-        {% for genre, data in poty_data.items() %}
+        {% for row in poty_tracker.genre_rows %}
         <div class="db-poty-row">
-          <span class="db-poty-g">{{ genre }}</span>
-          <div class="db-poty-bw"><div class="db-poty-bf" style="width:{{ [[(data.avg / 10 * 100)|int, 0]|max, 100]|min }}%;"></div></div>
-          <span class="db-poty-avg">{{ '%.1f'|format(data.avg) }}</span>
-          <span class="db-poty-ct">{{ data.count }} img{{ 's' if data.count != 1 }}</span>
+          <span class="db-poty-g">{{ row.genre }}</span>
+          <div class="db-poty-bw"><div class="db-poty-bf" style="width:{{ row.bar_pct }}%;"></div></div>
+          <span class="db-poty-avg">{{ row.top6_avg or '—' }}</span>
+          <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% endif %}</span>
         </div>
         {% endfor %}
       </div>
@@ -1242,7 +1242,7 @@ function dbToggle(hdr) {
 }
 
 function dbSearchUrl(q) {
-  return '{{ url_for('dashboard') }}' + (q ? '?q=' + encodeURIComponent(q) : '');
+  return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
 }
 
 function applyReferralCode() {
