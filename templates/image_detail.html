@@ -37,15 +37,15 @@
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: #FFFFFF; text-transform: uppercase; }
-  /* glink_inline — glossary links on dark backgrounds */
+  .ddi-lbl { font-family: var(--font-mono); font-size: 14px; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
+  /* glink_inline — glossary links on light backgrounds */
   .glink-inline {
-    color: #FFFFFF; text-decoration: underline; text-decoration-color: rgba(245,197,24,0.55);
+    color: var(--text-muted); text-decoration: underline; text-decoration-color: rgba(245,197,24,0.55);
     text-underline-offset: 2px; font-family: inherit; font-size: inherit;
     font-weight: inherit; letter-spacing: inherit; text-transform: inherit;
     transition: text-decoration-color 0.15s;
   }
-  .glink-inline:hover { text-decoration-color: #F5C518; }
+  .glink-inline:hover { color: var(--text-primary); text-decoration-color: #F5C518; }
 
   .peer-strip { display: flex; gap: 24px; flex-wrap: wrap; padding: 14px 0 0; border-top: 1px solid var(--border-subtle); margin-top: 4px; }
   .peer-item { font-size: 14px; color: var(--text-muted); }
