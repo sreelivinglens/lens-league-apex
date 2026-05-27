@@ -170,7 +170,7 @@
     {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
     <div class="ddi-grid">
       {% set dims = [
-        ('DoD', image.dod_score, 'Depth of Detail', 'DEPTH OF', 'DETAIL (DOD)'),
+        ('DoD', image.dod_score, 'Depth of Difficulty', 'DEPTH OF', 'DIFFICULTY (DOD)'),
         ('Disruption', image.disruption_score, 'Visual Disruption', 'VISUAL', 'DISRUPTION'),
         ('DM', image.dm_score, 'Decisive Moment', 'DECISIVE', 'MOMENT (DM)'),
         ('Wonder', image.wonder_score, 'Wonder Factor', 'WONDER', 'FACTOR'),
@@ -224,7 +224,7 @@
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
     <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;"><a href="/science" class="glink-inline" style="color:var(--text-primary); text-decoration-color:rgba(44,62,107,0.5);" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.5)'">DDI Analysis</a></div>
     {% set dim_links = {
-      'DoD': '/science#dimensions', 'Depth of Detail': '/science#dimensions',
+      'DoD': '/science#dimensions', 'Depth of Difficulty': '/science#dimensions',
       'DM': '/science#dimensions', 'Decisive Moment': '/science#dimensions',
       'AQ': '/science#dimensions', 'Aesthetic Quality': '/science#dimensions',
       'Wonder': '/science#dimensions',
@@ -261,11 +261,11 @@
       {% for tier_label, tier_col, tier_sub, tier_body in edit_tiers %}
       {% if tier_body %}
       <div style="margin-bottom:14px;padding:14px 18px;background:var(--surface-3);border-radius:var(--radius-sm);border:1px solid var(--border);">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;margin-bottom:6px;">
           <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;color:{{ tier_col }};text-transform:uppercase;">{{ tier_label }}</span>
           <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">· {{ tier_sub }}</span>
         </div>
-        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;">{{ tier_body }}</div>
+        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;word-break:break-word;">{{ tier_body }}</div>
       </div>
       {% endif %}
       {% endfor %}
