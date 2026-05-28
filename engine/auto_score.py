@@ -747,20 +747,31 @@ PEOPLE_SUBGENRE_CONTEXT = {
         "This sub-type covers intimate access to someone's private life — bedroom, "
         "domestic space, personal moment. In the tradition of Nan Goldin and Larry Clark.\n\n"
         "DoD: Score TRUST AND ACCESS — the primary DoD signal is that the photographer "
-        "was given access to a private world. This is not production difficulty — it is "
-        "relationship difficulty. Being trusted with a camera in an intimate space scores "
-        "DoD 6.5–7.5. The rawness of the technical execution (grain, available light, "
-        "domestic clutter) is EVIDENCE of this access, not a penalty.\n\n"
+        "was given access to a private world. This is NOT technical difficulty — it is "
+        "relationship difficulty. The hardest thing in photography is being trusted with "
+        "a camera in an intimate space. Score DoD 7.5–8.5 when the access is genuine "
+        "and the intimacy is real. Score 8.5+ when the subject is in a vulnerable or "
+        "private state that required deep trust to photograph. The rawness of the "
+        "technical execution (grain, available light, domestic clutter) is EVIDENCE "
+        "of this access, not a penalty. NEVER score DoD below 6.0 for genuine intimate "
+        "access — the difficulty is the relationship, not the exposure settings.\n\n"
         "DM: Score the unguarded moment within intimacy — the expression, gesture, or "
         "position that reveals the subject's private self. The decisive moment here is "
-        "not a public peak but a private truth.\n\n"
-        "AQ: CRITICAL — DO NOT penalise grain, available light, soft focus, or domestic "
-        "clutter in this sub-type. The rawness IS the aesthetic. Over-lit, over-processed "
-        "intimate photography loses its authenticity. Score AQ on whether the technical "
-        "choices serve the intimacy of the moment.\n\n"
+        "not a public peak but a private truth. A direct gaze while remaining completely "
+        "relaxed in a private space scores DM 7.5–8.5.\n\n"
         "WF: Score ACCESS WONDER — the sense that the viewer is seeing something "
-        "private that was shared willingly. The wonder is in the trust. Score 7.0–8.5 "
-        "when the intimacy feels genuine and the access feels earned."
+        "private that was shared willingly. The wonder is in the trust. "
+        "Score 8.0–8.5 when the intimacy feels genuine and the access feels earned. "
+        "Score 8.5–9.0 when the access is extraordinary — a private moment of "
+        "vulnerability, tenderness, or raw domestic truth that almost no photographer "
+        "is ever allowed to document. The direct gaze in a private space while the "
+        "subject remains completely relaxed scores Access Wonder 8.5+.\n\n"
+        "AQ: CRITICAL — DO NOT penalise grain, available light, soft focus, or domestic "
+        "clutter in this sub-type. The rawness IS the aesthetic. Score AQ on the "
+        "specific emotion the intimate moment creates — tenderness, vulnerability, "
+        "solitude, connection. Score 8.5–9.0 when the emotional register is specific "
+        "and the viewer feels something precise about the subject's inner state. "
+        "Award-winning intimate documentary work scores AQ 8.5+."
     ),
     'event_ceremony': (
         "This is People photography — sub-type: EVENT / CEREMONY.\n"
@@ -1966,6 +1977,10 @@ def get_genre_context(genre, sub_genre=None):
     # _other sub-genres always fall back to generic genre context
     if sub_genre and sub_genre.endswith('_other'):
         return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
+    # Cross-genre sub-types: apply the correct rubric regardless of filed genre
+    # lifestyle_intimate can be filed under Documentary, People, or Street
+    if sub_genre == 'lifestyle_intimate':
+        return PEOPLE_SUBGENRE_CONTEXT.get('lifestyle_intimate', GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default']))
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
