@@ -1004,19 +1004,19 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 <div id="sl-payment-modal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;">
   <div id="sl-payment-backdrop" onclick="slClosePaymentSoon()" style="position:absolute;inset:0;background:rgba(13,13,11,0.72);backdrop-filter:blur(3px);"></div>
   <div style="position:relative;z-index:1;background:#1A2744;border-radius:12px;padding:40px 36px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.5);border:1px solid rgba(245,197,24,0.2);">
-    <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#F5C518;margin-bottom:16px;" id="sl-modal-league-label">CAMERA LEAGUE · ₹199/month</div>
-    <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:12px;letter-spacing:-0.02em;">Payment gateway<br>coming soon.</div>
+    <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#F5C518;margin-bottom:16px;" id="sl-modal-league-label">CAMERA LEAGUE · ₹199/month</div>
+    <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;letter-spacing:-0.02em;">Payment gateway<br>coming soon.</div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;color:rgba(255,255,255,0.75);line-height:1.65;margin-bottom:20px;">
       We're in the final stages of KYC clearance with our payment partner. Subscriptions will open shortly.<br><br>
       In the meantime, register for free — your 3 scored images and shadow rank are waiting.
     </div>
     <div style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);border-radius:8px;padding:14px 16px;margin-bottom:20px;">
-      <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#F5C518;margin-bottom:6px;">Already have points?</div>
+      <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#F5C518;margin-bottom:6px;">Already have points?</div>
       <div style="font-family:'Inter',sans-serif;font-size:16px;color:rgba(255,255,255,0.80);line-height:1.6;">2,500 points covers one month's subscription. If you've earned points during your free assessment, you can redeem them now.</div>
-      <a href="{{ url_for('redeem') }}" style="display:inline-flex;align-items:center;margin-top:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1A2744;background:#F5C518;padding:8px 14px;border-radius:4px;text-decoration:none;min-height:38px;">Redeem Points →</a>
+      <a href="{{ url_for('redeem') }}" style="display:inline-flex;align-items:center;margin-top:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1A2744;background:#F5C518;padding:8px 14px;border-radius:4px;text-decoration:none;min-height:38px;">Redeem Points →</a>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="{{ url_for('register') }}" style="display:block;text-align:center;background:#F5C518;color:#000;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 20px;border-radius:6px;text-decoration:none;min-height:44px;line-height:1;">Start Free Assessment →</a>
+      <a href="{{ url_for('register') }}" style="display:block;text-align:center;background:#F5C518;color:#000;font-family:'Inter',sans-serif;font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 20px;border-radius:6px;text-decoration:none;min-height:44px;line-height:1;">Start Free Assessment →</a>
       <button onclick="slClosePaymentSoon()" style="display:block;width:100%;background:transparent;color:rgba(255,255,255,0.65);font-family:'Inter',sans-serif;font-size:16px;font-weight:600;padding:12px 20px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;min-height:44px;">Dismiss</button>
     </div>
   </div>

@@ -51,10 +51,10 @@
     <div>
       <div class="redeem-balance-pts">{{ wallet_hud.balance | round(1) }}</div>
       <div class="redeem-balance-label">Your Points Balance</div>
-      <div class="redeem-balance-sub">{{ wallet_hud.lifetime | round(1) }} earned lifetime &nbsp;·&nbsp; 20% expires 31 Dec</div>
+      <div class="redeem-balance-sub" id="redeem-decay-nudge" style="display:none;">Redeem before 31 Dec — unused points reduce by 10% on Jan 1.</div>
     </div>
     <div class="redeem-balance-note">
-      <div>80% carry forward each Jan 1</div>
+      <div>90% carry forward each Jan 1</div>
       <div>Tier badges are permanent</div>
       <a href="{{ url_for('upload') }}" style="display:inline-block;margin-top:10px;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 18px;border-radius:3px;text-decoration:none;">Upload Now →</a>
     </div>
@@ -162,7 +162,7 @@
     <div class="redeem-tnc-title">Points Terms &amp; Conditions</div>
     <ul>
       <li><strong>No cash value.</strong> Points cannot be exchanged for cash, transferred between accounts, or sold.</li>
-      <li><strong>Annual expiry.</strong> 20% of your total point balance expires on 31 December each year. 80% carries forward automatically to 1 January. You will receive an email reminder in December.</li>
+      <li><strong>Annual reset.</strong> 10% of your total point balance resets on 31 December each year. 90% carries forward automatically to 1 January. You will receive an email reminder in December.</li>
       <li><strong>Tier badges are permanent.</strong> Earning a tier badge (Rookie through Legend) is a lifetime achievement and does not expire regardless of your points balance.</li>
       <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions are available to all registered users via cash payment.</li>
       <li><strong>Non-reversible.</strong> Once points are redeemed, the transaction cannot be undone. Redeemed points are deducted immediately from your balance.</li>
@@ -179,4 +179,16 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var month = new Date().getMonth(); // 0=Jan … 10=Nov, 11=Dec
+  if (month >= 10) { // November or December only
+    var el = document.getElementById('redeem-decay-nudge');
+    if (el) el.style.display = 'block';
+  }
+})();
+</script>
 {% endblock %}
