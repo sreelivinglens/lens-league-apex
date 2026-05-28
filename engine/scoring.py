@@ -146,6 +146,7 @@ SUBGENRE_MAP = {
         ('urban_wildlife',         'Urban Wildlife'),
         ('animal_portrait',        'Animal Portrait'),
         ('macro_wildlife',         'Macro Wildlife'),
+        ('wildlife_other',         'Other / Does not fit above'),
     ],
     'Nature': [
         ('nature_flora',       'Flowers and Plants'),
@@ -156,6 +157,7 @@ SUBGENRE_MAP = {
         ('nature_astro',       'Night Sky and Astronomy'),
         ('nature_underwater',  'Underwater and Coral'),
         ('nature_seasons',     'Seasons and Natural Change'),
+        ('nature_other',       'Other / Does not fit above'),
     ],
     'Landscape': [
         ('landscape_mountain', 'Mountains and Highlands'),
@@ -165,6 +167,7 @@ SUBGENRE_MAP = {
         ('landscape_rural',    'Rural and Agricultural'),
         ('landscape_longexp',  'Long Exposure'),
         ('landscape_minimal',  'Minimalist'),
+        ('landscape_other',    'Other / Does not fit above'),
     ],
     'Street': [
         ('street_candid',        'Single Candid Subject'),
@@ -177,6 +180,7 @@ SUBGENRE_MAP = {
         ('street_reflection',    'Reflection'),
         ('street_geometry',      'Geometry and Light/Shadow'),
         ('street_silhouette',    'Silhouette'),
+        ('street_other',         'Other / Does not fit above'),
     ],
     'People': [
         ('portrait_posed',      'Portrait – Posed / Studio'),
@@ -186,12 +190,14 @@ SUBGENRE_MAP = {
         ('lifestyle_intimate',  'Lifestyle – Intimate / Diary'),
         ('event_ceremony',      'Event / Ceremony'),
         ('people_children',     'Children'),
+        ('people_other',        'Other / Does not fit above'),
     ],
     'Wedding': [
         ('wedding_ceremony',   'Ceremony'),
         ('wedding_couple',     'Couple Portrait'),
         ('wedding_reception',  'Reception and Celebration'),
         ('wedding_candid',     'Candid Moments'),
+        ('wedding_other',      'Other / Does not fit above'),
     ],
     'Macro': [
         ('macro_living',   'Living Subjects – Insects, Eyes, Skin'),
@@ -200,6 +206,7 @@ SUBGENRE_MAP = {
         ('macro_water',    'Water – Droplets, Splashes, Bubbles'),
         ('macro_texture',  'Texture and Surface'),
         ('macro_optical',  'Light and Optical Phenomena'),
+        ('macro_other',    'Other / Does not fit above'),
     ],
     'Drone': [
         ('drone_landscape', 'Landscape from Above'),
@@ -207,20 +214,26 @@ SUBGENRE_MAP = {
         ('drone_pattern',   'Patterns and Geometry'),
         ('drone_coastal',   'Coastal and Water'),
         ('drone_wildlife',  'Wildlife from Above'),
+        ('drone_other',     'Other / Does not fit above'),
     ],
     'Creative': [
-        ('creative_icm',        'ICM and Intentional Blur'),
-        ('creative_longexp',    'Long Exposure and Light Trails'),
-        ('creative_multiexp',   'Multiple Exposure'),
-        ('creative_abstract',   'Abstract and Pattern'),
-        ('creative_astro',      'Astrophotography'),
-        ('creative_silhouette', 'Silhouette and Shadow'),
+        ('creative_minimalist',  'Minimalist'),
+        ('creative_graphic',     'Graphic / Geometric'),
+        ('creative_fineart',     'Fine Art / Conceptual'),
+        ('creative_icm',         'ICM and Intentional Blur'),
+        ('creative_longexp',     'Long Exposure and Light Trails'),
+        ('creative_multiexp',    'Multiple Exposure'),
+        ('creative_abstract',    'Abstract and Pattern'),
+        ('creative_astro',       'Astrophotography'),
+        ('creative_silhouette',  'Silhouette and Shadow'),
+        ('creative_other',       'Other / Does not fit above'),
     ],
     'Fashion': [
         ('fashion_editorial', 'Editorial / Location'),
         ('fashion_concept',   'Conceptual / Art-Directed'),
         ('fashion_studio',    'Studio'),
         ('fashion_beauty',    'Beauty / Detail'),
+        ('fashion_other',     'Other / Does not fit above'),
     ],
     'Documentary': [
         ('doc_environment', 'Environment and Climate'),
@@ -230,6 +243,7 @@ SUBGENRE_MAP = {
         ('doc_social',      'Social Issues – Poverty, Hunger, Displacement'),
         ('doc_community',   'Community and Culture'),
         ('doc_crisis',      'Crisis and Emergency'),
+        ('doc_other',       'Other / Does not fit above'),
     ],
 }
 

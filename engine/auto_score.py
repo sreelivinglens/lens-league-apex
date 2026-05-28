@@ -232,36 +232,64 @@ Score all five modules. Apply all Apex layer rules. Calculate final weighted sco
 
 WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
 - NEVER describe what is visible in the image. The photographer knows what they shot.
-- NEVER open with observation. Open with the gap, the cost, or the fix.
-- Every sentence must either name a problem the photographer did not know they had, OR tell them exactly what to do about it.
+- NEVER open with observation. Open with the creative truth, the win, or the direction.
+- Write as an award-winning photographer talking to a peer — direct, generous, specific.
+- The goal is not to find fault. The goal is to help the photographer understand what
+  they made and where it could go next.
 - If a field has no actionable content, return null — do not fill space.
-- UNCERTAIN SUBJECT RULE: If the scene description flags any element as uncertain or unidentified, do NOT reference that element in mentor_technical, mentor_moment, mentor_next, byline_1, byline_2, or hard_truth. Build the analysis around what is definitively known. A wrong identification is worse than a null field.
-- Write as a mentor talking to a photographer peer — direct, no hedging.
-- BANNED phrases: "the image demonstrates", "this photograph shows", "the composition features", "the subject is positioned", "the technique showcases", "the exposure captures", "the scene reveals", "the frame contains".
-- BAD: "The river carves an S-curve through the valley floor that pulls the eye from foreground to the vanishing point." — this is description. The photographer can see the river.
-- GOOD: "The right-side peak is 30% heavier than the left — move your frame left until the river exit sits at the right third and the weight balances." — this is a diagnosis and a fix.
-- BAD: "The monochrome conversion removes colour information." — observation, not diagnosis.
-- GOOD: "Monochrome was the wrong call here — the colour temperature difference between the haze layers was the only thing separating them, and conversion collapsed three depth planes into one." — this is what it cost.
+- UNCERTAIN SUBJECT RULE: If the scene description flags any element as uncertain or
+  unidentified, do NOT reference it in any text field. A wrong identification is worse than null.
+- BANNED phrases: "the image demonstrates", "this photograph shows", "the composition
+  features", "the subject is positioned", "the technique showcases", "the exposure
+  captures", "the scene reveals", "the frame contains".
+
+SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
+- This image worked. The mentor job is to name exactly what made it work, then offer
+  one creative direction that makes the next image untouchable.
+- hard_truth: open with what this image IS and why it landed. Not what it missed.
+- mentor_technical: name the specific technical DECISION that served the image.
+  Not a gap. The choice that made it work.
+- mentor_moment: confirm this was the right frame and say exactly why this instant.
+  Do not suggest the frame was wrong.
+- mentor_next: ONE creative direction — wider, closer, different light, different lens,
+  processing transformation — framed as possibility, not correction. Example: "Go back
+  with a 50mm and shoot just the faces — let the geometry fall away and it becomes
+  entirely about what is in his eyes." Not "shift right six inches."
+- byline_1: on Soul Bonus images, name what the NEXT image in this scene needs —
+  not a flaw in this image.
+- NEVER tell a Soul Bonus photographer to reposition as if the composition failed.
+- NEVER give positional corrections (shift right, move left, six inches) as the
+  primary recommendation on a high-scoring image.
+
+ALL IMAGES — CREATIVE DIRECTION REQUIREMENT:
+Before writing mentor_next, consider these creative alternatives and name the
+strongest one that would most transform this specific image:
+  WIDER — what context does the scene gain? Does the story become larger?
+  CLOSER — what happens if you eliminate everything except the essential element?
+  DIFFERENT MOMENT — was there a stronger frame before or after?
+  MONOCHROME / COLOUR SWITCH — what does the conversion do to the emotion?
+  BLUR AS INTENT — shallow depth or motion blur as the creative statement
+  SEQUENCE THINKING — what does the next frame in this series need to be?
+  PROCESSING TRANSFORMATION — dark print, high contrast, bleached highlights —
+    what register serves the subject truth?
+Pick ONE direction and name it specifically in mentor_next.
+Technical fixes (lift shadows, burn corners) go in edit_base only.
+Creative vision goes in mentor_next.
+
+LOWER-SCORING IMAGES (score < 6.0):
+- Name the primary gap clearly and specifically.
+- Still offer one creative direction — what COULD this image become?
+- Tone is constructive peer, not auditor. Respect the attempt and redirect.
 
 CRITICAL — EQUIPMENT AND EXIF ACCURACY:
 The EXIF data is provided with the image. Read it carefully before writing any text.
-- If the camera make/model is a smartphone (iPhone, Samsung Galaxy, Pixel, Xiaomi, OnePlus etc.) NEVER describe the capture method as "drone", "aerial vehicle", "UAV", or "shot from a drone". It is a handheld or elevated mobile shot. Only reference drone/aerial if EXIF explicitly confirms a drone camera (DJI, Autel, Parrot etc.).
-- Do not assume subject matter or objects that are not clearly visible. If you see a colour boundary, describe it as a colour boundary — not a road unless you can clearly see it is a road.
-- Do not identify technical flaws (lens flare, dust, noise) unless you can clearly see them. A small coloured element may be part of the scene, not a flare. Describe what you see, not what you assume.
-- CRITICAL — small white or light objects at distance or in aerial shots: do NOT assume these are birds, animals, or wildlife. A small white speck could be a feather, debris, a boat, a vehicle, a person, or any other object. If you cannot clearly identify the object with confidence, label it as "unidentified object" or "possible [x] — uncertain" in your scene description. NEVER build scoring rationale or text fields around an uncertain identification.
-- If subject identity is uncertain: score MOMENT and set mentor_moment to null. Do not build mentor_next around an uncertain element. Score what is certain in the frame.
-- Never invent equipment, settings, or techniques not supported by the EXIF or the visible image.
+- If the camera is a smartphone NEVER describe it as drone/aerial/UAV.
+- Do not identify technical flaws (lens flare, dust, noise) unless clearly visible.
+- Never invent equipment or techniques not supported by EXIF or the image.
 
-COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure used in this image.
-Return exactly one value from the list below. If two apply equally, return the more visually dominant one.
-GOLDEN_SPIRAL: subject or key elements follow a Fibonacci / golden ratio spiral path
-LEADING_LINES: lines (road, river, fence, shadow, corridor, gaze direction) draw the eye to the subject
-DIAGONAL: dominant diagonal tension sweeps across the frame — subject or elements on a diagonal axis
-RULE_OF_THIRDS: subject placed on a thirds intersection or along a thirds line
-SYMMETRY: bilateral symmetry, mirror image, or strong reflection creating an axis
-NEGATIVE_SPACE: subject isolated in large empty area — the empty space IS the composition
-FRAME_IN_FRAME: subject enclosed or framed by a natural or architectural element within the scene
-NONE: no single dominant compositional structure identifiable
+COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure:
+GOLDEN_SPIRAL | LEADING_LINES | DIAGONAL | RULE_OF_THIRDS | SYMMETRY |
+NEGATIVE_SPACE | FRAME_IN_FRAME | NONE
 
 Return this exact JSON structure:
 {{
@@ -271,25 +299,26 @@ Return this exact JSON structure:
   "wonder": <float 0-10>,
   "aq": <float 0-10>,
   "score": <float>,
-  "tier": "<Apprentice|Practitioner|Master|Grandmaster|Legend>",
+  "tier": "<Apprentice|Shooter|Contender|Craftsman|Maverick|Master|Grandmaster|Legend>",
   "archetype": "<archetype name>",
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<ONE sentence. What this image IS — the single thing that makes or breaks it. Start with the verdict, not the scene. Never open with description of what is visible. BAD: 'The atmospheric layering and winding river create depth, but the monochrome conversion flattens tonal separation.' GOOD: 'Monochrome killed the depth — the colour temperature gap between the haze layers was the only separation between three planes, and conversion collapsed them.' Never start with 'This image' or 'The photograph'.>",
-  "mentor_technical": "<ONE sentence. Name the technical gap and what it cost — or, if technically clean, name the one decision that made it work. Never describe what is visible. Never open with observation. Start with the gap or the win. Example of gap: 'Exposure pushed half a stop too bright — highlights on the primary wing feathers are gone and cannot be recovered.' Example of win: 'ISO held at 1600 with a shutter fast enough to freeze the primary — the gamble paid.' If there is no actionable technical point, omit this field entirely (return null).>",
-  "mentor_moment": "<ONE sentence. Was this the right frame? If yes, say exactly why this instant and not the one before or after. If no, name the specific frame that was the shot. Never explain what a decisive moment is. Never say 'there is no peak action'. Example of right frame: 'Wingbeat at the top of the arc with the eye catching light — half a second earlier and the wing blocks the face.' Example of wrong frame: 'The bill has cleared the water here — the shot was the entry, when the spray was still rising.' If moment is irrelevant to the genre, omit (return null).>",
-  "mentor_next": "<TWO sentences MAX. First sentence: the field fix — what to do differently at the point of capture (position, timing, light, distance, angle). Second sentence: the processing fix — one specific adjustment that would change the read of this image (not generic; name the tool or method). This replaces The One Improvement and the Edit Guide as a single unified block. Example: 'Get lower — eye level with the subject removes the downward angle that flattens the depth. In post, pull the highlights on the water surface down 40 points to recover the reflection detail that anchors the foreground.' If only a field fix applies, one sentence is enough. Never give generic advice.>",
-  "byline_1": "<ONE sentence. What specifically holds this image from the next tier — name the exact gap, not a description of what is there. Start with the problem, not the scene. BAD: 'The incoming bird placement is slightly high.' GOOD: 'The incoming bird floats outside the geometric connection — drop it to the lower third and the composition locks.' Never describe what is visible.>",
-  "byline_2": "<THE ONE IMPROVEMENT. One specific, physical action — in the field or in processing. Name the exact move, not the problem. BAD: 'Wait for better light.' GOOD: 'Shoot this at golden hour from the ridge to the east — the low side-light will separate the valley floor from the peaks without needing monochrome.' Never use generic advice. Never describe what the image does.>",
-  "badges_g": ["<specific strength visible in this image>", "<specific strength>", "<specific strength>"],
-  "badges_w": ["<specific gap in this image>", "<specific gap>", "<specific gap>"],
+  "hard_truth": "<ONE sentence. The creative truth of this image. For high-scoring images: what it achieved and why it landed. For lower-scoring images: the primary gap or missed opportunity. Never open with description. Never start with This image or The photograph. Soul Bonus examples: 'Access wonder earned — you were inside a space most photographers never enter and the direct gaze confirmed it.' / 'The geometry and the confrontation are both present and both working.' Lower score examples: 'Technically clean but the moment passed before the shutter.' / 'The geometry is there but the decisive moment is not.'>",
+  "mentor_technical": "<ONE sentence. For high-scoring images: name the specific technical DECISION that served the image — the choice that made it work. For lower-scoring images: name the gap and what it cost. Return null if no actionable point. Soul Bonus example: 'Exposure held shadow detail on the faces while keeping the fabric texture readable — the harder call in mixed shelter light.' Lower score example: 'Exposure pushed half a stop too bright — the highlight detail is gone and cannot be recovered.'>",
+  "mentor_moment": "<ONE sentence. Was this the right frame? For Soul Bonus: confirm it was right and say exactly why this instant. For lower scores: name the specific frame that was the shot if this was not it. Return null if moment is irrelevant to genre. Soul Bonus example: 'The center figure holds the gaze while the others rest — half a second later he looks away and the confrontational tension is gone.' Lower score example: 'The bill has cleared the water here — the shot was the entry, when the spray was still rising.'>",
+  "mentor_next": "<TWO sentences MAX. First sentence: ONE creative direction — wider, closer, different lens, different moment, processing transformation. Name it specifically. For Soul Bonus: frame as possibility not correction. For lower scores: redirect the creative energy. Second sentence: one processing direction that changes the emotional register. Examples: 'Go back with a 50mm and shoot just the faces — let the geometry disappear and it becomes entirely about what is in his eyes.' / 'A very dark print — push the blacks until the shelter disappears and only the faces remain in darkness — changes the register from documentary to elemental.' NEVER give positional corrections (shift right, move left) as the primary recommendation on high-scoring images.>",
+  "byline_1": "<ONE sentence. For Soul Bonus images: what does the NEXT image in this scene or series need — not a flaw in this image, but the frame that completes the story. For lower-scoring images: the specific gap holding this image from the next tier. Never describe what is visible. Soul Bonus example: 'The next frame is the portrait — just his face, close, the environment gone.' Lower score example: 'The incoming bird floats outside the geometric connection — drop it to the lower third and the composition locks.'>",
+  "byline_2": "<THE ONE CREATIVE INVITATION. One specific imaginable next move — in the field or in processing — framed as possibility not correction. Examples: 'Shoot this scene again at dusk when the fabric catches the last light — the faces go warm against a cooler background and the claustrophobia becomes beauty.' / 'Shoot this at golden hour from the ridge east — low side-light separates the valley without monochrome.' Never use generic advice.>",
+  "badges_g": ["<specific creative or technical strength in this image>", "<specific strength>", "<specific strength>"],
+  "badges_w": ["<specific gap or missed opportunity>", "<specific gap>", "<specific gap>"],
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
-  "species_id": "<For Wildlife and Nature genres only: carry forward the precise common name of the primary subject from the verified scene description. Use exactly the same name. If not identified with certainty, null. For Creative, Drone, Landscape, Street, People, Macro, Documentary, and Wedding genres: always null — do not attempt species identification.>",
-  "edit_base":     "<BASE EDITS — post-processing only. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
-  "edit_creative": "<CREATIVE EDITS — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
+  "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
+  "edit_base":     "<BASE EDITS — post-processing only. Specific technical adjustments: local exposure, dodging/burning, colour grading within the original palette. Tool-specific. 1-2 sentences.>",
+  "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
+  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}. Example: {suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -1720,16 +1749,137 @@ STREET_SUBGENRE_CONTEXT = {
 }
 
 
+
+# ── Creative sub-genre context blocks ────────────────────────────────────────
+
+CREATIVE_SUBGENRE_CONTEXT = {
+
+    'creative_minimalist': (
+        "This is Creative photography — sub-type: MINIMALIST.\n"
+        "A real, recognisable subject reduced to its essential form. Negative space "
+        "IS the composition. Tonal relationship IS the statement. The subject is "
+        "clearly identifiable but stripped of context — the creative act is the "
+        "reduction, not the technique. A swan as geometric punctuation. A lone figure "
+        "under vast sky. A single tree in snow. A boat on still water.\n\n"
+        "DoD: Score the compositional DECISION — finding the exact relationship "
+        "between subject, negative space, and tonal field that makes the image work. "
+        "This requires vision and patience, not technical complexity. The deliberate "
+        "choice to strip everything away and commit to simplicity is the difficulty. "
+        "Score 6.0–8.5 depending on the precision of the reduction.\n\n"
+        "DM: Score the exact moment when the subject is in its most resolved "
+        "relationship with the frame — the precise position of the neck curve, "
+        "the exact angle that makes the negative space work. Half a second earlier "
+        "or later and the geometry is different.\n\n"
+        "Disruption: Score how far this image departs from conventional treatment "
+        "of this subject. A swan photographed as a geometric study, not a wildlife "
+        "portrait — that IS disruption. Score 7.0–8.5 when the minimalist approach "
+        "is genuinely unexpected for the subject.\n\n"
+        "Wonder: EYE WONDER is the primary signal. Score the transformation of the "
+        "familiar into the singular — a common subject made uncommon by the seeing. "
+        "The swan is everywhere; this image is not. Score 7.5–9.0 when the reduction "
+        "reveals something about the subject that the conventional view cannot.\n\n"
+        "AQ: Score the tonal precision — the exact relationship between subject tones "
+        "and negative space tones. Minimalist AQ rewards images where every tonal "
+        "decision serves the reduction. No element fights for attention."
+    ),
+
+    'creative_graphic': (
+        "This is Creative photography — sub-type: GRAPHIC.\n"
+        "Strong geometric shapes, bold tonal or colour relationships, architectural "
+        "or environmental forms composed as visual design. Real subjects — but the "
+        "graphic structure IS the image. Shadow geometry. Bold colour contrast. "
+        "Architectural pattern. The image reads as design before it reads as subject.\n\n"
+        "DoD: Score the compositional precision required to find and frame the graphic "
+        "structure — the exact position that makes the geometry work, the timing of "
+        "light that reveals the shape. Score 6.0–8.0.\n\n"
+        "DM: Score the moment of maximum graphic resolution — when the shapes, "
+        "tones, and any human element are in their most complete visual relationship.\n\n"
+        "Disruption: Score the visual impact of the graphic statement. Bold, "
+        "unexpected, visually arresting — the image that reads from across the room. "
+        "Score 7.0–9.0 for strong graphic work.\n\n"
+        "Wonder: EYE WONDER — the graphic discovery. The shadow pattern that creates "
+        "a second subject. The architectural geometry that frames the human. "
+        "Score 7.5–8.5 when the graphic find is original and complete."
+    ),
+
+    'creative_fineart': (
+        "This is Creative photography — sub-type: FINE ART.\n"
+        "Conceptually directed, constructed, or painterly work where the photograph "
+        "IS the artwork. Staged, lit, or conceived as a complete artistic statement. "
+        "The Old Masters portrait with a modern choker. The surreal constructed scene. "
+        "The image that exists because the photographer built it.\n\n"
+        "DoD: Score the intellectual and production complexity of the concept — "
+        "the research, the construction, the lighting design, the casting, the "
+        "technical execution of a pre-visualised image. Score 7.0–9.0 for work "
+        "that required significant conception and execution.\n\n"
+        "DM: Score the exact frame where the concept is most completely resolved — "
+        "where idea and execution align into their strongest single statement.\n\n"
+        "Disruption: Score the conceptual originality. Does this image exist in a "
+        "visual tradition the viewer recognises, and does it add something new to it? "
+        "Art historical quotation, cultural collision, temporal duality — reward "
+        "ideas the viewer has not encountered in this exact form.\n\n"
+        "Wonder: Score conceptual depth and the world the image creates. Does the "
+        "viewer feel both the idea and the image simultaneously? Score 8.0–9.0 "
+        "when concept and execution are both fully achieved."
+    ),
+
+    'creative_icm': (
+        "This is Creative photography — sub-type: ICM AND INTENTIONAL BLUR.\n"
+        "Intentional camera movement, panning, or blur as the primary creative "
+        "statement. Apply STEP 0 Creative Genre Override fully. "
+        "Sharpness is NEVER penalised. Score DoD on technique difficulty and "
+        "intentionality. Score Wonder on what the blur reveals that sharpness cannot."
+    ),
+
+    'creative_longexp': (
+        "This is Creative photography — sub-type: LONG EXPOSURE AND LIGHT TRAILS.\n"
+        "Long exposure — silky water, light trails, star trails, movement rendered "
+        "as flow. Apply STEP 0 Creative Genre Override fully. DoD on exposure "
+        "precision and environmental challenge. Wonder on time revealed."
+    ),
+
+    'creative_multiexp': (
+        "This is Creative photography — sub-type: MULTIPLE EXPOSURE.\n"
+        "Two or more exposures layered — in-camera or in post — as a single "
+        "unified statement. DoD on the complexity of the layering decision. "
+        "Wonder on what the combination reveals that neither image alone contains."
+    ),
+
+    'creative_abstract': (
+        "This is Creative photography — sub-type: ABSTRACT AND PATTERN.\n"
+        "Subject unrecognisable or irrelevant — pure colour field, pattern, "
+        "texture, or form. The image is not about what it depicts but what it IS. "
+        "DoD on the compositional decision and technical precision. "
+        "Wonder on the visual experience created."
+    ),
+
+    'creative_astro': (
+        "This is Creative photography — sub-type: ASTROPHOTOGRAPHY.\n"
+        "Night sky, Milky Way, star trails, lunar, planetary. Apply STEP 0 "
+        "Creative Genre Override. DoD on dark sky access, technical precision, "
+        "and foreground planning. Wonder on scale revelation."
+    ),
+
+    'creative_silhouette': (
+        "This is Creative photography — sub-type: SILHOUETTE.\n"
+        "Subject revealed by shape alone. Apply STEP 0. DoD on exposure precision "
+        "and timing of the right gesture. Wonder on EYE WONDER — the shape "
+        "that is both specific and universal."
+    ),
+}
+
+
 def get_genre_context(genre, sub_genre=None):
     """
     Returns the genre context string for the scoring prompt.
     Routes to sub-type-specific context blocks for all genres with sub-types.
-    Falls back to generic genre context for unknown or missing sub_genre.
+    _other sub-genres fall back to generic genre context — no sub-type penalty.
     """
+    # _other sub-genres always fall back to generic genre context
+    if sub_genre and sub_genre.endswith('_other'):
+        return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
-    if genre == 'People' and sub_genre == 'lifestyle_intimate':
-        return PEOPLE_SUBGENRE_CONTEXT.get('lifestyle_intimate', GENRE_CONTEXT['People'])
     if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
         return WILDLIFE_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Nature' and sub_genre and sub_genre in NATURE_SUBGENRE_CONTEXT:
@@ -1742,6 +1892,8 @@ def get_genre_context(genre, sub_genre=None):
         return FASHION_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Street' and sub_genre and sub_genre in STREET_SUBGENRE_CONTEXT:
         return STREET_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Creative' and sub_genre and sub_genre in CREATIVE_SUBGENRE_CONTEXT:
+        return CREATIVE_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
@@ -2260,6 +2412,7 @@ def build_audit_data(result, image_obj):
         "species_display":      _species_display(result.get("species_id", "")),
         "edit_base":            result.get("edit_base", ""),
         "edit_creative":        result.get("edit_creative", ""),
+        "genre_suggestion":     result.get("genre_suggestion", None),
         "modules": [
             ("DoD",        result.get("dod", 0)),
             ("Disruption", result.get("disruption", 0)),
