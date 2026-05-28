@@ -1228,31 +1228,155 @@ def check_tier_jump_bonus(user, new_tier, image_count, commit=True):
         db.session.commit()
 
 
+def _user_is_inactive(u, today, days=180):
+    """
+    Return True if user has had no scored image in the last `days` days.
+    Uses Image.created_at as the activity proxy.
+    """
+    cutoff = today - timedelta(days=days)
+    last_img = (
+        db.session.execute(
+            db.text(
+                "SELECT created_at FROM images "
+                "WHERE user_id = :uid AND status = 'scored' "
+                "ORDER BY created_at DESC LIMIT 1"
+            ),
+            {'uid': u.id}
+        ).fetchone()
+    )
+    if not last_img:
+        return True   # Never uploaded — treat as inactive
+    last_date = last_img[0].date() if hasattr(last_img[0], 'date') else last_img[0]
+    return last_date < cutoff
+
+
 def run_annual_points_expiry():
     """
-    Dec 31 job: expire 20% of each user's points balance.
-    Jan 1 job: 80% carries forward automatically (this is the residual after Dec 31 run).
-    Investor doc: Dec 31 → 20% expires, Jan 1 → 80% carry forward.
-    Scheduled as a cron job — called by APScheduler at 23:55 IST on Dec 31.
+    Dec 31 job: apply 10% reset to INACTIVE users only.
+    Active = at least one scored image in the last 180 days.
+    Inactive users: 10% of balance removed, 90% carries forward.
+    Active users: no change — full balance carries forward.
+    Scheduled as a cron job — called by APScheduler at 23:55 IST (18:25 UTC) on Dec 31.
     """
     with app.app_context():
         users = User.query.filter(User.points_balance > 0).all()
         today = date.today()
-        expired_count = 0
+        reset_count  = 0
+        skipped_active = 0
         for u in users:
             if u.points_last_expiry and u.points_last_expiry.year >= today.year:
-                continue  # Already ran expiry this year
-            expiry_amount = round(u.points_balance * 0.20, 1)
-            if expiry_amount > 0:
-                u.points_balance    = round(u.points_balance - expiry_amount, 1)
+                continue  # Already ran reset this year for this user
+            if not _user_is_inactive(u, today, days=180):
+                skipped_active += 1
+                continue  # Active in last 6 months — full balance carries forward
+            reset_amount = round(u.points_balance * 0.10, 1)
+            if reset_amount > 0:
+                u.points_balance     = round(u.points_balance - reset_amount, 1)
                 u.points_last_expiry = today
-                expired_count += 1
+                reset_count += 1
         db.session.commit()
         app.logger.info(
-            f'[points_expiry] Annual 20% expiry run. '
-            f'{expired_count} users affected. Date: {today}'
+            f'[points_expiry] Annual 10% reset run. '
+            f'{reset_count} inactive users reset, {skipped_active} active users skipped. '
+            f'Date: {today}'
         )
         db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
+
+
+def run_points_reset_warning_nov():
+    """
+    Nov 1 job: email inactive users (no upload in 180+ days) warning that their
+    points will reduce by 10% on 31 Dec unless they upload before then.
+    Only sends to users with points_balance > 0.
+    """
+    with app.app_context():
+        try:
+            users = User.query.filter(User.points_balance > 0).all()
+            today = date.today()
+            site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+            sent = 0
+            for u in users:
+                try:
+                    if not _user_is_inactive(u, today, days=180):
+                        continue  # Active — no email
+                    if not u.email:
+                        continue
+                    name    = u.full_name or u.username or 'Photographer'
+                    balance = round(u.points_balance or 0, 1)
+                    at_risk = round(balance * 0.10, 1)
+                    subject = f'Your {balance} points — upload before 31 Dec to keep them all'
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">Your points are waiting, {name}.</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{balance} points</strong> in your wallet.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">We haven&#39;t seen a new upload from you in a while. Points only reset for inactive accounts — upload one image before <strong>31 December</strong> and your full balance carries forward into the new year.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">If you don&#39;t upload before then, <strong>{at_risk} points</strong> (10%) will reset on 1 January.</p>
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload &amp; Protect Your Points &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have a Shutter League account with a points balance.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
+                    ok = send_email(u.email, subject, html_body)
+                    if ok:
+                        sent += 1
+                        app.logger.info(f'[points_warning_nov] Sent to user {u.id} ({u.email})')
+                except Exception as _ue:
+                    app.logger.error(f'[points_warning_nov] Error for user {u.id}: {_ue}')
+            app.logger.info(f'[points_warning_nov] Nov 1 warning run complete. {sent} emails sent.')
+        except Exception as e:
+            app.logger.error(f'[points_warning_nov] Job failed: {e}')
+        finally:
+            db.session.remove()
+
+
+def run_points_reset_warning_dec():
+    """
+    Dec 15 job: final reminder to still-inactive users — 16 days left to upload
+    and protect their full balance.
+    Only sends to users with points_balance > 0 who are still inactive.
+    """
+    with app.app_context():
+        try:
+            users = User.query.filter(User.points_balance > 0).all()
+            today = date.today()
+            site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+            sent = 0
+            for u in users:
+                try:
+                    if not _user_is_inactive(u, today, days=180):
+                        continue  # Now active — no email needed
+                    if not u.email:
+                        continue
+                    name    = u.full_name or u.username or 'Photographer'
+                    balance = round(u.points_balance or 0, 1)
+                    at_risk = round(balance * 0.10, 1)
+                    subject = f'16 days left — protect your {balance} points before 31 Dec'
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">16 days to protect your points, {name}.</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your balance: <strong>{balance} points.</strong></p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the deadline and <strong>{at_risk} points</strong> reset on 1 January.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You&#39;ve earned these. Take one shot before the year ends.</p>
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload Now — 16 Days Left &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have a Shutter League account with a points balance.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
+                    ok = send_email(u.email, subject, html_body)
+                    if ok:
+                        sent += 1
+                        app.logger.info(f'[points_warning_dec] Sent to user {u.id} ({u.email})')
+                except Exception as _ue:
+                    app.logger.error(f'[points_warning_dec] Error for user {u.id}: {_ue}')
+            app.logger.info(f'[points_warning_dec] Dec 15 warning run complete. {sent} emails sent.')
+        except Exception as e:
+            app.logger.error(f'[points_warning_dec] Job failed: {e}')
+        finally:
+            db.session.remove()
 
 
 # ── End of Points Engine ──────────────────────────────────────────────────────
@@ -13068,12 +13192,28 @@ if _sched_lock_held:
         name             = 'Auto-publish weekly challenge results',
         replace_existing = True,
     )
-    # Sprint 1 — annual 20% points expiry — 23:55 IST (18:25 UTC) on Dec 31
+    # Sprint 1 — annual 10% points reset (inactive users only) — 23:55 IST (18:25 UTC) on Dec 31
     _scheduler.add_job(
         func             = run_annual_points_expiry,
         trigger          = CronTrigger(month=12, day=31, hour=18, minute=25, timezone='UTC'),
         id               = 'annual_points_expiry',
-        name             = 'Annual 20% points balance expiry (Dec 31)',
+        name             = 'Annual 10% points reset — inactive users only (Dec 31)',
+        replace_existing = True,
+    )
+    # Points reset warning — Nov 1, 09:00 IST (03:30 UTC)
+    _scheduler.add_job(
+        func             = run_points_reset_warning_nov,
+        trigger          = CronTrigger(month=11, day=1, hour=3, minute=30, timezone='UTC'),
+        id               = 'points_warning_nov',
+        name             = 'Points reset Nov 1 warning email — inactive users',
+        replace_existing = True,
+    )
+    # Points reset final reminder — Dec 15, 09:00 IST (03:30 UTC)
+    _scheduler.add_job(
+        func             = run_points_reset_warning_dec,
+        trigger          = CronTrigger(month=12, day=15, hour=3, minute=30, timezone='UTC'),
+        id               = 'points_warning_dec',
+        name             = 'Points reset Dec 15 final reminder — inactive users',
         replace_existing = True,
     )
     # Sprint 3 — monthly residency clock — 00:05 IST = 18:35 UTC on last day of month
