@@ -131,12 +131,31 @@ DM (Decisive Moment):
   Selection ≠ Decision — reward active creative control.
 
 WF (Wonder Factor):
-  The Unseen Truth. Rare behaviour, scientific significance, or a view
-  the audience has never seen.
+  The Unseen Truth. Three distinct Wonder signals — any one at high intensity scores 7.5–9.0:
+
+  EYE WONDER: The photographer found something in the ordinary that transforms it.
+  A compositional find, an accidental frame, a juxtaposition that could not have been
+  planned. The cow shadow on the red wall. The barrel bath under "DO NOT TURN OFF THE TAP."
+  The woman framed through the camel's neck. The man surrounded by crowd shadows.
+  The subject is not rare — the seeing is. Eye Wonder scores 8.0–9.0 when the
+  compositional discovery is complete and unrepeatable.
+
+  ACCESS WONDER: The photographer was somewhere or trusted by someone that most
+  photographers never reach. Working inside a toxic kiln with labourers. A close portrait
+  of a stranger who allowed the camera. Inside a restricted religious community.
+  A delivery room. The wonder is in the access, not the subject's rarity.
+  Access Wonder scores 7.5–8.5 depending on the difficulty of the access.
+
+  CULTURAL WONDER: The image shows the viewer a world, a community, or a way of life
+  they cannot otherwise enter. The Haredi community on a street. Holi from inside
+  the powder cloud. A slum community living beside railway tracks going about daily life.
+  Cultural Wonder scores 7.0–8.5 depending on the specificity and depth of access.
+
+  FOR WILDLIFE AND NATURE ONLY — add: Rare behaviour, scientific significance,
+  and perspectives the viewer will never witness in person score highest.
   For Drone: perspectives impossible from ground = high Wonder.
-  For Creative: revealing the invisible (star movement, time compression,
-  light physics, hidden beauty in motion) = high Wonder.
-  Transforming the familiar into the transcendent IS valid Wonder.
+  For Creative: revealing the invisible (star movement, light physics) = high Wonder.
+  Transforming the familiar into the transcendent IS valid Wonder in all genres.
 
 AQ (Affective Quotient):
   Emotional resonance and tonal archetype. Evaluate the FEELING the
@@ -394,10 +413,27 @@ GENRE_CONTEXT = {
         "over-processing is a penalty."
     ),
     'Street': (
-        "This is Street photography. Evaluate for decisive moment, human narrative, and "
-        "environmental storytelling. Motion blur on moving subjects is acceptable and often "
-        "enhances energy. Reward layered compositions, reflections, shadows, and unexpected "
-        "juxtapositions."
+        "This is Street photography. The photographer was present and captured something "
+        "real — a face, a moment, a condition, a place with life in it.\n\n"
+        "DoD: Score speed of reaction, working in chaos, difficult or hostile light, "
+        "photographing in restricted or culturally specific environments, and the "
+        "physical act of being present in a demanding situation. Motion blur on moving "
+        "subjects is acceptable and often enhances energy.\n\n"
+        "DM: Score the unrepeatable instant — the precise frame where multiple visual "
+        "variables (expression, gesture, light, background alignment) peak simultaneously. "
+        "Reward layered compositions, reflections, shadows, and unexpected juxtapositions.\n\n"
+        "Wonder: Street Wonder operates on three signals — score whichever is strongest:\n"
+        "  EYE WONDER: The compositional find. Something was there and invisible until "
+        "the camera saw it — a shadow theatre, an accidental frame, a juxtaposition that "
+        "could not have been planned. Score 8.0–9.0 when the discovery is complete.\n"
+        "  ACCESS WONDER: The photographer was somewhere most photographers never go, "
+        "or trusted by a community that does not trust cameras. Score 7.5–8.5.\n"
+        "  CULTURAL WONDER: The image shows a world, community, or way of life most "
+        "viewers cannot enter. Score 7.0–8.5 based on cultural specificity and depth.\n"
+        "DO NOT score Wonder on subject rarity — a bus terminal, a market, a street "
+        "corner are not rare. The photographer's eye IS the wonder in street photography.\n\n"
+        "AQ: Reward images where technical choices serve the truth of the moment. "
+        "Grain, available light, and imperfect focus are not penalties when they serve the image."
     ),
     'Macro': (
         "This is Macro photography. The subject fills the frame at extreme magnification — "
@@ -453,6 +489,33 @@ GENRE_CONTEXT = {
         "real that most humans will never witness.\n\n"
         "AQ: Reward technical decisions that serve the natural truth — sharp where sharpness "
         "reveals structure, atmospheric where softness serves the subject."
+    ),
+    'Fashion': (
+        "This is Fashion photography — covering editorial, conceptual, studio, "
+        "and beauty work where the image is a directed creative act.\n\n"
+        "DoD: Score concept development and art direction complexity, location or "
+        "studio production demands, the technical precision of executing a directed "
+        "concept (skin rendering against dark backgrounds, costume and environment "
+        "alignment, lighting design), and any physical access challenge. "
+        "A conceptual art-historical reference executed at this level requires "
+        "significant intellectual and production work — score it.\n\n"
+        "DM: Score the moment within the directed setup where concept, body geometry, "
+        "light, and environment align simultaneously into their strongest statement. "
+        "Fashion DM is not reactive — it is the exact frame where the photographer's "
+        "vision is most completely realised. The image that could only have been made "
+        "in that specific instant of that specific setup.\n\n"
+        "Disruption: Score the conceptual statement. Does this image break from "
+        "convention in its genre? Art historical references, unexpected environments, "
+        "backs-to-camera, unconventional framing, temporal duality — reward ideas "
+        "that the viewer has not seen in this form before.\n\n"
+        "Wonder: Score the world the image creates. Does it stop the viewer? "
+        "Does it make the viewer feel they have entered a complete, fully realised "
+        "visual world? Conceptual depth — the Old Masters portrait with modern choker, "
+        "the desert landscape that collapses scale — scores Wonder 8.0–9.0 when the "
+        "concept is fully executed.\n\n"
+        "AQ: Equal weight to Disruption and Wonder. Fashion AQ scores the emotional "
+        "and aesthetic tone the image creates — the precise feeling it produces. "
+        "Technically clean, tonally controlled, emotionally specific."
     ),
     'Documentary': (
         "This is Documentary photography. The photographer witnessed something — an event, "
@@ -524,30 +587,50 @@ PEOPLE_SUBGENRE_CONTEXT = {
         "and the trust required to photograph in it are valid DoD signals.\n\n"
         "DM: Score authenticity of presence — how fully the subject inhabits their "
         "cultural environment in this specific frame. Dignity and self-possession are "
-        "STRENGTHS, not indicators of a posed or less-valuable moment. "
-        "The subject being aware of the camera is NOT a deduction in this sub-type. "
-        "Cultural documentary work operates by different rules than street candid — "
-        "the decisive moment is the one where subject and environment are in complete accord.\n\n"
-        "WF: Score cultural resonance. Does this image create the feeling of genuine "
-        "encounter with a world the viewer might not otherwise access? "
-        "Ethnographic gravity, cultural specificity, and the sense that this moment "
-        "could only have been made by a photographer with real access — all count."
+        "STRENGTHS. The subject being aware of the camera is NOT a deduction. "
+        "The decisive moment is the one where subject and environment are in complete accord.\n\n"
+        "WF: CULTURAL WONDER is the primary Wonder signal for this sub-type. Score on "
+        "three dimensions simultaneously:\n"
+        "1. WORLD BEHIND THE FACE: The subject's face is the entry point — the world "
+        "visible behind and around them is the Wonder. A face surrounded by cultural "
+        "signifiers that most viewers will never encounter in person scores Wonder 7.5–8.5. "
+        "The more specific the cultural context (not 'Indian woman' but 'Rajasthani bride "
+        "at a specific ceremonial moment'), the higher the Wonder score.\n"
+        "2. ACCESS DEPTH: Did this image require genuine relationship and trust to make? "
+        "A photographer who embedded themselves in a community for weeks scores higher "
+        "Access Wonder than a tourist who pointed a camera at a colourful ceremony.\n"
+        "3. SIGNIFICANCE OF THE ENCOUNTER: Does this image communicate something about "
+        "a community's way of life that would be lost without photography? "
+        "Traditions under threat, communities shrinking, ways of life disappearing — "
+        "documentation of these carries additional Wonder weight.\n"
+        "CRITICAL: Do NOT score Wonder low because the image is a 'posed' portrait or "
+        "because the subject is aware of the camera. Cultural portrait Wonder is in the "
+        "world the image shows, not in the spontaneity of capture."
     ),
     'portrait_candid': (
         "This is People photography — sub-type: PORTRAIT (CANDID / STREET).\n"
-        "The defining quality is the unguarded moment — subject unaware, or caught "
-        "in a real, unrepeatable expression of self. Timing is the primary criterion.\n\n"
-        "DoD: Score sharpness on a potentially moving subject, background separation "
-        "achieved in uncontrolled ambient light, and the physical challenge of working "
-        "fast in unpredictable conditions.\n\n"
-        "DM: Score the unrepeatable instant. The peak moment where expression, gesture, "
-        "and background alignment all converge. A half-second either side is lesser. "
-        "This is the sub-type where traditional decisive moment scoring applies fully — "
-        "reward the photograph that could not have been made a frame earlier or later.\n\n"
-        "WF: Score surprise — did the photographer catch something that could not have "
-        "been staged? The best candid portraits show the viewer something they could not "
-        "have planned. Unexpected gesture, rare expression, environmental coincidence — "
-        "the wonder is the world revealing itself."
+        "The defining quality is the unguarded moment — subject unaware, or a stranger "
+        "who consented to a moment of eye contact in a public space. "
+        "Timing and physical proximity are the primary criteria.\n\n"
+        "DoD: Score sharpness on a potentially moving subject and background separation "
+        "in uncontrolled ambient light. CRITICAL: Working at close portrait distance "
+        "with a stranger in a public space — no studio, no relationship, no control — "
+        "is a distinct DoD signal. The physical act of approaching a stranger and earning "
+        "or capturing that moment scores DoD 6.5–7.5. A weathered face in a working-class "
+        "environment, a person in a restricted cultural space, a subject in psychological "
+        "distress who allowed the camera — all raise DoD significantly.\n\n"
+        "DM: Score the unrepeatable instant where expression, gesture, and gaze align. "
+        "A direct gaze from a stranger who held eye contact for one moment is as valid "
+        "a decisive moment as a caught expression. Score the frame that could not have "
+        "been made a second earlier or later.\n\n"
+        "WF: Score on ACCESS WONDER and EYE WONDER:\n"
+        "ACCESS WONDER: A direct, unguarded gaze from a stranger photographed at close "
+        "range scores Wonder 7.0–8.5. The access required to get this close and the "
+        "subject's willingness to be seen cannot be replicated in a studio. "
+        "The more visible the subject's life in their face and environment, the higher.\n"
+        "EYE WONDER: A background element, light condition, or juxtaposition that "
+        "transforms the portrait into something larger than a face.\n"
+        "DO NOT score Wonder low because the subject is ordinary or the environment familiar."
     ),
     'lifestyle': (
         "This is People photography — sub-type: LIFESTYLE / EDITORIAL.\n"
@@ -562,6 +645,27 @@ PEOPLE_SUBGENRE_CONTEXT = {
         "WF: Score aspirational pull and visual world-building. Does the image create "
         "a world the viewer wants to enter? Is the visual language specific and original, "
         "or generic? Wonder here is the sense of a fully realised visual world."
+    ),
+    'lifestyle_intimate': (
+        "This is People photography — sub-type: LIFESTYLE (INTIMATE / DIARY).\n"
+        "Diary photography, domestic documentary, the private world shared willingly. "
+        "This sub-type covers intimate access to someone's private life — bedroom, "
+        "domestic space, personal moment. In the tradition of Nan Goldin and Larry Clark.\n\n"
+        "DoD: Score TRUST AND ACCESS — the primary DoD signal is that the photographer "
+        "was given access to a private world. This is not production difficulty — it is "
+        "relationship difficulty. Being trusted with a camera in an intimate space scores "
+        "DoD 6.5–7.5. The rawness of the technical execution (grain, available light, "
+        "domestic clutter) is EVIDENCE of this access, not a penalty.\n\n"
+        "DM: Score the unguarded moment within intimacy — the expression, gesture, or "
+        "position that reveals the subject's private self. The decisive moment here is "
+        "not a public peak but a private truth.\n\n"
+        "AQ: CRITICAL — DO NOT penalise grain, available light, soft focus, or domestic "
+        "clutter in this sub-type. The rawness IS the aesthetic. Over-lit, over-processed "
+        "intimate photography loses its authenticity. Score AQ on whether the technical "
+        "choices serve the intimacy of the moment.\n\n"
+        "WF: Score ACCESS WONDER — the sense that the viewer is seeing something "
+        "private that was shared willingly. The wonder is in the trust. Score 7.0–8.5 "
+        "when the intimacy feels genuine and the access feels earned."
     ),
     'event_ceremony': (
         "This is People photography — sub-type: EVENT / CEREMONY.\n"
@@ -1234,12 +1338,20 @@ DOCUMENTARY_SUBGENRE_CONTEXT = {
         "photograph people in vulnerable situations with dignity, and the physical "
         "and emotional challenge of working in conditions of hardship.\n\n"
         "DM: Score the frame that carries the full weight of the social reality — "
-        "not the most dramatic, but the most true. The child's expression, the "
-        "queuing detail, the contrast of poverty and wealth in a single frame.\n\n"
-        "Wonder: Score the image's power to create empathy and understanding. "
-        "Does this image make the viewer understand a social reality they cannot "
-        "ignore? The strongest social documentary images change how the viewer "
-        "sees the world they live in."
+        "not the most dramatic, but the most true. In multi-figure images, score the "
+        "narrative tension between figures — the foreground resignation against the "
+        "background defiance, the single figure isolated from the group, the gesture "
+        "that carries the whole story. The most true frame, not the most dramatic.\n\n"
+        "Wonder: CULTURAL WONDER and ACCESS WONDER are both primary signals here.\n"
+        "CULTURAL WONDER: A slum community going about daily life beside railway tracks, "
+        "workers in a toxic industrial environment, people living in conditions most "
+        "viewers will never enter — this is Wonder 8.0–8.5. The image shows a reality "
+        "most people choose not to see.\n"
+        "ACCESS WONDER: Being inside the working environment — not photographing it "
+        "from outside — scores Access Wonder 7.5–8.5. Physical presence in the difficult "
+        "space is the access signal.\n"
+        "DO NOT score Wonder low because the setting is ordinary or the subjects are "
+        "not doing anything dramatic. Daily life in difficult conditions IS the Wonder."
     ),
 
     'doc_community': (
@@ -1396,15 +1508,172 @@ MACRO_SUBGENRE_CONTEXT = {
 }
 
 
+# ── Fashion sub-genre context blocks ─────────────────────────────────────────
+
+FASHION_SUBGENRE_CONTEXT = {
+
+    'fashion_editorial': (
+        "This is Fashion photography — sub-type: EDITORIAL / LOCATION.\n"
+        "Concept-driven, location-based fashion work. The environment is a deliberate "
+        "creative choice that extends or contrasts the concept.\n\n"
+        "DoD: Score location access and production complexity — getting models, "
+        "costume, and crew to a remote desert, a rooftop, an industrial space. "
+        "The technical challenge of executing a concept outdoors in uncontrolled "
+        "conditions (wind, light changes, physical terrain) raises DoD.\n\n"
+        "DM: Score the moment where concept, body geometry, environment, and light "
+        "all align simultaneously. Editorial DM rewards the photographer who "
+        "pre-visualised the frame and executed it at the exact right instant.\n\n"
+        "Wonder: Score the world the image creates. Does the location choice "
+        "transform the fashion concept into something larger? Two figures in "
+        "contrasting black and white dresses in a volcanic desert — the environment "
+        "and the concept create a world together. Score 8.0–9.0 when the "
+        "environment-concept alignment is complete."
+    ),
+
+    'fashion_concept': (
+        "This is Fashion photography — sub-type: CONCEPTUAL / ART-DIRECTED.\n"
+        "Intellectual concept drives the image — art historical reference, "
+        "temporal duality, cultural quotation, narrative fiction. The idea is "
+        "the primary subject.\n\n"
+        "DoD: Score the intellectual and production complexity of executing the "
+        "concept. An Old Masters painting quotation requires costume research, "
+        "lighting design that replicates specific painterly qualities, and technical "
+        "precision of skin against dark backgrounds. Score the work behind the idea.\n\n"
+        "DM: Score the exact frame where the concept is most completely resolved — "
+        "where the art historical reference is most readable, where the temporal "
+        "tension is most present, where the idea and the execution align.\n\n"
+        "Disruption: Score the conceptual statement. Art historical quotation in "
+        "contemporary fashion photography, temporal duality, cultural collision — "
+        "reward ideas the viewer has not seen in this form before.\n\n"
+        "Wonder: Score conceptual depth. Does the image create genuine intellectual "
+        "wonder — the sense of time collapsing, of a world being constructed, of "
+        "an idea being made visible? Score 8.0–9.0 when the concept is fully "
+        "executed and the viewer feels both the idea and the image simultaneously."
+    ),
+
+    'fashion_studio': (
+        "This is Fashion photography — sub-type: STUDIO.\n"
+        "Controlled studio environment. Product, beauty, or person in clean "
+        "controlled light. Technical precision is the primary criterion.\n\n"
+        "DoD: Score lighting design precision, background and subject tonal "
+        "separation, and the technical challenge of rendering garment, skin, "
+        "or product at their best simultaneously.\n\n"
+        "DM: Score the exact moment of peak expression, pose, or garment movement "
+        "within the controlled session.\n\n"
+        "Wonder: Score the image's ability to stop the viewer despite the controlled "
+        "environment — the expression that transcends the studio setup, the garment "
+        "rendered so precisely it becomes sculpture."
+    ),
+
+    'fashion_beauty': (
+        "This is Fashion photography — sub-type: BEAUTY / DETAIL.\n"
+        "Face, cosmetic detail, jewellery, or garment detail as the primary subject. "
+        "Extreme technical precision and the revelation of detail are primary.\n\n"
+        "DoD: Score lighting precision on skin or material surfaces, focus accuracy "
+        "on small detail areas, and the technical challenge of revealing cosmetic "
+        "or garment craftsmanship.\n\n"
+        "DM: Score the exact focus and light alignment that makes the detail most "
+        "completely visible.\n\n"
+        "Wonder: Score the revelation — does the detail reveal something about "
+        "the craft, the skin, the material that the viewer had not seen before?"
+    ),
+}
+
+# ── Street sub-genre context blocks ──────────────────────────────────────────
+
+STREET_SUBGENRE_CONTEXT = {
+
+    'street_candid': (
+        "This is Street photography — sub-type: SINGLE CANDID SUBJECT.\n"
+        "One primary subject, unaware or in an unguarded public moment. "
+        "The photographer found a person and a context that said something together.\n\n"
+        "DoD: Score reaction speed, working in difficult or chaotic light, and "
+        "the physical challenge of being present. PROXIMITY BONUS: Working at "
+        "close distance to an unaware subject in a public space scores DoD 6.5–7.5.\n\n"
+        "DM: Score the unrepeatable instant — expression, gesture, background "
+        "alignment all at their peak simultaneously.\n\n"
+        "Wonder: Score EYE WONDER primarily — what compositional or contextual "
+        "discovery made this image possible? The background element that changes "
+        "the meaning, the light that transforms the ordinary face, the accidental "
+        "frame. Score 7.5–8.5 when the Eye Wonder discovery is complete and clear.\n"
+        "ACCESS WONDER: Score 7.0–8.0 when the subject's face or environment reveals "
+        "a world most viewers will not enter."
+    ),
+
+    'street_crowd': (
+        "This is Street photography — sub-type: CROWD AND URBAN ENERGY.\n"
+        "Multiple subjects, collective energy, urban density. "
+        "The crowd is the subject.\n\n"
+        "DoD: Score the challenge of finding order and narrative within chaos — "
+        "the right position, the right moment of crowd peak, clean separation "
+        "of key subjects from the mass.\n\n"
+        "DM: Score the moment of maximum collective energy and narrative coherence — "
+        "when the crowd tells a story in a single frame.\n\n"
+        "Disruption: Score layered compositions, unexpected geometries within the "
+        "crowd, and the use of colour, shadow, or reflection to organise chaos.\n\n"
+        "Wonder: EYE WONDER — the compositional find within the crowd that makes "
+        "the image more than documentation. The single figure isolated in the mass, "
+        "the geometric accident, the colour contrast. Score 7.5–8.5."
+    ),
+
+    'street_night': (
+        "This is Street photography — sub-type: NIGHT STREET.\n"
+        "Low light, artificial illumination, urban atmosphere after dark.\n\n"
+        "DoD: Score the technical management of mixed artificial light sources, "
+        "high ISO noise management, and the challenge of finding decisive moments "
+        "in environments with limited visibility.\n\n"
+        "DM: Score the moment when light, subject, and atmosphere align — "
+        "the figure stepping through a pool of neon, the rain reflection at its peak.\n\n"
+        "Wonder: EYE WONDER from the light — artificial light creating unexpected "
+        "colour and geometry in the urban environment."
+    ),
+
+    'street_architecture': (
+        "This is Street photography — sub-type: ARCHITECTURE DETAIL.\n"
+        "Built environment as the primary subject — no human presence required. "
+        "Geometry, light, and the character of place.\n\n"
+        "DoD: Score the compositional precision required to isolate architectural "
+        "detail and the timing of the right light.\n\n"
+        "DM: Score the moment of optimal light and geometry alignment.\n\n"
+        "Wonder: EYE WONDER — geometric discoveries, unexpected scale, or light "
+        "behaviour that transforms the familiar building into something new."
+    ),
+
+    'street_market': (
+        "This is Street photography — sub-type: MARKET AND COMMERCE.\n"
+        "Market, commerce, exchange, and the human activity of trade.\n\n"
+        "DoD: Score the chaos management, light management in covered market "
+        "environments, and the timing of transaction peaks.\n\n"
+        "DM: Score the transaction moment — the exchange, the negotiation, the "
+        "moment of decision or pleasure.\n\n"
+        "Wonder: CULTURAL WONDER and EYE WONDER equally — the market as a window "
+        "into how a community lives and trades."
+    ),
+
+    'street_transport': (
+        "This is Street photography — sub-type: TRANSPORT AND MOVEMENT.\n"
+        "Buses, trains, stations, vehicles — human movement through transit systems.\n\n"
+        "DoD: Score timing within fast-moving transport environments and the "
+        "challenge of finding decisive moments amid constant movement.\n\n"
+        "DM: Score the moment of peak human expression within transit — the departure "
+        "gesture, the arrival expression, the window portrait.\n\n"
+        "Wonder: EYE WONDER from the juxtaposition of human life against the "
+        "geometry and colour of vehicles and transit infrastructure. "
+        "Score 7.5–8.5 when the Eye Wonder discovery is complete."
+    ),
+}
+
+
 def get_genre_context(genre, sub_genre=None):
     """
     Returns the genre context string for the scoring prompt.
-    Routes to sub-type-specific context blocks for People, Wildlife,
-    Nature, Documentary, and Macro genres when a valid sub_genre is provided.
+    Routes to sub-type-specific context blocks for all genres with sub-types.
     Falls back to generic genre context for unknown or missing sub_genre.
     """
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'People' and sub_genre == 'lifestyle_intimate':
+        return PEOPLE_SUBGENRE_CONTEXT.get('lifestyle_intimate', GENRE_CONTEXT['People'])
     if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
         return WILDLIFE_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Nature' and sub_genre and sub_genre in NATURE_SUBGENRE_CONTEXT:
@@ -1413,6 +1682,10 @@ def get_genre_context(genre, sub_genre=None):
         return DOCUMENTARY_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Macro' and sub_genre and sub_genre in MACRO_SUBGENRE_CONTEXT:
         return MACRO_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Fashion' and sub_genre and sub_genre in FASHION_SUBGENRE_CONTEXT:
+        return FASHION_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Street' and sub_genre and sub_genre in STREET_SUBGENRE_CONTEXT:
+        return STREET_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
