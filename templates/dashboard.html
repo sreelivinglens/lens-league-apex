@@ -705,6 +705,45 @@
     .db-panel        { padding: 14px 14px; }
   }
 
+  /* ── Mobile collapsible announcement strips ── */
+  @media (max-width: 768px) {
+    .db-ann-strip {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding: 0 !important;
+      cursor: pointer;
+    }
+    .db-ann-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 14px;
+      gap: 10px;
+    }
+    .db-ann-body {
+      display: none;
+      padding: 0 14px 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .db-ann-strip.ann-open .db-ann-body { display: block; }
+    .db-ann-chevron {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .db-ann-strip.ann-open .db-ann-chevron { transform: rotate(180deg); }
+  }
+  @media (min-width: 769px) {
+    /* Desktop: ann-strip stays as inline flex row, hide mobile-only elements */
+    .db-ann-hdr { display: contents; }
+    .db-ann-body { display: contents; }
+    .db-ann-chevron { display: none; }
+  }
+
   /* ── Mobile collapsible right-column panels ── */
   @media (max-width: 768px) {
     .db-panel {
@@ -747,7 +786,6 @@
     }
     .db-panel.mob-open .db-panel-body { display: block; }
     /* Standing panel — open by default */
-    .db-panel.mob-open-default .db-panel-body { display: block; }
     /* Hide the original db-plbl inside panel body on mobile — hdr replaces it */
     .db-panel .db-plbl { display: none; }
     /* Dark panels (mentor, referral) adjust header colours */
@@ -793,14 +831,22 @@
 ════════════════════════════════════════════════════════════════ #}
 {% if contest_banners %}
 {% for ann in contest_banners %}
-<div class="db-ann-strip">
-  <span class="db-ann-tag">{{ ann.contest_type | upper if ann.contest_type else 'Announcement' }}</span>
-  <span class="db-ann-text">
-    {% if ann.title %}<strong>{{ ann.title }}</strong> — {% endif %}{{ ann.body }}
-  </span>
-  {% if ann.cta_label and ann.cta_url %}
-  <a href="{{ ann.cta_url }}" class="db-ann-cta">{{ ann.cta_label }} →</a>
-  {% endif %}
+<div class="db-ann-strip" onclick="dbAnnToggle(this)">
+  <div class="db-ann-hdr">
+    <span class="db-ann-tag">{{ ann.contest_type | upper if ann.contest_type else 'Announcement' }}</span>
+    {% if ann.title %}<span class="db-ann-text" style="font-weight:700;">{{ ann.title }}</span>{% endif %}
+    <span class="db-ann-chevron">▼</span>
+  </div>
+  <div class="db-ann-body">
+    <span class="db-ann-text">
+      {% if ann.title %}{% endif %}{{ ann.body }}
+    </span>
+    {% if ann.cta_label and ann.cta_url %}
+    <div style="margin-top:10px;">
+      <a href="{{ ann.cta_url }}" class="db-ann-cta" onclick="event.stopPropagation()">{{ ann.cta_label }} →</a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endfor %}
 {% endif %}
@@ -1118,7 +1164,7 @@
   <div class="db-right-col" style="min-width:0;">
 
     {# Standing + POTY #}
-    <div class="db-panel mob-open-default mob-open">
+    <div class="db-panel mob-open">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
         <span class="db-panel-hdr-title">Your Standing</span>
         <span class="db-panel-chevron">▼</span>
@@ -1355,6 +1401,10 @@ function dbToggle(hdr) {
 function dbPanelToggle(hdr) {
   var panel = hdr.parentElement;
   panel.classList.toggle('mob-open');
+}
+
+function dbAnnToggle(strip) {
+  strip.classList.toggle('ann-open');
 }
 
 function dbSearchUrl(q) {
