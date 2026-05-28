@@ -580,18 +580,25 @@
   }
 
   /* DDI dims */
-  .db-ddi-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .db-ddi-row {
+    display: flex; flex-direction: column;
+    gap: 4px; margin-bottom: 10px;
+  }
+  .db-ddi-row-top {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+  }
   .db-ddi-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    color: var(--text-primary); opacity: 0.55; width: 52px; flex-shrink: 0;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-primary); opacity: 0.65; flex: 1; min-width: 0;
   }
-  .db-ddi-bw { flex: 1; background: var(--surface-3); border-radius: 3px; height: 5px; min-width: 0; }
-  .db-ddi-bf { height: 5px; border-radius: 3px; background: var(--gold); }
   .db-ddi-sc {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-    color: var(--text-primary); width: 26px; text-align: right; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--text-primary); flex-shrink: 0; text-align: right;
   }
+  .db-ddi-bw { width: 100%; background: var(--surface-3); border-radius: 3px; height: 6px; }
+  .db-ddi-bf { height: 6px; border-radius: 3px; background: var(--gold); }
   .db-callout-grid {
     display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
     gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
@@ -1217,9 +1224,11 @@
       {% for dim in dim_order %}
       {% if dim in progress_data.dim_avgs %}
       <div class="db-ddi-row">
-        <span class="db-ddi-lbl">{{ progress_data.dim_labels[dim] if dim in progress_data.dim_labels else dim|upper }}</span>
+        <div class="db-ddi-row-top">
+          <span class="db-ddi-lbl">{{ progress_data.dim_labels[dim] if dim in progress_data.dim_labels else dim|upper }}</span>
+          <span class="db-ddi-sc">{{ '%.1f'|format(progress_data.dim_avgs[dim]) }}</span>
+        </div>
         <div class="db-ddi-bw"><div class="db-ddi-bf" style="width:{{ [[(progress_data.dim_avgs[dim] / 10 * 100)|int, 0]|max, 100]|min }}%;"></div></div>
-        <span class="db-ddi-sc">{{ '%.1f'|format(progress_data.dim_avgs[dim]) }}</span>
       </div>
       {% endif %}
       {% endfor %}
@@ -1241,7 +1250,7 @@
 
     {# Peer rating #}
     {% if rating_widget %}
-    <div class="db-panel gold-border">
+    <div class="db-panel">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
         <span class="db-panel-hdr-title">Peer Rating</span>
         <span class="db-panel-chevron">▼</span>
