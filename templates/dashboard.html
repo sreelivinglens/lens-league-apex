@@ -320,6 +320,27 @@
     .db-right-col { grid-template-columns: 1fr; }
   }
 
+  /* ── Zone B — full-width panels below gallery ── */
+  .db-zone-b {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+  @media (max-width: 900px) {
+    .db-zone-b { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .db-zone-b { grid-template-columns: 1fr; }
+  }
+  /* On mobile, Zone B panels use the same collapsible panel behaviour */
+  @media (min-width: 769px) {
+    .db-zone-b .db-panel { padding: 16px 18px; }
+    .db-zone-b .db-panel-hdr { display: none; }
+    .db-zone-b .db-panel-body { display: block !important; padding: 0; }
+    .db-zone-b .db-plbl { display: block; }
+  }
+
   /* ── Admin-style collapsible sections ── */
   .db-section {
     border: 1px solid var(--border);
@@ -1298,79 +1319,89 @@
       </div>{# /db-panel-body #}
     </div>
 
-    {# Wallet HUD — condensed in sidebar #}
-    {% if wallet_hud %}
-    <div class="db-panel">
-      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title">Points &amp; Ranking</span>
-        <span class="db-panel-chevron">▼</span>
-      </div>
-      <div class="db-panel-body">
-      <div class="db-plbl">Points &amp; Ranking</div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;">
-        <div>
-          <div style="font-size:24px;font-weight:700;color:var(--text-primary);line-height:1;">{{ wallet_hud.balance | round(1) }}</div>
-          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.55;margin-top:2px;">Your Points</div>
-        </div>
-        <div>
-          <div style="font-size:24px;font-weight:700;color:var(--text-primary);line-height:1;">{{ wallet_hud.residency_months }}<span style="font-size:14px;opacity:0.5;">/6</span></div>
-          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.55;margin-top:2px;">Months</div>
-        </div>
-      </div>
-      <div style="background:var(--surface-3);border-radius:4px;height:5px;margin-bottom:8px;">
-        <div style="background:#2C3E6B;border-radius:4px;height:5px;width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
-      </div>
-      {% if wallet_hud.officially_ranked %}
-      <div style="font-size:13px;color:var(--green,#2e7d32);font-weight:600;">✓ Official World Ranking — Live</div>
-      {% else %}
-      <div style="font-size:13px;color:var(--text-primary);opacity:0.65;line-height:1.5;">{{ wallet_hud.imgs_to_gate }} more images to appear on the leaderboard.</div>
-      {% endif %}
-      <a href="{{ url_for('redeem') }}" style="display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:8px 14px;border-radius:4px;text-decoration:none;white-space:nowrap;margin-top:10px;min-height:44px;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
-      </div>{# /db-panel-body #}
-    </div>
-    {% endif %}
-
-    {# Referral — condensed #}
-    {% if referral_code %}
-    <div class="db-panel" style="background:#F7F5F2;border-color:rgba(245,197,24,0.5);">
-      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px;">+500 pts</span></span>
-        <span class="db-panel-chevron" style="color:#1A2744;opacity:0.45;">▼</span>
-      </div>
-      <div class="db-panel-body">
-      <div class="db-plbl" style="color:#1A2744;opacity:1;">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:4px;">+500 pts</span></div>
-      <div style="font-size:16px;color:#1A1A18;line-height:1.6;margin-bottom:10px;">Share your link — earn <strong>+20 pts</strong> when they score, <strong>+500 pts</strong> when they subscribe.</div>
-      <div style="background:#fff;border:1px solid rgba(245,197,24,0.5);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:0.08em;color:#1A2744;">{{ referral_code }}</span>
-        <a href="#" onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ var el=this; el.textContent='Copied!'; setTimeout(function(){ el.textContent='Copy link'; },2000); }.bind(this)); return false;"
-           style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:7px 14px;border-radius:4px;text-decoration:none;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;">Copy link</a>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="slRefModal('whatsapp')" style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#fff;background:#25D366;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;min-height:44px;">&#128242; WhatsApp</button>
-        <button onclick="slRefModal('gmail')" style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#fff;background:#EA4335;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;min-height:44px;">&#9993; Gmail</button>
-      </div>
-      </div>{# /db-panel-body #}
-    </div>
-    {% endif %}
-
-    {# Set password nudge #}
-    {% if not current_user.password_hash %}
-    <div class="db-panel" style="border-color:var(--gold);">
-      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title">&#x1F512; Add a password</span>
-        <span class="db-panel-chevron">▼</span>
-      </div>
-      <div class="db-panel-body">
-      <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">&#x1F512; Add a password</div>
-      <div style="font-size:16px;color:var(--text-primary);opacity:0.75;line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
-      <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:14px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
-      </div>{# /db-panel-body #}
-    </div>
-    {% endif %}
-
   </div>{# /right col #}
 
 </div>{# /main-cols #}
+
+{# ════════════════════════════════════════════════════════════════
+   ZONE B — full-width below gallery: Wallet, Referrals, Set Password
+   Desktop: 3-column grid. Tablet: 2-col. Mobile: handled by panel collapse.
+════════════════════════════════════════════════════════════════ #}
+{% if wallet_hud or referral_code or not current_user.password_hash %}
+<div class="db-zone-b">
+
+  {# Wallet HUD #}
+  {% if wallet_hud %}
+  <div class="db-panel">
+    <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+      <span class="db-panel-hdr-title">Points &amp; Ranking</span>
+      <span class="db-panel-chevron">▼</span>
+    </div>
+    <div class="db-panel-body">
+    <div class="db-plbl">Points &amp; Ranking</div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;">
+      <div>
+        <div style="font-size:24px;font-weight:700;color:var(--text-primary);line-height:1;">{{ wallet_hud.balance | round(1) }}</div>
+        <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.55;margin-top:2px;">Your Points</div>
+      </div>
+      <div>
+        <div style="font-size:24px;font-weight:700;color:var(--text-primary);line-height:1;">{{ wallet_hud.residency_months }}<span style="font-size:14px;opacity:0.5;">/6</span></div>
+        <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.55;margin-top:2px;">Months</div>
+      </div>
+    </div>
+    <div style="background:var(--surface-3);border-radius:4px;height:5px;margin-bottom:8px;">
+      <div style="background:#2C3E6B;border-radius:4px;height:5px;width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
+    </div>
+    {% if wallet_hud.officially_ranked %}
+    <div style="font-size:13px;color:var(--green,#2e7d32);font-weight:600;">✓ Official World Ranking — Live</div>
+    {% else %}
+    <div style="font-size:13px;color:var(--text-primary);opacity:0.65;line-height:1.5;">{{ wallet_hud.imgs_to_gate }} more images to appear on the leaderboard.</div>
+    {% endif %}
+    <a href="{{ url_for('redeem') }}" style="display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#27500A;background:#EAF3DE;border:1.5px solid #3B6D11;padding:8px 14px;border-radius:4px;text-decoration:none;white-space:nowrap;margin-top:10px;min-height:44px;">Redeem {{ wallet_hud.balance | round(1) }} pts →</a>
+    </div>{# /db-panel-body #}
+  </div>
+  {% endif %}
+
+  {# Referral #}
+  {% if referral_code %}
+  <div class="db-panel" style="background:#F7F5F2;border-color:rgba(245,197,24,0.5);">
+    <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+      <span class="db-panel-hdr-title">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px;">+500 pts</span></span>
+      <span class="db-panel-chevron" style="color:#1A2744;opacity:0.45;">▼</span>
+    </div>
+    <div class="db-panel-body">
+    <div class="db-plbl" style="color:#1A2744;opacity:1;">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:4px;">+500 pts</span></div>
+    <div style="font-size:16px;color:#1A1A18;line-height:1.6;margin-bottom:10px;">Share your link — earn <strong>+20 pts</strong> when they score, <strong>+500 pts</strong> when they subscribe.</div>
+    <div style="background:#fff;border:1px solid rgba(245,197,24,0.5);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:0.08em;color:#1A2744;">{{ referral_code }}</span>
+      <a href="#" onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ var el=this; el.textContent='Copied!'; setTimeout(function(){ el.textContent='Copy link'; },2000); }.bind(this)); return false;"
+         style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:7px 14px;border-radius:4px;text-decoration:none;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;">Copy link</a>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="slRefModal('whatsapp')" style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#fff;background:#25D366;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;min-height:44px;">&#128242; WhatsApp</button>
+      <button onclick="slRefModal('gmail')" style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#fff;background:#EA4335;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;min-height:44px;">&#9993; Gmail</button>
+    </div>
+    </div>{# /db-panel-body #}
+  </div>
+  {% endif %}
+
+  {# Set password nudge #}
+  {% if not current_user.password_hash %}
+  <div class="db-panel" style="border-color:var(--gold);">
+    <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+      <span class="db-panel-hdr-title">&#x1F512; Add a password</span>
+      <span class="db-panel-chevron">▼</span>
+    </div>
+    <div class="db-panel-body">
+    <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">&#x1F512; Add a password</div>
+    <div style="font-size:16px;color:var(--text-primary);opacity:0.75;line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
+    <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:14px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
+    </div>{# /db-panel-body #}
+  </div>
+  {% endif %}
+
+</div>{# /zone-b #}
+{% endif %}
 
 {% else %}
 {# ── Empty state ── #}
