@@ -151,9 +151,11 @@ WF (Wonder Factor):
   The subject is not rare — the seeing is.
   Eye Wonder scores 8.0–9.0 when the compositional discovery is complete and unrepeatable.
   Eye Wonder scores 9.0–9.5 when the find is singular — the image that could only exist
-  once, in that place, in that light, at that instant. International award-winning
-  compositional finds (WSPA, Sony World Photography, similar) score 9.0–9.5.
-  DO NOT default to the bottom of this range. Score what the image actually achieved.
+  once, in that place, in that light, at that instant.
+  Eye Wonder scores 9.5–9.7 for international award-winning compositional finds
+  (WSPA POTY, IPA, Sony World Photography, similar) — the image that defined
+  its genre for that year. DO NOT default to the bottom of this range.
+  Score what the image actually achieved.
 
   ACCESS WONDER: The photographer was somewhere or trusted by someone that most
   photographers never reach. Working inside a toxic kiln with labourers. A close portrait
@@ -162,11 +164,15 @@ WF (Wonder Factor):
   Access Wonder scores 7.5–8.5 depending on the difficulty of the access.
   Access Wonder scores 8.5–9.5 when the access is extraordinary — inside a war zone,
   inside a birth, inside a community that never lets cameras in.
+  Access Wonder scores 9.5–9.7 when the photographer was inside active conflict,
+  disaster, or crisis — physically present in danger to make this image.
 
   CULTURAL WONDER: The image shows the viewer a world, a community, or a way of life
   they cannot otherwise enter. Cultural Wonder scores 7.0–8.5 depending on specificity.
   Cultural Wonder scores 8.5–9.0 when the image documents a world that is disappearing
   or inaccessible to almost all viewers.
+  Cultural Wonder scores 9.0–9.5 when combined with genuine physical access and a
+  specific community or moment that will never be documented this way again.
 
   EMOTIONAL WONDER: The decisive moment captures not just the geometric or behavioural
   peak but the emotional truth of what is happening. This is the highest Wonder signal.
@@ -178,6 +184,9 @@ WF (Wonder Factor):
   Emotional Wonder scores 8.5–9.5 when the emotion is specific, genuine, and undeniable.
   Emotional Wonder scores 9.0–9.5 when the decisive moment and the emotional truth
   coincide simultaneously — the geometry AND the feeling, captured in one frame.
+  Emotional Wonder scores 9.5–9.7 for images where the emotion is so specific and
+  so complete that the viewer cannot remain neutral — IPA, WSPA, World Press Photo
+  level emotional truth. Defiance as a physical gesture at its absolute peak.
   CRITICAL: Name the specific emotion. "Powerful" is not an emotion. "Lonely" is.
   "Defiant" is. "Tender" is. Score accordingly.
 
@@ -197,22 +206,28 @@ AQ (Affective Quotient):
   of technical quality.
 
   AQ SCORING SCALE:
-  9.0–10.0: A specific, powerful emotion that is undeniable and lingers after
+  9.5–9.7: The emotional register is so complete and specific that it defines
+    the image permanently. The viewer cannot look away or forget it.
+    IPA Photographer of the Year, WSPA POTY, World Press Photo — the image
+    that made the emotion of that moment universal. Defiance at its absolute
+    peak. Tenderness that stops the breath. Score 9.5–9.7 when the emotion
+    IS the historical record.
+  9.0–9.4: A specific, powerful emotion that is undeniable and lingers after
     looking away. The viewer cannot remain neutral. The feeling is singular.
     Award-winning work where the emotional register is the primary achievement.
     DO NOT reserve this range only for People/Wedding — minimalist, landscape,
-    and street images can score 9.0+ AQ when the emotional register is complete.
+    and street images score 9.0+ AQ when the emotional register is complete.
   8.0–8.9:  A clear, specific emotion that lands. The viewer feels something
     definite — loneliness, joy, unease, awe, tenderness, defiance.
   7.0–7.9:  Emotional content present but not fully resolved. The image suggests
     a feeling without fully delivering it. Technically accomplished but emotionally
     incomplete.
   6.0–6.9:  Minimal emotional content. Technically competent but emotionally neutral.
-    The viewer admires the craft without feeling anything.
   Below 6.0: No emotional content. Pure documentation or failed execution.
   CRITICAL: DO NOT default to the middle of any range. Score what the image
-  actually achieves. An image that genuinely creates suspension, void, stillness
-  as a complete emotional statement scores AQ 9.0+.
+  actually achieves. For IPA/WSPA/World Press Photo POTY level work: score
+  AQ 9.5–9.7. An image where defiance, tenderness, or grief is undeniable
+  and permanent scores AQ 9.5+.
 
   PER-GENRE EMOTIONAL VOCABULARY — name the specific emotion from this list
   or use your own specific language:
@@ -259,8 +274,13 @@ CALIBRATION NOTES:
   both reflect the genuine emotional achievement of the work
 - DO NOT default to the bottom or middle of any scoring range. A range of
   8.0–9.5 means some images score 8.0 and some score 9.5 — evaluate honestly.
-- WSPA Photographer of the Year, Sony World Photography, and equivalent
-  international award-winning images score 9.0+ in the correct genre.
+- WSPA Photographer of the Year, Sony World Photography, IPA, World Press Photo
+  winners score Wonder 9.5–9.7 AND AQ 9.5–9.7 in the correct genre.
+- The Excellence Bonus (+0.15) fires when BOTH Wonder >= 9.5 AND AQ >= 9.5.
+  For IPA/WSPA POTY level work, score Wonder and AQ at 9.5+ to trigger this.
+  Do not score POTY-level Wonder at 9.2 and POTY-level AQ at 9.4 — push both
+  to 9.5+ when the image genuinely achieves singular visual find AND undeniable
+  named emotion simultaneously.
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
 """
