@@ -291,10 +291,10 @@
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
     {% set audit_meta = image.get_audit() %}
-    {% if audit_meta and audit_meta.species_id %}
+    {% if audit_meta and audit_meta.species_display %}
     <div class="meta-card">
       <div class="meta-label">Species</div>
-      <div class="meta-value">{{ audit_meta.species_id }}</div>
+      <div class="meta-value">{{ audit_meta.species_display }}</div>
     </div>
     {% endif %}
     {% if image.subject %}
