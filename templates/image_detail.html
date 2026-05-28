@@ -216,9 +216,21 @@
   </div>
   {% endif %}
 
+  {# ── Scored As banner — shows when engine overrode sub-genre ────── #}
+  {% set audit_sa = image.get_audit() %}
+  {% if audit_sa and audit_sa.subgenre_overridden and audit_sa.effective_subgenre %}
+  <div style="margin-bottom:16px; padding:14px 20px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</div>
+    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit_sa.effective_subgenre.replace('_',' ') }}</div>
+    {% if audit_sa.vision_subgenre_reason %}
+    <div style="font-size:13px;color:var(--text-secondary);flex:1;min-width:200px;">{{ audit_sa.vision_subgenre_reason }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {# ── Genre Insight banner ──────────────────────────────────────── #}
   {% set audit_gi = image.get_audit() %}
-  {% if audit_gi and audit_gi.genre_suggestion and audit_gi.genre_suggestion.suggested_genre %}
+  {% if audit_gi and audit_gi.genre_suggestion and audit_gi.genre_suggestion.suggested_genre and not audit_gi.subgenre_overridden %}
   <div id="genre-insight-banner" style="margin-bottom:24px; padding:20px 24px; background:var(--surface-2); border:2px solid var(--gold); border-radius:var(--radius-md); position:relative;">
     <button onclick="document.getElementById('genre-insight-banner').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;" aria-label="Dismiss">×</button>
     <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
