@@ -6534,6 +6534,86 @@ def redeem():
                            platform_name=PLATFORM_NAME,
                            contact_email=CONTACT_EMAIL)
 
+
+@app.route('/redeem/action', methods=['POST'])
+@login_required
+def redeem_action():
+    """
+    Process a points redemption.
+    item_type: upload_single | upload_topup | subscription_offset |
+               challenge_entry | bow_entry | poty_entry |
+               mentor_senior | mentor_expert | mentor_legend |
+               free_month
+    Deducts points, logs to app.logger, flashes result.
+    KYC note: no payment gateway calls — pure points ledger for now.
+    """
+    COSTS = {
+        'upload_single':        10,
+        'challenge_entry':      50,
+        'open_entry':          100,
+        'bow_entry':           350,
+        'poty_entry':          500,
+        'upload_topup':       1000,
+        'subscription_offset': 2500,
+        'free_month_mobile':  1000,
+        'free_month_camera':  2000,
+        'mentor_senior':       500,
+        'mentor_expert':       750,
+        'mentor_legend':      1000,
+    }
+    LABELS = {
+        'upload_single':        'Single upload credit',
+        'challenge_entry':      'Weekly Challenge entry',
+        'open_entry':           'Open Submission entry',
+        'bow_entry':            'Body of Work entry',
+        'poty_entry':           'Annual Excellence Award entry',
+        'upload_topup':         'Top-up pack (5 images)',
+        'subscription_offset':  'Monthly subscription offset',
+        'free_month_mobile':    'Free month — Mobile League',
+        'free_month_camera':    'Free month — Camera League',
+        'mentor_senior':        'Senior Mentor session',
+        'mentor_expert':        'Expert Mentor session',
+        'mentor_legend':        'Legend Mentor session',
+    }
+
+    item_type = request.form.get('item_type', '').strip()
+
+    if item_type not in COSTS:
+        flash('Invalid redemption item.', 'error')
+        return redirect(url_for('redeem'))
+
+    cost  = COSTS[item_type]
+    label = LABELS[item_type]
+    bal   = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+
+    if bal < cost:
+        flash(f'Not enough points. You need {cost} pts for {label} (you have {bal}).', 'error')
+        return redirect(url_for('redeem'))
+
+    try:
+        db.session.execute(db.text(
+            "UPDATE users SET points_balance = points_balance - :cost WHERE id = :uid"
+        ), {'cost': cost, 'uid': current_user.id})
+        db.session.commit()
+
+        new_bal = round(bal - cost, 1)
+        app.logger.info(
+            f'[redeem_action] user={current_user.id} ({current_user.email}) '
+            f'item={item_type} cost={cost}pts bal_before={bal} bal_after={new_bal}'
+        )
+        flash(
+            f'Redeemed: {label} — {cost} points deducted. '
+            f'New balance: {new_bal} pts. '
+            f'Our team will action this within 24 hours.',
+            'success'
+        )
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[redeem_action] error user={current_user.id} item={item_type}: {e}')
+        flash('Something went wrong. Please try again or contact us.', 'error')
+
+    return redirect(url_for('redeem'))
+
 @app.route('/notify-me', methods=['POST'])
 def notify_me():
     email   = request.form.get('email', '').strip()
