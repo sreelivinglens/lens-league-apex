@@ -9520,11 +9520,11 @@ def judge_score_image(assignment_id):
         return redirect(url_for('judge_dashboard'))
 
     ddi_descriptions = {
-        'DoD':        'Depth of Difficulty -- technical precision, sharpness, compositional complexity',
-        'Disruption': 'Disruption -- visual surprise, unconventional perspective, breaks convention',
-        'DM':         'Decisive Moment -- the unrepeatable instant, timing, narrative peak',
-        'Wonder':     'Wonder -- emotional impact, transcendence, the feeling it leaves',
-        'AQ':         "Authenticity Quotient -- soul, honesty, the photographer's unique voice",
+        'DoD':        'Depth of Difficulty -- technical execution, physical risk, access difficulty, environmental challenge',
+        'Disruption': 'Disruption -- visual surprise, unconventional framing, breaks from convention',
+        'DM':         'Decisive Moment -- the unrepeatable instant, timing, narrative and emotional peak',
+        'Wonder':     'Wonder -- Eye Wonder (compositional find), Access Wonder (proximity/trust), Cultural Wonder, Emotional Wonder (specific named feeling)',
+        'AQ':         'Affective Quotient -- the specific emotion the image creates. Name it: loneliness, joy, defiance, tenderness. Cannot exceed 7.5 without a named emotion.',
     }
     return render_template('judge_score.html',
         assignment=assignment, judge=judge, ddi_descriptions=ddi_descriptions)
@@ -12355,27 +12355,27 @@ def send_welcome_email(user):
         '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
         '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">1. Depth of Difficulty</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Access, rarity, timing, environmental challenge, and technical execution difficulty.</p>'
+        'Technical execution, physical risk, access difficulty, and environmental challenge.</p>'
         '</td></tr>'
         '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">2. Visual Display</p>'
+        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">2. Visual Disruption</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Composition, structure, balance, visual clarity, and tonal control.</p>'
+        'Visual surprise, unconventional framing, breaks from convention.</p>'
         '</td></tr>'
         '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
         '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">3. Decisive Moment</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Timing, anticipation, gesture, emotional peak, and fleeting interaction.</p>'
+        'Timing, anticipation, gesture, and the unrepeatable instant.</p>'
         '</td></tr>'
         '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
         '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">4. Wonder Factor</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Uniqueness, surprise, visual intrigue, and memorability.</p>'
+        'The feeling the image creates — compositional find, access, cultural depth, or specific named emotion.</p>'
         '</td></tr>'
         '<tr><td style="padding:10px 0;">'
         '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">5. Affective Quotient</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Emotional resonance, empathy, atmosphere, and psychological impact.</p>'
+        'The specific emotion the image creates in the viewer — loneliness, joy, defiance, tenderness, awe.</p>'
         '</td></tr>'
         '</table>'
         '<p style="margin:14px 0 0;font-size:16px;color:#1A2744;">'
@@ -12519,11 +12519,11 @@ def send_welcome_email(user):
         'Shutter League gives you that answer. Every image is evaluated by the Apex DDI Engine\n'
         'across five dimensions, scored 0-10. You see exactly what\'s working and what to fix.\n\n'
         'THE DIMENSIONAL DEPTH INDEX (DDI)\n'
-        '1. Depth of Difficulty - access, rarity, timing, environmental challenge\n'
-        '2. Visual Display - composition, structure, balance, tonal control\n'
-        '3. Decisive Moment - timing, anticipation, gesture, emotional peak\n'
-        '4. Wonder Factor - uniqueness, surprise, visual intrigue, memorability\n'
-        '5. Affective Quotient - emotional resonance, empathy, atmosphere\n'
+        '1. Depth of Difficulty - technical execution, physical risk, access, environmental challenge\n'
+        '2. Visual Disruption - visual surprise, unconventional framing, breaks from convention\n'
+        '3. Decisive Moment - timing, anticipation, gesture, the unrepeatable instant\n'
+        '4. Wonder Factor - compositional find, access wonder, cultural depth, emotional wonder\n'
+        '5. Affective Quotient - the specific emotion the image creates: loneliness, joy, defiance, awe\n'
         'Read the science: ' + science_url + '\n'
         'How it works: ' + hiw_url + '\n\n'
         'YOUR RANK\n'
