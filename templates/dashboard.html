@@ -768,10 +768,9 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--text-primary);
-      opacity: 0.75;
+      opacity: 1;
       flex: 1;
     }
-    .db-panel-hdr-title.gold { color: var(--gold); opacity: 1; }
     .db-panel-chevron {
       font-size: 12px;
       color: var(--text-primary);
@@ -788,12 +787,11 @@
     /* Standing panel — open by default */
     /* Hide the original db-plbl inside panel body on mobile — hdr replaces it */
     .db-panel .db-plbl { display: none; }
-    /* Dark panels (mentor, referral) adjust header colours */
+    /* Dark-background panels only: gold title + white chevron */
     .db-panel[style*="background:#2C3E6B"] .db-panel-hdr-title,
     .db-panel[style*="background:#1A2744"] .db-panel-hdr-title { color: #F5C518; opacity: 1; }
-    .db-panel[style*="background:#F7F5F2"] .db-panel-hdr-title { color: #1A2744; opacity: 1; }
     .db-panel[style*="background:#2C3E6B"] .db-panel-chevron,
-    .db-panel[style*="background:#1A2744"] .db-panel-chevron { color: rgba(255,255,255,0.45); opacity: 1; }
+    .db-panel[style*="background:#1A2744"] .db-panel-chevron { color: rgba(255,255,255,0.55); opacity: 1; }
   }
   @media (min-width: 769px) {
     /* On desktop: panel header is hidden, body always visible */
@@ -1245,7 +1243,7 @@
     {% if rating_widget %}
     <div class="db-panel gold-border">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title gold">Peer Rating</span>
+        <span class="db-panel-hdr-title">Peer Rating</span>
         <span class="db-panel-chevron">▼</span>
       </div>
       <div class="db-panel-body">
@@ -1327,7 +1325,7 @@
     {% if referral_code %}
     <div class="db-panel" style="background:#F7F5F2;border-color:rgba(245,197,24,0.5);">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title" style="color:#1A2744;opacity:1;">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px;">+500 pts</span></span>
+        <span class="db-panel-hdr-title">Referrals <span style="background:#F5C518;color:#1A2744;font-size:12px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px;">+500 pts</span></span>
         <span class="db-panel-chevron" style="color:#1A2744;opacity:0.45;">▼</span>
       </div>
       <div class="db-panel-body">
