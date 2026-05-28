@@ -1,80 +1,98 @@
 """
 Apex DDI Engine — core scoring module
-Lens League · April 2026
+Shutter League · May 2026
 
-Genres (8 confirmed):
-  1. Wildlife       (incl. Flora & Fauna — animals, birds, marine, plants)
-  2. Street
-  3. Landscape
-  4. People
-  5. Wedding
-  6. Macro
-  7. Drone & Aerial
-  8. Creative
+Genres (10 confirmed):
+  1. Wildlife       — Animals in natural behaviour
+  2. Nature         — Plants, fungi, ecosystems, weather, natural phenomena
+  3. Landscape      — Land, sea, sky as the primary subject
+  4. Street         — Human life in public spaces
+  5. People         — Portraits, faces, human expression
+  6. Wedding        — Ceremonies and celebrations
+  7. Macro          — Extreme close-up — any subject
+  8. Drone          — Aerial photography
+  9. Creative       — Technique-driven, abstract, artistic intent
+ 10. Documentary    — Witnessed events, conditions, and stories
 """
 
 # ── Genre weights ─────────────────────────────────────────────────────────────
 # Keys must match GENRE_LIST ids exactly.
 GENRE_WEIGHTS = {
-    'Wildlife':      {'dod': 0.25, 'disruption': 0.20, 'dm': 0.25, 'wonder': 0.20, 'aq': 0.10},
-    'Landscape':     {'dod': 0.15, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.30},
-    'Street':        {'dod': 0.15, 'disruption': 0.25, 'dm': 0.25, 'wonder': 0.15, 'aq': 0.20},
-    'Wedding':       {'dod': 0.10, 'disruption': 0.15, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.40},
-    'People':        {'dod': 0.10, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.40},
-    'Macro':         {'dod': 0.35, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
-    'Creative':      {'dod': 0.20, 'disruption': 0.30, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.15},
-    'Drone & Aerial':{'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
+    'Wildlife':    {'dod': 0.25, 'disruption': 0.15, 'dm': 0.30, 'wonder': 0.20, 'aq': 0.10},
+    'Nature':      {'dod': 0.20, 'disruption': 0.15, 'dm': 0.20, 'wonder': 0.30, 'aq': 0.15},
+    'Landscape':   {'dod': 0.20, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.20},
+    'Street':      {'dod': 0.15, 'disruption': 0.25, 'dm': 0.25, 'wonder': 0.15, 'aq': 0.20},
+    'Wedding':     {'dod': 0.10, 'disruption': 0.15, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.40},
+    'People':      {'dod': 0.10, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.40},
+    'Macro':       {'dod': 0.35, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
+    'Creative':    {'dod': 0.20, 'disruption': 0.30, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.15},
+    'Drone':       {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
+    'Documentary': {'dod': 0.20, 'disruption': 0.20, 'dm': 0.25, 'wonder': 0.25, 'aq': 0.10},
+    # Legacy key — kept for backward compat with existing DB rows
+    'Drone & Aerial': {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
 }
 
 # ── Genre list (canonical — used by forms, DB, and prize logic) ───────────────
 GENRE_LIST = [
     {
         'id':          'Wildlife',
-        'label':       'Wildlife (Flora & Fauna)',
-        'description': 'Wildlife, Flora & Fauna — animals, birds, insects, plants, marine life, ecosystems',
-        'aliases':     ['wildlife', 'flora', 'fauna', 'nature', 'animals', 'birds', 'marine', 'underwater'],
+        'label':       'Wildlife',
+        'description': 'Animals in natural behaviour — birds, mammals, reptiles, insects, marine life',
+        'aliases':     ['wildlife', 'fauna', 'animals', 'birds', 'marine', 'underwater'],
     },
     {
-        'id':          'Street',
-        'label':       'Street',
-        'description': 'Street — urban life, candid moments, public spaces, architecture details',
-        'aliases':     ['street', 'urban', 'city', 'candid', 'documentary'],
+        'id':          'Nature',
+        'label':       'Nature',
+        'description': 'Plants, fungi, ecosystems, weather, rivers, night sky, coral — the living natural world',
+        'aliases':     ['nature', 'flora', 'botanical', 'plants', 'fungi', 'weather', 'ecosystem', 'astro'],
     },
     {
         'id':          'Landscape',
         'label':       'Landscape',
-        'description': 'Landscape — natural scenery, seascapes, cityscapes, astrophotography, weather',
-        'aliases':     ['landscape', 'landscapes', 'seascape', 'cityscape', 'astro', 'scenery'],
+        'description': 'Land, sea, sky — place as the primary subject. Seascapes, cityscapes, long exposure',
+        'aliases':     ['landscape', 'landscapes', 'seascape', 'cityscape', 'scenery'],
+    },
+    {
+        'id':          'Street',
+        'label':       'Street',
+        'description': 'Human life in public spaces — candid moments, urban energy, decisive moment',
+        'aliases':     ['street', 'urban', 'city', 'candid'],
     },
     {
         'id':          'People',
         'label':       'People',
-        'description': 'People — portraits, lifestyle, editorial, environmental portraits, cultural',
+        'description': 'Portraits, faces, human expression — emotional connection is the primary signal',
         'aliases':     ['people', 'portrait', 'portraits', 'lifestyle', 'editorial', 'cultural'],
     },
     {
         'id':          'Wedding',
         'label':       'Wedding',
-        'description': 'Wedding — ceremonies, receptions, couples, details, pre-wedding, engagement',
+        'description': 'Ceremonies, receptions, couples, candid moments — genuine emotion scores highest',
         'aliases':     ['wedding', 'bridal', 'ceremony', 'engagement', 'pre-wedding'],
     },
     {
         'id':          'Macro',
         'label':       'Macro',
-        'description': 'Macro — extreme close-up, textures, patterns, insects at macro scale, product',
-        'aliases':     ['macro', 'closeup', 'close-up', 'texture', 'pattern', 'product'],
+        'description': 'Extreme close-up — any subject. Pen nibs, fabric, insects, water droplets, crystals',
+        'aliases':     ['macro', 'closeup', 'close-up', 'texture', 'pattern'],
     },
     {
-        'id':          'Drone & Aerial',
-        'label':       'Drone & Aerial',
-        'description': "Drone & Aerial — aerial photography, drone shots, bird's eye view, elevated perspectives",
+        'id':          'Drone',
+        'label':       'Drone',
+        'description': 'Aerial photography — patterns from altitude, perspectives impossible from ground',
         'aliases':     ['drone', 'aerial', 'drone & aerial', 'birds eye', "bird's eye", 'uav', 'top view'],
     },
     {
         'id':          'Creative',
         'label':       'Creative',
-        'description': 'Creative — conceptual, composite, fine art, abstract, experimental photography',
+        'description': 'Technique-driven or artistic intent — ICM, long exposure, abstract, experimental',
         'aliases':     ['creative', 'conceptual', 'composite', 'fine art', 'abstract', 'experimental'],
+    },
+    {
+        'id':          'Documentary',
+        'label':       'Documentary',
+        'description': 'Witnessed events and conditions — health, birth, environment, social issues, crisis',
+        'aliases':     ['documentary', 'doc', 'photojournalism', 'reportage', 'social'],
     },
 ]
 
@@ -83,6 +101,9 @@ GENRE_IDS = [g['id'] for g in GENRE_LIST]
 
 # Display labels keyed by id — use in templates: {{ genre_labels[img.genre] }}
 GENRE_LABELS = {g['id']: g['label'] for g in GENRE_LIST}
+# Legacy label compat
+GENRE_LABELS['Drone & Aerial'] = 'Drone'
+GENRE_LABELS['Landscapes']     = 'Landscape'
 
 # List of (id, label) tuples — use for <select> dropdowns that need both
 GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
@@ -91,49 +112,110 @@ GENRE_CHOICES = [(g['id'], g['label']) for g in GENRE_LIST]
 # ── Sub-genre definitions ──────────────────────────────────────────────────────
 # Only genres listed here will show a secondary dropdown on the upload form.
 # sub_types: list of (id, label) tuples — id stored in images.sub_genre column.
-# Extend this dict as additional genres are calibrated (Session 34+).
 SUBGENRE_MAP = {
+    'Wildlife': [
+        # ── Birds ──────────────────────────────────────────────────────────────
+        ('bird_in_flight',         'Bird – In Flight'),
+        ('bird_behaviour',         'Bird – Predation / Behaviour'),
+        ('bird_family',            'Bird – Family / Juvenile'),
+        ('bird_migration',         'Bird – Migration / Murmuration'),
+        # ── Mammals ────────────────────────────────────────────────────────────
+        ('mammal_behaviour',       'Mammal – Behaviour / Conflict'),
+        ('mammal_family',          'Mammal – Family / Juvenile'),
+        ('mammal_migration',       'Mammal – Migration / Herd'),
+        ('primate_behaviour',      'Primate – Social / Behaviour'),
+        ('bat_behaviour',          'Bat – Behaviour / Emergence'),
+        # ── Aquatic / Marine ───────────────────────────────────────────────────
+        ('dolphin_behaviour',      'Dolphin / Cetacean – Behaviour'),
+        ('marine',                 'Marine / Underwater'),
+        ('marine_migration',       'Marine – Migration / Shoaling'),
+        # ── Reptiles & Amphibians ──────────────────────────────────────────────
+        ('reptile_amphibian',      'Reptile / Amphibian – Behaviour'),
+        # ── Invertebrates ──────────────────────────────────────────────────────
+        ('butterfly_behaviour',    'Butterfly / Insect – Behaviour'),
+        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
+        # ── Environmental / Contextual ─────────────────────────────────────────
+        ('animals_in_environment', 'Animal in Habitat / Environment'),
+        ('urban_wildlife',         'Urban Wildlife'),
+        ('animal_portrait',        'Animal Portrait'),
+        ('macro_wildlife',         'Macro Wildlife'),
+    ],
+    'Nature': [
+        ('nature_flora',       'Flowers and Plants'),
+        ('nature_fungi',       'Fungi and Mosses'),
+        ('nature_ecosystem',   'Forests and Ecosystems'),
+        ('nature_weather',     'Weather – Storms, Lightning, Fog'),
+        ('nature_water',       'Rivers, Waterfalls and Water'),
+        ('nature_astro',       'Night Sky and Astronomy'),
+        ('nature_underwater',  'Underwater and Coral'),
+        ('nature_seasons',     'Seasons and Natural Change'),
+    ],
+    'Landscape': [
+        ('landscape_mountain', 'Mountains and Highlands'),
+        ('landscape_coast',    'Coastline and Seascape'),
+        ('landscape_desert',   'Desert and Arid'),
+        ('landscape_urban',    'Urban Skyline'),
+        ('landscape_rural',    'Rural and Agricultural'),
+        ('landscape_longexp',  'Long Exposure'),
+        ('landscape_minimal',  'Minimalist'),
+    ],
+    'Street': [
+        ('street_candid_single', 'Single Candid Subject'),
+        ('street_crowd',         'Crowd and Urban Energy'),
+        ('street_night',         'Night Street'),
+        ('street_architecture',  'Architecture Detail'),
+        ('street_market',        'Market and Commerce'),
+        ('street_transport',     'Transport and Movement'),
+    ],
     'People': [
         ('portrait_posed',    'Portrait – Posed / Studio'),
         ('portrait_cultural', 'Portrait – Cultural / Documentary'),
         ('portrait_candid',   'Portrait – Candid / Street'),
         ('lifestyle',         'Lifestyle / Editorial'),
         ('event_ceremony',    'Event / Ceremony'),
+        ('people_children',   'Children'),
     ],
-    'Wildlife': [
-        # ── Birds ──────────────────────────────────────────────────────────────
-        ('bird_in_flight',       'Bird – In Flight'),
-        ('bird_behaviour',       'Bird – Predation / Behaviour'),
-        ('bird_family',          'Bird – Family / Juvenile'),
-        ('bird_migration',       'Bird – Migration / Murmuration'),
-        # ── Mammals ────────────────────────────────────────────────────────────
-        ('mammal_behaviour',     'Mammal – Behaviour / Conflict'),
-        ('mammal_family',        'Mammal – Family / Juvenile'),
-        ('mammal_migration',     'Mammal – Migration / Herd'),
-        ('primate_behaviour',    'Primate – Social / Behaviour'),
-        ('bat_behaviour',        'Bat – Behaviour / Emergence'),
-        # ── Aquatic / Marine ───────────────────────────────────────────────────
-        ('dolphin_behaviour',    'Dolphin / Cetacean – Behaviour'),
-        ('marine',               'Marine / Underwater'),
-        ('marine_migration',     'Marine – Migration / Shoaling'),
-        # ── Reptiles & Amphibians ──────────────────────────────────────────────
-        ('reptile_amphibian',    'Reptile / Amphibian – Behaviour'),
-        # ── Invertebrates ──────────────────────────────────────────────────────
-        ('butterfly_behaviour',  'Butterfly / Insect – Behaviour'),
-        ('invertebrate_behaviour', 'Invertebrate – Behaviour'),
-        # ── Plants & Fungi ─────────────────────────────────────────────────────
-        ('flora',                'Flora / Botanical / Fungi'),
-        # ── Macro ──────────────────────────────────────────────────────────────
-        ('macro_wildlife',       'Macro Wildlife'),
-        # ── Environmental / Contextual ─────────────────────────────────────────
-        ('animals_in_environment', 'Animal in Habitat / Environment'),
-        ('urban_wildlife',       'Urban Wildlife'),
-        ('animal_portrait',      'Animal Portrait'),
+    'Wedding': [
+        ('wedding_ceremony',   'Ceremony'),
+        ('wedding_couple',     'Couple Portrait'),
+        ('wedding_reception',  'Reception and Celebration'),
+        ('wedding_candid',     'Candid Moments'),
+    ],
+    'Macro': [
+        ('macro_living',   'Living Subjects – Insects, Eyes, Skin'),
+        ('macro_natural',  'Natural Objects – Flowers, Seeds, Crystals'),
+        ('macro_manmade',  'Man-made Objects – Pen Nibs, Fabric, Circuits'),
+        ('macro_water',    'Water – Droplets, Splashes, Bubbles'),
+        ('macro_texture',  'Texture and Surface'),
+        ('macro_optical',  'Light and Optical Phenomena'),
+    ],
+    'Drone': [
+        ('drone_landscape', 'Landscape from Above'),
+        ('drone_urban',     'Urban and Architecture'),
+        ('drone_pattern',   'Patterns and Geometry'),
+        ('drone_coastal',   'Coastal and Water'),
+        ('drone_wildlife',  'Wildlife from Above'),
+    ],
+    'Creative': [
+        ('creative_icm',        'ICM and Intentional Blur'),
+        ('creative_longexp',    'Long Exposure and Light Trails'),
+        ('creative_multiexp',   'Multiple Exposure'),
+        ('creative_abstract',   'Abstract and Pattern'),
+        ('creative_astro',      'Astrophotography'),
+        ('creative_silhouette', 'Silhouette and Shadow'),
+    ],
+    'Documentary': [
+        ('doc_environment', 'Environment and Climate'),
+        ('doc_urban',       'City Systems and Urban Life'),
+        ('doc_health',      'Health and Medicine'),
+        ('doc_birth',       'Birth and New Life'),
+        ('doc_social',      'Social Issues – Poverty, Hunger, Displacement'),
+        ('doc_community',   'Community and Culture'),
+        ('doc_crisis',      'Crisis and Emergency'),
     ],
 }
 
 # Flat validation set — all valid sub_genre values across all genres.
-# Use for form validation: sub_genre in VALID_SUBGENRES
 VALID_SUBGENRES = {sg_id for sgs in SUBGENRE_MAP.values() for sg_id, _ in sgs}
 
 
@@ -148,7 +230,7 @@ def get_subgenres(genre: str) -> list:
 def normalise_genre(raw: str) -> str:
     """
     Map a raw genre string (from DB, form, or legacy data) to a canonical GENRE_IDS entry.
-    Handles legacy renames: 'Landscapes' → 'Landscape', 'Drone' → 'Drone & Aerial'.
+    Handles legacy renames and aliases.
     Falls back to 'Wildlife' if no match found.
     """
     if not raw:
@@ -159,8 +241,9 @@ def normalise_genre(raw: str) -> str:
         return clean
     # Legacy renames
     legacy = {
-        'Landscapes': 'Landscape',
-        'Drone':      'Drone & Aerial',
+        'Landscapes':    'Landscape',
+        'Drone & Aerial': 'Drone',
+        'Drone':         'Drone',
     }
     if clean in legacy:
         return legacy[clean]
@@ -175,7 +258,7 @@ def normalise_genre(raw: str) -> str:
 # ── Prize structures ──────────────────────────────────────────────────────────
 
 # POTY — ₹50,00,000 total
-# 16 competitions: 8 genres × 2 tracks (Camera + Mobile)
+# 20 competitions: 10 genres × 2 tracks (Camera + Mobile)
 # Grand POTY selected by jury from category Gold winners.
 #
 # Camera per category: Gold ₹1,50,000 / Silver ₹75,000 / Bronze ₹50,000 = ₹2,75,000 × 8 = ₹22L
