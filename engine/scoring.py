@@ -28,6 +28,7 @@ GENRE_WEIGHTS = {
     'Creative':    {'dod': 0.20, 'disruption': 0.30, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.15},
     'Drone':       {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
     'Documentary': {'dod': 0.20, 'disruption': 0.20, 'dm': 0.25, 'wonder': 0.25, 'aq': 0.10},
+    'Fashion':     {'dod': 0.15, 'disruption': 0.25, 'dm': 0.20, 'wonder': 0.20, 'aq': 0.20},
     # Legacy key — kept for backward compat with existing DB rows
     'Drone & Aerial': {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
 }
@@ -55,14 +56,20 @@ GENRE_LIST = [
     {
         'id':          'Street',
         'label':       'Street',
-        'description': 'Human life in public spaces — candid moments, urban energy, decisive moment',
-        'aliases':     ['street', 'urban', 'city', 'candid'],
+        'description': 'Life as it happens — public spaces, markets, villages, transit, anywhere people live and move. Not urban-specific.',
+        'aliases':     ['street', 'candid', 'public'],
     },
     {
         'id':          'People',
         'label':       'People',
         'description': 'Portraits, faces, human expression — emotional connection is the primary signal',
         'aliases':     ['people', 'portrait', 'portraits', 'lifestyle', 'editorial', 'cultural'],
+    },
+    {
+        'id':          'Fashion',
+        'label':       'Fashion',
+        'description': 'Editorial, conceptual, studio, and beauty — directed creative work where the image is an art-directed act',
+        'aliases':     ['fashion', 'editorial', 'beauty', 'conceptual portrait'],
     },
     {
         'id':          'Wedding',
@@ -160,20 +167,25 @@ SUBGENRE_MAP = {
         ('landscape_minimal',  'Minimalist'),
     ],
     'Street': [
-        ('street_candid_single', 'Single Candid Subject'),
-        ('street_crowd',         'Crowd and Urban Energy'),
-        ('street_night',         'Night Street'),
-        ('street_architecture',  'Architecture Detail'),
+        ('street_candid',        'Single Candid Subject'),
+        ('street_crowd',         'Crowd and Collective Energy'),
+        ('street_night',         'Night and Low Light'),
+        ('street_architecture',  'Architecture and Environment'),
         ('street_market',        'Market and Commerce'),
         ('street_transport',     'Transport and Movement'),
+        ('street_juxtaposition', 'Juxtaposition'),
+        ('street_reflection',    'Reflection'),
+        ('street_geometry',      'Geometry and Light/Shadow'),
+        ('street_silhouette',    'Silhouette'),
     ],
     'People': [
-        ('portrait_posed',    'Portrait – Posed / Studio'),
-        ('portrait_cultural', 'Portrait – Cultural / Documentary'),
-        ('portrait_candid',   'Portrait – Candid / Street'),
-        ('lifestyle',         'Lifestyle / Editorial'),
-        ('event_ceremony',    'Event / Ceremony'),
-        ('people_children',   'Children'),
+        ('portrait_posed',      'Portrait – Posed / Studio'),
+        ('portrait_cultural',   'Portrait – Cultural / Documentary'),
+        ('portrait_candid',     'Portrait – Candid / Street'),
+        ('lifestyle',           'Lifestyle / Editorial'),
+        ('lifestyle_intimate',  'Lifestyle – Intimate / Diary'),
+        ('event_ceremony',      'Event / Ceremony'),
+        ('people_children',     'Children'),
     ],
     'Wedding': [
         ('wedding_ceremony',   'Ceremony'),
@@ -203,6 +215,12 @@ SUBGENRE_MAP = {
         ('creative_abstract',   'Abstract and Pattern'),
         ('creative_astro',      'Astrophotography'),
         ('creative_silhouette', 'Silhouette and Shadow'),
+    ],
+    'Fashion': [
+        ('fashion_editorial', 'Editorial / Location'),
+        ('fashion_concept',   'Conceptual / Art-Directed'),
+        ('fashion_studio',    'Studio'),
+        ('fashion_beauty',    'Beauty / Detail'),
     ],
     'Documentary': [
         ('doc_environment', 'Environment and Climate'),
@@ -241,9 +259,10 @@ def normalise_genre(raw: str) -> str:
         return clean
     # Legacy renames
     legacy = {
-        'Landscapes':    'Landscape',
+        'Landscapes':     'Landscape',
         'Drone & Aerial': 'Drone',
-        'Drone':         'Drone',
+        'Drone':          'Drone',
+        'Fashion & Editorial': 'Fashion',
     }
     if clean in legacy:
         return legacy[clean]

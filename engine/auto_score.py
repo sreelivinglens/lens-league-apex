@@ -1585,11 +1585,12 @@ STREET_SUBGENRE_CONTEXT = {
 
     'street_candid': (
         "This is Street photography — sub-type: SINGLE CANDID SUBJECT.\n"
-        "One primary subject, unaware or in an unguarded public moment. "
+        "One primary subject, unaware or in an unguarded public moment — anywhere. "
+        "Village, market, beach, transit, street. Location is irrelevant. "
         "The photographer found a person and a context that said something together.\n\n"
-        "DoD: Score reaction speed, working in difficult or chaotic light, and "
+        "DoD: Score reaction speed, working in difficult or chaotic conditions, and "
         "the physical challenge of being present. PROXIMITY BONUS: Working at "
-        "close distance to an unaware subject in a public space scores DoD 6.5–7.5.\n\n"
+        "close distance to an unaware subject scores DoD 6.5–7.5.\n\n"
         "DM: Score the unrepeatable instant — expression, gesture, background "
         "alignment all at their peak simultaneously.\n\n"
         "Wonder: Score EYE WONDER primarily — what compositional or contextual "
@@ -1601,65 +1602,120 @@ STREET_SUBGENRE_CONTEXT = {
     ),
 
     'street_crowd': (
-        "This is Street photography — sub-type: CROWD AND URBAN ENERGY.\n"
-        "Multiple subjects, collective energy, urban density. "
-        "The crowd is the subject.\n\n"
+        "This is Street photography — sub-type: CROWD AND COLLECTIVE ENERGY.\n"
+        "Multiple subjects, collective energy, public gathering — market, festival, "
+        "transport hub, religious event, village celebration. Location is irrelevant.\n\n"
         "DoD: Score the challenge of finding order and narrative within chaos — "
-        "the right position, the right moment of crowd peak, clean separation "
+        "the right position, the right moment of collective peak, clean separation "
         "of key subjects from the mass.\n\n"
         "DM: Score the moment of maximum collective energy and narrative coherence — "
         "when the crowd tells a story in a single frame.\n\n"
         "Disruption: Score layered compositions, unexpected geometries within the "
         "crowd, and the use of colour, shadow, or reflection to organise chaos.\n\n"
         "Wonder: EYE WONDER — the compositional find within the crowd that makes "
-        "the image more than documentation. The single figure isolated in the mass, "
-        "the geometric accident, the colour contrast. Score 7.5–8.5."
+        "the image more than documentation. Score 7.5–8.5."
     ),
 
     'street_night': (
-        "This is Street photography — sub-type: NIGHT STREET.\n"
-        "Low light, artificial illumination, urban atmosphere after dark.\n\n"
-        "DoD: Score the technical management of mixed artificial light sources, "
-        "high ISO noise management, and the challenge of finding decisive moments "
-        "in environments with limited visibility.\n\n"
-        "DM: Score the moment when light, subject, and atmosphere align — "
-        "the figure stepping through a pool of neon, the rain reflection at its peak.\n\n"
-        "Wonder: EYE WONDER from the light — artificial light creating unexpected "
-        "colour and geometry in the urban environment."
+        "This is Street photography — sub-type: NIGHT AND LOW LIGHT.\n"
+        "Low light, available or artificial illumination, atmosphere after dark — "
+        "anywhere. A village fire, a market lamp, city neon. Light source is irrelevant.\n\n"
+        "DoD: Score the technical management of low light, high ISO noise, and the "
+        "challenge of decisive moments in low visibility conditions.\n\n"
+        "DM: Score the moment when light, subject, and atmosphere align.\n\n"
+        "Wonder: EYE WONDER from light — unexpected colour, geometry, or atmosphere "
+        "created by the available light source."
     ),
 
     'street_architecture': (
-        "This is Street photography — sub-type: ARCHITECTURE DETAIL.\n"
-        "Built environment as the primary subject — no human presence required. "
-        "Geometry, light, and the character of place.\n\n"
-        "DoD: Score the compositional precision required to isolate architectural "
-        "detail and the timing of the right light.\n\n"
+        "This is Street photography — sub-type: ARCHITECTURE AND ENVIRONMENT.\n"
+        "Built or natural environment as the primary subject — no human presence "
+        "required. A village wall, a temple gate, an industrial structure, a doorway. "
+        "Not landscape — the environment as a stage for life.\n\n"
+        "DoD: Score compositional precision and timing of the right light.\n\n"
         "DM: Score the moment of optimal light and geometry alignment.\n\n"
         "Wonder: EYE WONDER — geometric discoveries, unexpected scale, or light "
-        "behaviour that transforms the familiar building into something new."
+        "behaviour that transforms the familiar environment into something new."
     ),
 
     'street_market': (
         "This is Street photography — sub-type: MARKET AND COMMERCE.\n"
-        "Market, commerce, exchange, and the human activity of trade.\n\n"
-        "DoD: Score the chaos management, light management in covered market "
+        "Market, commerce, exchange, trade — anywhere people buy and sell. "
+        "Village market, roadside vendor, transit hub shop. Not urban-specific.\n\n"
+        "DoD: Score chaos management, difficult light in covered or outdoor market "
         "environments, and the timing of transaction peaks.\n\n"
-        "DM: Score the transaction moment — the exchange, the negotiation, the "
-        "moment of decision or pleasure.\n\n"
+        "DM: Score the transaction moment — the exchange, the negotiation, "
+        "the gesture of commerce.\n\n"
         "Wonder: CULTURAL WONDER and EYE WONDER equally — the market as a window "
         "into how a community lives and trades."
     ),
 
     'street_transport': (
         "This is Street photography — sub-type: TRANSPORT AND MOVEMENT.\n"
-        "Buses, trains, stations, vehicles — human movement through transit systems.\n\n"
-        "DoD: Score timing within fast-moving transport environments and the "
-        "challenge of finding decisive moments amid constant movement.\n\n"
-        "DM: Score the moment of peak human expression within transit — the departure "
-        "gesture, the arrival expression, the window portrait.\n\n"
+        "Buses, trains, boats, cycles, carts — human movement through any transit "
+        "system. Village bus stop, rural train station, city subway. All valid.\n\n"
+        "DoD: Score timing within fast-moving transit environments.\n\n"
+        "DM: Score the moment of peak human expression within transit — "
+        "the departure gesture, the arrival expression, the window portrait.\n\n"
         "Wonder: EYE WONDER from the juxtaposition of human life against the "
-        "geometry and colour of vehicles and transit infrastructure. "
-        "Score 7.5–8.5 when the Eye Wonder discovery is complete."
+        "colour, geometry, and motion of vehicles and transit. Score 7.5–8.5."
+    ),
+
+    'street_juxtaposition': (
+        "This is Street photography — sub-type: JUXTAPOSITION.\n"
+        "The image's meaning comes from an unexpected relationship between two "
+        "or more elements — a sign and a gesture, a shadow and its owner, a word "
+        "and a face, scale contrast, irony, or visual pun. Anywhere, any subject.\n\n"
+        "DoD: Score the photographer's patience and positioning — juxtapositions "
+        "require waiting for the right alignment or recognising it in a fraction "
+        "of a second. Score 6.5–8.0 depending on complexity of the find.\n\n"
+        "DM: Score the exact alignment — the fraction of a second when the "
+        "juxtaposition is most complete and most readable.\n\n"
+        "Wonder: EYE WONDER is the PRIMARY signal. Score 7.5–9.0 when the "
+        "juxtaposition creates genuine surprise, humour, or new meaning. "
+        "The DREAMGIRL bus and the elderly woman, the cow shadow on the wall, "
+        "the woman framed through the camel neck — these are Wonder 8.5–9.0."
+    ),
+
+    'street_reflection': (
+        "This is Street photography — sub-type: REFLECTION.\n"
+        "Mirrors, water, glass, polished surfaces — reflections that double, "
+        "distort, or layer the story. Car windows, shop fronts, puddles, handheld mirrors.\n\n"
+        "DoD: Score the compositional precision required to align the reflected "
+        "world with the real world into a coherent image. Score 7.0–8.5.\n\n"
+        "DM: Score the moment when the reflected and real elements are in their "
+        "most complete and most surprising alignment.\n\n"
+        "Wonder: EYE WONDER — the discovery of a reflected world that reveals "
+        "something the direct view cannot. Score 8.0–9.0 when the reflection "
+        "creates genuine visual complexity or surprise."
+    ),
+
+    'street_geometry': (
+        "This is Street photography — sub-type: GEOMETRY AND LIGHT/SHADOW.\n"
+        "Bold shapes, lines, angles, shadows — the graphic structure of the "
+        "physical world with human presence. Architecture, shadows, patterns, "
+        "light shafts. Village or city, natural or built.\n\n"
+        "DoD: Score the timing and positioning required to align the human "
+        "element with the geometric structure. Score 6.5–8.0.\n\n"
+        "DM: Score the moment when the human and geometric elements are in "
+        "their most resolved alignment — the figure at the exact geometric centre, "
+        "the shadow at maximum length.\n\n"
+        "Wonder: EYE WONDER — geometric discovery. Score 7.5–8.5 when the "
+        "compositional structure is original and complete."
+    ),
+
+    'street_silhouette': (
+        "This is Street photography — sub-type: SILHOUETTE.\n"
+        "Subject revealed by shape alone against a bright background — backlit, "
+        "against sky, in doorways, against lit surfaces. The absence of detail "
+        "creates mystery, graphic power, and universality.\n\n"
+        "DoD: Score the exposure precision required to render the silhouette "
+        "cleanly while holding background detail, and the timing of the "
+        "right gesture or shape.\n\n"
+        "DM: Score the gesture or shape at its most readable and most powerful — "
+        "the silhouette that tells the story through outline alone.\n\n"
+        "Wonder: EYE WONDER — the graphic discovery. Score 7.5–8.5 when the "
+        "silhouette creates a shape that is both specific and universal."
     ),
 }
 
@@ -2014,8 +2070,8 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
             lines.append("- Disruption: reward images that break from convention in their genre.")
             lines.append("- DO NOT penalise this image for lacking a human story.")
             lines.append("- DO NOT suggest the photographer missed a human moment.")
-            lines.append("- The NEXT field may note the genre label and suggest Documentary (City Systems)")
-            lines.append("  or Creative as a better fit — but frame it as an opportunity, not a mistake.")
+            lines.append("- The NEXT field may note the genre label and suggest Documentary (City Systems or")
+            lines.append("  Environment) or Creative as a better fit — but frame it as an opportunity, not a mistake.")
             lines.append("  Do not say the genre cost them points or capped the score.")
 
     return "\n".join(lines)
