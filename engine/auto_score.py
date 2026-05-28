@@ -12,6 +12,7 @@ import re
 import time as _time
 import httpx
 from PIL import Image as PILImage
+from engine.scoring import VALID_SUBGENRES
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-sonnet-4-6")
@@ -2216,7 +2217,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> 
 
     payload = {
         "model":       VISION_MODEL,
-        "max_tokens":  900,
+        "max_tokens":  1200,
         "temperature": 0.1,
         "system":      VISION_SYSTEM,
         "messages": [
