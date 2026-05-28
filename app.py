@@ -7173,9 +7173,9 @@ def contest_enter_monthly(genre):
             db.session.commit()
             flash(f'"{img.asset_name}" entered into {GENRE_LABELS.get(genre, genre)}  -  {track.title()} Track . {now.strftime("%B %Y")}.', 'success')
 
-        # Wildlife, Landscapes, Drone scoring >= 7.5 require RAW on POTY entry.
+        # High-scoring genres require RAW verification on POTY entry.
         # Weekly challenges are excluded — engagement-first, no prizes.
-        _raw_genres = {'Wildlife', 'Landscapes', 'Drone'}
+        _raw_genres = {'Wildlife', 'Nature', 'Landscapes', 'Landscape', 'Drone', 'Documentary'}
         if (genre in _raw_genres
                 and img.score is not None
                 and img.score >= 7.5
