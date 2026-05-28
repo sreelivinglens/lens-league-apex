@@ -2520,8 +2520,8 @@ def _build_progress_data(user):
         return None
 
     dim_labels = {
-        'dod': 'Detail', 'disruption': 'Disruption',
-        'dm': 'Moment', 'wonder': 'Wonder', 'aq': 'Authenticity'
+        'dod': 'Depth of Difficulty', 'disruption': 'Disruption',
+        'dm': 'Decisive Moment', 'wonder': 'Wonder Factor', 'aq': 'Aesthetic Quality'
     }
     dim_fields = {
         'dod': 'dod_score', 'disruption': 'disruption_score',
