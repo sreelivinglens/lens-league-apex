@@ -383,7 +383,7 @@ Return this exact JSON structure:
   "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
   "edit_base":     "<BASE EDITS — post-processing only. Specific technical adjustments: local exposure, dodging/burning, colour grading within the original palette. Tool-specific. 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
-  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>"
+  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -2019,6 +2019,69 @@ Answer each question based ONLY on what you can actually see:
 8. Is the primary subject sharp or soft?
 9. Is there any evidence the animal is captive? Look for: cage bars or mesh, enclosure walls, zoo signage, unnatural substrate (concrete, artificial grass), feeding troughs, unnaturally tame proximity to humans, identification tags or collars. Answer yes/no and describe evidence if present.
 
+SUB-GENRE DETECTION — examine the image's PRIMARY creative structure and select the
+most accurate sub-genre from the list below. This overrides the photographer's selection
+when they have filed under a generic or incorrect sub-type. Be precise — the sub-genre
+determines which scoring rubric is applied.
+
+CREATIVE sub-genres:
+  creative_minimalist — single recognisable subject in large negative space; tonal
+    relationship IS the statement; the reduction IS the creative act. A swan as
+    geometric form. A lone figure under vast sky. Subject clearly identifiable but
+    stripped of context.
+  creative_graphic — bold geometric shapes, strong tonal contrast, shadow patterns,
+    architectural forms as pure visual design. The image reads as design before subject.
+  creative_fineart — constructed, staged, or conceptually directed work. The photograph
+    was built, not found.
+  creative_icm — intentional camera movement; consistent directional blur across frame.
+  creative_longexp — long exposure: silky water, light trails, star trails.
+  creative_multiexp — multiple exposures layered as single statement.
+  creative_abstract — subject unrecognisable; pure colour, pattern, or texture.
+  creative_astro — night sky, Milky Way, star trails, lunar.
+  creative_silhouette — subject revealed by shape only; background pure tone.
+  creative_other — does not fit any above.
+
+WILDLIFE sub-genres (select when genre is Wildlife):
+  wildlife_bird_inflight — bird captured in flight, wings spread or mid-wingbeat
+  wildlife_bird_behaviour — specific behaviour: predation, feeding, display, conflict
+  wildlife_bird_portrait — bird static; perched, resting, or standing
+  wildlife_mammal_action — mammal in motion, predation, or conflict
+  wildlife_mammal_portrait — mammal static; environmental portrait
+  wildlife_reptile — reptile or amphibian as primary subject
+  wildlife_underwater — underwater subject
+  wildlife_insect — insect or spider as primary subject
+  wildlife_other — does not fit above
+
+STREET sub-genres (select when genre is Street):
+  street_candid — spontaneous human moment; no awareness of camera
+  street_crowd — multiple figures; crowd energy or density is the subject
+  street_geometry — architectural lines, shadows, urban geometry; human may be absent
+  street_juxtaposition — two elements in unexpected visual relationship
+  street_reflection — reflections in glass, water, or mirrors as primary element
+  street_silhouette — figure(s) as silhouette against light source
+  street_market — market, vendor, or commercial transaction
+  street_transport — vehicles, transit, movement
+  street_night — night street; artificial light as primary element
+  street_other — does not fit above
+
+PEOPLE sub-genres (select when genre is People):
+  portrait_candid — unposed; subject unaware or caught in natural moment
+  portrait_posed — subject aware and posed; cooperative portrait
+  portrait_cultural — subject's cultural identity, dress, or context is primary
+  lifestyle_environmental — person in their environment; context is the story
+  lifestyle_intimate — diary/documentary; trust and access are primary
+
+DOCUMENTARY sub-genres (select when genre is Documentary):
+  doc_social — daily life in social or economic hardship
+  doc_environment — environmental crisis, pollution, ecological damage
+  doc_community — community life, ritual, celebration
+  doc_health — medical, health crisis, caregiving
+  doc_crisis — emergency, disaster, conflict
+  doc_other — does not fit above
+
+For all other genres (Landscape, Nature, Wedding, Macro, Drone, Fashion) return the
+most specific matching sub-genre, or null if genuinely unclear.
+
 Return this exact JSON:
 {
   "subject_count": <integer>,
@@ -2040,7 +2103,9 @@ Return this exact JSON:
   "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
   "is_captive": <true if any captive indicators present, else false>,
-  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. Use 'Unknown' if genuinely unidentifiable.>"
+  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. Use 'Unknown' if genuinely unidentifiable.>",
+  "suggested_subgenre": "<most accurate sub-genre id from the lists above — e.g. 'creative_minimalist', 'wildlife_bird_behaviour', 'street_candid'. null if genre is Landscape/Nature/Wedding/Macro/Drone/Fashion and no clear sub-genre match.>",
+  "suggested_subgenre_reason": "<one sentence: what specific visual evidence leads to this sub-genre. e.g. 'Single swan in 60% negative space with tonal relationship as primary compositional statement.'>"
 }
 """
 
@@ -2151,7 +2216,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> 
 
     payload = {
         "model":       VISION_MODEL,
-        "max_tokens":  600,
+        "max_tokens":  900,
         "temperature": 0.1,
         "system":      VISION_SYSTEM,
         "messages": [
@@ -2193,7 +2258,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> 
                 text += block.get("text", "")
         text = re.sub(r"```json|```", "", text).strip()
         result = json.loads(text)
-        print(f"[vision_analyse] Scene: {result.get('behavioural_act','?')} | Subjects: {result.get('subject_count','?')} | Contact: {result.get('physical_contact_between_subjects','?')} | Bill/talons: {result.get('object_in_bill_or_talons','?')}")
+        print(f"[vision_analyse] Scene: {result.get('behavioural_act','?')} | Subjects: {result.get('subject_count','?')} | Contact: {result.get('physical_contact_between_subjects','?')} | Bill/talons: {result.get('object_in_bill_or_talons','?')} | SubGenre: {result.get('suggested_subgenre','?')}")
         return result
     except Exception as e:
         print(f"[vision_analyse] Failed ({e}) — scoring will proceed without scene description")
@@ -2334,8 +2399,21 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # This prevents the scorer from hallucinating scene content (e.g. describing
     # a two-bird conflict as a single-bird takeoff). The scene description is
     # injected as verified ground truth into the scoring prompt.
-    vision       = vision_analyse(img_data, media_type, title, subject)
+    vision        = vision_analyse(img_data, media_type, title, subject)
     scene_context = build_scene_context(vision, genre=genre)
+
+    # ── Sub-genre auto-routing ─────────────────────────────────────────────────
+    # Use vision's detected sub-genre to override the photographer's selection.
+    # This ensures the correct rubric is always applied regardless of what the
+    # photographer filed. The photographer's selection is kept as a hint only.
+    # Priority: vision detection > photographer selection > None
+    vision_subgenre = vision.get('suggested_subgenre') or None
+    if vision_subgenre and vision_subgenre in VALID_SUBGENRES:
+        effective_subgenre = vision_subgenre
+        if vision_subgenre != sub_genre:
+            print(f"[auto_score] Sub-genre override: photographer={sub_genre!r} → engine={vision_subgenre!r} ({vision.get('suggested_subgenre_reason','')[:60]})")
+    else:
+        effective_subgenre = sub_genre
 
     calibration_block = get_calibration_examples(genre)
     correction_block  = get_calibration_notes(genre)
@@ -2346,7 +2424,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         title                = title,
         subject              = subject or "Not specified",
         location             = location or "Not specified",
-        genre_context        = get_genre_context(genre, sub_genre=sub_genre),
+        genre_context        = get_genre_context(genre, sub_genre=effective_subgenre),
         scene_context        = scene_context,
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
@@ -2425,6 +2503,12 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
 
+    # Attach routing metadata so build_audit_data and callers can access it
+    result['_effective_subgenre']        = effective_subgenre
+    result['_photographer_subgenre']     = sub_genre
+    result['_subgenre_overridden']       = (vision_subgenre and vision_subgenre != sub_genre and vision_subgenre in VALID_SUBGENRES)
+    result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
+
     return result
 
 
@@ -2481,7 +2565,13 @@ def build_audit_data(result, image_obj):
     subject    = image_obj.subject or ""
     location   = image_obj.location or ""
 
-    genre_tag_label = f"{genre.upper()}  ·  {sub_genre.replace('_', ' ').upper()}" if sub_genre else genre.upper()
+    # Use engine-detected sub-genre for display if it overrode photographer's selection
+    effective_subgenre   = result.get('_effective_subgenre') or sub_genre
+    subgenre_overridden  = result.get('_subgenre_overridden', False)
+    vision_subgenre_reason = result.get('_vision_subgenre_reason', '')
+
+    display_subgenre = effective_subgenre or sub_genre
+    genre_tag_label  = f"{genre.upper()}  ·  {display_subgenre.replace('_', ' ').upper()}" if display_subgenre else genre.upper()
 
     return {
         "asset":                image_obj.asset_name or "Untitled",
@@ -2500,6 +2590,9 @@ def build_audit_data(result, image_obj):
         "edit_base":            result.get("edit_base", ""),
         "edit_creative":        result.get("edit_creative", ""),
         "genre_suggestion":     result.get("genre_suggestion", None),
+        "effective_subgenre":   effective_subgenre,
+        "subgenre_overridden":  subgenre_overridden,
+        "vision_subgenre_reason": vision_subgenre_reason,
         "modules": [
             ("DoD",        result.get("dod", 0)),
             ("Disruption", result.get("disruption", 0)),
