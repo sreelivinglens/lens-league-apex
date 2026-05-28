@@ -216,6 +216,29 @@
   </div>
   {% endif %}
 
+  {# ── Genre Insight banner ──────────────────────────────────────── #}
+  {% set audit_gi = image.get_audit() %}
+  {% if audit_gi and audit_gi.genre_suggestion and audit_gi.genre_suggestion.suggested_genre %}
+  <div id="genre-insight-banner" style="margin-bottom:24px; padding:20px 24px; background:var(--surface-2); border:2px solid var(--gold); border-radius:var(--radius-md); position:relative;">
+    <button onclick="document.getElementById('genre-insight-banner').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;" aria-label="Dismiss">×</button>
+    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Genre Insight</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:8px;">
+          {{ audit_gi.genre_suggestion.reason }}
+        </div>
+        {% if audit_gi.genre_suggestion.score_note %}
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">{{ audit_gi.genre_suggestion.score_note }}</div>
+        {% endif %}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0;">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">Try: {{ audit_gi.genre_suggestion.suggested_genre }}</div>
+        <a href="{{ url_for('upload') }}?genre={{ audit_gi.genre_suggestion.suggested_genre }}&sub_genre={{ audit_gi.genre_suggestion.suggested_subgenre or '' }}" class="btn btn-solid" style="font-size:14px;padding:10px 18px;white-space:nowrap;">Re-submit →</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {# ── Audit analysis rows ────────────────────────────────────────── #}
   {% set audit = image.get_audit() %}
   {% if audit and audit.rows %}
@@ -241,13 +264,13 @@
     {% endfor %}
     {% if audit.byline_2_body or audit.byline_2 %}
     <div style="margin-top:20px;padding:16px 20px;background:#2C3E6B;border-radius:var(--radius-md);">
-      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">The One Improvement</div>
+      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Creative Direction</div>
       <div style="font-size:16px;color:#ffffff;line-height:1.7;">{{ audit.byline_2_body or audit.byline_2 }}</div>
     </div>
     {% endif %}
     {% if audit.byline_1 %}
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Gap Analysis</div>
+      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next Image</div>
       <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     </div>
     {% endif %}
