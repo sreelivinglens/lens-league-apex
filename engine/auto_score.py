@@ -1160,7 +1160,7 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> 
         return {}
 
 
-def build_scene_context(vision: dict) -> str:
+def build_scene_context(vision: dict, genre: str = "") -> str:
     """
     Converts the vision_analyse() result into a ground-truth block
     injected into the scoring prompt. The scorer cannot contradict this.
@@ -1227,6 +1227,52 @@ def build_scene_context(vision: dict) -> str:
         lines.append("- Wonder MUST reflect that wildness and access difficulty are absent.")
         lines.append("- Do NOT score as if this is a wild encounter.")
 
+    # ── Street genre mismatch gate ────────────────────────────────────────────
+    # If the photographer submitted as Street but vision detects no human
+    # presence, the Street rubric (DM=25%, Wonder=15% weighted to human narrative)
+    # will systematically undervalue the image. Detect this and override.
+    if genre and genre.lower() == "street":
+        _human_terms = {
+            "person", "people", "man", "woman", "child", "boy", "girl",
+            "human", "pedestrian", "crowd", "figure", "photographer",
+            "vendor", "worker", "commuter", "cyclist", "rider",
+        }
+        subject_types = [str(s.get("type", "")).lower() for s in subjects]
+
+        def _positive_human(text):
+            """True if a human term appears in text and is not negated."""
+            for term in _human_terms:
+                pattern = r'\b' + term + r'\b'
+                for m in re.finditer(pattern, text):
+                    ctx = text[max(0, m.start() - 20):m.start()]
+                    if not re.search(r'\b(?:no|without|absent|empty)\s*$', ctx.strip()):
+                        return True
+            return False
+
+        has_human = (
+            any(_positive_human(t) for t in subject_types) or
+            _positive_human(summary.lower())
+        )
+
+        if not has_human:
+            lines.append("")
+            lines.append("GENRE MISMATCH DETECTED — STREET WITHOUT HUMAN PRESENCE:")
+            lines.append("- Vision analysis confirms NO human subjects in this image.")
+            lines.append("- The Street rubric (human narrative, decisive urban moment, social context)")
+            lines.append("  does not apply to this image. Scoring against it will produce a false low.")
+            lines.append("- OVERRIDE: Score DM and Wonder against Creative/atmospheric rubric instead:")
+            lines.append("  DM — score the quality of the compositional decision and the moment of")
+            lines.append("       atmospheric or structural peak, not the absence of a human moment.")
+            lines.append("  Wonder — score visual impact, sculptural quality, and the image's power")
+            lines.append("           to stop the viewer, not human emotional narrative.")
+            lines.append("- DoD and AQ: score normally — no change.")
+            lines.append("- Disruption: reward images that break from convention in their genre.")
+            lines.append("- DO NOT penalise this image for lacking a human story.")
+            lines.append("- DO NOT suggest the photographer missed a human moment.")
+            lines.append("- The NEXT field may note the genre label and suggest Creative or Landscape")
+            lines.append("  as a better fit — but frame it as an opportunity, not a mistake.")
+            lines.append("  Do not say the genre cost them points or capped the score.")
+
     return "\n".join(lines)
 
 
@@ -1249,7 +1295,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # a two-bird conflict as a single-bird takeoff). The scene description is
     # injected as verified ground truth into the scoring prompt.
     vision       = vision_analyse(img_data, media_type, title, subject)
-    scene_context = build_scene_context(vision)
+    scene_context = build_scene_context(vision, genre=genre)
 
     calibration_block = get_calibration_examples(genre)
     correction_block  = get_calibration_notes(genre)
