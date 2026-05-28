@@ -1342,6 +1342,52 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     return result
 
 
+def _species_display(species_id):
+    """
+    Convert a full vision species ID to a display-safe common family name.
+    Rules (Session 37 spec):
+      - Gate: return None if species_id is empty, generic, or uncertain
+      - Display: strip leading adjectives to return family common name only
+        e.g. "Great Cormorant" → "Cormorant"
+             "Indian Kingfisher" → "Kingfisher"
+             "Bengal Tiger" → "Tiger"
+             "Spotted Deer" → "Deer"
+      - Never show Latin binomials or subspecies strings
+    """
+    if not species_id:
+        return None
+
+    # Gate: uncertain / generic terms — hide card entirely
+    _generic = {
+        'bird', 'birds', 'animal', 'animals', 'plant', 'plants',
+        'unknown', 'unidentified', 'unidentifiable', 'creature',
+        'insect', 'fish', 'mammal', 'reptile', 'amphibian',
+        'object', 'subject', 'wildlife', 'nature', 'null', 'none',
+    }
+    _lower = species_id.strip().lower()
+    if _lower in _generic:
+        return None
+    # Also gate on very short strings (< 4 chars) and anything with Latin format (Genus species)
+    import re as _re
+    if len(_lower) < 4:
+        return None
+    if _re.match(r'^[A-Z][a-z]+ [a-z]+$', species_id.strip()):
+        # Looks like a Latin binomial — do not show
+        return None
+
+    # Extract family common name: take the LAST capitalised word
+    # "Great Indian Hornbill" → "Hornbill"
+    # "Indian Kingfisher" → "Kingfisher"
+    # "Bengal Tiger" → "Tiger"
+    # "Flamingo" → "Flamingo" (already family name)
+    words = species_id.strip().split()
+    # Find last meaningful capitalised word
+    family = words[-1] if words else species_id
+    # Handle possessives / trailing punctuation
+    family = family.rstrip('.,;:)')
+    return family if family else None
+
+
 def build_audit_data(result, image_obj):
     genre      = image_obj.genre or "Wildlife"
     sub_genre  = getattr(image_obj, 'sub_genre', None) or ""
@@ -1364,6 +1410,7 @@ def build_audit_data(result, image_obj):
         "iucn_tag":             result.get("iucn_tag"),
         "hard_truth":           result.get("hard_truth", ""),
         "species_id":           result.get("species_id", ""),
+        "species_display":      _species_display(result.get("species_id", "")),
         "edit_base":            result.get("edit_base", ""),
         "edit_creative":        result.get("edit_creative", ""),
         "modules": [
