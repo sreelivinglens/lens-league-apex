@@ -141,7 +141,9 @@ WF (Wonder Factor):
   The subject is not rare — the seeing is.
   Eye Wonder scores 8.0–9.0 when the compositional discovery is complete and unrepeatable.
   Eye Wonder scores 9.0–9.5 when the find is singular — the image that could only exist
-  once, in that place, in that light, at that instant.
+  once, in that place, in that light, at that instant. International award-winning
+  compositional finds (WSPA, Sony World Photography, similar) score 9.0–9.5.
+  DO NOT default to the bottom of this range. Score what the image actually achieved.
 
   ACCESS WONDER: The photographer was somewhere or trusted by someone that most
   photographers never reach. Working inside a toxic kiln with labourers. A close portrait
@@ -187,6 +189,9 @@ AQ (Affective Quotient):
   AQ SCORING SCALE:
   9.0–10.0: A specific, powerful emotion that is undeniable and lingers after
     looking away. The viewer cannot remain neutral. The feeling is singular.
+    Award-winning work where the emotional register is the primary achievement.
+    DO NOT reserve this range only for People/Wedding — minimalist, landscape,
+    and street images can score 9.0+ AQ when the emotional register is complete.
   8.0–8.9:  A clear, specific emotion that lands. The viewer feels something
     definite — loneliness, joy, unease, awe, tenderness, defiance.
   7.0–7.9:  Emotional content present but not fully resolved. The image suggests
@@ -195,6 +200,9 @@ AQ (Affective Quotient):
   6.0–6.9:  Minimal emotional content. Technically competent but emotionally neutral.
     The viewer admires the craft without feeling anything.
   Below 6.0: No emotional content. Pure documentation or failed execution.
+  CRITICAL: DO NOT default to the middle of any range. Score what the image
+  actually achieves. An image that genuinely creates suspension, void, stillness
+  as a complete emotional statement scores AQ 9.0+.
 
   PER-GENRE EMOTIONAL VOCABULARY — name the specific emotion from this list
   or use your own specific language:
@@ -234,6 +242,10 @@ CALIBRATION NOTES:
 - For Creative and technique-detected images: TECHNIQUE WINS
 - Award-winning images should reach Grandmaster (9.0+) when Wonder and AQ
   both reflect the genuine emotional achievement of the work
+- DO NOT default to the bottom or middle of any scoring range. A range of
+  8.0–9.5 means some images score 8.0 and some score 9.5 — evaluate honestly.
+- WSPA Photographer of the Year, Sony World Photography, and equivalent
+  international award-winning images score 9.0+ in the correct genre.
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
 """
@@ -1810,30 +1822,49 @@ CREATIVE_SUBGENRE_CONTEXT = {
     'creative_minimalist': (
         "This is Creative photography — sub-type: MINIMALIST.\n"
         "A real, recognisable subject reduced to its essential form. Negative space "
-        "IS the composition. Tonal relationship IS the statement. The subject is "
-        "clearly identifiable but stripped of context — the creative act is the "
-        "reduction, not the technique. A swan as geometric punctuation. A lone figure "
-        "under vast sky. A single tree in snow. A boat on still water.\n\n"
-        "DoD: Score the compositional DECISION — finding the exact relationship "
-        "between subject, negative space, and tonal field that makes the image work. "
-        "This requires vision and patience, not technical complexity. The deliberate "
-        "choice to strip everything away and commit to simplicity is the difficulty. "
-        "Score 6.0–8.5 depending on the precision of the reduction.\n\n"
+        "IS the composition. Tonal relationship IS the statement. The creative act "
+        "is the reduction — the vision to strip everything away and commit to "
+        "simplicity. A swan as geometric punctuation. A lone figure under vast sky. "
+        "A single tree in snow. A boat on still water.\n\n"
+        "CRITICAL SCORING NOTE: Minimalist images are systematically underscored "
+        "when DoD and Disruption are evaluated against conventional criteria. "
+        "Apply the following corrections:\n\n"
+        "DoD: The compositional DECISION is the difficulty. Finding the exact "
+        "relationship between subject, negative space, and tonal field — the "
+        "patience to wait for the right geometry, the technical precision to "
+        "render white plumage against near-black water without clipping either, "
+        "the deliberate choice of angle and focal length that makes the reduction "
+        "work — this is DoD 8.0–9.0 for precisely executed minimalist work. "
+        "Score 8.5+ when the technical execution serves the reduction perfectly "
+        "with no element fighting for attention.\n\n"
+        "Disruption: A living subject (animal, person) treated as pure geometric "
+        "form goes against EVERY convention of its subject genre. A swan as "
+        "geometric study instead of wildlife portrait. A figure as negative space "
+        "anchor instead of human subject. This genre violation IS maximum "
+        "disruption — score 8.5–9.5. The more completely the reduction breaks "
+        "from the expected treatment of that subject, the higher the score.\n\n"
         "DM: Score the exact moment when the subject is in its most resolved "
-        "relationship with the frame — the precise position of the neck curve, "
-        "the exact angle that makes the negative space work. Half a second earlier "
-        "or later and the geometry is different.\n\n"
-        "Disruption: Score how far this image departs from conventional treatment "
-        "of this subject. A swan photographed as a geometric study, not a wildlife "
-        "portrait — that IS disruption. Score 7.0–8.5 when the minimalist approach "
-        "is genuinely unexpected for the subject.\n\n"
-        "Wonder: EYE WONDER is the primary signal. Score the transformation of the "
-        "familiar into the singular — a common subject made uncommon by the seeing. "
-        "The swan is everywhere; this image is not. Score 7.5–9.0 when the reduction "
-        "reveals something about the subject that the conventional view cannot.\n\n"
-        "AQ: Score the tonal precision — the exact relationship between subject tones "
-        "and negative space tones. Minimalist AQ rewards images where every tonal "
-        "decision serves the reduction. No element fights for attention."
+        "geometric relationship with the frame. Half a second earlier or later "
+        "and the geometry changes. For minimalist work, the decisive moment is "
+        "the instant of perfect resolution — score 8.0–9.0.\n\n"
+        "Wonder: EYE WONDER is the primary signal. Score the transformation of "
+        "the familiar into the singular. The swan is everywhere — this image is "
+        "not. Score 8.5–9.5 when the reduction reveals something about the "
+        "subject that the conventional view cannot. Score 9.0–9.5 for images "
+        "that have won or would win international awards — the singular find "
+        "that could only exist once, in that light, at that moment.\n\n"
+        "AQ: Score the specific emotional register the minimalist reduction creates. "
+        "Stillness. Suspension. The space between things. Absence as presence. "
+        "Void. Clarity. The image that lingers because it removed everything "
+        "except the essential truth. Score 8.5–9.5 when the emotional register "
+        "is specific and complete. Score 9.0+ when the feeling is undeniable "
+        "and stays with the viewer after they look away.\n\n"
+        "AWARD-LEVEL CALIBRATION: International award-winning minimalist work "
+        "(WSPA Photographer of Year, Sony World Photography, similar) should "
+        "score Grandmaster (9.0+). If the image has: precise technical execution "
+        "(DoD 8.5+), genuine genre disruption (Dis 8.5+), perfect geometric "
+        "resolution (DM 8.0+), singular Eye Wonder (Wonder 9.0+), and a specific "
+        "named emotional register (AQ 9.0+) — the score must reach 9.0+."
     ),
 
     'creative_graphic': (
@@ -1844,15 +1875,18 @@ CREATIVE_SUBGENRE_CONTEXT = {
         "Architectural pattern. The image reads as design before it reads as subject.\n\n"
         "DoD: Score the compositional precision required to find and frame the graphic "
         "structure — the exact position that makes the geometry work, the timing of "
-        "light that reveals the shape. Score 6.0–8.0.\n\n"
+        "light that reveals the shape. Score 7.0–9.0 for precisely executed graphic work.\n\n"
         "DM: Score the moment of maximum graphic resolution — when the shapes, "
         "tones, and any human element are in their most complete visual relationship.\n\n"
         "Disruption: Score the visual impact of the graphic statement. Bold, "
         "unexpected, visually arresting — the image that reads from across the room. "
-        "Score 7.0–9.0 for strong graphic work.\n\n"
+        "Score 8.0–9.5 for strong graphic work that genuinely stops the viewer.\n\n"
         "Wonder: EYE WONDER — the graphic discovery. The shadow pattern that creates "
         "a second subject. The architectural geometry that frames the human. "
-        "Score 7.5–8.5 when the graphic find is original and complete."
+        "Score 8.0–9.5 when the graphic find is original, complete, and singular.\n\n"
+        "AQ: Score the specific feeling the graphic structure creates — tension, "
+        "order, unease, power, clarity. Score 8.5–9.5 when the emotional register "
+        "of the graphic statement is specific and undeniable."
     ),
 
     'creative_fineart': (
