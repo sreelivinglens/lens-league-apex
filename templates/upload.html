@@ -602,19 +602,19 @@
   }
 
   const genreHints = {
-    'Creative':       '🎨 Abstract · ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Experimental. If your image is technique-driven or non-literal, choose Creative.',
-    'Drone':          '🚁 Aerial photography. Geometric patterns, altitude perspectives, and structures only visible from above score highest.',
+    'Creative':       '🎨 Abstract · ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Minimalist · Graphic · Fine Art. Technique-driven or form-driven work. Wonder and AQ score highest.',
+    'Drone':          '🚁 Aerial photography. Wonder and emotional scale score highest — the feeling of altitude and the impossibility of the perspective.',
     'Drone & Aerial': '🚁 Aerial photography. Geometric patterns score highest.',
-    'Wildlife':       '🦁 Animals in natural behaviour. Rare behaviour scores highest. Select a sub-type for more precise scoring.',
-    'Street':         '🚶 Life as it happens — village, market, beach, transit, anywhere. Candid moments, juxtaposition, reflection, geometry, silhouette. Not urban-specific.',
-    'Fashion':        '👗 Editorial · Conceptual · Studio · Beauty. Directed, art-directed, or concept-driven work.',
-    'Landscape':      '🌄 Land, sea, or sky as the primary subject. Light quality, patience, and compositional control.',
+    'Wildlife':       '🦁 Animals in natural behaviour. Wonder and the felt connection between viewer and subject score highest. Select a sub-type for more precise scoring.',
+    'Street':         '🚶 Life as it happens — village, market, beach, transit, anywhere. Emotional truth and Eye Wonder score highest. Not urban-specific.',
+    'Fashion':        '👗 Editorial · Conceptual · Studio · Beauty. The psychological tension the image creates scores highest.',
+    'Landscape':      '🌄 Land, sea, or sky as the primary subject. The feeling of presence — being transported somewhere — scores highest.',
     'Landscapes':     '🌄 Light quality, composition, patience.',
-    'Macro':          '🔬 Extreme close-up — any subject. A pen nib, a cloth fibre, an insect eye, a water droplet. Precision at high magnification IS the score.',
-    'Wedding':        '💍 Genuine unscripted emotion scores highest.',
-    'People':         '👤 Portraits, faces, human expression. Emotional connection and AQ are the dominant signals.',
-    'Nature':         '🌿 Plants · Fungi · Ecosystems · Weather · Rivers · Night Sky · Coral. The natural world beyond animals in behaviour. Wonder is the primary signal.',
-    'Documentary':    '📷 You witnessed something — an event, a condition, a story. Health · Birth · Crisis · Environment · Social Issues · Community. Truth over polish.',
+    'Macro':          '🔬 Extreme close-up — any subject. The revelation feeling — awe at the existence of the structure revealed — scores highest.',
+    'Wedding':        '💍 Ceremonies and celebrations. Genuine unrepeatable human emotion scores highest. AQ is the dominant signal at 45%.',
+    'People':         '👤 Portraits, faces, human expression. Name the specific emotion — loneliness, joy, defiance, tenderness. AQ is the dominant signal at 45%.',
+    'Nature':         '🌿 Plants · Fungi · Ecosystems · Weather · Rivers · Night Sky · Coral. Ecological wonder and the feeling of awe score highest.',
+    'Documentary':    '📷 You witnessed something. Emotional truth and moral weight score highest. The image that makes the viewer feel the weight of what it documents.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
