@@ -18,19 +18,19 @@ Genres (10 confirmed):
 # ── Genre weights ─────────────────────────────────────────────────────────────
 # Keys must match GENRE_LIST ids exactly.
 GENRE_WEIGHTS = {
-    'Wildlife':    {'dod': 0.22, 'disruption': 0.13, 'dm': 0.28, 'wonder': 0.25, 'aq': 0.12},
-    'Nature':      {'dod': 0.15, 'disruption': 0.13, 'dm': 0.15, 'wonder': 0.35, 'aq': 0.22},
-    'Landscape':   {'dod': 0.15, 'disruption': 0.15, 'dm': 0.13, 'wonder': 0.30, 'aq': 0.27},
-    'Street':      {'dod': 0.10, 'disruption': 0.18, 'dm': 0.20, 'wonder': 0.25, 'aq': 0.27},
-    'Wedding':     {'dod': 0.08, 'disruption': 0.12, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.45},
-    'People':      {'dod': 0.08, 'disruption': 0.17, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.45},
-    'Macro':       {'dod': 0.28, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.25, 'aq': 0.16},
-    'Creative':    {'dod': 0.15, 'disruption': 0.22, 'dm': 0.13, 'wonder': 0.25, 'aq': 0.25},
-    'Drone':       {'dod': 0.25, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.28, 'aq': 0.16},
-    'Documentary': {'dod': 0.15, 'disruption': 0.12, 'dm': 0.23, 'wonder': 0.28, 'aq': 0.22},
-    'Fashion':     {'dod': 0.12, 'disruption': 0.22, 'dm': 0.18, 'wonder': 0.22, 'aq': 0.26},
+    'Wildlife':    {'dod': 0.20, 'disruption': 0.12, 'dm': 0.27, 'wonder': 0.26, 'aq': 0.15},
+    'Nature':      {'dod': 0.13, 'disruption': 0.11, 'dm': 0.13, 'wonder': 0.37, 'aq': 0.26},
+    'Landscape':   {'dod': 0.13, 'disruption': 0.12, 'dm': 0.11, 'wonder': 0.32, 'aq': 0.32},
+    'Street':      {'dod': 0.08, 'disruption': 0.13, 'dm': 0.17, 'wonder': 0.30, 'aq': 0.32},
+    'Wedding':     {'dod': 0.07, 'disruption': 0.09, 'dm': 0.22, 'wonder': 0.10, 'aq': 0.52},
+    'People':      {'dod': 0.07, 'disruption': 0.13, 'dm': 0.12, 'wonder': 0.16, 'aq': 0.52},
+    'Macro':       {'dod': 0.26, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.27, 'aq': 0.19},
+    'Creative':    {'dod': 0.12, 'disruption': 0.18, 'dm': 0.10, 'wonder': 0.30, 'aq': 0.30},
+    'Drone':       {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
+    'Documentary': {'dod': 0.13, 'disruption': 0.09, 'dm': 0.20, 'wonder': 0.33, 'aq': 0.25},
+    'Fashion':     {'dod': 0.10, 'disruption': 0.20, 'dm': 0.16, 'wonder': 0.24, 'aq': 0.30},
     # Legacy key — kept for backward compat with existing DB rows
-    'Drone & Aerial': {'dod': 0.25, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.28, 'aq': 0.16},
+    'Drone & Aerial': {'dod': 0.23, 'disruption': 0.16, 'dm': 0.12, 'wonder': 0.30, 'aq': 0.19},
 }
 
 # ── Genre list (canonical — used by forms, DB, and prize logic) ───────────────
@@ -422,15 +422,25 @@ def calculate_score(genre, dod, disruption, dm, wonder, aq):
         notes.append('Plateau Penalty: DoD >= 9.5 + Disruption < 5.0, score capped at 7.9')
         raw = min(raw, 7.9)
 
-    # Iconic Wall: scores >= 9.0 require Disruption > 8.5 AND AQ > 8.5
+    # Iconic Wall: scores >= 9.0 require at least TWO dimensions above 8.5
+    # AND Wonder >= 8.5 OR AQ >= 8.5 (emotional content must be present)
+    dims_above_85 = sum(1 for d in [dod, disruption, dm, wonder, aq] if d > 8.5)
     if raw >= 9.0:
-        if disruption <= 8.5 or aq <= 8.5:
+        if dims_above_85 < 2 or (wonder <= 8.5 and aq <= 8.5):
             checks['iconic_wall_blocked'] = True
             raw = min(raw, 8.99)
             notes.append('Iconic Wall: score capped at 8.99')
         else:
             checks['iconic_wall_cleared'] = True
             notes.append('Iconic Wall cleared')
+
+    # Excellence Bonus: Wonder >= 9.5 AND AQ >= 9.5 simultaneously
+    # Fires only for the rarest work — singular visual find + undeniable emotion
+    # IPA, WSPA, Sony World Photography POTY level
+    if wonder >= 9.5 and aq >= 9.5:
+        raw += 0.15
+        checks['excellence_bonus'] = True
+        notes.append('Excellence Bonus: Wonder >= 9.5 AND AQ >= 9.5 (+0.15)')
 
     raw = min(raw, 9.9)
     # Round to 2dp to avoid float artefacts pushing scores across tier boundaries

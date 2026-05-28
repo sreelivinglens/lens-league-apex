@@ -34,17 +34,17 @@ FORMULA:
 LL-Score = (DoD × weight) + (Disruption × weight) + (DM × weight) + (Wonder × weight) + (AQ × weight)
 
 GENRE WEIGHTS:
-Wildlife:     DoD=22% Disruption=13% DM=28% Wonder=25% AQ=12%
-Nature:       DoD=15% Disruption=13% DM=15% Wonder=35% AQ=22%
-Landscape:    DoD=15% Disruption=15% DM=13% Wonder=30% AQ=27%
-Street:       DoD=10% Disruption=18% DM=20% Wonder=25% AQ=27%
-Wedding:      DoD=8%  Disruption=12% DM=25% Wonder=10% AQ=45%
-People:       DoD=8%  Disruption=17% DM=15% Wonder=15% AQ=45%
-Macro:        DoD=28% Disruption=18% DM=13% Wonder=25% AQ=16%
-Creative:     DoD=15% Disruption=22% DM=13% Wonder=25% AQ=25%
-Drone:        DoD=25% Disruption=18% DM=13% Wonder=28% AQ=16%
-Documentary:  DoD=15% Disruption=12% DM=23% Wonder=28% AQ=22%
-Fashion:      DoD=12% Disruption=22% DM=18% Wonder=22% AQ=26%
+Wildlife:     DoD=20% Disruption=12% DM=27% Wonder=26% AQ=15%
+Nature:       DoD=13% Disruption=11% DM=13% Wonder=37% AQ=26%
+Landscape:    DoD=13% Disruption=12% DM=11% Wonder=32% AQ=32%
+Street:       DoD=8%  Disruption=13% DM=17% Wonder=30% AQ=32%
+Wedding:      DoD=7%  Disruption=9%  DM=22% Wonder=10% AQ=52%
+People:       DoD=7%  Disruption=13% DM=12% Wonder=16% AQ=52%
+Macro:        DoD=26% Disruption=16% DM=12% Wonder=27% AQ=19%
+Creative:     DoD=12% Disruption=18% DM=10% Wonder=30% AQ=30%
+Drone:        DoD=23% Disruption=16% DM=12% Wonder=30% AQ=19%
+Documentary:  DoD=13% Disruption=9%  DM=20% Wonder=33% AQ=25%
+Fashion:      DoD=10% Disruption=20% DM=16% Wonder=24% AQ=30%
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
 If genre = 'Creative':
@@ -234,6 +234,11 @@ APEX LAYER RULES:
 - Humanity Check: AQ < 4.0 adds -1.5 penalty to AQ
 - Iconic Wall: score >= 9.0 requires at least TWO dimensions above 8.5,
   AND Wonder >= 8.5 OR AQ >= 8.5 (emotional content must be present)
+- Excellence Bonus: Wonder >= 9.5 AND AQ >= 9.5 simultaneously adds +0.15
+  to the final score. This fires ONLY when both the singular visual find
+  AND the undeniable emotional truth are present in the same image.
+  IPA, WSPA, Sony World Photography POTY level work should trigger this bonus.
+  DO NOT apply if either Wonder or AQ is below 9.5.
 - Plateau Penalty: DoD >= 9.5 + Disruption < 5.0 caps at 7.9
 - Identity Cap: >85% similarity to known winner caps at 6.0
 - 10.0 never awarded
