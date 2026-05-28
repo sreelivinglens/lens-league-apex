@@ -119,12 +119,21 @@ DoD (Depth of Difficulty):
   Creative: See STEP 0 above.
 
 VD (Visual Disruption):
-  Evaluate against global photographic database.
+  Evaluate against global photographic database — how far does this image
+  depart from the conventional treatment of its subject?
   Intentional blur, painterly rendering, multiple reflections, layered
   transparencies, drone geometry, unconventional framing = HIGH Disruption.
   For Drone: patterns only visible from altitude score very high.
   For Creative: layered blur mosaics and atmospheric abstractions that
   create an entirely new visual language score HIGHEST.
+  For Crisis/Documentary: smoke, chaos, physical danger as the visual
+  environment, unconventional framing from being inside the event rather
+  than observing it — these ARE high Disruption. An image made inside
+  active conflict, protest smoke, or disaster zone scores Disruption 8.0–9.0.
+  Being physically present in danger changes the visual language entirely.
+  DO NOT score crisis documentary Disruption against studio or street
+  photography standards. Score against what most photographers would
+  never attempt or be present for.
 
 DM (Decisive Moment):
   Multiple variables at peak simultaneously.
