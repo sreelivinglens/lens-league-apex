@@ -18,19 +18,19 @@ Genres (10 confirmed):
 # ── Genre weights ─────────────────────────────────────────────────────────────
 # Keys must match GENRE_LIST ids exactly.
 GENRE_WEIGHTS = {
-    'Wildlife':    {'dod': 0.25, 'disruption': 0.15, 'dm': 0.30, 'wonder': 0.20, 'aq': 0.10},
-    'Nature':      {'dod': 0.20, 'disruption': 0.15, 'dm': 0.20, 'wonder': 0.30, 'aq': 0.15},
-    'Landscape':   {'dod': 0.20, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.20},
-    'Street':      {'dod': 0.15, 'disruption': 0.25, 'dm': 0.25, 'wonder': 0.15, 'aq': 0.20},
-    'Wedding':     {'dod': 0.10, 'disruption': 0.15, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.40},
-    'People':      {'dod': 0.10, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.40},
-    'Macro':       {'dod': 0.35, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.10},
-    'Creative':    {'dod': 0.20, 'disruption': 0.30, 'dm': 0.15, 'wonder': 0.20, 'aq': 0.15},
-    'Drone':       {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
-    'Documentary': {'dod': 0.20, 'disruption': 0.20, 'dm': 0.25, 'wonder': 0.25, 'aq': 0.10},
-    'Fashion':     {'dod': 0.15, 'disruption': 0.25, 'dm': 0.20, 'wonder': 0.20, 'aq': 0.20},
+    'Wildlife':    {'dod': 0.22, 'disruption': 0.13, 'dm': 0.28, 'wonder': 0.25, 'aq': 0.12},
+    'Nature':      {'dod': 0.15, 'disruption': 0.13, 'dm': 0.15, 'wonder': 0.35, 'aq': 0.22},
+    'Landscape':   {'dod': 0.15, 'disruption': 0.15, 'dm': 0.13, 'wonder': 0.30, 'aq': 0.27},
+    'Street':      {'dod': 0.10, 'disruption': 0.18, 'dm': 0.20, 'wonder': 0.25, 'aq': 0.27},
+    'Wedding':     {'dod': 0.08, 'disruption': 0.12, 'dm': 0.25, 'wonder': 0.10, 'aq': 0.45},
+    'People':      {'dod': 0.08, 'disruption': 0.17, 'dm': 0.15, 'wonder': 0.15, 'aq': 0.45},
+    'Macro':       {'dod': 0.28, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.25, 'aq': 0.16},
+    'Creative':    {'dod': 0.15, 'disruption': 0.22, 'dm': 0.13, 'wonder': 0.25, 'aq': 0.25},
+    'Drone':       {'dod': 0.25, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.28, 'aq': 0.16},
+    'Documentary': {'dod': 0.15, 'disruption': 0.12, 'dm': 0.23, 'wonder': 0.28, 'aq': 0.22},
+    'Fashion':     {'dod': 0.12, 'disruption': 0.22, 'dm': 0.18, 'wonder': 0.22, 'aq': 0.26},
     # Legacy key — kept for backward compat with existing DB rows
-    'Drone & Aerial': {'dod': 0.30, 'disruption': 0.20, 'dm': 0.15, 'wonder': 0.25, 'aq': 0.10},
+    'Drone & Aerial': {'dod': 0.25, 'disruption': 0.18, 'dm': 0.13, 'wonder': 0.28, 'aq': 0.16},
 }
 
 # ── Genre list (canonical — used by forms, DB, and prize logic) ───────────────

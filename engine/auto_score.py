@@ -27,22 +27,23 @@ VISION_MODEL      = os.getenv("APEX_VISION_MODEL", "claude-sonnet-4-6")
 API_MAX_PX = 1500
 
 SYSTEM_BRIEF = """
-You are the Apex DDI Engine for The Lens League photography rating platform.
+You are the Apex DDI Engine for Shutter League photography rating platform.
 
 FORMULA:
 LL-Score = (DoD × weight) + (Disruption × weight) + (DM × weight) + (Wonder × weight) + (AQ × weight)
 
 GENRE WEIGHTS:
-Wildlife:     DoD=25% Disruption=15% DM=30% Wonder=20% AQ=10%
-Nature:       DoD=20% Disruption=15% DM=20% Wonder=30% AQ=15%
-Landscape:    DoD=20% Disruption=20% DM=15% Wonder=25% AQ=20%
-Street:       DoD=15% Disruption=25% DM=25% Wonder=15% AQ=20%
-Wedding:      DoD=10% Disruption=15% DM=25% Wonder=10% AQ=40%
-People:       DoD=10% Disruption=20% DM=15% Wonder=15% AQ=40%
-Macro:        DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
-Creative:     DoD=20% Disruption=30% DM=15% Wonder=20% AQ=15%
-Drone:        DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
-Documentary:  DoD=20% Disruption=20% DM=25% Wonder=25% AQ=10%
+Wildlife:     DoD=22% Disruption=13% DM=28% Wonder=25% AQ=12%
+Nature:       DoD=15% Disruption=13% DM=15% Wonder=35% AQ=22%
+Landscape:    DoD=15% Disruption=15% DM=13% Wonder=30% AQ=27%
+Street:       DoD=10% Disruption=18% DM=20% Wonder=25% AQ=27%
+Wedding:      DoD=8%  Disruption=12% DM=25% Wonder=10% AQ=45%
+People:       DoD=8%  Disruption=17% DM=15% Wonder=15% AQ=45%
+Macro:        DoD=28% Disruption=18% DM=13% Wonder=25% AQ=16%
+Creative:     DoD=15% Disruption=22% DM=13% Wonder=25% AQ=25%
+Drone:        DoD=25% Disruption=18% DM=13% Wonder=28% AQ=16%
+Documentary:  DoD=15% Disruption=12% DM=23% Wonder=28% AQ=22%
+Fashion:      DoD=12% Disruption=22% DM=18% Wonder=22% AQ=26%
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
 If genre = 'Creative':
@@ -131,56 +132,108 @@ DM (Decisive Moment):
   Selection ≠ Decision — reward active creative control.
 
 WF (Wonder Factor):
-  The Unseen Truth. Three distinct Wonder signals — any one at high intensity scores 7.5–9.0:
+  The Unseen Truth. Four distinct Wonder signals — any one at high intensity scores 7.5–9.5:
 
   EYE WONDER: The photographer found something in the ordinary that transforms it.
   A compositional find, an accidental frame, a juxtaposition that could not have been
-  planned. The cow shadow on the red wall. The barrel bath under "DO NOT TURN OFF THE TAP."
-  The woman framed through the camel's neck. The man surrounded by crowd shadows.
-  The subject is not rare — the seeing is. Eye Wonder scores 8.0–9.0 when the
-  compositional discovery is complete and unrepeatable.
+  planned. The cow shadow on the red wall. The barrel bath under a sign. The woman
+  framed through the camel neck. The man surrounded by crowd shadows.
+  The subject is not rare — the seeing is.
+  Eye Wonder scores 8.0–9.0 when the compositional discovery is complete and unrepeatable.
+  Eye Wonder scores 9.0–9.5 when the find is singular — the image that could only exist
+  once, in that place, in that light, at that instant.
 
   ACCESS WONDER: The photographer was somewhere or trusted by someone that most
   photographers never reach. Working inside a toxic kiln with labourers. A close portrait
   of a stranger who allowed the camera. Inside a restricted religious community.
-  A delivery room. The wonder is in the access, not the subject's rarity.
+  A delivery room. The wonder is in the access, not the subject rarity.
   Access Wonder scores 7.5–8.5 depending on the difficulty of the access.
+  Access Wonder scores 8.5–9.5 when the access is extraordinary — inside a war zone,
+  inside a birth, inside a community that never lets cameras in.
 
   CULTURAL WONDER: The image shows the viewer a world, a community, or a way of life
-  they cannot otherwise enter. The Haredi community on a street. Holi from inside
-  the powder cloud. A slum community living beside railway tracks going about daily life.
-  Cultural Wonder scores 7.0–8.5 depending on the specificity and depth of access.
+  they cannot otherwise enter. Cultural Wonder scores 7.0–8.5 depending on specificity.
+  Cultural Wonder scores 8.5–9.0 when the image documents a world that is disappearing
+  or inaccessible to almost all viewers.
 
-  FOR WILDLIFE AND NATURE ONLY — add: Rare behaviour, scientific significance,
-  and perspectives the viewer will never witness in person score highest.
+  EMOTIONAL WONDER: The decisive moment captures not just the geometric or behavioural
+  peak but the emotional truth of what is happening. This is the highest Wonder signal.
+  The loneliness in a silhouette at dusk. The defiance in a face under a smoky sky.
+  The tenderness in a mother's gesture. The resignation of daily life in hardship.
+  The joy that cannot be contained. When the image makes the viewer feel something
+  specific and nameable — not "powerful" but lonely, defiant, joyful, tender, resigned,
+  awed, unsettled — that is Emotional Wonder.
+  Emotional Wonder scores 8.5–9.5 when the emotion is specific, genuine, and undeniable.
+  Emotional Wonder scores 9.0–9.5 when the decisive moment and the emotional truth
+  coincide simultaneously — the geometry AND the feeling, captured in one frame.
+  CRITICAL: Name the specific emotion. "Powerful" is not an emotion. "Lonely" is.
+  "Defiant" is. "Tender" is. Score accordingly.
+
+  FOR WILDLIFE AND NATURE: Rare behaviour, scientific significance, and perspectives
+  the viewer will never witness score highest. Add Emotional Wonder when the image
+  creates felt connection between viewer and subject.
   For Drone: perspectives impossible from ground = high Wonder.
-  For Creative: revealing the invisible (star movement, light physics) = high Wonder.
-  Transforming the familiar into the transcendent IS valid Wonder in all genres.
+  For Creative: revealing the invisible + lingering resonance = high Wonder.
 
 AQ (Affective Quotient):
-  Emotional resonance and tonal archetype. Evaluate the FEELING the
-  image creates, not its technical attributes.
+  The specific feeling the image creates in a viewer. NOT technical quality —
+  technical quality lives in DoD.
+
+  CRITICAL: Name the specific emotion or feeling the image creates.
+  Score the precision and intensity of that feeling.
+  If no specific emotion is identifiable, AQ cannot exceed 7.5 regardless
+  of technical quality.
+
+  AQ SCORING SCALE:
+  9.0–10.0: A specific, powerful emotion that is undeniable and lingers after
+    looking away. The viewer cannot remain neutral. The feeling is singular.
+  8.0–8.9:  A clear, specific emotion that lands. The viewer feels something
+    definite — loneliness, joy, unease, awe, tenderness, defiance.
+  7.0–7.9:  Emotional content present but not fully resolved. The image suggests
+    a feeling without fully delivering it. Technically accomplished but emotionally
+    incomplete.
+  6.0–6.9:  Minimal emotional content. Technically competent but emotionally neutral.
+    The viewer admires the craft without feeling anything.
+  Below 6.0: No emotional content. Pure documentation or failed execution.
+
+  PER-GENRE EMOTIONAL VOCABULARY — name the specific emotion from this list
+  or use your own specific language:
+  Street/Documentary: loneliness, defiance, resignation, solidarity, isolation,
+    tenderness, urgency, despair, joy, dignity, invisibility, connection, alienation
+  People/Wedding: love, grief, joy, tenderness, pride, relief, overwhelm,
+    vulnerability, strength, intimacy, presence, absence
+  Wildlife/Nature: awe, reverence, fragility, abundance, power, vulnerability,
+    strangeness, belonging, threat
+  Landscape: presence (the feeling of being somewhere), vastness, solitude,
+    peace, unease, transcendence, melancholy, wonder
+  Creative/Minimalist: stillness, absence, boundary, resonance, void, clarity,
+    suspension, the space between things
+  Fashion: tension, unease, desire, power, otherness, beauty as threat
+  Macro/Drone: revelation, scale-shift, insignificance, hidden order, the sublime
 
 APEX LAYER RULES:
 - Soul Bonus: AQ >= 8.0 removes ALL technical penalties
 - Humanity Check: AQ < 4.0 adds -1.5 penalty to AQ
-- Iconic Wall: score >= 9.0 requires BOTH VD (Visual Disruption) AND AQ > 8.5
+- Iconic Wall: score >= 9.0 requires at least TWO dimensions above 8.5,
+  AND Wonder >= 8.5 OR AQ >= 8.5 (emotional content must be present)
 - Plateau Penalty: DoD >= 9.5 + Disruption < 5.0 caps at 7.9
 - Identity Cap: >85% similarity to known winner caps at 6.0
 - 10.0 never awarded
 
-TIERS: Apprentice 0-5.0 | Practitioner 5.1-7.5 | Master 7.6-8.9 | Grandmaster 9.0-9.6 | Legend 9.7-9.9
+TIERS: Rookie 0-4.0 | Shooter 4.0-5.0 | Contender 5.0-6.0 | Craftsman 6.0-7.0 | Maverick 7.0-8.0 | Master 8.0-9.0 | Grandmaster 9.0-9.7 | Legend 9.7-10.0
 
 ARCHETYPES: Sadness/Forlorn, Hope/Joy, Tension/Dread, Wonder/Transcendence,
 Resilient Forlorn, Sovereign Momentum, Compressed Tension, Joyful Disruption,
 Forlorn Transcendence, Chromatic Transcendence, Tender Sovereignty, Primal Dread
 
 CALIBRATION NOTES:
-- A technically "imperfect" image with high artistic intent scores HIGHER
-  than a technically perfect but creatively empty image
+- A technically imperfect image with high emotional truth scores HIGHER
+  than a technically perfect but emotionally empty image
 - Multiple reflections = compositional complexity = Disruption boost
 - Soul Bonus (AQ >= 8.0) removes technical penalties — apply it
 - For Creative and technique-detected images: TECHNIQUE WINS
+- Award-winning images should reach Grandmaster (9.0+) when Wonder and AQ
+  both reflect the genuine emotional achievement of the work
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
 """
@@ -2182,7 +2235,7 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
 
     # ── Street genre mismatch gate ────────────────────────────────────────────
     # If the photographer submitted as Street but vision detects no human
-    # presence, the Street rubric (DM=25%, Wonder=15% weighted to human narrative)
+    # presence, the Street rubric (DM=20%, Wonder=25% weighted to emotional truth)
     # will systematically undervalue the image. Detect this and override.
     if genre and genre.lower() == "street":
         _human_terms = {
