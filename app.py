@@ -7175,7 +7175,7 @@ def contest_enter_monthly(genre):
 
         # High-scoring genres require RAW verification on POTY entry.
         # Weekly challenges are excluded — engagement-first, no prizes.
-        _raw_genres = {'Wildlife', 'Nature', 'Landscapes', 'Landscape', 'Drone', 'Documentary'}
+        _raw_genres = {'Wildlife', 'Nature', 'Landscapes', 'Landscape', 'Drone', 'Documentary', 'Fashion'}
         if (genre in _raw_genres
                 and img.score is not None
                 and img.score >= 7.5
