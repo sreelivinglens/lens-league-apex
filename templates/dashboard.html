@@ -1169,7 +1169,7 @@
   <div class="db-right-col" style="min-width:0;">
 
     {# Standing + POTY #}
-    <div class="db-panel mob-open">
+    <div class="db-panel" id="db-panel-standing">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
         <span class="db-panel-hdr-title">Your Standing</span>
         <span class="db-panel-chevron">▼</span>
@@ -1413,6 +1413,24 @@ function dbPanelToggle(hdr) {
 function dbAnnToggle(strip) {
   strip.classList.toggle('ann-open');
 }
+
+// First-visit vs returning user panel state (mobile only)
+(function() {
+  if (window.innerWidth > 768) return; // desktop: CSS handles it, no JS needed
+  var key = 'sl_db_visited';
+  var standing = document.getElementById('db-panel-standing');
+  try {
+    var visited = localStorage.getItem(key);
+    if (!visited) {
+      // First visit — open Your Standing as orientation
+      if (standing) standing.classList.add('mob-open');
+      localStorage.setItem(key, '1');
+    }
+    // Returning visit — everything stays collapsed, user goes straight to Upload
+  } catch(e) {
+    // localStorage unavailable (private browsing etc) — default collapsed
+  }
+})();
 
 function dbSearchUrl(q) {
   return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
