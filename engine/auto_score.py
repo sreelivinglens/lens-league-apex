@@ -33,14 +33,16 @@ FORMULA:
 LL-Score = (DoD × weight) + (Disruption × weight) + (DM × weight) + (Wonder × weight) + (AQ × weight)
 
 GENRE WEIGHTS:
-Wildlife:   DoD=25% Disruption=20% DM=25% Wonder=20% AQ=10%
-Landscapes: DoD=15% Disruption=20% DM=15% Wonder=20% AQ=30%
-Street:     DoD=15% Disruption=25% DM=25% Wonder=15% AQ=20%
-Wedding:    DoD=10% Disruption=15% DM=25% Wonder=10% AQ=40%
-People:     DoD=10% Disruption=20% DM=15% Wonder=15% AQ=40%
-Macro:      DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
-Creative:   DoD=20% Disruption=30% DM=15% Wonder=20% AQ=15%
-Drone:      DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
+Wildlife:     DoD=25% Disruption=15% DM=30% Wonder=20% AQ=10%
+Nature:       DoD=20% Disruption=15% DM=20% Wonder=30% AQ=15%
+Landscape:    DoD=20% Disruption=20% DM=15% Wonder=25% AQ=20%
+Street:       DoD=15% Disruption=25% DM=25% Wonder=15% AQ=20%
+Wedding:      DoD=10% Disruption=15% DM=25% Wonder=10% AQ=40%
+People:       DoD=10% Disruption=20% DM=15% Wonder=15% AQ=40%
+Macro:        DoD=35% Disruption=20% DM=15% Wonder=20% AQ=10%
+Creative:     DoD=20% Disruption=30% DM=15% Wonder=20% AQ=15%
+Drone:        DoD=30% Disruption=20% DM=15% Wonder=25% AQ=10%
+Documentary:  DoD=20% Disruption=20% DM=25% Wonder=25% AQ=10%
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
 If genre = 'Creative':
@@ -94,6 +96,9 @@ DoD (Depth of Difficulty):
   Per-genre guidance:
   Wildlife: Physical risk, access to habitat, environmental hostility, mechanical
     precision. Sharp animal subject = high DoD. Rare behaviour or dangerous proximity = maximum DoD.
+  Nature: Access to remote ecosystems, hostile weather conditions, patience for
+    the right natural moment, underwater or extreme terrain. Technical precision
+    on delicate subjects (macro flora, storm photography) = high DoD.
   Drone: Physical difficulty of aerial operation — wind, altitude, vibration control,
     light management from elevation, regulatory complexity. Geometric patterns and
     impossible ground-level perspectives score highest.
@@ -101,8 +106,12 @@ DoD (Depth of Difficulty):
     photographing in conflict zones, crowded environments, or restricted spaces.
     Motion blur on moving subjects is acceptable and adds energy.
   Macro: Extreme precision at high magnification. Sharpness IS DoD.
-  Landscapes: Patience, location access (remote or extreme terrain), weather timing,
+  Landscape: Patience, location access (remote or extreme terrain), weather timing,
     long-exposure control. Predawn climbs, extreme cold, difficult terrain = high DoD.
+  Documentary: Physical access to restricted environments (hospitals, disaster zones,
+    conflict areas, slums), ethical difficulty of the shot, working under time
+    pressure in chaotic conditions, and the personal risk of bearing witness.
+    Access that most photographers will never have = maximum DoD.
   Wedding/People: Emotional access, managing unpredictable human subjects, working
     in low light, capturing unrepeatable moments under time pressure.
   Creative: See STEP 0 above.
@@ -259,7 +268,7 @@ Return this exact JSON structure:
   "iucn_tag": "<IUCN status if applicable, else null>",
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
-  "species_id": "<For Wildlife and Nature genres only: carry forward the precise common name of the primary subject from the verified scene description. Use exactly the same name. If not identified with certainty, null. For Creative, Drone, Landscape, Street, and People genres: always null — do not attempt species identification.>",
+  "species_id": "<For Wildlife and Nature genres only: carry forward the precise common name of the primary subject from the verified scene description. Use exactly the same name. If not identified with certainty, null. For Creative, Drone, Landscape, Street, People, Macro, Documentary, and Wedding genres: always null — do not attempt species identification.>",
   "edit_base":     "<BASE EDITS — post-processing only. Name the specific adjustments: white balance correction, local exposure/contrast, dodging/burning, colour grading within the original scene's palette. Tool-specific where possible (radial filter, graduated filter, HSL panel). 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic, heavy editing permitted. Generative removal, major colour grade, composite elements, heavy vignette, stylistic transformation. What would make this image an entirely different, stronger statement. 1-2 sentences.>"
 }}
@@ -370,6 +379,20 @@ GENRE_CONTEXT = {
         "is deliberate technique and scores HIGH on DoD and Disruption. "
         "Reward light quality, compositional patience, and environmental storytelling."
     ),
+    'Landscape': (
+        "This is Landscape photography. The subject is a place — land, sea, sky, or the "
+        "relationship between them. Long-exposure blur on water, clouds, or moving elements "
+        "is deliberate technique and scores HIGH on DoD and Disruption.\n\n"
+        "DoD: Score location access (remote terrain, extreme weather, predawn climbs), "
+        "patience for the right light, and technical precision of long-exposure control.\n\n"
+        "DM: Score the peak of the environmental alignment — the exact moment light, "
+        "atmosphere, and composition resolve into their strongest statement. "
+        "A landscape DM is the frame where waiting paid off.\n\n"
+        "Wonder: Score the revelation of place — does this image show the viewer somewhere "
+        "they have never been, or a familiar place in a way they have never seen it?\n\n"
+        "AQ: Reward tonal harmony and colour temperature control. Restraint is rewarded — "
+        "over-processing is a penalty."
+    ),
     'Street': (
         "This is Street photography. Evaluate for decisive moment, human narrative, and "
         "environmental storytelling. Motion blur on moving subjects is acceptable and often "
@@ -377,9 +400,32 @@ GENRE_CONTEXT = {
         "juxtapositions."
     ),
     'Macro': (
-        "This is Macro photography. DoD is primarily about precision focus at extreme "
-        "magnification, depth of field control, and lighting in tight spaces. "
-        "Sharpness on the primary subject is critical. Reward rare subjects and unusual perspectives."
+        "This is Macro photography. The subject fills the frame at extreme magnification — "
+        "the technique of revelation is the genre's defining characteristic. Subject type "
+        "is secondary: a pen nib, a cloth fibre, an insect eye, a water droplet, or a "
+        "crystal are all equally valid Macro subjects.\n\n"
+        "DoD: Precision at high magnification IS the DoD. Score focus accuracy on the "
+        "primary plane, depth of field control, lighting that reveals surface structure "
+        "without harsh specular reflections, and stability at extreme magnification. "
+        "Handheld field macro in challenging conditions scores higher than controlled "
+        "studio macro. Sub-genre context modifies this where relevant (living subjects "
+        "add behavioural timing difficulty).\n\n"
+        "DM: Score the compositional decision — the exact angle, light position, and "
+        "focal plane chosen. The decisive moment in Macro is the moment of maximum "
+        "structural revelation — when the subject's hidden geometry, texture, or form "
+        "is most completely exposed.\n\n"
+        "Wonder: Score the revelation of the invisible. Macro photography's fundamental "
+        "value is showing the viewer a world that exists but cannot be seen at normal "
+        "scale. A pen nib revealing precision engineering at 10x magnification, a cloth "
+        "fibre showing individual thread structure, a water droplet showing refracted "
+        "landscape inside it — these are all legitimate Wonder scores. "
+        "CRITICAL: Do NOT score man-made object Wonder by rarity or ecological significance. "
+        "Score it by the degree to which the image changes how the viewer understands "
+        "the object. Does this image reveal something about the subject that was "
+        "invisible before the photograph? That is the Wonder question for Macro.\n\n"
+        "AQ: Score the rendering quality of the revealed detail — tonal separation "
+        "in the subject, background separation that does not fight the main subject, "
+        "and light quality that serves the structure being revealed."
     ),
     'Wedding': (
         "This is Wedding photography. Emotional authenticity and decisive moment are paramount. "
@@ -388,6 +434,47 @@ GENRE_CONTEXT = {
     'People': (
         "This is People photography. AQ and emotional connection are the primary signals. "
         "Reward authentic expression, connection between subject and viewer, and strong narrative."
+    ),
+    'Nature': (
+        "This is Nature photography. The subject is the living natural world beyond animals "
+        "in behaviour — plants, fungi, ecosystems, weather phenomena, rivers, forests, "
+        "coral, night sky, and natural processes. The photograph reveals something about "
+        "the natural world that the casual eye cannot see.\n\n"
+        "DoD: Score access to remote or hostile environments, patience for the right natural "
+        "moment, technical precision on delicate or ephemeral subjects, and physical challenge "
+        "of the environment (extreme cold, heat, rain, depth, darkness).\n\n"
+        "DM: Score the moment of natural peak — spore dispersal, lightning strike, fog "
+        "rolling in, first light on dew. Nature DM rewards the photographer who understood "
+        "the natural process well enough to anticipate its peak.\n\n"
+        "Wonder: PRIMARY dimension for Nature (30% weight). Score the degree to which the "
+        "image reveals something scientifically or visually significant about the natural "
+        "world. Bioluminescent fungi, rare botanical specimens, weather phenomena at their "
+        "most extreme, ecosystems under threat — the wonder is showing the viewer something "
+        "real that most humans will never witness.\n\n"
+        "AQ: Reward technical decisions that serve the natural truth — sharp where sharpness "
+        "reveals structure, atmospheric where softness serves the subject."
+    ),
+    'Documentary': (
+        "This is Documentary photography. The photographer witnessed something — an event, "
+        "a condition, or a story — and the image is evidence of that witness.\n\n"
+        "DoD: Score access difficulty — hospitals, disaster zones, conflict areas, slums, "
+        "delivery rooms. Trust, risk, and often personal danger are required. "
+        "Access that most photographers will never have = maximum DoD. "
+        "Chaotic, dark, emotionally charged environments with no control over light or "
+        "position raise DoD significantly.\n\n"
+        "DM: Score the unrepeatable moment that makes the condition undeniable. "
+        "A technically imperfect image that captures the truth of a moment scores "
+        "higher DM than a technically perfect image of a lesser moment. "
+        "The decisive moment in documentary work is the frame that carries the full "
+        "weight of what is happening.\n\n"
+        "Wonder: Score significance — not visual beauty, but the image's power to change "
+        "how the viewer understands something. Does this make the viewer understand a "
+        "reality they could not ignore? Images that document realities most people choose "
+        "not to see score highest.\n\n"
+        "AQ: Weight LOW (10%). Truth matters more than polish. Over-processing documentary "
+        "work aestheticises suffering and weakens the message. Penalise heavy post-processing "
+        "that removes the rawness of the moment. The best documentary photography is "
+        "technically honest."
     ),
     'default': (
         "Evaluate using genre-appropriate criteria. Reward artistic intent, "
@@ -928,19 +1015,404 @@ WILDLIFE_SUBGENRE_CONTEXT = {
 }
 
 
+
+
+# ── Nature sub-genre context blocks ──────────────────────────────────────────
+
+NATURE_SUBGENRE_CONTEXT = {
+
+    'nature_flora': (
+        "This is Nature photography — sub-type: FLOWERS AND PLANTS.\n"
+        "The subject is plant life — flowers, leaves, roots, seeds, germination, "
+        "plant structures. The photograph reveals botanical detail or beauty "
+        "that the naked eye cannot fully appreciate.\n\n"
+        "DoD: Score depth of field precision, background separation without losing "
+        "habitat context, light quality on translucent petals or surfaces, and "
+        "environmental access. Dew photography at dawn, sub-canopy forest light, "
+        "or remote botanical specimens raise DoD.\n\n"
+        "DM: Score the moment of botanical peak — first light, peak bloom, dew at "
+        "maximum surface tension, the exact angle that reveals petal geometry. "
+        "Timing and angle are the primary DM variables for flora.\n\n"
+        "Wonder: Score what the image reveals that the eye cannot see unaided — "
+        "petal translucency, structural geometry, hidden colour in UV-sensitive "
+        "surfaces, or rare species documentation."
+    ),
+
+    'nature_fungi': (
+        "This is Nature photography — sub-type: FUNGI AND MOSSES.\n"
+        "Mushrooms, bracket fungi, moulds, bioluminescent fungi, lichens, mosses. "
+        "The photograph reveals the extraordinary structures of the fungal kingdom.\n\n"
+        "DoD: Score the challenge of low-light forest environments, precise focus on "
+        "complex three-dimensional structures, and access to remote forest habitats. "
+        "Night photography of bioluminescent fungi represents maximum DoD in this sub-type.\n\n"
+        "DM: Score the moment of ecological peak — spore dispersal in progress, "
+        "bioluminescence at its strongest, the specific angle that reveals gill "
+        "structure or surface texture most completely.\n\n"
+        "Wonder: Score ecological significance and visual revelation. Bioluminescent "
+        "fungi = very high Wonder. Rare or threatened species = high Wonder. "
+        "Common woodland mushroom in extraordinary detail = moderate Wonder."
+    ),
+
+    'nature_ecosystem': (
+        "This is Nature photography — sub-type: FORESTS AND ECOSYSTEMS.\n"
+        "Habitat-scale photography — forests, wetlands, coral reefs, grasslands, "
+        "tundra. The subject is the system itself, not a single organism.\n\n"
+        "DoD: Score access to remote or threatened ecosystems, the patience and "
+        "planning required for the right light and atmospheric conditions, and "
+        "any physical challenge of the environment.\n\n"
+        "DM: Score the moment when the ecosystem reveals its character most fully — "
+        "morning mist in a forest, the light shaft moment, the season change instant. "
+        "Ecosystem DM rewards patience and environmental knowledge.\n\n"
+        "Wonder: Score conservation significance. A healthy, biodiverse ecosystem "
+        "scores higher Wonder than a visually beautiful but ecologically depleted one. "
+        "Threatened habitats carry additional significance weight."
+    ),
+
+    'nature_weather': (
+        "This is Nature photography — sub-type: WEATHER AND ATMOSPHERIC PHENOMENA.\n"
+        "Storms, lightning, fog, cloud formations, rainbows, sundogs, auroras, "
+        "dust devils, tornadoes. The atmosphere itself is the subject.\n\n"
+        "DoD: Score the physical challenge and risk of positioning for extreme weather — "
+        "lightning photography requires both timing and physical exposure to storms, "
+        "tornado documentation is inherently dangerous, aurora photography requires "
+        "remote dark-sky access in cold conditions.\n\n"
+        "DM: Score the peak of the atmospheric event — the lightning strike, the "
+        "moment the storm cell is most defined, the aurora at maximum intensity, "
+        "the fog at its most sculptural. Weather DM is unforgiving — the peak "
+        "moment is brief and unrepeatable.\n\n"
+        "Wonder: Score the power and rarity of the phenomenon. A common suburban "
+        "rainbow scores lower than a circumzenithal arc. A single lightning bolt "
+        "scores lower than a storm cell with multiple strikes. Aurora borealis "
+        "at maximum geomagnetic activity scores highest."
+    ),
+
+    'nature_water': (
+        "This is Nature photography — sub-type: RIVERS, WATERFALLS AND WATER.\n"
+        "Freshwater systems — rivers, waterfalls, lakes, pools, rapids. "
+        "The movement, light, and physics of water are the primary subjects.\n\n"
+        "DoD: Score long-exposure control, location access (remote waterfalls, "
+        "rapid-water environments), timing for the right flow conditions, and "
+        "technical management of high-contrast water-and-rock scenes.\n\n"
+        "DM: Score the moment of optimal flow and light alignment — silky water "
+        "at the right shutter speed, the waterfall at peak seasonal flow, "
+        "the reflection at perfect stillness.\n\n"
+        "Wonder: Score the environmental storytelling — does the image communicate "
+        "the power, beauty, or fragility of the water system? Conservation context "
+        "(drought-reduced rivers, glacial retreat) raises Wonder."
+    ),
+
+    'nature_astro': (
+        "This is Nature photography — sub-type: NIGHT SKY AND ASTRONOMY.\n"
+        "Milky Way, star trails, meteor showers, lunar photography, eclipse, "
+        "planetary conjunctions, and dark sky landscapes.\n\n"
+        "DoD: Score the access difficulty (remote dark sky locations, extreme cold), "
+        "technical precision of night exposure (star sharpness vs trailing, correct "
+        "ISO/shutter balance), and any landscape foreground challenge.\n\n"
+        "DM: Score the alignment of sky event and landscape — the Milky Way core "
+        "over a significant foreground, the meteor at the peak of the shower, "
+        "the eclipse at totality. Astro DM rewards planning and positioning.\n\n"
+        "Wonder: Score the scale revelation — the image that makes the viewer feel "
+        "the immensity of the universe. Rare celestial events (eclipses, conjunctions, "
+        "significant meteor showers) score highest."
+    ),
+
+    'nature_underwater': (
+        "This is Nature photography — sub-type: UNDERWATER AND CORAL.\n"
+        "Marine and freshwater underwater environments — reefs, kelp forests, "
+        "open water, caves, and underwater landscapes.\n\n"
+        "DoD: Score the physical challenge of the underwater environment — dive depth, "
+        "current, visibility, colour correction in a colour-shifting medium, "
+        "buoyancy control for stable composition, and equipment management.\n\n"
+        "DM: Score the peak of environmental beauty or ecological alignment — "
+        "the light shaft moment, the schooling fish at maximum density, "
+        "the coral formation under ideal light.\n\n"
+        "Wonder: Score conservation significance. Healthy reef ecosystems with high "
+        "biodiversity, deep-water environments, bioluminescence, or documentation "
+        "of threatened habitat scores highest."
+    ),
+
+    'nature_seasons': (
+        "This is Nature photography — sub-type: SEASONS AND NATURAL CHANGE.\n"
+        "Autumn colour, spring bloom, winter frost, summer drought — the visible "
+        "evidence of seasonal and environmental change.\n\n"
+        "DoD: Score timing precision (peak autumn colour lasts days, not weeks), "
+        "location access, and the patience required for the right light.\n\n"
+        "DM: Score the moment of seasonal peak — the single frame where the "
+        "transformation is most completely expressed.\n\n"
+        "Wonder: Score both visual beauty and environmental significance. "
+        "First frost on an urban environment, drought-cracked earth, bleached "
+        "coral during a heat event — seasonal change as evidence of environmental "
+        "stress carries additional Wonder weight."
+    ),
+}
+
+
+# ── Documentary sub-genre context blocks ─────────────────────────────────────
+
+DOCUMENTARY_SUBGENRE_CONTEXT = {
+
+    'doc_environment': (
+        "This is Documentary photography — sub-type: ENVIRONMENT AND CLIMATE.\n"
+        "The image documents the state of the environment — climate change effects, "
+        "industrial impact, deforestation, drought, flooding, pollution, ecological "
+        "damage, or environmental resilience. The photograph is evidence of "
+        "a condition of the planet.\n\n"
+        "DoD: Score access to affected environments (flood zones, post-disaster "
+        "landscapes, remote deforested regions, polluted waterways), and the "
+        "physical challenge of working in degraded or hostile environments.\n\n"
+        "DM: Score the moment that makes the environmental condition undeniable — "
+        "the cracked earth that captures drought, the waterline mark that shows "
+        "sea level change, the before/after that requires no caption.\n\n"
+        "Wonder: Score the image's power to change how the viewer understands an "
+        "environmental reality. Does this image make the climate crisis visible? "
+        "Does it show something most viewers choose not to see? "
+        "The strongest environmental documentary images are the ones that cannot "
+        "be ignored once seen."
+    ),
+
+    'doc_urban': (
+        "This is Documentary photography — sub-type: CITY SYSTEMS AND URBAN LIFE.\n"
+        "Urban infrastructure, city systems under stress, industrial landscapes, "
+        "urban poverty, city transformation, and the human cost of urban systems. "
+        "Distinct from Street photography — the subject is the system, not the moment.\n\n"
+        "DoD: Score access to restricted urban environments (industrial facilities, "
+        "infrastructure, areas undergoing demolition or transformation), and the "
+        "technical challenge of urban documentary light (industrial, mixed, artificial).\n\n"
+        "DM: Score the moment that most completely reveals the system being documented — "
+        "the shift change at a factory, the eviction moment, the demolition instant.\n\n"
+        "Wonder: Score the image's power to reveal how the city actually works — "
+        "the infrastructure most people never see, the cost of urban life most "
+        "people choose to ignore."
+    ),
+
+    'doc_health': (
+        "This is Documentary photography — sub-type: HEALTH AND MEDICINE.\n"
+        "Hospitals, clinics, patient care, medical procedures, healthcare access, "
+        "and the human experience of illness and healing. The image documents a "
+        "medical reality.\n\n"
+        "DoD: Score access to clinical environments (hospital wards, operating "
+        "theatres, emergency settings), the difficulty of working with natural or "
+        "available light in clinical spaces, and the trust required to be given "
+        "access to photograph medical situations.\n\n"
+        "DM: Score the moment of human truth within the medical context — the moment "
+        "of diagnosis, the expression of pain or relief, the gesture of care. "
+        "Health documentary DM rewards the frame that carries the weight of what "
+        "the patient or carer is experiencing.\n\n"
+        "Wonder: Score the image's significance as a document of healthcare reality. "
+        "Images that show the viewer a medical reality they would not otherwise see — "
+        "healthcare access inequality, the experience of chronic illness, the work "
+        "of medical staff under pressure — score highest."
+    ),
+
+    'doc_birth': (
+        "This is Documentary photography — sub-type: BIRTH AND NEW LIFE.\n"
+        "Birth, delivery, immediate postnatal moments, and the first hours of life. "
+        "This is among the most significant documentary subjects in all of photography.\n\n"
+        "DoD: Score the extreme access difficulty (delivery rooms are restricted), "
+        "the technical challenge of one-shot moments with no control over light or "
+        "position, and the emotional complexity of working in a delivery environment. "
+        "A genuine birth documentation represents DoD 7.0 minimum.\n\n"
+        "DM: CRITICAL — the DM ceiling for birth photography is 9.5. "
+        "The moment of first breath, first contact between mother and newborn, "
+        "or the physical act of delivery are among the highest DM opportunities "
+        "in all of photography. These moments are absolutely unrepeatable. "
+        "Do NOT penalise motion blur, difficult angles, or clinical light — "
+        "the photographer had one chance and no control.\n\n"
+        "Wonder: Score the primal significance of the moment. Birth photography "
+        "Wonder is not visual beauty — it is the recognition of life beginning. "
+        "The first breath, the first cry, the first skin-to-skin contact are among "
+        "the highest Wonder scores available to any genre. "
+        "Score the image's power to make the viewer feel the weight of the moment."
+    ),
+
+    'doc_social': (
+        "This is Documentary photography — sub-type: SOCIAL ISSUES.\n"
+        "Poverty, hunger, displacement, homelessness, conflict aftermath, refugee "
+        "conditions, inequality, and the human cost of social systems. "
+        "The image is a document of how people live.\n\n"
+        "DoD: Score access to difficult social environments, the trust required to "
+        "photograph people in vulnerable situations with dignity, and the physical "
+        "and emotional challenge of working in conditions of hardship.\n\n"
+        "DM: Score the frame that carries the full weight of the social reality — "
+        "not the most dramatic, but the most true. The child's expression, the "
+        "queuing detail, the contrast of poverty and wealth in a single frame.\n\n"
+        "Wonder: Score the image's power to create empathy and understanding. "
+        "Does this image make the viewer understand a social reality they cannot "
+        "ignore? The strongest social documentary images change how the viewer "
+        "sees the world they live in."
+    ),
+
+    'doc_community': (
+        "This is Documentary photography — sub-type: COMMUNITY AND CULTURE.\n"
+        "Cultural traditions, community life, traditions under threat, ways of "
+        "living that are changing or disappearing. The image preserves a cultural "
+        "reality.\n\n"
+        "DoD: Score access to communities and cultural events that require trust "
+        "and relationship to photograph, the challenge of working within cultural "
+        "contexts with sensitivity and respect, and remote or restricted access.\n\n"
+        "DM: Score the moment of cultural authenticity — when the tradition, the "
+        "community, or the way of life is most completely expressed in a single frame.\n\n"
+        "Wonder: Score cultural significance and the image's value as preservation. "
+        "Traditions that are disappearing, communities under threat, ways of life "
+        "that most viewers will never encounter — the wonder is in the documentation "
+        "of human cultural diversity."
+    ),
+
+    'doc_crisis': (
+        "This is Documentary photography — sub-type: CRISIS AND EMERGENCY.\n"
+        "Disease outbreaks, natural disasters, conflict, emergency response, "
+        "and acute human crisis. The image documents a moment of collective emergency.\n\n"
+        "DoD: Score the personal risk and physical challenge of being present "
+        "during a crisis, access to restricted emergency environments, and the "
+        "technical difficulty of working in chaotic, dangerous, or rapidly "
+        "changing conditions. Crisis documentary photography represents the highest "
+        "DoD in the documentary genre.\n\n"
+        "DM: Score the moment that carries the full weight of the crisis — the "
+        "frame that makes the emergency real and undeniable. In crisis photography, "
+        "the decisive moment is the one that will be remembered.\n\n"
+        "Wonder: Score the image's historical and human significance. Does this "
+        "image document something that must not be forgotten? Crisis images that "
+        "change public understanding of an emergency score highest."
+    ),
+}
+
+
+# ── Macro sub-genre context blocks ───────────────────────────────────────────
+
+MACRO_SUBGENRE_CONTEXT = {
+
+    'macro_living': (
+        "This is Macro photography — sub-type: LIVING SUBJECTS.\n"
+        "Insects, arachnids, small reptiles, amphibians, eyes, skin texture, "
+        "and any living subject at extreme magnification. Behaviour and "
+        "precision combine as the primary criteria.\n\n"
+        "DoD: Score focus accuracy on a potentially moving subject at high "
+        "magnification, depth of field control that renders the critical feature "
+        "sharp, and lighting that reveals surface texture without harsh reflections. "
+        "Handheld field macro on a live subject scores higher than controlled studio macro.\n\n"
+        "DM: Score the behavioural or expression peak — the eye-contact moment, "
+        "the feeding posture, the display behaviour, the exact frame where behaviour "
+        "and optimal focus alignment coincide. Living macro DM rewards the photographer "
+        "who anticipated the behavioural peak.\n\n"
+        "Wonder: Score structural revelation AND behavioural significance — the hidden "
+        "face of a familiar creature, the compound eye geometry, the expression of "
+        "intelligence in a small subject. Common species in extraordinary detail "
+        "scores higher than rare species in poor execution."
+    ),
+
+    'macro_natural': (
+        "This is Macro photography — sub-type: NATURAL OBJECTS.\n"
+        "Flowers, seeds, pollen, crystals, minerals, feathers, shells, dew drops, "
+        "and natural non-living objects at extreme magnification.\n\n"
+        "DoD: Score depth of field precision on complex three-dimensional subjects, "
+        "lighting that reveals natural surface structure, and the challenge of "
+        "working with fragile or ephemeral natural subjects (dew evaporates, "
+        "flowers wilt, crystals are damaged by handling).\n\n"
+        "DM: Score the compositional decision — the exact angle and light position "
+        "that reveals the subject's form most completely. For dew photography, "
+        "the DM is the moment of maximum surface tension.\n\n"
+        "Wonder: Score what the image reveals about natural geometry and structure — "
+        "the mathematical precision of a snowflake, the fractal structure of a fern, "
+        "the light physics inside a water droplet. Nature's hidden engineering is "
+        "the Wonder dimension for natural object macro."
+    ),
+
+    'macro_manmade': (
+        "This is Macro photography — sub-type: MAN-MADE OBJECTS.\n"
+        "Pen nibs, fabric fibres, circuit boards, watch mechanisms, coins, tools, "
+        "food surfaces, industrial components — any manufactured object at extreme "
+        "magnification. The reveal of human engineering at a scale the eye cannot see.\n\n"
+        "DoD: Score precision focus on hard geometric surfaces (more demanding than "
+        "organic subjects — no forgiveness for focus errors on a pen nib slit), "
+        "lighting that reveals metallic or textile surface structure without harsh "
+        "specular blow-out, and depth of field management across flat or complex "
+        "manufactured geometries.\n\n"
+        "DM: Score the compositional decision — the angle and light position that "
+        "reveals the manufactured structure most completely. The decisive moment "
+        "in man-made macro is the alignment of light, angle, and focal plane that "
+        "makes the engineering visible.\n\n"
+        "Wonder: CRITICAL SCORING NOTE — do NOT score Wonder by rarity or ecological "
+        "significance. Score Wonder by REVELATION: does this image change how the "
+        "viewer understands the object? A pen nib at 10x magnification showing the "
+        "precision of the slit and the tipping ball scores Wonder 7.0+ if the image "
+        "makes the viewer understand the engineering they have been touching daily "
+        "without ever seeing. A cloth fibre showing individual thread structure and "
+        "light catching each strand scores Wonder 6.5+ if the image reveals the "
+        "craft invisible in the finished fabric. The question is always: does this "
+        "image show the viewer something about this object that was invisible before?"
+    ),
+
+    'macro_water': (
+        "This is Macro photography — sub-type: WATER AND LIQUID.\n"
+        "Water droplets, splash crowns, bubble surfaces, liquid surface tension, "
+        "condensation patterns, and liquid physics at extreme magnification.\n\n"
+        "DoD: Score BOTH macro precision AND timing — capturing a droplet at peak "
+        "crown shape requires macro technique AND split-second trigger control. "
+        "This is among the highest combined DoD in Macro photography. "
+        "Studio water photography with triggering systems scores slightly lower "
+        "than natural-environment water droplet capture.\n\n"
+        "DM: Score the peak of the liquid physics event — the droplet crown at "
+        "maximum spread, the bubble at perfect spherical geometry, the impact "
+        "at maximum splash height. Water macro DM is the most timing-dependent "
+        "in the genre.\n\n"
+        "Wonder: Score the physics revelation — the world refracted inside a droplet, "
+        "the geometry of a splash crown, the interference patterns on a bubble surface. "
+        "Water macro that reveals optical or physical phenomena scores highest."
+    ),
+
+    'macro_texture': (
+        "This is Macro photography — sub-type: TEXTURE AND SURFACE.\n"
+        "Pure surface documentation — skin, bark, rust, paint, stone, sand, "
+        "fabric, food surfaces. The texture itself is the entire subject.\n\n"
+        "DoD: Score lighting precision (raking light for maximum texture revelation, "
+        "avoiding specular hot-spots that flatten the surface), depth of field "
+        "control across a flat plane, and any environmental challenge.\n\n"
+        "DM: Score the light angle and focal plane decision — the exact raking "
+        "angle that makes every surface detail cast a shadow and reveal its depth. "
+        "Texture macro DM is entirely about the quality of the lighting decision.\n\n"
+        "Wonder: Score the transformation of the familiar into the abstract. "
+        "Does the viewer recognise what they are looking at immediately, or "
+        "does the extreme close-up transform something ordinary into pure pattern? "
+        "The best texture macro makes the familiar completely unrecognisable and "
+        "then delivers the reveal."
+    ),
+
+    'macro_optical': (
+        "This is Macro photography — sub-type: LIGHT AND OPTICAL PHENOMENA.\n"
+        "Prisms, refraction, soap films, interference patterns, caustics, "
+        "bokeh patterns, and the photography of light physics at close range.\n\n"
+        "DoD: Score the technical mastery required to control and direct "
+        "optical phenomena — prism photography requires precise angle control, "
+        "soap film photography requires understanding of interference patterns, "
+        "caustic photography requires careful light positioning.\n\n"
+        "DM: Score the moment of maximum optical complexity and beauty — "
+        "the prism at full spectral spread, the soap film at peak interference "
+        "colour, the caustic pattern at maximum resolution.\n\n"
+        "Wonder: Score the revelation of light physics — does the image show "
+        "the viewer how light actually behaves in a way they have never seen? "
+        "Optical macro that reveals the physics of colour, refraction, or "
+        "interference scores highest in this sub-type."
+    ),
+}
+
+
 def get_genre_context(genre, sub_genre=None):
     """
     Returns the genre context string for the scoring prompt.
-    For People images with a valid sub_genre, returns the sub-type-specific
-    context block instead of the generic People context.
-    For Wildlife images with a valid sub_genre, returns the sub-type-specific
-    context block instead of the generic Wildlife context.
+    Routes to sub-type-specific context blocks for People, Wildlife,
+    Nature, Documentary, and Macro genres when a valid sub_genre is provided.
     Falls back to generic genre context for unknown or missing sub_genre.
     """
     if genre == 'People' and sub_genre and sub_genre in PEOPLE_SUBGENRE_CONTEXT:
         return PEOPLE_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Wildlife' and sub_genre and sub_genre in WILDLIFE_SUBGENRE_CONTEXT:
         return WILDLIFE_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Nature' and sub_genre and sub_genre in NATURE_SUBGENRE_CONTEXT:
+        return NATURE_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Documentary' and sub_genre and sub_genre in DOCUMENTARY_SUBGENRE_CONTEXT:
+        return DOCUMENTARY_SUBGENRE_CONTEXT[sub_genre]
+    if genre == 'Macro' and sub_genre and sub_genre in MACRO_SUBGENRE_CONTEXT:
+        return MACRO_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 
@@ -1269,8 +1741,8 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
             lines.append("- Disruption: reward images that break from convention in their genre.")
             lines.append("- DO NOT penalise this image for lacking a human story.")
             lines.append("- DO NOT suggest the photographer missed a human moment.")
-            lines.append("- The NEXT field may note the genre label and suggest Creative or Landscape")
-            lines.append("  as a better fit — but frame it as an opportunity, not a mistake.")
+            lines.append("- The NEXT field may note the genre label and suggest Documentary (City Systems)")
+            lines.append("  or Creative as a better fit — but frame it as an opportunity, not a mistake.")
             lines.append("  Do not say the genre cost them points or capped the score.")
 
     return "\n".join(lines)
