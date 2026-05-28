@@ -250,6 +250,35 @@ SUBGENRE_MAP = {
 # Flat validation set — all valid sub_genre values across all genres.
 VALID_SUBGENRES = {sg_id for sgs in SUBGENRE_MAP.values() for sg_id, _ in sgs}
 
+# Sub-genres that belong to a different genre's weight family.
+# When vision auto-detects one of these for an image filed under a different genre,
+# the weights from the HOME genre are used instead of the filed genre's weights.
+# This ensures physical risk scores correctly regardless of how the photographer filed.
+SUBGENRE_HOME_GENRE = {
+    # Crisis documentary filed under Street/People still uses Documentary weights
+    'doc_crisis':      'Documentary',
+    'doc_social':      'Documentary',
+    'doc_environment': 'Documentary',
+    'doc_community':   'Documentary',
+    'doc_health':      'Documentary',
+    # Lifestyle intimate filed under Documentary still uses People weights
+    'lifestyle_intimate': 'People',
+    'portrait_candid':    'People',
+    'portrait_posed':     'People',
+    'portrait_cultural':  'People',
+}
+
+
+def get_effective_genre(genre: str, effective_subgenre: str = None) -> str:
+    """
+    Returns the genre whose weights should be used for scoring.
+    When the vision-detected sub-genre belongs to a different genre's weight family,
+    returns that home genre instead of the filed genre.
+    """
+    if effective_subgenre and effective_subgenre in SUBGENRE_HOME_GENRE:
+        return SUBGENRE_HOME_GENRE[effective_subgenre]
+    return genre
+
 
 def get_subgenres(genre: str) -> list:
     """

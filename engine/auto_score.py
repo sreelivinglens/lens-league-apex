@@ -12,7 +12,7 @@ import re
 import time as _time
 import httpx
 from PIL import Image as PILImage
-from engine.scoring import VALID_SUBGENRES
+from engine.scoring import VALID_SUBGENRES, get_effective_genre
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 MODEL             = os.getenv("APEX_MODEL", "claude-sonnet-4-6")
@@ -2462,13 +2462,35 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     calibration_block = get_calibration_examples(genre)
     correction_block  = get_calibration_notes(genre)
 
+    # ── Weight override for cross-genre sub-types ──────────────────────────────
+    # When vision detects a sub-genre whose home genre differs from the filed genre
+    # (e.g. doc_crisis detected but filed under Street), inject the correct weights
+    # so the engine scores against the right dimensional priorities.
+    effective_genre_for_weights = get_effective_genre(genre, effective_subgenre)
+    if effective_genre_for_weights != genre:
+        from engine.scoring import GENRE_WEIGHTS
+        ew = GENRE_WEIGHTS.get(effective_genre_for_weights, {})
+        weight_override_block = (
+            f"\nWEIGHT OVERRIDE — this image is scored as {effective_genre_for_weights} "
+            f"(detected sub-genre: {effective_subgenre}):\n"
+            f"DoD={int(ew.get('dod',0)*100)}% "
+            f"Disruption={int(ew.get('disruption',0)*100)}% "
+            f"DM={int(ew.get('dm',0)*100)}% "
+            f"Wonder={int(ew.get('wonder',0)*100)}% "
+            f"AQ={int(ew.get('aq',0)*100)}%\n"
+            f"USE THESE WEIGHTS, not the {genre} weights, to calculate the final score.\n"
+        )
+        print(f"[auto_score] Weight override: {genre} → {effective_genre_for_weights} weights for sub-genre {effective_subgenre}")
+    else:
+        weight_override_block = ""
+
     prompt = SCORE_PROMPT.format(
         genre                = genre,
         photographer         = photographer,
         title                = title,
         subject              = subject or "Not specified",
         location             = location or "Not specified",
-        genre_context        = get_genre_context(genre, sub_genre=effective_subgenre),
+        genre_context        = get_genre_context(genre, sub_genre=effective_subgenre) + weight_override_block,
         scene_context        = scene_context,
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
@@ -2552,6 +2574,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     result['_photographer_subgenre']     = sub_genre
     result['_subgenre_overridden']       = (vision_subgenre and vision_subgenre != sub_genre and vision_subgenre in VALID_SUBGENRES)
     result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
+    result['_effective_genre']           = effective_genre_for_weights
 
     return result
 
