@@ -1528,7 +1528,11 @@ DOCUMENTARY_SUBGENRE_CONTEXT = {
         "an active protest with smoke, flags, and confrontational subjects "
         "breaks from every convention of safe, composed photography. "
         "Score Disruption 8.0–9.0 for genuine crisis images. "
-        "Score 8.5+ when the chaos and physical danger ARE the visual language.\n\n"
+        "HARD FLOOR: When physical chaos IS the visual language — smoke filling "
+        "the frame, active confrontation, a subject at peak physical exertion "
+        "(slingshot extended, running, defiant gesture) — Disruption CANNOT be "
+        "below 8.5. Score 8.5–9.0. Reserve 9.0+ for images where the chaos "
+        "itself becomes the graphic structure of the frame.\n\n"
         "DM: Score the moment that carries the full weight of the crisis — "
         "the frame that makes the emergency real and undeniable, the gesture "
         "at its precise peak, the instant that will be remembered. "
@@ -1949,7 +1953,10 @@ CREATIVE_SUBGENRE_CONTEXT = {
         "Architectural pattern. The image reads as design before it reads as subject.\n\n"
         "DoD: Score the compositional precision required to find and frame the graphic "
         "structure — the exact position that makes the geometry work, the timing of "
-        "light that reveals the shape. Score 7.0–9.0 for precisely executed graphic work.\n\n"
+        "light that reveals the shape. Score 7.0–9.0 for precisely executed graphic work. "
+        "CRITICAL FLOOR: Never score DoD below 7.0 for a graphic image that is "
+        "clearly and precisely composed — the decision to find and commit to the "
+        "graphic structure IS a 7.0+ DoD act.\n\n"
         "DM: Score the moment of maximum graphic resolution — when the shapes, "
         "tones, and any human element are in their most complete visual relationship.\n\n"
         "Disruption: Score the visual impact of the graphic statement. Bold, "
@@ -2103,12 +2110,18 @@ when they have filed under a generic or incorrect sub-type. Be precise — the s
 determines which scoring rubric is applied.
 
 CREATIVE sub-genres:
-  creative_minimalist — single recognisable subject in large negative space; tonal
-    relationship IS the statement; the reduction IS the creative act. A swan as
-    geometric form. A lone figure under vast sky. Subject clearly identifiable but
-    stripped of context.
-  creative_graphic — bold geometric shapes, strong tonal contrast, shadow patterns,
-    architectural forms as pure visual design. The image reads as design before subject.
+  creative_minimalist — a LIVING SUBJECT (animal, bird, person) or clearly identifiable
+    object reduced to essential form in large negative space. The SUBJECT is the primary
+    point; the reduction IS the creative act. A swan at a ledge against dark water —
+    the swan IS the subject, the geometry supports it. A lone figure under vast sky.
+    A single tree in snow. CRITICAL RULE: If a living subject is present and anchors
+    the composition — even with strong geometry in the environment — route to
+    creative_minimalist, NOT creative_graphic.
+  creative_graphic — bold geometric shapes, architectural forms, shadow patterns, or
+    environmental structures where NO living subject anchors the composition. The design
+    IS the image. Shadows as geometry. Architectural planes. Abstract tonal fields.
+    Only use this when there is no creature or person functioning as the primary focal
+    point — the graphic structure alone carries the image.
   creative_fineart — constructed, staged, or conceptually directed work. The photograph
     was built, not found.
   creative_icm — intentional camera movement; consistent directional blur across frame.
