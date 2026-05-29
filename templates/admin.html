@@ -643,20 +643,20 @@
       {% set all_ok = avg_ok and gm_ok and master_ok %}
       {% set early = n < 50 %}
 
-      <div style="border:1px solid {{ 'var(--red)' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
+      <div style="border:1px solid {{ '#c0392b' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
                   border-radius:var(--radius-md); padding:16px 20px; margin-bottom:20px;
-                  background:{{ 'rgba(192,57,43,0.06)' if not all_ok else ('rgba(245,197,24,0.04)' if early else 'rgba(45,122,58,0.05)') }};">
+                  background:{{ '#fff5f5' if not all_ok else ('rgba(245,197,24,0.04)' if early else 'rgba(45,122,58,0.05)') }};">
 
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
-                      color:{{ 'var(--red)' if not all_ok else ('var(--gold)' if early else '#4caf50') }};">
+                      color:{{ '#5a0e0e' if not all_ok else ('var(--gold)' if early else '#2d7a3a') }};">
             📊 Calibration Monitor
           </div>
           <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
                        padding:3px 10px; border-radius:3px;
-                       background:{{ 'rgba(192,57,43,0.18)' if not all_ok else ('rgba(245,197,24,0.15)' if early else 'rgba(45,122,58,0.18)') }};
-                       border:1px solid {{ 'var(--red)' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
-                       color:{{ 'var(--red)' if not all_ok else ('var(--gold)' if early else '#4caf50') }};">
+                       background:{{ '#fde8e8' if not all_ok else ('rgba(245,197,24,0.15)' if early else 'rgba(45,122,58,0.18)') }};
+                       border:1px solid {{ '#c0392b' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
+                       color:{{ '#5a0e0e' if not all_ok else ('var(--gold)' if early else '#2d7a3a') }};">
             {{ 'DRIFT DETECTED' if not all_ok else ('EARLY — WATCH' if early else 'CALIBRATED') }}
           </span>
         </div>
@@ -664,7 +664,7 @@
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;">
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
             <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Platform avg</div>
-            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not avg_ok else 'var(--gold)' }};">{{ '%.2f'|format(avg) }}</div>
+            <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not avg_ok else 'var(--gold)' }};">{{ '%.2f'|format(avg) }}</div>
             <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 7.5</div>
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
@@ -674,12 +674,12 @@
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
             <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Grandmaster %</div>
-            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not gm_ok else 'var(--gold)' }};">{{ '%.1f'|format(gm_pct) }}%</div>
+            <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not gm_ok else 'var(--gold)' }};">{{ '%.1f'|format(gm_pct) }}%</div>
             <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 5%</div>
           </div>
           <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
             <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Master+ %</div>
-            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not master_ok else 'var(--gold)' }};">{{ '%.1f'|format(master_pct) }}%</div>
+            <div style="font-size:24px; font-weight:700; color:{{ '#5a0e0e' if not master_ok else 'var(--gold)' }};">{{ '%.1f'|format(master_pct) }}%</div>
             <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 35%</div>
           </div>
         </div>
@@ -690,17 +690,17 @@
         </div>
         {% endif %}
         {% if not avg_ok %}
-        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+        <div style="font-size:14px; font-weight:600; color:#5a0e0e; padding:10px 14px; background:#fde8e8; border:1px solid #e08080; border-radius:var(--radius-sm); margin-bottom:8px;">
           ⚠ Platform average {{ '%.2f'|format(avg) }} exceeds 7.5 threshold — possible grade inflation. Review recent auto_score calibration.
         </div>
         {% endif %}
         {% if not gm_ok %}
-        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+        <div style="font-size:14px; font-weight:600; color:#5a0e0e; padding:10px 14px; background:#fde8e8; border:1px solid #e08080; border-radius:var(--radius-sm); margin-bottom:8px;">
           ⚠ Grandmaster rate {{ '%.1f'|format(gm_pct) }}% exceeds 5% — top tier may be diluting. Check scoring rubrics.
         </div>
         {% endif %}
         {% if not master_ok %}
-        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+        <div style="font-size:14px; font-weight:600; color:#5a0e0e; padding:10px 14px; background:#fde8e8; border:1px solid #e08080; border-radius:var(--radius-sm); margin-bottom:8px;">
           ⚠ Master+ rate {{ '%.1f'|format(master_pct) }}% exceeds 35% — upper tiers crowding. Score distribution may need recalibration.
         </div>
         {% endif %}
