@@ -20,7 +20,7 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
 .sl-pmgr-avatar { width: 80px; height: 80px; border-radius: 50%; background: #1A2744; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .sl-pmgr-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .sl-pmgr-avatar-initials { font-size: 24px; font-weight: 700; color: #F5C518; font-family: 'Courier New', monospace !important; }
-.sl-pmgr-avatar-edit { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; background: #F5C518; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #F7F5F2; }
+.sl-pmgr-avatar-edit { margin-top: 8px; background: none; border: none; font-size: 13px; font-weight: 700; color: #1A2744; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; padding: 0; font-family: var(--font-mono, 'Courier New', monospace); letter-spacing: 0.5px; width: 80px; }
 .sl-pmgr-avatar-hint { font-size: 11px; color: rgba(26,26,24,0.38); margin-top: 6px; width: 80px; line-height: 1.4; }
 .sl-pmgr-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .sl-pmgr-field-full { grid-column: 1 / -1; }
@@ -119,12 +119,12 @@ body:has(.sl-pmgr) main { padding: 0 !important; max-width: none !important; mar
               <span class="sl-pmgr-avatar-initials">{{ (current_user.full_name or current_user.username)[:2]|upper }}</span>
             {% endif %}
           </div>
-          <div class="sl-pmgr-avatar-edit" onclick="document.getElementById('photo-input').click()" title="Upload photo">
-            <i class="ti ti-camera" style="font-size:13px;color:#1A1A18;" aria-hidden="true"></i>
-          </div>
+          <button type="button" class="sl-pmgr-avatar-edit" onclick="document.getElementById('photo-input').click()">
+            {% if user_data.portfolio_photo_url %}Change photo{% else %}Upload photo{% endif %}
+          </button>
           <input type="file" id="photo-input" accept="image/jpeg,image/png" style="display:none;" onchange="handlePhotoUpload(this)">
           <input type="hidden" name="portfolio_photo_url" id="portfolio_photo_url" value="{{ user_data.portfolio_photo_url or '' }}">
-          <div class="sl-pmgr-avatar-hint">Square · min 400×400px · JPG or PNG</div>
+          <div class="sl-pmgr-avatar-hint">Square · min 400×400 · JPG or PNG</div>
           <div class="sl-pmgr-upload-bar" id="upload-bar" style="width:0%;"></div>
         </div>
 
