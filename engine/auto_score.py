@@ -2518,6 +2518,34 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     else:
         weight_override_block = ""
 
+    # ── Build effective system brief ───────────────────────────────────────────
+    # When cross-genre weight routing fires, patch SYSTEM_BRIEF to replace the
+    # filed genre's weight line with the effective genre's weights.
+    # This ensures the engine's primary weight reference (which it reads first)
+    # reflects the correct dimensional priorities — genre_context override alone
+    # is insufficient because SYSTEM_BRIEF weights take precedence.
+    if effective_genre_for_weights != genre:
+        import re as _wsre
+        from engine.scoring import GENRE_WEIGHTS
+        ew = GENRE_WEIGHTS.get(effective_genre_for_weights, {})
+        override_weight_line = (
+            f"{genre.capitalize()}:     "
+            f"DoD={int(ew.get('dod',0)*100)}%  "
+            f"Disruption={int(ew.get('disruption',0)*100)}%  "
+            f"DM={int(ew.get('dm',0)*100)}%  "
+            f"Wonder={int(ew.get('wonder',0)*100)}%  "
+            f"AQ={int(ew.get('aq',0)*100)}%"
+            f"  \u2190 WEIGHT OVERRIDE: sub-genre '{effective_subgenre}' routes to {effective_genre_for_weights} weights"
+        )
+        effective_system = _wsre.sub(
+            r'(?mi)^' + _wsre.escape(genre.capitalize()) + r':.*$',
+            override_weight_line,
+            SYSTEM_BRIEF
+        )
+        print(f"[auto_score] SYSTEM_BRIEF patched: {genre} weights \u2192 {effective_genre_for_weights} weights (sub-genre: {effective_subgenre})")
+    else:
+        effective_system = SYSTEM_BRIEF
+
     prompt = SCORE_PROMPT.format(
         genre                = genre,
         photographer         = photographer,
@@ -2534,7 +2562,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         "model":       MODEL,
         "max_tokens":  1500,
         "temperature": 0.2,
-        "system":      SYSTEM_BRIEF,
+        "system":      effective_system,
         "messages": [
             {
                 "role": "user",
