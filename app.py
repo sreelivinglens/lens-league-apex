@@ -2541,15 +2541,95 @@ def _build_progress_data(user):
 
     avg_score = round(sum(img.score for img in scored) / len(scored), 2)
 
+    # ── Percentile — within same league ────────────────────────────────────
+    overall_pct     = None
+    genre_pct       = None
+    genre_pct_label = None
+    league_label    = None
+    tier_avg_dims   = {}
+    try:
+        _user_track = getattr(user, 'subscription_track', None) or                       getattr(user, 'camera_track', None) or None
+        _track_labels = {'camera': 'Camera', 'mobile': 'Mobile',
+                         'learning': 'Learning', 'mentor': 'Mentor'}
+        league_label = _track_labels.get(_user_track, 'Camera')
+
+        _league_q = [Image.status == 'scored', Image.score.isnot(None),
+                     Image.is_flagged.isnot(True), Image.needs_review.isnot(True)]
+        if _user_track in ('camera', 'mobile'):
+            _league_q.append(Image.camera_track == _user_track)
+
+        _all = (Image.query.filter(*_league_q)
+                .with_entities(Image.score, Image.genre, Image.camera_track,
+                               Image.dod_score, Image.disruption_score,
+                               Image.dm_score, Image.wonder_score, Image.aq_score)
+                .all())
+
+        if _all and avg_score:
+            _all_scores = [float(r.score) for r in _all]
+            _below = sum(1 for s in _all_scores if s < avg_score)
+            overall_pct = max(1, round((1 - _below / len(_all_scores)) * 100))
+
+            if top_genre:
+                from engine.scoring import normalise_genre as _ng
+                _genre_scores = [float(r.score) for r in _all
+                                 if _ng(r.genre) == _ng(top_genre)]
+                if _genre_scores and len(_genre_scores) >= 3:
+                    _bg = sum(1 for s in _genre_scores if s < avg_score)
+                    _gp = max(1, round((1 - _bg / len(_genre_scores)) * 100))
+                    if _gp < 100:
+                        genre_pct = _gp
+                        genre_pct_label = top_genre
+
+            # Tier average per dimension
+            _cur_tier = get_tier(avg_score)
+            _tier_imgs = (Image.query
+                .filter(Image.status == 'scored', Image.score.isnot(None),
+                        Image.tier == _cur_tier, Image.is_flagged.isnot(True))
+                .with_entities(Image.dod_score, Image.disruption_score,
+                               Image.dm_score, Image.wonder_score, Image.aq_score)
+                .limit(500).all())
+            _fd = {'dod': 'dod_score', 'disruption': 'disruption_score',
+                   'dm': 'dm_score', 'wonder': 'wonder_score', 'aq': 'aq_score'}
+            for _d, _f in _fd.items():
+                _vals = [getattr(r, _f) for r in _tier_imgs if getattr(r, _f) is not None]
+                tier_avg_dims[_d] = round(sum(_vals) / len(_vals), 1) if _vals else None
+    except Exception as _pe:
+        import logging
+        logging.getLogger(__name__).warning(f'[progress_data percentile] {_pe}')
+
+    # ── Tier progress ───────────────────────────────────────────────────────
+    _tier_order = ['Rookie','Shooter','Contender','Craftsman','Maverick',
+                   'Master','Grandmaster','Legend']
+    _tier_bounds = {'Rookie':(0,4),'Shooter':(4,5),'Contender':(5,6),
+                    'Craftsman':(6,7),'Maverick':(7,8),'Master':(8,9),
+                    'Grandmaster':(9,9.7),'Legend':(9.7,10)}
+    _cur_tier = get_tier(avg_score)
+    _prev_tier = (_tier_order[max(0, _tier_order.index(_cur_tier)-1)]
+                  if _cur_tier in _tier_order else None)
+    _next_tier = (_tier_order[min(len(_tier_order)-1, _tier_order.index(_cur_tier)+1)]
+                  if _cur_tier in _tier_order else None)
+    _bounds = _tier_bounds.get(_cur_tier, (0, 10))
+    _tier_pct = int(min(100, max(0,
+        (avg_score - _bounds[0]) / max(0.01, _bounds[1] - _bounds[0]) * 100)))
+
     return {
-        'count':      len(scored),
-        'avg_tier':   get_tier(avg_score),
-        'dim_avgs':   avgs,
-        'dim_labels': dim_labels,
-        'trend':      trend,
-        'strongest':  strongest,
-        'weakest':    weakest,
-        'top_genre':  top_genre,
+        'count':          len(scored),
+        'avg_tier':       get_tier(avg_score),
+        'avg_score':      avg_score,
+        'dim_avgs':       avgs,
+        'dim_labels':     dim_labels,
+        'trend':          trend,
+        'strongest':      strongest,
+        'weakest':        weakest,
+        'top_genre':      top_genre,
+        'overall_pct':    overall_pct,
+        'genre_pct':      genre_pct,
+        'genre_pct_label': genre_pct_label,
+        'league_label':   league_label,
+        'tier_avg_dims':  tier_avg_dims,
+        'tier_pct':       _tier_pct,
+        'prev_tier':      _prev_tier,
+        'next_tier':      _next_tier,
     }
 
 
