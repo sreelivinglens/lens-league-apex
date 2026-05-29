@@ -685,7 +685,7 @@
         </div>
 
         {% if early %}
-        <div style="font-size:13px; color:var(--gold); padding:8px 12px; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:var(--radius-sm); margin-bottom:8px;">
+        <div style="font-size:14px; font-weight:600; color:#5a3a00; padding:10px 14px; background:#fff8e1; border:1px solid #c8960a; border-radius:var(--radius-sm); margin-bottom:8px;">
           ℹ Only {{ n }} images scored — thresholds are most meaningful at 50+ images from mixed-skill users. Current members are self-selected experienced photographers.
         </div>
         {% endif %}
@@ -712,16 +712,16 @@
 
         {# Tier distribution bars #}
         <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
-          <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Tier distribution</div>
+          <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:var(--text-secondary); text-transform:uppercase; margin-bottom:10px;">Tier distribution</div>
           {% set tier_data = platform_cal.tier_counts %}
           {% set max_count = platform_cal.tier_max %}
           {% for tier in tier_data %}
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; font-size:12px;">
-            <span style="width:92px; text-align:right; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); flex-shrink:0;">{{ tier.name }}</span>
-            <div style="flex:1; height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:7px;">
+            <span style="width:110px; text-align:right; font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--text-primary); flex-shrink:0;">{{ tier.name }}</span>
+            <div style="flex:1; height:8px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
               <div style="width:{{ ((tier.count / max_count * 100) if max_count > 0 else 0)|round(1) }}%; height:100%; background:{{ tier.color }}; border-radius:4px;"></div>
             </div>
-            <span style="width:24px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">{{ tier.count }}</span>
+            <span style="width:28px; font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--text-primary);">{{ tier.count }}</span>
           </div>
           {% endfor %}
         </div>
@@ -735,10 +735,10 @@
       <div style="margin-bottom:16px;">
         {% for alert in drift_alerts %}
         <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:6px;
-                    background:{{ 'var(--red-dim)' if alert.type == 'low' else 'var(--amber-dim)' }};
-                    border:1px solid {{ 'var(--red)' if alert.type == 'low' else 'var(--amber)' }};
-                    border-radius:var(--radius-sm); font-size:15px;
-                    color:{{ '#F0A0A0' if alert.type == 'low' else '#F0C888' }};">
+                    background:{{ '#fde8e8' if alert.type == 'low' else '#fff8e1' }};
+                    border:1px solid {{ '#c0392b' if alert.type == 'low' else '#c8960a' }};
+                    border-radius:var(--radius-sm); font-size:15px; font-weight:600;
+                    color:{{ '#5a0e0e' if alert.type == 'low' else '#5a3a00' }};">
           {{ '⚠️' if alert.type == 'low' else '📈' }}
           <strong style="font-family:var(--font-mono);">{{ alert.genre }}</strong> — {{ alert.msg }}
         </div>
