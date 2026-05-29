@@ -75,9 +75,6 @@
   .audit-row-text { font-size: 16px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
   @media (max-width: 520px) { .audit-row { flex-direction: column; gap: 6px; } .audit-row-label { width: auto; } }
   @media (max-width: 520px) { .score-card { padding: 20px 18px; } .detail-wrap { padding: 0 4px; } }
-  .dl-share-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-  .dl-share-btn { flex:1; min-width:0; text-align:center; padding:13px 20px; font-size:15px; white-space:nowrap; box-sizing:border-box; }
-  @media (max-width: 420px) { .dl-share-row { flex-direction:column; gap:10px; } .dl-share-btn { flex:none; width:100%; min-width:0; } }
 
   #delete-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
@@ -115,9 +112,14 @@
   {# ── Status banners ──────────────────────────────────────────────── #}
   {% if image.is_flagged %}
   <div class="status-banner flagged">
-    <strong>⚠ Image Flagged</strong> — {{ image.flagged_reason or 'This image has been flagged and is not publicly visible.' }}
+    <strong>⚠ Image Flagged</strong> — {{ image.flagged_reason or 'This image has been flagged and is under review before going public.' }}
     {% if image.ai_suspicion and image.ai_suspicion >= 0.7 %}
-    <br><span style="font-size: 14px; opacity:0.8;">AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}. If you believe this is incorrect, contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span> with your original file.</span>
+    <br><span style="font-size: 14px; opacity:0.8; line-height:1.8;">
+      AI suspicion score: {{ '%.2f'|format(image.ai_suspicion) }}.<br>
+      High-production constructed shoots — studio work, allegorical tableaux, heavily lit portraits — can trigger false positives.
+      If this is an original photograph, email <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span> with your original RAW file, any behind-the-scenes photos, and the camera and lens used.
+      We aim to resolve appeals within 48 hours.
+    </span>
     {% endif %}
   </div>
   {% elif image.needs_review %}
@@ -402,11 +404,11 @@
 
   {# ── Download + Share row ────────────────────────────────────────── #}
   {% if image.status == 'scored' and image.score and not image.is_flagged %}
-  <div class="dl-share-row">
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
     <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank"
-       class="btn btn-solid dl-share-btn">↓ Download Review</a>
+       class="btn btn-solid" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↓ Download Review</a>
     <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="btn dl-share-btn">↑ Share Score</a>
+       class="btn" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↑ Share Score</a>
   </div>
   <div style="font-size:12px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
   {% endif %}
