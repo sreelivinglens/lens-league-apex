@@ -1889,11 +1889,26 @@ function dbToggle(hdr) {
   var chev = hdr.querySelector('.db-chevron');
   body.classList.toggle('collapsed');
   chev.classList.toggle('open');
+  // Persist state
+  try {
+    var titleEl = hdr.querySelector('.db-section-title');
+    var key = 'sl_sec_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : Math.random());
+    localStorage.setItem(key, body.classList.contains('collapsed') ? '0' : '1');
+  } catch(e) {}
 }
 
 function dbPanelToggle(hdr) {
   var panel = hdr.parentElement;
+  var body  = panel.querySelector('.db-panel-body');
   panel.classList.toggle('mob-open');
+  var open = panel.classList.contains('mob-open');
+  if (body && window.innerWidth < 769) body.style.display = open ? '' : 'none';
+  // Persist right-col panel state (mobile only)
+  try {
+    var titleEl = hdr.querySelector('.db-panel-hdr-title');
+    var key = 'sl_panel_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : Math.random());
+    localStorage.setItem(key, open ? '1' : '0');
+  } catch(e) {}
 }
 
 function dbAnnToggle(strip) {
@@ -1931,12 +1946,26 @@ function dbHcardToggle(id) {
   body.style.display = open ? 'none' : 'block';
   sum.style.display  = open ? 'block' : 'none';
   if (chev) chev.style.transform = open ? 'rotate(-90deg)' : '';
+  // Persist state
+  try { localStorage.setItem('sl_hcard_'+id, open ? '0' : '1'); } catch(e) {}
 }
 
-// First-visit: hero cards expanded; returning: all expanded (user chooses to collapse)
+// Restore hero card states — default collapsed, persist user preference
 (function() {
-  // Hero cards start expanded — no auto-collapse on first visit
-  // User can collapse individually
+  var cards = ['standing', 'points', 'poty'];
+  cards.forEach(function(id) {
+    var body = document.getElementById('db-hcard-body-'+id);
+    var sum  = document.getElementById('db-hcard-sum-'+id);
+    var chev = document.getElementById('db-hcard-chev-'+id);
+    if (!body) return;
+    var stored;
+    try { stored = localStorage.getItem('sl_hcard_'+id); } catch(e) {}
+    // Default is collapsed (stored===null means first visit → collapse)
+    var open = stored === '1';
+    body.style.display = open ? 'block' : 'none';
+    sum.style.display  = open ? 'none'  : 'block';
+    if (chev) chev.style.transform = open ? '' : 'rotate(-90deg)';
+  });
 })();
 
 function dbPotyToggle() {
@@ -1951,6 +1980,55 @@ function dbPotyToggle() {
   if (window.innerWidth <= 768) {
     var body = document.getElementById('db-poty-body');
     if (body) body.classList.add('collapsed');
+  }
+})();
+
+// ── Section + panel collapse init — default collapsed, localStorage persists user preference ──
+(function() {
+  // db-section bodies: collapse all except the image gallery (identified by having a db-img-grid child)
+  var sectionHdrs = document.querySelectorAll('.db-section-hdr');
+  sectionHdrs.forEach(function(hdr) {
+    var body = hdr.parentElement.querySelector('.db-section-body');
+    var chev = hdr.querySelector('.db-chevron');
+    if (!body) return;
+    // Never auto-collapse the image gallery section
+    if (body.querySelector('.db-img-grid')) return;
+    var titleEl = hdr.querySelector('.db-section-title');
+    var key = 'sl_sec_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : '');
+    var stored;
+    try { stored = localStorage.getItem(key); } catch(e) {}
+    // Default collapsed (null = first visit)
+    var open = stored === '1';
+    if (!open) {
+      body.classList.add('collapsed');
+      if (chev) chev.classList.remove('open');
+    } else {
+      body.classList.remove('collapsed');
+      if (chev) chev.classList.add('open');
+    }
+  });
+
+  // db-panel bodies (right col): collapsed by default on mobile only, persist preference
+  // On desktop (>=769px) CSS already forces display:block !important — don't touch
+  if (window.innerWidth < 769) {
+    var panelHdrs = document.querySelectorAll('.db-panel-hdr');
+    panelHdrs.forEach(function(hdr) {
+      var panel = hdr.parentElement;
+      var body  = panel.querySelector('.db-panel-body');
+      if (!body) return;
+      var titleEl = hdr.querySelector('.db-panel-hdr-title');
+      var key = 'sl_panel_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : '');
+      var stored;
+      try { stored = localStorage.getItem(key); } catch(e) {}
+      var open = stored === '1';
+      if (!open) {
+        panel.classList.remove('mob-open');
+        body.style.display = 'none';
+      } else {
+        panel.classList.add('mob-open');
+        body.style.display = '';
+      }
+    });
   }
 })();
 
