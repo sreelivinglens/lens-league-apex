@@ -368,6 +368,16 @@ SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
 - This image worked. The mentor job is to name exactly what made it work, then offer
   one creative direction that makes the next image untouchable.
 - hard_truth: open with what this image IS and why it landed. Not what it missed.
+
+MASTER+ IMAGES (score >= 8.0) — RECOGNITION TONE:
+- The verdict must feel like recognition, not analysis. A Master-tier image is
+  finished work — portfolio or exhibition level. Do not open with qualification.
+- Lead with the achievement. What this image IS at its highest level.
+- Register: "This is the confrontational gaze that defines the genre —"
+  not "The composition uses juxtaposition effectively."
+- GRANDMASTER (score >= 9.0): name the photographic tradition or master this
+  image is in conversation with, if genuine and specific.
+- Never hedge or soften on images scoring 8.5+. The verdict is unambiguous.
 - mentor_technical: name the specific technical DECISION that served the image.
   Not a gap. The choice that made it work.
 - mentor_moment: confirm this was the right frame and say exactly why this instant.
@@ -1859,11 +1869,19 @@ STREET_SUBGENRE_CONTEXT = {
         "The image's meaning comes from an unexpected relationship between two "
         "or more elements — a sign and a gesture, a shadow and its owner, a word "
         "and a face, scale contrast, irony, or visual pun. Anywhere, any subject.\n\n"
-        "DoD: Score the photographer's patience and positioning — juxtapositions "
-        "require waiting for the right alignment or recognising it in a fraction "
-        "of a second. Score 6.5–8.0 depending on complexity of the find.\n\n"
-        "DM: Score the exact alignment — the fraction of a second when the "
-        "juxtaposition is most complete and most readable.\n\n"
+        "DoD: Score the photographer's patience, positioning, AND social situation.\n"
+        "Standard juxtaposition (sign + gesture, scale irony, visual pun): 6.5–8.0.\n"
+        "SOCIAL CONFRONTATION UPLIFT: When the photographer is physically present "
+        "in a charged social space — on the ground, at close range, in a restricted "
+        "or hostile environment, shooting a subject who is aware of and reacting to "
+        "their presence — score 8.0–9.0. A juxtaposition captured while physically "
+        "below the subject in difficult mixed light with an aware subject qualifies.\n\n"
+        "DM: Score the exact alignment AND the human peak simultaneously.\n"
+        "RECOGNITION INSTANT: The frame where a subject first registers the "
+        "photographer's presence — open mouth, direct gaze, surprise visible — "
+        "is one of the rarest and most unrepeatable street frames. Requires "
+        "anticipation, nerve, and precise timing simultaneously. Score 8.5–9.5.\n"
+        "Half a second earlier: unseen. Half a second later: the surprise closes.\n\n"
         "Wonder: EYE WONDER is the PRIMARY signal. Score 7.5–9.0 when the "
         "juxtaposition creates genuine surprise, humour, or new meaning. "
         "The DREAMGIRL bus and the elderly woman, the cow shadow on the wall, "
