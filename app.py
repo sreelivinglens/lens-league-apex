@@ -549,6 +549,14 @@ with app.app_context():
                 )""",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
+                # ── P3: ON DELETE CASCADE for weekly_submissions (Session 37) ─
+                # DROP old constraints (no IF EXISTS on constraint names — wrapped in try/except by migration runner)
+                "ALTER TABLE weekly_submissions DROP CONSTRAINT IF EXISTS weekly_submissions_challenge_id_fkey",
+                "ALTER TABLE weekly_submissions DROP CONSTRAINT IF EXISTS weekly_submissions_user_id_fkey",
+                "ALTER TABLE weekly_submissions DROP CONSTRAINT IF EXISTS weekly_submissions_image_id_fkey",
+                "ALTER TABLE weekly_submissions ADD CONSTRAINT weekly_submissions_challenge_id_fkey FOREIGN KEY (challenge_id) REFERENCES weekly_challenges(id) ON DELETE CASCADE",
+                "ALTER TABLE weekly_submissions ADD CONSTRAINT weekly_submissions_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE",
+                "ALTER TABLE weekly_submissions ADD CONSTRAINT weekly_submissions_image_id_fkey FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE",
             ]
             for sql in _migrations:
                 try:
