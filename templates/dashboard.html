@@ -1837,6 +1837,42 @@
       </div>{# /db-panel-body #}
     </div>
 
+    {# Portfolio #}
+    <div class="db-panel" id="db-panel-portfolio">
+      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+        <span class="db-panel-hdr-title">Portfolio</span>
+        <span class="db-panel-chevron">▼</span>
+      </div>
+      <div class="db-panel-body">
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F5C518;margin-bottom:8px;">Your Portfolio</div>
+        {% if current_user.portfolio_public %}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Public · Live</div>
+        <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-bottom:10px;line-height:1.5;">
+          shutterleague.com/portfolio/{{ current_user.username }}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="{{ url_for('portfolio', username=current_user.username) }}" target="_blank"
+             style="display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--text-primary);font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;border:1px solid var(--border);">
+            View →
+          </a>
+          <a href="{{ url_for('portfolio_manager') }}"
+             style="display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;flex:1;">
+            Edit Portfolio →
+          </a>
+        </div>
+        {% else %}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Not published yet</div>
+        <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-bottom:14px;line-height:1.6;">
+          Build a public portfolio to share your best work with the world.
+        </div>
+        <a href="{{ url_for('portfolio_manager') }}"
+           style="display:flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;">
+          Set Up Portfolio →
+        </a>
+        {% endif %}
+      </div>{# /db-panel-body #}
+    </div>
+
   </div>{# /right col #}
 
 </div>{# /main-cols #}
