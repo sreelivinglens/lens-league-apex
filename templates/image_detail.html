@@ -75,6 +75,9 @@
   .audit-row-text { font-size: 16px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
   @media (max-width: 520px) { .audit-row { flex-direction: column; gap: 6px; } .audit-row-label { width: auto; } }
   @media (max-width: 520px) { .score-card { padding: 20px 18px; } .detail-wrap { padding: 0 4px; } }
+  .dl-share-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .dl-share-btn { flex:1; min-width:0; text-align:center; padding:13px 20px; font-size:15px; white-space:nowrap; box-sizing:border-box; }
+  @media (max-width: 420px) { .dl-share-row { flex-direction:column; gap:10px; } .dl-share-btn { flex:none; width:100%; min-width:0; } }
 
   #delete-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
@@ -399,11 +402,11 @@
 
   {# ── Download + Share row ────────────────────────────────────────── #}
   {% if image.status == 'scored' and image.score and not image.is_flagged %}
-  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+  <div class="dl-share-row">
     <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank"
-       class="btn btn-solid" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↓ Download Review</a>
+       class="btn btn-solid dl-share-btn">↓ Download Review</a>
     <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="btn" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↑ Share Score</a>
+       class="btn dl-share-btn">↑ Share Score</a>
   </div>
   <div style="font-size:12px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
   {% endif %}
