@@ -552,17 +552,11 @@ with app.app_context():
             ]
             for sql in _migrations:
                 try:
-                    try:
-                        conn.execute(db.text('COMMIT'))  # close any open txn
-                    except Exception:
-                        pass  # no active transaction — expected on already-run migrations
-                    conn.execute(db.text('BEGIN'))
-                    conn.execute(db.text(sql))
-                    conn.execute(db.text('COMMIT'))
+                    with conn.begin():
+                        conn.execute(db.text(sql))
                 except Exception as _e:
-                    print(f'[migration] {_e}')
-                    try: conn.execute(db.text('ROLLBACK'))
-                    except: pass
+                    if 'already exists' not in str(_e).lower():
+                        print(f'[migration] {_e}')
 
         # Mentor seed deferred — MENTORS dict is defined later in this module.
         # _seed_mentors() is called after MENTORS is defined (see below).
