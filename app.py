@@ -2547,95 +2547,15 @@ def _build_progress_data(user):
 
     avg_score = round(sum(img.score for img in scored) / len(scored), 2)
 
-    # ── Percentile — within same league (camera_track), overall and top genre ──
-    overall_pct  = None
-    genre_pct    = None
-    genre_pct_label = None
-    league_label = None
-    tier_avg_dims = {}
-    try:
-        # Determine this user's league — compare only within same track
-        _user_track = getattr(user, 'subscription_track', None) or                       getattr(user, 'camera_track', None) or None
-        # Map track → display label
-        _track_labels = {'camera': 'Camera', 'mobile': 'Mobile',
-                         'learning': 'Learning', 'mentor': 'Mentor'}
-        league_label = _track_labels.get(_user_track, 'all photographers')
-
-        _league_filter = [
-            Image.status == 'scored', Image.score.isnot(None),
-            Image.is_flagged.isnot(True), Image.needs_review.isnot(True)
-        ]
-        # Filter by same track when we know the user's track
-        if _user_track in ('camera', 'mobile'):
-            _league_filter.append(Image.camera_track == _user_track)
-
-        all_scored = (Image.query
-            .filter(*_league_filter)
-            .with_entities(Image.score, Image.genre, Image.user_id,
-                           Image.dod_score, Image.disruption_score,
-                           Image.dm_score, Image.wonder_score, Image.aq_score,
-                           Image.camera_track)
-            .all())
-        if all_scored and avg_score:
-            all_scores = [float(r.score) for r in all_scored]
-            below_overall = sum(1 for s in all_scores if s < avg_score)
-            overall_pct = max(1, round((1 - below_overall / len(all_scores)) * 100))
-            if top_genre:
-                from engine.scoring import normalise_genre as _ng
-                genre_scores = [float(r.score) for r in all_scored
-                                if _ng(r.genre) == _ng(top_genre)]
-                if genre_scores:
-                    below_genre = sum(1 for s in genre_scores if s < avg_score)
-                    genre_pct = max(1, round((1 - below_genre / len(genre_scores)) * 100))
-                    genre_pct_label = top_genre
-            # Tier average dimensions — users in same tier
-            user_tier = get_tier(avg_score)
-            tier_dim_map = {'dod': [], 'disruption': [], 'dm': [], 'wonder': [], 'aq': []}
-            # Use all scored images from all users to compute tier avg per dim
-            all_tier_imgs = (Image.query
-                .filter(Image.status == 'scored', Image.score.isnot(None),
-                        Image.tier == user_tier,
-                        Image.is_flagged.isnot(True))
-                .with_entities(Image.dod_score, Image.disruption_score,
-                               Image.dm_score, Image.wonder_score, Image.aq_score)
-                .limit(500).all())
-            fd = {'dod': 'dod_score', 'disruption': 'disruption_score',
-                  'dm': 'dm_score', 'wonder': 'wonder_score', 'aq': 'aq_score'}
-            for d, f in fd.items():
-                vals = [getattr(r, f) for r in all_tier_imgs if getattr(r, f) is not None]
-                tier_avg_dims[d] = round(sum(vals)/len(vals), 1) if vals else None
-    except Exception as _e:
-        import logging
-        logging.getLogger(__name__).warning(f'[progress_data percentile] {_e}')
-
-    # ── Tier progress ─────────────────────────────────────────────────────────
-    _tier_order = ['Rookie','Shooter','Contender','Craftsman','Maverick','Master','Grandmaster','Legend']
-    _tier_bounds = {'Rookie':(0,4),'Shooter':(4,5),'Contender':(5,6),'Craftsman':(6,7),
-                    'Maverick':(7,8),'Master':(8,9),'Grandmaster':(9,9.7),'Legend':(9.7,10)}
-    _cur_tier = get_tier(avg_score)
-    _prev_tier = _tier_order[max(0, _tier_order.index(_cur_tier)-1)] if _cur_tier in _tier_order else None
-    _next_tier_name = _tier_order[min(len(_tier_order)-1, _tier_order.index(_cur_tier)+1)] if _cur_tier in _tier_order else None
-    _bounds = _tier_bounds.get(_cur_tier, (0, 10))
-    _tier_pct = int(min(100, max(0, (avg_score - _bounds[0]) / max(0.01, _bounds[1] - _bounds[0]) * 100)))
-
     return {
-        'count':          len(scored),
-        'avg_tier':       get_tier(avg_score),
-        'avg_score':      avg_score,
-        'dim_avgs':       avgs,
-        'dim_labels':     dim_labels,
-        'trend':          trend,
-        'strongest':      strongest,
-        'weakest':        weakest,
-        'top_genre':      top_genre,
-        'overall_pct':    overall_pct,
-        'league_label':   league_label,
-        'genre_pct':      genre_pct,
-        'genre_pct_label': genre_pct_label,
-        'tier_avg_dims':  tier_avg_dims,
-        'tier_pct':       _tier_pct,
-        'prev_tier':      _prev_tier,
-        'next_tier':      _next_tier_name,
+        'count':      len(scored),
+        'avg_tier':   get_tier(avg_score),
+        'dim_avgs':   avgs,
+        'dim_labels': dim_labels,
+        'trend':      trend,
+        'strongest':  strongest,
+        'weakest':    weakest,
+        'top_genre':  top_genre,
     }
 
 
