@@ -1294,6 +1294,62 @@
     padding: 8px 12px; border-radius: 4px; border: none; cursor: pointer; min-height: 44px;
   }
 
+  /* ── Tier arc ── */
+  .db-hcard-arc-wrap {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin: 12px 0 10px;
+    min-width: 0;
+  }
+  @media (max-width: 900px) {
+    .db-hcard-arc-wrap {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+    .db-hcard-arc-left { width: 100%; max-width: 280px; }
+    .db-hcard-dims { width: 100%; }
+  }
+  .db-hcard-arc-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .db-hcard-arc-svg {
+    width: 180px;
+    height: 112px;
+    display: block;
+    max-width: 100%;
+  }
+  @media (max-width: 900px) {
+    .db-hcard-arc-svg { width: 220px; height: 136px; }
+  }
+  .db-hcard-arc-tiers {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .db-hcard-arc-tier-item { text-align: center; }
+  .db-hcard-arc-tier-lbl {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    opacity: 0.4;
+    margin-bottom: 1px;
+  }
+  .db-hcard-arc-tier-val {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    opacity: 0.7;
+  }
+  .db-hcard-arc-tier-div {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
 </style>
 {% endblock %}
 
@@ -1437,19 +1493,47 @@
         <span></span>
         <span>{{ progress_data.next_tier or '' }}</span>
       </div>
-      {# Radar + dimensions #}
+      {# Arc + dimensions #}
       {% if progress_data.dim_avgs %}
-      <div class="db-hcard-radar-wrap">
-        <div>
-          <canvas id="dbHeroRadar" class="db-hcard-radar-canvas"
-            role="img"
-            aria-label="Radar chart showing your five dimension averages vs tier average"
-            width="96" height="96"></canvas>
-          <div class="db-hcard-radar-legend">
-            <div class="db-hcard-leg-item"><div class="db-hcard-leg-gold"></div><span>You</span></div>
-            <div class="db-hcard-leg-item"><div class="db-hcard-leg-teal"></div><span>{{ progress_data.avg_tier or 'Tier' }} avg</span></div>
+      <div class="db-hcard-arc-wrap">
+
+        {# Left: tier arc SVG #}
+        <div class="db-hcard-arc-left">
+          <svg class="db-hcard-arc-svg" viewBox="0 0 180 118" role="img"
+            aria-label="Tier arc showing {{ progress_data.avg_tier or 'your tier' }}, score {{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}">
+            <path d="M 18 100 A 72 72 0 0 1 162 100"
+              fill="none" stroke="rgba(26,26,24,0.1)" stroke-width="10" stroke-linecap="round"/>
+            <path d="M 18 100 A 72 72 0 0 1 162 100"
+              fill="none" stroke="#F5C518" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="226"
+              stroke-dashoffset="{{ [[(226 * (1 - [[(progress_data.avg_score or 4) - 4, 0]|max / 6, 1]|min))|int, 0]|max, 226]|min }}"/>
+            <text x="90" y="76" text-anchor="middle" font-size="22" font-weight="700"
+              fill="#1A1A18" font-family="monospace">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</text>
+            <text x="90" y="90" text-anchor="middle" font-size="11" font-weight="700"
+              fill="#1A2744" font-family="monospace" letter-spacing="2">{{ (progress_data.avg_tier or '').upper() }}</text>
+            <text x="14"  y="114" text-anchor="middle" font-size="9" fill="rgba(26,26,24,0.35)" font-family="monospace">Rookie</text>
+            <text x="166" y="114" text-anchor="middle" font-size="9" fill="rgba(26,26,24,0.35)" font-family="monospace">Legend</text>
+            <text x="18"  y="93"  text-anchor="middle" font-size="8" fill="rgba(26,26,24,0.25)" font-family="monospace">4</text>
+            <text x="44"  y="51"  text-anchor="middle" font-size="8" fill="rgba(26,26,24,0.25)" font-family="monospace">5</text>
+            <text x="90"  y="35"  text-anchor="middle" font-size="8" fill="rgba(26,26,24,0.25)" font-family="monospace">6</text>
+            <text x="136" y="51"  text-anchor="middle" font-size="8" fill="rgba(26,26,24,0.25)" font-family="monospace">7</text>
+            <text x="162" y="93"  text-anchor="middle" font-size="8" fill="rgba(26,26,24,0.25)" font-family="monospace">8</text>
+            <circle id="dbArcDot" cx="18" cy="100" r="7" fill="#F5C518" stroke="#F7F5F2" stroke-width="2.5"/>
+          </svg>
+          <div class="db-hcard-arc-tiers">
+            <div class="db-hcard-arc-tier-item">
+              <div class="db-hcard-arc-tier-lbl">Prev</div>
+              <div class="db-hcard-arc-tier-val">{{ progress_data.prev_tier or '—' }}</div>
+            </div>
+            <div class="db-hcard-arc-tier-div"></div>
+            <div class="db-hcard-arc-tier-item">
+              <div class="db-hcard-arc-tier-lbl">Next</div>
+              <div class="db-hcard-arc-tier-val" style="color:#1D9E75;font-weight:700;">{{ progress_data.next_tier or '—' }}</div>
+            </div>
           </div>
         </div>
+
+        {# Right: dimension bars #}
         <div class="db-hcard-dims">
           {% set dim_order = ['dod','disruption','dm','wonder','aq'] %}
           {% for dim in dim_order %}{% if dim in progress_data.dim_avgs %}
@@ -1466,9 +1550,16 @@
             <span class="db-hcard-dim-val" style="{% if is_below %}color:var(--red,#c0392b);{% elif is_above %}color:#0F6E56;{% endif %}">{{ '%.1f'|format(your_val) }}</span>
           </div>
           {% endif %}{% endfor %}
+          <div class="db-hcard-radar-legend">
+            <div class="db-hcard-leg-item"><div class="db-hcard-leg-gold"></div><span>You</span></div>
+            <div class="db-hcard-leg-item"><div class="db-hcard-leg-teal"></div><span>{{ progress_data.avg_tier or 'Tier' }} avg</span></div>
+          </div>
         </div>
+
       </div>
-      {# Gap box #}
+      {% endif %}
+
+            {# Gap box #}
       {% if progress_data.weakest and progress_data.next_tier %}
       <div class="db-hcard-gap">
         <div class="db-hcard-gap-lbl">One step to {{ progress_data.next_tier }}</div>
@@ -1886,75 +1977,22 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if progress_data %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-{% endif %}
 
-{% if progress_data and progress_data.dim_avgs %}
+
+{% if progress_data and progress_data.avg_score %}
 <script>
 (function() {
-  var el = document.getElementById('dbHeroRadar');
-  if (!el) return;
-  // Resize canvas for mobile/tablet
-  var isMobile = window.innerWidth <= 900;
-  var sz = isMobile ? 190 : 96;
-  el.width = sz; el.height = sz;
-  el.style.width = sz + 'px'; el.style.height = sz + 'px';
-  var yourData = [
-    {{ progress_data.dim_avgs.get('dod', 0) }},
-    {{ progress_data.dim_avgs.get('disruption', 0) }},
-    {{ progress_data.dim_avgs.get('dm', 0) }},
-    {{ progress_data.dim_avgs.get('wonder', 0) }},
-    {{ progress_data.dim_avgs.get('aq', 0) }}
-  ];
-  var tierData = [
-    {{ progress_data.tier_avg_dims.get('dod') or 0 }},
-    {{ progress_data.tier_avg_dims.get('disruption') or 0 }},
-    {{ progress_data.tier_avg_dims.get('dm') or 0 }},
-    {{ progress_data.tier_avg_dims.get('wonder') or 0 }},
-    {{ progress_data.tier_avg_dims.get('aq') or 0 }}
-  ];
-  var hasTier = tierData.some(function(v){ return v > 0; });
-  var datasets = [{
-    data: yourData,
-    borderColor: '#F5C518',
-    borderWidth: 2,
-    pointBackgroundColor: '#F5C518',
-    pointRadius: 3,
-    backgroundColor: 'rgba(245,197,24,0.10)'
-  }];
-  if (hasTier) {
-    datasets.push({
-      data: tierData,
-      borderColor: 'rgba(26,39,68,0.4)',
-      borderWidth: 1.5,
-      pointBackgroundColor: 'rgba(26,39,68,0.4)',
-      pointRadius: 2,
-      backgroundColor: 'rgba(26,39,68,0.05)',
-      borderDash: [4,3]
-    });
-  }
-  new Chart(el, {
-    type: 'radar',
-    data: {
-      labels: ['Difficulty','Disruption','Moment','Wonder','Quality'],
-      datasets: datasets
-    },
-    options: {
-      responsive: false,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        r: {
-          min: 0, max: 10,
-          grid: { color: 'rgba(26,26,24,0.08)' },
-          angleLines: { color: 'rgba(26,26,24,0.08)' },
-          pointLabels: { color: 'rgba(26,26,24,0.45)', font: { size: 9 } },
-          ticks: { display: false }
-        }
-      }
-    }
-  });
+  var dot = document.getElementById('dbArcDot');
+  if (!dot) return;
+  var score = {{ progress_data.avg_score or 0 }};
+  var minS = 4, maxS = 10;
+  var pct = Math.min(1, Math.max(0, (score - minS) / (maxS - minS)));
+  var cx = 90, cy = 100, r = 72;
+  var angle = Math.PI - pct * Math.PI;
+  var x = cx + r * Math.cos(angle);
+  var y = cy - r * Math.sin(angle);
+  dot.setAttribute('cx', x.toFixed(1));
+  dot.setAttribute('cy', y.toFixed(1));
 })();
 </script>
 {% endif %}
