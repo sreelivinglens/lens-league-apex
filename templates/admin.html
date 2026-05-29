@@ -618,7 +618,7 @@
         📊 Platform Stats &amp; Calibration
       </div>
       <div style="display:flex; align-items:center; gap:12px;">
-        <span class="admin-section-meta">{{ total_users }} members · {{ scored }} scored</span>
+        <span class="admin-section-meta">{{ total_users }} members · {{ scored }} scored{% if platform_cal %} · <span style="color:{{ 'var(--red)' if platform_cal.drift else ('var(--gold)' if platform_cal.count < 50 else '#4caf50') }}; font-weight:600;">{{ 'DRIFT' if platform_cal.drift else ('watch' if platform_cal.count < 50 else '✓ calibrated') }}</span>{% endif %}</span>
         <span class="admin-chevron" id="chev-stats">▼</span>
       </div>
     </div>
@@ -630,6 +630,105 @@
         <div class="stat-box"><div class="stat-val">{{ scored }}</div><div class="stat-lbl">Scored</div></div>
         <div class="stat-box"><div class="stat-val">{{ pending }}</div><div class="stat-lbl">Pending</div></div>
       </div>
+
+      {# ── Calibration Alert Monitor ── #}
+      {% if platform_cal %}
+      {% set avg = platform_cal.average %}
+      {% set gm_pct = platform_cal.gm_pct %}
+      {% set master_pct = platform_cal.master_pct %}
+      {% set n = platform_cal.count %}
+      {% set avg_ok = avg <= 7.5 %}
+      {% set gm_ok = gm_pct <= 5.0 %}
+      {% set master_ok = master_pct <= 35.0 %}
+      {% set all_ok = avg_ok and gm_ok and master_ok %}
+      {% set early = n < 50 %}
+
+      <div style="border:1px solid {{ 'var(--red)' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
+                  border-radius:var(--radius-md); padding:16px 20px; margin-bottom:20px;
+                  background:{{ 'rgba(192,57,43,0.06)' if not all_ok else ('rgba(245,197,24,0.04)' if early else 'rgba(45,122,58,0.05)') }};">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+                      color:{{ 'var(--red)' if not all_ok else ('var(--gold)' if early else '#4caf50') }};">
+            📊 Calibration Monitor
+          </div>
+          <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+                       padding:3px 10px; border-radius:3px;
+                       background:{{ 'rgba(192,57,43,0.18)' if not all_ok else ('rgba(245,197,24,0.15)' if early else 'rgba(45,122,58,0.18)') }};
+                       border:1px solid {{ 'var(--red)' if not all_ok else ('var(--gold-dark)' if early else '#2d7a3a') }};
+                       color:{{ 'var(--red)' if not all_ok else ('var(--gold)' if early else '#4caf50') }};">
+            {{ 'DRIFT DETECTED' if not all_ok else ('EARLY — WATCH' if early else 'CALIBRATED') }}
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;">
+          <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
+            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Platform avg</div>
+            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not avg_ok else 'var(--gold)' }};">{{ '%.2f'|format(avg) }}</div>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 7.5</div>
+          </div>
+          <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
+            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Images scored</div>
+            <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ n }}</div>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">{{ 'early sample' if early else 'stable sample' }}</div>
+          </div>
+          <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
+            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Grandmaster %</div>
+            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not gm_ok else 'var(--gold)' }};">{{ '%.1f'|format(gm_pct) }}%</div>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 5%</div>
+          </div>
+          <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;">
+            <div style="font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Master+ %</div>
+            <div style="font-size:24px; font-weight:700; color:{{ 'var(--red)' if not master_ok else 'var(--gold)' }};">{{ '%.1f'|format(master_pct) }}%</div>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:2px;">threshold ≤ 35%</div>
+          </div>
+        </div>
+
+        {% if early %}
+        <div style="font-size:13px; color:var(--gold); padding:8px 12px; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:var(--radius-sm); margin-bottom:8px;">
+          ℹ Only {{ n }} images scored — thresholds are most meaningful at 50+ images from mixed-skill users. Current members are self-selected experienced photographers.
+        </div>
+        {% endif %}
+        {% if not avg_ok %}
+        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+          ⚠ Platform average {{ '%.2f'|format(avg) }} exceeds 7.5 threshold — possible grade inflation. Review recent auto_score calibration.
+        </div>
+        {% endif %}
+        {% if not gm_ok %}
+        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+          ⚠ Grandmaster rate {{ '%.1f'|format(gm_pct) }}% exceeds 5% — top tier may be diluting. Check scoring rubrics.
+        </div>
+        {% endif %}
+        {% if not master_ok %}
+        <div style="font-size:13px; color:#f08080; padding:8px 12px; background:var(--red-dim); border:1px solid var(--red); border-radius:var(--radius-sm); margin-bottom:8px;">
+          ⚠ Master+ rate {{ '%.1f'|format(master_pct) }}% exceeds 35% — upper tiers crowding. Score distribution may need recalibration.
+        </div>
+        {% endif %}
+        {% if all_ok and not early %}
+        <div style="font-size:13px; color:#4caf50; padding:8px 12px; background:rgba(45,122,58,0.08); border:1px solid #2d7a3a; border-radius:var(--radius-sm);">
+          ✓ Distribution is healthy. Average, Grandmaster rate, and Master+ rate are all within thresholds.
+        </div>
+        {% endif %}
+
+        {# Tier distribution bars #}
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+          <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px;">Tier distribution</div>
+          {% set tier_data = platform_cal.tier_counts %}
+          {% set max_count = platform_cal.tier_max %}
+          {% for tier in tier_data %}
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; font-size:12px;">
+            <span style="width:92px; text-align:right; font-family:var(--font-mono); font-size:11px; color:var(--text-muted); flex-shrink:0;">{{ tier.name }}</span>
+            <div style="flex:1; height:7px; background:var(--surface-3); border-radius:4px; overflow:hidden;">
+              <div style="width:{{ ((tier.count / max_count * 100) if max_count > 0 else 0)|round(1) }}%; height:100%; background:{{ tier.color }}; border-radius:4px;"></div>
+            </div>
+            <span style="width:24px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">{{ tier.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+      {% endif %}
+      {# ── End Calibration Alert Monitor ── #}
 
       {% if cal_stats %}
       {% if drift_alerts %}
