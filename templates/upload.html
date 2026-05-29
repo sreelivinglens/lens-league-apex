@@ -241,7 +241,7 @@
 <div class="upload-wrap">
   <div class="page-header">
     <h1>Upload Image</h1>
-    <p>Submit your photograph for AI scoring via the Apex DDI Engine</p>
+    <p>Upload your photograph and get a detailed score with feedback.</p>
   </div>
 
   <!-- ── UPLOAD CAROUSEL ── -->
@@ -628,19 +628,19 @@
   }
 
   const genreHints = {
-    'Creative':       '🎨 Abstract · ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Minimalist · Graphic · Fine Art. Technique-driven or form-driven work. Wonder and AQ score highest.',
-    'Drone':          '🚁 Aerial photography. Wonder and emotional scale score highest — the feeling of altitude and the impossibility of the perspective.',
-    'Drone & Aerial': '🚁 Aerial photography. Geometric patterns score highest.',
-    'Wildlife':       '🦁 Animals in natural behaviour. Wonder and the felt connection between viewer and subject score highest. The engine detects the sub-type automatically.',
-    'Street':         '🚶 Life as it happens — village, market, beach, transit, anywhere. Emotional truth and Eye Wonder score highest. Not urban-specific.',
-    'Fashion':        '👗 Editorial · Conceptual · Studio · Beauty. The psychological tension the image creates scores highest.',
-    'Landscape':      '🌄 Land, sea, or sky as the primary subject. The feeling of presence — being transported somewhere — scores highest.',
-    'Landscapes':     '🌄 Light quality, composition, patience.',
-    'Macro':          '🔬 Extreme close-up — any subject. The revelation feeling — awe at the existence of the structure revealed — scores highest.',
-    'Wedding':        '💍 Ceremonies and celebrations. Genuine unrepeatable human emotion scores highest. AQ is the dominant signal at 45%.',
-    'People':         '👤 Portraits, faces, human expression. Name the specific emotion — loneliness, joy, defiance, tenderness. AQ is the dominant signal at 45%.',
-    'Nature':         '🌿 Plants · Fungi · Ecosystems · Weather · Rivers · Night Sky · Coral. Ecological wonder and the feeling of awe score highest.',
-    'Documentary':    '📷 You witnessed something. Emotional truth and moral weight score highest. The image that makes the viewer feel the weight of what it documents.',
+    'Creative':       '🎨 Abstract · ICM · Panning · Zoom Burst · Star Trails · Astro · Light Painting · Minimalist · Graphic · Fine Art. Images built on technique, form, or idea — where how it was made is part of what it means.',
+    'Drone':          '🚁 Aerial photography. Perspectives, patterns, and scale only visible from above.',
+    'Drone & Aerial': '🚁 Aerial photography. Perspectives, patterns, and scale only visible from above.',
+    'Wildlife':       '🦁 Animals in their natural world — behaviour, movement, presence. Not zoos or captive settings.',
+    'Street':         '🚶 Life as it happens — city, village, market, transit, anywhere people are. The unposed, unplanned, unrepeatable moment.',
+    'Fashion':        '👗 Editorial · Conceptual · Studio · Beauty. Directed or art-led photography of people and clothing.',
+    'Landscape':      '🌄 Land, sea, or sky as the primary subject. No people, no wildlife — the place itself.',
+    'Landscapes':     '🌄 Land, sea, or sky as the primary subject.',
+    'Macro':          '🔬 Extreme close-up — insects, plants, objects, textures. The subject fills the frame.',
+    'Wedding':        '💍 Ceremonies, celebrations, and the moments between. Real emotion, not posed portraits.',
+    'People':         '👤 Portraits and human expression — faces, gestures, presence. One person or a few, close.',
+    'Nature':         '🌿 Plants · Fungi · Ecosystems · Weather · Rivers · Night Sky · Coral. The natural world, without people.',
+    'Documentary':    '📷 A real situation, witnessed and recorded. Events, communities, conditions, lives.',
   };
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
@@ -778,7 +778,7 @@
         // Phase 1 complete — image received. Now poll for score.
         document.getElementById('overlayPhase').textContent    = 'ANALYSING';
         document.getElementById('overlayStatus').textContent   = 'Apex DDI Engine evaluating…';
-        document.getElementById('overlaySubstatus').textContent = 'DoD · Disruption · DM · Wonder · AQ';
+        document.getElementById('overlaySubstatus').textContent = 'Scoring technique, composition, moment, and emotion…';
         _startPolling(resp.image_id, resp.next || '');
         return;
       }
@@ -867,7 +867,7 @@
     const phases = [
       { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',    ss:'Sending to server securely.' },
       { from:4,  to:10, p:'PROCESSING', s:'Preparing for analysis…',      ss:'Extracting metadata and verifying.' },
-      { from:10, to:15, p:'ANALYSING',  s:'Apex DDI Engine evaluating…',  ss:'DoD · Disruption · DM · Wonder · AQ' },
+      { from:10, to:15, p:'ANALYSING',  s:'Scoring your image…',           ss:'Technique · Composition · Moment · Emotion' },
     ];
 
     overlay.classList.add('active');
