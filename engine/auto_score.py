@@ -1897,7 +1897,15 @@ STREET_SUBGENRE_CONTEXT = {
         "Wonder: EYE WONDER is the PRIMARY signal. Score 7.5–9.0 when the "
         "juxtaposition creates genuine surprise, humour, or new meaning. "
         "The DREAMGIRL bus and the elderly woman, the cow shadow on the wall, "
-        "the woman framed through the camel neck — these are Wonder 8.5–9.0."
+        "the woman framed through the camel neck — these are Wonder 8.5–9.0. "
+        "Score Wonder 9.0–9.5 when the juxtaposition is singular AND layered — "
+        "when the visual find could not exist in any other place or moment AND "
+        "carries emotional weight beyond the graphic surprise. A man isolated in "
+        "shadow while a crowd of looming silhouettes is projected above him on a "
+        "vivid wall — the find IS the meaning. Scale irony that is also social "
+        "truth. EMOTIONAL WONDER compounds EYE WONDER: when the juxtaposition "
+        "reveals isolation, dignity, or the human condition — not just a visual "
+        "pun — score Wonder 9.0–9.5. DO NOT cap at 9.0 for these images.\n\n"
     ),
 
     'street_reflection': (
