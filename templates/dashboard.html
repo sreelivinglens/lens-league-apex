@@ -1288,7 +1288,7 @@
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     color: #1A2744;
   }
-  .db-hcard-ref-share { display: flex; gap: 8px; flex-wrap: wrap; }
+  .db-hcard-ref-share { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
   .db-hcard-ref-share button {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
     padding: 8px 12px; border-radius: 4px; border: none; cursor: pointer; min-height: 44px;
@@ -1546,11 +1546,10 @@
       <div class="db-hcard-ref-lbl">Referrals <span style="background:#F5C518;color:#7A5800;font-size:12px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:var(--font-mono);">+500 pts</span></div>
       <div class="db-hcard-ref-txt">Share your link — earn <strong>+20 pts</strong> when they score, <strong>+500 pts</strong> when they subscribe.</div>
       <div class="db-hcard-ref-code-row">
-        <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#1A2744;">{{ referral_code }}</span>
-        <a href="#" onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ var el=this; el.textContent='Copied!'; setTimeout(function(){ el.textContent='Copy link'; },2000); }.bind(this)); return false;"
-           style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:7px 14px;border-radius:4px;text-decoration:none;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center;">Copy link</a>
+        <span style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#1A2744;">{{ referral_code }}</span>
       </div>
       <div class="db-hcard-ref-share">
+        <button onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ this.textContent='Copied!'; var b=this; setTimeout(function(){ b.textContent='Copy link'; },2000); }.bind(this))" style="background:#F5C518;color:#1A2744;">Copy link</button>
         <button onclick="slRefModal('whatsapp')" style="background:#25D366;color:#fff;">WhatsApp</button>
         <button onclick="slRefModal('gmail')" style="background:#EA4335;color:#fff;">Gmail</button>
       </div>
