@@ -173,7 +173,6 @@
     line-height: 1.6;
     flex: 1;
     min-width: 0;
-    text-align: justify;
   }
   .db-ann-cta {
     font-family: var(--font-mono);
@@ -289,7 +288,6 @@
     line-height: 1.5;
     flex: 1;
     min-width: 0;
-    text-align: justify;
   }
   .db-alert-act {
     font-family: var(--font-mono);
@@ -517,28 +515,19 @@
     pointer-events: none;
   }
 
-  .db-img-body { padding: 9px 12px; min-width: 0; }
+  .db-img-body { padding: 9px 12px; }
   .db-img-title {
     font-size: 15px; font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .db-img-photographer {
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-primary); opacity: 0.5;
-    margin-top: 2px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: 0.04em;
+    text-align: justify;
   }
   .db-img-meta {
     font-family: var(--font-mono); font-size: 12px;
     color: var(--text-primary); opacity: 0.6;
     margin-top: 3px; display: flex; justify-content: space-between;
     text-transform: uppercase; letter-spacing: 1px;
-    min-width: 0;
   }
-  .db-img-meta span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .db-img-meta span:last-child { flex-shrink: 0; margin-left: 4px; }
 
   /* RAW banners inside card */
   .db-raw-banner {
@@ -852,6 +841,236 @@
     .db-panel-hdr { display: none; }
     .db-panel-body { display: block !important; padding: 0; }
   }
+  /* ── Standing panel — percentile strip ── */
+  .db-pct-strip {
+    margin-bottom: 14px;
+  }
+  .db-pct-box {
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+  }
+  .db-pct-overall {
+    background: #1A2744;
+  }
+  .db-pct-genre {
+    background: #2C3E6B;
+  }
+  .db-pct-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 4px;
+  }
+  .db-pct-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F5C518;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .db-pct-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .db-pct-num { font-size: 18px; }
+    .db-pct-box { padding: 10px 12px; }
+  }
+
+  /* ── Tier row ── */
+  .db-tier-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .db-tier-score {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-primary);
+    opacity: 0.65;
+  }
+
+  /* ── Radar + bars layout ── */
+  .db-radar-wrap {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin: 14px 0 10px;
+    min-width: 0;
+  }
+  .db-radar-canvas-wrap {
+    flex-shrink: 0;
+    width: 160px;
+    height: 160px;
+    display: block;
+  }
+  .db-radar-canvas-wrap canvas {
+    display: block;
+    width: 160px !important;
+    height: 160px !important;
+    max-width: 100%;
+  }
+  .db-radar-bars {
+    flex: 1;
+    min-width: 0;
+  }
+  .db-rdim-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    min-width: 0;
+  }
+  .db-rdim-lbl {
+    font-size: 12px;
+    color: var(--text-primary);
+    opacity: 0.55;
+    width: 80px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .db-rdim-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    position: relative;
+    min-width: 0;
+  }
+  .db-rdim-bar {
+    height: 5px;
+    border-radius: 99px;
+    background: #F5C518;
+  }
+  .db-rdim-tier-tick {
+    position: absolute;
+    top: -2px;
+    width: 2px;
+    height: 9px;
+    background: #1A2744;
+    border-radius: 1px;
+    transform: translateX(-50%);
+  }
+  .db-rdim-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+    width: 26px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .db-radar-legend {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .db-radar-leg-you {
+    font-size: 12px;
+    color: #F5C518;
+    font-family: var(--font-mono);
+  }
+  .db-radar-leg-tier {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    opacity: 0.55;
+  }
+
+  /* Tablet/iPad — right col is ~290px, side-by-side is tight but OK */
+  /* Stack radar above bars when container is narrow (mobile + iPad portrait right col) */
+  @media (max-width: 900px) {
+    .db-radar-wrap {
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .db-radar-canvas-wrap {
+      width: 200px;
+      height: 200px;
+    }
+    .db-radar-canvas-wrap canvas {
+      width: 200px !important;
+      height: 200px !important;
+    }
+    .db-radar-bars {
+      width: 100%;
+    }
+    .db-rdim-lbl {
+      width: 100px;
+      font-size: 13px;
+    }
+    .db-rdim-val {
+      font-size: 13px;
+    }
+  }
+  @media (max-width: 480px) {
+    .db-radar-canvas-wrap {
+      width: 180px;
+      height: 180px;
+    }
+    .db-radar-canvas-wrap canvas {
+      width: 180px !important;
+      height: 180px !important;
+    }
+    .db-rdim-lbl {
+      width: 80px;
+      font-size: 12px;
+    }
+  }
+
+  /* ── Gap box ── */
+  .db-gap-box {
+    background: rgba(26,39,68,0.06);
+    border: 0.5px solid rgba(26,39,68,0.18);
+    border-left: 3px solid #1A2744;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .db-gap-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(26,39,68,0.5);
+    margin-bottom: 4px;
+  }
+  .db-gap-txt {
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    text-align: justify;
+  }
+
+  /* ── POTY collapsible header (mobile only) ── */
+  .db-poty-section {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .db-poty-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (min-width: 769px) {
+    .db-poty-hdr .db-chevron { display: none; }
+    #db-poty-body { display: block !important; }
+  }
+  @media (max-width: 768px) {
+    #db-poty-body.collapsed { display: none; }
+  }
 </style>
 {% endblock %}
 
@@ -1118,7 +1337,6 @@
             </div>
             <div class="db-img-body">
               <div class="db-img-title">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
-              {% if img.photographer_name %}<div class="db-img-photographer">{{ img.photographer_name }}</div>{% endif %}
               <div class="db-img-meta">
                 <span>{{ img.genre or '' }}{% if img.camera_track %} · {{ img.camera_track|title }}{% endif %}</span>
                 <span>
@@ -1216,84 +1434,105 @@
   {# ── RIGHT: standing + DDI + peer ── #}
   <div class="db-right-col" style="min-width:0;">
 
-    {# Standing + POTY #}
+    {# ── Standing panel — percentile + radar + dimensions ── #}
+    {% if progress_data %}
     <div class="db-panel" id="db-panel-standing">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
         <span class="db-panel-hdr-title">Your Standing</span>
         <span class="db-panel-chevron">▼</span>
       </div>
       <div class="db-panel-body">
-      <div class="db-plbl">Your Standing</div>
-      {% if progress_data %}
-      <div style="text-align:center;padding:6px 0 4px;">
-        <div class="db-tier-name">{{ progress_data.avg_tier or '—' }}</div>
-        <div class="db-tier-rank">
-          {% if free_tier and free_tier.shadow_rank %}Rank #{{ free_tier.shadow_rank }} · {% endif %}{{ progress_data.top_genre or '' }} · {{ 'now' | upper }}
-        </div>
-      </div>
-      <div class="db-prog-wrap">
-        <div class="db-prog-fill" style="width:{{ [[(progress_data.tier_pct or 0)|int, 0]|max, 100]|min }}%;"></div>
-      </div>
-      <div class="db-prog-lbl">
-        <span>{{ progress_data.prev_tier or '' }}</span>
-        <span>{{ '%.1f'|format(stats.avg_score) if stats.avg_score else '—' }}</span>
-        <span>{{ progress_data.next_tier or '' }}</span>
-      </div>
-      {% endif %}
 
-      {% if poty_tracker and poty_tracker.genre_rows %}
-      <div style="margin-top:14px;">
-        <div class="db-plbl">POTY by genre</div>
-        {% for row in poty_tracker.genre_rows %}
-        <div class="db-poty-row">
-          <div class="db-poty-row-top">
-            <span class="db-poty-g">{{ row.genre }}</span>
-            <span class="db-poty-avg">{{ row.top6_avg or '—' }}</span>
-            <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% elif row.images_needed > 0 %} +{{ row.images_needed }}{% endif %}</span>
-          </div>
-          <div class="db-poty-bw">
-            <div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div>
+        {# ── Percentile headline — league-relative ── #}
+        {% if progress_data.overall_pct %}
+        <div class="db-pct-strip">
+          <div class="db-pct-box db-pct-overall">
+            <div class="db-pct-lbl">{{ progress_data.league_label or 'Your League' }}</div>
+            <div class="db-pct-num">Top {{ progress_data.overall_pct }}%</div>
+            <div class="db-pct-sub">{% if progress_data.genre_pct and progress_data.genre_pct_label %}· Top {{ progress_data.genre_pct }}% in {{ progress_data.genre_pct_label }}{% else %}in your league{% endif %}</div>
           </div>
         </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      </div>{# /db-panel-body #}
-    </div>
+        {% endif %}
 
-    {# DDI dimensions #}
-    {% if progress_data and progress_data.dim_avgs %}
-    <div class="db-panel">
-      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
-        <span class="db-panel-hdr-title">DDI Dimensions</span>
-        <span class="db-panel-chevron">▼</span>
-      </div>
-      <div class="db-panel-body">
-      <div class="db-plbl">DDI Dimensions</div>
-      {% set dim_order = ['dod', 'disruption', 'dm', 'wonder', 'aq'] %}
-      {% for dim in dim_order %}
-      {% if dim in progress_data.dim_avgs %}
-      <div class="db-ddi-row">
-        <div class="db-ddi-row-top">
-          <span class="db-ddi-lbl">{{ progress_data.dim_labels[dim] if dim in progress_data.dim_labels else dim|upper }}</span>
-          <span class="db-ddi-sc">{{ '%.1f'|format(progress_data.dim_avgs[dim]) }}</span>
+        {# ── Tier + avg score ── #}
+        <div class="db-tier-row">
+          <div class="db-tier-name">{{ progress_data.avg_tier or '—' }}</div>
+          <div class="db-tier-score">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</div>
         </div>
-        <div class="db-ddi-bw"><div class="db-ddi-bf" style="width:{{ [[(progress_data.dim_avgs[dim] / 10 * 100)|int, 0]|max, 100]|min }}%;"></div></div>
-      </div>
-      {% endif %}
-      {% endfor %}
-      <div class="db-callout-grid">
-        <div class="db-callout strength">
-          <div class="db-callout-tag strength">▲ Strength</div>
-          <div class="db-callout-dim">{{ progress_data.dim_labels[progress_data.strongest] if progress_data.strongest else '—' }}</div>
-          <div class="db-callout-sub">Keep leaning in.</div>
+        <div class="db-prog-wrap">
+          <div class="db-prog-fill" style="width:{{ [[(progress_data.tier_pct or 0)|int, 0]|max, 100]|min }}%;"></div>
         </div>
-        <div class="db-callout growth">
-          <div class="db-callout-tag growth">◎ Growth</div>
-          <div class="db-callout-dim">{{ progress_data.dim_labels[progress_data.weakest] if progress_data.weakest else '—' }}</div>
-          <div class="db-callout-sub">Biggest lever upward.</div>
+        <div class="db-prog-lbl">
+          <span>{{ progress_data.prev_tier or '' }}</span>
+          <span></span>
+          <span>{{ progress_data.next_tier or '' }}</span>
         </div>
-      </div>
+
+        {# ── Radar + bars — desktop side by side, mobile stacked ── #}
+        {% if progress_data.dim_avgs %}
+        <div class="db-radar-wrap">
+          <div class="db-radar-canvas-wrap">
+            <canvas id="dbRadarChart"
+              role="img"
+              aria-label="Radar chart showing your five dimension averages vs your tier average"
+              width="160" height="160"></canvas>
+          </div>
+          <div class="db-radar-bars">
+            {% set dim_order = ['dod','disruption','dm','wonder','aq'] %}
+            {% for dim in dim_order %}
+            {% if dim in progress_data.dim_avgs %}
+            {% set your_val = progress_data.dim_avgs[dim] %}
+            {% set tier_val = progress_data.tier_avg_dims.get(dim) if progress_data.tier_avg_dims else none %}
+            <div class="db-rdim-row">
+              <span class="db-rdim-lbl">{{ progress_data.dim_labels[dim] if dim in progress_data.dim_labels else dim }}</span>
+              <div class="db-rdim-bar-wrap">
+                <div class="db-rdim-bar" style="width:{{ [[(your_val / 10 * 100)|int, 0]|max, 100]|min }}%;"></div>
+                {% if tier_val %}<div class="db-rdim-tier-tick" style="left:{{ [[(tier_val / 10 * 100)|int, 0]|max, 99]|min }}%;"></div>{% endif %}
+              </div>
+              <span class="db-rdim-val">{{ '%.1f'|format(your_val) }}</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+            <div class="db-radar-legend">
+              <span class="db-radar-leg-you">— You</span>
+              <span class="db-radar-leg-tier">| {{ progress_data.avg_tier or 'Tier' }} avg</span>
+            </div>
+          </div>
+        </div>
+
+        {# ── Gap to next tier ── #}
+        {% if progress_data.weakest and progress_data.next_tier %}
+        <div class="db-gap-box">
+          <div class="db-gap-lbl">One step to {{ progress_data.next_tier }}</div>
+          <div class="db-gap-txt">{{ progress_data.dim_labels[progress_data.weakest] if progress_data.weakest in progress_data.dim_labels else progress_data.weakest }} is your growth lever — it's the gap between {{ progress_data.avg_tier }} and {{ progress_data.next_tier }}.</div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {# ── POTY by genre — collapsible on mobile ── #}
+        {% if poty_tracker and poty_tracker.genre_rows %}
+        <div class="db-poty-section" id="db-poty-section">
+          <div class="db-poty-hdr" onclick="dbPotyToggle()" id="db-poty-hdr">
+            <span class="db-plbl" style="margin-bottom:0;">POTY by genre</span>
+            <span class="db-chevron" id="db-poty-chev">▼</span>
+          </div>
+          <div id="db-poty-body">
+          {% for row in poty_tracker.genre_rows %}
+          <div class="db-poty-row">
+            <div class="db-poty-row-top">
+              <span class="db-poty-g">{{ row.genre }}</span>
+              <span class="db-poty-avg">{{ row.top6_avg or '—' }}</span>
+              <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% elif row.images_needed > 0 %} +{{ row.images_needed }}{% endif %}</span>
+            </div>
+            <div class="db-poty-bw">
+              <div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div>
+            </div>
+          </div>
+          {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
       </div>{# /db-panel-body #}
     </div>
     {% endif %}
@@ -1457,6 +1696,70 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 {% endif %}
 
+{% if progress_data and progress_data.dim_avgs %}
+<script>
+(function() {
+  var el = document.getElementById('dbRadarChart');
+  if (!el) return;
+  var yourData = [
+    {{ progress_data.dim_avgs.get('dod', 0) }},
+    {{ progress_data.dim_avgs.get('disruption', 0) }},
+    {{ progress_data.dim_avgs.get('dm', 0) }},
+    {{ progress_data.dim_avgs.get('wonder', 0) }},
+    {{ progress_data.dim_avgs.get('aq', 0) }}
+  ];
+  var tierData = [
+    {{ progress_data.tier_avg_dims.get('dod') or 0 }},
+    {{ progress_data.tier_avg_dims.get('disruption') or 0 }},
+    {{ progress_data.tier_avg_dims.get('dm') or 0 }},
+    {{ progress_data.tier_avg_dims.get('wonder') or 0 }},
+    {{ progress_data.tier_avg_dims.get('aq') or 0 }}
+  ];
+  var hasTier = tierData.some(function(v){ return v > 0; });
+  var datasets = [{
+    data: yourData,
+    borderColor: '#F5C518',
+    borderWidth: 2,
+    pointBackgroundColor: '#F5C518',
+    pointRadius: 3,
+    backgroundColor: 'rgba(245,197,24,0.10)'
+  }];
+  if (hasTier) {
+    datasets.push({
+      data: tierData,
+      borderColor: 'rgba(26,39,68,0.4)',
+      borderWidth: 1.5,
+      pointBackgroundColor: 'rgba(26,39,68,0.4)',
+      pointRadius: 2,
+      backgroundColor: 'rgba(26,39,68,0.05)',
+      borderDash: [4,3]
+    });
+  }
+  new Chart(el, {
+    type: 'radar',
+    data: {
+      labels: ['Difficulty','Disruption','Moment','Wonder','Quality'],
+      datasets: datasets
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 10,
+          grid: { color: 'rgba(26,26,24,0.08)' },
+          angleLines: { color: 'rgba(26,26,24,0.08)' },
+          pointLabels: { color: 'rgba(26,26,24,0.45)', font: { size: 9 } },
+          ticks: { display: false }
+        }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+
 <script>
 function dbToggle(hdr) {
   var body = hdr.parentElement.querySelector('.db-section-body');
@@ -1495,6 +1798,21 @@ function dbAnnToggle(strip) {
 function dbSearchUrl(q) {
   return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
 }
+
+function dbPotyToggle() {
+  var body = document.getElementById('db-poty-body');
+  var chev = document.getElementById('db-poty-chev');
+  if (!body) return;
+  body.classList.toggle('collapsed');
+  if (chev) chev.classList.toggle('open');
+}
+// On mobile collapse POTY by default to keep panel compact
+(function() {
+  if (window.innerWidth <= 768) {
+    var body = document.getElementById('db-poty-body');
+    if (body) body.classList.add('collapsed');
+  }
+})();
 
 function applyReferralCode() {
   var code = document.getElementById('referral-code-input').value.trim().toUpperCase();
