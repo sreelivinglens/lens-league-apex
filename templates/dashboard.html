@@ -326,7 +326,7 @@
     .db-main-cols { grid-template-columns: 1fr; }
     .db-right-col { display: flex; flex-direction: column; gap: 14px; }
   }
-  @media (max-width: 600px) {
+  @media (max-width: 900px) {
     .db-right-col { grid-template-columns: 1fr; }
   }
 
@@ -1179,11 +1179,14 @@
     font-size: 13px;
     color: var(--text-primary);
     opacity: 0.55;
-    width: 130px;
+    width: 148px;
     flex-shrink: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  @media (max-width: 900px) {
+    .db-hcard-dim-lbl { width: 160px; font-size: 14px; }
   }
 
   .db-hcard-dim-bw {
@@ -1489,7 +1492,7 @@
         </div>
         <div class="db-hcard-pts-stat">
           <div class="db-hcard-pts-lbl">Residency</div>
-          <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:13px;opacity:0.4;">/6</span></div>
+          <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:16px;opacity:0.4;">/6</span></div>
           <div class="db-hcard-pts-sub">months to ranking</div>
         </div>
       </div>
@@ -1497,7 +1500,7 @@
         <div class="db-hcard-pts-bar-fill" style="width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
       </div>
       {% if wallet_hud.officially_ranked %}
-      <div style="font-size:13px;color:var(--green,#2e7d32);font-weight:600;margin-bottom:10px;">✓ Official World Ranking — Live</div>
+      <div style="font-size:16px;color:var(--green,#2e7d32);font-weight:500;margin-bottom:10px;">✓ Official World Ranking — Live</div>
       {% else %}
       <div class="db-hcard-pts-note">{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }} to appear on the leaderboard.</div>
       {% endif %}
@@ -1610,7 +1613,7 @@
            style="font-family:var(--font-mono);font-size:14px;padding:10px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;min-width:160px;min-height:44px;letter-spacing:1px;text-transform:uppercase;"
            oninput="this.value=this.value.toUpperCase()">
     <button onclick="applyReferralCode()" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:10px 18px;border-radius:4px;border:none;cursor:pointer;min-height:44px;white-space:nowrap;">APPLY CODE &#8594;</button>
-    <span id="referral-code-msg" style="font-size:13px;color:rgba(255,255,255,0.60);display:none;"></span>
+    <span id="referral-code-msg" style="font-size:16px;color:rgba(255,255,255,0.60);display:none;"></span>
   </div>
 </div>
 {% endif %}
@@ -1722,7 +1725,7 @@
             <div class="db-pool-entry" onclick="event.preventDefault();">
               <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
                 <input type="hidden" name="image_id" value="{{ img.id }}">
-                <button type="submit" class="btn btn-solid" style="font-size:14px;width:100%;min-height:44px;">🔓 Enter Peer Pool</button>
+                <button type="submit" class="btn btn-solid" style="font-size:16px;width:100%;min-height:44px;">🔓 Enter Peer Pool</button>
               </form>
             </div>
             {% endif %}
@@ -1800,9 +1803,9 @@
         <div><div class="db-peer-val">{{ rating_widget.unlocks_pending or 0 }}</div><div class="db-peer-lbl">Unlock</div></div>
       </div>
       {% if rating_widget.credits > 0 %}
-      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
+      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
       {% if rating_widget.unlocks_pending > 0 %}
-      <div style="font-size:13px;color:var(--text-primary);opacity:0.65;margin-top:8px;line-height:1.5;">
+      <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-top:8px;line-height:1.5;">
         Rate {{ rating_widget.unlocks_pending }} image{{ 's' if rating_widget.unlocks_pending != 1 }} to unlock your pool slot.
       </div>
       {% endif %}
@@ -1850,7 +1853,7 @@
     <div class="db-panel-body">
     <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">&#x1F512; Add a password</div>
     <div style="font-size:16px;color:var(--text-primary);opacity:0.75;line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
-    <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:14px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
+    <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
     </div>
   </div>
 </div>
