@@ -3825,10 +3825,27 @@ def leaderboard():
             q = q.filter(User.city == city)
         return q
 
-    top_images = (apply_filters(Image.query, user_already_joined=False)
-                  .order_by(desc(Image.score))
-                  .limit(20)
-                  .all())
+    img_page     = request.args.get('img_page', 1, type=int)
+    img_per_page = 25
+    img_q        = apply_filters(Image.query, user_already_joined=False).order_by(desc(Image.score))
+    img_total    = img_q.count()
+    img_pages    = max(1, (img_total + img_per_page - 1) // img_per_page)
+    img_page     = max(1, min(img_page, img_pages))
+    top_images   = img_q.offset((img_page - 1) * img_per_page).limit(img_per_page).all()
+
+    # Find current user's best image rank for "your position" indicator
+    from flask_login import current_user as _cu
+    user_img_rank = None
+    if _cu.is_authenticated:
+        try:
+            all_scored = apply_filters(Image.query, user_already_joined=False)\
+                .order_by(desc(Image.score)).all()
+            for _i, _img in enumerate(all_scored):
+                if _img.user_id == _cu.id:
+                    user_img_rank = _i + 1
+                    break
+        except Exception:
+            pass
 
     # Top Photographers  -  grouped by user_id, sorted by avg_score DESC
     pg_base = (
@@ -3846,13 +3863,26 @@ def leaderboard():
         .join(User, Image.user_id == User.id)
     )
     pg_base = apply_filters(pg_base, user_already_joined=True)
-    pg_rows = (
+    pg_page     = request.args.get('pg_page', 1, type=int)
+    pg_per_page = 25
+    pg_all      = (
         pg_base
         .group_by(Image.user_id, User.username, User.full_name, User.city, User.state)
         .order_by(desc('avg_score'))
-        .limit(20)
         .all()
     )
+    pg_total    = len(pg_all)
+    pg_pages    = max(1, (pg_total + pg_per_page - 1) // pg_per_page)
+    pg_page     = max(1, min(pg_page, pg_pages))
+    pg_rows     = pg_all[(pg_page - 1) * pg_per_page : pg_page * pg_per_page]
+
+    # Find current user's photographer rank
+    user_pg_rank = None
+    if _cu.is_authenticated:
+        for _i, _row in enumerate(pg_all):
+            if _row.user_id == _cu.id:
+                user_pg_rank = _i + 1
+                break
     photographer_stats = []
     for row in pg_rows:
         photographer_stats.append({
@@ -3979,6 +4009,14 @@ def leaderboard():
         track              = track,
         tab                = tab,
         city               = city,
+        img_page           = img_page,
+        img_pages          = img_pages,
+        img_total          = img_total,
+        pg_page            = pg_page,
+        pg_pages           = pg_pages,
+        pg_total           = pg_total,
+        user_img_rank      = user_img_rank,
+        user_pg_rank       = user_pg_rank,
     )
 
 
