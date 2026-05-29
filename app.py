@@ -2722,7 +2722,7 @@ def upload():
                 if total_count >= (FREE_IMAGE_LIMIT + _bonus):
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
                     _msg = (f'You have used all {_limit_shown} free scored images. '
-                            'Upgrade to Mobile (&#8377;99/mo) or Camera (&#8377;599/mo) to keep uploading.')
+                            'Upgrade to Mobile (₹99/mo) or Camera (₹199/mo) to keep uploading.')
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                         return jsonify({'error': True, 'message': _msg}), 403
                     flash(_msg, 'warning')
