@@ -47,11 +47,32 @@ Documentary:  DoD=13% Disruption=9%  DM=20% Wonder=33% AQ=25%
 Fashion:      DoD=10% Disruption=20% DM=16% Wonder=24% AQ=30%
 
 STEP 0 — CREATIVE GENRE OVERRIDE (apply before anything else):
-If genre = 'Creative':
+If genre = 'Creative' OR sub_genre starts with 'creative_' (e.g. creative_minimalist,
+creative_graphic, creative_icm — even when filed under Street, Wildlife, or Documentary):
 - Sharpness is NEVER penalised when absent
 - Sharpness IS rewarded when present (sharp subject + technique blur = HIGHEST DoD 8.5-9.5)
 - Pure technique/abstract work scores on Disruption and Wonder — equally valid
-- DoD tiers:
+
+CRITICAL — MINIMALIST AND SILHOUETTE EXCEPTION (read before DoD tiers below):
+If sub_genre = 'creative_minimalist' OR sub_genre = 'creative_silhouette':
+  The technique-based DoD tiers below DO NOT APPLY.
+  DoD for minimalist/silhouette is scored on COMPOSITIONAL PRECISION, not camera technique.
+  The difficulty is the reduction decision: finding the exact subject-to-negative-space
+  relationship, the tonal execution (holding white plumage without clipping against
+  near-black water), the patience to wait for the precise geometric moment.
+  This is a DIFFERENT kind of difficulty — harder to find, not harder to execute mechanically.
+  DoD tiers for creative_minimalist and creative_silhouette:
+    8.5-9.5: Precise tonal execution (holding both extremes without clipping) AND
+             exact compositional resolution (subject at the geometric sweet spot) AND
+             the image could not exist if the photographer moved half a metre or
+             changed the exposure by half a stop
+    8.0-8.5: Strong compositional decision with clean tonal separation
+    7.0-8.0: Clear minimalist intent, competent execution
+    NEVER below 7.0 for a cleanly executed minimalist image — the decision to find
+    and commit to the reduction is itself a 7.0+ act.
+  Apply these tiers. Ignore the technique-based tiers below for these sub-genres.
+
+- DoD tiers (for ICM, long-exposure, panning, astro, and other technique-based sub-genres):
   8.5-9.5: Sharp subject + technique simultaneously (panning with frozen subject,
            star trails with sharp foreground, astro with sharp Milky Way,
            light painting with sharp subject, ICM with selective focus)
@@ -2066,6 +2087,14 @@ def get_genre_context(genre, sub_genre=None):
         return STREET_SUBGENRE_CONTEXT[sub_genre]
     if genre == 'Creative' and sub_genre and sub_genre in CREATIVE_SUBGENRE_CONTEXT:
         return CREATIVE_SUBGENRE_CONTEXT[sub_genre]
+    # Cross-genre creative sub-types: a creative sub-genre detected on an image filed
+    # under Street, Documentary, etc. must still load the correct Creative rubric.
+    # e.g. creative_minimalist detected on a Street-filed image.
+    if sub_genre and sub_genre in CREATIVE_SUBGENRE_CONTEXT:
+        return CREATIVE_SUBGENRE_CONTEXT[sub_genre]
+    # Cross-genre documentary sub-types: doc_crisis can be filed under Street
+    if sub_genre and sub_genre in DOCUMENTARY_SUBGENRE_CONTEXT:
+        return DOCUMENTARY_SUBGENRE_CONTEXT[sub_genre]
     return GENRE_CONTEXT.get(genre, GENRE_CONTEXT['default'])
 
 

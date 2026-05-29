@@ -266,6 +266,17 @@ SUBGENRE_HOME_GENRE = {
     'portrait_candid':    'People',
     'portrait_posed':     'People',
     'portrait_cultural':  'People',
+    # Creative sub-genres filed under Street/Wildlife/etc. use Creative weights
+    # and trigger STEP 0 Creative Genre Override in SYSTEM_BRIEF
+    'creative_minimalist': 'Creative',
+    'creative_graphic':    'Creative',
+    'creative_fineart':    'Creative',
+    'creative_icm':        'Creative',
+    'creative_longexp':    'Creative',
+    'creative_multiexp':   'Creative',
+    'creative_abstract':   'Creative',
+    'creative_astro':      'Creative',
+    'creative_silhouette': 'Creative',
 }
 
 
