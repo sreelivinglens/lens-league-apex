@@ -767,6 +767,50 @@ PEOPLE_SUBGENRE_CONTEXT = {
         "because the subject is aware of the camera. Cultural portrait Wonder is in the "
         "world the image shows, not in the spontaneity of capture."
     ),
+    'portrait_fineart': (
+        "This is People photography — sub-type: PORTRAIT (FINE ART / ALLEGORICAL / CONSTRUCTED).\n"
+        "The image IS the artwork. Allegorical tableaux, Old Masters quotation, "
+        "surreal constructed scenes, temporal duality, or painterly portraiture "
+        "executed as a complete artistic statement. The photographer built this "
+        "image — costume, light, composition, concept — before pressing the shutter.\n\n"
+        "DoD: Score the full intellectual and production complexity. "
+        "Allegorical portraiture requires art historical research, costume and "
+        "set design, lighting that replicates specific painterly qualities (Old Masters "
+        "chiaroscuro, Vermeer window light, Caravaggio shadow), and technical "
+        "precision across multiple subjects, fabrics, and tonal ranges simultaneously. "
+        "Score DoD 8.0–9.0 for work at this level. The difficulty is "
+        "conceptual AND technical — reward both.\n\n"
+        "DM: Score the exact frame where the concept is most completely "
+        "resolved — where figure relationships, gaze, and gesture align into "
+        "their strongest single statement. In a multi-figure tableau, the DM "
+        "is the frame where the geometric and emotional relationships between "
+        "figures are simultaneously at peak. Half a second earlier the tableau "
+        "collapses into separate portraits.\n\n"
+        "Disruption: Score conceptual originality within the tradition. "
+        "Does this image add something new to the visual tradition it is in "
+        "conversation with? Old Masters structure applied to contemporary subjects, "
+        "classical composition containing modern tension — reward the collision "
+        "between historical language and present-day truth.\n\n"
+        "Wonder: CONCEPTUAL WONDER is the primary signal. Score on three axes:\n"
+        "1. WORLD CREATED: Does the image create a complete world the viewer "
+        "enters? Score 8.0–9.0 when concept and execution are both fully achieved.\n"
+        "2. TRADITION IN CONVERSATION: Score 9.0–9.5 when the image is "
+        "genuinely in conversation with a recognised photographic or painterly "
+        "tradition AND brings something irreducibly new to it. The viewer "
+        "recognises both the tradition AND the departure simultaneously.\n"
+        "3. POTY / AWARD LEVEL: National or international POTY-winning allegorical "
+        "portraiture — work that defines a visual conversation for its year — "
+        "scores Wonder 9.5–9.7. DO NOT cap at 9.0 for award-level work. "
+        "The full range is available. Push to 9.5+ when the image is genuinely "
+        "at that level so the Excellence Bonus can fire.\n\n"
+        "AQ: Score the specific emotional register the constructed world creates. "
+        "Transcendence, unease, beauty as threat, temporal dislocation, the sacred "
+        "made visible. Score AQ 9.0–9.5 when the emotion is specific, complete, "
+        "and undeniable. Score AQ 9.5–9.7 for POTY-level work where the emotional "
+        "register defines the entire image — the viewer cannot unsee what this "
+        "image made them feel. DO NOT cap at 9.2 for award-winning work."
+    ),
+
     'portrait_candid': (
         "This is People photography — sub-type: PORTRAIT (CANDID / STREET).\n"
         "The defining quality is the unguarded moment — subject unaware, or a stranger "
@@ -2226,6 +2270,7 @@ PEOPLE sub-genres (select when genre is People):
   portrait_candid — unposed; subject unaware or caught in natural moment
   portrait_posed — subject aware and posed; cooperative portrait
   portrait_cultural — subject's cultural identity, dress, or context is primary
+  portrait_fineart — allegorical, constructed, or painterly portraiture; Old Masters quotation, surreal tableau, art-directed concept
   lifestyle_environmental — person in their environment; context is the story
   lifestyle_intimate — diary/documentary; trust and access are primary
 
