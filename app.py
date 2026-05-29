@@ -4116,6 +4116,42 @@ def admin_dashboard():
     # Active contest banners — shown in admin dashboard for visibility
     active_contest_banners = ContestAnnouncement.query.filter_by(banner_active=True).all()
 
+    # Platform calibration monitor
+    platform_cal = None
+    try:
+        _scored_imgs = Image.query.filter(Image.status == 'scored', Image.score.isnot(None)).all()
+        _vals = [float(img.score) for img in _scored_imgs]
+        if _vals:
+            _n = len(_vals)
+            _avg = sum(_vals) / _n
+            _gm_pct = len([s for s in _vals if s >= 9.0]) / _n * 100
+            _master_pct = len([s for s in _vals if s >= 8.0]) / _n * 100
+            _tier_defs = [
+                ('Legend',      9.7, 10.0, '#8B5CF6'),
+                ('Grandmaster', 9.0, 9.7,  '#F5C518'),
+                ('Master',      8.0, 9.0,  '#1D9E75'),
+                ('Maverick',    7.0, 8.0,  '#378ADD'),
+                ('Craftsman',   6.0, 7.0,  '#888780'),
+                ('Contender',   5.0, 6.0,  '#B4B2A9'),
+                ('Shooter',     4.0, 5.0,  '#D3D1C7'),
+                ('Rookie',      0,   4.0,  '#444441'),
+            ]
+            _tier_counts = [
+                {'name': t[0], 'count': len([s for s in _vals if t[1] <= s < t[2]]), 'color': t[3]}
+                for t in _tier_defs
+            ]
+            platform_cal = {
+                'count':       _n,
+                'average':     round(_avg, 3),
+                'gm_pct':      round(_gm_pct, 1),
+                'master_pct':  round(_master_pct, 1),
+                'drift':       not (_avg <= 7.5 and _gm_pct <= 5.0 and _master_pct <= 35.0),
+                'tier_counts': _tier_counts,
+                'tier_max':    max((t['count'] for t in _tier_counts), default=1),
+            }
+    except Exception as _ce:
+        app.logger.error(f'[platform_cal] {_ce}')
+
     return render_template('admin.html', total_users=total_users, total_images=total_images,
                            scored=scored, pending=pending, recent=recent,
                            recent_pages=recent_pages, admin_q=admin_q, recent_users=recent_users,
@@ -4128,7 +4164,8 @@ def admin_dashboard():
                            new_signups_7days=new_signups_7days,
                            new_signups_30days=new_signups_30days,
                            new_signups_onboarded=new_signups_onboarded,
-                           recent_signups=recent_signups)
+                           recent_signups=recent_signups,
+                           platform_cal=platform_cal)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
