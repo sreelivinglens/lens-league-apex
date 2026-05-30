@@ -510,7 +510,16 @@
               {% if img.status == 'scored' %}
               <button type="button" class="act-btn act-recal"
                       title="Recalibrate dimensions"
-                      onclick="openRecalModal({{ img.id }}, '{{ img.asset_name or 'Untitled' }}', {{ img.dod_score or 0 }}, {{ img.disruption_score or 0 }}, {{ img.dm_score or 0 }}, {{ img.wonder_score or 0 }}, {{ img.aq_score or 0 }}, '{{ img.score }}', '{{ img.tier }}')">
+                      data-id="{{ img.id }}"
+                      data-name="{{ (img.asset_name or 'Untitled') | replace(\"'\", \"&apos;\") | replace('\"', '&quot;') }}"
+                      data-dod="{{ img.dod_score or 0 }}"
+                      data-disruption="{{ img.disruption_score or 0 }}"
+                      data-dm="{{ img.dm_score or 0 }}"
+                      data-wonder="{{ img.wonder_score or 0 }}"
+                      data-aq="{{ img.aq_score or 0 }}"
+                      data-score="{{ img.score or 0 }}"
+                      data-tier="{{ img.tier or '' }}"
+                      onclick="openRecalModal(this)">
                 ⚖ Recal
               </button>
               {% endif %}
@@ -993,11 +1002,12 @@
 
   var _activeImageId = null;
 
-  window.openRecalModal = function(id, name, dod, dis, dm, wonder, aq, score, tier){
-    _activeImageId = id;
+  window.openRecalModal = function(btn){
+    var d = btn.dataset;
+    _activeImageId = d.id;
     document.getElementById('recal-modal-title').innerHTML =
-      '<strong>' + name + '</strong> &nbsp;&middot;&nbsp; Current: <strong>' + score + '</strong> ' + tier;
-    var vals = {dod:dod, disruption:dis, dm:dm, wonder:wonder, aq:aq};
+      '<strong>' + d.name + '</strong> &nbsp;&middot;&nbsp; Current: <strong>' + d.score + '</strong> ' + d.tier;
+    var vals = {dod:d.dod, disruption:d.disruption, dm:d.dm, wonder:d.wonder, aq:d.aq};
     Object.keys(vals).forEach(function(f){
       document.getElementById('recal-slider-'+f).value = vals[f];
     });
