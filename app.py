@@ -13335,6 +13335,19 @@ def admin_release_weekly_results(week_ref):
     return page_html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
+@app.route('/admin/cron/signup-digest', methods=['POST'])
+@login_required
+@admin_required
+def admin_trigger_signup_digest():
+    """Manual trigger for the daily signup digest — useful for testing and missed runs."""
+    try:
+        run_daily_signup_digest()
+        flash('Signup digest triggered — check admin@shutterleague.com shortly.', 'success')
+    except Exception as e:
+        flash(f'Digest trigger error: {e}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+
 def run_daily_signup_digest():
     """
     Daily admin digest — runs at 09:00 IST (03:30 UTC).
