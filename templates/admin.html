@@ -510,7 +510,7 @@
               {% if img.status == 'scored' %}
               <button type="button" class="act-btn act-recal"
                       title="Recalibrate dimensions"
-                      data-image-id="{{ img.id }}"
+                      data-iid="{{ img.id }}"
                       data-name="{{ (img.asset_name or 'Untitled') | replace("'", '') | replace('"', '') }}"
                       data-dod="{{ img.dod_score or 0 }}"
                       data-disruption="{{ img.disruption_score or 0 }}"
@@ -1004,7 +1004,7 @@
 
   window.openRecalModal = function(btn){
     var d = btn.dataset;
-    _activeImageId = d.imageId;
+    _activeImageId = d.iid;
     document.getElementById('recal-modal-title').innerHTML =
       '<strong>' + d.name + '</strong> &nbsp;&middot;&nbsp; Current: <strong>' + d.score + '</strong> ' + d.tier;
     var vals = {dod:d.dod, disruption:d.disruption, dm:d.dm, wonder:d.wonder, aq:d.aq};
