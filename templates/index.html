@@ -58,25 +58,24 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-text {
   position: relative;
   z-index: 5;
-  padding: 40px 48px;
-  width: 520px;
-  min-height: 360px;
+  padding: 28px 32px;
+  width: 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: rgba(30,28,24,0.30);
-  backdrop-filter: blur(2px);
+  background: rgba(13,13,11,0.18);
+  backdrop-filter: blur(1px);
   margin: 0 64px;
 }
 .sl-hero-h1 {
-  font-size: 42px;
+  font-size: 34px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: rgba(255,255,255,0.92);
   line-height: 1.08;
   letter-spacing: -0.03em;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   white-space: normal;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.95), 0 0 32px rgba(0,0,0,0.70);
 }
 .sl-hero-sub {
   font-size: 16px;
@@ -128,7 +127,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   top: 50%;
   transform: translateY(-50%);
   width: 252px;
-  background: rgba(6,4,2,0.88);
+  background: rgba(6,4,2,0.52);
   padding: 20px 22px 18px;
   z-index: 5;
 }
@@ -744,12 +743,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   /* Hero — content box narrows, stays centred */
   .sl-hero-text {
-    width: 420px;
-    min-height: 300px;
-    padding: 28px 32px;
+    width: 340px;
+    padding: 22px 26px;
     margin: 0 32px;
   }
-  .sl-hero-h1 { font-size: 32px; }
+  .sl-hero-h1 { font-size: 28px; }
   .sl-coaching { right: 24px; width: 210px; }
 
   /* 200 Years — collapse to single column */
@@ -818,7 +816,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     position: static;
     width: 100%;
     height: auto;
-    aspect-ratio: 16/9;
+    aspect-ratio: 16 / 9;
     object-fit: cover;
     object-position: center;
     display: block;
