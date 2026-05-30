@@ -1,7 +1,6 @@
 import os
 import uuid
 import json
-import random
 import threading
 from datetime import datetime, date, timedelta
 from functools import wraps
@@ -550,9 +549,6 @@ with app.app_context():
                 )""",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
-                # Home page performance — covers both hero carousel and recent_images queries
-                "CREATE INDEX IF NOT EXISTS ix_images_home_hero ON images(status, is_public, is_flagged, score, tier) WHERE status='scored' AND is_public=TRUE AND is_flagged=FALSE AND thumb_url IS NOT NULL",
-                "CREATE INDEX IF NOT EXISTS ix_images_scored_at ON images(scored_at DESC) WHERE status='scored'",
             ]
             for sql in _migrations:
                 try:
@@ -1553,49 +1549,23 @@ def run_reengagement_emailer():
 @app.route('/')
 def index():
     try:
-        # Recent public scored images for bottom strip
+        # Recent public scored images for bottom strips
         recent_images = (Image.query
                          .filter(Image.status=='scored', Image.score!=None,
                                  Image.is_public==True, Image.is_flagged==False,
                                  Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
                          .limit(12).all())
-
-        # Hero carousel — random without ORDER BY random() full-table sort:
-        # 1. Fetch qualifying IDs only (cheap — index scan, no row hydration)
-        # 2. Sample in Python
-        # 3. Fetch only the sampled rows by PK (instant)
-        _carousel_ids = [r[0] for r in db.session.execute(
-            db.text(
-                "SELECT id FROM images "
-                "WHERE status='scored' AND score IS NOT NULL "
-                "AND is_public=TRUE AND is_flagged=FALSE "
-                "AND tier IN ('Legend','Grandmaster','Master') "
-                "AND score >= 8.5 AND thumb_url IS NOT NULL"
-            )
-        ).fetchall()]
-        if _carousel_ids:
-            _sample = random.sample(_carousel_ids, min(12, len(_carousel_ids)))
-            carousel_images = Image.query.filter(Image.id.in_(_sample)).all()
-            random.shuffle(carousel_images)
-        else:
-            carousel_images = []
-
-        # Active challenge — single query with fallback, no double round-trip
-        _now = datetime.utcnow()
-        active_challenge = (WeeklyChallenge.query
-                            .filter(
-                                WeeklyChallenge.is_active == True,
-                                WeeklyChallenge.opens_at <= _now,
-                                WeeklyChallenge.closes_at >= _now,
-                            ).first()
-                            or
-                            WeeklyChallenge.query
-                            .filter_by(is_active=True)
-                            .order_by(WeeklyChallenge.opens_at.desc())
-                            .first())
-
-        # Top challenge entry thumb
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
+        carousel_images = (Image.query
+                           .filter(Image.status=='scored', Image.score!=None,
+                                   Image.is_public==True, Image.is_flagged==False,
+                                   Image.tier.in_(['Legend','Grandmaster','Master']),
+                                   Image.score>=8.5)
+                           .order_by(db.func.random())
+                           .limit(12).all())
+        active_challenge = _get_active_challenge()
+        # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
         if active_challenge:
             top_sub = (WeeklySubmission.query
@@ -1606,29 +1576,20 @@ def index():
                        .first())
             if top_sub:
                 challenge_thumb = top_sub.image.thumb_url
-
     except Exception:
-        recent_images    = []
-        carousel_images  = []
+        recent_images = []
+        carousel_images = []
         active_challenge = None
-        challenge_thumb  = None
-
+        challenge_thumb = None
     resp = make_response(render_template('index.html',
                            recent_images=recent_images,
                            carousel_images=carousel_images,
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
                            now=datetime.utcnow()))
-
-    # Anonymous users: 60s browser cache — back-navigation is instant.
-    # Authenticated users: no-cache so personalised state is always fresh.
-    if current_user.is_authenticated:
-        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        resp.headers['Pragma']        = 'no-cache'
-        resp.headers['Expires']       = '0'
-    else:
-        resp.headers['Cache-Control'] = 'public, max-age=60, stale-while-revalidate=30'
-
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma']        = 'no-cache'
+    resp.headers['Expires']       = '0'
     return resp
 
 
@@ -6882,9 +6843,32 @@ def learning():
                          .first())
     except Exception:
         learning_hero = None
+
+    # Build mentor list respecting is_active — same logic as /mentors route
+    mentors_data = {}
+    for slug, base in MENTORS.items():
+        merged = dict(base)
+        try:
+            row = db.session.execute(
+                db.text("SELECT * FROM mentor_profiles WHERE slug = :s"),
+                {'s': slug}
+            ).fetchone()
+            if row:
+                r = dict(row._mapping)
+                if not r.get('is_active', True):
+                    continue
+                if r.get('display_name'):  merged['name']    = r['display_name']
+                if r.get('bio'):           merged['bio']     = r['bio']
+                if r.get('genres'):        merged['genres']  = r['genres']
+                if r.get('photo_url'):     merged['photo']   = r['photo_url']
+        except Exception:
+            pass
+        mentors_data[slug] = merged
+
     return render_template('learning.html',
                            learning_limit=LEARNING_IMAGE_LIMIT,
-                           learning_hero=learning_hero)
+                           learning_hero=learning_hero,
+                           mentors_data=mentors_data)
 
 # ---------------------------------------------------------------------------
 # MENTOR DATA — source of truth; move to DB when roster grows
