@@ -511,7 +511,7 @@
               <button type="button" class="act-btn act-recal"
                       title="Recalibrate dimensions"
                       data-id="{{ img.id }}"
-                      data-name="{{ (img.asset_name or 'Untitled') | replace(\"'\", \"&apos;\") | replace('\"', '&quot;') }}"
+                      data-name="{{ (img.asset_name or 'Untitled') | replace("'", '') | replace('"', '') }}"
                       data-dod="{{ img.dod_score or 0 }}"
                       data-disruption="{{ img.disruption_score or 0 }}"
                       data-dm="{{ img.dm_score or 0 }}"
