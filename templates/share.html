@@ -83,7 +83,7 @@
     border: 2px solid var(--tier-color, #F5C518);
   }
 
-  .contest-badge {
+  .sl-award-badge {
     position: absolute; top: 16px; right: 16px; z-index: 4;
     background: #F5C518; color: #1a1a18;
     padding: 5px 10px; border-radius: 4px;
@@ -252,7 +252,7 @@
       shutterleague.com
     </div>
     {% if image.contest_result_status == 'published' and image.judge_final_score %}
-    <div class="contest-badge">🏆</div>
+    <div class="sl-award-badge">🏆</div>
     {% endif %}
   </div>
 
