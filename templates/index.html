@@ -827,8 +827,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     top: 0;
     height: 56.25vw; /* matches 16:9 */
     background: linear-gradient(to top,
-      rgba(0,0,0,0.90) 0%,
-      rgba(0,0,0,0.50) 40%,
+      rgba(0,0,0,0.70) 0%,
+      rgba(0,0,0,0.30) 40%,
       transparent 100%);
     pointer-events: none;
     z-index: 3;
@@ -854,9 +854,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     display: block;
   }
   .sl-hero-h1 {
-    font-size: 32px;
+    font-size: 24px;
     white-space: normal;
-    line-height: 1.08;
+    line-height: 1.1;
     color: #FFFFFF;
     text-shadow: 0 1px 8px rgba(0,0,0,0.98) !important;
     margin-bottom: 0;
@@ -990,7 +990,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-loop-num { margin-bottom: 0; }
   .sl-loop-icon { height: auto; margin-bottom: 0; }
   .sl-loop-title { font-size: 16px; margin-bottom: 4px; }
-  .sl-loop-desc { font-size: 15px; text-align: left; }
+  .sl-loop-desc { font-size: 15px; text-align: justify; }
   .sl-loop-arrow { display: none; }
   .sl-loop-cta { margin-top: 32px; }
 
@@ -1024,11 +1024,67 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-soul-tag2 { font-size: 22px; text-align: left; }
   .sl-heart-circle { margin-bottom: 12px; }
 
-  /* ── Feature cards — reduced padding, no fixed height ── */
+  /* ── Feature cards — mobile: stack vertically, content flows below image ── */
   .sl-cards { grid-template-columns: 1fr; }
-  .sl-card { height: auto; min-height: 0; padding: 20px 20px 24px; }
-  .sl-card-heading { font-size: 17px; }
-  .sl-card-body { font-size: 13px; }
+  .sl-card {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sl-card-img {
+    position: static;
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  .sl-card-overlay { display: none; }
+  .sl-card-eyebrow {
+    position: static;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #F5C518;
+    padding: 14px 20px 0;
+    text-shadow: none;
+    background: #1A2744;
+  }
+  .sl-card-content {
+    position: static;
+    background: #1A2744;
+    padding: 10px 20px 20px;
+  }
+  .sl-card-heading {
+    font-size: 17px;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+  }
+  .sl-card-body {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 14px;
+  }
+  .sl-bow-strip-wrap {
+    position: static;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+  }
+  .sl-bow-strip {
+    position: relative;
+    width: 100%;
+    height: 200px;
+  }
+  .sl-bow-strip img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
   /* ── Gallery — single column ── */
   .sl-gallery-wrap { padding: 24px 0 0; }
@@ -1067,7 +1123,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── 480px tightening ── */
 @media (max-width: 480px) {
-  .sl-hero-h1 { font-size: 32px; }
   .sl-200 { padding: 56px 16px; }
   .sl-200-num { font-size: 56px; }
   .sl-loop { padding: 56px 16px; }
@@ -1110,12 +1165,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   </div>
 
   {% if hero %}
+  {% set hero_audit = hero.get_audit() %}
+  {% set coaching_text = hero_audit.get('byline_2_body') or hero_audit.get('byline_1') %}
+  {% if coaching_text %}
   <div class="sl-coaching">
     <span class="sl-co-q">&ldquo;</span>
-    <p class="sl-co-body">{{ hero.improvement_note or 'Strong emotional resonance and atmosphere. Consider simplifying the foreground to strengthen the viewer\'s focus on the light.' }}</p>
+    <p class="sl-co-body">{{ coaching_text }}</p>
     <span class="sl-co-name">Shutter League Mentor</span>
     <span class="sl-co-tag">Real photo. Real member. Real feedback.</span>
   </div>
+  {% endif %}
   {% endif %}
 </section>
 
@@ -1194,7 +1253,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
       <div class="sl-loop-step-right">
         <div class="sl-loop-title">Upload</div>
-        <div class="sl-loop-desc">Submit a photo.<br>Get your score<br>and feedback.</div>
+        <div class="sl-loop-desc">Submit a photo. Get your score and feedback.</div>
       </div>
     </div>
 
@@ -1218,7 +1277,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
       <div class="sl-loop-step-right">
         <div class="sl-loop-title">Insight</div>
-        <div class="sl-loop-desc">Understand what&rsquo;s<br>working and what&rsquo;s<br>not.</div>
+        <div class="sl-loop-desc">Understand what’s working and what’s not.</div>
       </div>
     </div>
 
@@ -1240,7 +1299,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
       <div class="sl-loop-step-right">
         <div class="sl-loop-title">One Improvement</div>
-        <div class="sl-loop-desc">Apply one clear<br>suggestion to<br>get better.</div>
+        <div class="sl-loop-desc">Apply one clear suggestion to get better.</div>
       </div>
     </div>
 
@@ -1258,7 +1317,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       </div>
       <div class="sl-loop-step-right">
         <div class="sl-loop-title">Shoot Again</div>
-        <div class="sl-loop-desc">Practice, refine,<br>and see your<br>progress.</div>
+        <div class="sl-loop-desc">Practice, refine, and see your progress.</div>
       </div>
     </div>
 
