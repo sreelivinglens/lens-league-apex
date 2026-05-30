@@ -1044,9 +1044,10 @@
       document.getElementById('recal-f-'+f+'-'+_activeImageId).value = vals[i];
     });
     document.getElementById('recal-f-reason-'+_activeImageId).value = reason;
+    var submitId = _activeImageId;
     closeRecalModal();
     // Use adminPost (fetch + credentials:include) to match v34 pattern
-    adminPost('recal-form-'+_activeImageId);
+    adminPost('recal-form-'+submitId);
   };
 
   document.getElementById('recal-modal').addEventListener('click', function(e){
