@@ -38,7 +38,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   overflow: hidden;
   background: #0D0D0B;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
 }
 .sl-hero-img {
   position: absolute;
@@ -56,14 +56,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   pointer-events: none;
 }
 .sl-hero-text {
-  position: relative;
+  position: absolute;
+  bottom: 44px;
+  left: 64px;
   z-index: 5;
-  padding: 0;
+  padding: 24px 32px 28px;
   width: 420px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: transparent;
+  justify-content: flex-start;
+  background: rgba(13,11,8,0.38);
   margin: 0 64px;
 }
 .sl-hero-h1 {
@@ -122,11 +124,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* Coaching overlay */
 .sl-coaching {
   position: absolute;
+  bottom: 44px;
   right: 44px;
-  top: 50%;
-  transform: translateY(-50%);
   width: 252px;
-  background: rgba(6,4,2,0.52);
+  background: rgba(13,11,8,0.42);
   padding: 20px 22px 18px;
   z-index: 5;
 }
@@ -738,11 +739,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   /* Hero — content box narrows, stays centred */
   .sl-hero-text {
-    width: 380px;
-    padding: 0;
-    margin: 0 32px;
-    background: transparent;
+    width: 340px;
+    bottom: 32px;
+    left: 32px;
+    padding: 20px 24px 24px;
+    background: rgba(13,11,8,0.38);
   }
+  .sl-coaching { bottom: 32px; right: 24px; top: auto; transform: none; }
   .sl-hero-h1 { font-size: 28px; }
   .sl-coaching { right: 24px; width: 210px; }
 
