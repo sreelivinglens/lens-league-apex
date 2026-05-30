@@ -11975,6 +11975,129 @@ def admin_raw_appeal_decide(image_id):
     return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
+@app.route('/admin/image-scores-json/<int:image_id>')
+@login_required
+@admin_required
+def admin_image_scores_json(image_id):
+    """Returns current dimension scores for the recalibration preview fetch."""
+    img = Image.query.get_or_404(image_id)
+    return jsonify({
+        'id':          img.id,
+        'name':        img.asset_name or img.original_filename or 'Untitled',
+        'genre':       img.genre or '—',
+        'score':       round(float(img.score or 0), 2),
+        'tier':        img.tier or '—',
+        'soul_bonus':  bool(img.soul_bonus),
+        'dod':         round(float(img.dod_score        or 0), 2),
+        'disruption':  round(float(img.disruption_score or 0), 2),
+        'dm':          round(float(img.dm_score         or 0), 2),
+        'wonder':      round(float(img.wonder_score     or 0), 2),
+        'aq':          round(float(img.aq_score         or 0), 2),
+    })
+
+
+# Individual image recalibration tool (P1 — Session 42)
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/image/<int:image_id>/recalibrate', methods=['POST'])
+@login_required
+@admin_required
+def admin_recalibrate_image(image_id):
+    """
+    Manual recalibration of a single image from admin-supplied dimension scores.
+    Rebuilds: score, tier, soul_bonus, audit_json, and scorecard.
+    Does NOT re-run the AI engine — dimensions come entirely from the admin form.
+    Scores are permanent records; only use when a specific identifiable error exists.
+    """
+    img = Image.query.get_or_404(image_id)
+
+    try:
+        dod         = round(float(request.form.get('dod',         img.dod_score        or 0)), 2)
+        disruption  = round(float(request.form.get('disruption',  img.disruption_score or 0)), 2)
+        dm          = round(float(request.form.get('dm',          img.dm_score         or 0)), 2)
+        wonder      = round(float(request.form.get('wonder',      img.wonder_score     or 0)), 2)
+        aq          = round(float(request.form.get('aq',          img.aq_score         or 0)), 2)
+        reason      = request.form.get('reason', '').strip()
+
+        # Clamp all dimensions to valid range
+        for val, name in [(dod,'DoD'),(disruption,'Disruption'),(dm,'DM'),(wonder,'Wonder'),(aq,'AQ')]:
+            if not (0.0 <= val <= 10.0):
+                flash(f'Recalibration error: {name} value {val} is out of range (0–10).', 'error')
+                return redirect(url_for('admin_dashboard'))
+
+        final_score, tier, soul_bonus, checks = calculate_score(
+            img.genre, dod, disruption, dm, wonder, aq
+        )
+
+        # Preserve existing audit text fields; only update numeric + derived fields
+        old_audit = img.get_audit() or {}
+        audit = {
+            **old_audit,
+            'score':     str(final_score),
+            'tier':      tier,
+            'soul_bonus': soul_bonus,
+            'modules':   [
+                ('DoD', dod),
+                ('VD',  disruption),
+                ('DM',  dm),
+                ('WF',  wonder),
+                ('AQ',  aq),
+            ],
+        }
+        # Log who did this and why, stored in audit for traceability
+        audit['recalibration_log'] = audit.get('recalibration_log') or []
+        audit['recalibration_log'].append({
+            'admin':       current_user.username,
+            'at':          datetime.utcnow().isoformat(),
+            'reason':      reason,
+            'old_score':   float(img.score or 0),
+            'new_score':   final_score,
+            'old_dims':    [float(img.dod_score or 0), float(img.disruption_score or 0),
+                            float(img.dm_score or 0), float(img.wonder_score or 0), float(img.aq_score or 0)],
+            'new_dims':    [dod, disruption, dm, wonder, aq],
+        })
+
+        img.dod_score        = dod
+        img.disruption_score = disruption
+        img.dm_score         = dm
+        img.wonder_score     = wonder
+        img.aq_score         = aq
+        img.score            = final_score
+        img.tier             = tier
+        img.soul_bonus       = soul_bonus
+        img.set_audit(audit)
+
+        # Rebuild scorecard
+        try:
+            from engine.compositor import build_card1 as build_card
+            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                          f"{img.genre}_{final_score}.jpg")
+            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+            build_card(img.thumb_path, audit, card_path)
+            img.card_path = card_path
+            uid = str(uuid.uuid4())
+            card_url = _r2_upload_card(card_path, uid + '_card')
+            if card_url:
+                img.card_url = card_url
+        except Exception as card_err:
+            app.logger.warning(f'[recalibrate] card rebuild failed for image {image_id}: {card_err}')
+
+        db.session.commit()
+        flash(
+            f'Recalibrated "{img.asset_name or img.id}": '
+            f'{final_score} {tier}{"  ·  Soul Bonus" if soul_bonus else ""}',
+            'success'
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[recalibrate] image {image_id}: {e}')
+        flash(f'Recalibration error: {e}', 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
+
 # ---------------------------------------------------------------------------
 # Winner notification + RAW window trigger
 # ---------------------------------------------------------------------------
