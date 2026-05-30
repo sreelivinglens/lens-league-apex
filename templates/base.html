@@ -871,6 +871,7 @@ img {
       {% else %}
         <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
         <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}nav-active{% endif %}">Upload</a>
+        <a href="{{ url_for('challenge') }}" class="{% if request.endpoint in ['challenge', 'challenge_submit', 'challenge_withdraw', 'challenge_topup'] %}nav-active{% endif %}">Challenge</a>
         <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
         <a href="{{ url_for('contests') }}" class="{% if request.endpoint in ['contests', 'contests_redirect'] %}nav-active{% endif %}">Programmes</a>
         <a href="{{ url_for('mentors') }}" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
@@ -896,8 +897,9 @@ img {
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
       <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learning</a>
       <a href="/mentors" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
-      <a href="{{ url_for('bow_info') }}" class="{% if request.endpoint == 'bow_info' %}nav-active{% endif %}">Body of Work</a>
-      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Annual Excellence Award</a>
+      <a href="{{ url_for('challenge') }}" class="{% if request.endpoint == 'challenge' %}nav-active{% endif %}">Challenge</a>
+      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Leaderboard</a>
+      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Awards</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
       <a href="{{ url_for('login') }}">Log In</a>
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Get My First Score</a>
@@ -931,6 +933,7 @@ img {
     {% else %}
       <a href="{{ url_for('dashboard') }}" onclick="toggleNav()">Dashboard</a>
       <a href="{{ url_for('profile') }}"   onclick="toggleNav()">Profile</a>
+      <a href="{{ url_for('challenge') }}" onclick="toggleNav()">Challenge</a>
       <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
       <a href="{{ url_for('contests') }}" onclick="toggleNav()">Programmes</a>
       <a href="{{ url_for('poty') }}" onclick="toggleNav()">Awards</a>
@@ -949,6 +952,8 @@ img {
     <a href="{{ url_for('science') }}" onclick="toggleNav()">Science</a>
     <a href="{{ url_for('learning') }}" onclick="toggleNav()">Learning</a>
     <a href="/mentors" onclick="toggleNav()">Mentors</a>
+    <a href="{{ url_for('challenge') }}" onclick="toggleNav()">Challenge</a>
+    <a href="{{ url_for('leaderboard') }}" onclick="toggleNav()">Leaderboard</a>
     <a href="{{ url_for('bow_info') }}" onclick="toggleNav()">Body of Work</a>
     <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
