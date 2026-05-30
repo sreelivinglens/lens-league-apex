@@ -4304,7 +4304,7 @@ def delete_image(image_id):
                     pass
         threading.Thread(target=_cleanup, args=(r2_keys,), daemon=True).start()
 
-    flash('Image deleted. Your scores and contest standings have been updated accordingly.', 'warning')
+    flash('Image deleted. Your scores and standing have been updated accordingly.', 'warning')
     return redirect(url_for('dashboard'))
 
 
@@ -12051,7 +12051,7 @@ def admin_notify_winners():
                 winner_image_ids.extend([r.id for r in ddi_top])
 
     if not winner_image_ids:
-        flash('No eligible images found for this contest. Check contest ref or use manual IDs.', 'warning')
+        flash('No eligible images found for this programme. Check reference or use manual IDs.', 'warning')
         return redirect(url_for('admin_judge_config'))
 
     # Deduplicate
