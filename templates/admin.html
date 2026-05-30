@@ -859,7 +859,171 @@
       </div>
 
     </div>
+
+    {# ── Individual Image Recalibration ── #}
+    <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+      <div class="tool-label" style="margin-bottom:4px;">Individual Image Recalibration</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+        Recalculates score, tier, and Soul Bonus from manual dimension values.
+        Use only when a specific identifiable error is found — scores are permanent records.
+        Rebuilds the scorecard automatically.
+      </div>
+      <div id="recal-form-wrap" style="background:var(--bg-card,#f7f5f1); border:1px solid var(--border); border-radius:8px; padding:18px 20px;">
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
+          <div style="flex:1; min-width:160px;">
+            <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
+            <input id="recal-image-id" type="number" min="1" placeholder="e.g. 142"
+                   style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
+                   oninput="recalLoadPreview(this.value)">
+          </div>
+          <div id="recal-preview" style="flex:2; min-width:200px; font-size:13px; color:var(--text-muted); padding:8px 0;">
+            Enter an image ID to load current scores.
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;">
+          {% set dims = [
+            ('dod',        'Depth of Difficulty'),
+            ('disruption', 'Visual Disruption'),
+            ('dm',         'Decisive Moment'),
+            ('wonder',     'Wonder Factor'),
+            ('aq',         'Aesthetic Quality'),
+          ] %}
+          {% for field, label in dims %}
+          <div>
+            <label for="recal-{{ field }}" style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">{{ label }}</label>
+            <input id="recal-{{ field }}" type="number" min="0" max="10" step="0.1" placeholder="0.0–10.0"
+                   style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
+                   oninput="recalComputeLive()">
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason for recalibration (required)</label>
+          <input id="recal-reason" type="text" maxlength="200" placeholder="e.g. Wrong genre applied — should be street_juxtaposition not wildlife"
+                 style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;">
+        </div>
+
+        <div id="recal-live" style="font-size:13px; color:var(--text-muted); margin-bottom:14px; min-height:20px;"></div>
+
+        <button type="button" class="btn btn-solid" id="recal-submit-btn"
+                style="padding:10px 22px; font-size:13px; background:var(--gold,#F5C518); color:#1a1a18; border:none; cursor:pointer;"
+                onclick="recalSubmit()">
+          Recalibrate →
+        </button>
+      </div>
+    </div>
+
   </div>
+</div>
+
+{# Recalibration confirm modal #}
+<div id="recal-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9000; align-items:center; justify-content:center;">
+  <div style="background:var(--bg,#fff); border-radius:10px; padding:28px 32px; max-width:440px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <div style="font-size:16px; font-weight:700; margin-bottom:8px;">Confirm Recalibration</div>
+    <div id="recal-modal-body" style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:20px;"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button type="button" onclick="document.getElementById('recal-modal').style.display='none'"
+              style="padding:9px 18px; font-size:13px; border:1px solid var(--border); border-radius:4px; background:transparent; cursor:pointer; color:var(--text);">
+        Cancel
+      </button>
+      <button type="button" id="recal-confirm-btn"
+              style="padding:9px 18px; font-size:13px; background:#c0392b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:700;">
+        Yes, Recalibrate
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Tier thresholds (matches engine)
+  const TIERS = [
+    {name:'Legend',      min:9.8},
+    {name:'Grandmaster', min:9.0},
+    {name:'Master',      min:8.0},
+    {name:'Maverick',    min:7.0},
+    {name:'Craftsman',   min:6.0},
+    {name:'Contender',   min:5.0},
+    {name:'Shooter',     min:4.0},
+    {name:'Rookie',      min:0},
+  ];
+  function getTier(s){ return (TIERS.find(t=>s>=t.min)||TIERS[TIERS.length-1]).name; }
+
+  window.recalLoadPreview = function(idVal){
+    const id = parseInt(idVal);
+    if(!id || id<1){ document.getElementById('recal-preview').textContent='Enter an image ID to load current scores.'; return; }
+    const prev = document.getElementById('recal-preview');
+    prev.textContent = 'Loading…';
+    fetch('/admin/image-scores-json/'+id)
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{
+        if(!d){ prev.textContent='Image not found.'; return; }
+        prev.innerHTML = `<strong>${d.name||'Untitled'}</strong> &nbsp;·&nbsp; ${d.genre||'—'} &nbsp;·&nbsp; Current: <strong>${d.score}</strong> ${d.tier}`;
+        // Populate sliders with current values
+        [['dod',d.dod],['disruption',d.disruption],['dm',d.dm],['wonder',d.wonder],['aq',d.aq]].forEach(([f,v])=>{
+          const el=document.getElementById('recal-'+f);
+          if(el&&v!=null) el.value=v;
+        });
+        recalComputeLive();
+      })
+      .catch(()=>{ prev.textContent='Could not load image.'; });
+  };
+
+  window.recalComputeLive = function(){
+    const vals = ['dod','disruption','dm','wonder','aq'].map(f=>parseFloat(document.getElementById('recal-'+f)?.value)||0);
+    const avg  = vals.reduce((a,b)=>a+b,0)/5;
+    const score= Math.round(avg*100)/100;
+    const tier = getTier(score);
+    const soul = vals[3]>=9.5 && vals[4]>=9.5;
+    const div  = document.getElementById('recal-live');
+    if(vals.some(v=>v>0)){
+      div.innerHTML = `Projected: <strong>${score.toFixed(2)}</strong> &nbsp;${tier}${soul?' &nbsp;·&nbsp; Soul Bonus ✦':''}`;
+    } else {
+      div.textContent='';
+    }
+  };
+
+  window.recalSubmit = function(){
+    const id     = parseInt(document.getElementById('recal-image-id').value);
+    const reason = document.getElementById('recal-reason').value.trim();
+    if(!id){ alert('Enter an image ID.'); return; }
+    if(!reason){ alert('A reason is required for the audit log.'); return; }
+    const dims = ['dod','disruption','dm','wonder','aq'].map(f=>({
+      field:f, val:parseFloat(document.getElementById('recal-'+f)?.value)
+    }));
+    if(dims.some(d=>isNaN(d.val)||d.val<0||d.val>10)){
+      alert('All dimension values must be between 0 and 10.'); return;
+    }
+    const liveEl = document.getElementById('recal-live');
+    document.getElementById('recal-modal-body').innerHTML =
+      `Image ID <strong>${id}</strong><br>${liveEl.innerHTML||''}<br><br>Reason: <em>${reason}</em><br><br>This will permanently overwrite the score, tier, and scorecard. Continue?`;
+    const modal = document.getElementById('recal-modal');
+    modal.style.display='flex';
+    document.getElementById('recal-confirm-btn').onclick = function(){
+      modal.style.display='none';
+      // Build and submit form
+      const form = document.createElement('form');
+      form.method='POST';
+      form.action='/admin/image/'+id+'/recalibrate';
+      const fields = {
+        dod:     document.getElementById('recal-dod').value,
+        disruption: document.getElementById('recal-disruption').value,
+        dm:      document.getElementById('recal-dm').value,
+        wonder:  document.getElementById('recal-wonder').value,
+        aq:      document.getElementById('recal-aq').value,
+        reason:  reason,
+      };
+      Object.entries(fields).forEach(([k,v])=>{
+        const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; form.appendChild(i);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    };
+  };
+})();
+</script>
 
   {# ══════════════════════════════════════════════════════════════════
      SECTION 4 — EXPORTS & REPORTS (collapsed)
