@@ -26,7 +26,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
   height: 480px;
   background: #1A2744;
   display: flex;
-  align-items: center;
+  align-items: flex-end-end;
   overflow: hidden;
 }
 .sl-pr-hero-img {
@@ -44,11 +44,13 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
   background: rgba(13,13,11,0.45);
 }
 .sl-pr-hero-content {
-  position: relative;
+  position: absolute;
   z-index: 2;
   margin: 0 64px;
   max-width: 560px;
-}
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
 .sl-pr-eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -674,9 +676,23 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — max-width 768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── iPad 900px ── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-pr-hero { align-items: flex-end-end; }
+  .sl-pr-hero-content {
+    width: 360px;
+    padding: 20px 24px 24px;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
+}
+
 @media (max-width: 768px) {
   .sl-pr-hero { height: auto; min-height: 360px; }
-  .sl-pr-hero-content { margin: 0 20px; padding: 48px 0; }
+  .sl-pr-hero-content { margin: 0 20px; padding: 48px 0;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
   .sl-pr-hero h1 { font-size: 30px; text-shadow: none; }
   .sl-pr-hero-copy { font-size: 16px; }
 

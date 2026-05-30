@@ -30,7 +30,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   max-height: 480px;
   background: #0D0D0B;
   display: flex;
-  align-items: center;
+  align-items: flex-end-end;
   overflow: hidden;
 }
 .sl-men-hero-img {
@@ -52,18 +52,18 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   background: rgba(13,13,11,0.45);
 }
 .sl-men-hero-content {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  padding: 40px 48px;
-  width: 520px;
-  min-height: 360px;
+  padding: 24px 32px 28px;
+  width: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: rgba(30,28,24,0.30);
-  backdrop-filter: blur(2px);
+  background: rgba(13,11,8,0.09);
+  
   margin: 0 64px;
-}
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
 .sl-men-eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -79,7 +79,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   margin-bottom: 22px;
 }
 .sl-men-hero-h1 {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
@@ -453,6 +453,17 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — max-width 768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── iPad 900px ── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-men-hero { align-items: flex-end-end; }
+  .sl-men-hero-content {
+    width: 360px;
+    padding: 20px 24px 24px;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
+}
+
 @media (max-width: 768px) {
 
   /* HERO */
@@ -460,7 +471,7 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
     height: auto;
     max-height: none;
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-end;
   }
   .sl-men-hero-img {
     position: static;
@@ -475,18 +486,19 @@ body:has(.sl-men) main { padding: 0 !important; max-width: none !important; marg
   }
   .sl-men-hero-content {
     position: static;
-    background: #2C3E6B;
+    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 12px 16px 20px;
     width: 100%;
     max-width: none;
-    min-height: auto;
     display: block;
-    backdrop-filter: none;
+    
     text-shadow: none;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
   }
   .sl-men-hero-h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1.2;

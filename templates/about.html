@@ -30,7 +30,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
   max-height: 480px;
   background: #1A2744;
   display: flex;
-  align-items: center;
+  align-items: flex-end-end;
   overflow: hidden;
 }
 .sl-ab-hero-img {
@@ -49,21 +49,21 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
 .sl-ab-hero-fade {
   position: absolute;
   inset: 0;
-  background: rgba(26,39,68,0.52);
+  background: rgba(13,13,11,0.45);
 }
 .sl-ab-hero-content {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  padding: 40px 48px;
-  width: 520px;
-  min-height: 360px;
+  padding: 24px 32px 28px;
+  width: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: rgba(26,39,68,0.30);
-  backdrop-filter: blur(2px);
+  background: rgba(13,11,8,0.09);
+  
   margin: 0 64px;
-}
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
 .sl-ab-eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -79,7 +79,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
   margin-bottom: 22px;
 }
 .sl-ab-hero-h1 {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
@@ -109,7 +109,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
 
 /* ━━ SHARED SECTION ━━━━━━━━━━━━━━━━━━━━━ */
 .sl-ab-sec {
-  padding: 80px 64px;
+  padding: 56px 20px;
 }
 .sl-ab-inner {
   max-width: 1080px;
@@ -465,6 +465,17 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
    Hero: 16:9 image on top, #2C3E6B text below
    All grids collapse to single column
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── iPad 900px ── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-ab-hero { align-items: flex-end-end; }
+  .sl-ab-hero-content {
+    width: 360px;
+    padding: 20px 24px 24px;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
+}
+
 @media (max-width: 768px) {
 
   /* HERO */
@@ -472,7 +483,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
     height: auto;
     max-height: none;
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-end;
   }
   .sl-ab-hero-img {
     position: static;
@@ -485,13 +496,13 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
   .sl-ab-hero-fade { display: none; }
   .sl-ab-hero-content {
     position: static;
-    background: #2C3E6B;
+    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 16px 16px 24px;
     width: 100%;
     max-width: none;
-    min-height: auto;
-    backdrop-filter: none;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
   }
   .sl-ab-hero-h1 {
     font-size: 26px;
@@ -502,7 +513,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
   .sl-ab-hero-sub  { display: none; }
 
   /* SECTIONS */
-  .sl-ab-sec { padding: 48px 20px; }
+  .sl-ab-sec { padding: 56px 20px; }
 
   /* ORIGIN — stack */
   .sl-ab-origin-grid {

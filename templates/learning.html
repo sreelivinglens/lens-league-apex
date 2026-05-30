@@ -30,7 +30,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   max-height: 480px;
   background: #0D0D0B;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   overflow: hidden;
 }
 .sl-learn-hero-img {
@@ -53,20 +53,20 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   text-shadow: none;
 }
 .sl-learn-hero-content {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  padding: 40px 48px;
-  width: 520px;
-  min-height: 360px;
+  padding: 12px 18px 14px;
+  width: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: rgba(30,28,24,0.30);
-  backdrop-filter: blur(2px);
+  background: rgba(13,11,8,0.09);
+  
   margin: 0 64px;
-}
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
 .sl-learn-hero-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -80,7 +80,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   margin-bottom: 22px;
 }
 .sl-learn-hero-h1 {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
@@ -157,7 +157,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   align-items: start;
 }
 .sl-learn-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -224,7 +224,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   padding: 32px 40px;
 }
 .sl-learn-integrity-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -333,7 +333,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   position: absolute;
   top: 10px;
   left: 10px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -600,6 +600,21 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
 .sl-learn-cta-btn:hover { opacity: 0.88; }
 
 /* ━━ MOBILE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── iPad 900px ── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-learn-hero-content { width: 380px; padding: 32px 36px; margin: 0 32px;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
+  .sl-learn-hero-h1 { font-size: 26px; }
+  .sl-learn-sec { padding: 56px 32px; }
+  .sl-learn-mentors-layout { grid-template-columns: 1fr; gap: 24px; }
+  .sl-learn-mentor-cards { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sl-learn-ddi-grid { grid-template-columns: 1fr; gap: 32px; }
+  .sl-learn-hiw-steps { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .sl-learn-hiw-arrow { display: none; }
+}
+
 @media (max-width: 768px) {
 
   /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
@@ -607,7 +622,7 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
     height: auto;
     max-height: none;
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-end;
   }
   .sl-learn-hero-img {
     position: static;
@@ -623,18 +638,19 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   }
   .sl-learn-hero-content {
     position: static;
-    background: #2C3E6B;
+    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 12px 16px 20px;
     width: 100%;
     max-width: none;
-    min-height: auto;
     display: block;
-    backdrop-filter: none;
+    
     text-shadow: none;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
   }
   .sl-learn-hero-h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1.2;
@@ -654,8 +670,8 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
   .sl-learn-hero-cta {
     display: block;
     margin-top: 14px;
-    font-size: 12px;
-    padding: 11px 16px;
+    font-size: 14px;
+    padding: 12px 16px;
     letter-spacing: 1px;
     text-shadow: none;
   }

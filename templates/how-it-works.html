@@ -30,7 +30,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   max-height: 480px;
   background: #0D0D0B;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   overflow: hidden;
 }
 .sl-hiw-hero-img {
@@ -53,18 +53,18 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   text-shadow: none;
 }
 .sl-hiw-hero-content {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  padding: 40px 48px;
-  width: 520px;
-  min-height: 360px;
+  padding: 12px 18px 14px;
+  width: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: rgba(30,28,24,0.30);
-  backdrop-filter: blur(2px);
+  background: rgba(13,11,8,0.09);
+  
   margin: 0 64px;
-}
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
 .sl-hiw-eyebrow {
   font-size: 12px;
   font-weight: 700;
@@ -80,7 +80,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   margin-bottom: 22px;
 }
 .sl-hiw-hero-h1 {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.08;
@@ -429,6 +429,22 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
    MOBILE — max-width 768px
    Per MOBILE_CONTENT_BEHAVIOR.docx
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── iPad 900px ── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .sl-hiw-hero-content { width: 380px; padding: 32px 40px; margin: 0 32px;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
+  }
+  .sl-hiw-hero-h1 { font-size: 26px; }
+  .sl-hiw-sec { padding: 56px 32px; }
+  .sl-hiw-feature-grid { grid-template-columns: 1fr; }
+  .sl-hiw-feature-img { min-height: 220px; aspect-ratio: 16 / 9; }
+  .sl-hiw-diff-grid { grid-template-columns: 1fr 1fr; }
+  .sl-hiw-diff-col { padding: 24px 18px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.10); }
+  .sl-hiw-diff-col:nth-child(odd) { border-right: 1px solid rgba(26,26,24,0.10); }
+  .sl-hiw-steps { gap: 16px; }
+}
+
 @media (max-width: 768px) {
 
   /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
@@ -436,7 +452,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     height: auto;
     max-height: none;
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-end;
   }
   .sl-hiw-hero-img {
     position: static;
@@ -452,18 +468,19 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   }
   .sl-hiw-hero-content {
     position: static;
-    background: #2C3E6B;
+    background: rgba(13,11,8,0.55);
     margin: 0;
     padding: 12px 16px 20px;
     width: 100%;
     max-width: none;
-    min-height: auto;
     display: block;
-    backdrop-filter: none;
+    
     text-shadow: none;
+  bottom: 15px;
+  left: clamp(16px, 4vw, 48px);
   }
   .sl-hiw-hero-h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1.2;
@@ -550,7 +567,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     aspect-ratio: 4 / 3;
   }
   .sl-hiw-imp-text {
-    font-size: 13px;
+    font-size: 14px;
   }
   .sl-hiw-feature-text {
     padding: 40px 20px;
