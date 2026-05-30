@@ -33,9 +33,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero {
   position: relative;
   width: 100%;
-  min-height: 92vh;
+  height: 480px;
+  max-height: 480px;
   overflow: hidden;
   background: #0D0D0B;
+  display: flex;
+  align-items: center;
 }
 .sl-hero-img {
   position: absolute;
@@ -53,24 +56,27 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   pointer-events: none;
 }
 .sl-hero-text {
-  position: absolute;
-  bottom: 52px;
-  left: 52px;
-  max-width: 520px;
+  position: relative;
   z-index: 5;
-  padding: 32px 40px;
+  padding: 40px 48px;
+  width: 520px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: rgba(30,28,24,0.30);
   backdrop-filter: blur(2px);
+  margin: 0 64px;
 }
 .sl-hero-h1 {
-  font-size: 61px;
-  font-weight: 600;
+  font-size: 42px;
+  font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.05;
+  line-height: 1.08;
   letter-spacing: -0.03em;
   margin-bottom: 16px;
-  white-space: nowrap;
-  text-shadow: 0 2px 24px rgba(0,0,0,0.95), 0 1px 8px rgba(0,0,0,0.98), 0 0 48px rgba(0,0,0,0.80);
+  white-space: normal;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .sl-hero-sub {
   font-size: 16px;
@@ -118,8 +124,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 /* Coaching overlay */
 .sl-coaching {
   position: absolute;
-  bottom: 48px;
   right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 252px;
   background: rgba(6,4,2,0.88);
   padding: 20px 22px 18px;
@@ -176,7 +183,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   padding: 0 12px;
 }
 .sl-trust-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -420,7 +427,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   border: 1.5px solid #1A1A18;
   background: transparent;
   color: #1A1A18;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -560,7 +567,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   top: 20px;
   left: 24px;
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -590,7 +597,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   border: 1.5px solid rgba(255,255,255,0.80);
   background: transparent;
   color: #FFFFFF;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
@@ -724,18 +731,87 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-below { display: none; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   IPAD — 900px
+   Covers iPad portrait (768–900px).
+   Hero content box, multi-column grids,
+   and wide padding all need to narrow here.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 900px) {
+
+  /* Hero — content box narrows, stays centred */
+  .sl-hero-text {
+    width: 420px;
+    min-height: 300px;
+    padding: 28px 32px;
+    margin: 0 32px;
+  }
+  .sl-hero-h1 { font-size: 32px; }
+  .sl-coaching { right: 24px; width: 210px; }
+
+  /* 200 Years — collapse to single column */
+  .sl-200 {
+    grid-template-columns: 1fr;
+    padding: 48px 32px;
+    gap: 32px;
+  }
+  .sl-200-right { padding-left: 0; text-align: left; align-items: flex-start; }
+  .sl-200-num { font-size: 72px; }
+
+  /* Learning loop — narrower padding */
+  .sl-loop { padding: 56px 32px; }
+
+  /* Honest Part — collapse 3-col to 1-col */
+  .sl-honest {
+    grid-template-columns: 1fr;
+    padding: 56px 32px;
+    gap: 0;
+  }
+  .sl-honest-col {
+    padding: 0 0 40px 0;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(26,26,24,0.10);
+    margin-bottom: 40px;
+  }
+  .sl-honest-col:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* Feature cards — 1-col stack */
+  .sl-cards { grid-template-columns: 1fr; }
+  .sl-card { height: 280px; }
+
+  /* Trust bar — 2x2 grid */
+  .sl-trust {
+    padding: 24px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .sl-trust-item { flex: none; align-items: flex-start; text-align: left; }
+
+  /* Section padding tighten */
+  .sl-hiw-sec { padding: 56px 32px; }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MOBILE — 768px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
 
   /* ── Hero — Option B: 16:9 photo, headline at bottom, rest on cream ── */
   .sl-hero {
-    min-height: unset;
     height: auto;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
     background: #0D0D0B;
   }
   .sl-hero-img {
-    position: relative;
+    position: static;
     width: 100%;
     height: auto;
     aspect-ratio: 16/9;
@@ -767,11 +843,15 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     bottom: 0;
     left: 20px;
     right: 20px;
+    width: auto;
+    min-height: unset;
     max-width: 100%;
     z-index: 5;
     padding: 0 0 16px 0;
     background: transparent;
     backdrop-filter: none;
+    margin: 0;
+    display: block;
   }
   .sl-hero-h1 {
     font-size: 32px;
@@ -846,7 +926,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     gap: 8px;
   }
   .sl-trust-label {
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.06em;
     line-height: 1.4;
     word-break: normal;
@@ -855,22 +935,28 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-trust-desc { font-size: 13px; }
 
   /* ── 200 Years — single column ── */
+  /* ── 200 Years — tightened: hide body paragraphs, keep pull quote + taglines ── */
   .sl-200 {
     grid-template-columns: 1fr;
-    padding: 72px 20px;
-    gap: 48px;
+    padding: 32px 20px;
+    gap: 24px;
   }
-  .sl-200-num { font-size: 64px; }
-  .sl-200-label-line { font-size: 11px; }
-  .sl-200-body { font-size: 18px; }
-  .sl-200-body-bold { font-size: 18px; }
+  .sl-200-num { font-size: 56px; }
+  .sl-200-label-line { font-size: 12px; }
+  .sl-200-body { display: none; }
+  .sl-200-body-bold {
+    font-size: 16px;
+    border-left: 2px solid #F5C518;
+    padding-left: 12px;
+    margin-bottom: 0;
+  }
   .sl-200-right { padding-left: 0; }
-  .sl-200-tagline-1 { font-size: 22px; }
-  .sl-200-tagline-2 { font-size: 28px; }
+  .sl-200-tagline-1 { font-size: 18px; }
+  .sl-200-tagline-2 { font-size: 22px; }
 
-  /* ── Learning loop — horizontal rows per step ── */
-  .sl-loop { padding: 72px 20px; }
-  .sl-loop-heading { font-size: 13px; margin-bottom: 40px; }
+  /* ── Learning loop ── */
+  .sl-loop { padding: 32px 20px; }
+  .sl-loop-heading { font-size: 13px; margin-bottom: 24px; }
   .sl-loop-steps {
     flex-direction: column;
     align-items: stretch;
@@ -883,7 +969,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     gap: 20px;
     width: 100%;
     max-width: 100%;
-    padding: 20px 0;
+    padding: 16px 0;
     border-bottom: 1px solid rgba(26,26,24,0.08);
   }
   .sl-loop-step:last-child { border-bottom: none; }
@@ -891,17 +977,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex-shrink: 0;
-    width: 60px;
-  }
-  .sl-loop-step-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    width: 64px;
+    width: 56px;
   }
   .sl-loop-step-right {
     display: flex;
@@ -911,22 +989,22 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   }
   .sl-loop-num { margin-bottom: 0; }
   .sl-loop-icon { height: auto; margin-bottom: 0; }
-  .sl-loop-title { font-size: 17px; margin-bottom: 6px; }
-  .sl-loop-desc { font-size: 17px; text-align: left; }
+  .sl-loop-title { font-size: 16px; margin-bottom: 4px; }
+  .sl-loop-desc { font-size: 15px; text-align: left; }
   .sl-loop-arrow { display: none; }
-  .sl-loop-cta { margin-top: 40px; }
+  .sl-loop-cta { margin-top: 32px; }
 
-  /* ── Honest Part + Emotional Impact — single column ── */
+  /* ── Honest Part + Emotional Impact — tightened ── */
   .sl-honest {
     grid-template-columns: 1fr;
-    padding: 72px 20px;
+    padding: 32px 20px;
     gap: 0;
   }
   .sl-honest-col {
-    padding: 0 0 48px 0;
+    padding: 0 0 32px 0;
     border-right: none !important;
     border-bottom: 1px solid rgba(26,26,24,0.10);
-    margin-bottom: 48px;
+    margin-bottom: 32px;
   }
   .sl-honest-col:last-child {
     border-bottom: none;
@@ -935,19 +1013,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     align-items: flex-start;
     text-align: left;
   }
-  .sl-honest-heading { font-size: 30px; }
-  .sl-honest-body { font-size: 18px; }
-  .sl-honest-body-bold { font-size: 18px; }
-  .sl-soul-title { font-size: 18px; }
-  .sl-soul-body { font-size: 18px; text-align: left; }
-  .sl-soul-tag1 { font-size: 22px; text-align: left; }
-  .sl-soul-tag2 { font-size: 26px; text-align: left; }
-  .sl-heart-circle { margin-bottom: 16px; }
+  /* Trim body to one key sentence — hide extended copy */
+  .sl-honest-body { font-size: 16px; }
+  .sl-honest-body-bold { display: none; }
+  /* Emotional impact heading gets full treatment — key differentiator line */
+  .sl-honest-heading { font-size: 18px; }
+  .sl-soul-title { font-size: 16px; }
+  .sl-soul-body { font-size: 15px; text-align: left; }
+  .sl-soul-tag1 { font-size: 18px; text-align: left; }
+  .sl-soul-tag2 { font-size: 22px; text-align: left; }
+  .sl-heart-circle { margin-bottom: 12px; }
 
-  /* ── Feature cards — stacked full width ── */
+  /* ── Feature cards — reduced padding, no fixed height ── */
   .sl-cards { grid-template-columns: 1fr; }
-  .sl-card { height: 320px; }
-  .sl-card-heading { font-size: 18px; }
+  .sl-card { height: auto; min-height: 0; padding: 20px 20px 24px; }
+  .sl-card-heading { font-size: 17px; }
   .sl-card-body { font-size: 13px; }
 
   /* ── Gallery — single column ── */
