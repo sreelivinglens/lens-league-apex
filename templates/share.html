@@ -51,30 +51,31 @@
     -webkit-touch-callout: none; }
 
   :root {
-    --tier-rookie:      #888888;
-    --tier-shooter:     #c87941;
-    --tier-contender:   #3da85a;
-    --tier-craftsman:   #2ab8a0;
-    --tier-maverick:    #3a7adf;
-    --tier-master:      #9b6fdf;
+    --tier-rookie:      #888780;
+    --tier-shooter:     #888780;
+    --tier-contender:   #1D9E75;
+    --tier-craftsman:   #1D9E75;
+    --tier-maverick:    #1D9E75;
+    --tier-master:      #1D9E75;
     --tier-grandmaster: #F5C518;
-    --tier-legend:      #e04040;
+    --tier-legend:      #F5C518;
   }
 
   .tier-strip {
-    background: var(--surface-3); padding: 14px 24px;
+    background: var(--surface-3); padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(245,197,24,0.15);
+    border-bottom: 2px solid #F5C518;
+    gap: 16px;
   }
   .tier-strip .tier-word {
-    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 24px; font-weight: 700;
     letter-spacing: 3px; text-transform: uppercase; line-height: 1;
   }
   .tier-strip .tier-sub {
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+    font-family: var(--font-mono); font-size: 14px; color: var(--text-3);
     letter-spacing: 2px; text-transform: uppercase; margin-top: 5px;
   }
-  .tier-engine { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); letter-spacing: 2px; text-transform: uppercase; }
+  .tier-engine { display: none; }
   .tier-badge-wrap {
     width: 52px; height: 52px; border-radius: 50%;
     background: var(--surface-2); flex-shrink: 0;
@@ -153,6 +154,25 @@
     .card-header { padding: 10px 16px; }
     .actions { gap: 8px; }
   }
+  /* ── Mobile 768px ── */
+  @media (max-width: 768px) {
+    .share-wrap { padding: 0 0 32px; }
+    .card { margin: 0 12px; border-radius: 8px; }
+    .tier-strip { padding: 14px 16px; }
+    .tier-strip .tier-word { font-size: 20px; }
+    .tier-strip .tier-sub { font-size: 14px; }
+    .img-info { padding: 16px 18px; }
+    .img-title { font-size: 20px; }
+    .img-meta { font-size: 14px; }
+    .register-cta { padding: 24px 18px; }
+    .register-cta h3 { font-size: 18px; }
+    .actions { margin: 16px 12px 0; }
+  }
+  /* ── iPad 900px ── */
+  @media (min-width: 769px) and (max-width: 900px) {
+    .card { margin: 0 24px; }
+    .actions { margin-left: 24px; margin-right: 24px; }
+  }
   .action-btn {
     flex: 1; padding: 15px 20px; text-align: center;
     font-family: var(--font-mono); font-size: 15px; font-weight: 600;
@@ -174,12 +194,13 @@
 
   @media (max-width: 520px) {
     .card-header .engine-tag { display: none; }
-    .img-info { padding: 18px; }
+    .img-info { padding: 16px; }
     .img-title { font-size: 18px; }
-    .analysis, .byline-section { padding: 18px; }
+    .analysis, .byline-section { padding: 16px; }
     .analysis-body, .byline-text, .improvement-text { font-size: 16px; }
-    .badges-section, .card-footer { padding: 14px 18px; }
+    .badges-section, .card-footer { padding: 14px 16px; }
     .actions { flex-direction: column; }
+    .tier-strip .tier-word { font-size: 18px; }
   }
 </style>
 {% endblock %}
@@ -217,7 +238,7 @@
          alt="{{ image.asset_name }}" style="display:block; width:100%;">
     <!-- Photographer name — bottom left -->
     <div style="position:absolute; bottom:12px; left:12px;
-                font-family:var(--font-mono); font-size:13px; font-weight:700;
+                font-family:var(--font-mono); font-size:14px; font-weight:700;
                 letter-spacing:1px; color:rgba(255,255,255,0.85);
                 text-shadow:0 1px 4px rgba(0,0,0,0.7); pointer-events:none;">
       {{ image.photographer_name }}
@@ -254,9 +275,8 @@
       </div>
     </div>
     {% if image.score %}
-    <div style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:#F5C518;letter-spacing:1px;line-height:1;">{{ "%.2f"|format(image.score|float) }}</div>
+    <div style="font-family:var(--font-mono);font-size:48px;font-weight:700;color:#F5C518;letter-spacing:1px;line-height:1;">{{ "%.2f"|format(image.score|float) }}</div>
     {% endif %}
-    <div class="tier-engine">APEX DDI</div>
   </div>
 
   <!-- Image info -->
@@ -386,13 +406,13 @@
         <a href="/upload" style="
           flex:1; text-align:center; padding:12px 16px;
           background:#F5C518; color:#000000;
-          font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;
+          font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700;
           letter-spacing:2px; text-transform:uppercase; text-decoration:none;
           border-radius:6px;">Upload New Image</a>
         <button onclick="document.getElementById('dopamine-popup').style.display='none'" style="
           padding:12px 16px; background:transparent;
           border:1px solid rgba(255,255,255,0.2); color:#FFFFFF;
-          font-size:13px; border-radius:6px; cursor:pointer;">Later</button>
+          font-size:14px; border-radius:6px; cursor:pointer;">Later</button>
       </div>
     </div>
     <button onclick="document.getElementById('dopamine-popup').style.display='none'"
