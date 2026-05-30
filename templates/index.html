@@ -58,24 +58,23 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-text {
   position: relative;
   z-index: 5;
-  padding: 28px 32px;
-  width: 400px;
+  padding: 0;
+  width: 420px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: rgba(13,13,11,0.18);
-  backdrop-filter: blur(1px);
+  background: transparent;
   margin: 0 64px;
 }
 .sl-hero-h1 {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 700;
-  color: rgba(255,255,255,0.92);
+  color: #FFFFFF;
   line-height: 1.08;
   letter-spacing: -0.03em;
   margin-bottom: 14px;
   white-space: normal;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.95), 0 0 32px rgba(0,0,0,0.70);
+  text-shadow: 0 2px 16px rgba(0,0,0,0.95), 0 0 48px rgba(0,0,0,0.80);
 }
 .sl-hero-sub {
   font-size: 16px;
@@ -160,11 +159,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: #F5C518;
   margin-bottom: 5px;
 }
-.sl-co-tag {
-  font-size: 12px;
-  color: rgba(255,255,255,0.40);
-  letter-spacing: 0.03em;
-}
+
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    TRUST BAR
@@ -743,9 +738,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   /* Hero — content box narrows, stays centred */
   .sl-hero-text {
-    width: 340px;
-    padding: 22px 26px;
+    width: 380px;
+    padding: 0;
     margin: 0 32px;
+    background: transparent;
   }
   .sl-hero-h1 { font-size: 28px; }
   .sl-coaching { right: 24px; width: 210px; }
@@ -1207,7 +1203,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <span class="sl-co-q">&ldquo;</span>
     <p class="sl-co-body">{{ coaching_text }}</p>
     <span class="sl-co-name">Shutter League Mentor</span>
-    <span class="sl-co-tag">Real photo. Real member. Real feedback.</span>
   </div>
   {% endif %}
   {% endif %}

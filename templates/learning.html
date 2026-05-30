@@ -855,68 +855,28 @@ body:has(.sl-learn) main { padding: 0 !important; max-width: none !important; ma
         </div>
         <div>
           <div class="sl-learn-mentor-cards">
-
-            <!-- Ashok Kochhar — Grandmaster -->
+            {% set tier_css_map = {'legend':'grandmaster','grandmaster':'grandmaster','expert':'master','master':'master','senior':'base','base':'base','contender':'base'} %}
+            {% for slug, m in mentors_data.items() %}
+            {% set css_cls = tier_css_map.get(m.tier_class, 'base') %}
             <div class="sl-learn-mentor-card">
               <div class="sl-learn-mentor-photo-wrap">
                 <img
                   class="sl-learn-mentor-photo"
-                  src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-                  alt="Ashok Kochhar — Grandmaster Mentor"
+                  src="{{ url_for('static', filename=m.photo) }}"
+                  alt="{{ m.name }} — {{ m.tier_label }}"
                   onerror="this.style.display='none'"
                 >
-                <span class="sl-learn-mentor-badge sl-learn-badge-grandmaster">Grandmaster Mentor</span>
+                <span class="sl-learn-mentor-badge sl-learn-badge-{{ css_cls }}">{{ m.tier_label }}</span>
               </div>
               <div class="sl-learn-mentor-body">
-                <div class="sl-learn-mentor-name">Ashok Kochhar</div>
-                <div class="sl-learn-mentor-genres">Conceptual &middot; Fashion &middot; Street &middot; Nature</div>
+                <div class="sl-learn-mentor-name">{{ m.name }}</div>
+                <div class="sl-learn-mentor-genres">{{ m.genres }}</div>
                 <div class="sl-learn-mentor-rule"></div>
-                <div class="sl-learn-mentor-bio">Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.</div>
-                <a href="{{ url_for('mentor_register', slug='ashok') }}" class="sl-learn-mentor-btn sl-learn-btn-grandmaster">&#8377;100 <span>&#8594;</span></a>
+                <div class="sl-learn-mentor-bio">{{ m.bio }}</div>
+                <a href="{{ url_for('mentor_register', slug=slug) }}" class="sl-learn-mentor-btn sl-learn-btn-{{ css_cls }}">&#8377;{{ m.price }} <span>&#8594;</span></a>
               </div>
             </div>
-
-            <!-- Gopal MS — Master -->
-            <div class="sl-learn-mentor-card">
-              <div class="sl-learn-mentor-photo-wrap">
-                <img
-                  class="sl-learn-mentor-photo"
-                  src="{{ url_for('static', filename='img/Gopal MS.jpeg') }}"
-                  alt="Gopal MS — Master Mentor"
-                  onerror="this.style.display='none'"
-                >
-                <span class="sl-learn-mentor-badge sl-learn-badge-master">Master Mentor</span>
-              </div>
-              <div class="sl-learn-mentor-body">
-                <div class="sl-learn-mentor-name">Gopal MS</div>
-                <div class="sl-learn-mentor-genres">Street &middot; Documentary &middot; Urban</div>
-                <div class="sl-learn-mentor-rule"></div>
-                <div class="sl-learn-mentor-bio">Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.</div>
-                <a href="{{ url_for('mentor_register', slug='gopal') }}" class="sl-learn-mentor-btn sl-learn-btn-master">&#8377;75 <span>&#8594;</span></a>
-              </div>
-            </div>
-
-            <!-- Sreekumar Krishnan — Base -->
-            <div class="sl-learn-mentor-card">
-              <div class="sl-learn-mentor-photo-wrap">
-                <img
-                  class="sl-learn-mentor-photo"
-                  src="{{ url_for('static', filename='img/Sreekumar.png') }}"
-                  alt="Sreekumar Krishnan — Base Mentor"
-                  onerror="this.style.display='none'"
-                  style="object-position: center center;"
-                >
-                <span class="sl-learn-mentor-badge sl-learn-badge-base">Base Mentor</span>
-              </div>
-              <div class="sl-learn-mentor-body">
-                <div class="sl-learn-mentor-name">Sreekumar Krishnan</div>
-                <div class="sl-learn-mentor-genres">Wildlife &middot; Street &middot; Portrait &middot; Mobile</div>
-                <div class="sl-learn-mentor-rule"></div>
-                <div class="sl-learn-mentor-bio">International award-winning photographer &amp; filmmaker. IPPA Gold 2019. Sanctuary Asia &amp; National Geographic featured.</div>
-                <a href="{{ url_for('mentor_register', slug='sreekumar') }}" class="sl-learn-mentor-btn sl-learn-btn-base">&#8377;50 <span>&#8594;</span></a>
-              </div>
-            </div>
-
+            {% endfor %}
           </div>
           <p class="sl-learn-mentors-footer">Not sure which to choose? <a href="{{ url_for('learning') }}">Explore mentor perspectives &#8594;</a></p>
         </div>
