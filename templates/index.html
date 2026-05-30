@@ -147,6 +147,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: rgba(255,255,255,0.92);
   line-height: 1.68;
   margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sl-co-name {
   display: block;
@@ -909,7 +913,39 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     font-size: 14px;
     font-weight: 400;
   }
-  /* Hide coaching overlay on mobile */
+  /* Mobile mentor feedback block — shown below CTA in cream block */
+  .sl-hero-below-mentor {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(26,26,24,0.10);
+  }
+  .sl-hero-below-mentor-q {
+    font-size: 18px;
+    font-weight: 700;
+    color: #F5C518;
+    line-height: 1;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .sl-hero-below-mentor-body {
+    font-size: 14px;
+    font-style: italic;
+    color: rgba(26,26,24,0.75);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .sl-hero-below-mentor-name {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #F5C518;
+  }
+  /* Hide desktop coaching overlay on mobile */
   .sl-coaching { display: none; }
 
   /* ── Trust bar — 2×2 grid ── */
@@ -1035,8 +1071,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-card-img {
     position: static;
     width: 100%;
-    height: 200px;
+    height: 260px;
     object-fit: cover;
+    object-position: top;
     display: block;
   }
   .sl-card-overlay { display: none; }
@@ -1070,13 +1107,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-bow-strip-wrap {
     position: static;
     width: 100%;
-    height: 200px;
+    height: 260px;
     overflow: hidden;
   }
   .sl-bow-strip {
     position: relative;
     width: 100%;
-    height: 200px;
+    height: 260px;
   }
   .sl-bow-strip img {
     position: absolute;
@@ -1187,6 +1224,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Usually under a minute
   </div>
+  {% if hero %}
+  {% set hero_audit = hero.get_audit() %}
+  {% set coaching_text = hero_audit.get('byline_2_body') or hero_audit.get('byline_1') %}
+  {% if coaching_text %}
+  <div class="sl-hero-below-mentor">
+    <span class="sl-hero-below-mentor-q">&ldquo;</span>
+    <p class="sl-hero-below-mentor-body">{{ coaching_text }}</p>
+    <span class="sl-hero-below-mentor-name">Shutter League Mentor</span>
+  </div>
+  {% endif %}
+  {% endif %}
 </div>
 <div class="sl-trust">
   <div class="sl-trust-item">
