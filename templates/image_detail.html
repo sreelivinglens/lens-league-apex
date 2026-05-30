@@ -11,6 +11,13 @@
   }
   .detail-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
   .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; flex-shrink: 0; }
+  @media (max-width: 520px) {
+    .detail-header { flex-direction: column; gap: 12px; }
+    .detail-header .page-header h1 { font-size: 22px; line-height: 1.2; }
+    .detail-header .page-header p { font-size: 14px; margin-top: 4px; }
+    .detail-actions { flex-direction: row; width: 100%; }
+    .detail-actions .btn { flex: 1; text-align: center; font-size: 14px; padding: 10px 12px; }
+  }
 
   .detail-image-wrap {
     border-radius: var(--radius-md); overflow: hidden;
@@ -74,7 +81,7 @@
   .audit-row-label { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; width: 140px; flex-shrink: 0; padding-top: 2px; }
   .audit-row-text { font-size: 16px; color: var(--text-secondary); line-height: 1.7; flex: 1; }
   @media (max-width: 520px) { .audit-row { flex-direction: column; gap: 6px; } .audit-row-label { width: auto; } }
-  @media (max-width: 520px) { .score-card { padding: 20px 18px; } .detail-wrap { padding: 0 4px; } }
+  @media (max-width: 520px) { .score-card { padding: 20px 18px; } .detail-wrap { padding: 0 16px; } }
 
   #delete-modal {
     display: none; position: fixed; inset: 0; z-index: 1000;
@@ -160,13 +167,15 @@
     <div class="score-archetype">{{ image.archetype }}</div>
     {% endif %}
 
-    {# Hard Truth — photographer voice verdict #}
+    {# Hard Truth — owner/admin only #}
+    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
     {% set audit_ht = image.get_audit() %}
     {% if audit_ht and audit_ht.hard_truth %}
     <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;margin-bottom:20px;">
       <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
       <div style="font-size:17px;color:#ffffff;line-height:1.65;font-style:italic;">{{ audit_ht.hard_truth }}</div>
     </div>
+    {% endif %}
     {% endif %}
 
     {# DDI dimensions #}
@@ -209,6 +218,9 @@
     {% endif %}
   </div>
 
+  {# ── Analysis — owner and admin only ──────────────────────────── #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
+
   {# ── DDI qualifier note ────────────────────────────────────────── #}
   {% if image.status == 'scored' and image.score %}
   <div style="font-size: 14px; color:var(--text-muted); line-height:1.6;
@@ -225,10 +237,10 @@
   {% set audit_sa = image.get_audit() %}
   {% if audit_sa and audit_sa.subgenre_overridden and audit_sa.effective_subgenre %}
   <div style="margin-bottom:16px; padding:14px 20px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</div>
-    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit_sa.effective_subgenre.replace('_',' ') }}</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit_sa.effective_subgenre.replace('_',' ') }}</div>
     {% if audit_sa.vision_subgenre_reason %}
-    <div style="font-size:13px;color:var(--text-secondary);flex:1;min-width:200px;">{{ audit_sa.vision_subgenre_reason }}</div>
+    <div style="font-size:14px;color:var(--text-secondary);flex:1;min-width:200px;">{{ audit_sa.vision_subgenre_reason }}</div>
     {% endif %}
   </div>
   {% endif %}
@@ -240,16 +252,16 @@
     <button onclick="document.getElementById('genre-insight-banner').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;" aria-label="Dismiss">×</button>
     <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
       <div style="flex:1;min-width:200px;">
-        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Genre Insight</div>
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Genre Insight</div>
         <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:8px;">
           {{ audit_gi.genre_suggestion.reason }}
         </div>
         {% if audit_gi.genre_suggestion.score_note %}
-        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">{{ audit_gi.genre_suggestion.score_note }}</div>
+        <div style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);">{{ audit_gi.genre_suggestion.score_note }}</div>
         {% endif %}
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0;">
-        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">Try: {{ audit_gi.genre_suggestion.suggested_genre }}</div>
+        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">Try: {{ audit_gi.genre_suggestion.suggested_genre }}</div>
         <a href="{{ url_for('upload') }}?genre={{ audit_gi.genre_suggestion.suggested_genre }}&sub_genre={{ audit_gi.genre_suggestion.suggested_subgenre or '' }}" class="btn btn-solid" style="font-size:14px;padding:10px 18px;white-space:nowrap;">Re-submit →</a>
       </div>
     </div>
@@ -287,7 +299,7 @@
     {% endif %}
     {% if audit.byline_1 %}
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next Image</div>
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next Image</div>
       <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     </div>
     {% endif %}
@@ -304,8 +316,8 @@
       {% if tier_body %}
       <div style="margin-bottom:14px;padding:14px 18px;background:var(--surface-3);border-radius:var(--radius-sm);border:1px solid var(--border);">
         <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;margin-bottom:6px;">
-          <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;color:{{ tier_col }};text-transform:uppercase;">{{ tier_label }}</span>
-          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">· {{ tier_sub }}</span>
+          <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:{{ tier_col }};text-transform:uppercase;">{{ tier_label }}</span>
+          <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);">· {{ tier_sub }}</span>
         </div>
         <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;word-break:break-word;">{{ tier_body }}</div>
       </div>
@@ -327,6 +339,8 @@
     <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:12px 24px; font-size:15px;">Book Mentor Review →</a>
   </div>
   {% endif %}
+
+  {% endif %}{# end owner/admin analysis gate #}
 
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
@@ -404,13 +418,15 @@
 
   {# ── Download + Share row ────────────────────────────────────────── #}
   {% if image.status == 'scored' and image.score and not image.is_flagged %}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
     <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank"
-       class="btn btn-solid" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↓ Download Review</a>
+       class="btn btn-solid" style="flex:1; min-width:120px; text-align:center; padding:13px 16px; font-size:14px; white-space:nowrap;">↓ Download Review</a>
     <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="btn" style="flex:1; min-width:140px; text-align:center; padding:13px 20px; font-size:15px;">↑ Share Score</a>
+       class="btn" style="flex:1; min-width:120px; text-align:center; padding:13px 16px; font-size:14px; white-space:nowrap;">↑ Share Score</a>
   </div>
-  <div style="font-size:12px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
+  <div style="font-size:14px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
+  {% endif %}
   {% endif %}
 
   {# ── Admin section ───────────────────────────────────────────────── #}
