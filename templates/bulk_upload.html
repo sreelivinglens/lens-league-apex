@@ -534,46 +534,62 @@ form.addEventListener('submit', function(e) {
     submitBtn.textContent = '⬆ Upload & Auto-Score All';
   }
 
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/bulk-upload');
-  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-  xhr.withCredentials = true;
-  xhr.timeout = 600000; // 10 min for large batches
+  // Send one image at a time — avoids Gunicorn timeout on large batches
+  const genre        = form.querySelector('[name="genre"]').value;
+  const photographer = form.querySelector('[name="photographer_name"]').value;
+  const is_public    = form.querySelector('[name="is_public"]') &&
+                       form.querySelector('[name="is_public"]').checked ? '1' : '0';
+  const fileArray    = Array.from(files).slice(0, 10);
+  const allResults   = [];
+  let   imgIndex     = 0;
 
-  xhr.onload = function() {
-    clearInterval(ticker); clearInterval(breathCycle);
-    // Try to parse JSON first
-    let data = null;
-    try { data = JSON.parse(xhr.responseText); } catch(e) {}
-
-    if (data && data.error) {
-      showOverlayError(data.message || 'Upload failed. Please try again.');
-      return;
-    }
-    if (xhr.status === 200 && data && data.ok) {
+  async function sendNext() {
+    if (imgIndex >= fileArray.length) {
+      // All done
+      clearInterval(ticker); clearInterval(breathCycle);
       notifyComplete();
       clockSecs.textContent = '✓';
       clockRing.style.strokeDashoffset = '0';
       clockRing.style.stroke = 'rgba(200,168,75,0.9)';
       overlayPhase.textContent  = 'COMPLETE';
-      overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} processed!`;
+      overlayStatus.textContent = `All ${fileArray.length} image${fileArray.length > 1 ? 's' : ''} processed!`;
       overlaySub.textContent    = 'Redirecting to your dashboard…';
       if (breathLabel) breathLabel.textContent = '🙏';
       sessionStorage.removeItem('bulk_processing');
-      setTimeout(() => { window.location.href = data.redirect || '/dashboard'; }, 1200);
-    } else if (xhr.status === 200) {
-      // Fallback: non-JSON 200 (shouldn't happen but handle gracefully)
-      notifyComplete();
-      sessionStorage.removeItem('bulk_processing');
       setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
-    } else {
-      showOverlayError(`Server error ${xhr.status}. Check your dashboard — images may have been saved.`);
+      return;
     }
-  };
-  xhr.onerror   = function() { showOverlayError('Network error. Check your dashboard to see if any images were saved.'); };
-  xhr.ontimeout = function() { showOverlayError('Request timed out. Check your dashboard in 2–3 minutes — images may still be processing.'); };
 
-  xhr.send(new FormData(form));
+    const file = fileArray[imgIndex];
+    imgIndex++;
+
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('genre', genre);
+    fd.append('photographer_name', photographer);
+    fd.append('is_public', is_public);
+
+    try {
+      const resp = await fetch('/bulk-upload/one', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd
+      });
+      if (!resp.ok) {
+        allResults.push({ filename: file.name, status: 'server error ' + resp.status });
+      } else {
+        const data = await resp.json();
+        allResults.push(data);
+      }
+    } catch(err) {
+      allResults.push({ filename: file.name, status: 'network error — check dashboard' });
+    }
+
+    sendNext();
+  }
+
+  sendNext();
 });
 
 window.addEventListener('DOMContentLoaded', initPage);
