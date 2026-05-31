@@ -8398,6 +8398,132 @@ def bulk_upload():
 
 
 
+
+
+
+
+# ---------------------------------------------------------------------------
+# Bulk Upload — single image endpoint (called per-image by frontend loop)
+# ---------------------------------------------------------------------------
+@app.route('/bulk-upload/one', methods=['POST'])
+@login_required
+def bulk_upload_one():
+    """Process one image at a time — called in a loop by the bulk upload frontend.
+    Keeps each request well under Gunicorn worker timeout regardless of batch size."""
+    if current_user.role != 'admin':
+        abort(403)
+
+    file = request.files.get('image')
+    if not file or not file.filename:
+        return jsonify({'status': 'error', 'message': 'No file received'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'filename': file.filename, 'status': 'skipped',
+                        'score': None, 'tier': None}), 200
+
+    genre = normalise_genre(request.form.get('genre', '').strip())
+    if not genre:
+        return jsonify({'status': 'error', 'message': 'No genre provided'}), 400
+
+    photographer = (request.form.get('photographer_name') or '').strip() \
+                   or current_user.full_name or current_user.username
+    is_public    = request.form.get('is_public', '1') == '1'
+    api_key      = os.getenv('ANTHROPIC_API_KEY', '')
+
+    result = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
+    try:
+        uid        = str(uuid.uuid4())
+        filename   = secure_filename(file.filename)
+        raw_path   = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', uid + '_' + filename)
+        file.save(raw_path)
+        thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        if os.path.exists(raw_path):
+            os.remove(raw_path)
+
+        from engine.processor import hash_similarity_pct
+        existing_imgs = Image.query.filter(Image.phash.isnot(None)).all()
+        for ex in existing_imgs:
+            if hash_similarity_pct(phash, ex.phash) >= 98.0:
+                if os.path.exists(thumb_path):
+                    os.remove(thumb_path)
+                if ex.user_id == current_user.id:
+                    dup_msg = 'duplicate: already uploaded as "' + (ex.asset_name or ex.original_filename or '') + '"'
+                else:
+                    dup_msg = 'unable to accept: image may already exist in our database'
+                return jsonify({'filename': file.filename, 'status': dup_msg,
+                                'score': None, 'tier': None}), 200
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+
+        from models import Image as ImageModel
+        img = ImageModel(
+            user_id          = current_user.id,
+            original_filename= filename,
+            stored_filename  = os.path.basename(thumb_path),
+            thumb_path       = thumb_path,
+            thumb_url        = thumb_url,
+            file_size_kb     = int(os.path.getsize(thumb_path) / 1024),
+            width=w, height=h, format=fmt,
+            asset_name       = auto_title(filename, genre),
+            phash            = phash,
+            genre            = genre,
+            photographer_name= photographer,
+            camera_track     = getattr(current_user, 'subscription_track', None),
+            status           = 'pending',
+            is_public        = is_public,
+        )
+        db.session.add(img)
+        db.session.flush()
+
+        if api_key:
+            from engine.auto_score import auto_score, build_audit_data
+            from engine.compositor import build_card1 as _build_card
+            scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                sub_genre=img.sub_genre,
+                                title=img.asset_name, photographer=photographer)
+            img.dod_score        = float(scored.get('dod', 0))
+            img.disruption_score = float(scored.get('disruption', 0))
+            img.dm_score         = float(scored.get('dm', 0))
+            img.wonder_score     = float(scored.get('wonder', 0))
+            img.aq_score         = float(scored.get('aq', 0))
+            img.score            = float(scored.get('score', 0))
+            img.tier             = get_tier(float(scored.get('score', 0)))
+            img.archetype        = scored.get('archetype', '')
+            img.soul_bonus       = scored.get('soul_bonus', False)
+            img.status           = 'scored'
+            img.scored_at        = datetime.utcnow()
+            audit = build_audit_data(scored, img)
+            img.set_audit(audit)
+            card_fname = ('LL_' + date.today().strftime('%Y%m%d') + '_'
+                          + secure_filename(photographer.replace(' ', ''))
+                          + '_' + genre + '_' + str(img.score) + '.jpg')
+            card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+            _build_card(img.thumb_path, audit, card_path)
+            img.card_path = card_path
+            card_url = _r2_upload_card(card_path, uid + '_card')
+            if card_url:
+                img.card_url = card_url
+            result = {'filename': file.filename, 'score': img.score,
+                      'tier': img.tier, 'status': 'scored'}
+        else:
+            img.status = 'pending'
+            result = {'filename': file.filename, 'score': None,
+                      'tier': None, 'status': 'uploaded'}
+
+        db.session.commit()
+
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        import traceback
+        app.logger.error('bulk_upload_one error for ' + file.filename + ': ' + traceback.format_exc())
+        result = {'filename': file.filename, 'status': 'error: ' + str(e)[:120],
+                  'score': None, 'tier': None}
+
+    return jsonify(result), 200
+
 # ---------------------------------------------------------------------------
 # Peer Rating Routes
 # ---------------------------------------------------------------------------
