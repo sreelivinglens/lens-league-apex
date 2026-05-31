@@ -8253,14 +8253,19 @@ def cancel_subscription():
 def bulk_upload():
     if current_user.role != 'admin':
         abort(403)
+    is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     results = []
     if request.method == 'POST':
         files = request.files.getlist('images')
         if len(files) > 10:
+            if is_xhr:
+                return jsonify({'error': True, 'message': 'Maximum 10 images per batch.'}), 400
             flash('Maximum 10 images per bulk upload. Please split into batches of 10.', 'error')
             return redirect(url_for('bulk_upload'))
         raw_genre = request.form.get('genre', '').strip()
         if not raw_genre:
+            if is_xhr:
+                return jsonify({'error': True, 'message': 'Please select a genre before uploading.'}), 400
             flash('Please select a genre before uploading.', 'error')
             return redirect(url_for('bulk_upload'))
         genre = normalise_genre(raw_genre)
@@ -8385,6 +8390,8 @@ def bulk_upload():
         if saved_count:   msg_parts.append(f'{saved_count} saved (pending)')
         if error_count:   msg_parts.append(f'{error_count} failed')
         flash(f"Bulk upload complete: {', '.join(msg_parts)}.", 'success')
+        if is_xhr:
+            return jsonify({'ok': True, 'results': results, 'redirect': url_for('dashboard')})
         return redirect(url_for('dashboard'))
     return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
 
