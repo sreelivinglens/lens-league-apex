@@ -265,7 +265,7 @@
         </label>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn btn-solid" style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;">
+      <button type="button" id="submitBtn" class="btn btn-solid" style="width:100%; padding:15px; font-size:13px; letter-spacing:2px;" onclick="document.getElementById('bulkForm').dispatchEvent(new Event('submit', {cancelable:true,bubbles:true}))">
         ⬆ Upload &amp; Auto-Score All
       </button>
     </form>
@@ -542,7 +542,15 @@ form.addEventListener('submit', function(e) {
 
   xhr.onload = function() {
     clearInterval(ticker); clearInterval(breathCycle);
-    if (xhr.status === 200) {
+    // Try to parse JSON first
+    let data = null;
+    try { data = JSON.parse(xhr.responseText); } catch(e) {}
+
+    if (data && data.error) {
+      showOverlayError(data.message || 'Upload failed. Please try again.');
+      return;
+    }
+    if (xhr.status === 200 && data && data.ok) {
       notifyComplete();
       clockSecs.textContent = '✓';
       clockRing.style.strokeDashoffset = '0';
@@ -551,6 +559,11 @@ form.addEventListener('submit', function(e) {
       overlayStatus.textContent = `All ${total} image${total > 1 ? 's' : ''} processed!`;
       overlaySub.textContent    = 'Redirecting to your dashboard…';
       if (breathLabel) breathLabel.textContent = '🙏';
+      sessionStorage.removeItem('bulk_processing');
+      setTimeout(() => { window.location.href = data.redirect || '/dashboard'; }, 1200);
+    } else if (xhr.status === 200) {
+      // Fallback: non-JSON 200 (shouldn't happen but handle gracefully)
+      notifyComplete();
       sessionStorage.removeItem('bulk_processing');
       setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
     } else {
