@@ -943,8 +943,8 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
               <div class="sl-poty-step-icon">
                 <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
               </div>
-              <div class="sl-poty-step-title">Earn Points</div>
-              <div class="sl-poty-step-desc">Each accepted photo earns points based on its overall performance across key dimensions.</div>
+              <div class="sl-poty-step-title">Accumulate Credit</div>
+              <div class="sl-poty-step-desc">Each accepted photo builds your annual credit based on its overall performance across key dimensions.</div>
             </div>
             <div class="sl-poty-arrow">→</div>
             <div class="sl-poty-step">
@@ -952,8 +952,8 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
               <div class="sl-poty-step-icon">
                 <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
               </div>
-              <div class="sl-poty-step-title">Climb Rankings</div>
-              <div class="sl-poty-step-desc">Your points contribute to your position on the Annual Excellence Leaderboard.</div>
+              <div class="sl-poty-step-title">Track Your Growth</div>
+              <div class="sl-poty-step-desc">Your evaluation credit contributes to your position on the Annual Excellence standings.</div>
             </div>
             <div class="sl-poty-arrow">→</div>
             <div class="sl-poty-step">
@@ -962,7 +962,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
                 <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
               </div>
               <div class="sl-poty-step-title">Earn Recognition</div>
-              <div class="sl-poty-step-desc">Top performers receive the Annual Excellence Award and exclusive recognition.</div>
+              <div class="sl-poty-step-desc">Recognised photographers receive the Annual Excellence Award and a certificate of achievement.</div>
             </div>
           </div>
         </div>
@@ -975,7 +975,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
     <div class="sl-poty-inner">
       <p class="sl-poty-sec-eyebrow">What Earns You Points</p>
       <div class="sl-poty-sec-rule-dark"></div>
-      <h2 class="sl-poty-h2">Points that reflect real photographic achievement.</h2>
+      <h2 class="sl-poty-h2">Growth credit that reflects real photographic achievement.</h2>
       <div class="sl-poty-points-grid">
         <div class="sl-poty-point-col">
           <div class="sl-poty-point-icon">
@@ -1027,10 +1027,10 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
     <div class="sl-poty-inner">
       <div class="sl-poty-lb-grid">
         <div>
-          <p class="sl-poty-sec-eyebrow">Annual Excellence Leaderboard</p>
+          <p class="sl-poty-sec-eyebrow">Annual Excellence Standings</p>
           <div class="sl-poty-sec-rule-dark"></div>
-          <h2 class="sl-poty-h2" style="font-size:32px;">A live reflection of dedication.</h2>
-          <p class="sl-poty-body" style="font-size:17px;">The leaderboard showcases photographers who consistently create outstanding work and contribute to the community.</p>
+          <h2 class="sl-poty-h2" style="font-size:32px;">A live reflection of photographic growth.</h2>
+          <p class="sl-poty-body" style="font-size:17px;">The standings showcase photographers who consistently demonstrate growth and create outstanding work.</p>
           <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Rankings are updated regularly throughout the year.</p>
         </div>
         <div>
@@ -1062,13 +1062,13 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
                 {% endfor %}
               {% else %}
               <tr>
-                <td colspan="3" style="text-align:center;padding:24px;font-size:15px;color:rgba(26,26,24,0.45);">Leaderboard updates as scores come in.</td>
+                <td colspan="3" style="text-align:center;padding:24px;font-size:15px;color:rgba(26,26,24,0.45);">Standings update as evaluations come in.</td>
               </tr>
               {% endif %}
             </tbody>
           </table>
           <p class="sl-poty-lb-note">Provisional — weighted average score across all submissions. Updated live throughout the year.</p>
-          <a href="{{ url_for('leaderboard') }}" class="sl-poty-lb-link">View Full Leaderboard →</a>
+          <a href="{{ url_for('leaderboard') }}" class="sl-poty-lb-link">View Full Standings →</a>
         </div>
         <div class="sl-poty-lb-photo-wrap">
           {% if lb_hero and lb_hero.thumb_url %}

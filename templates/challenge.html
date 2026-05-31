@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Weekly Challenge{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
+{% block title %}Weekly Practice Brief{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -105,8 +105,8 @@
 
 {% if not challenge %}
   <div class="page-header">
-    <h1>Weekly Challenge</h1>
-    <p>No active challenge right now. A new prompt goes up every Monday.</p>
+    <h1>Weekly Practice Brief</h1>
+    <p>No active practice brief right now. A new brief goes up every Monday.</p>
   </div>
   {% if current_user.is_authenticated %}
   <div style="margin-top:24px;">
@@ -118,7 +118,7 @@
 
   {# ── Challenge hero ── #}
   <div class="ch-hero">
-    <div class="ch-week-label">Weekly Challenge · {{ challenge.week_ref }}</div>
+    <div class="ch-week-label">Weekly Practice Brief · {{ challenge.week_ref }}</div>
     <div class="ch-title">{{ challenge.prompt_title }}</div>
 
     <div style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
@@ -138,7 +138,7 @@
         Closes &nbsp;<strong>{{ challenge.closes_at.strftime('%a %d %b, %H:%M') }} UTC</strong>
       </div>
       <div class="ch-meta-item">
-        Submissions &nbsp;<strong>{{ challenge.submission_count }}</strong>
+        Participants Submissions &nbsp;<strong>{{ challenge.submission_count }}</strong>nbsp;<strong>{{ challenge.submission_count }}</strong>
       </div>
       {% if challenge.is_open %}
       <div class="ch-meta-item" style="color:var(--green); font-weight:600;">● Open now</div>
@@ -153,7 +153,7 @@
     <div class="sponsor-badge">
       <strong>Sponsored by {{ challenge.sponsor_name }}</strong>
       {% if challenge.sponsor_prize %}
-        &nbsp;·&nbsp; Sponsor award: {{ challenge.sponsor_prize }}
+        &nbsp;·&nbsp; Partner feature: {{ challenge.sponsor_prize }}
       {% endif %}
     </div>
     {% endif %}
@@ -166,28 +166,28 @@
         {% endfor %}
         <span class="slot-label">
           {% if slots_used == 0 %}
-            You can submit up to {{ slot_limit }} image{{ 's' if slot_limit > 1 else '' }} this week
+            You have {{ slot_limit }} feedback credit{{ 's' if slot_limit > 1 else '' }} available this week
           {% elif slots_used < slot_limit %}
-            {{ slots_used }} of {{ slot_limit }} submissions used this week
+            {{ slots_used }} of {{ slot_limit }} feedback credits used this week
           {% else %}
-            You've used all {{ slot_limit }} submission{{ 's' if slot_limit > 1 else '' }} this week
+            You've used all {{ slot_limit }} feedback credit{{ 's' if slot_limit > 1 else '' }} this week
           {% endif %}
           {% if not current_user.is_subscribed %}
-            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for 3 →</a>
+            &nbsp;·&nbsp; <a href="{{ url_for('pricing') }}" style="color:var(--gold);">Subscribe for more credits →</a>
           {% endif %}
         </span>
       </div>
 
       <div class="ch-ctas">
         {% if can_submit %}
-          <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit an image →</a>
+          <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid">Submit for feedback →</a>
         {% elif slots_used >= slot_limit and challenge.is_open %}
           {% if topup_ctx and topup_ctx.can_buy_more %}
             <a href="{{ url_for('challenge_topup') }}" class="btn btn-solid">
-              Buy more images &mdash; Rs.49 each ->
+              Add more feedback credits &mdash; Rs.49 each ->
             </a>
           {% else %}
-            <span class="btn" style="opacity:0.4; cursor:not-allowed;">Maximum images reached for this week</span>
+            <span class="btn" style="opacity:0.4; cursor:not-allowed;">All feedback credits used this week</span>
           {% endif %}
         {% endif %}
         {% if not challenge.is_open and not challenge.is_closed %}
@@ -197,11 +197,11 @@
 
     {% else %}
       <div class="ch-ctas">
-        <a href="{{ url_for('register') }}" class="btn btn-solid">Join free to enter →</a>
+        <a href="{{ url_for('register') }}" class="btn btn-solid">Join free to participate →</a>
         <a href="{{ url_for('login') }}" class="btn">Sign in</a>
       </div>
       <div style="font-size:16px; color:var(--text-muted); margin-top:10px;">
-        Free members: 1 image/week &nbsp;·&nbsp; Subscribers: 3 images/week + leaderboard ranking
+        Free members: 1 feedback credit/week · Subscribers: 3 feedback credits/week + growth tracking
       </div>
     {% endif %}
   </div>
@@ -211,12 +211,12 @@
   <div class="user-subs-wrap">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px;
                 color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
-      Your submissions this week
+      Your practice submissions this week
     </div>
     {% for sub in user_subs %}
     <div class="user-sub-row">
       {% if sub.image.thumb_url %}
-        <img src="{{ sub.image.thumb_url }}" alt="" class="user-sub-img">
+        <img src="{{ sub.image.thumb_url }}" alt="" class="user-sub-img" onerror="this.style.display='none'">
       {% else %}
         <div class="user-sub-img" style="background:var(--surface-4);"></div>
       {% endif %}
@@ -236,7 +236,7 @@
   {# ── Leaderboard — subscribers only ── #}
   <div class="leaderboard-wrap">
     <div class="lb-header">
-      <div class="lb-title">This week's entries</div>
+      <div class="lb-title">This week's practice submissions</div>
       <div class="lb-note">Scores and rankings revealed on Monday</div>
     </div>
 
@@ -245,7 +245,7 @@
       {% for sub in top_subs %}
       <div class="sub-card">
         {% if sub.image.thumb_url %}
-          <img src="{{ sub.image.thumb_url }}" alt="" class="sub-img">
+          <img src="{{ sub.image.thumb_url }}" alt="" class="sub-img" onerror="this.style.display='none'">
         {% else %}
           <div class="sub-img-placeholder">No preview</div>
         {% endif %}
