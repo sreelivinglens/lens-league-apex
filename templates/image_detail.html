@@ -388,6 +388,41 @@
   </div>
   {% endif %}
 
+  {# ── Technical details ─────────────────────────────────────────────── #}
+  {% if image.original_filename or (image.width and image.height) or image.file_size_kb %}
+  <div style="border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:24px; background:var(--surface-2);">
+    <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">File Details</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 24px;">
+      {% if image.original_filename %}
+      <div>
+        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Filename</div>
+        <div style="font-size:14px; font-weight:600; color:var(--text-primary); word-break:break-all;">{{ image.original_filename }}</div>
+      </div>
+      {% endif %}
+      {% if image.format %}
+      <div>
+        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Format</div>
+        <div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ image.format.upper() }}</div>
+      </div>
+      {% endif %}
+      {% if image.width and image.height %}
+      <div>
+        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Dimensions</div>
+        <div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ image.width }} × {{ image.height }}px</div>
+      </div>
+      {% endif %}
+      {% if image.file_size_kb %}
+      <div>
+        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">File Size</div>
+        <div style="font-size:14px; font-weight:600; color:var(--text-primary);">
+          {% if image.file_size_kb >= 1024 %}{{ "%.1f"|format(image.file_size_kb / 1024) }} MB{% else %}{{ image.file_size_kb }} KB{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   {# ── Judge/contest info ──────────────────────────────────────────── #}
   {% if image.contest_result_status == 'published' and image.judge_final_score %}
   <div style="background:rgba(200,168,75,0.06); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;">
