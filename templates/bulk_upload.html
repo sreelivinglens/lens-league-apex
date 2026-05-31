@@ -22,14 +22,14 @@
   .carousel-slide.slide-danger .carousel-msg { color: #ff6b6b; }
   .carousel-slide.slide-warn   .carousel-msg { color: var(--gold); }
   .carousel-slide.slide-ok     .carousel-msg { color: #3ea06e; }
-  .carousel-sub { font-size: 11px; font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+  .carousel-sub { font-size: 12px; font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
   .carousel-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--gold); border-radius: 0 2px 0 0; transition: width 2.5s linear; }
 
   .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: var(--surface-2); border: 1px solid var(--gold-dark); max-width: 580px; width: 100%; border-radius: var(--radius-md); display: flex; flex-direction: column; max-height: 90vh; }
   .modal-header { padding: 22px 28px 18px; border-bottom: 1px solid var(--border); }
-  .modal-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .modal-eyebrow { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
   .modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0; }
   .modal-body { padding: 22px 28px; overflow-y: auto; flex: 1; font-size: 15px; line-height: 1.75; color: var(--text-secondary); }
   .modal-body ol { padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
@@ -65,7 +65,7 @@
     font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji", sans-serif;
   }
   .shot-on-tile label .tile-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .shot-on-tile label .tile-sub  { font-size: 11px; color: var(--text-muted); }
+  .shot-on-tile label .tile-sub  { font-size: 12px; color: var(--text-muted); }
   .shot-on-tile input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); }
   .shot-on-tile input[type="radio"]:checked + label .tile-name { color: var(--gold); }
   .shot-on-tile label:hover { border-color: var(--border-strong); }
@@ -88,7 +88,7 @@
   /* ══ SCORING OVERLAY ══ */
   #scoringOverlay { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(10,10,8,.97); backdrop-filter: blur(12px); flex-direction: column; align-items: center; justify-content: center; padding: 32px; }
   #scoringOverlay.active { display: flex; }
-  .overlay-engine-tag { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
+  .overlay-engine-tag { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 44px; opacity: .55; }
   .breath-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; animation: fadeInBreath 0.8s 1s ease forwards; margin-bottom: 28px; }
   @keyframes fadeInBreath { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   .breath-ring-hero { width: 140px; height: 140px; border-radius: 50%; border: 3px solid rgba(200,168,75,0.5); background: radial-gradient(circle, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.03) 70%, transparent 100%); animation: breatheHero 8s ease-in-out infinite; display: flex; align-items: center; justify-content: center; }
@@ -99,9 +99,9 @@
   .breath-counts { font-family: var(--font-mono); font-size: 12px; letter-spacing: 3px; color: #FFFFFF; text-transform: uppercase; }
   .breath-tagline { font-size: 15px; color: #FFFFFF; font-style: italic; }
   .overlay-copy { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 32px; opacity: 0; animation: fadeInBreath 0.8s 1.2s ease forwards; }
-  .overlay-phase { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: #F5C518; text-transform: uppercase; }
+  .overlay-phase { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #F5C518; text-transform: uppercase; }
   .overlay-status { font-size: 14px; font-weight: 500; color: rgba(184,182,174,0.65); text-align: center; max-width: 340px; line-height: 1.5; }
-  .overlay-substatus { font-family: var(--font-mono); font-size: 10px; color: #FFFFFF; text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
+  .overlay-substatus { font-family: var(--font-mono); font-size: 12px; color: #FFFFFF; text-align: center; max-width: 300px; line-height: 1.6; letter-spacing: .5px; }
   .mini-timer { display: flex; flex-direction: column; align-items: center; opacity: 0; animation: fadeInBreath 0.6s 0.2s ease forwards; }
   .mini-clock-wrap { position: relative; width: 72px; height: 72px; }
   .mini-clock-svg { transform: rotate(-90deg); }
@@ -109,7 +109,7 @@
   .mini-ring-fill { fill: none; stroke: rgba(200,168,75,0.55); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 195; stroke-dashoffset: 195; transition: stroke-dashoffset .9s linear; }
   .mini-clock-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .mini-clock-secs { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: rgba(200,168,75,0.75); line-height: 1; }
-  .mini-clock-unit { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
+  .mini-clock-unit { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px; color: rgba(122,120,112,0.55); text-transform: uppercase; margin-top: 2px; }
   .overlay-error { display: none; margin-top: 24px; padding: 16px 24px; background: var(--red-dim); border: 1px solid var(--red); border-radius: var(--radius-md); font-size: 15px; color: #F0A0A0; text-align: center; max-width: 480px; line-height: 1.6; }
   .overlay-error a { color: var(--gold); text-decoration: underline; cursor: pointer; }
 </style>
@@ -169,7 +169,7 @@
         <div><div class="carousel-msg">Any image may be selected for RAW verification at any time</div><div class="carousel-sub">Verification</div></div>
       </div>
       <div class="carousel-slide slide-danger">
-        <div><div class="carousel-msg">Fraud = account deleted &amp; all prizes forfeited</div><div class="carousel-sub">Penalty</div></div>
+        <div><div class="carousel-msg">Fraud = account deleted &amp; all recognition forfeited</div><div class="carousel-sub">Penalty</div></div>
       </div>
       <div class="carousel-slide slide-ok">
         <div><div class="carousel-msg">Original photographs only &nbsp;·&nbsp; taken by you</div><div class="carousel-sub">Your commitment</div></div>
@@ -219,7 +219,7 @@
 
       <!-- Shot On -->
       <div class="form-group" style="margin-bottom:20px;">
-        <label style="display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">
+        <label style="display:block; font-family:var(--font-mono); font-size: 12px; font-weight:600; letter-spacing:2px; color:var(--gold); text-transform:uppercase; margin-bottom:4px;">
           Shot On <span style="color:var(--red); font-size:13px;">*</span>
         </label>
         <div class="shot-on-grid">
@@ -249,11 +249,11 @@
         <strong style="color:var(--amber);">⏰ Best times (IST):</strong> 6–10 AM &nbsp;·&nbsp; 2–5 PM &nbsp;·&nbsp; After 11 PM
       </div>
 
-      <!-- Leaderboard Visibility Toggle -->
+      <!-- Gallery Visibility Toggle -->
       <div style="margin-bottom:16px; padding:16px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
         <div>
-          <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Leaderboard</div>
-          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately.</div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px;">Show on Community Gallery</div>
+          <div style="font-family:var(--font-mono); font-size: 12px; color:var(--text-muted); letter-spacing:.5px;">Hidden images are scored privately.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0;">
           <div style="position:relative; width:44px; height:24px;">
@@ -261,7 +261,7 @@
             <div id="bulkToggleTrack" style="position:absolute; inset:0; border-radius:99px; background:var(--gold); transition:background .2s;"></div>
             <div id="bulkToggleThumb" style="position:absolute; top:3px; left:23px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s;"></div>
           </div>
-          <span id="bulkToggleLabel" style="font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1px; color:var(--gold); text-transform:uppercase;">Public</span>
+          <span id="bulkToggleLabel" style="font-family:var(--font-mono); font-size: 12px; font-weight:600; letter-spacing:1px; color:var(--gold); text-transform:uppercase;">Public</span>
         </label>
       </div>
 
@@ -285,10 +285,10 @@
     <div class="results-count"><span>{{ results|length }}</span> image{{ 's' if results|length != 1 }} processed</div>
     <div class="result-border">
       <div style="display:flex; gap:16px; padding:12px 20px; background:var(--surface-3); border-bottom:1px solid var(--border);">
-        <div style="flex:1; font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">File</div>
-        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Score</div>
-        <div style="min-width:90px; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Tier</div>
-        <div style="min-width:120px; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Status</div>
+        <div style="flex:1; font-family:var(--font-mono); font-size: 12px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase;">File</div>
+        <div style="min-width:48px; text-align:right; font-family:var(--font-mono); font-size: 12px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Score</div>
+        <div style="min-width:90px; font-family:var(--font-mono); font-size: 12px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Tier</div>
+        <div style="min-width:120px; font-family:var(--font-mono); font-size: 12px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Status</div>
       </div>
       {% for r in results %}
       {% set is_ok = r.status in ['scored', 'uploaded'] %}
@@ -591,7 +591,7 @@ function playBowl() {
 function haptic() { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {} }
 function notifyComplete() { playBowl(); haptic(); }
 
-// Leaderboard toggle
+// Gallery toggle
 (function() {
   const cb = document.getElementById('isPublicToggle');
   const track = document.getElementById('bulkToggleTrack');
