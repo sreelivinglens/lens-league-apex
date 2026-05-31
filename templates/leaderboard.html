@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "glossary_links.html" import glink %}
-{% block title %}Leaderboard — Shutter League{% endblock %}
+{% block title %}Gallery — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -307,7 +307,7 @@ body { overflow-x: hidden; }
 <div class="lb-wrap">
 
   <div class="lb-header">
-    <h1>Leaderboard</h1>
+    <h1>Gallery</h1>
     <p class="lb-sub">Ranked by {{ glink("DDI")|safe }} score · updated on every rescore</p>
   </div>
 

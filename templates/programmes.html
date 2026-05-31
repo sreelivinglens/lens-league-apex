@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <style>
-  .contests-wrap { max-width: 880px; margin: 0 auto; padding: 0 0 clamp(3rem,6vw,5rem); }
+  .programmes-wrap { max-width: 880px; margin: 0 auto; padding: 0 0 clamp(3rem,6vw,5rem); }
 
   
 
@@ -98,7 +98,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="contests-wrap">
+<div class="programmes-wrap">
 
   <div class="page-header" style="margin-bottom: 40px;">
     <h1>Photography Programmes</h1>
@@ -114,7 +114,7 @@
     <h3>Who Can Participate</h3>
     <ul>
       <li>All registered Shutter League members — Camera Users and Mobile Users.</li>
-      <li>Prize eligibility restricted to Indian residents with a valid PAN card and an operational Indian bank account. Participation is open to all; prize payments are governed by Indian law (TDS applicable under Section 194B).</li>
+      <li>Award eligibility restricted to Indian residents with a valid PAN card and an operational Indian bank account. Participation is open to all; award payments are governed by Indian law.</li>
       <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Scores, standings, and qualifying history reset on 1 January each year.</li>
       <li>Images must be the photographer's original work. AI-generated images, composites, and stolen images are disqualified. RAW file verification applies to all programme recipients.</li>
       <li>Full submission rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
