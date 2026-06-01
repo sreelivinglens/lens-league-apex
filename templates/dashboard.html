@@ -1502,7 +1502,7 @@
       {% if wallet_hud.officially_ranked %}
       <div style="font-size:16px;color:var(--green,#2e7d32);font-weight:500;margin-bottom:10px;">✓ Official World Ranking — Live</div>
       {% else %}
-      <div class="db-hcard-pts-note">{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }} to appear on the leaderboard.</div>
+      <div class="db-hcard-pts-note">{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }} to appear in the community.</div>
       {% endif %}
       <a href="{{ url_for('redeem') }}" class="db-hcard-redeem">Redeem {{ '{:,.0f}'.format(wallet_hud.balance) }} pts →</a>
       <div class="db-hcard-qs">
@@ -1573,7 +1573,7 @@
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
     <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Rank →</a>
-    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See Full Leaderboard</a>
+    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See Community →</a>
   </div>
 </div>
 {% elif free_tier and free_tier.remaining > 0 %}
@@ -1771,7 +1771,7 @@
       <div class="db-section-body collapsed">
         {% for img in contest_wins %}
         <div class="db-win-card">
-          <span class="db-win-badge">{{ img.tier or 'Winner' }}</span>
+          <span class="db-win-badge">{{ img.tier or 'Recipient' }}</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
             {% if img.genre %}<div style="font-size:16px;color:var(--text-primary);opacity:0.7;margin-top:3px;line-height:1.5;">{{ img.genre }}</div>{% endif %}
