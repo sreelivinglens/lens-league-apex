@@ -4539,6 +4539,37 @@ def admin_user_detail(user_id):
 @app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
 @login_required
 @admin_required
+
+@app.route('/admin/image/<int:image_id>/toggle-visibility', methods=['POST'])
+@login_required
+@admin_required
+def admin_toggle_visibility(image_id):
+    """Admin toggle: flip is_public without touching flagged/review state."""
+    img = Image.query.get_or_404(image_id)
+    if img.is_flagged:
+        flash('Cannot change visibility on a flagged image. Unflag first.', 'warning')
+        return redirect(request.referrer or url_for('admin_dashboard'))
+    img.is_public = not img.is_public
+    db.session.commit()
+    state = 'public' if img.is_public else 'hidden'
+    flash(f'Image "{img.asset_name or "Untitled"}" is now {state}.', 'success')
+    return redirect(request.referrer or url_for('admin_dashboard'))
+
+
+@app.route('/image/<int:image_id>/toggle-visibility', methods=['POST'])
+@login_required
+def owner_toggle_visibility(image_id):
+    """Owner toggle: image owner can hide or show their own image."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+    if img.is_flagged or img.needs_review:
+        return jsonify({'error': 'Cannot change visibility while image is under review.'}), 400
+    img.is_public = not img.is_public
+    db.session.commit()
+    return jsonify({'is_public': img.is_public})
+
+
 def admin_toggle_subscription(user_id):
     user = User.query.get_or_404(user_id)
     user.is_subscribed = not getattr(user, 'is_subscribed', False)
