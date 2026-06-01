@@ -238,6 +238,10 @@
   @media (max-width: 420px) {
     .admin-tile-grid { grid-template-columns: 1fr; }
   }
+  @keyframes erSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
 </style>
 {% endblock %}
 
@@ -982,6 +986,7 @@
                 onclick="erscoreSubmit()">
           Rescore with Engine →
         </button>
+        <div id="erscore-status" style="display:none; margin-top:12px; padding:10px 14px; background:#1a1a18; color:#F5C518; border-radius:4px; font-size:13px; font-family:var(--font-mono,'Courier New'),monospace; letter-spacing:.04em;"></div>
         <form id="erscore-form" method="POST" style="display:none;">
           <input type="hidden" name="reason" id="erscore-form-reason">
         </form>
@@ -1126,6 +1131,20 @@
     var form = document.getElementById('erscore-form');
     form.action = '/admin/image/' + imageId + '/engine-rescore';
     document.getElementById('erscore-form-reason').value = reason;
+    // ── Loading state — vision analysis takes 15–30s ──
+    var btn = document.getElementById('erscore-submit-btn');
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.style.cursor  = 'not-allowed';
+    btn.innerHTML = '<span style="display:inline-block;animation:erSpin 1s linear infinite;margin-right:8px;">⟳</span>Rescoring… (15–30 seconds)';
+    document.getElementById('erscore-reason').disabled = true;
+    document.getElementById('erscore-image-id').disabled = true;
+    // Status bar below the button
+    var statusEl = document.getElementById('erscore-status');
+    if (statusEl) {
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '⏳ Vision analysis running — do not close this page.';
+    }
     form.submit();
   };
 })();
