@@ -258,21 +258,21 @@
 
   {# ── Top nav ── #}
   <div class="admin-nav">
-    <a href="{{ url_for("admin_users") | tojson }}" class="admin-nav-btn">👥 Users</a>
-    <a href="{{ url_for("admin_calibration_notes") | tojson }}" class="admin-nav-btn gold">🔧 Calibration Notes</a>
-    <a href="{{ url_for("admin_reports") | tojson }}" class="admin-nav-btn red">
+    <a href="{{ url_for("admin_users") }}" class="admin-nav-btn">👥 Users</a>
+    <a href="{{ url_for("admin_calibration_notes") }}" class="admin-nav-btn gold">🔧 Calibration Notes</a>
+    <a href="{{ url_for("admin_reports") }}" class="admin-nav-btn red">
       ⚑ Reports
       {% if open_reports_count %}
         <span class="badge-count">{{ open_reports_count }}</span>
       {% endif %}
     </a>
-    <a href="{{ url_for("admin_judges") | tojson }}" class="admin-nav-btn gold">⚖️ Jury</a>
-    <a href="{{ url_for("admin_raw_verification") | tojson }}" class="admin-nav-btn gold">📁 RAW Verification</a>
-    <a href="{{ url_for("admin_weekly_challenge") | tojson }}" class="admin-nav-btn gold">📅 Weekly Assignment</a>
-    <a href="{{ url_for("admin_subscriptions") | tojson }}" class="admin-nav-btn">💳 Subscriptions</a>
-    <a href="{{ url_for("admin_contests") | tojson }}" class="admin-nav-btn gold">🏆 Programmes</a>
-    <a href="{{ url_for("admin_mentors") | tojson }}" class="admin-nav-btn gold">&#127979; Mentors</a>
-    <a href="{{ url_for("bulk_upload") | tojson }}" class="admin-nav-btn gold">⬆ Bulk Upload</a>
+    <a href="{{ url_for("admin_judges") }}" class="admin-nav-btn gold">⚖️ Jury</a>
+    <a href="{{ url_for("admin_raw_verification") }}" class="admin-nav-btn gold">📁 RAW Verification</a>
+    <a href="{{ url_for("admin_weekly_challenge") }}" class="admin-nav-btn gold">📅 Weekly Assignment</a>
+    <a href="{{ url_for("admin_subscriptions") }}" class="admin-nav-btn">💳 Subscriptions</a>
+    <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn gold">🏆 Programmes</a>
+    <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn gold">&#127979; Mentors</a>
+    <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn gold">⬆ Bulk Upload</a>
   </div>
 
   {# ── Action Required Banner ── #}
@@ -301,7 +301,7 @@
             {% if needs_action or flagged_items %}&nbsp;·&nbsp;{% endif %}
             <span style="color:#f08080; font-weight:700;">{{ open_reports_count }}</span>
             user report{{ 's' if open_reports_count != 1 else '' }} filed
-            &nbsp;<a href="{{ url_for("admin_reports") | tojson }}" style="color:var(--red); font-weight:700; text-decoration:underline;">View Reports →</a>
+            &nbsp;<a href="{{ url_for("admin_reports") }}" style="color:var(--red); font-weight:700; text-decoration:underline;">View Reports →</a>
           {% endif %}
         </div>
       </div>
@@ -321,7 +321,7 @@
       <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">{{ ann.contest_type }}</span>
       <span style="font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ ann.title }}</span>
       <span style="font-size:12px; color:var(--text-muted); white-space:nowrap;">{{ ann.audience }}</span>
-      <a href="{{ url_for("admin_contests") | tojson }}" style="font-family:var(--font-mono); font-size:11px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
+      <a href="{{ url_for("admin_contests") }}" style="font-family:var(--font-mono); font-size:11px; color:var(--gold); text-decoration:none; white-space:nowrap; border:1px solid var(--gold); padding:4px 10px; border-radius:4px;">Manage →</a>
     </div>
     {% endfor %}
   </div>
@@ -351,14 +351,14 @@
     <div class="admin-section-body" id="body-review">
 
       {# Search bar #}
-      <form method="GET" action="{{ url_for("admin_dashboard") | tojson }}" style="display:flex; gap:8px; margin-bottom:16px;">
+      <form method="GET" action="{{ url_for("admin_dashboard") }}" style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" name="q" value="{{ admin_q or '' }}"
                placeholder="Search by username, title, genre…"
                style="flex:1; padding:8px 14px; border:1px solid var(--border); border-radius:var(--radius-sm);
                       font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); outline:none;">
         <button type="submit" class="act-btn act-ref" style="padding:8px 16px;">🔍 Search</button>
         {% if admin_q %}
-        <a href="{{ url_for("admin_dashboard") | tojson }}" class="act-btn" style="padding:8px 14px; text-decoration:none;">✕ Clear</a>
+        <a href="{{ url_for("admin_dashboard") }}" class="act-btn" style="padding:8px 14px; text-decoration:none;">✕ Clear</a>
         {% endif %}
       </form>
 
@@ -395,10 +395,10 @@
           {%- set tile_class = 'is-flagged' if img.is_flagged else ('needs-review' if img.needs_review else ('is-ref' if img.is_calibration_example else '')) -%}
           <div class="admin-tile {{ tile_class }}">
 
-            <form id="ref-form-{{ img.id }}"    method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) | tojson }}" style="display:none;"></form>
-            <form id="del-form-{{ img.id }}"    method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) | tojson }}" style="display:none;"></form>
+            <form id="ref-form-{{ img.id }}"    method="POST" action="{{ url_for('toggle_calibration_example', image_id=img.id) }}" style="display:none;"></form>
+            <form id="del-form-{{ img.id }}"    method="POST" action="{{ url_for('admin_delete_image', image_id=img.id) }}" style="display:none;"></form>
             {% if img.status == 'scored' %}
-            <form id="recal-form-{{ img.id }}" method="POST" action="{{ url_for('admin_recalibrate_image', image_id=img.id) | tojson }}" style="display:none;">
+            <form id="recal-form-{{ img.id }}" method="POST" action="{{ url_for('admin_recalibrate_image', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="dod"        id="recal-f-dod-{{ img.id }}"        value="{{ img.dod_score or 0 }}">
               <input type="hidden" name="disruption" id="recal-f-disruption-{{ img.id }}" value="{{ img.disruption_score or 0 }}">
               <input type="hidden" name="dm"         id="recal-f-dm-{{ img.id }}"         value="{{ img.dm_score or 0 }}">
@@ -407,14 +407,14 @@
               <input type="hidden" name="reason"     id="recal-f-reason-{{ img.id }}">
             </form>
             {% endif %}
-            <form id="flag-form-{{ img.id }}"   method="POST" action="{{ url_for('admin_flag_image', image_id=img.id) | tojson }}" style="display:none;">
+            <form id="flag-form-{{ img.id }}"   method="POST" action="{{ url_for('admin_flag_image', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="reason" value="Manually flagged as AI-generated by admin">
             </form>
-            <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) | tojson }}" style="display:none;"></form>
-            <form id="raw-form-{{ img.id }}" method="POST" action="{{ url_for('admin_request_raw', image_id=img.id) | tojson }}" style="display:none;"></form>
-            <form id="vis-form-{{ img.id }}" method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) | tojson }}" style="display:none;"></form>
-            <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) | tojson }}" style="display:none;"></form>
-            <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) | tojson }}" style="display:none;">
+            <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
+            <form id="raw-form-{{ img.id }}" method="POST" action="{{ url_for('admin_request_raw', image_id=img.id) }}" style="display:none;"></form>
+            <form id="vis-form-{{ img.id }}" method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:none;"></form>
+            <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
+            <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
             </form>
 
@@ -450,7 +450,7 @@
             </div>
 
             <div class="admin-tile-body">
-              <a href="{{ url_for('image_detail', image_id=img.id) | tojson }}" class="admin-tile-title">
+              <a href="{{ url_for('image_detail', image_id=img.id) }}" class="admin-tile-title">
                 {{ img.asset_name or img.original_filename or 'Untitled' }}
               </a>
               <div class="admin-tile-meta">
@@ -516,7 +516,7 @@
               {% if not img.is_flagged %}
               {% set _vis_msg = 'Hide from Community?' if img.is_public else 'Make Public?' %}
               <button type="button"
-                      onclick="adminPost('vis-form-' + {{ img.id }}, '{{ _vis_msg }}')"
+                      onclick="adminPost('vis-form-' + {{ img.id }}, {{ _vis_msg | tojson }})"
                       class="act-btn"
                       style="border-color:{{ 'var(--border)' if img.is_public else '#b8860b' }}; color:{{ 'var(--text-muted)' if img.is_public else '#b8860b' }};"
                       title="{{ 'Hide from Community' if img.is_public else 'Make Public' }}">
@@ -550,14 +550,14 @@
       {% if recent_pages.pages > 1 %}
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
         {% if recent_pages.has_prev %}
-        <a href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q) | tojson }}"
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.prev_num, q=admin_q) }}"
            style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">← Prev</a>
         {% endif %}
         <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">
           Page {{ recent_pages.page }} of {{ recent_pages.pages }} &nbsp;·&nbsp; {{ recent_pages.total }} images
         </span>
         {% if recent_pages.has_next %}
-        <a href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q) | tojson }}"
+        <a href="{{ url_for('admin_dashboard', page=recent_pages.next_num, q=admin_q) }}"
            style="font-family:var(--font-mono); font-size:13px; padding:6px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; color:var(--text-primary);">Next →</a>
         {% endif %}
       </div>
@@ -637,14 +637,14 @@
               {% endif %}
             </td>
             <td style="padding:8px 12px;">
-              <a href="{{ url_for('admin_user_detail', user_id=u.id) | tojson }}" style="color:var(--gold);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;">VIEW →</a>
+              <a href="{{ url_for('admin_user_detail', user_id=u.id) }}" style="color:var(--gold);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;">VIEW →</a>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
       <div style="padding:12px 0 4px;display:flex;justify-content:flex-end;">
-        <a href="{{ url_for("admin_users") | tojson }}" style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);text-decoration:none;">VIEW ALL MEMBERS →</a>
+        <a href="{{ url_for("admin_users") }}" style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);text-decoration:none;">VIEW ALL MEMBERS →</a>
       </div>
       {% else %}
       <p style="color:var(--text-muted);font-size:14px;padding:12px 0;">No new signups in the last 30 days.</p>
@@ -861,7 +861,7 @@
             <div class="tool-label">Health Check</div>
             <div class="tool-desc">Scan all scored images for missing audit data or broken cards</div>
           </div>
-          <a href="{{ url_for("admin_health_check") | tojson }}" target="_blank" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold); flex-shrink:0;">Run →</a>
+          <a href="{{ url_for("admin_health_check") }}" target="_blank" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold); flex-shrink:0;">Run →</a>
         </div>
         <div class="tool-row">
           <div>
@@ -1202,35 +1202,35 @@
           <div class="sub-lbl">Free Users</div>
           <div class="sub-val" style="color:var(--text-muted);">{{ stats.free_users }}</div>
         </div>
-        <a href="{{ url_for("admin_subscriptions") | tojson }}" class="btn btn-solid" style="padding:10px 18px; font-size:13px; white-space:nowrap;">View Subscriptions →</a>
+        <a href="{{ url_for("admin_subscriptions") }}" class="btn btn-solid" style="padding:10px 18px; font-size:13px; white-space:nowrap;">View Subscriptions →</a>
       </div>
 
       <div class="export-grid" style="margin-bottom:16px;">
-        <a href="{{ url_for("admin_export_users") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_users") }}" class="export-btn">
           <span class="export-icon">👥</span>
           <div><div class="export-title">User Base</div><div class="export-desc">All users · subscription · credits</div></div>
         </a>
-        <a href="{{ url_for("admin_export_subscriptions") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_subscriptions") }}" class="export-btn">
           <span class="export-icon">💳</span>
           <div><div class="export-title">Subscriptions</div><div class="export-desc">Active · plan · payment IDs</div></div>
         </a>
-        <a href="{{ url_for("admin_export_images") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_images") }}" class="export-btn">
           <span class="export-icon">🖼️</span>
           <div><div class="export-title">Images &amp; Scores</div><div class="export-desc">All scored · DDI · EXIF</div></div>
         </a>
-        <a href="{{ url_for("admin_export_peer_ratings_full") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_peer_ratings_full") }}" class="export-btn">
           <span class="export-icon">⭐</span>
           <div><div class="export-title">Peer Ratings</div><div class="export-desc">Full audit · bias flags · delta</div></div>
         </a>
-        <a href="{{ url_for("admin_export_camera_rankings") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_camera_rankings") }}" class="export-btn">
           <span class="export-icon">📷</span>
           <div><div class="export-title">Camera Rankings</div><div class="export-desc">Avg score by camera model</div></div>
         </a>
-        <a href="{{ url_for("admin_export_lens_rankings") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_lens_rankings") }}" class="export-btn">
           <span class="export-icon">🔭</span>
           <div><div class="export-title">Lens Rankings</div><div class="export-desc">Avg score by lens model</div></div>
         </a>
-        <a href="{{ url_for("admin_export_ratings_csv") | tojson }}" class="export-btn">
+        <a href="{{ url_for("admin_export_ratings_csv") }}" class="export-btn">
           <span class="export-icon">📊</span>
           <div><div class="export-title">Ratings Audit</div><div class="export-desc">Peer ratings export</div></div>
         </a>
