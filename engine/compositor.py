@@ -246,14 +246,14 @@ def build_card1(photo_path, data, out_path):
     draw.rectangle([SX, pip_y, SX+SW, pip_y+1], fill=BORDER)
     pip_y += 16
 
-    # Title — smaller (fnt 36), half the previous size
-    pip_y = draw_text(draw, data.get('asset', 'Untitled'), fnt(36, bold=True), T1, SX, pip_y, SW, 4)
+    # Title — regular weight (not bold)
+    pip_y = draw_text(draw, data.get('asset', 'Untitled'), fnt(36), T1, SX, pip_y, SW, 4)
 
-    # Photographer line — "Photography · Name"
+    # Photographer line — "PHOTOGRAPHY BY NAME", caps, slate blue, mono matching tier font
     credit = data.get('credit', '').strip()
     photographer_y = pip_y  # capture Y before drawing — modules align here
     if credit:
-        pip_y = draw_text(draw, 'Photography · ' + credit, fnt(44, bold=True), T1, SX, pip_y, SW, 4)
+        pip_y = draw_text(draw, 'PHOTOGRAPHY BY :  ' + credit.upper(), fnt(44, bold=True, mono=True), SLATE, SX, pip_y, SW, 4)
     pip_y = draw_text(draw, data.get('meta', ''), fnt(34), T2, SX, pip_y, SW, 4)
     arch = "Affective State: " + data.get('dec', '')
     pip_y = draw_text(draw, arch, fnt(30, mono=True), T3, SX, pip_y, SW, 4)
