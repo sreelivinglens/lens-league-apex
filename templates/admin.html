@@ -1117,8 +1117,11 @@
       return;
     }
     preview.innerHTML = 'Loading...';
-    fetch('/admin/image-scores-json/' + _erscoreImageId)
-      .then(function(r){ return r.json(); })
+    fetch('/admin/image-scores-json/' + _erscoreImageId, { credentials: 'same-origin' })
+      .then(function(r){
+        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+        return r.json();
+      })
       .then(function(d){
         if (d.error) { preview.innerHTML = '<span style="color:red;">' + d.error + '</span>'; return; }
         preview.innerHTML = '<strong>' + (d.name || 'Image ' + _erscoreImageId) + '</strong>'
@@ -1126,7 +1129,7 @@
           + ' &nbsp;·&nbsp; Score: <strong>' + d.score + '</strong>'
           + ' &nbsp;·&nbsp; ' + d.tier;
       })
-      .catch(function(){ preview.innerHTML = '<span style="color:red;">Could not load image data.</span>'; });
+      .catch(function(e){ preview.innerHTML = '<span style="color:red;">Could not load image data — ' + (e.message || 'check image ID') + '</span>'; });
   };
 
   window.erscoreSubmit = function() {
