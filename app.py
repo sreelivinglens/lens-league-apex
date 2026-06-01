@@ -550,13 +550,13 @@ with app.app_context():
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
             ]
-            try:
-                with conn.begin():
-                    for sql in _migrations:
+            for sql in _migrations:
+                try:
+                    with conn.begin():
                         conn.execute(db.text(sql))
-            except Exception as _e:
-                if 'already exists' not in str(_e).lower():
-                    print(f'[migration] Warning: {_e}')
+                except Exception as _e:
+                    if 'already exists' not in str(_e).lower():
+                        print(f'[migration] {_e}')
 
         # Mentor seed deferred — MENTORS dict is defined later in this module.
         # _seed_mentors() is called after MENTORS is defined (see below).
@@ -2844,7 +2844,7 @@ def upload():
             asset_name        = (request.form.get('asset_name') or '').strip() or
                                   os.path.splitext(filename)[0].replace('_',' ').replace('-',' ').title(),
             genre             = genre,
-            subject           = request.form.get('subject', ''),
+            subject           = (('[Species: ' + request.form.get('species_hint', '').strip() + '] ') if request.form.get('species_hint', '').strip() else '') + request.form.get('subject', ''),
             location          = request.form.get('location', ''),
             conditions        = request.form.get('conditions', ''),
             photographer_name = request.form.get('photographer_name',
