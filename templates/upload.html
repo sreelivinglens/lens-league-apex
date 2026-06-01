@@ -362,6 +362,15 @@
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
       </div>
 
+      <div class="form-group" id="species-hint-row" style="display:none;">
+        <label for="species_hint">Species <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional — helps the engine identify correctly)</span></label>
+        <input type="text" id="species_hint" name="species_hint"
+               placeholder="e.g. Whiskered Tern, Bengal Tiger, Indian Kingfisher"
+               maxlength="120"
+               style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:16px; background:var(--bg); color:var(--text);">
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">You know what you photographed — the engine will use this as ground truth.</div>
+      </div>
+
       <div class="form-group">
         <label for="subject">Subject / Story <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <textarea id="subject" name="subject" placeholder="Brief context about this image — subject, conditions, technique…" maxlength="500"></textarea>
@@ -645,6 +654,11 @@
   document.getElementById('genre').addEventListener('change', function () {
     document.getElementById('genre-hint').textContent = genreHints[this.value] || '';
     updateSubGenre(this.value);
+    // Show species field for Wildlife and Nature only
+    var speciesRow = document.getElementById('species-hint-row');
+    if (speciesRow) {
+      speciesRow.style.display = (this.value === 'Wildlife' || this.value === 'Nature') ? 'block' : 'none';
+    }
   });
   document.querySelectorAll('input[name="camera_track"]').forEach(r =>
     r.addEventListener('change', () => { trackHint.style.display = 'none'; })
