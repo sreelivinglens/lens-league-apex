@@ -981,6 +981,12 @@
                  placeholder="e.g. Rubric recalibration — landscape scoring update Session 46"
                  style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;">
         </div>
+        <div style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="erscore-notify" style="width:16px; height:16px; cursor:pointer; accent-color:#F5C518;">
+          <label for="erscore-notify" style="font-size:13px; color:var(--text-muted); cursor:pointer; user-select:none;">
+            Notify user by email &nbsp;<span style="color:var(--text-muted); font-size:11px; font-family:var(--font-mono,'Courier New'),monospace; letter-spacing:.04em;">(off by default — tick for individual rescores only)</span>
+          </label>
+        </div>
         <button type="button" class="btn btn-solid" id="erscore-submit-btn"
                 style="padding:10px 22px; font-size:13px; background:#F5C518; color:#1a1a18; border:none; cursor:pointer; font-weight:700;"
                 onclick="erscoreSubmit()">
@@ -989,6 +995,7 @@
         <div id="erscore-status" style="display:none; margin-top:12px; padding:10px 14px; background:#1a1a18; color:#F5C518; border-radius:4px; font-size:13px; font-family:var(--font-mono,'Courier New'),monospace; letter-spacing:.04em;"></div>
         <form id="erscore-form" method="POST" style="display:none;">
           <input type="hidden" name="reason" id="erscore-form-reason">
+          <input type="hidden" name="notify_user" id="erscore-form-notify" value="0">
         </form>
       </div>
     </div>
@@ -1131,6 +1138,7 @@
     var form = document.getElementById('erscore-form');
     form.action = '/admin/image/' + imageId + '/engine-rescore';
     document.getElementById('erscore-form-reason').value = reason;
+    document.getElementById('erscore-form-notify').value = document.getElementById('erscore-notify').checked ? '1' : '0';
     // ── Loading state — vision analysis takes 15–30s ──
     var btn = document.getElementById('erscore-submit-btn');
     btn.disabled = true;
