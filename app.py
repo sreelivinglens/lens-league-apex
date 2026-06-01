@@ -3701,6 +3701,9 @@ def download_card(image_id):
         'byline_2_body': audit.get('byline_2_body','') or audit.get('byline_2',''),
         'badges_g':      audit.get('badges_g',[]),
         'badges_w':      audit.get('badges_w',[]),
+        'hard_truth':    audit.get('hard_truth',''),
+        'edit_base':     audit.get('edit_base',''),
+        'edit_creative': audit.get('edit_creative',''),
     }
 
     photo_tmp  = None
