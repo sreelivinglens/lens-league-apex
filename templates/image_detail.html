@@ -288,8 +288,20 @@
       'Technical': '/science#dimensions',
       'Moment': '/science#dimensions',
     } %}
+    {# Technical + Moment — visible to all #}
     {% for row in audit.rows %}
-    {% if row[1] %}
+    {% if row[1] and row[0] in ('Technical', 'Moment') %}
+    <div class="audit-row">
+      <div class="audit-row-label">{% if row[0] in dim_links %}<a href="{{ dim_links[row[0]] }}" style="color:var(--text-primary); text-decoration:underline; text-decoration-color:rgba(44,62,107,0.4); text-underline-offset:2px; font-family:inherit; font-size:inherit; font-weight:inherit; letter-spacing:inherit; text-transform:inherit;" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.4)'">{{ row[0] }}</a>{% else %}{{ row[0] }}{% endif %}</div>
+      <div class="audit-row-text">{{ row[1] }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {# Next + Creative Direction + Edit Guide — subscribers only #}
+    {% if current_user.is_authenticated and current_user.is_subscribed %}
+    {% for row in audit.rows %}
+    {% if row[1] and row[0] not in ('Technical', 'Moment') %}
     <div class="audit-row">
       <div class="audit-row-label">{% if row[0] in dim_links %}<a href="{{ dim_links[row[0]] }}" style="color:var(--text-primary); text-decoration:underline; text-decoration-color:rgba(44,62,107,0.4); text-underline-offset:2px; font-family:inherit; font-size:inherit; font-weight:inherit; letter-spacing:inherit; text-transform:inherit;" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.4)'">{{ row[0] }}</a>{% else %}{{ row[0] }}{% endif %}</div>
       <div class="audit-row-text">{{ row[1] }}</div>
@@ -308,7 +320,6 @@
       <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     </div>
     {% endif %}
-
     {# Edit Guide — Base Edits / Creative Edits #}
     {% if audit.edit_base or audit.edit_creative %}
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-subtle);">
@@ -328,6 +339,14 @@
       </div>
       {% endif %}
       {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    {# Free tier CTA — unlock improvement directions #}
+    <div style="margin-top:20px;padding:20px 24px;background:var(--surface-3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 var(--radius-md) var(--radius-md) 0;">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Improvement Directions &amp; Edit Guide</div>
+      <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Subscribe to unlock what to shoot next, creative directions, and a full edit guide for this image.</div>
+      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px;font-size:15px;">Subscribe to unlock →</a>
     </div>
     {% endif %}
   </div>
