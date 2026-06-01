@@ -3673,39 +3673,7 @@ def download_card(image_id):
     if not img.score:
         return "This image has not been scored yet.", 404
 
-    import io, tempfile, os as _os, hashlib
-    from flask import Response
-
-    import re as _re
-    raw = img.asset_name or 'card'
-    clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
-    clean = clean[:40].replace(' ','_')
-
-    # ── PDF cache — keyed by image_id + score so rescores invalidate automatically ──
-    # Cache key: image_id + score + tier + audit fingerprint + card layout version
-    # Increment CARD_VERSION when compositor layout changes to bust all cached PDFs
-    CARD_VERSION = "v2"
-    _audit_raw   = img.audit_json or ""
-    _audit_hash  = hashlib.md5(_audit_raw.encode()).hexdigest()[:8]
-    _cache_key   = hashlib.md5(f"{image_id}:{img.score}:{img.tier}:{_audit_hash}:{CARD_VERSION}".encode()).hexdigest()[:12]
-    _cache_path  = f"/tmp/sl_card_{_cache_key}.pdf"
-
-    if _os.path.exists(_cache_path):
-        app.logger.info(f'[download] img={image_id} serving from cache')
-        with open(_cache_path, 'rb') as _cf:
-            pdf_bytes = _cf.read()
-        return Response(
-            pdf_bytes,
-            headers={
-                'Content-Type':        'application/pdf',
-                'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
-                'Content-Length':      str(len(pdf_bytes)),
-                'Cache-Control':       'private, max-age=3600',
-                'X-Content-Type-Options': 'nosniff',
-            }
-        )
-
-    # ── Cache miss — build and store ──────────────────────────────────────────────
+    import io, tempfile, os as _os
     from engine.compositor import build_card1, build_card2
 
     audit = img.get_audit() or {}
@@ -3750,7 +3718,6 @@ def download_card(image_id):
         except Exception as e:
             app.logger.warning(f'Thumb fetch failed: {e}')
 
-    t1 = t2 = None
     try:
         t1 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
         t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
@@ -3759,6 +3726,12 @@ def download_card(image_id):
         build_card1(photo_path, card_data, t1.name)
         build_card2(card_data, t2.name)
 
+        import re as _re
+        raw = img.asset_name or 'card'
+        clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
+        clean = clean[:40].replace(' ','_')
+
+        # Build 2-page PDF (page 1 = score card, page 2 = analysis)
         from PIL import Image as _PILImg
         pg1 = _PILImg.open(t1.name).convert('RGB')
         pg2 = _PILImg.open(t2.name).convert('RGB')
@@ -3766,26 +3739,21 @@ def download_card(image_id):
         pg1.save(pdf_buf, format='PDF', save_all=True, append_images=[pg2], resolution=150)
         pdf_bytes = pdf_buf.getvalue()
 
-        # Write to cache
-        try:
-            with open(_cache_path, 'wb') as _cf:
-                _cf.write(pdf_bytes)
-        except Exception as _ce:
-            app.logger.warning(f'[download] cache write failed: {_ce}')
-
     finally:
         for p in [t1.name if t1 else None, t2.name if t2 else None, photo_tmp]:
             try:
                 if p: _os.unlink(p)
             except: pass
 
+    from flask import Response
     return Response(
         pdf_bytes,
         headers={
             'Content-Type':        'application/pdf',
             'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
             'Content-Length':      str(len(pdf_bytes)),
-            'Cache-Control':       'private, max-age=3600',
+            'Cache-Control':       'no-store, no-cache, must-revalidate',
+            'Pragma':              'no-cache',
             'X-Content-Type-Options': 'nosniff',
         }
     )
@@ -4536,9 +4504,6 @@ def admin_user_detail(user_id):
     )
 
 
-@app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
-@login_required
-@admin_required
 
 @app.route('/admin/image/<int:image_id>/toggle-visibility', methods=['POST'])
 @login_required
@@ -4570,6 +4535,9 @@ def owner_toggle_visibility(image_id):
     return jsonify({'is_public': img.is_public})
 
 
+@app.route('/admin/user/<int:user_id>/toggle-subscription', methods=['POST'])
+@login_required
+@admin_required
 def admin_toggle_subscription(user_id):
     user = User.query.get_or_404(user_id)
     user.is_subscribed = not getattr(user, 'is_subscribed', False)
