@@ -175,109 +175,101 @@ def apply_watermark(canvas, x, y, w, h):
 
 
 def build_card1(photo_path, data, out_path):
-    """Card 1 — Photo + Score + Modules (landscape brag card)"""
+    """Card 1 — Full-width photo top 60%, score/meta/modules band below (v35 magazine layout)"""
     canvas = PilImage.new('RGB',(CW,CH),CREAM)
     draw   = ImageDraw.Draw(canvas)
 
-    INNER_H = CH - HEADER_H - FOOTER_H
-    PHOTO_W = int(CW * 0.44)  # v34: reduced to allow full module labels
+    INNER_H  = CH - HEADER_H - FOOTER_H
+    PHOTO_H  = int(INNER_H * 0.60)
+    BAND_Y   = HEADER_H + PHOTO_H
+    BAND_H   = INNER_H - PHOTO_H
 
-    # Photo — left half
     try:
         ph = PilImage.open(photo_path).convert('RGB')
-        pw,phh = ph.size
-        scale = max(PHOTO_W/pw, INNER_H/phh)
-        nw,nh = int(pw*scale),int(phh*scale)
-        ph = ph.resize((nw,nh),PilImage.LANCZOS)
-        cx,cy = (nw-PHOTO_W)//2,(nh-INNER_H)//2
-        ph = ph.crop((cx,cy,cx+PHOTO_W,cy+INNER_H))
-        canvas.paste(ph,(0,HEADER_H))
-        apply_watermark(canvas, 0, HEADER_H, PHOTO_W, INNER_H)
+        pw, phh = ph.size
+        scale = max(CW / pw, PHOTO_H / phh)
+        nw, nh = int(pw * scale), int(phh * scale)
+        ph = ph.resize((nw, nh), PilImage.LANCZOS)
+        cx, cy = (nw - CW) // 2, (nh - PHOTO_H) // 2
+        ph = ph.crop((cx, cy, cx + CW, cy + PHOTO_H))
+        canvas.paste(ph, (0, HEADER_H))
+        apply_watermark(canvas, 0, HEADER_H, CW, PHOTO_H)
     except:
-        draw.rectangle([0,HEADER_H,PHOTO_W,HEADER_H+INNER_H],fill=BORDER)
+        draw.rectangle([0, HEADER_H, CW, HEADER_H + PHOTO_H], fill=BORDER)
 
-    # Right panel — cream background
-    RX = PHOTO_W + PAD
-    RW = CW - RX - PAD
-    RY = HEADER_H + PAD
+    score = str(data.get('score', '—'))
+    tier  = data.get('tier', '').upper()
 
-    # Score number — dark text
-    score = str(data.get('score','—'))
-    tier  = data.get('tier','').upper()
-    draw.text((RX,RY), score, font=fnt(260,bold=True), fill=T1)
-    RY += lh(fnt(260,bold=True)) + 10
+    # Module scores — right 55% of band
+    modules  = data.get('modules', [])
+    n        = max(len(modules), 1)
+    MOD_W    = int(CW * 0.55)
+    MOD_X    = CW - MOD_W
+    draw.rectangle([MOD_X, BAND_Y, CW, BAND_Y + BAND_H], fill=SURFACE)
+    draw.rectangle([MOD_X, BAND_Y, MOD_X + 1, BAND_Y + BAND_H], fill=BORDER)
 
-    # Tier — slate blue
-    draw.text((RX,RY), tier, font=fnt(72,bold=True,mono=True), fill=SLATE)
-    RY += lh(fnt(72,bold=True,mono=True)) + 16
+    MW     = (MOD_W - PAD) // n
+    max_sc = max((float(s) for _, s in modules if s), default=0)
+    LBL_Y  = BAND_Y + 40
 
-    # Tier pips — gold for active, border for inactive
+    _lbl_map = {
+        'DoD':        ('DEPTH OF',   'DETAIL (DOD)'),
+        'VD':         ('VISUAL',     'DISRUPTION'),
+        'Disruption': ('VISUAL',     'DISRUPTION'),
+        'DM':         ('DECISIVE',   'MOMENT (DM)'),
+        'WF':         ('WONDER',     'FACTOR'),
+        'Wonder':     ('WONDER',     'FACTOR'),
+        'AQ':         ('AESTHETIC',  'QUALITY (AQ)'),
+    }
+    for i, (name, mscore) in enumerate(modules):
+        mx  = MOD_X + PAD//2 + i * MW
+        top = float(mscore) == max_sc
+        col = GOLD if top else T1
+        if i > 0:
+            draw.rectangle([mx-1, BAND_Y+10, mx, BAND_Y+BAND_H-10], fill=BORDER)
+        l1, l2 = _lbl_map.get(name, (name.upper(), ''))
+        draw.text((mx+12, LBL_Y),                              l1, font=fnt(30, mono=True), fill=T2)
+        draw.text((mx+12, LBL_Y+lh(fnt(30, mono=True))+4),    l2, font=fnt(30, mono=True), fill=T2)
+        draw.text((mx+12, LBL_Y+lh(fnt(30, mono=True))*2+14), str(mscore), font=fnt(76, bold=True), fill=col)
+
+    # Score + meta — left 45% of band
+    SX = PAD
+    SW = MOD_X - PAD * 2
+    SY = BAND_Y + 32
+
+    draw.text((SX, SY), score, font=fnt(130, bold=True), fill=T1)
+    score_w = tw(draw, score, fnt(130, bold=True))
+    draw.text((SX + score_w + 24, SY + 20), tier, font=fnt(52, bold=True, mono=True), fill=SLATE)
+
     tier_map = {
         'ROOKIE':1, 'SHOOTER':1,
         'CONTENDER':2, 'CRAFTSMAN':2,
         'MAVERICK':3, 'MASTER':3,
         'GRANDMASTER':4, 'LEGEND':5,
     }
-    active = tier_map.get(tier,1)
+    active = tier_map.get(tier, 1)
+    pip_y  = SY + lh(fnt(130, bold=True)) + 8
     for i in range(5):
-        px = RX+i*44
-        draw.rectangle([px,RY,px+32,RY+18], fill=GOLD if i<active else BORDER)
-    RY += 44
+        px = SX + i * 40
+        draw.rectangle([px, pip_y, px+28, pip_y+14], fill=GOLD if i < active else BORDER)
+    pip_y += 30
 
-    # Divider
-    draw.rectangle([RX,RY,CW-PAD,RY+2], fill=BORDER)
-    RY += 20
+    draw.rectangle([SX, pip_y, SX+SW, pip_y+1], fill=BORDER)
+    pip_y += 16
 
-    # Title + meta
-    RY = draw_text(draw, data.get('asset','Untitled'), fnt(64,bold=True), T1, RX, RY, RW, 8)
-    RY = draw_text(draw, data.get('meta',''), fnt(40), T2, RX, RY, RW, 6)
-    RY += 10
-    arch = f"Affective State: {data.get('dec','')}  ·  {data.get('credit','')}"
-    RY = draw_text(draw, arch, fnt(36,mono=True), T3, RX, RY, RW, 6)
+    pip_y = draw_text(draw, data.get('asset', 'Untitled'), fnt(52, bold=True), T1, SX, pip_y, SW, 6)
+    pip_y = draw_text(draw, data.get('meta', ''), fnt(34), T2, SX, pip_y, SW, 4)
+    arch  = "Affective State: " + data.get('dec','') + "  ·  " + data.get('credit','')
+    pip_y = draw_text(draw, arch, fnt(30, mono=True), T3, SX, pip_y, SW, 4)
 
     if data.get('soul_bonus'):
-        RY += 14
-        draw_text(draw,'★  SOUL BONUS ACTIVE  —  AQ ≥ 8.0',fnt(36,mono=True),GOLD,RX,RY,RW)
-
-    # Module scores — pinned to bottom, slate blue panel
-    modules = data.get('modules',[])
-    n = max(len(modules),1)
-    # Two-line label: line1 + line2 + gap + score number
-    MOD_BLOCK_H = PAD + lh(fnt(32,mono=True)) + 4 + lh(fnt(32,mono=True)) + 10 + lh(fnt(80,bold=True)) + PAD
-    MOD_Y = CH - FOOTER_H - MOD_BLOCK_H
-
-    draw.rectangle([PHOTO_W,MOD_Y,CW,CH-FOOTER_H], fill=SURFACE)
-    draw.rectangle([PHOTO_W,MOD_Y,CW,MOD_Y+1], fill=BORDER)
-
-    MW = (CW - PHOTO_W - PAD*2) // n
-    max_sc = max((float(s) for _,s in modules if s), default=0)
-    LBL_Y = MOD_Y + PAD
-
-    for i,(name,mscore) in enumerate(modules):
-        mx = PHOTO_W + PAD + i*MW
-        top = float(mscore)==max_sc
-        col = GOLD if top else T1  # gold for top, dark text for rest
-        if i>0:
-            draw.rectangle([mx-1,MOD_Y+10,mx,CH-FOOTER_H-10],fill=BORDER)
-        # Two-line label: full name split across two lines, abbreviation in brackets on line 2
-        _lbl_map = {
-            'DoD':  ('DEPTH OF',   'DETAIL (DOD)'),
-            'VD':   ('VISUAL',     'DISRUPTION'),
-            'DM':   ('DECISIVE',   'MOMENT (DM)'),
-            'WF':   ('WONDER',     'FACTOR'),
-            'AQ':   ('AESTHETIC',  'QUALITY (AQ)'),
-        }
-        l1, l2 = _lbl_map.get(name, (name.upper(), ''))
-        draw.text((mx+12, LBL_Y), l1, font=fnt(32,mono=True), fill=T2)
-        draw.text((mx+12, LBL_Y+lh(fnt(32,mono=True))+4), l2, font=fnt(32,mono=True), fill=T2)
-        draw.text((mx+12, LBL_Y+lh(fnt(32,mono=True))*2+14), str(mscore), font=fnt(80,bold=True), fill=col)
+        pip_y += 10
+        draw_text(draw, '★  SOUL BONUS ACTIVE  —  AQ ≥ 8.0', fnt(30, mono=True), GOLD, SX, pip_y, SW)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
-    draw_footer(canvas, draw, f"SL · {score} · {tier}")
-    canvas.save(out_path,'JPEG',quality=96)
+    draw_footer(canvas, draw, "SL · " + score + " · " + tier)
+    canvas.save(out_path, 'JPEG', quality=96)
     return out_path
-
-
 def build_card2(data, out_path):
     """Card 2 — Full Analysis, 2 columns, DYNAMIC height based on content."""
 
@@ -293,7 +285,7 @@ def build_card2(data, out_path):
     bw   = [b for b in data.get('badges_w',[]) if b.strip()]
     hard_truth    = data.get('hard_truth','').strip()
     edit_purist   = data.get('edit_purist','').strip()
-    edit_standard = data.get('edit_standard','').strip()
+    edit_standard = (data.get('edit_standard','') or data.get('edit_base','')).strip()
     edit_creative = data.get('edit_creative','').strip()
 
     def measure_section(dummy_draw, body, w):
