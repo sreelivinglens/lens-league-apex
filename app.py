@@ -550,13 +550,13 @@ with app.app_context():
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
             ]
-            for sql in _migrations:
-                try:
-                    with conn.begin():
+            try:
+                with conn.begin():
+                    for sql in _migrations:
                         conn.execute(db.text(sql))
-                except Exception as _e:
-                    if 'already exists' not in str(_e).lower():
-                        print(f'[migration] {_e}')
+            except Exception as _e:
+                if 'already exists' not in str(_e).lower():
+                    print(f'[migration] Warning: {_e}')
 
         # Mentor seed deferred — MENTORS dict is defined later in this module.
         # _seed_mentors() is called after MENTORS is defined (see below).
