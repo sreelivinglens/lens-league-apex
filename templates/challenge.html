@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Weekly Shoot{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
+{% block title %}Weekly Assignment{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -105,7 +105,7 @@
 
 {% if not challenge %}
   <div class="page-header">
-    <h1>Weekly Shoot</h1>
+    <h1>Weekly Assignment</h1>
     <p>No active weekly shoot right now. A new shoot goes up every Monday.</p>
   </div>
   {% if current_user.is_authenticated %}
@@ -118,7 +118,7 @@
 
   {# ── Challenge hero ── #}
   <div class="ch-hero">
-    <div class="ch-week-label">Weekly Shoot · {{ challenge.week_ref }}</div>
+    <div class="ch-week-label">Weekly Assignment · {{ challenge.week_ref }}</div>
     <div class="ch-title">{{ challenge.prompt_title }}</div>
 
     <div style="font-size:16px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">
@@ -236,7 +236,7 @@
   {# ── Leaderboard — subscribers only ── #}
   <div class="leaderboard-wrap">
     <div class="lb-header">
-      <div class="lb-title">This week's Weekly Shoot submissions</div>
+      <div class="lb-title">This week's Weekly Assignment submissions</div>
       <div class="lb-note">Scores and rankings revealed on Monday</div>
     </div>
 
