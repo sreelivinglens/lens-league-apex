@@ -364,6 +364,7 @@
 
       <form id="bulkForm" onsubmit="return false;">
         <div class="bulk-bar">
+
           <label>
             <input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All
           </label>
@@ -373,7 +374,9 @@
                   style="opacity:0.4; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:1px; padding:6px 14px; border:1px solid var(--gold); color:#000; background:var(--gold); border-radius:var(--radius-sm); cursor:pointer;"
                   onclick="bulkRequestRaw()">📂 Request RAW</button>
         </div>
+      </form>{# end bulkForm — tiles are outside so nested forms work correctly #}
 
+      <div id="tile-grid-wrapper">
         {# Split into attention items (pinned) vs normal #}
         {%- set attention_imgs = (recent | selectattr('is_flagged') | list) + (recent | selectattr('needs_review') | rejectattr('is_flagged') | list) -%}
         {%- set normal_imgs    = recent | rejectattr('is_flagged') | rejectattr('needs_review') | list -%}
@@ -544,7 +547,7 @@
           </div>
           {% endfor %}
         </div>
-      </form>
+      </div>{# end tile-grid-wrapper #}
 
       {# Pagination #}
       {% if recent_pages.pages > 1 %}
