@@ -12233,6 +12233,126 @@ def admin_recalibrate_image(image_id):
 
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/image/<int:image_id>/engine-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_engine_rescore(image_id):
+    """
+    Engine Rescore — re-runs auto_score.py on an existing image using the
+    current rubric. Replaces all scores, audit text, and scorecard.
+    Use after rubric updates to apply new scoring standards to existing images.
+    Requires a reason for the audit trail.
+    """
+    img = Image.query.get_or_404(image_id)
+    reason = request.form.get('reason', '').strip()
+    if not reason:
+        flash('Engine rescore requires a reason.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        from engine.auto_score import auto_score, build_audit_data
+        from engine.compositor import build_card1, build_card2
+
+        # Fetch thumb — from disk or R2
+        thumb_path = img.thumb_path
+        temp_file  = None
+        if not thumb_path or not os.path.exists(thumb_path):
+            try:
+                from storage import get_client, BUCKET
+                tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                get_client().download_fileobj(
+                    BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+                )
+                tf.close()
+                thumb_path = temp_file = tf.name
+            except Exception as e:
+                flash(f'Engine rescore: could not fetch image — {e}', 'error')
+                return redirect(url_for('admin_dashboard'))
+
+        # Store old scores for audit trail
+        old_score = float(img.score or 0)
+        old_tier  = img.tier or ''
+        old_dims  = [float(img.dod_score or 0), float(img.disruption_score or 0),
+                     float(img.dm_score or 0), float(img.wonder_score or 0),
+                     float(img.aq_score or 0)]
+
+        # Run engine
+        result = auto_score(
+            image_path   = thumb_path,
+            genre        = img.genre,
+            sub_genre    = img.sub_genre,
+            title        = img.asset_name,
+            photographer = img.photographer_name,
+            subject      = img.subject,
+            location     = img.location,
+        )
+
+        if temp_file:
+            try: os.unlink(temp_file)
+            except: pass
+
+        # Update model
+        img.dod_score        = float(result.get('dod', 0))
+        img.disruption_score = float(result.get('disruption', 0))
+        img.dm_score         = float(result.get('dm', 0))
+        img.wonder_score     = float(result.get('wonder', 0))
+        img.aq_score         = float(result.get('aq', 0))
+        img.score            = float(result.get('score', 0))
+        img.tier             = get_tier(float(result.get('score', 0)))
+        img.archetype        = result.get('archetype', img.archetype or '')
+        img.soul_bonus       = result.get('soul_bonus', False)
+        img.status           = 'scored'
+
+        audit = build_audit_data(result, img)
+
+        # Append rescore log entry
+        audit['recalibration_log'] = (img.get_audit() or {}).get('recalibration_log') or []
+        audit['recalibration_log'].append({
+            'type':      'engine_rescore',
+            'admin':     current_user.username,
+            'at':        datetime.utcnow().isoformat(),
+            'reason':    reason,
+            'old_score': old_score,
+            'new_score': img.score,
+            'old_tier':  old_tier,
+            'new_tier':  img.tier,
+            'old_dims':  old_dims,
+            'new_dims':  [img.dod_score, img.disruption_score,
+                          img.dm_score, img.wonder_score, img.aq_score],
+        })
+        img.set_audit(audit)
+
+        # Rebuild scorecard (both pages)
+        try:
+            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                          f"{img.genre}_{img.score}.jpg")
+            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+            build_card1(img.thumb_path or thumb_path, audit, card_path)
+            img.card_path = card_path
+            uid = str(uuid.uuid4())
+            card_url = _r2_upload_card(card_path, uid + '_card')
+            if card_url:
+                img.card_url = card_url
+        except Exception as card_err:
+            app.logger.warning(f'[engine_rescore] card rebuild failed img {image_id}: {card_err}')
+
+        db.session.commit()
+        flash(
+            f'Engine rescore complete — "{img.asset_name or img.id}": '
+            f'{old_score} {old_tier} → {img.score} {img.tier}'
+            f'{"  ·  Soul Bonus" if img.soul_bonus else ""}',
+            'success'
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[engine_rescore] image {image_id}: {e}')
+        flash(f'Engine rescore error: {e}', 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
+
 
 # ---------------------------------------------------------------------------
 # Winner notification + RAW window trigger
