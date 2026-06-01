@@ -2391,7 +2391,7 @@ Return this exact JSON:
   "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
   "is_captive": <true if any captive indicators present, else false>,
-  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. Use 'Unknown' if genuinely unidentifiable.>",
+  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL: Only name a species if you can identify it with HIGH VISUAL CONFIDENCE from the image. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, or the birds/animals are small or distant and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist and species identity is not the primary subject. A wrong species identification with confident Wikipedia data is worse than returning Unknown. When in doubt, return Unknown.>",
   "suggested_subgenre": "<most accurate sub-genre id from the lists above — e.g. 'creative_minimalist', 'wildlife_bird_behaviour', 'street_candid'. null if genre is Landscape/Nature/Wedding/Macro/Drone/Fashion and no clear sub-genre match.>",
   "suggested_subgenre_reason": "<one sentence: what specific visual evidence leads to this sub-genre. e.g. 'Single swan in 60% negative space with tonal relationship as primary compositional statement.'>"
 }
@@ -2488,19 +2488,32 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def vision_analyse(img_data: str, media_type: str, title: str, subject: str) -> dict:
+def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "") -> dict:
     """
     Call 1 of the two-call architecture.
     Sends the image to the API with a pure description prompt — no scoring.
     Returns a dict with scene description facts (subjects, behaviour, prey, contact).
     Falls back to an empty dict on any failure — scoring proceeds without it
     rather than blocking entirely.
+
+    species_hint: photographer-supplied species name (e.g. "Whiskered Tern").
+                  When present, treated as ground truth for species_id — overrides
+                  vision model identification. Prevents misidentification on
+                  high-key, monochrome, or minimalist wildlife images.
     """
     prompt = VISION_PROMPT
     # Inject title and subject as hints — not as constraints
     if title or subject:
         hint = f"\nImage title: {title or 'Not provided'}. Subject field: {subject or 'Not provided'}.\nUse these as hints only — do not assume they are accurate. Describe what you actually see."
         prompt = prompt + hint
+    # Species hint — photographer-supplied, treated as ground truth
+    if species_hint and species_hint.strip():
+        species_gt = (
+            f"\nSPECIES GROUND TRUTH: The photographer has identified the species as '{species_hint.strip()}'. "
+            f"Use this as the species_id in your response. Do NOT override this with your own identification "
+            f"— the photographer knows what they photographed."
+        )
+        prompt = prompt + species_gt
 
     payload = {
         "model":       VISION_MODEL,
@@ -2848,7 +2861,7 @@ def build_species_context(research: dict) -> str:
     return "\n".join(lines)
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint=""):
     """
     Score an image using the Apex DDI Engine.
 
@@ -2856,6 +2869,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                sub-type-specific rubric context for DM, DoD, and WF scoring.
                Currently active for People genre only; ignored for all others.
                Values must match VALID_SUBGENRES in engine/scoring.py.
+    species_hint: photographer-supplied species name for Wildlife/Nature images.
+                  Passed to vision_analyse() as ground truth — prevents
+                  misidentification on high-key or processed images.
     """
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
@@ -2866,7 +2882,14 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # This prevents the scorer from hallucinating scene content (e.g. describing
     # a two-bird conflict as a single-bird takeoff). The scene description is
     # injected as verified ground truth into the scoring prompt.
-    vision        = vision_analyse(img_data, media_type, title, subject)
+    # Extract species hint from subject field if prepended as [Species: ...]
+    _species_hint = species_hint or ""
+    if not _species_hint and subject and subject.startswith('[Species:'):
+        import re as _re_sh
+        _m = _re_sh.match(r'\[Species:\s*([^\]]+)\]', subject)
+        if _m:
+            _species_hint = _m.group(1).strip()
+    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint)
     scene_context = build_scene_context(vision, genre=genre)
 
     # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
