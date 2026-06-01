@@ -506,10 +506,37 @@ form.addEventListener('submit', function(e) {
   document.getElementById('overlayError').style.display = 'none';
   clockSecs.textContent = PER_IMAGE;
 
+  // VIBGYOR colours — cycle on every breath phase
+  const VIBGYOR = [
+    { ring: 'rgba(148,0,211,0.85)',  glow: 'rgba(148,0,211,0.25)',  dot: '#9400D3' },
+    { ring: 'rgba(75,0,130,0.85)',   glow: 'rgba(75,0,130,0.25)',   dot: '#4B0082'  },
+    { ring: 'rgba(0,0,255,0.85)',    glow: 'rgba(0,0,255,0.25)',    dot: '#0000FF'  },
+    { ring: 'rgba(0,168,107,0.85)',  glow: 'rgba(0,168,107,0.25)',  dot: '#00A86B'  },
+    { ring: 'rgba(255,191,0,0.85)',  glow: 'rgba(255,191,0,0.25)',  dot: '#FFBF00'  },
+    { ring: 'rgba(255,127,0,0.85)',  glow: 'rgba(255,127,0,0.25)',  dot: '#FF7F00'  },
+    { ring: 'rgba(255,0,0,0.85)',    glow: 'rgba(255,0,0,0.25)',    dot: '#FF0000'  },
+  ];
+  let breathColorIdx = 0;
+  const breathRing    = document.querySelector('.breath-ring-hero');
+  const breathDot     = document.querySelector('.breath-inner-dot');
+
+  function applyBreathColor(idx) {
+    const c = VIBGYOR[idx % VIBGYOR.length];
+    if (breathRing) {
+      breathRing.style.borderColor = c.ring;
+      breathRing.style.boxShadow   = `0 0 48px 10px ${c.glow}`;
+      breathRing.style.background  = `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`;
+    }
+    if (breathDot) breathDot.style.background = c.dot;
+  }
+  applyBreathColor(breathColorIdx);
+
   let breathPhase = 0;
   const breathCycle = setInterval(() => {
     breathPhase = (breathPhase + 1) % 2;
     if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
+    breathColorIdx = (breathColorIdx + 1) % VIBGYOR.length;
+    applyBreathColor(breathColorIdx);
   }, 4000);
 
   let secs = 0;
