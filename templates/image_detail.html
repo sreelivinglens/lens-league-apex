@@ -179,6 +179,11 @@
     <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;margin-bottom:20px;">
       <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
       <div style="font-size:17px;color:#ffffff;line-height:1.65;font-style:italic;">{{ audit_ht.hard_truth }}</div>
+      {% if audit_ht.wikipedia_url %}
+      <div style="margin-top:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:0.5px;color:rgba(255,255,255,0.35);">
+        Species data: <a href="{{ audit_ht.wikipedia_url }}" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,0.45);text-decoration:underline;text-underline-offset:2px;">Wikipedia · {{ audit_ht.wikipedia_title or audit_ht.species_id }}</a>
+      </div>
+      {% endif %}
     </div>
     {% endif %}
     {% endif %}
