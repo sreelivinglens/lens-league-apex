@@ -2674,63 +2674,73 @@ def species_research(species_id: str) -> dict:
     Call 1.5 of the scoring pipeline — fires only for Wildlife/Nature genres
     when a species has been identified by vision_analyse().
 
-    Queries Google Custom Search API for species rarity, global distribution,
-    wild population status, and photography documentation scarcity.
+    Queries the Wikipedia REST API (no key, no billing, no rate limits) for
+    species range, conservation status, behaviour documentation, and rarity.
+    Falls back to a Wikipedia search if direct page lookup fails.
     Returns a dict with research findings, or an empty dict on failure.
 
     Falls back silently — scoring always proceeds regardless of outcome.
     """
-    cse_api_key = os.getenv("GOOGLE_CSE_API_KEY", "")
-    cse_id      = os.getenv("GOOGLE_CSE_ID", "")
-    if not cse_api_key or not cse_id:
-        print(f"[species_research] GOOGLE_CSE_API_KEY or GOOGLE_CSE_ID not set — skipping species research for '{species_id}'")
-        return {}
-
-    query = f"{species_id} wild population distribution rarity wildlife photography documentation"
     try:
+        # Step 1 — try direct Wikipedia page lookup by species name
+        # Wikipedia REST API: no auth, no billing, free
+        search_term = species_id.replace(" ", "_")
         resp = httpx.get(
-            "https://www.googleapis.com/customsearch/v1",
-            params={
-                "key": cse_api_key,
-                "cx":  cse_id,
-                "q":   query,
-                "num": 5,
-                "safe": "active",
-            },
+            f"https://en.wikipedia.org/api/rest_v1/page/summary/{search_term}",
+            headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0 (wildlife scoring; contact@shutterleague.com)"},
             timeout=15,
+            follow_redirects=True,
         )
-        if resp.status_code != 200:
-            print(f"[species_research] Google CSE error {resp.status_code} — skipping")
+
+        summary_text = ""
+        if resp.status_code == 200:
+            data = resp.json()
+            summary_text = data.get("extract", "")
+            print(f"[species_research] Wikipedia hit for '{species_id}' ({len(summary_text)} chars)")
+        else:
+            # Step 2 — fallback: Wikipedia search API
+            search_resp = httpx.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list":   "search",
+                    "srsearch": species_id,
+                    "format": "json",
+                    "srlimit": 3,
+                },
+                headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0"},
+                timeout=15,
+            )
+            if search_resp.status_code == 200:
+                results = search_resp.json().get("query", {}).get("search", [])
+                if results:
+                    top_title = results[0].get("title", "").replace(" ", "_")
+                    page_resp = httpx.get(
+                        f"https://en.wikipedia.org/api/rest_v1/page/summary/{top_title}",
+                        headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0"},
+                        timeout=15,
+                        follow_redirects=True,
+                    )
+                    if page_resp.status_code == 200:
+                        summary_text = page_resp.json().get("extract", "")
+                        print(f"[species_research] Wikipedia fallback hit for '{species_id}' via '{top_title}' ({len(summary_text)} chars)")
+
+        if not summary_text:
+            print(f"[species_research] No Wikipedia content for '{species_id}' — skipping")
             return {}
 
-        data = resp.json()
-        results = data.get("items", [])
-        if not results:
-            print(f"[species_research] No results for '{species_id}'")
-            return {}
-
-        # Collect snippets from top results
-        snippets = []
-        for r in results[:4]:
-            desc = r.get("snippet", "").strip()
-            if desc:
-                snippets.append(desc)
-
-        if not snippets:
-            return {}
-
-        # Use a lightweight Claude call to distil snippets into structured facts
+        # Step 3 — distil Wikipedia extract into structured scoring facts
         distil_prompt = (
-            f"You are a wildlife photography expert. Based on the following search snippets "
-            f"about '{species_id}', extract ONLY these facts in JSON:\n"
+            f"You are a wildlife photography expert. Based on the following Wikipedia extract "
+            f"about '{species_id}', extract ONLY these facts as JSON:\n"
             f"- global_range: one sentence on native geographic range\n"
-            f"- population_status: IUCN status and trend if known\n"
-            f"- wild_behaviour_known: true/false — is wild behaviour well-documented?\n"
+            f"- population_status: IUCN status and population trend if mentioned\n"
+            f"- wild_behaviour_known: true/false — is wild behaviour well-documented in scientific literature?\n"
             f"- photography_difficulty: one sentence on how difficult it is to photograph in the wild\n"
-            f"- captive_common: true/false — is this species commonly photographed in captivity/bird hides?\n"
-            f"- rarity_note: one sentence on rarity and documentation scarcity for wildlife photographers\n\n"
-            f"Snippets:\n" + "\n---\n".join(snippets[:4]) + "\n\n"
-            f"Respond ONLY with a valid JSON object. No preamble."
+            f"- captive_common: true/false — is this species commonly kept in captivity or photographed at bird hides?\n"
+            f"- rarity_note: one sentence summarising rarity and documentation scarcity for wildlife photographers\n\n"
+            f"Wikipedia extract:\n{summary_text[:2000]}\n\n"
+            f"Respond ONLY with a valid JSON object. No preamble. No markdown."
         )
 
         distil_payload = {
@@ -2750,8 +2760,8 @@ def species_research(species_id: str) -> dict:
             timeout=30,
         )
         if distil_resp.status_code != 200:
-            print(f"[species_research] Distil API error {distil_resp.status_code} — returning raw snippets")
-            return {"raw_snippets": snippets}
+            print(f"[species_research] Distil API error {distil_resp.status_code} — skipping")
+            return {}
 
         distil_text = ""
         for block in distil_resp.json().get("content", []):
