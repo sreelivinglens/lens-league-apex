@@ -951,6 +951,43 @@
       </div>
     </div>
 
+    {# ── Engine Rescore ── #}
+    <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+      <div class="tool-label" style="margin-bottom:4px;">Engine Rescore</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+        Re-runs the full Apex DDI Engine on an existing image using the <strong>current rubric</strong>.
+        Replaces all scores, analysis text, and scorecard. Use after rubric updates to apply
+        new scoring standards to existing images. Uses API credits.
+      </div>
+      <div style="background:var(--bg-card,#f7f5f1); border:1px solid var(--border); border-radius:8px; padding:18px 20px;">
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
+          <div style="flex:1; min-width:160px;">
+            <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Image ID</label>
+            <input id="erscore-image-id" type="number" min="1" placeholder="e.g. 142"
+                   style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text);"
+                   oninput="erscoreLoadPreview(this.value)">
+          </div>
+          <div id="erscore-preview" style="flex:2; min-width:200px; font-size:13px; color:var(--text-muted); padding:8px 0;">
+            Enter an image ID to load current scores.
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:4px;">Reason (required)</label>
+          <input id="erscore-reason" type="text" maxlength="200"
+                 placeholder="e.g. Rubric recalibration — landscape scoring update Session 46"
+                 style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:14px; background:var(--bg); color:var(--text); box-sizing:border-box;">
+        </div>
+        <button type="button" class="btn btn-solid" id="erscore-submit-btn"
+                style="padding:10px 22px; font-size:13px; background:#2C3E6B; color:#fff; border:none; cursor:pointer;"
+                onclick="erscoreSubmit()">
+          Rescore with Engine →
+        </button>
+        <form id="erscore-form" method="POST" style="display:none;">
+          <input type="hidden" name="reason" id="erscore-form-reason">
+        </form>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1054,6 +1091,43 @@
   document.getElementById('recal-modal').addEventListener('click', function(e){
     if(e.target === this) closeRecalModal();
   });
+})();
+
+// ── Engine Rescore ────────────────────────────────────────────────────────────
+(function(){
+  var _erscoreImageId = null;
+
+  window.erscoreLoadPreview = function(val) {
+    _erscoreImageId = parseInt(val);
+    var preview = document.getElementById('erscore-preview');
+    if (!_erscoreImageId || _erscoreImageId < 1) {
+      preview.innerHTML = 'Enter an image ID to load current scores.';
+      return;
+    }
+    preview.innerHTML = 'Loading...';
+    fetch('/admin/image-scores-json/' + _erscoreImageId)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.error) { preview.innerHTML = '<span style="color:red;">' + d.error + '</span>'; return; }
+        preview.innerHTML = '<strong>' + (d.name || 'Image ' + _erscoreImageId) + '</strong>'
+          + ' &nbsp;·&nbsp; ' + d.genre
+          + ' &nbsp;·&nbsp; Score: <strong>' + d.score + '</strong>'
+          + ' &nbsp;·&nbsp; ' + d.tier;
+      })
+      .catch(function(){ preview.innerHTML = '<span style="color:red;">Could not load image data.</span>'; });
+  };
+
+  window.erscoreSubmit = function() {
+    var imageId = document.getElementById('erscore-image-id').value;
+    var reason  = document.getElementById('erscore-reason').value.trim();
+    if (!imageId) { alert('Please enter an image ID.'); return; }
+    if (!reason)  { alert('Please enter a reason for the rescore.'); return; }
+    if (!confirm('Re-run the Apex engine on image ' + imageId + '? This will replace the existing score, analysis, and scorecard.')) return;
+    var form = document.getElementById('erscore-form');
+    form.action = '/admin/image/' + imageId + '/engine-rescore';
+    document.getElementById('erscore-form-reason').value = reason;
+    form.submit();
+  };
 })();
 </script>
 
