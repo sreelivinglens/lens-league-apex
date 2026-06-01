@@ -344,6 +344,15 @@
         </select>
       </div>
 
+      <div class="form-group" id="species-hint-row" style="display:none;">
+        <label for="species_hint">Species <span style="font-weight:400; color:var(--text-primary); text-transform:none;">— what did you photograph?</span></label>
+        <input type="text" id="species_hint" name="species_hint"
+               placeholder="e.g. Green Bee-eater, Bengal Tiger, Indian Paradise Flycatcher"
+               maxlength="120"
+               style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:16px; background:var(--bg); color:var(--text);">
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">The engine uses this as ground truth — overrides vision detection if Wikipedia returns the wrong species.</div>
+      </div>
+
       <div class="form-group shot-on-group">
         <span class="field-label">Shot On <span style="color:var(--red);font-size:16px;">*</span></span>
         <div class="shot-on-options">
@@ -368,15 +377,6 @@
       <div class="form-group">
         <label for="location">Location <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
         <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
-      </div>
-
-      <div class="form-group" id="species-hint-row" style="display:none;">
-        <label for="species_hint">Species <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional — helps the engine identify correctly)</span></label>
-        <input type="text" id="species_hint" name="species_hint"
-               placeholder="e.g. Whiskered Tern, Bengal Tiger, Indian Kingfisher"
-               maxlength="120"
-               style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:16px; background:var(--bg); color:var(--text);">
-        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">You know what you photographed — the engine will use this as ground truth.</div>
       </div>
 
       <div class="form-group">
