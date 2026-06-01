@@ -12346,6 +12346,68 @@ def admin_engine_rescore(image_id):
             'success'
         )
 
+        # Optional user notification — only when admin ticks the checkbox
+        if request.form.get('notify_user') == '1':
+            try:
+                _user = User.query.get(img.user_id)
+                if _user and _user.email:
+                    _name      = _user.full_name or _user.username or 'Photographer'
+                    _title     = img.asset_name or f'Image {img.id}'
+                    _genre     = (img.genre or '').replace('_', ' ').title()
+                    _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    _img_url   = f"{_site_url}/image/{img.id}"
+                    _score_str = f'{img.score:.2f}'
+                    _tier_str  = img.tier or ''
+                    _delta     = img.score - old_score
+                    _delta_str = (f'+{_delta:.2f}' if _delta >= 0 else f'{_delta:.2f}')
+                    send_email(
+                        to_addresses=_user.email,
+                        subject=f'[Shutter League] Your evaluation has been updated — {_title}',
+                        html_body=(
+                            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                            '<tr><td align="center">'
+                            '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+                            '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League</p>'
+                            '</td></tr>'
+                            '<tr><td style="padding:28px 32px;">'
+                            '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#1a1a18;">Hi ' + _name + ',</p>'
+                            '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
+                            'We have updated the evaluation for your <strong>' + _genre + '</strong> image '
+                            '<strong>&#8220;' + _title + '&#8221;</strong> following a rubric recalibration.'
+                            '</p>'
+                            '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;padding:16px 20px;margin:20px 0;">'
+                            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8070;">Updated Score</p>'
+                            '<p style="margin:0;font-size:28px;font-weight:700;color:#1a1a18;">' + _score_str + ' &nbsp;<span style="font-size:16px;color:#8a8070;">' + _tier_str + '</span></p>'
+                            '<p style="margin:6px 0 0;font-size:13px;color:#8a8070;font-family:Courier New,monospace;">Change: ' + _delta_str + '</p>'
+                            '</div>'
+                            '<p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#4A4840;">'
+                            'Your scorecard and full analysis have been updated to reflect the latest scoring standards. '
+                            'No action is needed on your part.'
+                            '</p>'
+                            '<a href="' + _img_url + '" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">View Updated Scorecard →</a>'
+                            '</td></tr>'
+                            '<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">'
+                            '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">Questions? Reply to this email or contact <a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a></p>'
+                            '</td></tr>'
+                            '</table></td></tr></table></body></html>'
+                        ),
+                        text_body=(
+                            'Hi ' + _name + ',\n\n'
+                            'We have updated the evaluation for your ' + _genre + ' image '
+                            '"' + _title + '" following a rubric recalibration.\n\n'
+                            'Updated score: ' + _score_str + ' (' + _tier_str + ')  Change: ' + _delta_str + '\n\n'
+                            'Your scorecard and full analysis have been updated. No action needed.\n\n'
+                            'View your updated scorecard: ' + _img_url + '\n\n'
+                            '— Shutter League'
+                        )
+                    )
+                    app.logger.info(f'[engine_rescore] notification sent to {_user.email} for image {image_id}')
+            except Exception as _mail_err:
+                app.logger.warning(f'[engine_rescore] notification email failed img {image_id}: {_mail_err}')
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[engine_rescore] image {image_id}: {e}')
