@@ -204,18 +204,15 @@ def build_card1(photo_path, data, out_path):
     score = str(data.get('score', '—'))
     tier  = data.get('tier', '').upper()
 
-    # Module scores — right 55% of band
+    # Module layout — calculated upfront so SW can reference MOD_X
     modules  = data.get('modules', [])
     n        = max(len(modules), 1)
     MOD_W    = int(CW * 0.55)
     MOD_X    = CW - MOD_W
     draw.rectangle([MOD_X, BAND_Y, CW, BAND_Y + BAND_H], fill=SURFACE)
     draw.rectangle([MOD_X, BAND_Y, MOD_X + 1, BAND_Y + BAND_H], fill=BORDER)
-
     MW     = (MOD_W - PAD) // n
     max_sc = max((float(s) for _, s in modules if s), default=0)
-    LBL_Y  = BAND_Y + 40
-
     _lbl_map = {
         'DoD':        ('DEPTH OF',   'DETAIL (DOD)'),
         'VD':         ('VISUAL',     'DISRUPTION'),
@@ -225,22 +222,6 @@ def build_card1(photo_path, data, out_path):
         'Wonder':     ('WONDER',     'FACTOR'),
         'AQ':         ('AESTHETIC',  'QUALITY (AQ)'),
     }
-    for i, (name, mscore) in enumerate(modules):
-        # Centre each module within its column
-        mx  = MOD_X + PAD//2 + i * MW
-        col_cx = mx + MW // 2
-        top = float(mscore) == max_sc
-        col = GOLD if top else T1
-        # No vertical dividers — removed (were jarring)
-        l1, l2 = _lbl_map.get(name, (name.upper(), ''))
-        l1w = tw(draw, l1, fnt(30, mono=True))
-        l2w = tw(draw, l2, fnt(30, mono=True))
-        scw = tw(draw, str(mscore), fnt(76, bold=True))
-        draw.text((col_cx - l1w//2, LBL_Y),                              l1, font=fnt(30, mono=True), fill=T2)
-        draw.text((col_cx - l2w//2, LBL_Y+lh(fnt(30, mono=True))+4),    l2, font=fnt(30, mono=True), fill=T2)
-        draw.text((col_cx - scw//2, LBL_Y+lh(fnt(30, mono=True))*2+14), str(mscore), font=fnt(76, bold=True), fill=col)
-
-    # Score + meta — left 45% of band
     SX = PAD
     SW = MOD_X - PAD * 2
     SY = BAND_Y + 32
@@ -265,10 +246,14 @@ def build_card1(photo_path, data, out_path):
     draw.rectangle([SX, pip_y, SX+SW, pip_y+1], fill=BORDER)
     pip_y += 16
 
-    pip_y = draw_text(draw, data.get('asset', 'Untitled'), fnt(52, bold=True), T1, SX, pip_y, SW, 6)
+    # Title — smaller (fnt 36), half the previous size
+    pip_y = draw_text(draw, data.get('asset', 'Untitled'), fnt(36, bold=True), T1, SX, pip_y, SW, 4)
+
+    # Photographer line — "Photography · Name"
     credit = data.get('credit', '').strip()
+    photographer_y = pip_y  # capture Y before drawing — modules align here
     if credit:
-        pip_y = draw_text(draw, credit, fnt(44, bold=True), T1, SX, pip_y, SW, 4)
+        pip_y = draw_text(draw, 'Photography · ' + credit, fnt(44, bold=True), T1, SX, pip_y, SW, 4)
     pip_y = draw_text(draw, data.get('meta', ''), fnt(34), T2, SX, pip_y, SW, 4)
     arch = "Affective State: " + data.get('dec', '')
     pip_y = draw_text(draw, arch, fnt(30, mono=True), T3, SX, pip_y, SW, 4)
@@ -276,6 +261,25 @@ def build_card1(photo_path, data, out_path):
     if data.get('soul_bonus'):
         pip_y += 10
         draw_text(draw, '★  SOUL BONUS ACTIVE  —  AQ ≥ 8.0', fnt(30, mono=True), GOLD, SX, pip_y, SW)
+
+    # Module scores — labels align to photographer name line
+    # LBL_Y is set to photographer_y so scores sit beside the name, not the top of the band
+    LBL_Y = photographer_y
+
+    for i, (name, mscore) in enumerate(modules):
+        # Centre each module within its column
+        mx  = MOD_X + PAD//2 + i * MW
+        col_cx = mx + MW // 2
+        top = float(mscore) == max_sc
+        col = GOLD if top else T1
+        # No vertical dividers — removed (were jarring)
+        l1, l2 = _lbl_map.get(name, (name.upper(), ''))
+        l1w = tw(draw, l1, fnt(30, mono=True))
+        l2w = tw(draw, l2, fnt(30, mono=True))
+        scw = tw(draw, str(mscore), fnt(76, bold=True))
+        draw.text((col_cx - l1w//2, LBL_Y),                              l1, font=fnt(30, mono=True), fill=T2)
+        draw.text((col_cx - l2w//2, LBL_Y+lh(fnt(30, mono=True))+4),    l2, font=fnt(30, mono=True), fill=T2)
+        draw.text((col_cx - scw//2, LBL_Y+lh(fnt(30, mono=True))*2+14), str(mscore), font=fnt(76, bold=True), fill=col)
 
     draw_header(canvas, draw, 'SHUTTER LEAGUE', 'APEX DDI ENGINE  ·  FULL EVALUATION')
     draw_footer(canvas, draw, "SL · " + score + " · " + tier)
