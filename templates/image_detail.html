@@ -374,17 +374,24 @@
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
     {% set audit_meta = image.get_audit() %}
-    {% if audit_meta and audit_meta.species_display %}
+    {% if audit_meta and audit_meta.species_display and audit_meta.species_display|lower not in ['species', 'unknown', 'n/a', ''] %}
     <div class="meta-card">
       <div class="meta-label">Species</div>
       <div class="meta-value">{{ audit_meta.species_display }}</div>
     </div>
     {% endif %}
     {% if image.subject %}
+    {% if image.subject.startswith('[Species:') %}
+      {% set _subject_display = image.subject[image.subject.find(']')+1:].strip() %}
+    {% else %}
+      {% set _subject_display = image.subject %}
+    {% endif %}
+    {% if _subject_display %}
     <div class="meta-card">
       <div class="meta-label">Subject</div>
-      <div class="meta-value">{{ image.subject }}</div>
+      <div class="meta-value">{{ _subject_display }}</div>
     </div>
+    {% endif %}
     {% endif %}
     {% if image.location %}
     <div class="meta-card">
@@ -470,20 +477,13 @@
       {% elif image.needs_review %}
         <strong style="color:var(--amber);">Hidden (under review)</strong>
       {% elif image.is_public %}
-        <strong id="vis-label" style="color:var(--green);">Public</strong>
+        <strong style="color:var(--green);">Public</strong>
       {% else %}
-        <strong id="vis-label" style="color:var(--text-muted);">Hidden</strong>
+        <strong style="color:var(--text-muted);">Private</strong>
       {% endif %}
     </div>
     {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
     <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
-    {% endif %}
-    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and not image.is_flagged and not image.needs_review %}
-    <button id="vis-toggle-btn" type="button"
-            onclick="toggleVisibility({{ image.id }}, {{ 'true' if image.is_public else 'false' }})"
-            class="btn" style="font-size:13px; padding:6px 14px;">
-      {{ '🔒 Hide' if image.is_public else '👁 Make Public' }}
-    </button>
     {% endif %}
   </div>
 
@@ -517,13 +517,6 @@
       {% else %}
       <form method="POST" action="{{ url_for('admin_unflag_image', image_id=image.id) }}" style="display:inline;">
         <button type="submit" class="btn" style="font-size: 14px;">Unflag / Restore</button>
-      </form>
-      {% endif %}
-      {% if not image.is_flagged and not image.needs_review %}
-      <form method="POST" action="{{ url_for('admin_toggle_visibility', image_id=image.id) }}" style="display:inline;">
-        <button type="submit" class="btn" style="font-size:14px;">
-          {{ '🔒 Hide from Community' if image.is_public else '👁 Make Public' }}
-        </button>
       </form>
       {% endif %}
       <a href="{{ url_for('admin_raw_detail', image_id=image.id) }}" class="btn" style="font-size: 14px;">RAW Detail →</a>
@@ -579,35 +572,5 @@
     </div>
   </div>
 </div>
-
-<script>
-function toggleVisibility(imageId, currentlyPublic) {
-  var btn = document.getElementById('vis-toggle-btn');
-  var label = document.getElementById('vis-label');
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
-
-  fetch('/image/' + imageId + '/toggle-visibility', {
-    method: 'POST',
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    credentials: 'same-origin'
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var nowPublic = data.is_public;
-    if (label) {
-      label.textContent = nowPublic ? 'Public' : 'Hidden';
-      label.style.color = nowPublic ? 'var(--green)' : 'var(--text-muted)';
-    }
-    if (btn) {
-      btn.textContent = nowPublic ? '🔒 Hide' : '👁 Make Public';
-      btn.disabled = false;
-    }
-  })
-  .catch(function() {
-    if (btn) { btn.disabled = false; btn.textContent = currentlyPublic ? '🔒 Hide' : '👁 Make Public'; }
-    alert('Could not update visibility. Please try again.');
-  });
-}
-</script>
 
 {% endblock %}
