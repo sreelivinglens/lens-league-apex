@@ -141,7 +141,7 @@ def send_challenge_notification(challenge):
 
       <!-- Challenge banner -->
       <tr><td style="background:#1a1a18;padding:0 32px 28px;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Challenge . {challenge.week_ref}</p>
+        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Assignment . {challenge.week_ref}</p>
         <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.1;">{challenge.prompt_title}</h1>
       </td></tr>
 
@@ -172,7 +172,7 @@ def send_challenge_notification(challenge):
 </table>
 </body></html>"""
 
-        text_body = f"""SHUTTER LEAGUE  -  Weekly Challenge
+        text_body = f"""SHUTTER LEAGUE  -  Weekly Assignment
 
 This week: {challenge.prompt_title}
 {challenge.week_ref}
@@ -6755,7 +6755,7 @@ def redeem_action():
     }
     LABELS = {
         'upload_single':        'Single upload credit',
-        'challenge_entry':      'Weekly Challenge entry',
+        'challenge_entry':      'Weekly Assignment entry',
         'open_entry':           'Open Submission entry',
         'bow_entry':            'Body of Work entry',
         'poty_entry':           'Annual Excellence Award entry',
@@ -7614,7 +7614,7 @@ def open_contest_enter():
 
 
 # ===========================================================================
-# Weekly Challenge
+# Weekly Assignment
 # ===========================================================================
 
 def _get_active_challenge():
@@ -7789,7 +7789,7 @@ def challenge_results(week_ref):
 
 
 # ---------------------------------------------------------------------------
-# Admin  -  Weekly Challenge management
+# Admin  -  Weekly Assignment management
 # ---------------------------------------------------------------------------
 
 @app.route('/admin/weekly-challenge', methods=['GET', 'POST'])
@@ -12625,7 +12625,7 @@ def send_winners_email(challenge, winners):
             '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
             '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
             'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
-            'Weekly Challenge . ' + challenge.week_ref + '</p>'
+            'Weekly Assignment . ' + challenge.week_ref + '</p>'
             '<h1 style="margin:0;font-size:30px;font-style:italic;color:#C8A84B;line-height:1.1;">'
             + medal + ' You placed ' + rank_str + '</h1>'
             '</td></tr>'
@@ -12885,7 +12885,7 @@ def send_welcome_email(user):
         '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">'
 
         '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Weekly Challenge</p>'
+        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Weekly Assignment</p>'
         '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
         'Every week, a theme. Submit your best image &#8212; every entry earns points just for participating. '
         'Top 3 earn additional points. Results every Monday. '
@@ -13002,7 +13002,7 @@ def send_welcome_email(user):
         'Your best scores build your Photographer of the Year (POTY) average.\n'
         'Consistency wins. One great image is not enough.\n\n'
         'WHAT AWAITS YOU\n'
-        'Weekly Challenge: Every week, a theme. Every entry earns points. Top 3 earn additional points.\n'
+        'Weekly Assignment: Every week, a theme. Every entry earns points. Top 3 earn additional points.\n'
         + challenge_url + '\n\n'
         'Body of Work: 6-10 images. One story. Jury evaluation in December.\n'
         + bow_url + '\n\n'
@@ -13216,7 +13216,7 @@ def _send_admin_hold_email(challenge, ranked, hold_until):
             '<p style="margin:0;font-size:13px;color:#8a8070;">'
             'Shutter League  —  Admin notification  —  '
             '<a href="' + site_url + '/admin/weekly-challenge" style="color:#C8A84B;">'
-            'Weekly Challenge Admin</a>'
+            'Weekly Assignment Admin</a>'
             '</p></td></tr>'
             '</table></td></tr></table></body></html>'
         )
