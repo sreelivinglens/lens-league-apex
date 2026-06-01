@@ -3165,8 +3165,7 @@ def upload():
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
-                            subject=_img.subject, location=_img.location,
-                            filename=_img.original_filename or '',
+                            subject=_img.subject, location=_img.location
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -3502,7 +3501,6 @@ def retry_score(image_id):
             photographer = img.photographer_name,
             subject      = img.subject,
             location     = img.location,
-            filename     = img.original_filename or '',
         )
 
         img.dod_score        = float(result.get('dod', 0))
@@ -3675,7 +3673,34 @@ def download_card(image_id):
     if not img.score:
         return "This image has not been scored yet.", 404
 
-    import io, tempfile, os as _os
+    import io, tempfile, os as _os, hashlib
+    from flask import Response
+
+    import re as _re
+    raw = img.asset_name or 'card'
+    clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
+    clean = clean[:40].replace(' ','_')
+
+    # ── PDF cache — keyed by image_id + score so rescores invalidate automatically ──
+    _cache_key  = hashlib.md5(f"{image_id}:{img.score}:{img.tier}".encode()).hexdigest()[:12]
+    _cache_path = f"/tmp/sl_card_{_cache_key}.pdf"
+
+    if _os.path.exists(_cache_path):
+        app.logger.info(f'[download] img={image_id} serving from cache')
+        with open(_cache_path, 'rb') as _cf:
+            pdf_bytes = _cf.read()
+        return Response(
+            pdf_bytes,
+            headers={
+                'Content-Type':        'application/pdf',
+                'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
+                'Content-Length':      str(len(pdf_bytes)),
+                'Cache-Control':       'private, max-age=3600',
+                'X-Content-Type-Options': 'nosniff',
+            }
+        )
+
+    # ── Cache miss — build and store ──────────────────────────────────────────────
     from engine.compositor import build_card1, build_card2
 
     audit = img.get_audit() or {}
@@ -3720,6 +3745,7 @@ def download_card(image_id):
         except Exception as e:
             app.logger.warning(f'Thumb fetch failed: {e}')
 
+    t1 = t2 = None
     try:
         t1 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
         t2 = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
@@ -3728,12 +3754,6 @@ def download_card(image_id):
         build_card1(photo_path, card_data, t1.name)
         build_card2(card_data, t2.name)
 
-        import re as _re
-        raw = img.asset_name or 'card'
-        clean = _re.sub(r'(?i)screenshot[\d._\-atATPM ]+','',raw).strip('_- ') or 'RatingCard'
-        clean = clean[:40].replace(' ','_')
-
-        # Build 2-page PDF (page 1 = score card, page 2 = analysis)
         from PIL import Image as _PILImg
         pg1 = _PILImg.open(t1.name).convert('RGB')
         pg2 = _PILImg.open(t2.name).convert('RGB')
@@ -3741,21 +3761,26 @@ def download_card(image_id):
         pg1.save(pdf_buf, format='PDF', save_all=True, append_images=[pg2], resolution=150)
         pdf_bytes = pdf_buf.getvalue()
 
+        # Write to cache
+        try:
+            with open(_cache_path, 'wb') as _cf:
+                _cf.write(pdf_bytes)
+        except Exception as _ce:
+            app.logger.warning(f'[download] cache write failed: {_ce}')
+
     finally:
         for p in [t1.name if t1 else None, t2.name if t2 else None, photo_tmp]:
             try:
                 if p: _os.unlink(p)
             except: pass
 
-    from flask import Response
     return Response(
         pdf_bytes,
         headers={
             'Content-Type':        'application/pdf',
             'Content-Disposition': f'inline; filename="ShutterLeague_{clean}_RatingCard.pdf"',
             'Content-Length':      str(len(pdf_bytes)),
-            'Cache-Control':       'no-store, no-cache, must-revalidate',
-            'Pragma':              'no-cache',
+            'Cache-Control':       'private, max-age=3600',
             'X-Content-Type-Options': 'nosniff',
         }
     )
@@ -4771,8 +4796,7 @@ def score_single_image():
                 from engine.auto_score import auto_score, build_audit_data
                 scored = auto_score(image_path=img.thumb_path, genre=genre,
                                     sub_genre=img.sub_genre,
-                                    title=img.asset_name, photographer=photographer,
-                                    filename=img.original_filename or '')
+                                    title=img.asset_name, photographer=photographer)
                 img.dod_score        = float(scored.get('dod', 0))
                 img.disruption_score = float(scored.get('disruption', 0))
                 img.dm_score         = float(scored.get('dm', 0))
@@ -4898,8 +4922,7 @@ def admin_rescore_all():
                 genre=img.genre or 'Wildlife',
                 sub_genre=img.sub_genre,
                 title=img.asset_name,
-                photographer=img.photographer_name,
-                filename=img.original_filename or '',
+                photographer=img.photographer_name
             )
             audit = build_audit_data(scored, img)
             img.set_audit(audit)
@@ -8346,8 +8369,7 @@ def bulk_upload():
                     from engine.compositor import build_card1 as _build_card
                     scored = auto_score(image_path=img.thumb_path, genre=genre,
                                         sub_genre=img.sub_genre,
-                                        title=img.asset_name, photographer=photographer,
-                                        filename=img.original_filename or '')
+                                        title=img.asset_name, photographer=photographer)
                     img.dod_score=float(scored.get('dod',0))
                     img.disruption_score=float(scored.get('disruption',0))
                     img.dm_score=float(scored.get('dm',0))
@@ -8488,8 +8510,7 @@ def bulk_upload_one():
             from engine.compositor import build_card1 as _build_card
             scored = auto_score(image_path=img.thumb_path, genre=genre,
                                 sub_genre=img.sub_genre,
-                                title=img.asset_name, photographer=photographer,
-                                filename=img.original_filename or '')
+                                title=img.asset_name, photographer=photographer)
             img.dod_score        = float(scored.get('dod', 0))
             img.disruption_score = float(scored.get('disruption', 0))
             img.dm_score         = float(scored.get('dm', 0))
@@ -12288,7 +12309,6 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
                 photographer = img.photographer_name,
                 subject      = img.subject,
                 location     = img.location,
-                filename     = img.original_filename or '',
             )
 
             if temp_file:
