@@ -169,7 +169,8 @@
     width: 140px; height: 140px; border-radius: 50%;
     border: 3px solid rgba(245,197,24,0.6);
     background: radial-gradient(circle, rgba(245,197,24,0.08) 0%, rgba(245,197,24,0.08) 70%, transparent 100%);
-    /* fill-mode: both — ring starts at scale(0.82) immediately, no jerk */
+    /* start at scale(0.82) — matches keyframe 0%, eliminates jerk entirely */
+    transform: scale(0.82);
     animation: breatheHero 8s ease-in-out infinite both;
     display: flex; align-items: center; justify-content: center;
     /* colour transitions smoothly between JS-applied VIBGYOR values */
@@ -184,6 +185,8 @@
   .breath-inner-dot {
     width: 16px; height: 16px; border-radius: 50%;
     background: var(--gold);
+    transform: scale(1.4);
+    opacity: 0.6;
     animation: breatheInner 8s ease-in-out infinite both;
     transition: background 1.2s ease;
   }
