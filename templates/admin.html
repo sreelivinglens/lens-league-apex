@@ -412,6 +412,7 @@
             </form>
             <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
             <form id="raw-form-{{ img.id }}" method="POST" action="{{ url_for('admin_request_raw', image_id=img.id) }}" style="display:none;"></form>
+            <form id="vis-form-{{ img.id }}" method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:none;"></form>
             <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
             <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
@@ -512,6 +513,15 @@
                 {% endif %}
               {% endif %}
               <button type="button" onclick="adminPost('del-form-' + {{ img.id }}, 'Delete? Cannot be undone.')" class="act-btn act-del">🗑</button>
+              {% if not img.is_flagged %}
+              <button type="button"
+                      onclick="adminPost('vis-form-' + {{ img.id }}, '{{ 'Hide this image from Community?' if img.is_public else 'Make this image public?' }}')"
+                      class="act-btn"
+                      style="border-color:{{ 'var(--border)' if img.is_public else '#b8860b' }}; color:{{ 'var(--text-muted)' if img.is_public else '#b8860b' }};"
+                      title="{{ 'Hide from Community' if img.is_public else 'Make Public' }}">
+                {{ '👁 Hide' if img.is_public else '👁 Show' }}
+              </button>
+              {% endif %}
               {% if img.status == 'scored' %}
               <button type="button" class="act-btn act-recal"
                       title="Recalibrate dimensions"
