@@ -3682,8 +3682,13 @@ def download_card(image_id):
     clean = clean[:40].replace(' ','_')
 
     # ── PDF cache — keyed by image_id + score so rescores invalidate automatically ──
-    _cache_key  = hashlib.md5(f"{image_id}:{img.score}:{img.tier}".encode()).hexdigest()[:12]
-    _cache_path = f"/tmp/sl_card_{_cache_key}.pdf"
+    # Cache key: image_id + score + tier + audit fingerprint + card layout version
+    # Increment CARD_VERSION when compositor layout changes to bust all cached PDFs
+    CARD_VERSION = "v2"
+    _audit_raw   = img.audit_json or ""
+    _audit_hash  = hashlib.md5(_audit_raw.encode()).hexdigest()[:8]
+    _cache_key   = hashlib.md5(f"{image_id}:{img.score}:{img.tier}:{_audit_hash}:{CARD_VERSION}".encode()).hexdigest()[:12]
+    _cache_path  = f"/tmp/sl_card_{_cache_key}.pdf"
 
     if _os.path.exists(_cache_path):
         app.logger.info(f'[download] img={image_id} serving from cache')
