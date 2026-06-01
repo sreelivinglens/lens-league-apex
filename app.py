@@ -12250,6 +12250,7 @@ def admin_engine_rescore(image_id):
         return redirect(url_for('admin_dashboard'))
 
     try:
+        import tempfile
         from engine.auto_score import auto_score, build_audit_data
         from engine.compositor import build_card1, build_card2
 
