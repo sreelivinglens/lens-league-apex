@@ -339,6 +339,7 @@ Two birds in contact scores higher Wonder than one bird in flight.
 GENRE CONTEXT: {genre_context}
 
 {scene_context}
+{species_context}
 {calibration_examples}
 {calibration_notes}
 
@@ -435,8 +436,8 @@ Return this exact JSON structure:
   "soul_bonus": <true|false>,
   "judge_referral": <true if Creative genre AND score >= 7.0 OR exceptional technique, else false>,
   "composition_technique": "<GOLDEN_SPIRAL|LEADING_LINES|DIAGONAL|RULE_OF_THIRDS|SYMMETRY|NEGATIVE_SPACE|FRAME_IN_FRAME|NONE>",
-  "hard_truth": "<ONE sentence. The creative truth of this image. For high-scoring images: what it achieved and why it landed. For lower-scoring images: the primary gap or missed opportunity. Never open with description. Never start with This image or The photograph. Soul Bonus examples: 'Access wonder earned — you were inside a space most photographers never enter and the direct gaze confirmed it.' / 'The geometry and the confrontation are both present and both working.' Lower score examples: 'Technically clean but the moment passed before the shutter.' / 'The geometry is there but the decisive moment is not.'>",
-  "mentor_technical": "<ONE sentence. For high-scoring images: name the specific technical DECISION that served the image — the choice that made it work. For lower-scoring images: name the gap and what it cost. Return null if no actionable point. Soul Bonus example: 'Exposure held shadow detail on the faces while keeping the fabric texture readable — the harder call in mixed shelter light.' Lower score example: 'Exposure pushed half a stop too bright — the highlight detail is gone and cannot be recovered.'>",
+  "hard_truth": "<ONE sentence. The creative truth of this image. GRANDMASTER RULE (score >= 9.0): You MUST open with the judgment, not the description. The photographer can see the image. Tell them what they MADE — its place in the genre, the rarity of what was captured, what separates it from 10,000 similar attempts. For Wildlife Grandmaster: if the species research block is present, USE IT — name the species context, the localised range, the scarcity of wild behavioural documentation. The rarity of the species in wild photography IS part of what was achieved. NEVER open with what is in the frame. Open with why it matters. Example: 'The displacement frame of a species whose wild behaviour is almost entirely undocumented — this is not just a bird fight, it is one of the rarest behavioural captures in Asian forest photography.' For other high-scoring images: what it achieved and why it landed. For lower-scoring images: the primary gap or missed opportunity. Never open with description. Never start with This image or The photograph. Soul Bonus examples: 'Access wonder earned — you were inside a space most photographers never enter and the direct gaze confirmed it.' / 'The geometry and the confrontation are both present and both working.' Lower score examples: 'Technically clean but the moment passed before the shutter.' / 'The geometry is there but the decisive moment is not.'>",
+  "mentor_technical": "<ONE sentence. For high-scoring images: name the specific technical DECISION that served the image — the choice that made it work. HARD RULE: Do NOT describe the technical outcome. Name the DECISION — the specific choice the photographer made that another photographer might not have made. 'Exposed for the plumage and let the sky blow' is a decision. 'Shutter speed froze the feathers' is a description. If you find yourself writing what the shutter or exposure DID, stop and rewrite as what the photographer CHOSE and what it cost or gained. For lower-scoring images: name the gap and what it cost. Return null if no actionable point. Soul Bonus example: 'Chose to expose for shadow-side feather detail and accepted the sky at the limit — the harder call than exposing for the average.' Lower score example: 'Exposure pushed half a stop too bright — the highlight detail is gone and cannot be recovered.'>",
   "mentor_moment": "<ONE sentence. Was this the right frame? For Soul Bonus: confirm it was right and say exactly why this instant. For lower scores: name the specific frame that was the shot if this was not it. Return null if moment is irrelevant to genre. Soul Bonus example: 'The center figure holds the gaze while the others rest — half a second later he looks away and the confrontational tension is gone.' Lower score example: 'The bill has cleared the water here — the shot was the entry, when the spray was still rising.'>",
   "mentor_next": "<TWO sentences MAX. First sentence: ONE creative direction — wider, closer, different lens, different moment, processing transformation. Name it specifically. For Soul Bonus: frame as possibility not correction. For lower scores: redirect the creative energy. Second sentence: one processing direction that changes the emotional register. Examples: 'Go back with a 50mm and shoot just the faces — let the geometry disappear and it becomes entirely about what is in his eyes.' / 'A very dark print — push the blacks until the shelter disappears and only the faces remain in darkness — changes the register from documentary to elemental.' NEVER give positional corrections (shift right, move left) as the primary recommendation on high-scoring images.>",
   "byline_1": "<ONE sentence. For Soul Bonus images: what does the NEXT image in this scene or series need — not a flaw in this image, but the frame that completes the story. For lower-scoring images: the specific gap holding this image from the next tier. Never describe what is visible. Soul Bonus example: 'The next frame is the portrait — just his face, close, the environment gone.' Lower score example: 'The incoming bird floats outside the geometric connection — drop it to the lower third and the composition locks.'>",
@@ -1029,7 +1030,11 @@ WILDLIFE_SUBGENRE_CONTEXT = {
         "scores LOWER — reward the act, not the transit.\n\n"
         "WF: Score behavioural rarity explicitly. Common takeoff = low. Catch freeze "
         "with prey visible = moderate. Mid-air prey transfer, cooperative hunting, "
-        "rare display = high. The wonder is the complete behavioural narrative."
+        "rare display = high. The wonder is the complete behavioural narrative.\n\n"
+        "DISRUPTION CEILING: Clean sky or neutral background compositions — however "
+        "geometrically strong — score Disruption 6.0-7.0. Disruption above 7.5 requires "
+        "unconventional framing, layered complexity, or unexpected visual language. "
+        "Two subjects against plain sky is classical wildlife composition, not disruptive."
     ),
 
     'bird_family': (
@@ -2664,6 +2669,156 @@ def build_scene_context(vision: dict, genre: str = "") -> str:
     return "\n".join(lines)
 
 
+def species_research(species_id: str) -> dict:
+    """
+    Call 1.5 of the scoring pipeline — fires only for Wildlife/Nature genres
+    when a species has been identified by vision_analyse().
+
+    Queries the Brave Search API for species rarity, global distribution,
+    wild population status, and photography documentation scarcity.
+    Returns a dict with research findings, or an empty dict on failure.
+
+    Falls back silently — scoring always proceeds regardless of outcome.
+    """
+    brave_key = os.getenv("BRAVE_API_KEY", "")
+    if not brave_key:
+        print(f"[species_research] BRAVE_API_KEY not set — skipping species research for '{species_id}'")
+        return {}
+
+    query = f"{species_id} wild population distribution rarity wildlife photography documentation"
+    try:
+        resp = httpx.get(
+            "https://api.search.brave.com/res/v1/web/search",
+            headers={
+                "Accept":               "application/json",
+                "Accept-Encoding":      "gzip",
+                "X-Subscription-Token": brave_key,
+            },
+            params={"q": query, "count": 5, "safesearch": "strict"},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            print(f"[species_research] Brave API error {resp.status_code} — skipping")
+            return {}
+
+        data = resp.json()
+        results = data.get("web", {}).get("results", [])
+        if not results:
+            print(f"[species_research] No results for '{species_id}'")
+            return {}
+
+        # Collect snippets from top results
+        snippets = []
+        for r in results[:4]:
+            desc = r.get("description", "").strip()
+            if desc:
+                snippets.append(desc)
+
+        if not snippets:
+            return {}
+
+        # Use a lightweight Claude call to distil snippets into structured facts
+        distil_prompt = (
+            f"You are a wildlife photography expert. Based on the following search snippets "
+            f"about '{species_id}', extract ONLY these facts in JSON:\n"
+            f"- global_range: one sentence on native geographic range\n"
+            f"- population_status: IUCN status and trend if known\n"
+            f"- wild_behaviour_known: true/false — is wild behaviour well-documented?\n"
+            f"- photography_difficulty: one sentence on how difficult it is to photograph in the wild\n"
+            f"- captive_common: true/false — is this species commonly photographed in captivity/bird hides?\n"
+            f"- rarity_note: one sentence on rarity and documentation scarcity for wildlife photographers\n\n"
+            f"Snippets:\n" + "\n---\n".join(snippets[:4]) + "\n\n"
+            f"Respond ONLY with a valid JSON object. No preamble."
+        )
+
+        distil_payload = {
+            "model":       MODEL,
+            "max_tokens":  400,
+            "temperature": 0.1,
+            "messages":    [{"role": "user", "content": distil_prompt}],
+        }
+        distil_resp = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json=distil_payload,
+            timeout=30,
+        )
+        if distil_resp.status_code != 200:
+            print(f"[species_research] Distil API error {distil_resp.status_code} — returning raw snippets")
+            return {"raw_snippets": snippets}
+
+        distil_text = ""
+        for block in distil_resp.json().get("content", []):
+            if block.get("type") == "text":
+                distil_text += block.get("text", "")
+        distil_text = re.sub(r"```json|```", "", distil_text).strip()
+        facts = json.loads(distil_text)
+        facts["species_id"] = species_id
+        print(f"[species_research] '{species_id}': range={facts.get('global_range','?')[:60]} | captive_common={facts.get('captive_common','?')} | behaviour_known={facts.get('wild_behaviour_known','?')}")
+        return facts
+
+    except Exception as e:
+        print(f"[species_research] Failed ({e}) — scoring will proceed without species context")
+        return {}
+
+
+def build_species_context(research: dict) -> str:
+    """
+    Converts species_research() result into a ground-truth block injected
+    into the scoring prompt. Returns empty string if research is empty.
+    """
+    if not research:
+        return ""
+
+    species = research.get("species_id", "this species")
+    lines = [
+        "",
+        "SPECIES RESEARCH — VERIFIED EXTERNAL CONTEXT (use this to calibrate Wonder and hard_truth):",
+        f"Species: {species}",
+    ]
+
+    if research.get("global_range"):
+        lines.append(f"Global range: {research['global_range']}")
+    if research.get("population_status"):
+        lines.append(f"Population/IUCN status: {research['population_status']}")
+    if research.get("photography_difficulty"):
+        lines.append(f"Photography difficulty: {research['photography_difficulty']}")
+    if research.get("rarity_note"):
+        lines.append(f"Documentation rarity: {research['rarity_note']}")
+
+    captive_common = research.get("captive_common", None)
+    behaviour_known = research.get("wild_behaviour_known", None)
+
+    lines.append("")
+    lines.append("SCORING INSTRUCTIONS BASED ON SPECIES RESEARCH:")
+
+    if captive_common is False and behaviour_known is False:
+        lines.append(f"- {species} is rarely photographed in wild conditions and wild behaviour is poorly documented.")
+        lines.append("- Wonder MUST credit documentation rarity — this is not a commonly photographed species in wild conflict.")
+        lines.append("- hard_truth MUST name the species context: what the photographer accessed, not just what they captured.")
+        lines.append("- DoD MUST reflect the difficulty of wild access for this species specifically.")
+    elif captive_common is True:
+        lines.append(f"- {species} is commonly photographed in captivity or at bird hides.")
+        lines.append("- If captive context is confirmed, DoD and Wonder must be penalised accordingly.")
+        lines.append("- If wild context is confirmed, state this explicitly — wild documentation is rarer than captive.")
+    elif behaviour_known is False:
+        lines.append(f"- Wild behaviour of {species} is poorly documented in scientific and photographic literature.")
+        lines.append("- Behavioural documentation Wonder must be scored higher than for well-documented species.")
+
+    if research.get("global_range") and any(
+        word in research["global_range"].lower()
+        for word in ["southwestern china", "myanmar", "yunnan", "sichuan", "restricted", "limited", "narrow"]
+    ):
+        lines.append(f"- Species has restricted global range — localised distribution adds to Wonder and DoD scores.")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
 def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None):
     """
     Score an image using the Apex DDI Engine.
@@ -2684,6 +2839,23 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # injected as verified ground truth into the scoring prompt.
     vision        = vision_analyse(img_data, media_type, title, subject)
     scene_context = build_scene_context(vision, genre=genre)
+
+    # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
+    # When a species is identified by vision and the genre is Wildlife or Nature,
+    # query the web for species rarity, global range, wild behaviour documentation
+    # status, and photography difficulty. Injects verified external context into
+    # the scoring prompt so Wonder and hard_truth reflect the genuine rarity of
+    # what was photographed — not just the engine training-data knowledge.
+    # Falls back silently — scoring proceeds without it if search fails.
+    _RESEARCH_GENRES = {'Wildlife', 'Nature'}
+    species_context = ""
+    if genre in _RESEARCH_GENRES:
+        _species_id = vision.get("species_id", "").strip()
+        if _species_id and _species_id.lower() not in ("unknown", "not specified", ""):
+            _research = species_research(_species_id)
+            species_context = build_species_context(_research)
+        else:
+            print(f"[auto_score] Species research skipped — no species identified by vision")
 
     # ── Sub-genre auto-routing ─────────────────────────────────────────────────
     # Use vision's detected sub-genre to override the photographer's selection.
@@ -2771,6 +2943,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         location             = location or "Not specified",
         genre_context        = get_genre_context(genre, sub_genre=effective_subgenre) + weight_override_block,
         scene_context        = scene_context,
+        species_context      = species_context,
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
     )
