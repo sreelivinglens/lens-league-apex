@@ -1144,14 +1144,14 @@
     btn.disabled = true;
     btn.style.opacity = '0.75';
     btn.style.cursor  = 'not-allowed';
-    btn.innerHTML = '<span style="display:inline-block;animation:erSpin 1s linear infinite;margin-right:8px;">⟳</span>Rescoring… (15–30 seconds)';
+    btn.innerHTML = '<span style="display:inline-block;animation:erSpin 1s linear infinite;margin-right:8px;">⟳</span>Rescore queued…';
     document.getElementById('erscore-reason').disabled = true;
     document.getElementById('erscore-image-id').disabled = true;
     // Status bar below the button
     var statusEl = document.getElementById('erscore-status');
     if (statusEl) {
       statusEl.style.display = 'block';
-      statusEl.innerHTML = '⏳ Vision analysis running — do not close this page.';
+      statusEl.innerHTML = '⏳ Rescore submitted — you will be redirected to the dashboard. Refresh in 30 seconds to see the updated score.';
     }
     form.submit();
   };
