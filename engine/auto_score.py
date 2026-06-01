@@ -2391,7 +2391,7 @@ Return this exact JSON:
   "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
   "is_captive": <true if any captive indicators present, else false>,
-  "species_id": "<precise common name of the primary subject species — e.g. 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL: Only name a species if you can identify it with HIGH VISUAL CONFIDENCE from the image. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, or the birds/animals are small or distant and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist and species identity is not the primary subject. A wrong species identification with confident Wikipedia data is worse than returning Unknown. When in doubt, return Unknown.>",
+  "species_id": "<precise common name of the primary subject species — e.g. 'Rock Pigeon', 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL RULES: (1) Return ONLY the species common name — never a behavioural description, never 'Mother with chicks', never 'Bird feeding young', never a scene description. If you see a pigeon with chicks, return 'Rock Pigeon'. If you see a heron hunting, return 'Grey Heron'. The behaviour is NOT the species name. (2) Only name a species if you can identify it with HIGH VISUAL CONFIDENCE. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, or the birds/animals are small or distant and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist. A wrong species identification is worse than returning Unknown. When in doubt, return Unknown.>",
   "suggested_subgenre": "<most accurate sub-genre id from the lists above — e.g. 'creative_minimalist', 'wildlife_bird_behaviour', 'street_candid'. null if genre is Landscape/Nature/Wedding/Macro/Drone/Fashion and no clear sub-genre match.>",
   "suggested_subgenre_reason": "<one sentence: what specific visual evidence leads to this sub-genre. e.g. 'Single swan in 60% negative space with tonal relationship as primary compositional statement.'>"
 }
@@ -2889,7 +2889,27 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         _m = _re_sh.match(r'\[Species:\s*([^\]]+)\]', subject)
         if _m:
             _species_hint = _m.group(1).strip()
-    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint)
+
+    # Sanitise species hint — reject anything that looks like a description rather than a name:
+    # - More than 5 words → likely a sentence, not a species name
+    # - Contains verbs/behavioural words → description, not species
+    # - Too long (>60 chars) → not a species name
+    if _species_hint:
+        import re as _re_sp
+        _hint_words = _species_hint.strip().split()
+        _behavioural = {'with', 'and', 'new', 'hatchling', 'hatchlings', 'mother',
+                        'baby', 'babies', 'fighting', 'flying', 'eating', 'feeding',
+                        'sitting', 'standing', 'running', 'jumping', 'swimming',
+                        'resting', 'sleeping', 'young', 'chick', 'chicks', 'nest',
+                        'pair', 'group', 'flock', 'family', 'male', 'female'}
+        _hint_lower_words = set(w.lower() for w in _hint_words)
+        if (len(_hint_words) > 5
+                or len(_species_hint) > 60
+                or _hint_lower_words & _behavioural):
+            print(f"[auto_score] Species hint '{_species_hint}' looks like a description — ignoring as species name")
+            _species_hint = ""
+
+    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=filename)
     scene_context = build_scene_context(vision, genre=genre)
 
     # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
@@ -2904,6 +2924,17 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     _research = {}  # always defined — populated below for Wildlife/Nature
     if genre in _RESEARCH_GENRES:
         _species_id = vision.get("species_id", "").strip()
+        # Reject species_id that looks like a description rather than a species name
+        if _species_id and _species_id.lower() not in ("unknown", "not specified", ""):
+            _sid_words = _species_id.split()
+            _sid_behavioural = {'with', 'and', 'new', 'hatchling', 'hatchlings', 'mother',
+                                'baby', 'babies', 'fighting', 'flying', 'eating', 'feeding',
+                                'sitting', 'standing', 'young', 'chick', 'chicks', 'nest',
+                                'pair', 'group', 'flock', 'family'}
+            _sid_lower = set(w.lower() for w in _sid_words)
+            if len(_sid_words) > 5 or len(_species_id) > 60 or (_sid_lower & _sid_behavioural):
+                print(f"[auto_score] species_id '{_species_id}' looks like a description — skipping species_research")
+                _species_id = ""
         if _species_id and _species_id.lower() not in ("unknown", "not specified", ""):
             _research = species_research(_species_id)
             species_context = build_species_context(_research)
@@ -3119,9 +3150,17 @@ def _species_display(species_id):
         # Looks like a Latin binomial — do not show
         return None
 
-    # Show full common name — "Black-bellied Plover" not just "Plover"
-    # Title-case it cleanly and return as-is
-    return species_id.strip().title() if species_id.strip() else None
+    # Extract family common name: take the LAST capitalised word
+    # "Great Indian Hornbill" → "Hornbill"
+    # "Indian Kingfisher" → "Kingfisher"
+    # "Bengal Tiger" → "Tiger"
+    # "Flamingo" → "Flamingo" (already family name)
+    words = species_id.strip().split()
+    # Find last meaningful capitalised word
+    family = words[-1] if words else species_id
+    # Handle possessives / trailing punctuation
+    family = family.rstrip('.,;:)')
+    return family if family else None
 
 
 def build_audit_data(result, image_obj):
