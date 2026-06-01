@@ -2713,6 +2713,7 @@ def species_research(species_id: str) -> dict:
                     return text
             return ""
 
+        wiki_title  = species_id  # track which title was used for URL generation
         summary_text = _wiki_extract(species_id)
         if summary_text:
             print(f"[species_research] Wikipedia hit for '{species_id}' ({len(summary_text)} chars)")
@@ -2736,6 +2737,7 @@ def species_research(species_id: str) -> dict:
                     top_title = results[0].get("title", "")
                     summary_text = _wiki_extract(top_title)
                     if summary_text:
+                        wiki_title = top_title
                         print(f"[species_research] Wikipedia fallback hit for '{species_id}' via '{top_title}' ({len(summary_text)} chars)")
 
         if not summary_text:
@@ -2782,8 +2784,10 @@ def species_research(species_id: str) -> dict:
                 distil_text += block.get("text", "")
         distil_text = re.sub(r"```json|```", "", distil_text).strip()
         facts = json.loads(distil_text)
-        facts["species_id"] = species_id
-        print(f"[species_research] '{species_id}': range={facts.get('global_range','?')[:60]} | captive_common={facts.get('captive_common','?')} | behaviour_known={facts.get('wild_behaviour_known','?')}")
+        facts["species_id"]      = species_id
+        facts["wikipedia_title"] = wiki_title
+        facts["wikipedia_url"]   = "https://en.wikipedia.org/wiki/" + wiki_title.replace(" ", "_")
+        print(f"[species_research] '{species_id}': range={facts.get('global_range','?')[:60]} | captive_common={facts.get('captive_common','?')} | behaviour_known={facts.get('wild_behaviour_known','?')} | wiki={facts['wikipedia_url']}")
         return facts
 
     except Exception as e:
@@ -2874,6 +2878,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # Falls back silently — scoring proceeds without it if search fails.
     _RESEARCH_GENRES = {'Wildlife', 'Nature'}
     species_context = ""
+    _research = {}  # always defined — populated below for Wildlife/Nature
     if genre in _RESEARCH_GENRES:
         _species_id = vision.get("species_id", "").strip()
         if _species_id and _species_id.lower() not in ("unknown", "not specified", ""):
@@ -3047,6 +3052,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
 
     # Attach routing metadata so build_audit_data and callers can access it
+    result['_wikipedia_url']             = _research.get('wikipedia_url', '')
+    result['_wikipedia_title']           = _research.get('wikipedia_title', '')
     result['_effective_subgenre']        = effective_subgenre
     result['_photographer_subgenre']     = sub_genre
     result['_subgenre_overridden']       = (vision_subgenre and vision_subgenre != sub_genre and vision_subgenre in VALID_SUBGENRES)
@@ -3131,6 +3138,8 @@ def build_audit_data(result, image_obj):
         "hard_truth":           result.get("hard_truth", ""),
         "species_id":           result.get("species_id", ""),
         "species_display":      _species_display(result.get("species_id", "")),
+        "wikipedia_url":        result.get("_wikipedia_url", ""),
+        "wikipedia_title":      result.get("_wikipedia_title", ""),
         "edit_base":            result.get("edit_base", ""),
         "edit_creative":        result.get("edit_creative", ""),
         "genre_suggestion":     result.get("genre_suggestion", None),
