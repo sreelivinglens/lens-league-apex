@@ -2683,8 +2683,8 @@ def species_research(species_id: str) -> dict:
     """
     try:
         # Step 1 — fetch full Wikipedia intro section via extracts API
-        # Uses action=query&prop=extracts&exintro=1 which returns the full
-        # introductory section (range, status, behaviour) not just 1-2 sentences.
+        # Uses action=query&prop=extracts which returns the full article text
+        # (range, status, behaviour, distribution) — exintro omitted to get full content.
         # No auth, no billing, free, no rate limits worth worrying about.
         summary_text = ""
 
@@ -2695,8 +2695,8 @@ def species_research(species_id: str) -> dict:
                 params={
                     "action":      "query",
                     "prop":        "extracts",
-                    "exintro":     "1",
                     "explaintext": "1",
+                    "exsectionformat": "plain",
                     "titles":      title,
                     "format":      "json",
                     "redirects":   "1",
@@ -2746,13 +2746,13 @@ def species_research(species_id: str) -> dict:
         distil_prompt = (
             f"You are a wildlife photography expert. Based on the following Wikipedia extract "
             f"about '{species_id}', extract ONLY these facts as JSON:\n"
-            f"- global_range: one sentence on native geographic range\n"
+            f"- global_range: one sentence on native geographic range — infer from any mention of countries, regions, continents, or habitat\n"
             f"- population_status: IUCN status and population trend if mentioned\n"
             f"- wild_behaviour_known: true/false — is wild behaviour well-documented in scientific literature?\n"
             f"- photography_difficulty: one sentence on how difficult it is to photograph in the wild\n"
             f"- captive_common: true/false — is this species commonly kept in captivity or photographed at bird hides?\n"
             f"- rarity_note: one sentence summarising rarity and documentation scarcity for wildlife photographers\n\n"
-            f"Wikipedia extract:\n{summary_text[:2000]}\n\n"
+            f"Wikipedia extract:\n{summary_text[:3500]}\n\n"
             f"Respond ONLY with a valid JSON object. No preamble. No markdown."
         )
 
