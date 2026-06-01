@@ -2674,35 +2674,37 @@ def species_research(species_id: str) -> dict:
     Call 1.5 of the scoring pipeline — fires only for Wildlife/Nature genres
     when a species has been identified by vision_analyse().
 
-    Queries the Brave Search API for species rarity, global distribution,
+    Queries Google Custom Search API for species rarity, global distribution,
     wild population status, and photography documentation scarcity.
     Returns a dict with research findings, or an empty dict on failure.
 
     Falls back silently — scoring always proceeds regardless of outcome.
     """
-    brave_key = os.getenv("BRAVE_API_KEY", "")
-    if not brave_key:
-        print(f"[species_research] BRAVE_API_KEY not set — skipping species research for '{species_id}'")
+    cse_api_key = os.getenv("GOOGLE_CSE_API_KEY", "")
+    cse_id      = os.getenv("GOOGLE_CSE_ID", "")
+    if not cse_api_key or not cse_id:
+        print(f"[species_research] GOOGLE_CSE_API_KEY or GOOGLE_CSE_ID not set — skipping species research for '{species_id}'")
         return {}
 
     query = f"{species_id} wild population distribution rarity wildlife photography documentation"
     try:
         resp = httpx.get(
-            "https://api.search.brave.com/res/v1/web/search",
-            headers={
-                "Accept":               "application/json",
-                "Accept-Encoding":      "gzip",
-                "X-Subscription-Token": brave_key,
+            "https://www.googleapis.com/customsearch/v1",
+            params={
+                "key": cse_api_key,
+                "cx":  cse_id,
+                "q":   query,
+                "num": 5,
+                "safe": "active",
             },
-            params={"q": query, "count": 5, "safesearch": "strict"},
             timeout=15,
         )
         if resp.status_code != 200:
-            print(f"[species_research] Brave API error {resp.status_code} — skipping")
+            print(f"[species_research] Google CSE error {resp.status_code} — skipping")
             return {}
 
         data = resp.json()
-        results = data.get("web", {}).get("results", [])
+        results = data.get("items", [])
         if not results:
             print(f"[species_research] No results for '{species_id}'")
             return {}
@@ -2710,7 +2712,7 @@ def species_research(species_id: str) -> dict:
         # Collect snippets from top results
         snippets = []
         for r in results[:4]:
-            desc = r.get("description", "").strip()
+            desc = r.get("snippet", "").strip()
             if desc:
                 snippets.append(desc)
 
