@@ -2691,6 +2691,18 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # photographer filed. The photographer's selection is kept as a hint only.
     # Priority: vision detection > photographer selection > None
     vision_subgenre = vision.get('suggested_subgenre') or None
+
+    # Guard: environment genres (Landscape, Nature, Drone, Wildlife) must not be
+    # silently re-weighted to Creative via sub-genre detection.
+    # A lone figure on a glacier is Landscape; negative space does not make it
+    # creative_minimalist for scoring purposes. Creative sub-genres are only
+    # applied when the photographer filed the image as Creative.
+    _ENVIRONMENT_GENRES = {'Landscape', 'Nature', 'Drone', 'Wildlife'}
+    _CREATIVE_SUBGENRES = {s for s in VALID_SUBGENRES if s.startswith('creative_')}
+    if (vision_subgenre in _CREATIVE_SUBGENRES and genre in _ENVIRONMENT_GENRES):
+        print(f"[auto_score] Creative sub-genre override BLOCKED for {genre} filing: {vision_subgenre!r} — keeping environment weights")
+        vision_subgenre = None
+
     if vision_subgenre and vision_subgenre in VALID_SUBGENRES:
         effective_subgenre = vision_subgenre
         if vision_subgenre != sub_genre:
