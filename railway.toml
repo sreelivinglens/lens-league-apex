@@ -1,2 +1,4 @@
 [deploy]
-startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5"
+startCommand = "gunicorn app:app --workers 2 --timeout 300 --keep-alive 5 --preload"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
