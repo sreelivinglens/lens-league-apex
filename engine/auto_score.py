@@ -2682,31 +2682,50 @@ def species_research(species_id: str) -> dict:
     Falls back silently — scoring always proceeds regardless of outcome.
     """
     try:
-        # Step 1 — try direct Wikipedia page lookup by species name
-        # Wikipedia REST API: no auth, no billing, free
-        search_term = species_id.replace(" ", "_")
-        resp = httpx.get(
-            f"https://en.wikipedia.org/api/rest_v1/page/summary/{search_term}",
-            headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0 (wildlife scoring; contact@shutterleague.com)"},
-            timeout=15,
-            follow_redirects=True,
-        )
-
+        # Step 1 — fetch full Wikipedia intro section via extracts API
+        # Uses action=query&prop=extracts&exintro=1 which returns the full
+        # introductory section (range, status, behaviour) not just 1-2 sentences.
+        # No auth, no billing, free, no rate limits worth worrying about.
         summary_text = ""
-        if resp.status_code == 200:
-            data = resp.json()
-            summary_text = data.get("extract", "")
+
+        def _wiki_extract(title: str) -> str:
+            """Fetch full intro extract for a Wikipedia article title."""
+            r = httpx.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action":      "query",
+                    "prop":        "extracts",
+                    "exintro":     "1",
+                    "explaintext": "1",
+                    "titles":      title,
+                    "format":      "json",
+                    "redirects":   "1",
+                },
+                headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0 (wildlife scoring; contact@shutterleague.com)"},
+                timeout=15,
+            )
+            if r.status_code != 200:
+                return ""
+            pages = r.json().get("query", {}).get("pages", {})
+            for page in pages.values():
+                text = page.get("extract", "")
+                if text and not page.get("missing"):
+                    return text
+            return ""
+
+        summary_text = _wiki_extract(species_id)
+        if summary_text:
             print(f"[species_research] Wikipedia hit for '{species_id}' ({len(summary_text)} chars)")
         else:
-            # Step 2 — fallback: Wikipedia search API
+            # Step 2 — fallback: search Wikipedia for the species name
             search_resp = httpx.get(
                 "https://en.wikipedia.org/w/api.php",
                 params={
-                    "action": "query",
-                    "list":   "search",
+                    "action":   "query",
+                    "list":     "search",
                     "srsearch": species_id,
-                    "format": "json",
-                    "srlimit": 3,
+                    "format":   "json",
+                    "srlimit":  3,
                 },
                 headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0"},
                 timeout=15,
@@ -2714,15 +2733,9 @@ def species_research(species_id: str) -> dict:
             if search_resp.status_code == 200:
                 results = search_resp.json().get("query", {}).get("search", [])
                 if results:
-                    top_title = results[0].get("title", "").replace(" ", "_")
-                    page_resp = httpx.get(
-                        f"https://en.wikipedia.org/api/rest_v1/page/summary/{top_title}",
-                        headers={"User-Agent": "ShutterLeague-ScoringEngine/1.0"},
-                        timeout=15,
-                        follow_redirects=True,
-                    )
-                    if page_resp.status_code == 200:
-                        summary_text = page_resp.json().get("extract", "")
+                    top_title = results[0].get("title", "")
+                    summary_text = _wiki_extract(top_title)
+                    if summary_text:
                         print(f"[species_research] Wikipedia fallback hit for '{species_id}' via '{top_title}' ({len(summary_text)} chars)")
 
         if not summary_text:
