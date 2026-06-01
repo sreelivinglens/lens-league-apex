@@ -12233,15 +12233,189 @@ def admin_recalibrate_image(image_id):
 
     return redirect(url_for('admin_dashboard'))
 
+def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload_folder):
+    """
+    Background worker for engine rescore.
+    Runs in a separate thread — route returns immediately to admin dashboard.
+    All DB work done inside a fresh app context.
+    """
+    with app.app_context():
+        try:
+            import tempfile
+            from engine.auto_score import auto_score, build_audit_data
+            from engine.compositor import build_card1, build_card2
+
+            img = Image.query.get(image_id)
+            if not img:
+                app.logger.error(f'[engine_rescore] image {image_id} not found in worker')
+                return
+
+            # Fetch thumb — from disk or R2
+            thumb_path = img.thumb_path
+            temp_file  = None
+            if not thumb_path or not os.path.exists(thumb_path):
+                try:
+                    from storage import get_client, BUCKET
+                    tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                    get_client().download_fileobj(
+                        BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+                    )
+                    tf.close()
+                    thumb_path = temp_file = tf.name
+                except Exception as e:
+                    app.logger.error(f'[engine_rescore] could not fetch image {image_id}: {e}')
+                    return
+
+            # Store old scores for audit trail
+            old_score = float(img.score or 0)
+            old_tier  = img.tier or ''
+            old_dims  = [float(img.dod_score or 0), float(img.disruption_score or 0),
+                         float(img.dm_score or 0), float(img.wonder_score or 0),
+                         float(img.aq_score or 0)]
+
+            # Run engine
+            result = auto_score(
+                image_path   = thumb_path,
+                genre        = img.genre,
+                sub_genre    = img.sub_genre,
+                title        = img.asset_name,
+                photographer = img.photographer_name,
+                subject      = img.subject,
+                location     = img.location,
+            )
+
+            if temp_file:
+                try: os.unlink(temp_file)
+                except: pass
+
+            # Update model
+            img.dod_score        = float(result.get('dod', 0))
+            img.disruption_score = float(result.get('disruption', 0))
+            img.dm_score         = float(result.get('dm', 0))
+            img.wonder_score     = float(result.get('wonder', 0))
+            img.aq_score         = float(result.get('aq', 0))
+            img.score            = float(result.get('score', 0))
+            img.tier             = get_tier(float(result.get('score', 0)))
+            img.archetype        = result.get('archetype', img.archetype or '')
+            img.soul_bonus       = result.get('soul_bonus', False)
+            img.status           = 'scored'
+
+            audit = build_audit_data(result, img)
+
+            # Append rescore log entry
+            audit['recalibration_log'] = (img.get_audit() or {}).get('recalibration_log') or []
+            audit['recalibration_log'].append({
+                'type':      'engine_rescore',
+                'admin':     admin_username,
+                'at':        datetime.utcnow().isoformat(),
+                'reason':    reason,
+                'old_score': old_score,
+                'new_score': img.score,
+                'old_tier':  old_tier,
+                'new_tier':  img.tier,
+                'old_dims':  old_dims,
+                'new_dims':  [img.dod_score, img.disruption_score,
+                              img.dm_score, img.wonder_score, img.aq_score],
+            })
+            img.set_audit(audit)
+
+            # Rebuild scorecard
+            try:
+                card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                              f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
+                              f"{img.genre}_{img.score}.jpg")
+                card_path = os.path.join(upload_folder, 'cards', card_fname)
+                build_card1(img.thumb_path or thumb_path, audit, card_path)
+                img.card_path = card_path
+                uid = str(uuid.uuid4())
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+            except Exception as card_err:
+                app.logger.warning(f'[engine_rescore] card rebuild failed img {image_id}: {card_err}')
+
+            db.session.commit()
+            app.logger.info(
+                f'[engine_rescore] complete — img {image_id} '
+                f'"{img.asset_name}": {old_score} {old_tier} → {img.score} {img.tier}'
+                f'{" · Soul Bonus" if img.soul_bonus else ""}'
+            )
+
+            # Optional user notification
+            if notify_user:
+                try:
+                    _user = User.query.get(img.user_id)
+                    if _user and _user.email:
+                        _name      = _user.full_name or _user.username or 'Photographer'
+                        _title     = img.asset_name or f'Image {img.id}'
+                        _genre     = (img.genre or '').replace('_', ' ').title()
+                        _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _img_url   = f"{_site_url}/image/{img.id}"
+                        _score_str = f'{img.score:.2f}'
+                        _tier_str  = img.tier or ''
+                        _delta     = img.score - old_score
+                        _delta_str = (f'+{_delta:.2f}' if _delta >= 0 else f'{_delta:.2f}')
+                        send_email(
+                            to_addresses=_user.email,
+                            subject=f'[Shutter League] Your evaluation has been updated — {_title}',
+                            html_body=(
+                                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                '<tr><td align="center">'
+                                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                '<tr><td style="background:#1a1a18;padding:24px 32px;">'
+                                '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League</p>'
+                                '</td></tr>'
+                                '<tr><td style="padding:28px 32px;">'
+                                '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#1a1a18;">Hi ' + _name + ',</p>'
+                                '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
+                                'We have updated the evaluation for your <strong>' + _genre + '</strong> image '
+                                '<strong>&#8220;' + _title + '&#8221;</strong> following a rubric recalibration.'
+                                '</p>'
+                                '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;padding:16px 20px;margin:20px 0;">'
+                                '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8070;">Updated Score</p>'
+                                '<p style="margin:0;font-size:28px;font-weight:700;color:#1a1a18;">' + _score_str + ' &nbsp;<span style="font-size:16px;color:#8a8070;">' + _tier_str + '</span></p>'
+                                '<p style="margin:6px 0 0;font-size:13px;color:#8a8070;font-family:Courier New,monospace;">Change: ' + _delta_str + '</p>'
+                                '</div>'
+                                '<p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#4A4840;">'
+                                'Your scorecard and full analysis have been updated to reflect the latest scoring standards. '
+                                'No action is needed on your part.'
+                                '</p>'
+                                '<a href="' + _img_url + '" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">View Updated Scorecard →</a>'
+                                '</td></tr>'
+                                '<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">'
+                                '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">Questions? Reply to this email or contact <a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a></p>'
+                                '</td></tr>'
+                                '</table></td></tr></table></body></html>'
+                            ),
+                            text_body=(
+                                'Hi ' + _name + ',\n\n'
+                                'We have updated the evaluation for your ' + _genre + ' image '
+                                '"' + _title + '" following a rubric recalibration.\n\n'
+                                'Updated score: ' + _score_str + ' (' + _tier_str + ')  Change: ' + _delta_str + '\n\n'
+                                'Your scorecard and full analysis have been updated. No action needed.\n\n'
+                                'View your updated scorecard: ' + _img_url + '\n\n'
+                                '— Shutter League'
+                            )
+                        )
+                        app.logger.info(f'[engine_rescore] notification sent to {_user.email} for image {image_id}')
+                except Exception as _mail_err:
+                    app.logger.warning(f'[engine_rescore] notification email failed img {image_id}: {_mail_err}')
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'[engine_rescore] worker error img {image_id}: {e}')
+
+
 @app.route('/admin/image/<int:image_id>/engine-rescore', methods=['POST'])
 @login_required
 @admin_required
 def admin_engine_rescore(image_id):
     """
-    Engine Rescore — re-runs auto_score.py on an existing image using the
-    current rubric. Replaces all scores, audit text, and scorecard.
-    Use after rubric updates to apply new scoring standards to existing images.
-    Requires a reason for the audit trail.
+    Engine Rescore — fires immediately, runs in background thread.
+    Admin is redirected to dashboard instantly — no blue screen.
+    Result appears in Railway logs; refresh dashboard to see updated score.
     """
     img = Image.query.get_or_404(image_id)
     reason = request.form.get('reason', '').strip()
@@ -12249,170 +12423,23 @@ def admin_engine_rescore(image_id):
         flash('Engine rescore requires a reason.', 'error')
         return redirect(url_for('admin_dashboard'))
 
-    try:
-        import tempfile
-        from engine.auto_score import auto_score, build_audit_data
-        from engine.compositor import build_card1, build_card2
+    notify_user  = request.form.get('notify_user') == '1'
+    admin_username = current_user.username
+    upload_folder  = app.config['UPLOAD_FOLDER']
 
-        # Fetch thumb — from disk or R2
-        thumb_path = img.thumb_path
-        temp_file  = None
-        if not thumb_path or not os.path.exists(thumb_path):
-            try:
-                from storage import get_client, BUCKET
-                tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-                get_client().download_fileobj(
-                    BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
-                )
-                tf.close()
-                thumb_path = temp_file = tf.name
-            except Exception as e:
-                flash(f'Engine rescore: could not fetch image — {e}', 'error')
-                return redirect(url_for('admin_dashboard'))
+    # Fire and return — rescore runs in background
+    t = threading.Thread(
+        target=_engine_rescore_worker,
+        args=(image_id, reason, notify_user, admin_username, upload_folder),
+        daemon=True
+    )
+    t.start()
 
-        # Store old scores for audit trail
-        old_score = float(img.score or 0)
-        old_tier  = img.tier or ''
-        old_dims  = [float(img.dod_score or 0), float(img.disruption_score or 0),
-                     float(img.dm_score or 0), float(img.wonder_score or 0),
-                     float(img.aq_score or 0)]
-
-        # Run engine
-        result = auto_score(
-            image_path   = thumb_path,
-            genre        = img.genre,
-            sub_genre    = img.sub_genre,
-            title        = img.asset_name,
-            photographer = img.photographer_name,
-            subject      = img.subject,
-            location     = img.location,
-        )
-
-        if temp_file:
-            try: os.unlink(temp_file)
-            except: pass
-
-        # Update model
-        img.dod_score        = float(result.get('dod', 0))
-        img.disruption_score = float(result.get('disruption', 0))
-        img.dm_score         = float(result.get('dm', 0))
-        img.wonder_score     = float(result.get('wonder', 0))
-        img.aq_score         = float(result.get('aq', 0))
-        img.score            = float(result.get('score', 0))
-        img.tier             = get_tier(float(result.get('score', 0)))
-        img.archetype        = result.get('archetype', img.archetype or '')
-        img.soul_bonus       = result.get('soul_bonus', False)
-        img.status           = 'scored'
-
-        audit = build_audit_data(result, img)
-
-        # Append rescore log entry
-        audit['recalibration_log'] = (img.get_audit() or {}).get('recalibration_log') or []
-        audit['recalibration_log'].append({
-            'type':      'engine_rescore',
-            'admin':     current_user.username,
-            'at':        datetime.utcnow().isoformat(),
-            'reason':    reason,
-            'old_score': old_score,
-            'new_score': img.score,
-            'old_tier':  old_tier,
-            'new_tier':  img.tier,
-            'old_dims':  old_dims,
-            'new_dims':  [img.dod_score, img.disruption_score,
-                          img.dm_score, img.wonder_score, img.aq_score],
-        })
-        img.set_audit(audit)
-
-        # Rebuild scorecard (both pages)
-        try:
-            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
-                          f"{secure_filename((img.photographer_name or 'unknown').replace(' ',''))}_"
-                          f"{img.genre}_{img.score}.jpg")
-            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-            build_card1(img.thumb_path or thumb_path, audit, card_path)
-            img.card_path = card_path
-            uid = str(uuid.uuid4())
-            card_url = _r2_upload_card(card_path, uid + '_card')
-            if card_url:
-                img.card_url = card_url
-        except Exception as card_err:
-            app.logger.warning(f'[engine_rescore] card rebuild failed img {image_id}: {card_err}')
-
-        db.session.commit()
-        flash(
-            f'Engine rescore complete — "{img.asset_name or img.id}": '
-            f'{old_score} {old_tier} → {img.score} {img.tier}'
-            f'{"  ·  Soul Bonus" if img.soul_bonus else ""}',
-            'success'
-        )
-
-        # Optional user notification — only when admin ticks the checkbox
-        if request.form.get('notify_user') == '1':
-            try:
-                _user = User.query.get(img.user_id)
-                if _user and _user.email:
-                    _name      = _user.full_name or _user.username or 'Photographer'
-                    _title     = img.asset_name or f'Image {img.id}'
-                    _genre     = (img.genre or '').replace('_', ' ').title()
-                    _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
-                    _img_url   = f"{_site_url}/image/{img.id}"
-                    _score_str = f'{img.score:.2f}'
-                    _tier_str  = img.tier or ''
-                    _delta     = img.score - old_score
-                    _delta_str = (f'+{_delta:.2f}' if _delta >= 0 else f'{_delta:.2f}')
-                    send_email(
-                        to_addresses=_user.email,
-                        subject=f'[Shutter League] Your evaluation has been updated — {_title}',
-                        html_body=(
-                            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
-                            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
-                            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
-                            '<tr><td align="center">'
-                            '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
-                            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
-                            '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League</p>'
-                            '</td></tr>'
-                            '<tr><td style="padding:28px 32px;">'
-                            '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#1a1a18;">Hi ' + _name + ',</p>'
-                            '<p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4A4840;">'
-                            'We have updated the evaluation for your <strong>' + _genre + '</strong> image '
-                            '<strong>&#8220;' + _title + '&#8221;</strong> following a rubric recalibration.'
-                            '</p>'
-                            '<div style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:6px;padding:16px 20px;margin:20px 0;">'
-                            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8070;">Updated Score</p>'
-                            '<p style="margin:0;font-size:28px;font-weight:700;color:#1a1a18;">' + _score_str + ' &nbsp;<span style="font-size:16px;color:#8a8070;">' + _tier_str + '</span></p>'
-                            '<p style="margin:6px 0 0;font-size:13px;color:#8a8070;font-family:Courier New,monospace;">Change: ' + _delta_str + '</p>'
-                            '</div>'
-                            '<p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#4A4840;">'
-                            'Your scorecard and full analysis have been updated to reflect the latest scoring standards. '
-                            'No action is needed on your part.'
-                            '</p>'
-                            '<a href="' + _img_url + '" style="display:inline-block;background:#1a1a18;color:#F5C518;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">View Updated Scorecard →</a>'
-                            '</td></tr>'
-                            '<tr><td style="padding:16px 32px;border-top:1px solid #E0D8C8;">'
-                            '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">Questions? Reply to this email or contact <a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a></p>'
-                            '</td></tr>'
-                            '</table></td></tr></table></body></html>'
-                        ),
-                        text_body=(
-                            'Hi ' + _name + ',\n\n'
-                            'We have updated the evaluation for your ' + _genre + ' image '
-                            '"' + _title + '" following a rubric recalibration.\n\n'
-                            'Updated score: ' + _score_str + ' (' + _tier_str + ')  Change: ' + _delta_str + '\n\n'
-                            'Your scorecard and full analysis have been updated. No action needed.\n\n'
-                            'View your updated scorecard: ' + _img_url + '\n\n'
-                            '— Shutter League'
-                        )
-                    )
-                    app.logger.info(f'[engine_rescore] notification sent to {_user.email} for image {image_id}')
-            except Exception as _mail_err:
-                app.logger.warning(f'[engine_rescore] notification email failed img {image_id}: {_mail_err}')
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f'[engine_rescore] image {image_id}: {e}')
-        flash(f'Engine rescore error: {e}', 'error')
-
+    flash(
+        f'Engine rescore started for "{img.asset_name or img.id}" — '
+        f'refresh this page in 30 seconds to see the updated score.',
+        'info'
+    )
     return redirect(url_for('admin_dashboard'))
 
 
