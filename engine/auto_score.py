@@ -2488,7 +2488,7 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "") -> dict:
+def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "", filename: str = "") -> dict:
     """
     Call 1 of the two-call architecture.
     Sends the image to the API with a pure description prompt — no scoring.
@@ -2500,18 +2500,32 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
                   When present, treated as ground truth for species_id — overrides
                   vision model identification. Prevents misidentification on
                   high-key, monochrome, or minimalist wildlife images.
+    filename: original upload filename — parsed for species/location context
+              as a soft hint (lower priority than species_hint, higher than title).
     """
+    import re as _re
     prompt = VISION_PROMPT
     # Inject title and subject as hints — not as constraints
     if title or subject:
         hint = f"\nImage title: {title or 'Not provided'}. Subject field: {subject or 'Not provided'}.\nUse these as hints only — do not assume they are accurate. Describe what you actually see."
         prompt = prompt + hint
-    # Species hint — photographer-supplied, treated as ground truth
+    # Filename hint — parse original filename for species/location context
+    # Strip extension, camera codes (e.g. -SRA8949, _DSC1234), replace separators with spaces
+    if filename and filename.strip():
+        _fname = _re.sub(r'\.[^.]+$', '', filename.strip())           # remove extension
+        _fname = _re.sub(r'[-_]?[A-Z]{2,4}\d{4,}[-_]?', ' ', _fname) # strip camera codes
+        _fname = _re.sub(r'[-_]+', ' ', _fname).strip()               # underscores/dashes to spaces
+        if len(_fname) > 4:  # skip trivial names like "IMG"
+            prompt = prompt + (
+                f"\nFilename context (soft hint — may contain species or location info): '{_fname}'. "
+                f"Use this as additional context only if it corroborates what you see in the image."
+            )
+    # Species hint — photographer-supplied, treated as strong context but not absolute
     if species_hint and species_hint.strip():
         species_gt = (
-            f"\nSPECIES GROUND TRUTH: The photographer has identified the species as '{species_hint.strip()}'. "
-            f"Use this as the species_id in your response. Do NOT override this with your own identification "
-            f"— the photographer knows what they photographed."
+            f"\nSPECIES CONTEXT: The photographer has identified the species as '{species_hint.strip()}'. "
+            f"Use this as a strong starting point for species_id, but trust what you actually see in the image. "
+            f"If the image clearly shows a different species, use what you see and note the discrepancy."
         )
         prompt = prompt + species_gt
 
@@ -2861,7 +2875,7 @@ def build_species_context(research: dict) -> str:
     return "\n".join(lines)
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint=""):
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", filename=""):
     """
     Score an image using the Apex DDI Engine.
 
@@ -2889,7 +2903,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         _m = _re_sh.match(r'\[Species:\s*([^\]]+)\]', subject)
         if _m:
             _species_hint = _m.group(1).strip()
-    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint)
+    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=filename)
     scene_context = build_scene_context(vision, genre=genre)
 
     # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
