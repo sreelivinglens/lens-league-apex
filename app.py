@@ -3165,7 +3165,8 @@ def upload():
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
-                            subject=_img.subject, location=_img.location
+                            subject=_img.subject, location=_img.location,
+                            filename=_img.original_filename or '',
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -3501,6 +3502,7 @@ def retry_score(image_id):
             photographer = img.photographer_name,
             subject      = img.subject,
             location     = img.location,
+            filename     = img.original_filename or '',
         )
 
         img.dod_score        = float(result.get('dod', 0))
@@ -4769,7 +4771,8 @@ def score_single_image():
                 from engine.auto_score import auto_score, build_audit_data
                 scored = auto_score(image_path=img.thumb_path, genre=genre,
                                     sub_genre=img.sub_genre,
-                                    title=img.asset_name, photographer=photographer)
+                                    title=img.asset_name, photographer=photographer,
+                                    filename=img.original_filename or '')
                 img.dod_score        = float(scored.get('dod', 0))
                 img.disruption_score = float(scored.get('disruption', 0))
                 img.dm_score         = float(scored.get('dm', 0))
@@ -4895,7 +4898,8 @@ def admin_rescore_all():
                 genre=img.genre or 'Wildlife',
                 sub_genre=img.sub_genre,
                 title=img.asset_name,
-                photographer=img.photographer_name
+                photographer=img.photographer_name,
+                filename=img.original_filename or '',
             )
             audit = build_audit_data(scored, img)
             img.set_audit(audit)
@@ -5206,37 +5210,6 @@ def admin_unflag_image(image_id):
         app.logger.error(f'[unflag email error] {_me}')
     flash(f'Image "{img.asset_name}" unflagged and restored to public view.', 'success')
     return redirect(request.referrer or url_for('admin_dashboard'))
-
-
-@app.route('/admin/image/<int:image_id>/toggle-visibility', methods=['POST'])
-@login_required
-@admin_required
-def admin_toggle_visibility(image_id):
-    """Admin toggle: flip is_public without touching flagged/review state."""
-    img = Image.query.get_or_404(image_id)
-    # Don't allow making a flagged image public via this route
-    if img.is_flagged:
-        flash('Cannot change visibility on a flagged image. Unflag first.', 'warning')
-        return redirect(request.referrer or url_for('admin_dashboard'))
-    img.is_public = not img.is_public
-    db.session.commit()
-    state = 'public' if img.is_public else 'hidden'
-    flash(f'Image "{img.asset_name or "Untitled"}" is now {state}.', 'success')
-    return redirect(request.referrer or url_for('admin_dashboard'))
-
-
-@app.route('/image/<int:image_id>/toggle-visibility', methods=['POST'])
-@login_required
-def owner_toggle_visibility(image_id):
-    """Owner toggle: image owner can hide or show their own image."""
-    img = Image.query.get_or_404(image_id)
-    if img.user_id != current_user.id:
-        abort(403)
-    if img.is_flagged or img.needs_review:
-        return jsonify({'error': 'Cannot change visibility while image is under review.'}), 400
-    img.is_public = not img.is_public
-    db.session.commit()
-    return jsonify({'is_public': img.is_public})
 
 
 @app.route('/admin/image/<int:image_id>/approve-review', methods=['POST'])
@@ -8373,7 +8346,8 @@ def bulk_upload():
                     from engine.compositor import build_card1 as _build_card
                     scored = auto_score(image_path=img.thumb_path, genre=genre,
                                         sub_genre=img.sub_genre,
-                                        title=img.asset_name, photographer=photographer)
+                                        title=img.asset_name, photographer=photographer,
+                                        filename=img.original_filename or '')
                     img.dod_score=float(scored.get('dod',0))
                     img.disruption_score=float(scored.get('disruption',0))
                     img.dm_score=float(scored.get('dm',0))
@@ -8514,7 +8488,8 @@ def bulk_upload_one():
             from engine.compositor import build_card1 as _build_card
             scored = auto_score(image_path=img.thumb_path, genre=genre,
                                 sub_genre=img.sub_genre,
-                                title=img.asset_name, photographer=photographer)
+                                title=img.asset_name, photographer=photographer,
+                                filename=img.original_filename or '')
             img.dod_score        = float(scored.get('dod', 0))
             img.disruption_score = float(scored.get('disruption', 0))
             img.dm_score         = float(scored.get('dm', 0))
@@ -12313,6 +12288,7 @@ def _engine_rescore_worker(image_id, reason, notify_user, admin_username, upload
                 photographer = img.photographer_name,
                 subject      = img.subject,
                 location     = img.location,
+                filename     = img.original_filename or '',
             )
 
             if temp_file:
