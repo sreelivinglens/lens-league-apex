@@ -303,8 +303,9 @@
     {% endif %}
     {% endfor %}
 
-    {# Next + Creative Direction + Edit Guide — subscribers only #}
-    {% if current_user.is_authenticated and current_user.is_subscribed %}
+    {# Next + Creative Direction + Edit Guide — subscribers, UAT users, and admin #}
+    {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' %}
+    {% if current_user.is_authenticated and _can_see_full %}
     {% for row in audit.rows %}
     {% if row[1] and row[0] not in ('Technical', 'Moment') %}
     <div class="audit-row">
@@ -374,24 +375,17 @@
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
     {% set audit_meta = image.get_audit() %}
-    {% if audit_meta and audit_meta.species_display and audit_meta.species_display|lower not in ['species', 'unknown', 'n/a', ''] %}
+    {% if audit_meta and audit_meta.species_display %}
     <div class="meta-card">
       <div class="meta-label">Species</div>
       <div class="meta-value">{{ audit_meta.species_display }}</div>
     </div>
     {% endif %}
     {% if image.subject %}
-    {% if image.subject.startswith('[Species:') %}
-      {% set _subject_display = image.subject[image.subject.find(']')+1:].strip() %}
-    {% else %}
-      {% set _subject_display = image.subject %}
-    {% endif %}
-    {% if _subject_display %}
     <div class="meta-card">
       <div class="meta-label">Subject</div>
-      <div class="meta-value">{{ _subject_display }}</div>
+      <div class="meta-value">{{ image.subject }}</div>
     </div>
-    {% endif %}
     {% endif %}
     {% if image.location %}
     <div class="meta-card">
