@@ -2488,7 +2488,7 @@ def encode_image(image_path: str):
     return encoded, 'image/jpeg'
 
 
-def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "") -> dict:
+def vision_analyse(img_data: str, media_type: str, title: str, subject: str, species_hint: str = "", filename: str = "") -> dict:
     """
     Call 1 of the two-call architecture.
     Sends the image to the API with a pure description prompt — no scoring.
@@ -2497,23 +2497,37 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
     rather than blocking entirely.
 
     species_hint: photographer-supplied species name (e.g. "Whiskered Tern").
-                  When present, treated as ground truth for species_id — overrides
-                  vision model identification. Prevents misidentification on
-                  high-key, monochrome, or minimalist wildlife images.
+                  Treated as supporting evidence — Vision identifies first, then
+                  cross-references this hint. If the hint matches what Vision sees,
+                  it anchors the species_id. If it conflicts, Vision's observation wins.
+    filename: original upload filename (e.g. "Lady_Amherst_by_Kishore_Reddy.jpg").
+              Lowest-confidence hint — may contain species or subject information.
+              Injected as contextual clue only; Vision is not bound by it.
     """
     prompt = VISION_PROMPT
     # Inject title and subject as hints — not as constraints
     if title or subject:
         hint = f"\nImage title: {title or 'Not provided'}. Subject field: {subject or 'Not provided'}.\nUse these as hints only — do not assume they are accurate. Describe what you actually see."
         prompt = prompt + hint
-    # Species hint — photographer-supplied, treated as ground truth
+    # Species hint — photographer-supplied, supporting evidence only (not ground truth)
     if species_hint and species_hint.strip():
-        species_gt = (
-            f"\nSPECIES GROUND TRUTH: The photographer has identified the species as '{species_hint.strip()}'. "
-            f"Use this as the species_id in your response. Do NOT override this with your own identification "
-            f"— the photographer knows what they photographed."
+        species_hint_text = (
+            f"\nPHOTOGRAPHER SPECIES HINT: The photographer believes the species is '{species_hint.strip()}'. "
+            f"Treat this as supporting evidence, not ground truth. "
+            f"If your visual analysis confirms or is consistent with this identification, use it as species_id. "
+            f"If what you see clearly does not match this hint, trust your visual analysis and note the discrepancy in scene_summary."
         )
-        prompt = prompt + species_gt
+        prompt = prompt + species_hint_text
+
+    # Filename hint — lowest confidence, may contain species or subject clues
+    if filename and filename.strip():
+        import os as _os
+        _fname = _os.path.splitext(filename.strip())[0].replace('_', ' ').replace('-', ' ')
+        filename_hint_text = (
+            f"\nFILENAME HINT (lowest confidence): The original filename suggests '{_fname}'. "
+            f"Use only if it provides useful context that aligns with what you see — do not treat it as fact."
+        )
+        prompt = prompt + filename_hint_text
 
     payload = {
         "model":       VISION_MODEL,
@@ -2909,8 +2923,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             print(f"[auto_score] Species hint '{_species_hint}' looks like a description — ignoring as species name")
             _species_hint = ""
 
-    filename      = os.path.basename(image_path)
-    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=filename)
+    _filename     = os.path.basename(image_path)
+    vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=_filename)
     scene_context = build_scene_context(vision, genre=genre)
 
     # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
