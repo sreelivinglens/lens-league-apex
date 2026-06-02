@@ -1081,24 +1081,27 @@
     .db-hero-grid { grid-template-columns: 1fr; gap: 8px; }
   }
 
-  /* ── Desktop: cards always open, no tap UI, no summary (body visible) ── */
+
+  /* ── Desktop: cards always open, no tap UI, no summary ── */
   @media (min-width: 901px) {
     .db-hcard-body      { display: block !important; }
     .db-hcard-tap-hint  { display: none !important; }
     .db-hcard-chev      { display: none !important; }
     .db-hcard-summary   { display: none !important; }
-    .db-hcard-hdr       { cursor: default; padding-bottom: 16px; }
-  }
-  .db-hcard {
-    background: #1A2744;
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
+    .db-hcard-hdr       { cursor: default; }
   }
 
-  /* ── Header: category label + title + subtitle ── */
+  /* ── Card shell ── */
+  .db-hcard {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #D8D2C8;
+  }
+
+  /* ── Header: dark navy band ── */
   .db-hcard-hdr {
-    padding: 20px 20px 0;
+    background: #1A2744;
+    padding: 18px 20px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1114,9 +1117,9 @@
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+    color: #FFFFFF;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
   .db-hcard-hdr-title {
     font-family: 'Inter', Arial, sans-serif !important;
@@ -1125,28 +1128,27 @@
     color: #FFFFFF;
     display: block;
     line-height: 1.25;
-    margin-bottom: 6px;
-    letter-spacing: -0.01em;
+    margin-bottom: 5px;
   }
   .db-hcard-hdr-sub {
     font-family: 'Inter', Arial, sans-serif !important;
     font-size: 14px;
     font-weight: 400;
-    color: rgba(255,255,255,0.65);
+    color: #FFFFFF;
     display: block;
     line-height: 1.5;
-    letter-spacing: 0;
   }
   .db-hcard-chev {
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    color: #FFFFFF;
     flex-shrink: 0;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
-  /* ── Key data summary — always visible ── */
+  /* ── Summary (mobile only — dark, shown when collapsed) ── */
   .db-hcard-summary {
-    padding: 16px 20px 0;
+    background: #1A2744;
+    padding: 0 20px 18px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1158,78 +1160,88 @@
     line-height: 1.6;
     display: block;
   }
-  .db-hcard-summary-val {
-    color: #F5C518;
-    font-weight: 700;
-  }
+  .db-hcard-summary-val { color: #F5C518; font-weight: 700; }
 
-  /* ── Tap button ── */
+  /* ── Tap button (mobile only) ── */
   .db-hcard-tap-hint {
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 14px 0 0;
     padding: 11px 18px;
-    background: rgba(255,255,255,0.10);
-    border: 1px solid rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 6px;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #FFFFFF;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     min-height: 44px;
-    box-sizing: border-box;
     width: 100%;
+    box-sizing: border-box;
     cursor: pointer;
   }
 
-  /* ── Body: same dark bg, gold accent top border ── */
+  /* ── Body: WHITE background, black text ── */
   .db-hcard-body {
-    padding: 16px 20px 20px;
-    background: #1A2744;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 20px;
+    background: #FFFFFF;
+    border-top: 3px solid #F5C518;
   }
 
-  /* Override text colours inside body for dark bg */
-  .db-hcard-body .db-hcard-pts-lbl  { color: rgba(255,255,255,0.55); }
-  .db-hcard-body .db-hcard-pts-note { color: rgba(255,255,255,0.75); }
-  .db-hcard-body .db-hcard-qs-item  { color: rgba(255,255,255,0.70); }
-  .db-hcard-body .db-hcard-qs-val   { color: #FFFFFF; }
-  .db-hcard-body .db-hcard-gap-lbl  { color: rgba(255,255,255,0.45); }
-  .db-hcard-body .db-hcard-gap-txt  { color: #FFFFFF; }
-  .db-hcard-body .db-hcard-poty-lbl { color: rgba(255,255,255,0.55); }
-  .db-hcard-body .db-poty-g         { color: #FFFFFF; }
-  .db-hcard-body .db-poty-avg       { color: #F5C518; }
-  .db-hcard-body .db-poty-ct        { color: rgba(255,255,255,0.70); }
-  .db-hcard-body .db-poty-bw        { background: rgba(255,255,255,0.12); }
-  .db-hcard-body .db-poty-row       { border-color: rgba(255,255,255,0.10); }
-  .db-hcard-body .db-prog-wrap      { background: rgba(255,255,255,0.12); }
-  .db-hcard-body .db-tier-name      { color: #F5C518; }
-  .db-hcard-body .db-tier-score     { color: rgba(255,255,255,0.75); }
-  .db-hcard-body .db-prog-lbl       { color: rgba(255,255,255,0.55); }
-  .db-hcard-body .db-hcard-dim-lbl  { color: rgba(255,255,255,0.65); }
-  .db-hcard-body .db-hcard-dim-bw   { background: rgba(255,255,255,0.12); }
-  .db-hcard-body .db-hcard-dim-val  { color: #FFFFFF; }
-  .db-hcard-body .db-hcard-ref-txt  { color: rgba(255,255,255,0.85); }
+  /* All text inside body = black. Gold for values. */
+  .db-hcard-body,
+  .db-hcard-body p,
+  .db-hcard-body div,
+  .db-hcard-body span { color: #1A1A18; }
+
+  /* Specific overrides inside white body */
+  .db-hcard-body .db-hcard-pts-lbl   { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-pts-val   { color: #F5C518; }
+  .db-hcard-body .db-hcard-pts-sub   { color: #1A1A18; font-size: 16px; }
+  .db-hcard-body .db-hcard-pts-note  { color: #1A1A18; }
+  .db-hcard-body .db-hcard-qs-item   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-qs-val    { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-gap-lbl   { color: #1A2744; font-weight: 700; }
+  .db-hcard-body .db-hcard-gap-txt   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-poty-lbl  { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-poty-g          { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-poty-avg        { color: #F5C518; font-weight: 700; }
+  .db-hcard-body .db-poty-ct         { color: #1A1A18; }
+  .db-hcard-body .db-poty-bw         { background: #E8E4DC; }
+  .db-hcard-body .db-poty-row        { border-color: #E8E4DC; }
+  .db-hcard-body .db-prog-wrap       { background: #E8E4DC; }
+  .db-hcard-body .db-tier-name       { color: #1A2744; }
+  .db-hcard-body .db-tier-score      { color: #1A1A18; }
+  .db-hcard-body .db-prog-lbl        { color: #1A1A18; }
+  .db-hcard-body .db-hcard-dim-lbl   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-dim-bw    { background: #E8E4DC; }
+  .db-hcard-body .db-hcard-dim-val   { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-ref-txt   { color: #1A1A18; }
   .db-hcard-body .db-hcard-ref-code-row {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(245,197,24,0.35);
+    background: #F5F3EF;
+    border-color: #D8A800;
   }
-  .db-hcard-body p, .db-hcard-body div { color: inherit; }
+  .db-hcard-body .db-hcard-leg-item  { color: #1A1A18; }
+  .db-hcard-body .db-radar-leg-tier  { color: #1A1A18; }
+  .db-hcard-body .db-rdim-lbl        { color: #1A1A18; }
+  .db-hcard-body .db-rdim-val        { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-pct-hero-lbl    { color: #1A1A18; }
+  .db-hcard-body .db-pct-hero-ctx    { color: #1A1A18; }
+  .db-hcard-body .db-pct-hero-gnr    { color: #1A2744; }
 
   /* Percentile hero box */
   .db-pct-hero {
-    background: rgba(255,255,255,0.07);
+    background: #1A2744;
     border-radius: var(--radius-md);
     padding: 16px;
-    margin-bottom: 14px;
-    border: 1px solid rgba(255,255,255,0.10);
+    margin-bottom: 16px;
   }
   .db-pct-hero-lbl {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -1312,16 +1324,16 @@
 
   /* Gap box inside standing card */
   .db-hcard-gap {
-    background: rgba(255,255,255,0.07);
-    border-left: 3px solid #F5C518;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: #EEF2F8;
+    border-left: 3px solid #1A2744;
+    border-radius: 0 8px 8px 0;
     padding: 12px 14px;
-    margin-top: 12px;
+    margin-top: 14px;
   }
   .db-hcard-gap-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: rgba(26,39,68,0.5); margin-bottom: 3px;
+    color: #1A2744; font-weight: 700; margin-bottom: 3px;
   }
   .db-hcard-gap-txt { font-size: 16px; color: var(--text-primary); line-height: 1.5; text-align: justify; }
 
@@ -1330,26 +1342,28 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
   }
   .db-hcard-pts-stat {
-    background: rgba(255,255,255,0.08); border-radius: var(--radius-md); padding: 14px;
-    border: 1px solid rgba(255,255,255,0.10);
+    background: #F5F3EF;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    border: 1px solid #E0D8C8;
   }
   .db-hcard-pts-lbl {
     font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #FFFFFF; margin-bottom: 3px;
+    text-transform: uppercase; color: #1A1A18; font-weight: 700; margin-bottom: 3px;
   }
-  .db-hcard-pts-val { font-size: 26px; font-weight: 700; color: #F5C518; line-height: 1; }
+  .db-hcard-pts-val { font-size: 28px; font-weight: 700; color: #F5C518; line-height: 1; }
   .db-hcard-pts-sub { font-size: 16px; color: #FFFFFF; margin-top: 2px; }
   .db-hcard-pts-bar-wrap {
-    height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; margin: 8px 0 6px;
+    height: 6px; background: #E0D8C8; border-radius: 99px; margin: 8px 0 6px;
   }
   .db-hcard-pts-bar-fill { height: 6px; border-radius: 99px; background: #F5C518; }
   .db-hcard-pts-note { font-size: 16px; color: var(--text-primary); margin-bottom: 10px; line-height: 1.5; }
   .db-hcard-redeem {
     display: flex; align-items: center; justify-content: center;
-    background: #F5C518; border: none; color: #1A1A18;
+    background: #1A1A18; border: none; color: #F5C518;
     font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 16px;
-    border-radius: 6px; text-decoration: none; min-height: 44px; margin-bottom: 12px;
+    border-radius: 6px; text-decoration: none; min-height: 44px; margin-bottom: 14px;
   }
   .db-hcard-qs {
     display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px;
@@ -1362,7 +1376,7 @@
   .db-hcard-poty-lbl {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: rgba(255,255,255,0.55); margin-bottom: 10px;
+    color: #FFFFFF; margin-bottom: 10px;
   }
   .db-hcard-ref-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
@@ -1371,12 +1385,12 @@
     display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
   }
   .db-hcard-div { height: 0.5px; background: var(--border); margin: 12px 0; }
-  .db-hcard-ref-txt { font-size: 16px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 14px; }
+  .db-hcard-ref-txt { font-size: 16px; color: #1A1A18; line-height: 1.6; margin-bottom: 14px; }
   .db-hcard-ref-code-row {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(245,197,24,0.35);
+    background: #F5F3EF;
+    border: 1px solid #D8A800;
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1387,7 +1401,7 @@
     font-family: var(--font-mono);
     font-size: 18px;
     font-weight: 700;
-    color: #F5C518;
+    color: #1A1A18;
     letter-spacing: 2px;
   }
   .db-hcard-ref-share {
@@ -1724,7 +1738,7 @@
     <div class="db-hcard-body" id="db-hcard-body-referrals">
       <div class="db-hcard-ref-txt">When a friend signs up with your code and subscribes, <strong>you earn +500 pts</strong> and <strong>they get their first month discounted</strong>.</div>
       <div class="db-hcard-ref-code-row">
-        <span style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:#1A2744;letter-spacing:2px;">{{ referral_code }}</span>
+        <span class="db-hcard-ref-code">{{ referral_code }}</span>
         <button onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ this.textContent='✓ Copied'; var b=this; setTimeout(function(){ b.textContent='Copy'; },2000); }.bind(this))"
           style="background:#F5C518;color:#1A2744;font-family:var(--font-mono);font-size:13px;font-weight:700;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;min-height:36px;">Copy</button>
       </div>
