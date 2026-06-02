@@ -127,12 +127,11 @@
   }
   .db-page-sub {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--text-primary);
     margin-top: 4px;
-    opacity: 0.65;
   }
   .db-top-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
   @media (max-width: 600px) {
@@ -228,23 +227,21 @@
   .db-stat-val.neutral { color: var(--text-primary); }
   .db-stat-lbl {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: var(--text-primary);
     text-transform: uppercase;
-    opacity: 0.65;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .db-stat-delta {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    opacity: 0.75;
   }
   .db-stat-delta.up   { color: var(--green, #2e7d32); }
   .db-stat-delta.down { color: var(--red, #c0392b); }
@@ -384,11 +381,10 @@
     gap: 8px;
     color: var(--text-primary);
   }
-  .db-section-meta { font-size: 13px; color: var(--text-primary); opacity: 0.55; }
+  .db-section-meta { font-size: 14px; color: var(--text-primary); }
   .db-chevron {
     font-size: 12px;
     color: var(--text-primary);
-    opacity: 0.5;
     transition: transform 0.2s;
     flex-shrink: 0;
   }
@@ -408,7 +404,7 @@
   }
   .db-count-badge.gold   { background: var(--gold); color: #000; }
   .db-count-badge.red    { background: var(--red, #c0392b); color: #fff; }
-  .db-count-badge.neutral { background: var(--surface-3); color: var(--text-primary); opacity: 0.7; }
+  .db-count-badge.neutral { background: var(--surface-3); color: var(--text-primary); }
 
   /* ── Search + filter row ── */
   .db-search-row {
@@ -441,16 +437,15 @@
     border-radius: var(--radius-sm);
     background: var(--surface-1);
     color: var(--text-primary);
-    opacity: 0.65;
     cursor: pointer;
     min-height: 44px;
     white-space: nowrap;
     flex-shrink: 0;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    transition: border-color 0.15s, opacity 0.15s;
+    transition: border-color 0.15s;
   }
-  .db-filter-btn:hover { opacity: 1; border-color: var(--gold); }
+  .db-filter-btn:hover { border-color: var(--gold); }
   .db-filter-btn.active { border-color: var(--gold); color: var(--text-primary); opacity: 1; background: var(--gold-subtle); }
 
   /* ── Image grid ── */
@@ -517,14 +512,14 @@
 
   .db-img-body { padding: 9px 12px; }
   .db-img-title {
-    font-size: 15px; font-weight: 700;
+    font-size: 16px; font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     text-align: justify;
   }
   .db-img-meta {
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-primary); opacity: 0.6;
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text-primary);
     margin-top: 3px; display: flex; justify-content: space-between;
     text-transform: uppercase; letter-spacing: 1px;
   }
@@ -562,12 +557,12 @@
   .db-panel.gold-border { border-color: var(--gold); background: rgba(245,197,24,0.03); }
   .db-plbl {
     font-family: var(--font-mono);
-    font-size: 12px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--text-primary); opacity: 0.55;
+    color: var(--text-primary);
     margin-bottom: 10px;
   }
-  .db-plbl.gold { color: var(--text-primary); opacity: 1; }
+  .db-plbl.gold { color: var(--text-primary); }
 
   /* Tier display */
   .db-tier-name {
@@ -576,7 +571,7 @@
     letter-spacing: 2px; text-transform: uppercase;
     color: #1A2744;
   }
-  .db-tier-rank { font-size: 13px; color: var(--text-primary); opacity: 0.6; margin-top: 3px; }
+  .db-tier-rank { font-size: 13px; color: var(--text-primary); }
   .db-prog-wrap {
     background: var(--surface-3);
     border-radius: 4px; height: 6px; margin: 10px 0 5px;
@@ -584,8 +579,8 @@
   .db-prog-fill { height: 6px; border-radius: 4px; background: var(--gold); }
   .db-prog-lbl {
     display: flex; justify-content: space-between;
-    font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-primary); opacity: 0.5;
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text-primary);
   }
 
   /* POTY rows — stacked: genre label + count on top row, bar below */
@@ -600,16 +595,16 @@
     justify-content: space-between; gap: 6px;
   }
   .db-poty-g {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--text-primary); flex: 1; min-width: 0;
   }
   .db-poty-avg {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     color: var(--text-primary); flex-shrink: 0; text-align: right;
   }
   .db-poty-ct {
-    font-size: 12px; color: var(--text-primary); opacity: 0.55;
+    font-size: 13px; color: var(--text-primary);
     flex-shrink: 0; text-align: right; white-space: nowrap;
   }
   .db-poty-bw { width: 100%; background: var(--surface-3); border-radius: 3px; height: 5px; }
@@ -625,12 +620,12 @@
     justify-content: space-between; gap: 8px;
   }
   .db-ddi-lbl {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-primary); opacity: 0.65; flex: 1; min-width: 0;
+    color: var(--text-primary); flex: 1; min-width: 0;
   }
   .db-ddi-sc {
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
     color: var(--text-primary); flex-shrink: 0; text-align: right;
   }
   .db-ddi-bw { width: 100%; background: var(--surface-3); border-radius: 3px; height: 6px; }
@@ -655,7 +650,7 @@
   .db-callout-tag.strength { color: var(--green, #2e7d32); }
   .db-callout-tag.growth   { color: #7A5800; }
   .db-callout-dim { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-  .db-callout-sub { font-size: 12px; color: var(--text-primary); opacity: 0.6; margin-top: 2px; }
+  .db-callout-sub { font-size: 12px; color: var(--text-primary); margin-top: 2px; }
 
   /* Peer widget */
   .db-peer-stats {
@@ -664,8 +659,8 @@
   }
   .db-peer-val { font-size: 26px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .db-peer-lbl {
-    font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px;
-    text-transform: uppercase; color: var(--text-primary); opacity: 0.55; margin-top: 3px;
+    font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-primary); margin-top: 3px;
   }
 
   /* Pagination */
@@ -679,7 +674,7 @@
   }
   .db-pagination a:hover { border-color: var(--gold); }
   .db-pagination a.active { border-color: var(--gold); background: var(--gold-subtle); }
-  .db-pagination span { font-family: var(--font-mono); font-size: 13px; padding: 8px 6px; color: var(--text-primary); opacity: 0.4; }
+  .db-pagination span { font-family: var(--font-mono); font-size: 13px; padding: 8px 6px; color: var(--text-primary); }
 
   /* Empty state */
   .db-empty { text-align: center; padding: 56px 20px; color: var(--text-primary); }
@@ -817,7 +812,6 @@
     .db-panel-chevron {
       font-size: 12px;
       color: var(--text-primary);
-      opacity: 0.5;
       transition: transform 0.2s ease;
       flex-shrink: 0;
     }
@@ -892,7 +886,6 @@
     font-family: var(--font-mono);
     font-size: 16px;
     color: var(--text-primary);
-    opacity: 0.65;
   }
 
   /* ── Radar + bars layout ── */
@@ -927,9 +920,8 @@
     min-width: 0;
   }
   .db-rdim-lbl {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-primary);
-    opacity: 0.55;
     width: 80px;
     flex-shrink: 0;
     white-space: nowrap;
@@ -960,7 +952,7 @@
   }
   .db-rdim-val {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-primary);
     width: 26px;
     text-align: right;
@@ -977,10 +969,9 @@
     font-family: var(--font-mono);
   }
   .db-radar-leg-tier {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-primary);
     font-family: var(--font-mono);
-    opacity: 0.55;
   }
 
   /* Tablet/iPad — right col is ~290px, side-by-side is tight but OK */
@@ -1180,7 +1171,6 @@
   .db-hcard-dim-lbl {
     font-size: 13px;
     color: var(--text-primary);
-    opacity: 0.55;
     width: 148px;
     flex-shrink: 0;
     white-space: nowrap;
@@ -1214,7 +1204,7 @@
   }
   .db-hcard-leg-item {
     display: flex; align-items: center; gap: 5px;
-    font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); opacity: 0.45;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); 
   }
   .db-hcard-leg-gold { width: 14px; height: 2px; background: #F5C518; border-radius: 99px; }
   .db-hcard-leg-teal { width: 14px; height: 2px; background: #1D9E75; border-radius: 99px; }
@@ -1776,7 +1766,7 @@
           <span class="db-win-badge">{{ img.tier or 'Recipient' }}</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
-            {% if img.genre %}<div style="font-size:16px;color:var(--text-primary);opacity:0.7;margin-top:3px;line-height:1.5;">{{ img.genre }}</div>{% endif %}
+            {% if img.genre %}<div style="font-size:16px;color:var(--text-primary);margin-top:3px;line-height:1.5;">{{ img.genre }}</div>{% endif %}
           </div>
         </div>
         {% endfor %}
@@ -1806,12 +1796,12 @@
       {% if rating_widget.credits > 0 %}
       <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
       {% if rating_widget.unlocks_pending > 0 %}
-      <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-top:8px;line-height:1.5;">
+      <div style="font-size:16px;color:var(--text-primary);margin-top:8px;line-height:1.5;">
         Rate {{ rating_widget.unlocks_pending }} image{{ 's' if rating_widget.unlocks_pending != 1 }} to unlock your pool slot.
       </div>
       {% endif %}
       {% else %}
-      <div style="font-size:16px;color:var(--text-primary);opacity:0.65;line-height:1.5;">
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.5;">
         No images ready to rate right now. Check back soon.
       </div>
       {% endif %}
@@ -1849,7 +1839,7 @@
         <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F5C518;margin-bottom:8px;">Your Portfolio</div>
         {% if current_user.portfolio_public %}
         <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Public · Live</div>
-        <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-bottom:10px;line-height:1.5;">
+        <div style="font-size:16px;color:var(--text-primary);margin-bottom:10px;line-height:1.5;">
           shutterleague.com/portfolio/{{ current_user.username }}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1864,7 +1854,7 @@
         </div>
         {% else %}
         <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Not published yet</div>
-        <div style="font-size:16px;color:var(--text-primary);opacity:0.65;margin-bottom:14px;line-height:1.6;">
+        <div style="font-size:16px;color:var(--text-primary);margin-bottom:14px;line-height:1.6;">
           Build a public portfolio to share your best work with the world.
         </div>
         <a href="{{ url_for('portfolio_manager') }}"
@@ -1889,7 +1879,7 @@
     </div>
     <div class="db-panel-body">
     <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">&#x1F512; Add a password</div>
-    <div style="font-size:16px;color:var(--text-primary);opacity:0.75;line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
     <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
     </div>
   </div>
