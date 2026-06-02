@@ -519,7 +519,7 @@
               {% if not img.is_flagged %}
               {% set _vis_msg = 'Hide from Community?' if img.is_public else 'Make Public?' %}
               <button type="button"
-                      onclick="adminPost('vis-form-' + {{ img.id }}, {{ _vis_msg | tojson }})"
+                      onclick="adminPost('vis-form-' + {{ img.id }}, '{{ _vis_msg }}')"
                       class="act-btn"
                       style="border-color:{{ 'var(--border)' if img.is_public else '#b8860b' }}; color:{{ 'var(--text-muted)' if img.is_public else '#b8860b' }};"
                       title="{{ 'Hide from Community' if img.is_public else 'Make Public' }}">
