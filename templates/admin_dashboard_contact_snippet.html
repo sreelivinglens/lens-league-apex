@@ -1,0 +1,19 @@
+<!-- ADD THIS BLOCK to admin.html alongside your existing RAW Verification / Reports buttons -->
+<!-- It shows a badge with unread count and turns gold when messages are waiting -->
+
+<a href="{{ url_for('admin_contact_inbox') }}"
+   style="display:inline-flex;align-items:center;gap:10px;
+          background:{% if unread_contact_count > 0 %}#F5C518{% else %}#F5F3EF{% endif %};
+          color:{% if unread_contact_count > 0 %}#1A1A18{% else %}#555555{% endif %};
+          border:1px solid {% if unread_contact_count > 0 %}#F5C518{% else %}#E0D8C8{% endif %};
+          font-family:'Courier New',monospace;font-size:13px;font-weight:700;
+          letter-spacing:1px;text-transform:uppercase;
+          padding:12px 20px;text-decoration:none;border-radius:4px;">
+  ✉ Contact Inbox
+  {% if unread_contact_count > 0 %}
+  <span style="background:#1A2744;color:#F5C518;font-size:12px;font-weight:700;
+               padding:2px 8px;border-radius:10px;min-width:20px;text-align:center;">
+    {{ unread_contact_count }}
+  </span>
+  {% endif %}
+</a>
