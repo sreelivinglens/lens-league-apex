@@ -8176,7 +8176,7 @@ def subscribe(track):
                 {'uid': current_user.id}
             )  # discount used — clear
             db.session.commit()
-            # ── Referral: first payment — +500 pts to referrer ────────────
+            # ── Referral: first payment — +200 pts to referrer ────────────
             try:
                 _ref_rec2 = db.session.execute(
                     db.text('SELECT id, referrer_id, points_reward_granted '
@@ -8193,7 +8193,7 @@ def subscribe(track):
                         {'rid': _ref_rec2[0]}
                     )
                     db.session.commit()
-                    app.logger.info(f'[referral] +500pts: referrer={_ref_rec2[1]} referred={current_user.id}')
+                    app.logger.info(f'[referral] +200pts: referrer={_ref_rec2[1]} referred={current_user.id}')
             except Exception as _rpe:
                 app.logger.error(f'[referral] subscribe hook: {_rpe}')
 
