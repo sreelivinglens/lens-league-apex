@@ -2821,18 +2821,20 @@ def upload():
         existing = Image.query.filter(Image.phash.isnot(None)).all()
         for ex in existing:
             sim = hash_similarity_pct(phash, ex.phash)
-            if sim >= 98.0:
+            if ex.user_id == current_user.id and sim >= 90.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
-                if ex.user_id == current_user.id:
-                    return jsonify({'error': True, 'message':
-                        f' This image appears identical to one you already uploaded (\"{ ex.asset_name or ex.original_filename }\"). Please upload a different photograph.'
-                    }), 409
-                else:
-                    return jsonify({'error': True, 'message':
-                        'We were unable to accept this image. Our system has detected that it may be identical to a photograph already in our database. '
-                        'Please ensure you are submitting your own original work. '
-                        'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
-                    }), 409
+                return jsonify({'error': True, 'message':
+                    f'A similar image already exists in your uploads ("{ex.asset_name or ex.original_filename}"). '
+                    'Please delete the previous version and upload a fresh image, or submit a different photograph. '
+                    'If you feel this image is not similar, write to us at info@shutterleague.com and we will review it.'
+                }), 409
+            elif ex.user_id != current_user.id and sim >= 98.0:
+                if os.path.exists(thumb_path): os.remove(thumb_path)
+                return jsonify({'error': True, 'message':
+                    'We were unable to accept this image. Our system has detected that it may be identical to a photograph already in our database. '
+                    'Please ensure you are submitting your own original work. '
+                    'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
+                }), 409
 
         # Blocklist check — reject known confirmed AI images
         from models import FlaggedPhash as _FlaggedPhash
