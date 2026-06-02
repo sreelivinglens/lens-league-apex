@@ -1101,7 +1101,7 @@ _TIER_JUMP_POINTS = {
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
 REFERRAL_DISCOUNT_PRICES = {
-    'mobile': {'monthly': 85,  'annual': 850},
+    'mobile': {'monthly': 80,  'annual': 800},
     'camera': {'monthly': 169, 'annual': 1690},
 }
 
@@ -8186,7 +8186,7 @@ def subscribe(track):
                 if _ref_rec2 and not _ref_rec2[2]:
                     _referrer2 = User.query.get(_ref_rec2[1])
                     if _referrer2:
-                        award_points(_referrer2, 500, 'referral_conversion')
+                        award_points(_referrer2, 200, 'referral_conversion')
                     db.session.execute(
                         db.text('UPDATE referrals SET first_payment_at = NOW(), '
                                 'points_reward_granted = TRUE WHERE id = :rid'),
