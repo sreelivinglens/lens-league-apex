@@ -1082,10 +1082,9 @@
   }
 
 
-  /* ── Desktop: summary hidden (replaced by header), chev visible ── */
+  /* ── Desktop: tap hint hidden (summary visible instead), cards collapsible ── */
   @media (min-width: 901px) {
     .db-hcard-tap-hint  { display: none !important; }
-    .db-hcard-summary   { display: none !important; }
     .db-hcard-hdr       { cursor: pointer; }
   }
 
@@ -1146,7 +1145,8 @@
   /* ── Summary (mobile only — dark, shown when collapsed) ── */
   .db-hcard-summary {
     background: #1A2744;
-    padding: 0 20px 18px;
+    padding: 14px 20px 18px;
+    border-top: 1px solid rgba(255,255,255,0.12);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1438,7 +1438,6 @@
   }
   @media (min-width: 901px) {
     .db-always-grid .db-hcard-tap-hint { display: none !important; }
-    .db-always-grid .db-hcard-summary  { display: none !important; }
     .db-always-grid .db-hcard-hdr      { cursor: pointer; }
   }
 
