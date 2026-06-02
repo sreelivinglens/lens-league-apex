@@ -1110,39 +1110,39 @@
   .db-hcard-hdr-txt { flex: 1; }
   .db-hcard-hdr-lbl {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #FFFFFF;
+    color: rgba(255,255,255,0.70);
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
   .db-hcard-hdr-title {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     color: #FFFFFF;
     display: block;
     line-height: 1.25;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
   .db-hcard-hdr-sub {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 400;
     color: #FFFFFF;
     display: block;
     line-height: 1.5;
   }
   .db-hcard-chev {
-    font-size: 14px;
+    font-size: 16px;
     color: #FFFFFF;
     flex-shrink: 0;
     margin-top: 2px;
   }
 
-  /* ── Summary (mobile only — dark, shown when collapsed) ── */
+  /* ── Summary — shown when collapsed (all screens) ── */
   .db-hcard-summary {
     background: #1A2744;
     padding: 14px 20px 18px;
@@ -1152,13 +1152,17 @@
   }
   .db-hcard-summary-txt {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 600;
     color: #FFFFFF;
     line-height: 1.6;
     display: block;
   }
-  .db-hcard-summary-val { color: #F5C518; font-weight: 700; }
+  .db-hcard-summary-val {
+    color: #F5C518;
+    font-weight: 700;
+    font-size: 18px;
+  }
 
   /* ── Tap button (mobile only) ── */
   .db-hcard-tap-hint {
