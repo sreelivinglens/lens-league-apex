@@ -1079,6 +1079,17 @@
   @media (max-width: 900px) {
     .db-hero-grid { grid-template-columns: 1fr; gap: 8px; }
   }
+
+  /* ── Desktop: cards always open, no tap UI ── */
+  @media (min-width: 901px) {
+    .db-hcard-body   { display: block !important; }
+    .db-hcard-tap-hint { display: none !important; }
+    .db-hcard-chev   { display: none !important; }
+    .db-hcard-hdr    { cursor: default; }
+    .db-hcard-summary { cursor: default; }
+    /* Shorter subtitle on desktop — 3 narrow columns */
+    .db-hcard-hdr-sub { font-size: 13px; }
+  }
   .db-hcard {
     background: #1A2744;
     border: none;
@@ -1091,7 +1102,7 @@
     background: #1A2744;
     padding: 16px 18px 0;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
@@ -1100,12 +1111,34 @@
   }
   .db-hcard-hdr-lbl {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.70);
+    color: rgba(255,255,255,0.50);
     flex: 1;
+  }
+  .db-hcard-hdr-title {
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 18px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-top: 4px;
+    display: block;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .db-hcard-hdr-sub {
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0;
+    text-transform: none;
+    margin-top: 3px;
+    display: block;
+    line-height: 1.4;
   }
   .db-hcard-chev {
     font-size: 14px;
@@ -1128,11 +1161,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   .db-hcard-summary-txt {
-    font-family: var(--font-mono);
-    font-size: 16px;
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 17px;
     font-weight: 600;
     color: #FFFFFF;
-    line-height: 1.7;
+    line-height: 1.6;
     display: block;
   }
   .db-hcard-summary-val {
@@ -1145,10 +1178,10 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: 12px;
-    padding: 8px 16px;
+    margin-top: 14px;
+    padding: 10px 18px;
     background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.30);
     border-radius: 6px;
     font-family: var(--font-mono);
     font-size: 13px;
@@ -1158,6 +1191,8 @@
     text-transform: uppercase;
     min-height: 44px;
     box-sizing: border-box;
+    width: 100%;
+    justify-content: center;
   }
   .db-hcard-body { padding: 16px 18px; background: var(--surface-1); }
 
@@ -1439,14 +1474,16 @@
   {# ── Card 1: Your Standing ── #}
   <div class="db-hcard" id="db-hcard-standing">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('standing')">
-      <span class="db-hcard-hdr-lbl">Your standing</span>
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Your standing</span>
+        <span class="db-hcard-hdr-title">How good is your photography?</span>
+        <span class="db-hcard-hdr-sub">Your rank, tier and average score across all scored images.</span>
+      </div>
       <span class="db-hcard-chev" id="db-hcard-chev-standing">▶</span>
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-standing" onclick="dbHcardToggle('standing')">
-      <span class="db-hcard-summary-txt">
-        {% if progress_data.overall_pct %}<span class="db-hcard-summary-val">Top {{ progress_data.overall_pct }}%</span> in {{ progress_data.league_label or 'league' }}<br>{% endif %}<span class="db-hcard-summary-val">{{ progress_data.avg_tier or '—' }}</span> &nbsp;·&nbsp; avg <span class="db-hcard-summary-val">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</span>
-      </span>
-      <span class="db-hcard-tap-hint" id="db-hcard-hint-standing">Tap to expand ▾</span>
+      <span class="db-hcard-summary-txt">{% if progress_data.overall_pct %}<span class="db-hcard-summary-val">Top {{ progress_data.overall_pct }}%</span> in {{ progress_data.league_label or 'league' }}{% endif %}<br><span class="db-hcard-summary-val">{{ progress_data.avg_tier or '—' }}</span> · avg <span class="db-hcard-summary-val">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</span></span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-standing">See full breakdown ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-standing">
       {# Percentile #}
@@ -1513,12 +1550,16 @@
   {% if wallet_hud %}
   <div class="db-hcard" id="db-hcard-points">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('points')">
-      <span class="db-hcard-hdr-lbl">Points &amp; ranking</span>
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Points &amp; ranking</span>
+        <span class="db-hcard-hdr-title">Your points wallet</span>
+        <span class="db-hcard-hdr-sub">Earn points every time you upload. Redeem for free uploads, entries and subscription discounts.</span>
+      </div>
       <span class="db-hcard-chev" id="db-hcard-chev-points">▶</span>
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-points" onclick="dbHcardToggle('points')">
-      <span class="db-hcard-summary-txt"><span class="db-hcard-summary-val">{{ wallet_hud.balance | round(1) }} pts</span><br>Residency <span class="db-hcard-summary-val">{{ wallet_hud.residency_months }}/6</span> &nbsp;·&nbsp; Scored <span class="db-hcard-summary-val">{{ stats.scored }}</span></span>
-      <span class="db-hcard-tap-hint" id="db-hcard-hint-points">Tap to expand ▾</span>
+      <span class="db-hcard-summary-txt"><span class="db-hcard-summary-val">{{ wallet_hud.balance | round(1) }} pts</span><br>Residency <span class="db-hcard-summary-val">{{ wallet_hud.residency_months }}/6</span> · Scored <span class="db-hcard-summary-val">{{ stats.scored }}</span></span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-points">See points &amp; redeem ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-points">
       <div class="db-hcard-pts-grid">
@@ -1555,14 +1596,16 @@
   {# ── Card 3: POTY + Referrals ── #}
   <div class="db-hcard" id="db-hcard-poty">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('poty')">
-      <span class="db-hcard-hdr-lbl">POTY &amp; referrals</span>
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">POTY &amp; Refer a Friend</span>
+        <span class="db-hcard-hdr-title">Photographer of the Year + Referrals</span>
+        <span class="db-hcard-hdr-sub">POTY: your best scores across the year build toward the annual title. Refer friends — you earn 500 pts, they get a discount on their first month.</span>
+      </div>
       <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-poty" onclick="dbHcardToggle('poty')">
-      <span class="db-hcard-summary-txt">
-        {% if poty_tracker and poty_tracker.genre_rows %}Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }} · {{ poty_tracker.genre_rows[0].count }} imgs</span><br>{% endif %}{% if referral_code %}Code <span class="db-hcard-summary-val">{{ referral_code }}</span>{% endif %}
-      </span>
-      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">Tap to expand ▾</span>
+      <span class="db-hcard-summary-txt">{% if poty_tracker and poty_tracker.genre_rows %}Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span> · <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].count }} imgs</span>{% endif %}<br>{% if referral_code %}Code <span class="db-hcard-summary-val">{{ referral_code }}</span>{% endif %}</span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">See POTY &amp; refer a friend ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-poty">
       {% if poty_tracker and poty_tracker.genre_rows %}
@@ -2010,22 +2053,33 @@ function dbSearchUrl(q) {
   return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
 }
 
+var _hintExpand = {
+    standing: 'See full breakdown \u25be',
+    points:   'See points & redeem \u25be',
+    poty:     'See POTY & refer a friend \u25be'
+  };
+  var _hintCollapse = {
+    standing: 'Hide breakdown \u25b4',
+    points:   'Hide details \u25b4',
+    poty:     'Hide details \u25b4'
+  };
+
 function dbHcardToggle(id) {
+  if (window.innerWidth >= 901) return; // Desktop: always open, CSS handles it
   var body = document.getElementById('db-hcard-body-'+id);
   var chev = document.getElementById('db-hcard-chev-'+id);
   var hint = document.getElementById('db-hcard-hint-'+id);
   if (!body) return;
   var open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
-  // Summary row stays always visible — just update hint text and chevron
-  if (hint) hint.textContent = open ? 'Tap to expand \u25be' : 'Tap to collapse \u25b4';
+  if (hint) hint.textContent = open ? (_hintExpand[id] || 'See more \u25be') : (_hintCollapse[id] || 'Hide \u25b4');
   if (chev) chev.textContent = open ? '\u25b6' : '\u25bc';
-  // Persist state
   try { localStorage.setItem('sl_hcard_'+id, open ? '0' : '1'); } catch(e) {}
 }
 
-// Restore hero card states — default collapsed, persist user preference
+// Restore hero card states — mobile only (desktop CSS forces open)
 (function() {
+  if (window.innerWidth >= 901) return; // Desktop: CSS handles display:block
   var cards = ['standing', 'points', 'poty'];
   cards.forEach(function(id) {
     var body = document.getElementById('db-hcard-body-'+id);
@@ -2034,10 +2088,9 @@ function dbHcardToggle(id) {
     if (!body) return;
     var stored;
     try { stored = localStorage.getItem('sl_hcard_'+id); } catch(e) {}
-    // Default is collapsed (stored===null means first visit → collapse)
     var open = stored === '1';
     body.style.display = open ? 'block' : 'none';
-    if (hint) hint.textContent = open ? 'Tap to collapse \u25b4' : 'Tap to expand \u25be';
+    if (hint) hint.textContent = open ? (_hintCollapse[id] || 'Hide \u25b4') : (_hintExpand[id] || 'See more \u25be');
     if (chev) chev.textContent = open ? '\u25bc' : '\u25b6';
   });
 })();
