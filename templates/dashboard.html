@@ -971,13 +971,13 @@
     margin-top: 6px;
   }
   .db-radar-leg-you {
-    font-size: 12px;
+    font-size: 14px;
     color: #F5C518;
     font-family: var(--font-mono);
   }
   .db-radar-leg-tier {
-    font-size: 13px;
-    color: var(--text-primary);
+    font-size: 14px;
+    color: rgba(255,255,255,0.70);
     font-family: var(--font-mono);
   }
 
@@ -1075,31 +1075,30 @@
     grid-template-columns: repeat(2, minmax(0,1fr));
     gap: 10px;
     margin-bottom: 8px;
+    align-items: start;
   }
   @media (max-width: 768px) {
     .db-hero-grid { grid-template-columns: 1fr; gap: 8px; }
   }
 
-  /* ── Desktop: cards always open, no tap UI ── */
+  /* ── Desktop: cards always open, no tap UI, no summary (body visible) ── */
   @media (min-width: 901px) {
-    .db-hcard-body   { display: block !important; }
-    .db-hcard-tap-hint { display: none !important; }
-    .db-hcard-chev   { display: none !important; }
-    .db-hcard-hdr    { cursor: default; }
-    .db-hcard-summary { cursor: default; }
-    .db-hcard-hdr-sub { font-size: 14px; }
+    .db-hcard-body      { display: block !important; }
+    .db-hcard-tap-hint  { display: none !important; }
+    .db-hcard-chev      { display: none !important; }
+    .db-hcard-summary   { display: none !important; }
+    .db-hcard-hdr       { cursor: default; padding-bottom: 16px; }
   }
   .db-hcard {
     background: #1A2744;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 0;
   }
-  /* The entire card header + summary is ONE tappable unit */
+
+  /* ── Header: category label + title + subtitle ── */
   .db-hcard-hdr {
-    background: #1A2744;
-    padding: 16px 18px 0;
+    padding: 20px 20px 0;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1108,54 +1107,46 @@
     -webkit-tap-highlight-color: transparent;
     gap: 12px;
   }
+  .db-hcard-hdr-txt { flex: 1; }
   .db-hcard-hdr-lbl {
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.50);
-    flex: 1;
+    color: rgba(255,255,255,0.45);
+    display: block;
+    margin-bottom: 4px;
   }
   .db-hcard-hdr-title {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: #FFFFFF;
-    margin-top: 4px;
     display: block;
-    line-height: 1.3;
-    letter-spacing: 0;
-    text-transform: none;
+    line-height: 1.25;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
   }
   .db-hcard-hdr-sub {
     font-family: 'Inter', Arial, sans-serif !important;
     font-size: 14px;
     font-weight: 400;
     color: rgba(255,255,255,0.65);
-    letter-spacing: 0;
-    text-transform: none;
-    margin-top: 3px;
     display: block;
-    line-height: 1.4;
+    line-height: 1.5;
+    letter-spacing: 0;
   }
   .db-hcard-chev {
-    font-size: 14px;
-    color: #FFFFFF;
-    transition: transform 0.2s;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
+    margin-top: 4px;
   }
-  /* Summary = always visible, sits below label, above body */
+
+  /* ── Key data summary — always visible ── */
   .db-hcard-summary {
-    background: #1A2744;
-    padding: 8px 18px 16px;
+    padding: 16px 20px 0;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1170,17 +1161,17 @@
   .db-hcard-summary-val {
     color: #F5C518;
     font-weight: 700;
-    font-size: 18px;
   }
-  /* Tap hint — styled as a button */
+
+  /* ── Tap button ── */
   .db-hcard-tap-hint {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 14px;
-    padding: 10px 18px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.30);
+    justify-content: center;
+    margin: 14px 0 0;
+    padding: 11px 18px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.20);
     border-radius: 6px;
     font-family: var(--font-mono);
     font-size: 13px;
@@ -1191,16 +1182,50 @@
     min-height: 44px;
     box-sizing: border-box;
     width: 100%;
-    justify-content: center;
+    cursor: pointer;
   }
-  .db-hcard-body { padding: 16px 18px; background: var(--surface-1); }
+
+  /* ── Body: same dark bg, gold accent top border ── */
+  .db-hcard-body {
+    padding: 16px 20px 20px;
+    background: #1A2744;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Override text colours inside body for dark bg */
+  .db-hcard-body .db-hcard-pts-lbl  { color: rgba(255,255,255,0.55); }
+  .db-hcard-body .db-hcard-pts-note { color: rgba(255,255,255,0.75); }
+  .db-hcard-body .db-hcard-qs-item  { color: rgba(255,255,255,0.70); }
+  .db-hcard-body .db-hcard-qs-val   { color: #FFFFFF; }
+  .db-hcard-body .db-hcard-gap-lbl  { color: rgba(255,255,255,0.45); }
+  .db-hcard-body .db-hcard-gap-txt  { color: #FFFFFF; }
+  .db-hcard-body .db-hcard-poty-lbl { color: rgba(255,255,255,0.55); }
+  .db-hcard-body .db-poty-g         { color: #FFFFFF; }
+  .db-hcard-body .db-poty-avg       { color: #F5C518; }
+  .db-hcard-body .db-poty-ct        { color: rgba(255,255,255,0.70); }
+  .db-hcard-body .db-poty-bw        { background: rgba(255,255,255,0.12); }
+  .db-hcard-body .db-poty-row       { border-color: rgba(255,255,255,0.10); }
+  .db-hcard-body .db-prog-wrap      { background: rgba(255,255,255,0.12); }
+  .db-hcard-body .db-tier-name      { color: #F5C518; }
+  .db-hcard-body .db-tier-score     { color: rgba(255,255,255,0.75); }
+  .db-hcard-body .db-prog-lbl       { color: rgba(255,255,255,0.55); }
+  .db-hcard-body .db-hcard-dim-lbl  { color: rgba(255,255,255,0.65); }
+  .db-hcard-body .db-hcard-dim-bw   { background: rgba(255,255,255,0.12); }
+  .db-hcard-body .db-hcard-dim-val  { color: #FFFFFF; }
+  .db-hcard-body .db-hcard-ref-txt  { color: rgba(255,255,255,0.85); }
+  .db-hcard-body .db-hcard-ref-code-row {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(245,197,24,0.35);
+  }
+  .db-hcard-body p, .db-hcard-body div { color: inherit; }
 
   /* Percentile hero box */
   .db-pct-hero {
-    background: #1A2744;
+    background: rgba(255,255,255,0.07);
     border-radius: var(--radius-md);
-    padding: 14px;
-    margin-bottom: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.10);
   }
   .db-pct-hero-lbl {
     font-family: var(--font-mono);
@@ -1287,11 +1312,11 @@
 
   /* Gap box inside standing card */
   .db-hcard-gap {
-    background: rgba(26,39,68,0.06);
-    border-left: 3px solid #1A2744;
+    background: rgba(255,255,255,0.07);
+    border-left: 3px solid #F5C518;
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    padding: 10px 12px;
-    margin-top: 10px;
+    padding: 12px 14px;
+    margin-top: 12px;
   }
   .db-hcard-gap-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
@@ -1305,7 +1330,8 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
   }
   .db-hcard-pts-stat {
-    background: #1A2744; border-radius: var(--radius-md); padding: 12px;
+    background: rgba(255,255,255,0.08); border-radius: var(--radius-md); padding: 14px;
+    border: 1px solid rgba(255,255,255,0.10);
   }
   .db-hcard-pts-lbl {
     font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
@@ -1314,29 +1340,29 @@
   .db-hcard-pts-val { font-size: 26px; font-weight: 700; color: #F5C518; line-height: 1; }
   .db-hcard-pts-sub { font-size: 16px; color: #FFFFFF; margin-top: 2px; }
   .db-hcard-pts-bar-wrap {
-    height: 4px; background: var(--surface-3); border-radius: 99px; margin: 6px 0 5px;
+    height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; margin: 8px 0 6px;
   }
-  .db-hcard-pts-bar-fill { height: 4px; border-radius: 99px; background: #2C3E6B; }
+  .db-hcard-pts-bar-fill { height: 6px; border-radius: 99px; background: #F5C518; }
   .db-hcard-pts-note { font-size: 16px; color: var(--text-primary); margin-bottom: 10px; line-height: 1.5; }
   .db-hcard-redeem {
     display: flex; align-items: center; justify-content: center;
-    background: #EAF3DE; border: 1.5px solid #3B6D11; color: #27500A;
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 12px;
-    border-radius: 4px; text-decoration: none; min-height: 44px; margin-bottom: 10px;
+    background: #F5C518; border: none; color: #1A1A18;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 16px;
+    border-radius: 6px; text-decoration: none; min-height: 44px; margin-bottom: 12px;
   }
   .db-hcard-qs {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px;
-    padding-top: 10px; border-top: 0.5px solid var(--border);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px;
+    padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.10);
   }
   .db-hcard-qs-item { font-size: 16px; color: var(--text-primary); }
   .db-hcard-qs-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
 
   /* POTY + referrals card */
   .db-hcard-poty-lbl {
-    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-primary); margin-bottom: 8px;
+    color: rgba(255,255,255,0.55); margin-bottom: 10px;
   }
   .db-hcard-ref-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
@@ -1345,16 +1371,24 @@
     display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
   }
   .db-hcard-div { height: 0.5px; background: var(--border); margin: 12px 0; }
-  .db-hcard-ref-txt { font-size: 16px; color: var(--text-primary); line-height: 1.5; margin-bottom: 12px; text-align: justify; }
+  .db-hcard-ref-txt { font-size: 16px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 14px; }
   .db-hcard-ref-code-row {
-    background: var(--surface-1); border: 1px solid rgba(245,197,24,0.4);
-    border-radius: var(--radius-md); padding: 12px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(245,197,24,0.35);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
   }
   .db-hcard-ref-code {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
-    color: #1A2744;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: #F5C518;
+    letter-spacing: 2px;
   }
   .db-hcard-ref-share {
     display: flex;
@@ -1362,10 +1396,20 @@
     flex-wrap: wrap;
   }
   .db-hcard-ref-share button {
-    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
-    padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer;
-    min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
     flex: 1;
+    justify-content: center;
   }
 
   /* ── Always-visible grid: POTY + Referrals (2-col desktop, 1-col mobile) ── */
@@ -1374,16 +1418,17 @@
     grid-template-columns: repeat(2, minmax(0,1fr));
     gap: 10px;
     margin-bottom: 12px;
+    align-items: start;
   }
   @media (max-width: 768px) {
     .db-always-grid { grid-template-columns: 1fr; gap: 8px; }
   }
   @media (min-width: 901px) {
-    .db-always-grid .db-hcard-body   { display: block !important; }
+    .db-always-grid .db-hcard-body    { display: block !important; }
     .db-always-grid .db-hcard-tap-hint { display: none !important; }
-    .db-always-grid .db-hcard-chev   { display: none !important; }
-    .db-always-grid .db-hcard-hdr    { cursor: default; }
-    .db-always-grid .db-hcard-summary { cursor: default; }
+    .db-always-grid .db-hcard-chev    { display: none !important; }
+    .db-always-grid .db-hcard-summary { display: none !important; }
+    .db-always-grid .db-hcard-hdr     { cursor: default; padding-bottom: 16px; }
   }
 
 
