@@ -727,6 +727,19 @@
     letter-spacing: 1px; text-transform: uppercase;
   }
 
+  /* Peer validation nudge (free tier) */
+  .db-peer-nudge {
+    padding: 7px 12px;
+    background: rgba(245,197,24,0.07);
+    border-top: 1px solid var(--border);
+  }
+  .db-peer-nudge a {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    color: var(--gold); letter-spacing: 0.5px; text-decoration: none;
+    text-transform: uppercase; display: block;
+  }
+  .db-peer-nudge a:hover { text-decoration: underline; }
+
   /* Zone banners */
   .db-zone-banner {
     border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px;
@@ -1931,6 +1944,16 @@
             <div class="db-peer-pool-strip">
               ✓ In Peer Pool{% if img.peer_rating_count %} · {{ img.peer_rating_count }} rating{{ 's' if img.peer_rating_count != 1 }}{% endif %}
             </div>
+            {% elif img.score is not none and img.peer_rating_count and img.peer_rating_count > 0 %}
+            <div class="db-peer-pool-strip" style="color:var(--gold);background:rgba(245,197,24,0.07);">
+              👥 {{ img.peer_rating_count }} peer rating{{ 's' if img.peer_rating_count != 1 }}{% if img.peer_avg_score %} · avg {{ '%.1f'|format(img.peer_avg_score) }}{% endif %}
+            </div>
+            {% elif img.score is not none and not img.is_in_peer_pool %}
+              {% if not rating_widget %}
+            <div class="db-peer-nudge">
+              <a href="{{ url_for('pricing') }}" onclick="event.stopPropagation();">👥 Get peer validation →</a>
+            </div>
+              {% endif %}
             {% endif %}
           </a>
           {% endfor %}

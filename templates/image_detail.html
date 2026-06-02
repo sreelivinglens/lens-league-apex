@@ -59,6 +59,24 @@
   .peer-item { font-size: 14px; color: var(--text-muted); }
   .peer-item strong { color: var(--text-primary); font-family: var(--font-mono); }
 
+  .peer-block {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-top: 20px;
+    background: rgba(245,197,24,0.04);
+  }
+  .peer-block-nudge { background: rgba(245,197,24,0.06); }
+  .peer-block-hdr {
+    font-size: 13px; font-weight: 700; color: var(--gold);
+    letter-spacing: 1px; text-transform: uppercase;
+    font-family: var(--font-mono); margin-bottom: 10px;
+  }
+  @media (max-width: 600px) {
+    .peer-block { padding: 14px 16px; }
+  }
+
   .status-banner { border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
   .status-banner.flagged { background: var(--red-dim); border: 1px solid var(--red); border-left: 4px solid var(--red); }
   .status-banner.review  { background: rgba(184,112,10,0.08); border: 1px solid var(--amber); border-left: 4px solid var(--amber); }
@@ -209,10 +227,26 @@
 
     {# Peer rating info #}
     {% if image.peer_rating_count and image.peer_rating_count > 0 %}
-    <div class="peer-strip">
-      <div class="peer-item">Peer ratings: <strong>{{ image.peer_rating_count }}</strong></div>
-      {% if image.peer_avg_score %}<div class="peer-item">Peer avg: <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
-      {% if image.blended_score %}<div class="peer-item">Blended score: <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
+    <div class="peer-block">
+      <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
+      <div class="peer-strip">
+        <div class="peer-item">Ratings <strong>{{ image.peer_rating_count }}</strong></div>
+        {% if image.peer_avg_score %}<div class="peer-item">Peer avg <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
+        {% if image.blended_score %}<div class="peer-item">Blended score <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
+      </div>
+    </div>
+    {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id %}
+    <div class="peer-block peer-block-nudge">
+      <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">
+        Your AI score is live. Want human photographers to validate it?
+        Peer rating shows how real photographers score your work alongside the AI.
+      </div>
+      {% if current_user.is_subscribed %}
+      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Rate others to unlock &#x2192;</a>
+      {% else %}
+      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Unlock peer validation &#x2192;</a>
+      {% endif %}
     </div>
     {% endif %}
 
