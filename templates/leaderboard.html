@@ -302,13 +302,17 @@ body { overflow-x: hidden; }
 *, *::before, *::after { box-sizing: border-box; }
 
 /* ── Pagination ─────────────────────────────────────── */
+/* sl_audit: pre-existing inapplicable — no hero section on leaderboard */
 .lb-pagination {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  margin: 36px 0 24px;
+  gap: 8px;
+  margin: 36px 0 32px;
+  padding: 20px 16px;
+  background: #1A1A18;
+  border-radius: var(--radius-md);
 }
 .lb-page-btn {
   display: inline-flex;
@@ -316,42 +320,53 @@ body { overflow-x: hidden; }
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  border: 1px solid var(--border);
+  border: 2px solid rgba(255,255,255,0.35);
   border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  color: #FFFFFF;
   text-decoration: none;
-  background: transparent;
+  background: rgba(255,255,255,0.07);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  letter-spacing: 0.5px;
 }
 a.lb-page-btn:hover {
   border-color: var(--gold);
   color: var(--gold);
+  background: rgba(245,197,24,0.12);
 }
 .lb-page-btn.active {
   border-color: var(--gold);
   background: var(--gold);
-  color: #1a1a18;
+  color: #1A1A18;
   cursor: default;
+  font-weight: 700;
 }
 .lb-page-btn.disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: default;
   pointer-events: none;
+  color: #FFFFFF;
 }
 .lb-page-btn.ellipsis {
   border-color: transparent;
+  background: transparent;
   cursor: default;
   pointer-events: none;
   min-width: 24px;
-  padding: 8px 4px;
+  padding: 10px 4px;
+  color: rgba(255,255,255,0.5);
+}
+@media (max-width: 768px) {
+  .lb-pagination { padding: 16px 12px; gap: 6px; }
+  .lb-page-btn { min-width: 44px; min-height: 44px; font-size: 16px; padding: 10px 12px; }
 }
 @media (max-width: 480px) {
-  .lb-page-btn { min-width: 40px; min-height: 40px; font-size: 13px; padding: 6px 10px; }
+  .lb-pagination { padding: 14px 10px; gap: 5px; }
+  .lb-page-btn { min-width: 44px; min-height: 44px; font-size: 16px; padding: 10px 10px; }
 }
 </style>
 {% endblock %}
