@@ -1740,16 +1740,16 @@
       <div class="db-hcard-hdr-txt" style="flex:1;">
         <span class="db-hcard-hdr-lbl">Refer a friend</span>
         <span class="db-hcard-hdr-title">Invite friends, earn points</span>
-        <span class="db-hcard-hdr-sub">Share your code. You earn <strong style="color:#F5C518;">500 pts</strong> when they subscribe. They get a discount on their first month.</span>
+        <span class="db-hcard-hdr-sub">Share your code. You earn <strong style="color:#F5C518;">200 pts</strong> when they subscribe. They get a discount on their first month.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-referrals">▶</span>
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-referrals" onclick="dbHcardToggle('referrals')">
-      <span class="db-hcard-summary-txt">Your code: <span class="db-hcard-summary-val">{{ referral_code }}</span><br>You earn <span class="db-hcard-summary-val">+500 pts</span> per referral</span>
+      <span class="db-hcard-summary-txt">Your code: <span class="db-hcard-summary-val">{{ referral_code }}</span><br>You earn <span class="db-hcard-summary-val">+200 pts</span> per referral</span>
       <span class="db-hcard-tap-hint" id="db-hcard-hint-referrals">Share my code ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-referrals">
-      <div class="db-hcard-ref-txt">When a friend signs up with your code and subscribes, <strong>you earn +500 pts</strong> and <strong>they get their first month discounted</strong>.</div>
+      <div class="db-hcard-ref-txt">When a friend signs up with your code and subscribes, <strong>you earn +200 pts</strong> and <strong>they get their first month discounted</strong>.</div>
       <div class="db-hcard-ref-code-row">
         <span class="db-hcard-ref-code">{{ referral_code }}</span>
         <button onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ this.textContent='✓ Copied'; var b=this; setTimeout(function(){ b.textContent='Copy'; },2000); }.bind(this))"
