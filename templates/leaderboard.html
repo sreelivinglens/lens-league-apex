@@ -300,6 +300,59 @@
 }
 body { overflow-x: hidden; }
 *, *::before, *::after { box-sizing: border-box; }
+
+/* ── Pagination ─────────────────────────────────────── */
+.lb-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 36px 0 24px;
+}
+.lb-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+a.lb-page-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.lb-page-btn.active {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #1a1a18;
+  cursor: default;
+}
+.lb-page-btn.disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+.lb-page-btn.ellipsis {
+  border-color: transparent;
+  cursor: default;
+  pointer-events: none;
+  min-width: 24px;
+  padding: 8px 4px;
+}
+@media (max-width: 480px) {
+  .lb-page-btn { min-width: 40px; min-height: 40px; font-size: 13px; padding: 6px 10px; }
+}
 </style>
 {% endblock %}
 
@@ -449,6 +502,32 @@ body { overflow-x: hidden; }
   <div class="lb-empty">No scored images match these filters.</div>
   {% endif %}
 
+  {% if img_pages > 1 %}
+  <nav class="lb-pagination" aria-label="Image pages">
+    {% if img_page > 1 %}
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page - 1 }}" class="lb-page-btn">&lsaquo; Prev</a>
+    {% else %}
+    <span class="lb-page-btn disabled">&lsaquo; Prev</span>
+    {% endif %}
+
+    {% for p in range(1, img_pages + 1) %}
+      {% if p == img_page %}
+      <span class="lb-page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == img_pages or (p >= img_page - 2 and p <= img_page + 2) %}
+      <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      {% elif p == img_page - 3 or p == img_page + 3 %}
+      <span class="lb-page-btn ellipsis">&hellip;</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if img_page < img_pages %}
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page + 1 }}" class="lb-page-btn">Next &rsaquo;</a>
+    {% else %}
+    <span class="lb-page-btn disabled">Next &rsaquo;</span>
+    {% endif %}
+  </nav>
+  {% endif %}
+
   <!-- ══════════════════════════════════
        TOP PHOTOGRAPHERS — CARD GRID
   ════════════════════════════════════ -->
@@ -513,6 +592,32 @@ body { overflow-x: hidden; }
 
   {% else %}
   <div class="lb-empty">No photographers match these filters.</div>
+  {% endif %}
+
+  {% if pg_pages > 1 %}
+  <nav class="lb-pagination" aria-label="Photographer pages">
+    {% if pg_page > 1 %}
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn">&lsaquo; Prev</a>
+    {% else %}
+    <span class="lb-page-btn disabled">&lsaquo; Prev</span>
+    {% endif %}
+
+    {% for p in range(1, pg_pages + 1) %}
+      {% if p == pg_page %}
+      <span class="lb-page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == pg_pages or (p >= pg_page - 2 and p <= pg_page + 2) %}
+      <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ p }}" class="lb-page-btn">{{ p }}</a>
+      {% elif p == pg_page - 3 or p == pg_page + 3 %}
+      <span class="lb-page-btn ellipsis">&hellip;</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if pg_page < pg_pages %}
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn">Next &rsaquo;</a>
+    {% else %}
+    <span class="lb-page-btn disabled">Next &rsaquo;</span>
+    {% endif %}
+  </nav>
   {% endif %}
 
   {% endif %}
