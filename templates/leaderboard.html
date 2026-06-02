@@ -304,69 +304,97 @@ body { overflow-x: hidden; }
 /* ── Pagination ─────────────────────────────────────── */
 /* sl_audit: pre-existing inapplicable — no hero section on leaderboard */
 .lb-pagination {
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin: 36px 0 32px;
-  padding: 20px 16px;
+  gap: 6px;
+  margin: 32px 0 28px;
+  padding: 18px 24px;
   background: #1A1A18;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
+  min-height: 80px;
 }
 .lb-page-btn {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 10px 16px;
+  flex-shrink: 0;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
   font-family: var(--font-mono);
   font-size: 16px;
   font-weight: 600;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-radius: var(--radius-sm);
+  line-height: 1;
+  border: 1px solid rgba(255,255,255,0.30);
+  border-radius: 6px;
   color: #FFFFFF;
   text-decoration: none;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.06);
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
-  letter-spacing: 0.5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+/* Prev / Next slightly wider */
+.lb-page-btn.prev-btn,
+.lb-page-btn.next-btn {
+  padding: 0 14px;
+}
+/* Reset browser visited/focus/link states — prevents gold bleed on page 3 etc */
+a.lb-page-btn,
+a.lb-page-btn:visited,
+a.lb-page-btn:link {
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,0.30);
+  background: rgba(255,255,255,0.06);
 }
 a.lb-page-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(245,197,24,0.12);
+  border-color: #F5C518;
+  color: #F5C518;
+  background: rgba(245,197,24,0.10);
+}
+a.lb-page-btn:focus-visible {
+  outline: 2px solid #F5C518;
+  outline-offset: 2px;
 }
 .lb-page-btn.active {
-  border-color: var(--gold);
-  background: var(--gold);
+  border-color: #F5C518;
+  background: #F5C518;
   color: #1A1A18;
   cursor: default;
   font-weight: 700;
 }
 .lb-page-btn.disabled {
-  opacity: 0.25;
+  opacity: 0.22;
   cursor: default;
   pointer-events: none;
-  color: #FFFFFF;
 }
 .lb-page-btn.ellipsis {
   border-color: transparent;
   background: transparent;
   cursor: default;
   pointer-events: none;
-  min-width: 24px;
-  padding: 10px 4px;
-  color: rgba(255,255,255,0.5);
+  min-width: 20px;
+  padding: 0 4px;
+  color: rgba(255,255,255,0.40);
 }
+/* iPad (768px) */
 @media (max-width: 768px) {
-  .lb-pagination { padding: 16px 12px; gap: 6px; }
-  .lb-page-btn { min-width: 44px; min-height: 44px; font-size: 16px; padding: 10px 12px; }
+  .lb-pagination { padding: 16px 16px; gap: 5px; min-height: 72px; }
+  .lb-page-btn { height: 36px; min-width: 36px; font-size: 16px; padding: 0 8px; }
+  .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 12px; }
 }
+/* Mobile (480px) */
 @media (max-width: 480px) {
-  .lb-pagination { padding: 14px 10px; gap: 5px; }
-  .lb-page-btn { min-width: 44px; min-height: 44px; font-size: 16px; padding: 10px 10px; }
+  .lb-pagination { padding: 14px 10px; gap: 4px; min-height: 68px; border-radius: 8px; }
+  .lb-page-btn { height: 36px; min-width: 36px; font-size: 16px; padding: 0 8px; }
+  .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 10px; }
 }
 </style>
 {% endblock %}
@@ -520,9 +548,9 @@ a.lb-page-btn:hover {
   {% if img_pages > 1 %}
   <nav class="lb-pagination" aria-label="Image pages">
     {% if img_page > 1 %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page - 1 }}" class="lb-page-btn">&lsaquo; Prev</a>
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
     {% else %}
-    <span class="lb-page-btn disabled">&lsaquo; Prev</span>
+    <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
     {% endif %}
 
     {% for p in range(1, img_pages + 1) %}
@@ -536,9 +564,9 @@ a.lb-page-btn:hover {
     {% endfor %}
 
     {% if img_page < img_pages %}
-    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page + 1 }}" class="lb-page-btn">Next &rsaquo;</a>
+    <a href="?tab=images&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&img_page={{ img_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
     {% else %}
-    <span class="lb-page-btn disabled">Next &rsaquo;</span>
+    <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
     {% endif %}
   </nav>
   {% endif %}
@@ -612,9 +640,9 @@ a.lb-page-btn:hover {
   {% if pg_pages > 1 %}
   <nav class="lb-pagination" aria-label="Photographer pages">
     {% if pg_page > 1 %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn">&lsaquo; Prev</a>
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page - 1 }}" class="lb-page-btn prev-btn">&lsaquo; Prev</a>
     {% else %}
-    <span class="lb-page-btn disabled">&lsaquo; Prev</span>
+    <span class="lb-page-btn prev-btn disabled">&lsaquo; Prev</span>
     {% endif %}
 
     {% for p in range(1, pg_pages + 1) %}
@@ -628,9 +656,9 @@ a.lb-page-btn:hover {
     {% endfor %}
 
     {% if pg_page < pg_pages %}
-    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn">Next &rsaquo;</a>
+    <a href="?tab=photographers&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ track }}&city={{ city }}&pg_page={{ pg_page + 1 }}" class="lb-page-btn next-btn">Next &rsaquo;</a>
     {% else %}
-    <span class="lb-page-btn disabled">Next &rsaquo;</span>
+    <span class="lb-page-btn next-btn disabled">Next &rsaquo;</span>
     {% endif %}
   </nav>
   {% endif %}
