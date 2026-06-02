@@ -1073,51 +1073,76 @@
     .db-hero-grid { grid-template-columns: 1fr; }
   }
   .db-hcard {
-    background: var(--surface-1);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-md);
+    background: #1A2744;
+    border: none;
+    border-radius: 10px;
     overflow: hidden;
+    margin-bottom: 4px;
   }
+  /* The entire card header + summary is ONE tappable unit */
   .db-hcard-hdr {
     background: #1A2744;
-    padding: 0 16px;
+    padding: 14px 18px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 44px;
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    gap: 12px;
   }
   .db-hcard-hdr-lbl {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #FFFFFF;
-    opacity: 1;
+    color: rgba(255,255,255,0.65);
     flex: 1;
   }
   .db-hcard-chev {
-    font-size: 12px;
+    font-size: 14px;
     color: #FFFFFF;
     transition: transform 0.2s;
     flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.10);
+    border-radius: 50%;
   }
+  /* Summary = always visible, sits below label, above body */
   .db-hcard-summary {
-    background: rgba(26,39,68,0.92);
-    padding: 8px 16px;
-    display: none;
+    background: #1A2744;
+    padding: 10px 18px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
   .db-hcard-summary-txt {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 16px;
+    font-weight: 600;
     color: #FFFFFF;
     line-height: 1.5;
+    display: block;
   }
-  .db-hcard-summary-val { color: #F5C518; font-weight: 700; }
-  .db-hcard-body { padding: 14px 16px; }
+  .db-hcard-summary-val {
+    color: #F5C518;
+    font-weight: 700;
+  }
+  /* Tap hint below summary — shown when collapsed */
+  .db-hcard-tap-hint {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    display: block;
+  }
+  .db-hcard-body { padding: 16px 18px; background: var(--surface-1); }
 
   /* Percentile hero box */
   .db-pct-hero {
@@ -1398,12 +1423,13 @@
   <div class="db-hcard" id="db-hcard-standing">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('standing')">
       <span class="db-hcard-hdr-lbl">Your standing</span>
-      <span class="db-hcard-chev" id="db-hcard-chev-standing">▼</span>
+      <span class="db-hcard-chev" id="db-hcard-chev-standing">▶</span>
     </div>
-    <div class="db-hcard-summary" id="db-hcard-sum-standing">
+    <div class="db-hcard-summary" id="db-hcard-sum-standing" onclick="dbHcardToggle('standing')">
       <span class="db-hcard-summary-txt">
         {% if progress_data.overall_pct %}<span class="db-hcard-summary-val">Top {{ progress_data.overall_pct }}%</span> in {{ progress_data.league_label or 'league' }} · {% endif %}<span class="db-hcard-summary-val">{{ progress_data.avg_tier or '—' }}</span> · avg <span class="db-hcard-summary-val">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</span>
       </span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-standing">Tap to expand ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-standing">
       {# Percentile #}
@@ -1471,10 +1497,11 @@
   <div class="db-hcard" id="db-hcard-points">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('points')">
       <span class="db-hcard-hdr-lbl">Points &amp; ranking</span>
-      <span class="db-hcard-chev" id="db-hcard-chev-points">▼</span>
+      <span class="db-hcard-chev" id="db-hcard-chev-points">▶</span>
     </div>
-    <div class="db-hcard-summary" id="db-hcard-sum-points">
+    <div class="db-hcard-summary" id="db-hcard-sum-points" onclick="dbHcardToggle('points')">
       <span class="db-hcard-summary-txt"><span class="db-hcard-summary-val">{{ wallet_hud.balance | round(1) }} pts</span> · Residency <span class="db-hcard-summary-val">{{ wallet_hud.residency_months }}/6</span> · Scored <span class="db-hcard-summary-val">{{ stats.scored }}</span></span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-points">Tap to expand ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-points">
       <div class="db-hcard-pts-grid">
@@ -1512,12 +1539,13 @@
   <div class="db-hcard" id="db-hcard-poty">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('poty')">
       <span class="db-hcard-hdr-lbl">POTY &amp; referrals</span>
-      <span class="db-hcard-chev" id="db-hcard-chev-poty">▼</span>
+      <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
     </div>
-    <div class="db-hcard-summary" id="db-hcard-sum-poty">
+    <div class="db-hcard-summary" id="db-hcard-sum-poty" onclick="dbHcardToggle('poty')">
       <span class="db-hcard-summary-txt">
         {% if poty_tracker and poty_tracker.genre_rows %}Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }} {{ poty_tracker.genre_rows[0].count }} imgs</span> · {% endif %}{% if referral_code %}Code <span class="db-hcard-summary-val">{{ referral_code }}</span>{% endif %}
       </span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">Tap to expand ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-poty">
       {% if poty_tracker and poty_tracker.genre_rows %}
@@ -1967,13 +1995,14 @@ function dbSearchUrl(q) {
 
 function dbHcardToggle(id) {
   var body = document.getElementById('db-hcard-body-'+id);
-  var sum  = document.getElementById('db-hcard-sum-'+id);
   var chev = document.getElementById('db-hcard-chev-'+id);
+  var hint = document.getElementById('db-hcard-hint-'+id);
   if (!body) return;
   var open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
-  sum.style.display  = open ? 'block' : 'none';
-  if (chev) chev.style.transform = open ? 'rotate(-90deg)' : '';
+  // Summary row stays always visible — just update hint text and chevron
+  if (hint) hint.textContent = open ? 'Tap to expand \u25be' : 'Tap to collapse \u25b4';
+  if (chev) chev.textContent = open ? '\u25b6' : '\u25bc';
   // Persist state
   try { localStorage.setItem('sl_hcard_'+id, open ? '0' : '1'); } catch(e) {}
 }
@@ -1983,16 +2012,16 @@ function dbHcardToggle(id) {
   var cards = ['standing', 'points', 'poty'];
   cards.forEach(function(id) {
     var body = document.getElementById('db-hcard-body-'+id);
-    var sum  = document.getElementById('db-hcard-sum-'+id);
     var chev = document.getElementById('db-hcard-chev-'+id);
+    var hint = document.getElementById('db-hcard-hint-'+id);
     if (!body) return;
     var stored;
     try { stored = localStorage.getItem('sl_hcard_'+id); } catch(e) {}
     // Default is collapsed (stored===null means first visit → collapse)
     var open = stored === '1';
     body.style.display = open ? 'block' : 'none';
-    sum.style.display  = open ? 'none'  : 'block';
-    if (chev) chev.style.transform = open ? '' : 'rotate(-90deg)';
+    if (hint) hint.textContent = open ? 'Tap to collapse \u25b4' : 'Tap to expand \u25be';
+    if (chev) chev.textContent = open ? '\u25bc' : '\u25b6';
   });
 })();
 
