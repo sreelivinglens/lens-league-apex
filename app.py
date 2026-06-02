@@ -10889,6 +10889,38 @@ def jpeg_provenance_submit(image_id):
                     daemon=True
                 ).start()
 
+            # Notify admin
+            try:
+                _site  = os.getenv('SITE_URL', 'https://shutterleague.com')
+                _ahtml = (
+                    '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+                    '<div style="background:#1A2744;padding:16px 28px;">'
+                    '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:13px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE — ADMIN ALERT</p>'
+                    '</div>'
+                    '<div style="padding:24px 28px;">'
+                    f'<p style="font-size:16px;color:#1A1A18;margin:0 0 12px 0;font-weight:700;">JPEG Provenance Submission Received</p>'
+                    f'<p style="font-size:15px;color:#1A1A18;margin:0 0 8px 0;">User: <strong>{current_user.full_name or current_user.username}</strong> ({current_user.email})</p>'
+                    f'<p style="font-size:15px;color:#1A1A18;margin:0 0 8px 0;">Image ID: <strong>{image_id}</strong> &nbsp;·&nbsp; Method: <strong>{method}</strong></p>'
+                    f'<p style="font-size:15px;color:#1A1A18;margin:0 0 20px 0;">Score: <strong style="color:#F5C518;">{round(img.normalised_score, 2) if img.normalised_score else "—"}</strong> &nbsp;·&nbsp; {img.asset_name or "Untitled"}</p>'
+                    f'<a href="{_site}/admin/raw-verification/{image_id}" '
+                    f'style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;">Review Submission &#8594;</a>'
+                    '</div></div>'
+                )
+                _atxt = (
+                    f'JPEG Provenance Submission\\n'
+                    f'User: {current_user.full_name or current_user.username} ({current_user.email})\\n'
+                    f'Image: {image_id} — {img.asset_name}\\n'
+                    f'Method: {method}\\n'
+                    f'Review: {_site}/admin/raw-verification/{image_id}'
+                )
+                send_email(
+                    ADMIN_NOTIFY_EMAIL,
+                    f'JPEG Provenance Submitted — Image {image_id} ({current_user.email})',
+                    _ahtml, _atxt
+                )
+            except Exception as _ae:
+                app.logger.warning(f'[jpeg_provenance] admin notify failed: {_ae}')
+
             flash('Original JPEG submitted. We are verifying it now and will email you the result.', 'success')
             return redirect(url_for('raw_status', image_id=image_id))
 
