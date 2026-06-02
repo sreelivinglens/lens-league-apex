@@ -4243,7 +4243,10 @@ def admin_dashboard():
                            new_signups_30days=new_signups_30days,
                            new_signups_onboarded=new_signups_onboarded,
                            recent_signups=recent_signups,
-                           platform_cal=platform_cal)
+                           platform_cal=platform_cal,
+                           unread_contact_count=db.session.execute(db.text(
+                               "SELECT COUNT(*) FROM contact_messages WHERE replied=FALSE"
+                           )).scalar() or 0)
 
 
 @app.route('/admin/user/<int:user_id>/clear-suspension', methods=['POST'])
