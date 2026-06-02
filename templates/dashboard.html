@@ -1082,13 +1082,11 @@
   }
 
 
-  /* ── Desktop: cards always open, no tap UI, no summary ── */
+  /* ── Desktop: summary hidden (replaced by header), chev visible ── */
   @media (min-width: 901px) {
-    .db-hcard-body      { display: block !important; }
     .db-hcard-tap-hint  { display: none !important; }
-    .db-hcard-chev      { display: none !important; }
     .db-hcard-summary   { display: none !important; }
-    .db-hcard-hdr       { cursor: default; }
+    .db-hcard-hdr       { cursor: pointer; }
   }
 
   /* ── Card shell ── */
@@ -1188,7 +1186,7 @@
   .db-hcard-body {
     padding: 20px;
     background: #FFFFFF;
-    border-top: 3px solid #F5C518;
+    border-top: none;
   }
 
   /* All text inside body = black. Gold for values. */
@@ -1228,9 +1226,10 @@
   .db-hcard-body .db-radar-leg-tier  { color: #1A1A18; }
   .db-hcard-body .db-rdim-lbl        { color: #1A1A18; }
   .db-hcard-body .db-rdim-val        { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-pct-hero-num    { color: #F5C518; }
   .db-hcard-body .db-pct-hero-lbl    { color: #FFFFFF; }
   .db-hcard-body .db-pct-hero-ctx    { color: #FFFFFF; }
-  .db-hcard-body .db-pct-hero-gnr    { color: rgba(255,255,255,0.80); }
+  .db-hcard-body .db-pct-hero-gnr    { color: #FFFFFF; }
 
   /* Percentile hero box */
   .db-pct-hero {
@@ -1438,11 +1437,9 @@
     .db-always-grid { grid-template-columns: 1fr; gap: 8px; }
   }
   @media (min-width: 901px) {
-    .db-always-grid .db-hcard-body    { display: block !important; }
     .db-always-grid .db-hcard-tap-hint { display: none !important; }
-    .db-always-grid .db-hcard-chev    { display: none !important; }
-    .db-always-grid .db-hcard-summary { display: none !important; }
-    .db-always-grid .db-hcard-hdr     { cursor: default; padding-bottom: 16px; }
+    .db-always-grid .db-hcard-summary  { display: none !important; }
+    .db-always-grid .db-hcard-hdr      { cursor: pointer; }
   }
 
 
@@ -2158,28 +2155,27 @@ var _hintExpand = {
   };
 
 function dbHcardToggle(id) {
-  if (window.innerWidth >= 901) return; // Desktop: always open, CSS handles it
   var body = document.getElementById('db-hcard-body-'+id);
   var chev = document.getElementById('db-hcard-chev-'+id);
   var hint = document.getElementById('db-hcard-hint-'+id);
   if (!body) return;
   var open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
+  // Mobile/tablet: update hint text
   if (hint) hint.textContent = open ? (_hintExpand[id] || 'See more \u25be') : (_hintCollapse[id] || 'Hide \u25b4');
+  // Chevron: right = collapsed, down = expanded
   if (chev) chev.textContent = open ? '\u25b6' : '\u25bc';
-  // No localStorage — always reset to collapsed on next page load
 }
 
-// Always start collapsed on every page load — mobile + tablet
+// Always start collapsed on every page load — all screen sizes
 (function() {
-  if (window.innerWidth >= 901) return; // Desktop: CSS forces open
   var cards = ['standing', 'points', 'poty', 'referrals'];
   cards.forEach(function(id) {
     var body = document.getElementById('db-hcard-body-'+id);
     var chev = document.getElementById('db-hcard-chev-'+id);
     var hint = document.getElementById('db-hcard-hint-'+id);
     if (!body) return;
-    body.style.display = 'none'; // Always collapsed
+    body.style.display = 'none';
     if (hint) hint.textContent = _hintExpand[id] || 'See more \u25be';
     if (chev) chev.textContent = '\u25b6';
   });
