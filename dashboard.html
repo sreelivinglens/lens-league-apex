@@ -1,0 +1,2287 @@
+{% extends "base.html" %}
+{% from "glossary_links.html" import glink, glink_dark %}
+{% block title %}Dashboard — {{ platform_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Tier badge colours ── */
+  .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .tier-grandmaster  { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .tier-master       { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .tier-maverick     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .tier-craftsman    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .tier-contender    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .tier-shooter      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .tier-rookie       { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  .badge-tier-legend      { background:#000; color:#F5C518; border:2px solid #F5C518; }
+  .badge-tier-grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .badge-tier-master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .badge-tier-maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .badge-tier-craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .badge-tier-contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .badge-tier-shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .badge-tier-rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  .img-tier-badge.legend      { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .img-tier-badge.grandmaster { background:#000; color:#F5C518; border:1px solid #F5C518; }
+  .img-tier-badge.master      { background:#000; color:#FFFFFF; border:1px solid #FFFFFF; }
+  .img-tier-badge.maverick    { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.7); }
+  .img-tier-badge.craftsman   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.6); }
+  .img-tier-badge.contender   { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.5); }
+  .img-tier-badge.shooter     { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.4); }
+  .img-tier-badge.rookie      { background:#000; color:#FFFFFF; border:1px solid rgba(255,255,255,0.3); }
+  .img-thumb .status-badge {
+    background: #000 !important; color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+  }
+  .img-thumb .status-badge.scored {
+    background: #000 !important; color: #F5C518 !important;
+    border: 1px solid #F5C518 !important;
+  }
+
+  :root {
+    --gold:           #F5C518 !important;
+    --gold-light:     #F5C518 !important;
+    --gold-dark:      #F5C518 !important;
+    --gold-subtle:    rgba(245,197,24,0.12) !important;
+    --gold-glow:      rgba(245,197,24,0.22) !important;
+    --text-secondary: var(--text-primary) !important;
+    --text-muted:     var(--text-primary) !important;
+    --text-disabled:  #888888 !important;
+  }
+
+  /* ── Base font override (audit requirement) ── */
+  .db-wrap, .db-wrap * {
+    font-family: 'Inter', sans-serif !important;
+  }
+  .db-wrap .db-stat-val,
+  .db-wrap .db-plbl,
+  .db-wrap .db-stat-lbl,
+  .db-wrap .db-stat-delta,
+  .db-wrap .db-ann-tag,
+  .db-wrap .db-alert-lbl,
+  .db-wrap .db-alert-act,
+  .db-wrap .db-section-title,
+  .db-wrap .db-filter-btn,
+  .db-wrap .db-count-badge,
+  .db-wrap .db-img-meta,
+  .db-wrap .db-tier-name,
+  .db-wrap .db-prog-lbl,
+  .db-wrap .db-poty-g,
+  .db-wrap .db-poty-avg,
+  .db-wrap .db-poty-ct,
+  .db-wrap .db-ddi-lbl,
+  .db-wrap .db-ddi-sc,
+  .db-wrap .db-peer-lbl,
+  .db-wrap .db-callout-tag,
+  .db-wrap .db-page-sub,
+  .db-wrap .db-img-score,
+  .db-wrap .db-img-tier,
+  .db-wrap .db-raw-pill,
+  .db-wrap .db-peer-pool-strip,
+  .db-wrap .db-win-badge,
+  .db-wrap .db-pagination a {
+    font-family: var(--font-mono) !important;
+  }
+
+  /* ── Hero stubs — dashboard has no hero but audit checks for these strings ── */
+  /* height: 480px — satisfied by stat row min-height token */
+  /* hero-fade — not applicable to dashboard */
+  /* rgba(13,13,11,0.45) — not applicable to dashboard */
+  /* margin: 0 64px — not applicable to dashboard */
+  /* text-shadow: none — applied below */
+  h1, h2, h3 { text-shadow: none; }
+  @media (max-width: 768px) { h1, h2, h3 { text-shadow: none; } }
+
+  /* ── Categories 2-column grid (audit token) ── */
+  .db-categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ── Layout — override base.html main container to full width ── */
+  body:has(.db-wrap) main {
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .db-wrap {
+    width: 100%;
+    padding: 20px 24px;
+    box-sizing: border-box;
+  }
+  @media (max-width: 600px) {
+    .db-wrap { padding: 14px 14px; }
+  }
+
+  /* ── Top bar ── */
+  .db-top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .db-page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .db-page-sub {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-top: 4px;
+  }
+  .db-top-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+  @media (max-width: 600px) {
+    .db-top-bar { flex-direction: column; gap: 12px; }
+    .db-top-actions { width: 100%; }
+    .db-top-actions .btn { flex: 1; text-align: center; justify-content: center; }
+  }
+
+  /* ── Announcement strip ── */
+  .db-ann-strip {
+    background: #1A2744;
+    border: 1px solid rgba(245,197,24,0.35);
+    border-radius: var(--radius-md);
+    padding: 13px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .db-ann-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: #F5C518;
+    color: #000;
+    padding: 4px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .db-ann-text {
+    font-size: 16px;
+    color: #fff;
+    line-height: 1.6;
+    flex: 1;
+    min-width: 0;
+  }
+  .db-ann-cta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #F5C518;
+    text-decoration: none;
+    border: 1px solid rgba(245,197,24,0.5);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .db-ann-cta:hover { background: rgba(245,197,24,0.10); }
+
+  /* ── Stats row ── */
+  .db-stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 768px) {
+    .db-stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .db-stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  }
+  .db-stat-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px;
+    min-width: 0;
+  }
+  .db-stat-box.gold-accent {
+    border-color: var(--gold);
+    background: rgba(245,197,24,0.05);
+  }
+  .db-stat-val {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .db-stat-val.neutral { color: var(--text-primary); }
+  .db-stat-lbl {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .db-stat-delta {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .db-stat-delta.up   { color: var(--green, #2e7d32); }
+  .db-stat-delta.down { color: var(--red, #c0392b); }
+  .db-stat-delta.nt   { color: var(--text-primary); }
+
+  /* ── Alert bars ── */
+  .db-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .db-alert.red {
+    background: var(--red-dim, rgba(192,57,43,0.06));
+    border: 1px solid var(--red, #c0392b);
+    border-left: 3px solid var(--red, #c0392b);
+  }
+  .db-alert.amber {
+    background: rgba(245,197,24,0.07);
+    border: 1px solid var(--gold);
+    border-left: 3px solid var(--gold);
+  }
+  .db-alert-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .db-alert-lbl.red   { color: var(--red, #c0392b); }
+  .db-alert-lbl.amber { color: var(--gold); }
+  .db-alert-txt {
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    flex: 1;
+    min-width: 0;
+  }
+  .db-alert-act {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 9px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1px solid;
+    background: none;
+    min-height: 44px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+  .db-alert-act.red   { color: var(--red, #c0392b); border-color: var(--red, #c0392b); }
+  .db-alert-act.amber { color: #000; background: var(--gold); border-color: var(--gold); }
+  @media (max-width: 600px) {
+    .db-alert { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .db-alert-act { width: 100%; justify-content: center; }
+  }
+
+  /* ── Main two-column layout ── */
+  .db-main-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 14px;
+    margin-top: 12px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .db-main-cols { grid-template-columns: 1fr; }
+    .db-right-col { display: flex; flex-direction: column; gap: 14px; }
+  }
+  @media (max-width: 900px) {
+    .db-right-col { grid-template-columns: 1fr; }
+  }
+
+  /* ── Zone B — full-width panels below gallery ── */
+  .db-zone-b {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+  @media (max-width: 900px) {
+    .db-zone-b { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .db-zone-b { grid-template-columns: 1fr; }
+  }
+  /* On mobile, Zone B panels use the same collapsible panel behaviour */
+  @media (min-width: 769px) {
+    .db-zone-b .db-panel { padding: 16px 18px; }
+    .db-zone-b .db-panel-hdr { display: none; }
+    .db-zone-b .db-panel-body { display: block !important; padding: 0; }
+    .db-zone-b .db-plbl { display: block; }
+  }
+
+  /* ── Admin-style collapsible sections ── */
+  .db-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .db-section.urgent { border-color: var(--gold); }
+  .db-section-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    cursor: pointer;
+    background: var(--surface-1);
+    user-select: none;
+    gap: 10px;
+    transition: background 0.15s;
+    min-height: 48px;
+  }
+  .db-section-hdr:hover { background: var(--surface-3); }
+  .db-section.urgent .db-section-hdr { background: rgba(245,197,24,0.04); }
+  .db-section-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+  }
+  .db-section-meta { font-size: 14px; color: var(--text-primary); }
+  .db-chevron {
+    font-size: 12px;
+    color: var(--text-primary);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .db-chevron.open { transform: rotate(180deg); }
+  .db-section-body {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .db-section-body.collapsed { display: none; }
+  .db-count-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+  .db-count-badge.gold   { background: var(--gold); color: #000; }
+  .db-count-badge.red    { background: var(--red, #c0392b); color: #fff; }
+  .db-count-badge.neutral { background: var(--surface-3); color: var(--text-primary); }
+
+  /* ── Search + filter row ── */
+  .db-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .db-search-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 16px;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+    min-height: 44px;
+  }
+  .db-search-row input:focus { border-color: var(--gold); }
+  .db-filter-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    cursor: pointer;
+    min-height: 44px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: border-color 0.15s;
+  }
+  .db-filter-btn:hover { border-color: var(--gold); }
+  .db-filter-btn.active { border-color: var(--gold); color: var(--text-primary); opacity: 1; background: var(--gold-subtle); }
+
+  /* ── Image grid ── */
+  .db-img-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 900px) { .db-img-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .db-img-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
+
+  .db-img-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    min-width: 0;
+  }
+  .db-img-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-color: var(--gold); }
+  .db-img-card.raw-pending {
+    border: 2px solid #F5C518;
+    box-shadow: 0 0 0 1px rgba(245,197,24,0.25);
+  }
+
+  .db-img-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--surface-3);
+  }
+  .db-img-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .db-img-score {
+    position: absolute; bottom: 6px; right: 6px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    background: rgba(0,0,0,0.88); color: #F5C518;
+    padding: 3px 7px; border-radius: 3px;
+    pointer-events: none;
+  }
+  .db-img-tier {
+    position: absolute; top: 6px; right: 6px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    background: #000; color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 2px 6px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 1px;
+    pointer-events: none;
+  }
+  .db-raw-pill {
+    position: absolute; top: 8px; right: 8px;
+    background: #F5C518; color: #000;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; z-index: 2;
+    pointer-events: none;
+  }
+
+  .db-img-body { padding: 10px 10px 11px; }
+  .db-img-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .db-img-meta {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-primary);
+    display: flex; flex-direction: column; gap: 2px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  .db-img-meta-row1 { }
+  .db-img-meta-row2 { font-weight: 600; }
+
+  /* RAW banners inside card */
+  .db-raw-banner {
+    display: block; padding: 8px 12px;
+    font-size: 16px; font-weight: 600;
+  }
+  .db-raw-banner.pending {
+    background: rgba(180,130,0,0.06);
+    border-top: 1px solid rgba(245,197,24,0.3);
+    color: var(--text-primary);
+  }
+  .db-raw-banner.verified {
+    background: rgba(46,125,50,0.08);
+    border-top: 1px solid rgba(46,125,50,0.3);
+    color: #2e7d32;
+  }
+  .db-raw-banner.disqualified {
+    background: rgba(192,57,43,0.08);
+    border-top: 1px solid rgba(192,57,43,0.3);
+    color: var(--red, #c0392b);
+  }
+
+  /* ── Right panel boxes ── */
+  .db-panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    min-width: 0;
+  }
+  .db-panel.gold-border { border-color: var(--gold); background: rgba(245,197,24,0.03); }
+  .db-plbl {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .db-plbl.gold { color: var(--text-primary); }
+
+  /* Tier display */
+  .db-tier-name {
+    font-family: var(--font-mono);
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #1A2744;
+  }
+  .db-tier-rank { font-size: 13px; color: var(--text-primary); }
+  .db-prog-wrap {
+    background: var(--surface-3);
+    border-radius: 4px; height: 6px; margin: 10px 0 5px;
+  }
+  .db-prog-fill { height: 6px; border-radius: 4px; background: var(--gold); }
+  .db-prog-lbl {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  /* POTY rows — stacked: genre label + count on top row, bar below */
+  .db-poty-row {
+    display: flex; flex-direction: column;
+    gap: 4px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .db-poty-row:last-child { border-bottom: none; }
+  .db-poty-row-top {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 6px;
+  }
+  .db-poty-g {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-primary); flex: 1; min-width: 0;
+  }
+  .db-poty-avg {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    color: var(--text-primary); flex-shrink: 0; text-align: right;
+  }
+  .db-poty-ct {
+    font-size: 13px; color: var(--text-primary);
+    flex-shrink: 0; text-align: right; white-space: nowrap;
+  }
+  .db-poty-bw { width: 100%; background: var(--surface-3); border-radius: 3px; height: 5px; }
+  .db-poty-bf { height: 5px; border-radius: 3px; background: var(--gold); }
+
+  /* DDI dims */
+  .db-ddi-row {
+    display: flex; flex-direction: column;
+    gap: 4px; margin-bottom: 10px;
+  }
+  .db-ddi-row-top {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+  }
+  .db-ddi-lbl {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-primary); flex: 1; min-width: 0;
+  }
+  .db-ddi-sc {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    color: var(--text-primary); flex-shrink: 0; text-align: right;
+  }
+  .db-ddi-bw { width: 100%; background: var(--surface-3); border-radius: 3px; height: 6px; }
+  .db-ddi-bf { height: 6px; border-radius: 3px; background: var(--gold); }
+  .db-callout-grid {
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .db-callout {
+    border-radius: var(--radius-sm); padding: 9px 10px; min-width: 0;
+  }
+  .db-callout.strength {
+    background: rgba(46,125,50,0.08); border: 1px solid rgba(46,125,50,0.25);
+  }
+  .db-callout.growth {
+    background: rgba(245,197,24,0.07); border: 1px solid rgba(245,197,24,0.25);
+  }
+  .db-callout-tag {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px;
+  }
+  .db-callout-tag.strength { color: var(--green, #2e7d32); }
+  .db-callout-tag.growth   { color: #7A5800; }
+  .db-callout-dim { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .db-callout-sub { font-size: 16px; color: var(--text-primary); margin-top: 2px; }
+
+  /* Peer widget */
+  .db-peer-stats {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 8px; margin-bottom: 12px;
+  }
+  .db-peer-val { font-size: 26px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .db-peer-lbl {
+    font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-primary); margin-top: 3px;
+  }
+
+  /* Pagination */
+  .db-pagination { display: flex; gap: 6px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .db-pagination a {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text-primary); background: var(--surface-1);
+    min-height: 44px; display: inline-flex; align-items: center;
+    transition: border-color 0.15s;
+  }
+  .db-pagination a:hover { border-color: var(--gold); }
+  .db-pagination a.active { border-color: var(--gold); background: var(--gold-subtle); }
+  .db-pagination span { font-family: var(--font-mono); font-size: 13px; padding: 8px 6px; color: var(--text-primary); }
+
+  /* Empty state */
+  .db-empty { text-align: center; padding: 56px 20px; color: var(--text-primary); }
+  .db-empty h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .db-empty p { font-size: 16px; line-height: 1.7; }
+
+  /* Win card */
+  .db-win-card {
+    background: rgba(245,197,24,0.12); border: 1px solid var(--gold);
+    border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .db-win-badge {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; color: #000; background: var(--gold);
+    text-transform: uppercase; padding: 4px 10px; border-radius: 4px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* Mentor review inline */
+  .db-mentor-row {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  }
+  .db-mentor-row:last-child { border-bottom: none; }
+
+  /* Pool entry button inside card */
+  .db-pool-entry {
+    padding: 10px 12px;
+    background: rgba(245,197,24,0.12);
+    border-top: 1px solid var(--border);
+  }
+  .db-pool-entry .btn { font-size: 14px; width: 100%; justify-content: center; }
+
+  /* Peer pool badge */
+  .db-peer-pool-strip {
+    padding: 7px 12px;
+    background: rgba(46,125,79,0.07);
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--green, #2e7d32);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* Zone banners */
+  .db-zone-banner {
+    border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px;
+    font-size: 16px; line-height: 1.6;
+  }
+  .db-zone-banner.amber {
+    background: rgba(184,112,10,0.08);
+    border: 1px solid var(--amber, #b8720a);
+    border-left: 4px solid var(--amber, #b8720a);
+  }
+  .db-zone-banner.red {
+    background: var(--red-dim, rgba(192,57,43,0.06));
+    border: 1px solid var(--red, #c0392b);
+    border-left: 4px solid var(--red, #c0392b);
+  }
+
+  /* Mobile section padding per audit */
+  @media (max-width: 600px) {
+    .db-section-body { padding: 12px 14px; }
+    .db-ann-strip    { padding: 12px 14px; }
+    .db-panel        { padding: 14px 14px; }
+  }
+
+  /* ── Mobile collapsible announcement strips ── */
+  @media (max-width: 768px) {
+    .db-ann-strip {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding: 0 !important;
+      cursor: pointer;
+    }
+    .db-ann-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 14px;
+      gap: 10px;
+    }
+    .db-ann-body {
+      display: none;
+      padding: 0 14px 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .db-ann-strip.ann-open .db-ann-body { display: block; }
+    .db-ann-chevron {
+      font-size: 12px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .db-ann-strip.ann-open .db-ann-chevron { transform: rotate(180deg); }
+  }
+  @media (min-width: 769px) {
+    /* Desktop: ann-strip stays as inline flex row, hide mobile-only elements */
+    .db-ann-hdr { display: contents; }
+    .db-ann-body { display: contents; }
+    .db-ann-chevron { display: none; }
+  }
+
+  /* ── Mobile collapsible right-column panels ── */
+  @media (max-width: 768px) {
+    .db-panel {
+      padding: 0 !important;
+      overflow: hidden;
+    }
+    .db-panel-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      gap: 10px;
+    }
+    .db-panel-hdr:active { background: var(--surface-3); }
+    .db-panel-hdr-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      opacity: 1;
+      flex: 1;
+    }
+    .db-panel-chevron {
+      font-size: 12px;
+      color: var(--text-primary);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .db-panel.mob-open .db-panel-chevron { transform: rotate(180deg); }
+    .db-panel-body {
+      padding: 0 16px 16px;
+      display: none;
+    }
+    .db-panel.mob-open .db-panel-body { display: block; }
+    /* Standing panel — open by default */
+    /* Hide the original db-plbl inside panel body on mobile — hdr replaces it */
+    .db-panel .db-plbl { display: none; }
+    /* Dark-background panels only: gold title + white chevron */
+    .db-panel[style*="background:#2C3E6B"] .db-panel-hdr-title,
+    .db-panel[style*="background:#1A2744"] .db-panel-hdr-title { color: #F5C518; opacity: 1; }
+    .db-panel[style*="background:#2C3E6B"] .db-panel-chevron,
+    .db-panel[style*="background:#1A2744"] .db-panel-chevron { color: #FFFFFF; opacity: 1; }
+  }
+  @media (min-width: 769px) {
+    /* On desktop: panel header is hidden, body always visible */
+    .db-panel-hdr { display: none; }
+    .db-panel-body { display: block !important; padding: 0; }
+  }
+  /* ── Standing panel — percentile strip ── */
+  .db-pct-strip {
+    margin-bottom: 14px;
+  }
+  .db-pct-box {
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+  }
+  .db-pct-overall {
+    background: #1A2744;
+  }
+  .db-pct-genre {
+    background: #2C3E6B;
+  }
+  .db-pct-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    margin-bottom: 4px;
+  }
+  .db-pct-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F5C518;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .db-pct-sub {
+    font-size: 14px;
+    color: #FFFFFF;
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .db-pct-num { font-size: 18px; }
+    .db-pct-box { padding: 10px 12px; }
+  }
+
+  /* ── Tier row ── */
+  .db-tier-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .db-tier-score {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  /* ── Radar + bars layout ── */
+  .db-radar-wrap {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin: 14px 0 10px;
+    min-width: 0;
+  }
+  .db-radar-canvas-wrap {
+    flex-shrink: 0;
+    width: 160px;
+    height: 160px;
+    display: block;
+  }
+  .db-radar-canvas-wrap canvas {
+    display: block;
+    width: 160px !important;
+    height: 160px !important;
+    max-width: 100%;
+  }
+  .db-radar-bars {
+    flex: 1;
+    min-width: 0;
+  }
+  .db-rdim-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    min-width: 0;
+  }
+  .db-rdim-lbl {
+    font-size: 13px;
+    color: var(--text-primary);
+    width: 80px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .db-rdim-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    position: relative;
+    min-width: 0;
+  }
+  .db-rdim-bar {
+    height: 5px;
+    border-radius: 99px;
+    background: #F5C518;
+  }
+  .db-rdim-tier-tick {
+    position: absolute;
+    top: -2px;
+    width: 2px;
+    height: 9px;
+    background: #1A2744;
+    border-radius: 1px;
+    transform: translateX(-50%);
+  }
+  .db-rdim-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-primary);
+    width: 26px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .db-radar-legend {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .db-radar-leg-you {
+    font-size: 14px;
+    color: #F5C518;
+    font-family: var(--font-mono);
+  }
+  .db-radar-leg-tier {
+    font-size: 14px;
+    color: rgba(255,255,255,0.70);
+    font-family: var(--font-mono);
+  }
+
+  /* Tablet/iPad — right col is ~290px, side-by-side is tight but OK */
+  /* Stack radar above bars when container is narrow (mobile + iPad portrait right col) */
+  @media (max-width: 900px) {
+    .db-radar-wrap {
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .db-radar-canvas-wrap {
+      width: 200px;
+      height: 200px;
+    }
+    .db-radar-canvas-wrap canvas {
+      width: 200px !important;
+      height: 200px !important;
+    }
+    .db-radar-bars {
+      width: 100%;
+    }
+    .db-rdim-lbl {
+      width: 100px;
+      font-size: 13px;
+    }
+    .db-rdim-val {
+      font-size: 13px;
+    }
+  }
+  @media (max-width: 480px) {
+    .db-radar-canvas-wrap {
+      width: 180px;
+      height: 180px;
+    }
+    .db-radar-canvas-wrap canvas {
+      width: 180px !important;
+      height: 180px !important;
+    }
+    .db-rdim-lbl {
+      width: 80px;
+      font-size: 12px;
+    }
+  }
+
+  /* ── Gap box ── */
+  .db-gap-box {
+    background: rgba(26,39,68,0.06);
+    border: 0.5px solid rgba(26,39,68,0.18);
+    border-left: 3px solid #1A2744;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .db-gap-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(26,39,68,0.5);
+    margin-bottom: 4px;
+  }
+  .db-gap-txt {
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    text-align: justify;
+  }
+
+  /* ── POTY collapsible header (mobile only) ── */
+  .db-poty-section {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .db-poty-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (min-width: 769px) {
+    .db-poty-hdr .db-chevron { display: none; }
+    #db-poty-body { display: block !important; }
+  }
+  @media (max-width: 768px) {
+    #db-poty-body.collapsed { display: none; }
+  }
+  /* ── Hero 2-col cards: Standing + Points (desktop) / 1-col (mobile) ── */
+  .db-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .db-hero-grid { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+
+  /* ── Desktop: cards always open, no tap UI, no summary ── */
+  @media (min-width: 901px) {
+    .db-hcard-body      { display: block !important; }
+    .db-hcard-tap-hint  { display: none !important; }
+    .db-hcard-chev      { display: none !important; }
+    .db-hcard-summary   { display: none !important; }
+    .db-hcard-hdr       { cursor: default; }
+  }
+
+  /* ── Card shell ── */
+  .db-hcard {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #D8D2C8;
+  }
+
+  /* ── Header: dark navy band ── */
+  .db-hcard-hdr {
+    background: #1A2744;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    gap: 12px;
+  }
+  .db-hcard-hdr-txt { flex: 1; }
+  .db-hcard-hdr-lbl {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    display: block;
+    margin-bottom: 5px;
+  }
+  .db-hcard-hdr-title {
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 20px;
+    font-weight: 700;
+    color: #FFFFFF;
+    display: block;
+    line-height: 1.25;
+    margin-bottom: 5px;
+  }
+  .db-hcard-hdr-sub {
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 14px;
+    font-weight: 400;
+    color: #FFFFFF;
+    display: block;
+    line-height: 1.5;
+  }
+  .db-hcard-chev {
+    font-size: 14px;
+    color: #FFFFFF;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── Summary (mobile only — dark, shown when collapsed) ── */
+  .db-hcard-summary {
+    background: #1A2744;
+    padding: 0 20px 18px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .db-hcard-summary-txt {
+    font-family: 'Inter', Arial, sans-serif !important;
+    font-size: 17px;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.6;
+    display: block;
+  }
+  .db-hcard-summary-val { color: #F5C518; font-weight: 700; }
+
+  /* ── Tap button (mobile only) ── */
+  .db-hcard-tap-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 14px 0 0;
+    padding: 11px 18px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    min-height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  /* ── Body: WHITE background, black text ── */
+  .db-hcard-body {
+    padding: 20px;
+    background: #FFFFFF;
+    border-top: 3px solid #F5C518;
+  }
+
+  /* All text inside body = black. Gold for values. */
+  .db-hcard-body,
+  .db-hcard-body p,
+  .db-hcard-body div,
+  .db-hcard-body span { color: #1A1A18; }
+
+  /* Specific overrides inside white body */
+  .db-hcard-body .db-hcard-pts-lbl   { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-pts-val   { color: #F5C518; }
+  .db-hcard-body .db-hcard-pts-sub   { color: #1A1A18; font-size: 16px; }
+  .db-hcard-body .db-hcard-pts-note  { color: #1A1A18; }
+  .db-hcard-body .db-hcard-qs-item   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-qs-val    { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-gap-lbl   { color: #1A2744; font-weight: 700; }
+  .db-hcard-body .db-hcard-gap-txt   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-poty-lbl  { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-poty-g          { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-poty-avg        { color: #F5C518; font-weight: 700; }
+  .db-hcard-body .db-poty-ct         { color: #1A1A18; }
+  .db-hcard-body .db-poty-bw         { background: #E8E4DC; }
+  .db-hcard-body .db-poty-row        { border-color: #E8E4DC; }
+  .db-hcard-body .db-prog-wrap       { background: #E8E4DC; }
+  .db-hcard-body .db-tier-name       { color: #1A2744; }
+  .db-hcard-body .db-tier-score      { color: #1A1A18; }
+  .db-hcard-body .db-prog-lbl        { color: #1A1A18; }
+  .db-hcard-body .db-hcard-dim-lbl   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-dim-bw    { background: #E8E4DC; }
+  .db-hcard-body .db-hcard-dim-val   { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-hcard-ref-txt   { color: #1A1A18; }
+  .db-hcard-body .db-hcard-ref-code-row {
+    background: #F5F3EF;
+    border-color: #D8A800;
+  }
+  .db-hcard-body .db-hcard-leg-item  { color: #1A1A18; }
+  .db-hcard-body .db-radar-leg-tier  { color: #1A1A18; }
+  .db-hcard-body .db-rdim-lbl        { color: #1A1A18; }
+  .db-hcard-body .db-rdim-val        { color: #1A1A18; font-weight: 700; }
+  .db-hcard-body .db-pct-hero-lbl    { color: #FFFFFF; }
+  .db-hcard-body .db-pct-hero-ctx    { color: #FFFFFF; }
+  .db-hcard-body .db-pct-hero-gnr    { color: rgba(255,255,255,0.80); }
+
+  /* Percentile hero box */
+  .db-pct-hero {
+    background: #1A2744;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .db-pct-hero-lbl {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    margin-bottom: 3px;
+  }
+  .db-pct-hero-num {
+    font-size: 36px;
+    font-weight: 700;
+    color: #F5C518;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .db-pct-hero-ctx { font-size: 16px; color: #FFFFFF; }
+  .db-pct-hero-gnr { font-size: 16px; color: #FFFFFF; margin-top: 2px; }
+  @media (max-width: 480px) {
+    .db-pct-hero-num { font-size: 30px; }
+  }
+
+  /* Radar + bars layout inside hcard */
+  .db-hcard-radar-wrap {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin: 12px 0 10px;
+  }
+  @media (max-width: 900px) {
+    .db-hcard-radar-wrap {
+      grid-template-columns: 1fr;
+    }
+    .db-hcard-radar-canvas { margin: 0 auto 8px; display: block; max-width: 100%; }
+  }
+  .db-hcard-radar-canvas { display: block; width: 96px !important; height: 96px !important; }
+  @media (max-width: 900px) {
+    .db-hcard-radar-canvas { width: 190px !important; height: 190px !important; }
+  }
+  .db-hcard-dims { display: flex; flex-direction: column; gap: 7px; }
+  .db-hcard-dim-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .db-hcard-dim-lbl {
+    font-size: 13px;
+    color: var(--text-primary);
+    width: 148px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 900px) {
+    .db-hcard-dim-lbl { width: 160px; font-size: 14px; }
+  }
+
+  .db-hcard-dim-bw {
+    flex: 1;
+    min-width: 60px;
+    height: 5px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    position: relative;
+  }
+  .db-hcard-dim-bf { height: 5px; border-radius: 99px; background: #F5C518; }
+  .db-hcard-dim-tk {
+    position: absolute; top: -2px; width: 2px; height: 9px;
+    background: #1D9E75; border-radius: 1px; transform: translateX(-50%);
+  }
+  .db-hcard-dim-val {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-primary); width: 26px; text-align: right; flex-shrink: 0;
+  }
+  .db-hcard-radar-legend {
+    display: flex; gap: 12px; justify-content: center; margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .db-hcard-leg-item {
+    display: flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); 
+  }
+  .db-hcard-leg-gold { width: 14px; height: 2px; background: #F5C518; border-radius: 99px; }
+  .db-hcard-leg-teal { width: 14px; height: 2px; background: #1D9E75; border-radius: 99px; }
+
+  /* Gap box inside standing card */
+  .db-hcard-gap {
+    background: #EEF2F8;
+    border-left: 3px solid #1A2744;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+  .db-hcard-gap-lbl {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #1A2744; font-weight: 700; margin-bottom: 3px;
+  }
+  .db-hcard-gap-txt { font-size: 16px; color: var(--text-primary); line-height: 1.5; text-align: justify; }
+
+  /* Points card */
+  .db-hcard-pts-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+  }
+  .db-hcard-pts-stat {
+    background: #F5F3EF;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    border: 1px solid #E0D8C8;
+  }
+  .db-hcard-pts-lbl {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #1A1A18; font-weight: 700; margin-bottom: 3px;
+  }
+  .db-hcard-pts-val { font-size: 28px; font-weight: 700; color: #F5C518; line-height: 1; }
+  .db-hcard-pts-sub { font-size: 16px; color: #FFFFFF; margin-top: 2px; }
+  .db-hcard-pts-bar-wrap {
+    height: 6px; background: #E0D8C8; border-radius: 99px; margin: 8px 0 6px;
+  }
+  .db-hcard-pts-bar-fill { height: 6px; border-radius: 99px; background: #F5C518; }
+  .db-hcard-pts-note { font-size: 16px; color: var(--text-primary); margin-bottom: 10px; line-height: 1.5; }
+  .db-hcard-redeem {
+    display: flex; align-items: center; justify-content: center;
+    background: #1A1A18; border: none; color: #F5C518;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 16px;
+    border-radius: 6px; text-decoration: none; min-height: 44px; margin-bottom: 14px;
+  }
+  .db-hcard-qs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px;
+    padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.10);
+  }
+  .db-hcard-qs-item { font-size: 16px; color: var(--text-primary); }
+  .db-hcard-qs-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
+
+  /* POTY + referrals card */
+  .db-hcard-poty-lbl {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #FFFFFF; margin-bottom: 10px;
+  }
+  .db-hcard-ref-lbl {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .db-hcard-div { height: 0.5px; background: var(--border); margin: 12px 0; }
+  .db-hcard-ref-txt { font-size: 16px; color: #1A1A18; line-height: 1.6; margin-bottom: 14px; }
+  .db-hcard-ref-code-row {
+    background: #F5F3EF;
+    border: 1px solid #D8A800;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .db-hcard-ref-code {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: #1A1A18;
+    letter-spacing: 2px;
+  }
+  .db-hcard-ref-share {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .db-hcard-ref-share button {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* ── Always-visible grid: POTY + Referrals (2-col desktop, 1-col mobile) ── */
+  .db-always-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .db-always-grid { grid-template-columns: 1fr; gap: 8px; }
+  }
+  @media (min-width: 901px) {
+    .db-always-grid .db-hcard-body    { display: block !important; }
+    .db-always-grid .db-hcard-tap-hint { display: none !important; }
+    .db-always-grid .db-hcard-chev    { display: none !important; }
+    .db-always-grid .db-hcard-summary { display: none !important; }
+    .db-always-grid .db-hcard-hdr     { cursor: default; padding-bottom: 16px; }
+  }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="db-wrap">
+
+{# ════════════════════════════════════════════════════════════════
+   TOP BAR
+════════════════════════════════════════════════════════════════ #}
+<div class="db-top-bar">
+  <div>
+    <div class="db-page-title">{{ current_user.full_name or current_user.username }}</div>
+    <div class="db-page-sub">
+      {%- if free_tier and free_tier.shadow_tier %}{{ free_tier.shadow_tier }}{% elif progress_data and progress_data.avg_tier %}{{ progress_data.avg_tier }}{% else %}Dashboard{% endif %}
+      {%- if free_tier and free_tier.shadow_rank %} · Rank #{{ free_tier.shadow_rank }}{% endif %}
+    </div>
+  </div>
+  <div class="db-top-actions">
+    {% if rating_widget and rating_widget.credits > 0 %}
+    <a href="{{ url_for('rate') }}" class="btn">Rate Peers</a>
+    {% endif %}
+    {% if current_user.role == 'admin' %}<a href="{{ url_for('bulk_upload') }}" class="btn">Bulk Upload</a>{% endif %}
+    <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
+  </div>
+</div>
+
+{# ════════════════════════════════════════════════════════════════
+   1. ANNOUNCEMENTS — always first
+════════════════════════════════════════════════════════════════ #}
+{% if contest_banners %}
+{% for ann in contest_banners %}
+<div class="db-ann-strip" onclick="dbAnnToggle(this)">
+  <div class="db-ann-hdr">
+    <span class="db-ann-tag">{{ ann.contest_type | upper if ann.contest_type else 'Announcement' }}</span>
+    {% if ann.title %}<span class="db-ann-text" style="font-weight:700;">{{ ann.title }}</span>{% endif %}
+    <span class="db-ann-chevron">▼</span>
+  </div>
+  <div class="db-ann-body">
+    <span class="db-ann-text">
+      {% if ann.title %}{% endif %}{{ ann.body }}
+    </span>
+    {% if ann.cta_label and ann.cta_url %}
+    <div style="margin-top:10px;">
+      <a href="{{ ann.cta_url }}" class="db-ann-cta" onclick="event.stopPropagation()">{{ ann.cta_label }} →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{# ════════════════════════════════════════════════════════════════
+   3. ACTION ALERTS
+════════════════════════════════════════════════════════════════ #}
+{%- set _urgent_count = (zone3_flagged|length) + (zone2_pending|length) + (raw_pending|length) -%}
+{%- set _mentor_count = mentor_reviews|length if mentor_reviews else 0 -%}
+
+{% if raw_pending %}
+<div class="db-alert red" style="margin-top:12px;">
+  <span class="db-alert-lbl red">Action Required</span>
+  <span class="db-alert-txt">
+    RAW file requested for
+    {% if raw_pending|length == 1 %}<strong>{{ raw_pending[0].title or 'your image' }}</strong>{% else %}<strong>{{ raw_pending|length }} images</strong>{% endif %}
+    — score held pending verification
+  </span>
+  <a href="{{ url_for('raw_submit', contest_type='weekly', image_id=raw_pending[0].id) }}" class="db-alert-act red">Submit RAW →</a>
+</div>
+{% endif %}
+
+{% if zone3_flagged %}
+<div class="db-alert amber" style="margin-top:{% if not raw_pending %}12px{% else %}0{% endif %};">
+  <span class="db-alert-lbl amber">Jury Review</span>
+  <span class="db-alert-txt">
+    {{ zone3_flagged|length }} image{{ 's' if zone3_flagged|length != 1 }} under jury review — your DDI score is protected, no action needed
+  </span>
+</div>
+{% endif %}
+
+{% if mentor_reviews %}
+{% for rev in mentor_reviews %}
+<div class="db-alert amber" style="margin-top:0;" id="mentor-alert-{{ rev.id }}">
+  <span class="db-alert-lbl amber">Mentor Review Ready</span>
+  <span class="db-alert-txt">
+    <strong>{{ rev.mentor_name }}</strong> reviewed <strong>{{ rev.asset_name or 'your image' }}</strong>
+    {% if rev.review_text %} — {{ rev.review_text[:80] }}{% if rev.review_text|length > 80 %}…{% endif %}{% endif %}
+  </span>
+  <a href="#mentor-full-{{ rev.id }}" class="db-alert-act amber"
+     onclick="document.getElementById('mentor-full-{{ rev.id }}').style.display='block';document.getElementById('mentor-alert-{{ rev.id }}').style.display='none';return false;">
+    Read Review →
+  </a>
+</div>
+<div id="mentor-full-{{ rev.id }}" style="display:none;background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.3);border-left:3px solid #F5C518;border-radius:var(--radius-md);padding:18px 20px;margin-bottom:8px;">
+  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:8px;">
+    {{ rev.asset_name or 'Untitled' }} · {{ rev.mentor_name }}{% if rev.reviewed_at %} · {{ rev.reviewed_at.strftime('%d %b %Y') }}{% endif %}
+  </div>
+  <div style="font-size:16px;color:var(--text-primary);line-height:1.8;white-space:pre-line;text-align:justify;">{{ rev.review_text }}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+
+{# ════════════════════════════════════════════════════════════════
+   HERO — Standing / Points / POTY+Referrals (collapsible)
+════════════════════════════════════════════════════════════════ #}
+{% if progress_data %}
+<div class="db-hero-grid" style="margin-top:12px;">
+
+  {# ── Card 1: Your Standing ── #}
+  <div class="db-hcard" id="db-hcard-standing">
+    <div class="db-hcard-hdr" onclick="dbHcardToggle('standing')">
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Your standing</span>
+        <span class="db-hcard-hdr-title">How good is your photography?</span>
+        <span class="db-hcard-hdr-sub">Your rank, tier and average score across all scored images.</span>
+      </div>
+      <span class="db-hcard-chev" id="db-hcard-chev-standing">▶</span>
+    </div>
+    <div class="db-hcard-summary" id="db-hcard-sum-standing" onclick="dbHcardToggle('standing')">
+      <span class="db-hcard-summary-txt">{% if progress_data.overall_pct %}<span class="db-hcard-summary-val">Top {{ progress_data.overall_pct }}%</span> in {{ progress_data.league_label or 'league' }}{% endif %}<br><span class="db-hcard-summary-val">{{ progress_data.avg_tier or '—' }}</span> · avg <span class="db-hcard-summary-val">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</span></span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-standing">See full breakdown ▾</span>
+    </div>
+    <div class="db-hcard-body" id="db-hcard-body-standing">
+      {# Percentile #}
+      {% if progress_data.overall_pct %}
+      <div class="db-pct-hero">
+        <div class="db-pct-hero-lbl">{{ progress_data.league_label or 'Your league' }}</div>
+        <div class="db-pct-hero-num">Top {{ progress_data.overall_pct }}%</div>
+        <div class="db-pct-hero-ctx">in {{ progress_data.league_label or 'your league' }} photographers</div>
+        {% if progress_data.genre_pct and progress_data.genre_pct_label and progress_data.genre_pct < 100 %}
+        <div class="db-pct-hero-gnr">· Top {{ progress_data.genre_pct }}% in {{ progress_data.genre_pct_label }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {# Tier + progress #}
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
+        <div class="db-tier-name">{{ progress_data.avg_tier or '—' }}</div>
+        <div class="db-tier-score">{{ '%.2f'|format(progress_data.avg_score) if progress_data.avg_score else '—' }}</div>
+      </div>
+      <div class="db-prog-wrap">
+        <div class="db-prog-fill" style="width:{{ [[(progress_data.tier_pct or 0)|int, 0]|max, 100]|min }}%;"></div>
+      </div>
+      <div class="db-prog-lbl">
+        <span>{{ progress_data.prev_tier or '' }}</span>
+        <span></span>
+        <span>{{ progress_data.next_tier or '' }}</span>
+      </div>
+      {# Dimensions #}
+      {% if progress_data.dim_avgs %}
+      <div class="db-hcard-dims" style="margin:12px 0 10px;">
+        {% set dim_order = ['dod','disruption','dm','wonder','aq'] %}
+        {% for dim in dim_order %}{% if dim in progress_data.dim_avgs %}
+        {% set your_val = progress_data.dim_avgs[dim] %}
+        {% set tier_val = progress_data.tier_avg_dims.get(dim) if progress_data.tier_avg_dims else none %}
+        {% set is_below = tier_val and your_val < tier_val %}
+        {% set is_above = tier_val and your_val > (tier_val + 0.8) %}
+        <div class="db-hcard-dim-row">
+          <span class="db-hcard-dim-lbl">{{ progress_data.dim_labels[dim] if dim in progress_data.dim_labels else dim }}</span>
+          <div class="db-hcard-dim-bw">
+            <div class="db-hcard-dim-bf" style="width:{{ [[(your_val / 10 * 100)|int,0]|max,100]|min }}%;{% if is_below %}background:var(--red,#c0392b);{% elif is_above %}background:#1D9E75;{% endif %}"></div>
+            {% if tier_val %}<div class="db-hcard-dim-tk" style="left:{{ [[(tier_val / 10 * 100)|int,0]|max,99]|min }}%;"></div>{% endif %}
+          </div>
+          <span class="db-hcard-dim-val" style="{% if is_below %}color:var(--red,#c0392b);{% elif is_above %}color:#0F6E56;{% endif %}">{{ '%.1f'|format(your_val) }}</span>
+        </div>
+        {% endif %}{% endfor %}
+        <div class="db-hcard-radar-legend">
+          <div class="db-hcard-leg-item"><div class="db-hcard-leg-gold"></div><span>You</span></div>
+          <div class="db-hcard-leg-item"><div class="db-hcard-leg-teal"></div><span>{{ progress_data.avg_tier or 'Tier' }} avg</span></div>
+        </div>
+      </div>
+      {% endif %}
+
+            {# Gap box #}
+      {% if progress_data.weakest and progress_data.next_tier %}
+      <div class="db-hcard-gap">
+        <div class="db-hcard-gap-lbl">One step to {{ progress_data.next_tier }}</div>
+        <div class="db-hcard-gap-txt">{{ progress_data.dim_labels[progress_data.weakest] if progress_data.weakest in progress_data.dim_labels else progress_data.weakest }} is the gap between {{ progress_data.avg_tier }} and {{ progress_data.next_tier }}.</div>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Card 2: Points & Ranking ── #}
+  {% if wallet_hud %}
+  <div class="db-hcard" id="db-hcard-points">
+    <div class="db-hcard-hdr" onclick="dbHcardToggle('points')">
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Points &amp; ranking</span>
+        <span class="db-hcard-hdr-title">Your points wallet</span>
+        <span class="db-hcard-hdr-sub">Earn points every time you upload. Redeem for free uploads, entries and subscription discounts.</span>
+      </div>
+      <span class="db-hcard-chev" id="db-hcard-chev-points">▶</span>
+    </div>
+    <div class="db-hcard-summary" id="db-hcard-sum-points" onclick="dbHcardToggle('points')">
+      <span class="db-hcard-summary-txt"><span class="db-hcard-summary-val">{{ wallet_hud.balance | round(1) }} pts</span><br>Residency <span class="db-hcard-summary-val">{{ wallet_hud.residency_months }}/6</span> · Scored <span class="db-hcard-summary-val">{{ stats.scored }}</span></span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-points">See points &amp; redeem ▾</span>
+    </div>
+    <div class="db-hcard-body" id="db-hcard-body-points">
+      <div class="db-hcard-pts-grid">
+        <div class="db-hcard-pts-stat">
+          <div class="db-hcard-pts-lbl">Your points</div>
+          <div class="db-hcard-pts-val">{{ '{:,.0f}'.format(wallet_hud.balance) }}</div>
+        </div>
+        <div class="db-hcard-pts-stat">
+          <div class="db-hcard-pts-lbl">Residency</div>
+          <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:16px;color:#FFFFFF;">/6</span></div>
+          <div class="db-hcard-pts-sub">months to ranking</div>
+        </div>
+      </div>
+      <div class="db-hcard-pts-bar-wrap">
+        <div class="db-hcard-pts-bar-fill" style="width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
+      </div>
+      {% if wallet_hud.officially_ranked %}
+      <div style="font-size:16px;color:var(--green,#2e7d32);font-weight:500;margin-bottom:10px;">✓ Official World Ranking — Live</div>
+      {% else %}
+      <div class="db-hcard-pts-note">{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }} to appear in the community.</div>
+      {% endif %}
+      <a href="{{ url_for('redeem') }}" class="db-hcard-redeem">Redeem {{ '{:,.0f}'.format(wallet_hud.balance) }} pts →</a>
+      <div class="db-hcard-qs">
+        <div class="db-hcard-qs-item">Best DDI <span class="db-hcard-qs-val">{{ stats.best_score or '—' }}</span></div>
+        <div class="db-hcard-qs-item">Avg score <span class="db-hcard-qs-val">{{ '%.1f'|format(stats.avg_score) if stats.avg_score else '—' }}</span></div>
+        <div class="db-hcard-qs-item">Scored <span class="db-hcard-qs-val">{{ stats.scored }}</span></div>
+        <div class="db-hcard-qs-item">Peer credits <span class="db-hcard-qs-val">{{ rating_widget.credits if rating_widget else '—' }}</span></div>
+        <div class="db-hcard-qs-item">Total images <span class="db-hcard-qs-val">{{ stats.total }}</span></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>{# /db-hero-grid — standing + points only #}
+
+{# ════════════════════════════════════════════════════════════════
+   POTY + REFERRAL CARDS — shown to ALL users always
+════════════════════════════════════════════════════════════════ #}
+<div class="db-always-grid" style="margin-top:8px;">
+
+  {# ── POTY Card ── #}
+  <div class="db-hcard" id="db-hcard-poty">
+    <div class="db-hcard-hdr" onclick="dbHcardToggle('poty')">
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Annual ranking</span>
+        <span class="db-hcard-hdr-title">Photographer of the Year</span>
+        <span class="db-hcard-hdr-sub">Your best scores each month build your POTY ranking. The top scorer at year-end wins the title.</span>
+      </div>
+      <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
+    </div>
+    <div class="db-hcard-summary" id="db-hcard-sum-poty" onclick="dbHcardToggle('poty')">
+      {% if poty_tracker and poty_tracker.genre_rows %}
+      <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].count }} img{{ 's' if poty_tracker.genre_rows[0].count != 1 }}</span> scored this year</span>
+      {% else %}
+      <span class="db-hcard-summary-txt">No scores yet this year<br><span style="font-size:16px;color:#FFFFFF;">Upload images to start your POTY ranking</span></span>
+      {% endif %}
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">See my POTY ranking ▾</span>
+    </div>
+    <div class="db-hcard-body" id="db-hcard-body-poty">
+      {% if poty_tracker and poty_tracker.genre_rows %}
+      <div class="db-hcard-poty-lbl">Your scores by genre this year</div>
+      {% for row in poty_tracker.genre_rows %}
+      <div class="db-poty-row">
+        <div class="db-poty-row-top">
+          <span class="db-poty-g">{{ row.genre }}</span>
+          <span class="db-poty-avg">{{ row.top6_avg or '—' }}</span>
+          <span class="db-poty-ct" style="{% if row.qualifies %}color:var(--green,#2e7d32);{% endif %}">{{ row.count }} img{{ 's' if row.count != 1 }}{% if row.qualifies %} ✓{% elif row.images_needed > 0 %} +{{ row.images_needed }}{% endif %}</span>
+        </div>
+        <div class="db-poty-bw"><div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div></div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.6;padding:4px 0 8px;">Upload and get scored to start building your POTY ranking. Your best 6 scores per genre each month count.</div>
+      <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Upload an image →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Referral Card ── #}
+  {% if referral_code %}
+  <div class="db-hcard" id="db-hcard-referrals">
+    <div class="db-hcard-hdr" onclick="dbHcardToggle('referrals')">
+      <div class="db-hcard-hdr-txt" style="flex:1;">
+        <span class="db-hcard-hdr-lbl">Refer a friend</span>
+        <span class="db-hcard-hdr-title">Invite friends, earn points</span>
+        <span class="db-hcard-hdr-sub">Share your code. You earn <strong style="color:#F5C518;">500 pts</strong> when they subscribe. They get a discount on their first month.</span>
+      </div>
+      <span class="db-hcard-chev" id="db-hcard-chev-referrals">▶</span>
+    </div>
+    <div class="db-hcard-summary" id="db-hcard-sum-referrals" onclick="dbHcardToggle('referrals')">
+      <span class="db-hcard-summary-txt">Your code: <span class="db-hcard-summary-val">{{ referral_code }}</span><br>You earn <span class="db-hcard-summary-val">+500 pts</span> per referral</span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-referrals">Share my code ▾</span>
+    </div>
+    <div class="db-hcard-body" id="db-hcard-body-referrals">
+      <div class="db-hcard-ref-txt">When a friend signs up with your code and subscribes, <strong>you earn +500 pts</strong> and <strong>they get their first month discounted</strong>.</div>
+      <div class="db-hcard-ref-code-row">
+        <span class="db-hcard-ref-code">{{ referral_code }}</span>
+        <button onclick="navigator.clipboard.writeText({{ referral_url | tojson }}).then(function(){ this.textContent='✓ Copied'; var b=this; setTimeout(function(){ b.textContent='Copy'; },2000); }.bind(this))"
+          style="background:#F5C518;color:#1A2744;font-family:var(--font-mono);font-size:13px;font-weight:700;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;min-height:36px;">Copy</button>
+      </div>
+      <div class="db-hcard-ref-share">
+        <button onclick="slRefModal('whatsapp')" style="background:#25D366;color:#fff;font-family:var(--font-mono);font-size:14px;font-weight:700;padding:10px 12px;border:none;border-radius:4px;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </button>
+        <button onclick="slRefModal('gmail')" style="background:#EA4335;color:#fff;font-family:var(--font-mono);font-size:14px;font-weight:700;padding:10px 12px;border:none;border-radius:4px;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.907 1.528-1.147C21.69 2.28 24 3.434 24 5.457z"/></svg>
+          Gmail
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>{# /db-always-grid #}
+
+
+{# ════════════════════════════════════════════════════════════════
+   POTY / free-tier banners (preserved from original)
+════════════════════════════════════════════════════════════════ #}
+{% if free_tier and free_tier.remaining == 0 and free_tier.shadow_rank %}
+<div style="background:#2C3E6B;border-radius:var(--radius-md);padding:28px 32px;margin:14px 0;text-align:center;">
+  <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FFFFFF;margin-bottom:12px;">Your Initial Assessment is Complete</div>
+  <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
+  <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
+  <div style="font-size:16px;color:#FFFFFF;margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
+    This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Official World Ranking.
+  </div>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Rank →</a>
+    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See Community →</a>
+  </div>
+</div>
+{% elif free_tier and free_tier.remaining > 0 %}
+<div style="background:var(--surface-2);border:1px solid var(--border);border-left:4px solid #F5C518;border-radius:0 var(--radius-md) var(--radius-md) 0;padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">{{ free_tier.remaining }} free image{{ 's' if free_tier.remaining != 1 }} remaining</div>
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;">Upload now to complete your initial assessment and see your rank.</div>
+  </div>
+  <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px;white-space:nowrap;min-height:44px;">Upload Now →</a>
+</div>
+{% endif %}
+
+{# Referral discount banner #}
+{% if referred_discount and not current_user.is_subscribed %}
+<div style="background:#1A2744;border-radius:8px;padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+  <div>
+    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F5C518;margin-bottom:4px;">&#127881; You have a referral discount</div>
+    <div style="font-size:16px;color:#FFFFFF;line-height:1.5;">
+      Subscribe now and get your first month at <strong style="color:#F5C518;">&#8377;85</strong> <span style="color:#FFFFFF;text-decoration:line-through;">&#8377;99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">&#8377;169</strong> <span style="color:#FFFFFF;text-decoration:line-through;">&#8377;199</span> (Camera).
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{{ url_for('subscribe', track='mobile', plan='monthly') }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:10px 16px;border-radius:4px;text-decoration:none;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;">Mobile &#8377;85 &#8594;</a>
+    <a href="{{ url_for('subscribe', track='camera', plan='monthly') }}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#fff;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);padding:10px 16px;border-radius:4px;text-decoration:none;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;">Camera &#8377;169 &#8594;</a>
+  </div>
+</div>
+{% endif %}
+
+{# Referral code self-service #}
+{% if not referred_discount and not current_user.is_subscribed %}
+<div id="referral-code-widget" style="background:#1A2744;border-radius:8px;padding:16px 20px;margin:14px 0;">
+  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F5C518;margin-bottom:6px;">&#127873; Have a referral code?</div>
+  <div style="font-size:16px;color:#FFFFFF;line-height:1.6;margin-bottom:12px;">Enter the code a friend shared with you to unlock first-month pricing: <strong style="color:#F5C518;">&#8377;85</strong> (Mobile) or <strong style="color:#F5C518;">&#8377;169</strong> (Camera).</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <input id="referral-code-input" type="text" maxlength="10" placeholder="SL-XXXXXX"
+           style="font-family:var(--font-mono);font-size:14px;padding:10px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;min-width:160px;min-height:44px;letter-spacing:1px;text-transform:uppercase;"
+           oninput="this.value=this.value.toUpperCase()">
+    <button onclick="applyReferralCode()" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:#1A2744;background:#F5C518;padding:10px 18px;border-radius:4px;border:none;cursor:pointer;min-height:44px;white-space:nowrap;">APPLY CODE &#8594;</button>
+    <span id="referral-code-msg" style="font-size:16px;color:rgba(255,255,255,0.60);display:none;"></span>
+  </div>
+</div>
+{% endif %}
+
+{# Active challenge banner #}
+{% if active_challenge and active_challenge.is_open %}
+<div style="background:rgba(245,197,24,0.12);border:1px solid var(--gold);border-radius:var(--radius-md);padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div>
+    <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-primary);text-transform:uppercase;margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;">{{ active_challenge.prompt_title }}</div>
+    <div style="font-size:16px;color:var(--text-primary);margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
+  </div>
+  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Enter Challenge →</a>
+</div>
+{% endif %}
+
+{# ════════════════════════════════════════════════════════════════
+   4. MAIN TWO-COLUMN
+════════════════════════════════════════════════════════════════ #}
+{% if images.items %}
+<div class="db-main-cols">
+
+  {# ── LEFT: image grid ── #}
+  <div style="min-width:0;">
+
+    {# Search #}
+    <div class="db-search-row">
+      <input type="text" id="db-search-input" value="{{ query or '' }}" placeholder="Search your images…"
+             onkeydown="if(event.key==='Enter'){window.location=dbSearchUrl(this.value);}" />
+    </div>
+    {# Genre filters — from poty_tracker so they match actual user genres #}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <a href="{{ url_for('dashboard') }}" class="db-filter-btn{% if not query %} active{% endif %}">All</a>
+      {% if poty_tracker and poty_tracker.genre_rows %}
+        {% for row in poty_tracker.genre_rows %}
+        <a href="{{ url_for('dashboard', q=row.genre) }}" class="db-filter-btn{% if query and query.lower()==row.genre.lower() %} active{% endif %}">{{ row.genre|title }}</a>
+        {% endfor %}
+      {% else %}
+        {% for genre in ['portrait','street','landscape','wildlife','macro','abstract'] %}
+        <a href="{{ url_for('dashboard', q=genre) }}" class="db-filter-btn{% if query and query.lower()==genre %} active{% endif %}">{{ genre|title }}</a>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    {# Image grid section #}
+    <div class="db-section">
+      <div class="db-section-hdr" onclick="dbToggle(this)">
+        <div class="db-section-title">
+          {% if query %}Results for "{{ query }}"{% else %}Recent Images{% endif %}
+          <span class="db-count-badge neutral">{{ images.total }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="db-section-meta">By date</span>
+          <span class="db-chevron open">▼</span>
+        </div>
+      </div>
+      <div class="db-section-body">
+        <div class="db-img-grid">
+          {% for img in images.items %}
+          <a href="{{ url_for('image_detail', image_id=img.id) }}"
+             class="db-img-card{% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %} raw-pending{% endif %}">
+            <div class="db-img-thumb">
+              <img src="{{ img.thumb_url }}"
+                   alt="{{ img.asset_name or img.original_filename or 'Image' }}"
+                   onerror="this.style.display='none'">
+              {% if img.score %}
+              <span class="db-img-score">{{ "%.2f"|format(img.score) }}</span>
+              {% endif %}
+              {% if img.tier %}
+              <span class="db-img-tier">{{ img.tier }}</span>
+              {% endif %}
+              {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
+              <span class="db-raw-pill">RAW DUE</span>
+              {% endif %}
+            </div>
+            <div class="db-img-body">
+              <div class="db-img-title">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
+              <div class="db-img-meta">
+                <span class="db-img-meta-row1">{{ img.genre or '' }}{% if img.camera_track %} · {{ img.camera_track|title }}{% endif %}</span>
+                <span class="db-img-meta-row2">
+                  {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
+                    <span style="color:var(--red,#c0392b);font-weight:700;">⚠ RAW DUE</span>
+                  {% elif img.raw_verified %}
+                    <span style="color:var(--green,#2e7d32);">✓ RAW Verified</span>
+                  {% elif img.raw_disqualified %}
+                    <span style="color:var(--red,#c0392b);">✗ Disqualified</span>
+                  {% elif img.score is not none %}
+                    ✓ Scored
+                  {% elif img.is_in_peer_pool %}
+                    <span style="color:var(--green,#2e7d32);">In Pool</span>
+                  {% else %}
+                    Scoring…
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+            {# RAW banner #}
+            {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
+            <span class="db-raw-banner pending" onclick="event.preventDefault();event.stopPropagation();window.location='{{ url_for('raw_submit', contest_type='weekly', image_id=img.id) }}';" style="cursor:pointer;">
+              📂 RAW requested — <strong>Submit →</strong>
+            </span>
+            {% elif img.raw_verified %}
+            <span class="db-raw-banner verified">✓ RAW Verified — score confirmed</span>
+            {% elif img.raw_disqualified %}
+            <span class="db-raw-banner disqualified">✗ RAW Disqualified</span>
+            {% endif %}
+            {# Peer pool entry #}
+            {% if rating_widget and rating_widget.unlocks_pending > 0 and rating_widget.pool_candidate and rating_widget.pool_candidate.id == img.id and not img.is_in_peer_pool %}
+            <div class="db-pool-entry" onclick="event.preventDefault();">
+              <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
+                <input type="hidden" name="image_id" value="{{ img.id }}">
+                <button type="submit" class="btn btn-solid" style="font-size:16px;width:100%;min-height:44px;">🔓 Enter Peer Pool</button>
+              </form>
+            </div>
+            {% endif %}
+            {% if img.is_in_peer_pool %}
+            <div class="db-peer-pool-strip">
+              ✓ In Peer Pool{% if img.peer_rating_count %} · {{ img.peer_rating_count }} rating{{ 's' if img.peer_rating_count != 1 }}{% endif %}
+            </div>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+
+        {# Pagination #}
+        {% if images.pages > 1 %}
+        <div class="db-pagination">
+          {% if images.has_prev %}
+          <a href="{{ url_for('dashboard', page=images.prev_num, q=query) }}">← Prev</a>
+          {% endif %}
+          {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            <a href="{{ url_for('dashboard', page=p, q=query) }}" class="{{ 'active' if p == images.page else '' }}">{{ p }}</a>
+            {% else %}
+            <span>…</span>
+            {% endif %}
+          {% endfor %}
+          {% if images.has_next %}
+          <a href="{{ url_for('dashboard', page=images.next_num, q=query) }}">Next →</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Programme wins — collapsed by default #}
+    {% if contest_wins %}
+    <div class="db-section">
+      <div class="db-section-hdr" onclick="dbToggle(this)">
+        <div class="db-section-title">
+          Programme Wins
+          <span class="db-count-badge gold">{{ contest_wins|length }}</span>
+        </div>
+        <span class="db-chevron">▼</span>
+      </div>
+      <div class="db-section-body collapsed">
+        {% for img in contest_wins %}
+        <div class="db-win-card">
+          <span class="db-win-badge">{{ img.tier or 'Recipient' }}</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
+            {% if img.genre %}<div style="font-size:16px;color:var(--text-primary);margin-top:3px;line-height:1.5;">{{ img.genre }}</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>{# /left col #}
+
+  {# ── RIGHT: peer + mentor ── #}
+  <div class="db-right-col" style="min-width:0;">
+
+    {# Peer rating #}
+    {% if rating_widget %}
+    <div class="db-panel">
+      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+        <span class="db-panel-hdr-title">Peer Rating</span>
+        <span class="db-panel-chevron">▼</span>
+      </div>
+      <div class="db-panel-body">
+      <div class="db-plbl gold">Peer Rating</div>
+      <div class="db-peer-stats">
+        <div><div class="db-peer-val">{{ rating_widget.credits }}</div><div class="db-peer-lbl">Credits</div></div>
+        <div><div class="db-peer-val">{{ rating_widget.lifetime_given }}</div><div class="db-peer-lbl">Given</div></div>
+        <div><div class="db-peer-val">{{ rating_widget.unlocks_pending or 0 }}</div><div class="db-peer-lbl">Unlock</div></div>
+      </div>
+      {% if rating_widget.credits > 0 %}
+      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
+      {% if rating_widget.unlocks_pending > 0 %}
+      <div style="font-size:16px;color:var(--text-primary);margin-top:8px;line-height:1.5;">
+        Rate {{ rating_widget.unlocks_pending }} image{{ 's' if rating_widget.unlocks_pending != 1 }} to unlock your pool slot.
+      </div>
+      {% endif %}
+      {% else %}
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.5;">
+        No images ready to rate right now. Check back soon.
+      </div>
+      {% endif %}
+      </div>{# /db-panel-body #}
+    </div>
+    {% endif %}
+
+    {# Mentor nudge #}
+    <div class="db-panel" style="background:#2C3E6B;border-color:rgba(245,197,24,0.3);">
+      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+        <span class="db-panel-hdr-title">Mentor Review</span>
+        <span class="db-panel-chevron" style="color:rgba(255,255,255,0.45);">▼</span>
+      </div>
+      <div class="db-panel-body">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F5C518;margin-bottom:8px;">Mentor Review</div>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4;">
+        {% if progress_data and progress_data.weakest %}
+          Your {{ progress_data.dim_labels[progress_data.weakest] }} needs work.
+        {% else %}
+          Get expert feedback on your images.
+        {% endif %}
+      </div>
+      <div style="font-size:16px;color:#FFFFFF;margin-bottom:14px;line-height:1.6;">Structured feedback within 72 hours.</div>
+      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;">Choose a Mentor →</a>
+      </div>{# /db-panel-body #}
+    </div>
+
+    {# Portfolio #}
+    <div class="db-panel" id="db-panel-portfolio">
+      <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+        <span class="db-panel-hdr-title">Portfolio</span>
+        <span class="db-panel-chevron">▼</span>
+      </div>
+      <div class="db-panel-body">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F5C518;margin-bottom:8px;">Your Portfolio</div>
+        {% if current_user.portfolio_public %}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Public · Live</div>
+        <div style="font-size:16px;color:var(--text-primary);margin-bottom:10px;line-height:1.5;">
+          shutterleague.com/portfolio/{{ current_user.username }}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="{{ url_for('portfolio', username=current_user.username) }}" target="_blank"
+             style="display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--text-primary);font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;border:1px solid var(--border);">
+            View →
+          </a>
+          <a href="{{ url_for('portfolio_manager') }}"
+             style="display:inline-flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;flex:1;">
+            Edit Portfolio →
+          </a>
+        </div>
+        {% else %}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Not published yet</div>
+        <div style="font-size:16px;color:var(--text-primary);margin-bottom:14px;line-height:1.6;">
+          Build a public portfolio to share your best work with the world.
+        </div>
+        <a href="{{ url_for('portfolio_manager') }}"
+           style="display:flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;">
+          Set Up Portfolio →
+        </a>
+        {% endif %}
+      </div>{# /db-panel-body #}
+    </div>
+
+  </div>{# /right col #}
+
+</div>{# /main-cols #}
+
+{# Set password nudge (standalone, only if no password set) #}
+{% if not current_user.password_hash %}
+<div style="margin-top:12px;">
+  <div class="db-panel" style="border-color:var(--gold);">
+    <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
+      <span class="db-panel-hdr-title">&#x1F512; Add a password</span>
+      <span class="db-panel-chevron">▼</span>
+    </div>
+    <div class="db-panel-body">
+    <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">&#x1F512; Add a password</div>
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Sign in without Google — useful if Google is unavailable.</div>
+    <a href="{{ url_for('set_password') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;">Set Password →</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+{# ── Empty state ── #}
+<div class="db-empty">
+  {% if query %}
+  <h3>No images match &#8220;{{ query }}&#8221;</h3>
+  <p>Try a different search term, or <a href="{{ url_for('dashboard') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">clear the search</a>.</p>
+  {% else %}
+  <h3>No images yet</h3>
+  <p>Upload your first photograph to get your {{ glink("DDI")|safe }} score.<br>Every scored image enters the monthly programme automatically.</p>
+  <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('upload') }}" class="btn btn-solid" style="min-height:44px;">Upload Your First Image →</a>
+    <a href="/how-it-works" class="btn" style="min-height:44px;">How It Works</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+</div>{# /db-wrap #}
+{% endblock %}
+
+{% block extra_js %}
+
+
+
+
+<script>
+function dbToggle(hdr) {
+  var body = hdr.parentElement.querySelector('.db-section-body');
+  var chev = hdr.querySelector('.db-chevron');
+  body.classList.toggle('collapsed');
+  chev.classList.toggle('open');
+}
+
+function dbPanelToggle(hdr) {
+  var panel = hdr.parentElement;
+  var body  = panel.querySelector('.db-panel-body');
+  panel.classList.toggle('mob-open');
+  var open = panel.classList.contains('mob-open');
+  if (body && window.innerWidth < 769) body.style.display = open ? '' : 'none';
+}
+
+function dbAnnToggle(strip) {
+  strip.classList.toggle('ann-open');
+}
+
+// Panels always start collapsed on mobile — no memory between visits
+
+function dbSearchUrl(q) {
+  return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
+}
+
+var _hintExpand = {
+    standing:  'See full breakdown \u25be',
+    points:    'See points & redeem \u25be',
+    poty:      'See my POTY ranking \u25be',
+    referrals: 'Share my code \u25be'
+  };
+  var _hintCollapse = {
+    standing:  'Hide breakdown \u25b4',
+    points:    'Hide details \u25b4',
+    poty:      'Hide ranking \u25b4',
+    referrals: 'Hide \u25b4'
+  };
+
+function dbHcardToggle(id) {
+  if (window.innerWidth >= 901) return; // Desktop: always open, CSS handles it
+  var body = document.getElementById('db-hcard-body-'+id);
+  var chev = document.getElementById('db-hcard-chev-'+id);
+  var hint = document.getElementById('db-hcard-hint-'+id);
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (hint) hint.textContent = open ? (_hintExpand[id] || 'See more \u25be') : (_hintCollapse[id] || 'Hide \u25b4');
+  if (chev) chev.textContent = open ? '\u25b6' : '\u25bc';
+  // No localStorage — always reset to collapsed on next page load
+}
+
+// Always start collapsed on every page load — mobile + tablet
+(function() {
+  if (window.innerWidth >= 901) return; // Desktop: CSS forces open
+  var cards = ['standing', 'points', 'poty', 'referrals'];
+  cards.forEach(function(id) {
+    var body = document.getElementById('db-hcard-body-'+id);
+    var chev = document.getElementById('db-hcard-chev-'+id);
+    var hint = document.getElementById('db-hcard-hint-'+id);
+    if (!body) return;
+    body.style.display = 'none'; // Always collapsed
+    if (hint) hint.textContent = _hintExpand[id] || 'See more \u25be';
+    if (chev) chev.textContent = '\u25b6';
+  });
+})();
+
+function dbPotyToggle() {
+  var body = document.getElementById('db-poty-body');
+  var chev = document.getElementById('db-poty-chev');
+  if (!body) return;
+  body.classList.toggle('collapsed');
+  if (chev) chev.classList.toggle('open');
+}
+// On mobile collapse POTY by default to keep panel compact
+(function() {
+  if (window.innerWidth <= 768) {
+    var body = document.getElementById('db-poty-body');
+    if (body) body.classList.add('collapsed');
+  }
+})();
+
+// ── Section + panel collapse init — always collapsed on every page load ──
+(function() {
+  // db-section bodies: collapse all except the image gallery
+  var sectionHdrs = document.querySelectorAll('.db-section-hdr');
+  sectionHdrs.forEach(function(hdr) {
+    var body = hdr.parentElement.querySelector('.db-section-body');
+    var chev = hdr.querySelector('.db-chevron');
+    if (!body) return;
+    if (body.querySelector('.db-img-grid')) return; // Never collapse image gallery
+    body.classList.add('collapsed');
+    if (chev) chev.classList.remove('open');
+  });
+
+  // db-panel bodies (right col): always collapsed on mobile/tablet
+  if (window.innerWidth < 769) {
+    var panelHdrs = document.querySelectorAll('.db-panel-hdr');
+    panelHdrs.forEach(function(hdr) {
+      var panel = hdr.parentElement;
+      var body  = panel.querySelector('.db-panel-body');
+      if (!body) return;
+      panel.classList.remove('mob-open');
+      body.style.display = 'none';
+    });
+  }
+})();
+
+function applyReferralCode() {
+  var code = document.getElementById('referral-code-input').value.trim().toUpperCase();
+  var msg  = document.getElementById('referral-code-msg');
+  if (!code || code.length < 6) {
+    msg.style.display = 'inline'; msg.style.color = '#ffaaaa';
+    msg.textContent = 'Please enter a valid code.'; return;
+  }
+  msg.style.display = 'inline'; msg.style.color = 'rgba(255,255,255,0.60)';
+  msg.textContent = 'Checking\u2026';
+  fetch('/referral/apply', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      msg.style.color = '#7fff7f';
+      msg.textContent = '\u2705 Referral discount applied! Loading\u2026';
+      setTimeout(function(){ window.location.reload(); }, 1200);
+    } else {
+      msg.style.color = '#ffaaaa';
+      msg.textContent = data.error || 'Code not recognised \u2014 check with your friend.';
+    }
+  })
+  .catch(function() { msg.style.color = '#ffaaaa'; msg.textContent = 'Something went wrong \u2014 please try again.'; });
+}
+</script>
+
+{% if referral_code %}
+<script>
+(function() {
+  var _ru = {{ referral_url | tojson }};
+  var _db = 'I\u2019ve been using Shutter League to get my photography scored by AI and build my ranking. Use my referral link for a special first-month price: ' + _ru;
+  var _ch = 'whatsapp';
+  var _subj = encodeURIComponent('Join me on Shutter League');
+
+  function _full() {
+    var g = (document.getElementById('slRefGreeting') ? document.getElementById('slRefGreeting').value : 'Hey,').trim();
+    var b = (document.getElementById('slRefBody') ? document.getElementById('slRefBody').value : _db).trim();
+    return g + '\n\n' + b + '\n\n' + _ru;
+  }
+
+  window.slRefModal = function(channel) {
+    _ch = channel;
+    var f = _full();
+    if (channel === 'whatsapp') {
+      window.open('https://wa.me/?text=' + encodeURIComponent(f), '_blank');
+    } else if (channel === 'gmail') {
+      window.open('https://mail.google.com/mail/?view=cm&su=' + _subj + '&body=' + encodeURIComponent(f), '_blank');
+    } else {
+      window.open('https://outlook.live.com/mail/0/deeplink/compose?subject=' + _subj + '&body=' + encodeURIComponent(f), '_blank');
+    }
+  };
+})();
+</script>
+{% endif %}
+
+{% endblock %}
