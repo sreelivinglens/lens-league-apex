@@ -3832,7 +3832,7 @@ def leaderboard():
     img_per_page = 25
     img_q        = apply_filters(Image.query, user_already_joined=False).order_by(desc(Image.score))
     img_total    = img_q.count()
-    img_pages    = max(1, (img_total + img_per_page - 1) // img_per_page)
+    img_pages    = min(25, max(1, (img_total + img_per_page - 1) // img_per_page))
     img_page     = max(1, min(img_page, img_pages))
     top_images   = img_q.offset((img_page - 1) * img_per_page).limit(img_per_page).all()
 
@@ -3875,7 +3875,7 @@ def leaderboard():
         .all()
     )
     pg_total    = len(pg_all)
-    pg_pages    = max(1, (pg_total + pg_per_page - 1) // pg_per_page)
+    pg_pages    = min(25, max(1, (pg_total + pg_per_page - 1) // pg_per_page))
     pg_page     = max(1, min(pg_page, pg_pages))
     pg_rows     = pg_all[(pg_page - 1) * pg_per_page : pg_page * pg_per_page]
 
