@@ -126,43 +126,50 @@ def send_challenge_notification(challenge):
         slot_text = '3 images this week' if is_sub else '1 image this week (subscribe for 3)'
         cta_text  = 'Submit your image ->' if is_sub else 'Enter the challenge ->'
 
-        html_body = f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="x-apple-disable-message-reformatting">
-</head>
-<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">
-<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">This week: {challenge.prompt_title}</div>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F0EDE8;padding:32px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" border="0"
- style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-  <tr><td style="background:#1A1A18;padding:28px 32px 10px;">
-    <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League · Weekly Assignment</p>
-  </td></tr>
-  <tr><td style="background:#1A1A18;padding:8px 32px 8px;">
-    <p style="margin:0 0 6px;font-family:'Courier New',Courier,monospace;font-size:13px;letter-spacing:2px;color:#8A8070;text-transform:uppercase;">{challenge.week_ref}</p>
-    <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:700;font-style:italic;color:#FFFFFF;line-height:1.2;">{challenge.prompt_title}</h1>
-  </td></tr>
-  <tr><td style="background:#F5C518;padding:4px 32px;"></td></tr>
-  <tr><td style="padding:32px 32px 0;">
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Get your photo rated — every submission counts toward <strong>Photographer of the Year</strong> standing.</p>
-    {'<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#4A4840;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
-    {sponsor_line}
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F3EF;border-radius:6px;margin-bottom:24px;">
-      <tr><td style="padding:16px 20px;font-family:Arial,Helvetica,sans-serif;font-size:17px;color:#1A1A18;line-height:1.7;">
-        <strong>Submissions:</strong> {slot_text}<br>
-        <span style="color:#4A4840;">Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}</span>
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+
+      <!-- Header -->
+      <tr><td style="background:#1a1a18;padding:24px 32px;">
+        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
       </td></tr>
+
+      <!-- Challenge banner -->
+      <tr><td style="background:#1a1a18;padding:0 32px 28px;">
+        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Assignment . {challenge.week_ref}</p>
+        <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.1;">{challenge.prompt_title}</h1>
+      </td></tr>
+
+      <!-- Body -->
+      <tr><td style="padding:28px 32px;">
+        <p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.6;">Get your photo rated for it to be in the reckoning to qualify for <strong style="color:#1a1a18;">Photographer of the Year</strong></p>
+        {'<p style="margin:0 0 20px;font-size:16px;color:#6a6458;line-height:1.7;">' + challenge.prompt_body + '</p>' if challenge.prompt_body else ''}
+        {sponsor_line}
+        <p style="margin:0 0 8px;font-size:15px;color:#8a8070;">
+          <strong style="color:#1a1a18;">You have:</strong> {slot_text}
+        </p>
+        <p style="margin:0 0 24px;font-size:14px;color:#8a8070;">
+          Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
+        </p>
+        <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">
+        <p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">
+          You're receiving this because you have an account on Shutter League.<br>
+          <a href="{site_url}" style="color:#C8A84B;">shutterleague.com</a>
+        </p>
+      </td></tr>
+
     </table>
   </td></tr>
-  <tr><td style="padding:0 32px 32px;">
-    <a href="{challenge_url}" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 32px;text-decoration:none;border-radius:4px;">{cta_text}</a>
-  </td></tr>
-  <tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">
-    <p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">You are receiving this because you have an account on Shutter League.&nbsp;<a href="{site_url}/profile" style="color:#1A1A18;text-decoration:underline;">Manage preferences</a></p>
-  </td></tr>
 </table>
-</td></tr></table>
 </body></html>"""
 
         text_body = f"""SHUTTER LEAGUE  -  Weekly Assignment
@@ -437,6 +444,8 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verification_required BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_verified BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS raw_disqualified BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS jpeg_provenance_status VARCHAR(20) DEFAULT NULL",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS jpeg_provenance_status VARCHAR(20) DEFAULT NULL",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS in_judge_pool BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_score FLOAT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS judge_final_score FLOAT",
@@ -881,6 +890,29 @@ with app.app_context():
                 conn12.commit()
             print('raw_submissions schema OK.')
         except Exception as ce:
+            db.session.rollback()
+            print(f'raw_submissions migration warning: {ce}')
+        try:
+            db.session.execute(db.text(
+                """CREATE TABLE IF NOT EXISTS contact_messages (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(120) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    subject VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    received_at TIMESTAMP DEFAULT NOW(),
+                    replied BOOLEAN DEFAULT FALSE,
+                    replied_at TIMESTAMP,
+                    replied_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                    reply_body TEXT
+                )"""
+            ))
+            db.session.commit()
+            print('contact_messages schema OK.')
+        except Exception as _cme:
+            db.session.rollback()
+            print(f'contact_messages migration warning: {_cme}')
+        except Exception as ce:
             print(f'raw_submissions migration warning: {ce}')
 
         print('Columns migrated OK.')
@@ -1292,36 +1324,19 @@ def run_points_reset_warning_nov():
                     balance = round(u.points_balance or 0, 1)
                     at_risk = round(balance * 0.10, 1)
                     subject = f'Your {balance} points — upload before 31 Dec to keep them all'
-                    html_body = f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="x-apple-disable-message-reformatting">
-</head>
-<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">
-<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">Your {balance} points are safe — upload before 31 Dec</div>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F0EDE8;padding:32px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" border="0"
- style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-  <tr><td style="background:#1A1A18;padding:28px 32px 10px;">
-    <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League · Points</p>
-  </td></tr>
-  <tr><td style="background:#1A1A18;padding:8px 32px 32px;">
-    <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;color:#FFFFFF;line-height:1.25;">Your points are waiting, {name}.</h1>
-  </td></tr>
-  <tr><td style="padding:32px 32px 0;">
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">You have <strong>{balance} points</strong> in your wallet.</p>
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">We haven&#39;t seen a new upload from you in a while. Points only reset for inactive accounts — upload one image before <strong>31 December</strong> and your full balance carries forward into the new year.</p>
-    <p style="margin:0 0 24px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">If you don&#39;t upload before then, <strong>{at_risk} points</strong> (10%) will reset on 1 January.</p>
-  </td></tr>
-  <tr><td style="padding:0 32px 32px;">
-    <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 32px;text-decoration:none;border-radius:4px;">Upload &amp; Protect Your Points &#8594;</a>
-  </td></tr>
-  <tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">
-    <p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">You received this because you have a Shutter League account with a points balance.&nbsp;<a href="{site_url}/profile" style="color:#1A1A18;text-decoration:underline;">Manage preferences</a></p>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>"""
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">Your points are waiting, {name}.</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{balance} points</strong> in your wallet.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">We haven&#39;t seen a new upload from you in a while. Points only reset for inactive accounts — upload one image before <strong>31 December</strong> and your full balance carries forward into the new year.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">If you don&#39;t upload before then, <strong>{at_risk} points</strong> (10%) will reset on 1 January.</p>
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload &amp; Protect Your Points &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have a Shutter League account with a points balance.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
                     ok = send_email(u.email, subject, html_body)
                     if ok:
                         sent += 1
@@ -1357,36 +1372,19 @@ def run_points_reset_warning_dec():
                     balance = round(u.points_balance or 0, 1)
                     at_risk = round(balance * 0.10, 1)
                     subject = f'16 days left — protect your {balance} points before 31 Dec'
-                    html_body = f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="x-apple-disable-message-reformatting">
-</head>
-<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">
-<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">16 days left — upload to keep your {balance} points</div>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F0EDE8;padding:32px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" border="0"
- style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-  <tr><td style="background:#1A1A18;padding:28px 32px 10px;">
-    <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League · Points</p>
-  </td></tr>
-  <tr><td style="background:#1A1A18;padding:8px 32px 32px;">
-    <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;color:#FFFFFF;line-height:1.25;">16 days to protect your points, {name}.</h1>
-  </td></tr>
-  <tr><td style="padding:32px 32px 0;">
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Your balance: <strong>{balance} points.</strong></p>
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the deadline and <strong>{at_risk} points</strong> reset on 1 January.</p>
-    <p style="margin:0 0 24px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">You&#39;ve earned these. Take one shot before the year ends.</p>
-  </td></tr>
-  <tr><td style="padding:0 32px 32px;">
-    <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 32px;text-decoration:none;border-radius:4px;">Upload Now — 16 Days Left &#8594;</a>
-  </td></tr>
-  <tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">
-    <p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">You received this because you have a Shutter League account with a points balance.&nbsp;<a href="{site_url}/profile" style="color:#1A1A18;text-decoration:underline;">Manage preferences</a></p>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>"""
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">16 days to protect your points, {name}.</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your balance: <strong>{balance} points.</strong></p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the deadline and <strong>{at_risk} points</strong> reset on 1 January.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You&#39;ve earned these. Take one shot before the year ends.</p>
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload Now — 16 Days Left &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have a Shutter League account with a points balance.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
                     ok = send_email(u.email, subject, html_body)
                     if ok:
                         sent += 1
@@ -1530,44 +1528,27 @@ def run_reengagement_emailer():
 
                     if is_sub:
                         subject  = f'Your {genre} photo scored {score:.2f} — ready for round two?'
-                        pts_line = f'<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
+                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{pts} points</strong> in your wallet. Upload another image and earn more.</p>'
                         cta_text = 'Upload Your Next Image'
                     else:
                         subject  = f'Your {genre} photo scored {score:.2f} — keep building'
-                        pts_line = f'<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Subscribe to start earning points and build your Official World Ranking.</p>'
+                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your Official World Ranking.</p>'
                         cta_text = 'Continue on Shutter League'
 
-                    html_body = f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="x-apple-disable-message-reformatting">
-</head>
-<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">
-<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">Your {genre} image scored {score:.2f} — see what&#39;s next</div>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F0EDE8;padding:32px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" border="0"
- style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-  <tr><td style="background:#1A1A18;padding:28px 32px 10px;">
-    <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">Shutter League · DDI Score</p>
-  </td></tr>
-  <tr><td style="background:#1A1A18;padding:8px 32px 32px;">
-    <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;color:#FFFFFF;line-height:1.25;">{subject}</h1>
-  </td></tr>
-  <tr><td style="padding:32px 32px 0;">
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Hi {name},</p>
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
-    <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:18px;color:#1A1A18;line-height:1.7;">Upload your next shot and see how you compare.</p>
-    {pts_line}
-  </td></tr>
-  <tr><td style="padding:0 32px 32px;">
-    <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:16px 32px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
-  </td></tr>
-  <tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">
-    <p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">You received this because you have an account on Shutter League.&nbsp;<a href="{site_url}/profile" style="color:#1A1A18;text-decoration:underline;">Manage preferences</a></p>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>"""
+                    html_body = f"""
+    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
+      <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League · Apex DDI Engine</div>
+      <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">{subject}</h2>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Hi {name},</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your <strong>{genre}</strong> image &#39;{img_name}&#39; scored <strong>{score:.2f}</strong> — that&#39;s a <strong>{tier}</strong> rating. Solid foundation.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Upload your next shot and see how you compare.</p>
+      {pts_line}
+      <div style="margin:28px 0;">
+        <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text} &#8594;</a>
+      </div>
+      <p style="font-size:13px;color:#8a8070;line-height:1.6;">You received this because you have an account on Shutter League.<br>
+      <a href="{site_url}/profile" style="color:#8a8070;">Manage email preferences</a></p>
+    </div>"""
 
                     ok = send_email(row.email, subject, html_body)
                     if ok:
@@ -3338,7 +3319,19 @@ def upload():
                                     if _img.score >= 9.0 and ai_suspicion < 0.4:
                                         _img.raw_verification_required = True
                                         _deadline = datetime.utcnow() + timedelta(days=7)
-                                        _submit_url = f'{_site_url}/raw/submit/weekly/{_img.id}'
+                                        # ── JPEG provenance path check ──
+                                        if check_jpeg_provenance_eligible(_img):
+                                            # Camera-direct JPEG — send the JPEG provenance emailer instead
+                                            _jp_url = f'{_site_url}/jpeg-provenance/submit/{_img.id}'
+                                            import threading as _jpt
+                                            _jpt.Thread(
+                                                target=_send_jpeg_provenance_email,
+                                                args=(_img.id, _jp_url, _user_email, _user_name, _img.asset_name, round(_img.normalised_score, 2)),
+                                                daemon=True
+                                            ).start()
+                                            app.logger.info(f'[jpeg_provenance_trigger] image={_img.id} score={_img.normalised_score}')
+                                        else:
+                                            _submit_url = f'{_site_url}/raw/submit/weekly/{_img.id}'
                                         try:
                                             db.session.execute(db.text(
                                                 "INSERT INTO raw_submissions "
@@ -6761,7 +6754,48 @@ def contact():
 
         if ok:
             session['contact_last_sent'] = _time.time()
-            flash('Your message has been sent. We respond within 2 working days.', 'success')
+            # Store message in DB
+            try:
+                db.session.execute(db.text(
+                    "INSERT INTO contact_messages (name, email, subject, message) "
+                    "VALUES (:n, :e, :s, :m)"
+                ), {'n': name, 'e': email, 's': subject, 'm': message})
+                db.session.commit()
+            except Exception as _cm_err:
+                db.session.rollback()
+                app.logger.warning(f'[contact] Could not store message: {_cm_err}')
+            # Auto-reply to sender — branded, 3 working days
+            _ar_html = (
+                '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+                '<div style="background:#1A2744;padding:20px 32px;">'
+                '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+                '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+                '</div>'
+                '<div style="padding:32px;">'
+                f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi ' + name + ',</p>'
+                '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Thank you for writing in. We have received your message and will respond within <strong>3 working days</strong>.</p>'
+                '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
+                '<p style="font-size:14px;color:#1A1A18;font-weight:700;margin:0 0 6px 0;">Your message:</p>'
+                f'<p style="font-size:14px;color:#555555;margin:0;font-style:italic;line-height:1.7;">' + message.replace('\n', '<br>') + '</p>'
+                '</div>'
+                '<p style="font-size:14px;color:#888888;margin:0;">If your query is urgent, you can also reach us directly at <a href="mailto:info@shutterleague.com" style="color:#F5C518;">info@shutterleague.com</a>.</p>'
+                '</div>'
+                '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+                '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+                '</div>'
+                '</div>'
+            )
+            _ar_text = (
+                f'Hi {name},\n\n'
+                'Thank you for writing in. We have received your message and will respond within 3 working days.\n\n'
+                f'Your message:\n{message}\n\n'
+                'If urgent: info@shutterleague.com\n\n-- Shutter League'
+            )
+            try:
+                send_email(email, f'We received your message — Shutter League', _ar_html, _ar_text)
+            except Exception as _are:
+                app.logger.warning(f'[contact] Auto-reply failed: {_are}')
+            flash('Your message has been sent. We respond within 3 working days.', 'success')
             return render_template('contact.html')
         else:
             app.logger.error(f'[contact] Failed to send contact email from {email}')
@@ -9177,72 +9211,34 @@ def admin_contests():
 
 
 def _send_contest_announcement_email(user, ann):
-    """Send a contest announcement email to a single user via Brevo.
-    White background · black header · gold accents · 18px body · 70yr rule · mobile-safe.
-    """
-    import html as _html
-    name      = user.full_name or user.username
-    safe_name = _html.escape(name)
-    safe_body = _html.escape(ann.body)
-    site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
-
-    cta_label = ann.cta_label or ''
-    cta_url   = ''
+    """Send a contest announcement email to a single user via Brevo."""
+    name = user.full_name or user.username
+    cta_html = ''
     if ann.cta_label and ann.cta_url:
-        cta_url = ann.cta_url if ann.cta_url.startswith('http') else site_url + ann.cta_url
-
-    cta_block = (
-        '<tr><td style="padding:0 32px 32px;">'
-        '<a href="' + cta_url + '" style="display:inline-block;background:#1A1A18;'
-        'color:#F5C518;font-family:\'Courier New\',Courier,monospace;font-size:16px;'
-        'font-weight:700;letter-spacing:2px;text-transform:uppercase;'
-        'padding:16px 32px;text-decoration:none;border-radius:4px;">'
-        + _html.escape(cta_label) + '</a></td></tr>'
-    ) if cta_label and cta_url else ''
-
+        cta_url = ann.cta_url if ann.cta_url.startswith('http') else 'https://shutterleague.com' + ann.cta_url
+        cta_html = (
+            '<div style="margin-top:24px;">'
+            '<a href="' + cta_url + '" style="background:#F5C518; color:#000; font-weight:700; '
+            'padding:12px 28px; border-radius:6px; text-decoration:none; font-size:15px;">'
+            + ann.cta_label + '</a></div>'
+        )
+    import html as _html
+    safe_title = _html.escape(ann.title)
+    safe_body  = _html.escape(ann.body)
+    safe_name  = _html.escape(name)
     html_body = (
-        '<!DOCTYPE html><html lang="en"><head>'
-        '<meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<meta name="x-apple-disable-message-reformatting">'
-        '</head>'
-        '<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">'
-        '<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">'
-        + _html.escape(ann.title) + '</div>'
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0" '
-        'style="background:#F0EDE8;padding:32px 16px;">'
-        '<tr><td align="center">'
-        '<table width="600" cellpadding="0" cellspacing="0" border="0" '
-        'style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;'
-        'overflow:hidden;max-width:600px;width:100%;">'
-        # Black header — brand label
-        '<tr><td style="background:#1A1A18;padding:28px 32px 10px;">'
-        '<p style="margin:0;font-family:\'Courier New\',Courier,monospace;font-size:13px;'
-        'font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">'
-        'Shutter League</p></td></tr>'
-        # Black header — headline
-        '<tr><td style="background:#1A1A18;padding:8px 32px 32px;">'
-        '<h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;'
-        'font-weight:700;color:#FFFFFF;line-height:1.25;">'
-        + _html.escape(ann.title) + '</h1></td></tr>'
-        # White body
-        '<tr><td style="padding:32px 32px 0;">'
-        '<p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;'
-        'font-size:18px;color:#1A1A18;line-height:1.7;">Hi ' + safe_name + ',</p>'
-        '<div style="font-family:Arial,Helvetica,sans-serif;font-size:18px;'
-        'color:#1A1A18;line-height:1.7;margin:0 0 18px;white-space:pre-wrap;">'
-        + safe_body + '</div>'
-        '</td></tr>'
-        + cta_block +
-        # Footer
-        '<tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">'
-        '<p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">'
-        'You are receiving this because you are a member of Shutter League.&nbsp;'
-        '<a href="' + site_url + '/profile" style="color:#1A1A18;text-decoration:underline;">'
-        'Manage preferences</a></p>'
-        '</td></tr>'
-        '</table></td></tr></table>'
-        '</body></html>'
+        '<div style="font-family:Arial,sans-serif; max-width:600px; margin:0 auto;'
+        ' background:#000; color:#fff; padding:32px; border-radius:8px;">'
+        '<div style="font-family:monospace; font-size:11px; letter-spacing:3px;'
+        ' color:#F5C518; text-transform:uppercase; margin-bottom:8px;">Shutter League</div>'
+        '<h2 style="color:#F5C518; margin:0 0 16px 0;">' + safe_title + '</h2>'
+        '<p style="color:#ccc; font-size:15px; line-height:1.6; margin:0 0 16px 0;">Hi ' + safe_name + ',</p>'
+        '<div style="color:#fff; font-size:15px; line-height:1.7; white-space:pre-wrap;">' + safe_body + '</div>'
+        + cta_html
+        + '<p style="color:#666; font-size:12px; margin-top:32px;">You are receiving this because you are'
+        ' a member of Shutter League. '
+        '<a href="https://shutterleague.com/dashboard" style="color:#F5C518;">Visit your dashboard</a></p>'
+        '</div>'
     )
     send_email(user.email, ann.title, html_body)
 
@@ -10538,6 +10534,557 @@ def raw_submit(contest_type, image_id):
                            contest_type=contest_type, already_submitted=False)
 
 
+# ---------------------------------------------------------------------------
+# JPEG Provenance Verification  (alternative to RAW for camera-direct JPEGs)
+# Triggered when: score > 9.0 AND EXIF shows intact camera-direct origin
+# Accepts: original full-size JPEG (≥20MB) OR a Google Drive / WeTransfer link
+# ---------------------------------------------------------------------------
+
+def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, asset_name, score):
+    """Send the JPEG provenance submission email to the photographer."""
+    try:
+        from engine.mailer import send_email
+        subject = f'Verify Your {score} Score — Submit Original JPEG'
+        html_body = (
+            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">'
+            '<div style="background:#1A2744;padding:24px 32px;">'
+            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:18px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+            '</div>'
+            '<div style="padding:32px;">'
+            f'<p style="font-size:16px;color:#1A1A18;">Hi {user_name},</p>'
+            f'<p style="font-size:16px;color:#1A1A18;">Your image <strong>{asset_name}</strong> scored <strong style="color:#F5C518;">{score}</strong> — a Grandmaster-tier result. '
+            'Scores above 9.0 require verification before the score goes public on the leaderboard.</p>'
+            '<p style="font-size:16px;color:#1A1A18;">We can see your image was captured on a camera with intact EXIF data. '
+            'For photographers shooting unedited JPEGs straight from the camera, you do not need to submit a RAW file — '
+            'but we do need the <strong>original full-size JPEG</strong> exactly as it came off your camera or memory card.</p>'
+            '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
+            '<p style="font-size:14px;color:#1A1A18;margin:0 0 8px 0;font-weight:700;">What to submit:</p>'
+            '<p style="font-size:14px;color:#1A1A18;margin:0;">The original camera JPEG — no resizing, no export, no post-processing. '
+            'The file should be between 20MB and 45MB. This is not the web-sized version you uploaded — '
+            'it is the original file from your memory card or camera roll.</p>'
+            '</div>'
+            '<p style="font-size:16px;color:#1A1A18;">You can upload the file directly on the dashboard, or provide a Google Drive or WeTransfer link:</p>'
+            f'<a href="{submit_url}" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit Original JPEG &#8594;</a>'
+            f'<p style="font-size:13px;color:#555555;">Or visit: <a href="{submit_url}" style="color:#F5C518;">{submit_url}</a></p>'
+            '<p style="font-size:14px;color:#555555;margin-top:24px;">Going forward, we recommend enabling RAW+JPEG Fine in your camera settings. '
+            'This captures both files simultaneously with every shot — no change to your workflow, '
+            'and every future image is automatically eligible for contest qualifying rounds and the Photographer of the Year award.</p>'
+            '<p style="font-size:16px;color:#1A1A18;">Your score is held, not rejected. Once verified it will go live on your profile and the leaderboard.</p>'
+            '</div>'
+            '<div style="background:#1A2744;padding:16px 32px;">'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League · info@shutterleague.com · shutterleague.com</p>'
+            '</div>'
+            '</div>'
+        )
+        text_body = (
+            f'Hi {user_name},\n\n'
+            f'Your image {asset_name} scored {score} — Grandmaster tier. '
+            'Scores above 9.0 require verification.\n\n'
+            'We need the original full-size JPEG from your camera (20MB–45MB), not the web-sized version you uploaded.\n\n'
+            f'Submit here: {submit_url}\n\n'
+            'Or provide a Google Drive or WeTransfer link on that page.\n\n'
+            '-- Shutter League'
+        )
+        send_email(
+            to_email=user_email,
+            to_name=user_name,
+            subject=subject,
+            html_body=html_body,
+            text_body=text_body
+        )
+        return True
+    except Exception as _e:
+        import traceback
+        print(f'[jpeg_provenance_email] ERROR: {_e}')
+        traceback.print_exc()
+        return False
+
+
+def check_jpeg_provenance_eligible(img):
+    """
+    Returns True if image qualifies for JPEG provenance path instead of RAW.
+    Conditions:
+      1. exif_camera field is populated (recognised camera present)
+      2. exif_capture_datetime is present (original timestamp intact)
+      3. file_size_kb < 5000 (uploaded file was web-sized — original not yet submitted)
+    The full file-size verification (≥20MB) happens at submission time.
+    """
+    camera = (getattr(img, 'exif_camera', '') or '').strip()
+    capture_dt = (getattr(img, 'exif_capture_datetime', '') or '').strip()
+    file_size_kb = getattr(img, 'file_size_kb', 0) or 0
+
+    if not camera:
+        return False
+    if not capture_dt:
+        return False
+    # If the uploaded file is already large (original), standard RAW path
+    if file_size_kb >= 5000:
+        return False
+    return True
+
+
+@app.route('/jpeg-provenance/submit/<int:image_id>', methods=['GET', 'POST'])
+@login_required
+def jpeg_provenance_submit(image_id):
+    """
+    JPEG provenance submission page.
+    User uploads original full-size JPEG (≥20MB) or provides a Drive/WeTransfer link.
+    This is the alternative verification path for camera-direct JPEG shooters.
+    """
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+
+    # Check if already submitted
+    existing = db.session.execute(db.text(
+        "SELECT * FROM raw_submissions WHERE image_id=:iid AND contest_type='jpeg_provenance' LIMIT 1"
+    ), {'iid': image_id}).fetchone()
+
+    if existing and existing.submitted_at:
+        return render_template('jpeg_provenance_submit.html',
+                               img=img, already_submitted=True,
+                               submission=existing)
+
+    error = None
+
+    if request.method == 'POST':
+        method   = request.form.get('method', 'upload')
+        file_key = None
+        link     = None
+
+        if method == 'upload':
+            f = request.files.get('jpeg_file')
+            if not f or not f.filename:
+                error = 'Please select your original JPEG file.'
+            else:
+                # Read into memory to check size before uploading
+                import io
+                data = f.read()
+                size_mb = len(data) / (1024 * 1024)
+                if size_mb < 5:
+                    error = (
+                        f'The file you uploaded is {size_mb:.1f}MB. '
+                        'We need the original full-size JPEG from your camera — '
+                        'typically 20MB to 45MB. This is not the web-sized version. '
+                        'Please locate the original file on your memory card or camera roll.'
+                    )
+                else:
+                    uid      = str(uuid.uuid4())
+                    filename = secure_filename(f.filename)
+                    key      = f'jpeg_provenance/{uid}_{filename}'
+                    uploaded = r2.upload_fileobj(io.BytesIO(data), key, content_type='image/jpeg')
+                    if not uploaded:
+                        error = 'Upload failed. Please try again or use a shareable link instead.'
+                    else:
+                        file_key = key
+
+        elif method == 'link':
+            link = request.form.get('jpeg_link', '').strip()
+            if not link:
+                error = 'Please provide a Google Drive or WeTransfer link.'
+            elif not (link.startswith('https://drive.google.com') or
+                      link.startswith('https://we.tl') or
+                      link.startswith('https://wetransfer.com') or
+                      link.startswith('https://') ):
+                error = 'Please provide a valid https:// link.'
+
+        if not error:
+            # Save to raw_submissions with contest_type='jpeg_provenance'
+            db.session.execute(db.text(
+                "INSERT INTO raw_submissions "
+                "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
+                "VALUES (:iid, :uid, 'jpeg_provenance', 'jpeg_provenance', :meth, :fk, :lnk, NOW(), 'pending') "
+                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE "
+                "SET submission_method=:meth, raw_file_key=:fk, raw_link=:lnk, submitted_at=NOW(), analysis_status='pending'"
+            ), {
+                'iid': image_id,
+                'uid': current_user.id,
+                'meth': method,
+                'fk':   file_key,
+                'lnk':  link
+            })
+            # Mark image as jpeg_provenance pending
+            db.session.execute(db.text(
+                "UPDATE images SET jpeg_provenance_status='pending' WHERE id=:iid"
+            ), {'iid': image_id})
+            db.session.commit()
+
+            flash('Original JPEG submitted successfully. We will verify it within 24–48 hours and email you.', 'success')
+            return redirect(url_for('raw_status', image_id=image_id))
+
+    return render_template('jpeg_provenance_submit.html',
+                           img=img, already_submitted=False,
+                           submission=None, error=error)
+
+
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# JPEG Provenance Verification
+# Alternative to RAW for camera-direct JPEG shooters with intact EXIF
+# ---------------------------------------------------------------------------
+
+def check_jpeg_provenance_eligible(img):
+    """
+    Returns True if image qualifies for JPEG provenance path.
+    Conditions: recognised camera in EXIF + capture datetime present
+    + uploaded file was web-sized (original not yet submitted).
+    """
+    camera     = (getattr(img, 'exif_camera', '') or '').strip()
+    capture_dt = (getattr(img, 'exif_capture_datetime', '') or '').strip()
+    file_size_kb = getattr(img, 'file_size_kb', 0) or 0
+    if not camera:
+        return False
+    if not capture_dt:
+        return False
+    if file_size_kb >= 5000:   # already large — treat as standard RAW path
+        return False
+    return True
+
+
+def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, asset_name, score):
+    """Branded 72-hour JPEG provenance request email."""
+    try:
+        _html = (
+            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+            '<div style="background:#1A2744;padding:20px 32px;">'
+            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+            '</div>'
+            '<div style="padding:32px;">'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user_name},</p>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your image <strong>{asset_name}</strong> scored <strong style="color:#F5C518;font-size:20px;">{score}</strong> — Grandmaster tier. Scores above 9.0 are held for verification before going live on the leaderboard.</p>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">We can see your image was shot on your camera with the original EXIF data intact. You do not need to submit a RAW file — but we need the <strong>original full-size JPEG</strong> exactly as it came off your memory card or camera roll.</p>'
+            '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
+            '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">What to submit:</p>'
+            '<ul style="font-size:15px;color:#1A1A18;margin:0;padding-left:20px;line-height:2;">'
+            '<li>The original file from your camera — <strong>not</strong> the version you uploaded</li>'
+            '<li>No resizing, no export, no post-processing</li>'
+            '<li>File size will be between <strong>5MB and 50MB+</strong> depending on your quality settings</li>'
+            '</ul>'
+            '</div>'
+            '<div style="background:#FFF3CD;border-left:4px solid #F5C518;padding:14px 20px;margin:20px 0;">'
+            '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">&#9203; Submit within 72 hours</p>'
+            '<p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster scores are automatically hidden from the leaderboard.</p>'
+            '</div>'
+            f'<a href="{submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit Original JPEG &#8594;</a>'
+            f'<p style="font-size:13px;color:#888888;">Or visit: <a href="{submit_url}" style="color:#F5C518;">{submit_url}</a></p>'
+            '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;"><strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously — enabling RAW+JPEG Fine in your camera settings means every future frame is automatically eligible for contest qualifying rounds and the Photographer of the Year award without any extra steps.</p>'
+            '</div>'
+            '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '</div>'
+            '</div>'
+        )
+        _txt = (
+            f'Hi {user_name},\n\n'
+            f'Your image {asset_name} scored {score} — Grandmaster tier. Verification required within 72 hours.\n\n'
+            'Submit the original full-size JPEG (5MB–50MB+) from your camera — no resizing, no editing.\n\n'
+            f'Submit here: {submit_url}\n\n'
+            'You can also paste a Google Drive or WeTransfer link on that page.\n\n'
+            '-- Shutter League'
+        )
+        send_email(user_email, f'Verify Your {score} Grandmaster Score — 72 Hours', _html, _txt)
+        return True
+    except Exception as _e:
+        import traceback; traceback.print_exc()
+        return False
+
+
+def _send_jpeg_provenance_approved_email(user_email, user_name, asset_name, score, dashboard_url):
+    """Branded approval email when JPEG provenance is verified."""
+    try:
+        _html = (
+            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+            '<div style="background:#1A2744;padding:20px 32px;">'
+            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+            '</div>'
+            '<div style="padding:32px;">'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user_name},</p>'
+            '<div style="background:#E8F5E9;border-left:4px solid #3B6D11;padding:16px 20px;margin:0 0 20px 0;">'
+            '<p style="font-size:18px;color:#3B6D11;font-weight:700;margin:0 0 4px 0;">&#10003; Verification Approved</p>'
+            f'<p style="font-size:15px;color:#1A1A18;margin:0;">Your image <strong>{asset_name}</strong> has been verified.</p>'
+            '</div>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your <strong style="color:#F5C518;font-size:20px;">{score}</strong> Grandmaster score is now live on your profile and the leaderboard.</p>'
+            f'<a href="{dashboard_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">View Your Score &#8594;</a>'
+            '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;">For future submissions, enabling RAW+JPEG Fine on your camera means verification is automatic — no extra steps required.</p>'
+            '</div>'
+            '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '</div>'
+            '</div>'
+        )
+        _txt = (
+            f'Hi {user_name},\n\n'
+            f'Your image {asset_name} has been verified. Your {score} Grandmaster score is now live.\n\n'
+            f'View it here: {dashboard_url}\n\n'
+            '-- Shutter League'
+        )
+        send_email(user_email, f'Your {score} Score is Now Live — Shutter League', _html, _txt)
+        return True
+    except Exception as _e:
+        import traceback; traceback.print_exc()
+        return False
+
+
+def _auto_approve_jpeg_provenance(image_id, submission_id):
+    """
+    Auto-approve JPEG provenance submissions.
+    Checks:
+      1. File size ≥ 5MB (original camera JPEG floor)
+      2. Submission is a link → route to manual review (can't check size)
+      3. EXIF camera in submitted file matches stored exif_camera on image
+      4. No editing software signature in submitted file EXIF
+    """
+    with app.app_context():
+        try:
+            import piexif, io
+            from PIL import Image as _PIL
+
+            sub = db.session.execute(db.text(
+                'SELECT * FROM raw_submissions WHERE id=:sid'
+            ), {'sid': submission_id}).fetchone()
+            img = Image.query.get(image_id)
+            if not sub or not img:
+                return
+
+            photographer = User.query.get(img.user_id)
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            _dash = f'{_site}/dashboard'
+            _score = round(img.normalised_score, 2) if img.normalised_score else '—'
+            _name  = photographer.full_name or photographer.username if photographer else 'Photographer'
+            _email = photographer.email if photographer else None
+
+            # Link submissions → manual review
+            if sub.submission_method == 'link':
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.commit()
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} → manual (link submission)')
+                return
+
+            # File upload — check via R2
+            if not sub.raw_file_key:
+                return
+
+            try:
+                _obj = r2.get_object(sub.raw_file_key)
+                _data = _obj['Body'].read()
+            except Exception as _dl_err:
+                app.logger.warning(f'[jpeg_provenance_auto] could not fetch file: {_dl_err}')
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.commit()
+                return
+
+            # Gate 1: file size
+            size_mb = len(_data) / (1024 * 1024)
+            if size_mb < 5:
+                # Too small — reject, tell user to find original
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='rejected', "
+                    "auto_decision='rejected', auto_flag_reasons=:r WHERE id=:sid"
+                ), {'r': f'File too small ({size_mb:.1f}MB). Original camera JPEG required (5MB–50MB+).',
+                    'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET jpeg_provenance_status='rejected' WHERE id=:iid"
+                ), {'iid': image_id})
+                db.session.commit()
+                if _email:
+                    _submit_url = f'{_site}/jpeg-provenance/submit/{image_id}'
+                    _html = (
+                        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+                        '<div style="background:#1A2744;padding:20px 32px;">'
+                        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+                        '</div><div style="padding:32px;">'
+                        f'<p style="font-size:16px;color:#1A1A18;">Hi {_name},</p>'
+                        '<div style="background:#FFEBEE;border-left:4px solid #C0392B;padding:16px 20px;margin:0 0 20px 0;">'
+                        f'<p style="font-size:15px;color:#C0392B;font-weight:700;margin:0 0 4px 0;">File too small — {size_mb:.1f}MB received</p>'
+                        '<p style="font-size:14px;color:#1A1A18;margin:0;">We need the original JPEG from your camera, typically 5MB to 50MB+. The file you submitted appears to be a web-sized export.</p>'
+                        '</div>'
+                        f'<a href="{_submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0;">Resubmit Original File &#8594;</a>'
+                        '</div><div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+                        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League · info@shutterleague.com</p>'
+                        '</div></div>'
+                    )
+                    send_email(_email, 'Resubmission Required — Original JPEG Needed', _html,
+                               f'Hi {_name},\n\nFile too small ({size_mb:.1f}MB). Need original camera JPEG (5MB–50MB+).\n\nResubmit: {_submit_url}\n\n-- Shutter League')
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} rejected — file too small {size_mb:.1f}MB')
+                return
+
+            # Gate 2: EXIF cross-match
+            try:
+                _pil = _PIL.open(io.BytesIO(_data))
+                _exif_raw = _pil.info.get('exif', b'')
+                _approved = True
+                _reject_reason = None
+
+                if _exif_raw:
+                    try:
+                        _exif_dict = piexif.load(_exif_raw)
+                        # Check for editing software
+                        _soft = _exif_dict.get('0th', {}).get(piexif.ImageIFD.Software, b'')
+                        if isinstance(_soft, bytes): _soft = _soft.decode('utf-8', errors='ignore')
+                        _edit_apps = ['lightroom', 'photoshop', 'capture one', 'darktable',
+                                      'luminar', 'affinity', 'gimp', 'snapseed', 'vsco']
+                        if any(app_name in _soft.lower() for app_name in _edit_apps):
+                            _approved = False
+                            _reject_reason = f'Editing software detected in EXIF: {_soft}'
+                        # Cross-match camera model
+                        if _approved and img.exif_camera:
+                            _sub_make  = (_exif_dict.get('0th', {}).get(piexif.ImageIFD.Make, b'') or b'').decode('utf-8', errors='ignore').strip()
+                            _sub_model = (_exif_dict.get('0th', {}).get(piexif.ImageIFD.Model, b'') or b'').decode('utf-8', errors='ignore').strip()
+                            _sub_cam   = f'{_sub_make} {_sub_model}'.strip().lower()
+                            _orig_cam  = img.exif_camera.lower()
+                            # Partial match is sufficient (X100VI in both)
+                            _cam_words = [w for w in _orig_cam.split() if len(w) > 3]
+                            if _cam_words and not any(w in _sub_cam for w in _cam_words):
+                                _approved = False
+                                _reject_reason = f'Camera mismatch: submitted={_sub_cam}, original={_orig_cam}'
+                    except Exception as _exif_err:
+                        app.logger.warning(f'[jpeg_provenance_auto] EXIF parse error: {_exif_err}')
+                        # EXIF parse failed — route to manual
+                        db.session.execute(db.text(
+                            "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
+                        ), {'sid': submission_id})
+                        db.session.commit()
+                        return
+            except Exception as _pil_err:
+                app.logger.warning(f'[jpeg_provenance_auto] PIL open failed: {_pil_err}')
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.commit()
+                return
+
+            if _approved:
+                # AUTO-APPROVE
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='approved', "
+                    "auto_decision='approved', auto_decided_at=NOW() WHERE id=:sid"
+                ), {'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET raw_verified=TRUE, raw_disqualified=FALSE, "
+                    "jpeg_provenance_status='verified' WHERE id=:iid"
+                ), {'iid': image_id})
+                db.session.commit()
+                # Send approval email
+                if _email:
+                    _send_jpeg_provenance_approved_email(_email, _name,
+                        img.asset_name or 'Untitled', _score, _dash)
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} AUTO-APPROVED size={size_mb:.1f}MB')
+            else:
+                # REJECT
+                db.session.execute(db.text(
+                    "UPDATE raw_submissions SET analysis_status='rejected', "
+                    "auto_decision='rejected', auto_flag_reasons=:r WHERE id=:sid"
+                ), {'r': _reject_reason, 'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET jpeg_provenance_status='rejected' WHERE id=:iid"
+                ), {'iid': image_id})
+                db.session.commit()
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} rejected: {_reject_reason}')
+
+        except Exception as _top_err:
+            db.session.rollback()
+            app.logger.error(f'[jpeg_provenance_auto] unhandled error: {_top_err}')
+            import traceback; traceback.print_exc()
+
+
+@app.route('/jpeg-provenance/submit/<int:image_id>', methods=['GET', 'POST'])
+@login_required
+def jpeg_provenance_submit(image_id):
+    """JPEG provenance submission — original full-size JPEG or Drive/WeTransfer link."""
+    img = Image.query.get_or_404(image_id)
+    if img.user_id != current_user.id:
+        abort(403)
+
+    existing = db.session.execute(db.text(
+        "SELECT * FROM raw_submissions WHERE image_id=:iid AND contest_type='jpeg_provenance' LIMIT 1"
+    ), {'iid': image_id}).fetchone()
+
+    if existing and existing.submitted_at:
+        return render_template('jpeg_provenance_submit.html',
+                               img=img, already_submitted=True, submission=existing)
+
+    error = None
+
+    if request.method == 'POST':
+        method   = request.form.get('method', 'upload')
+        file_key = None
+        link     = None
+
+        if method == 'upload':
+            f = request.files.get('jpeg_file')
+            if not f or not f.filename:
+                error = 'Please select your original JPEG file.'
+            else:
+                import io as _io2
+                data = f.read()
+                size_mb = len(data) / (1024 * 1024)
+                if size_mb < 5:
+                    error = (
+                        f'The file you uploaded is {size_mb:.1f}MB. '
+                        'We need the original full-size JPEG from your camera — '
+                        'typically between 5MB and 50MB+. '
+                        'This is not the web-sized version. '
+                        'Please locate the original file on your memory card or camera roll.'
+                    )
+                else:
+                    uid      = str(uuid.uuid4())
+                    filename = secure_filename(f.filename)
+                    key      = f'jpeg_provenance/{uid}_{filename}'
+                    uploaded = r2.upload_fileobj(_io2.BytesIO(data), key, content_type='image/jpeg')
+                    if not uploaded:
+                        error = 'Upload failed. Please try again or use a shareable link instead.'
+                    else:
+                        file_key = key
+
+        elif method == 'link':
+            link = request.form.get('jpeg_link', '').strip()
+            if not link:
+                error = 'Please provide a Google Drive or WeTransfer link.'
+            elif not link.startswith('https://'):
+                error = 'Please provide a valid https:// link.'
+
+        if not error:
+            db.session.execute(db.text(
+                "INSERT INTO raw_submissions "
+                "(image_id, user_id, contest_ref, contest_type, submission_method, raw_file_key, raw_link, submitted_at, analysis_status) "
+                "VALUES (:iid, :uid, 'jpeg_provenance', 'jpeg_provenance', :meth, :fk, :lnk, NOW(), 'pending') "
+                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE "
+                "SET submission_method=:meth, raw_file_key=:fk, raw_link=:lnk, submitted_at=NOW(), analysis_status='pending'"
+            ), {'iid': image_id, 'uid': current_user.id,
+                'meth': method, 'fk': file_key, 'lnk': link})
+            db.session.execute(db.text(
+                "UPDATE images SET jpeg_provenance_status='pending' WHERE id=:iid"
+            ), {'iid': image_id})
+            db.session.commit()
+
+            sub_row = db.session.execute(db.text(
+                "SELECT id FROM raw_submissions WHERE image_id=:iid AND contest_type='jpeg_provenance' ORDER BY submitted_at DESC LIMIT 1"
+            ), {'iid': image_id}).fetchone()
+            if sub_row and method == 'upload':
+                import threading as _jpt
+                _jpt.Thread(
+                    target=_auto_approve_jpeg_provenance,
+                    args=(image_id, sub_row.id),
+                    daemon=True
+                ).start()
+
+            flash('Original JPEG submitted. We are verifying it now and will email you the result.', 'success')
+            return redirect(url_for('raw_status', image_id=image_id))
+
+    return render_template('jpeg_provenance_submit.html',
+                           img=img, already_submitted=False,
+                           submission=None, error=error)
+
+
+# ---------------------------------------------------------------------------
+
 @app.route('/raw/status/<int:image_id>')
 @login_required
 def raw_status(image_id):
@@ -10552,6 +11099,76 @@ def raw_status(image_id):
 
 # ---------------------------------------------------------------------------
 # Admin  -  RAW Verification Queue
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Admin — Contact Inbox & Branded Reply
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/contact-inbox')
+@login_required
+@admin_required
+def admin_contact_inbox():
+    messages = db.session.execute(db.text(
+        "SELECT * FROM contact_messages ORDER BY received_at DESC LIMIT 100"
+    )).fetchall()
+    return render_template('admin_contact_inbox.html', messages=messages)
+
+
+@app.route('/admin/contact-inbox/<int:msg_id>/reply', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_reply(msg_id):
+    msg = db.session.execute(db.text(
+        "SELECT * FROM contact_messages WHERE id=:mid"
+    ), {'mid': msg_id}).fetchone()
+    if not msg:
+        abort(404)
+
+    reply_body = request.form.get('reply_body', '').strip()
+    if not reply_body:
+        flash('Reply cannot be empty.', 'error')
+        return redirect(url_for('admin_contact_inbox'))
+
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _html = (
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+        '<div style="background:#1A2744;padding:20px 32px;">'
+        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+        '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+        '</div>'
+        '<div style="padding:32px;">'
+        f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {msg.name},</p>'
+        + ''.join(
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">{line}</p>'
+            for line in reply_body.split('\n') if line.strip()
+        ) +
+        '<div style="background:#F5F3EF;border-left:4px solid #E0D8C8;padding:14px 20px;margin:28px 0 0 0;">'
+        '<p style="font-size:12px;color:#888888;margin:0 0 4px 0;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Your original message</p>'
+        f'<p style="font-size:13px;color:#888888;margin:0;font-style:italic;line-height:1.7;">{msg.message[:300]}{"..." if len(msg.message) > 300 else ""}</p>'
+        '</div>'
+        '</div>'
+        '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+        '</div>'
+        '</div>'
+    )
+    _txt = f'Hi {msg.name},\n\n{reply_body}\n\n-- Shutter League'
+
+    ok = send_email(msg.email, f'Re: {msg.subject}', _html, _txt)
+    if ok:
+        db.session.execute(db.text(
+            "UPDATE contact_messages SET replied=TRUE, replied_at=NOW(), "
+            "replied_by=:by, reply_body=:rb WHERE id=:mid"
+        ), {'by': current_user.id, 'rb': reply_body, 'mid': msg_id})
+        db.session.commit()
+        flash(f'Reply sent to {msg.email}.', 'success')
+    else:
+        flash('Failed to send reply. Please try again.', 'error')
+
+    return redirect(url_for('admin_contact_inbox'))
+
+
 # ---------------------------------------------------------------------------
 
 @app.route('/admin/raw-verification')
@@ -12825,75 +13442,57 @@ def send_results_announcement(challenge, winners):
         owner     = User.query.get(w.user_id) if w.user_id else None
         name      = (owner.full_name or owner.username) if owner else 'Photographer'
         score_str = str(img.score) if img and img.score else ''
-        rank_colour = '#F5C518' if w.result_rank == 1 else ('#8A8A8A' if w.result_rank == 2 else '#8B6343')
         winners_html += (
-            '<tr style="border-top:1px solid #E8E4DC;">'
-            '<td style="padding:14px 16px;font-family:Courier New,monospace;font-size:16px;'
-            'font-weight:700;color:' + rank_colour + ';width:52px;">' + ordinals[w.result_rank] + '</td>'
-            '<td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:600;color:#1A1A18;">'
+            '<tr>'
+            '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'font-weight:700;color:#C8A84B;width:48px;">' + ordinals[w.result_rank] + '</td>'
+            '<td style="padding:10px 16px;font-size:15px;color:#1a1a18;">'
             + (img.asset_name if img else 'Untitled') +
             '</td>'
-            '<td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#4A4840;">' + name + '</td>'
-            '<td style="padding:14px 16px;font-family:Courier New,monospace;font-size:16px;'
-            'color:#1A1A18;font-weight:600;">' + score_str + '</td>'
+            '<td style="padding:10px 16px;font-size:14px;color:#6a6458;">' + name + '</td>'
+            '<td style="padding:10px 16px;font-family:Courier New,monospace;font-size:13px;'
+            'color:#8a8070;">' + score_str + '</td>'
             '</tr>'
         )
 
     sent = 0
     for user in users:
         html_body = (
-            '<!DOCTYPE html><html lang="en"><head>'
-            '<meta charset="UTF-8">'
-            '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<meta name="x-apple-disable-message-reformatting">'
-            '</head>'
-            '<body style="margin:0;padding:0;background:#F0EDE8;-webkit-text-size-adjust:100%;">'
-            '<div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0;">'
-            'Results are in: ' + challenge.prompt_title + '</div>'
-            '<table width="100%" cellpadding="0" cellspacing="0" border="0"'
-            ' style="background:#F0EDE8;padding:32px 16px;"><tr><td align="center">'
-            '<table width="600" cellpadding="0" cellspacing="0" border="0"'
-            ' style="background:#FFFFFF;border:1px solid #D8D2C8;border-radius:8px;'
-            'overflow:hidden;max-width:600px;width:100%;">'
-            # Black header — brand label
-            '<tr><td style="background:#1A1A18;padding:28px 32px 10px;">'
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="background:#F5F0E8;padding:32px 16px;"><tr><td align="center">'
+            '<table width="560" cellpadding="0" cellspacing="0"'
+            ' style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;'
+            'overflow:hidden;max-width:560px;width:100%;">'
+            '<tr><td style="background:#1a1a18;padding:24px 32px;">'
             '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;'
-            'font-weight:700;letter-spacing:3px;color:#F5C518;text-transform:uppercase;">'
-            'Shutter League · Weekly Results</p></td></tr>'
-            # Black header — challenge name + ref
-            '<tr><td style="background:#1A1A18;padding:8px 32px 8px;">'
-            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:13px;'
-            'letter-spacing:2px;color:#8A8070;text-transform:uppercase;">'
-            'Results &middot; ' + challenge.week_ref + '</p>'
-            '<h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:28px;'
-            'font-weight:700;font-style:italic;color:#FFFFFF;line-height:1.2;">'
+            'font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">'
+            'SHUTTER LEAGUE</p></td></tr>'
+            '<tr><td style="background:#1a1a18;padding:0 32px 28px;">'
+            '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:11px;'
+            'letter-spacing:2px;color:#6a6458;text-transform:uppercase;">'
+            'Results . ' + challenge.week_ref + '</p>'
+            '<h1 style="margin:0;font-size:30px;font-style:italic;color:#C8A84B;line-height:1.1;">'
             + challenge.prompt_title + '</h1></td></tr>'
-            # Gold accent strip
-            '<tr><td style="background:#F5C518;padding:4px 32px;"></td></tr>'
-            # White body
-            '<tr><td style="padding:32px 32px 0;">'
-            '<p style="margin:0 0 20px;font-family:Arial,Helvetica,sans-serif;'
-            'font-size:18px;color:#1A1A18;line-height:1.7;">'
-            'Results are in. Here are this week&#39;s top photographers:</p>'
-            '<table width="100%" cellpadding="0" cellspacing="0" border="0"'
-            ' style="border:1px solid #E8E4DC;border-radius:6px;overflow:hidden;margin-bottom:24px;">'
+            '<tr><td style="padding:28px 32px;">'
+            '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.6;">'
+            'The results are in. Here are this week&#39;s top photographers:</p>'
+            '<table width="100%" cellpadding="0" cellspacing="0"'
+            ' style="border:1px solid #E0D8C8;border-radius:6px;overflow:hidden;margin-bottom:24px;">'
             + winners_html +
             '</table>'
-            '</td></tr>'
-            # CTA
-            '<tr><td style="padding:0 32px 32px;">'
             '<a href="' + results_url + '"'
-            ' style="display:inline-block;background:#1A1A18;color:#F5C518;'
-            'font-family:Courier New,monospace;font-size:16px;font-weight:700;'
-            'letter-spacing:2px;text-transform:uppercase;padding:16px 32px;'
+            ' style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+            'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
+            'letter-spacing:1px;text-transform:uppercase;padding:14px 28px;'
             'text-decoration:none;border-radius:4px;">See Full Results</a>'
             '</td></tr>'
-            # Footer
-            '<tr><td style="padding:24px 32px 28px;border-top:1px solid #E8E4DC;">'
-            '<p style="margin:0;font-size:14px;color:#8A8070;line-height:1.7;">'
-            'You are receiving this because you have an account on Shutter League.&nbsp;'
-            '<a href="' + site_url + '/profile" style="color:#1A1A18;text-decoration:underline;">'
-            'Manage preferences</a>'
+            '<tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">'
+            '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
+            'You&#39;re receiving this because you have an account on Shutter League.<br>'
+            '<a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a>'
             '</p></td></tr>'
             '</table></td></tr></table></body></html>'
         )
@@ -13811,6 +14410,97 @@ def admin_release_weekly_results(week_ref):
 
     return page_html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
+
+# ---------------------------------------------------------------------------
+# Admin — Subscription Invitation Broadcast
+# Sends to all free users (is_subscribed=FALSE) when triggered manually
+# ---------------------------------------------------------------------------
+
+@app.route('/admin/broadcast/subscription-invite', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_subscription_broadcast():
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+
+    if request.method == 'GET':
+        count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM users WHERE is_subscribed=FALSE AND is_active=TRUE "
+            "AND onboarding_complete=TRUE AND role='user'"
+        )).scalar()
+        return render_template('admin_subscription_broadcast.html', count=count)
+
+    # POST — send the broadcast
+    preview_only = request.form.get('preview') == '1'
+
+    users = db.session.execute(db.text(
+        "SELECT id, email, full_name, username FROM users "
+        "WHERE is_subscribed=FALSE AND is_active=TRUE "
+        "AND onboarding_complete=TRUE AND role='user'"
+    )).fetchall()
+
+    sent = 0; failed = 0
+    for u in users:
+        _name     = u.full_name or u.username or 'Photographer'
+        _subscribe_url = f'{_site}/subscribe'
+        _html = (
+            '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+            '<div style="background:#1A2744;padding:20px 32px;">'
+            '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+            '<p style="color:#FFFFFF;font-size:11px;margin:4px 0 0 0;letter-spacing:1px;">HONEST FEEDBACK. REAL IMPROVEMENT.</p>'
+            '</div>'
+            '<div style="padding:32px;">'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {_name},</p>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">You have already experienced what Shutter League does — your images have been scored, your rank is live, and the DDI engine has given you the kind of honest, specific feedback that most photographers never receive.</p>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Now take it further.</p>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">A subscription gives you:</p>'
+            '<ul style="font-size:16px;color:#1A1A18;margin:0 0 20px 0;padding-left:24px;line-height:2.2;">'
+            '<li><strong>Scored images every month</strong> — track your progress over time</li>'
+            '<li><strong>Your rank on the national leaderboard</strong> — updated with every submission</li>'
+            '<li><strong>Eligibility for the Photographer of the Year award</strong> — the first ranking in Indian photography built on continuous performance, not a single image on a single day</li>'
+            '<li><strong>Access to the mentor marketplace</strong> — one-on-one review from working professionals</li>'
+            '</ul>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 8px 0;line-height:1.7;">This platform is being built now, and the photographers who join early are the ones who shape it.</p>'
+            '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
+            '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">Subscription</p>'
+            '<p style="font-size:15px;color:#1A1A18;margin:0 0 4px 0;">Mobile Track &nbsp;&#8212;&nbsp; <strong>&#8377;99/month</strong> &nbsp;(8 scored images)</p>'
+            '<p style="font-size:15px;color:#1A1A18;margin:0;">Camera Track &nbsp;&#8212;&nbsp; <strong>&#8377;199/month</strong> &nbsp;(5 scored images + full suite)</p>'
+            '</div>'
+            '<div style="background:#FFF8E1;border-left:4px solid #F5C518;padding:14px 20px;margin:0 0 20px 0;">'
+            '<p style="font-size:14px;color:#1A1A18;margin:0;line-height:1.7;"><strong>Payment note:</strong> Shutter League currently accepts Indian payment methods — Indian debit card, credit card, UPI, or net banking. An Indian bank account or card is required to subscribe.</p>'
+            '</div>'
+            f'<a href="{_subscribe_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:4px 0 8px 0;">Subscribe Now &#8594;</a>'
+            '</div>'
+            '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '</div>'
+            '</div>'
+        )
+        _txt = (
+            f'Hi {_name},\n\n'
+            'You have already seen your scores. Now take it further.\n\n'
+            'A Shutter League subscription gives you scored images every month, your rank on the national leaderboard, '
+            'and eligibility for the Photographer of the Year award.\n\n'
+            'Mobile Track: ₹99/month (8 scored images)\n'
+            'Camera Track: ₹199/month (5 images + full suite)\n\n'
+            'Payment note: Indian debit card, credit card, UPI, or net banking required.\n\n'
+            f'Subscribe: {_subscribe_url}\n\n'
+            '-- Shutter League'
+        )
+        if not preview_only:
+            ok = send_email(u.email, 'Your Rank is Live. Your Story is Just Starting.', _html, _txt)
+            if ok: sent += 1
+            else:  failed += 1
+        else:
+            sent += 1  # preview count only
+
+    if preview_only:
+        flash(f'Preview: would send to {sent} users.', 'info')
+    else:
+        flash(f'Broadcast sent: {sent} delivered, {failed} failed.', 'success' if not failed else 'warning')
+    return redirect(url_for('admin_subscription_broadcast'))
+
+
+# ---------------------------------------------------------------------------
 
 @app.route('/admin/cron/signup-digest', methods=['POST'])
 @login_required
