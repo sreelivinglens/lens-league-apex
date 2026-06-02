@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Subscription Broadcast — Admin{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:40px auto;padding:0 20px;">
+
+  <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;">
+    <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 4px 0;">ADMIN</p>
+    <h1 style="color:#FFFFFF;font-size:20px;font-weight:700;margin:0;">Subscription Invitation Broadcast</h1>
+  </div>
+
+  <div style="background:#FFFFFF;border:1px solid #E0D8C8;border-top:none;padding:28px;">
+
+    <div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:0 0 24px 0;border-radius:0 4px 4px 0;">
+      <p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">{{ count }} users will receive this email</p>
+      <p style="font-size:14px;color:#555;margin:0;">All active, onboarded, free-tier users (is_subscribed = FALSE)</p>
+    </div>
+
+    <p style="font-size:15px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">
+      This sends a branded subscription invitation to every free user on the platform.
+      The email is warm and personal — it acknowledges their scores, explains what a subscription unlocks,
+      shows pricing in INR, and includes the Indian payment method note.
+    </p>
+
+    <div style="background:#FFF3CD;border-left:4px solid #BA7517;padding:14px 20px;margin:0 0 24px 0;border-radius:0 4px 4px 0;">
+      <p style="font-size:14px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">⚠ This cannot be undone</p>
+      <p style="font-size:14px;color:#555;margin:0;">Each user receives the email once. Use Preview first to confirm the count.</p>
+    </div>
+
+    <!-- Preview -->
+    <form method="POST" action="{{ url_for('admin_subscription_broadcast') }}" style="display:inline;margin-right:12px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="preview" value="1">
+      <button type="submit"
+        style="padding:12px 24px;background:#F5F3EF;color:#1A1A18;font-family:'Courier New',monospace;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;border:1px solid #E0D8C8;border-radius:4px;cursor:pointer;">
+        Preview Count
+      </button>
+    </form>
+
+    <!-- Send -->
+    <form method="POST" action="{{ url_for('admin_subscription_broadcast') }}" style="display:inline;"
+          onsubmit="return confirm('Send subscription invitation to {{ count }} users? This cannot be undone.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+        style="padding:12px 28px;background:#1A2744;color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;">
+        Send to {{ count }} Users →
+      </button>
+    </form>
+
+  </div>
+
+</div>
+{% endblock %}

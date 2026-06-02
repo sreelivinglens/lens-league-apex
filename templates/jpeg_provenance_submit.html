@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Submit Original JPEG — Verification{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:40px auto;padding:0 20px;">
+
+  <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;">
+    <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 6px 0;">SCORE VERIFICATION</p>
+    <h1 style="color:#FFFFFF;font-size:22px;font-weight:700;margin:0;">Submit Your Original JPEG</h1>
+  </div>
+
+  <div style="background:#F5F3EF;border:1px solid #E0D8C8;border-top:none;padding:16px 28px;">
+    <p style="font-size:16px;color:#1A1A18;margin:0;">
+      <strong>{{ img.asset_name }}</strong> &nbsp;·&nbsp;
+      <strong style="color:#F5C518;font-size:20px;">{{ "%.2f"|format(img.normalised_score) }}</strong>
+      <span style="color:#888888;font-size:13px;margin-left:8px;">GRANDMASTER · verification required</span>
+    </p>
+  </div>
+
+  {% if already_submitted %}
+  <div style="background:#FFFFFF;border:1px solid #E0D8C8;border-top:none;padding:28px;">
+    <div style="background:#E8F5E9;border-left:4px solid #3B6D11;padding:16px 20px;border-radius:0 4px 4px 0;">
+      <p style="color:#3B6D11;font-weight:700;font-size:16px;margin:0 0 4px 0;">✓ Original JPEG submitted</p>
+      <p style="color:#1A1A18;font-size:15px;margin:0;">
+        Submitted {{ submission.submitted_at.strftime('%d %b %Y at %H:%M') if submission.submitted_at else '' }}
+        via {{ 'file upload' if submission.submission_method == 'upload' else 'shareable link' }}.
+        We are verifying it and will email you the result.
+      </p>
+    </div>
+    <p style="margin-top:20px;"><a href="{{ url_for('dashboard') }}" style="color:#F5C518;font-weight:700;font-size:15px;">← Back to Dashboard</a></p>
+  </div>
+
+  {% else %}
+  <div style="background:#FFFFFF;border:1px solid #E0D8C8;border-top:none;padding:28px;">
+
+    <!-- 72hr warning -->
+    <div style="background:#FFF3CD;border-left:4px solid #F5C518;padding:14px 20px;margin:0 0 20px 0;border-radius:0 4px 4px 0;">
+      <p style="font-size:16px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">⏳ Submit within 72 hours</p>
+      <p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster scores are automatically hidden from the leaderboard.</p>
+    </div>
+
+    <p style="font-size:16px;color:#1A1A18;line-height:1.7;margin:0 0 16px 0;">
+      Your EXIF data shows this image was captured with original camera data intact.
+      You do not need to submit a RAW file — but we need the <strong>original full-size JPEG</strong>
+      exactly as it came off your memory card or camera roll.
+    </p>
+
+    <div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:0 0 20px 0;border-radius:0 4px 4px 0;">
+      <p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">What to submit:</p>
+      <ul style="font-size:15px;color:#1A1A18;margin:0;padding-left:20px;line-height:2.2;">
+        <li>The original file from your camera or memory card — <strong>not</strong> the version you uploaded</li>
+        <li>No resizing, no export, no post-processing applied</li>
+        <li>File size will be between <strong>5MB and 50MB+</strong> depending on your quality setting</li>
+      </ul>
+    </div>
+
+    {% if error %}
+    <div style="background:#FFEBEE;border-left:4px solid #C0392B;padding:14px 20px;margin:0 0 20px 0;border-radius:0 4px 4px 0;">
+      <p style="color:#C0392B;font-size:15px;margin:0;font-weight:700;">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="method" id="method_field" value="upload">
+
+      <!-- Method tabs -->
+      <div style="display:flex;gap:10px;margin:0 0 20px 0;">
+        <button type="button" onclick="setMethod('upload')" id="tab_upload"
+          style="flex:1;padding:12px;font-size:14px;font-weight:700;border:2px solid #F5C518;background:#F5C518;color:#1A1A18;cursor:pointer;border-radius:4px;">
+          ↑ Upload File
+        </button>
+        <button type="button" onclick="setMethod('link')" id="tab_link"
+          style="flex:1;padding:12px;font-size:14px;font-weight:700;border:2px solid #E0D8C8;background:#FFFFFF;color:#1A1A18;cursor:pointer;border-radius:4px;">
+          🔗 Share Link
+        </button>
+      </div>
+
+      <!-- Upload panel -->
+      <div id="panel_upload">
+        <label style="display:block;font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:8px;">
+          Select original JPEG from your camera
+        </label>
+        <input type="file" name="jpeg_file" accept=".jpg,.jpeg"
+          style="display:block;width:100%;padding:12px;border:1px solid #E0D8C8;border-radius:4px;font-size:15px;background:#F5F3EF;box-sizing:border-box;">
+        <p style="font-size:13px;color:#888888;margin-top:6px;">Accepts .jpg / .jpeg &nbsp;·&nbsp; Must be 5MB or larger &nbsp;·&nbsp; Originals are typically 10MB–45MB</p>
+      </div>
+
+      <!-- Link panel -->
+      <div id="panel_link" style="display:none;">
+        <label style="display:block;font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:8px;">
+          Google Drive or WeTransfer link
+        </label>
+        <input type="url" name="jpeg_link" placeholder="https://drive.google.com/..."
+          style="display:block;width:100%;padding:12px;border:1px solid #E0D8C8;border-radius:4px;font-size:15px;box-sizing:border-box;">
+        <p style="font-size:13px;color:#888888;margin-top:6px;">
+          Google Drive: set sharing to <strong>"Anyone with the link"</strong> before pasting.
+        </p>
+      </div>
+
+      <button type="submit"
+        style="display:block;width:100%;margin-top:24px;padding:16px;background:#1A2744;color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;">
+        Submit for Verification →
+      </button>
+    </form>
+
+    <!-- Going forward tip -->
+    <div style="margin-top:28px;padding:16px 20px;background:#F5F3EF;border-radius:4px;">
+      <p style="font-size:14px;color:#555555;margin:0;line-height:1.7;">
+        <strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously.
+        Enable <strong>RAW+JPEG Fine</strong> in your Image Quality settings — you will never notice it
+        while shooting, and every future frame will be automatically eligible for contest qualifying
+        rounds and the Photographer of the Year award without any extra steps.
+      </p>
+    </div>
+
+    <p style="margin-top:20px;"><a href="{{ url_for('dashboard') }}" style="color:#888888;font-size:14px;">← Back to Dashboard</a></p>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+function setMethod(m) {
+  document.getElementById('method_field').value = m;
+  document.getElementById('panel_upload').style.display = m === 'upload' ? 'block' : 'none';
+  document.getElementById('panel_link').style.display   = m === 'link'   ? 'block' : 'none';
+  var gold = '#F5C518', white = '#FFFFFF', grey = '#E0D8C8';
+  document.getElementById('tab_upload').style.background   = m === 'upload' ? gold  : white;
+  document.getElementById('tab_upload').style.borderColor  = m === 'upload' ? gold  : grey;
+  document.getElementById('tab_link').style.background     = m === 'link'   ? gold  : white;
+  document.getElementById('tab_link').style.borderColor    = m === 'link'   ? gold  : grey;
+}
+</script>
+{% endblock %}
