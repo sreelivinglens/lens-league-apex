@@ -1228,9 +1228,9 @@
   .db-hcard-body .db-radar-leg-tier  { color: #1A1A18; }
   .db-hcard-body .db-rdim-lbl        { color: #1A1A18; }
   .db-hcard-body .db-rdim-val        { color: #1A1A18; font-weight: 700; }
-  .db-hcard-body .db-pct-hero-lbl    { color: #1A1A18; }
-  .db-hcard-body .db-pct-hero-ctx    { color: #1A1A18; }
-  .db-hcard-body .db-pct-hero-gnr    { color: #1A2744; }
+  .db-hcard-body .db-pct-hero-lbl    { color: #FFFFFF; }
+  .db-hcard-body .db-pct-hero-ctx    { color: #FFFFFF; }
+  .db-hcard-body .db-pct-hero-gnr    { color: rgba(255,255,255,0.80); }
 
   /* Percentile hero box */
   .db-pct-hero {
@@ -2124,12 +2124,6 @@ function dbToggle(hdr) {
   var chev = hdr.querySelector('.db-chevron');
   body.classList.toggle('collapsed');
   chev.classList.toggle('open');
-  // Persist state
-  try {
-    var titleEl = hdr.querySelector('.db-section-title');
-    var key = 'sl_sec_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : Math.random());
-    localStorage.setItem(key, body.classList.contains('collapsed') ? '0' : '1');
-  } catch(e) {}
 }
 
 function dbPanelToggle(hdr) {
@@ -2138,35 +2132,13 @@ function dbPanelToggle(hdr) {
   panel.classList.toggle('mob-open');
   var open = panel.classList.contains('mob-open');
   if (body && window.innerWidth < 769) body.style.display = open ? '' : 'none';
-  // Persist right-col panel state (mobile only)
-  try {
-    var titleEl = hdr.querySelector('.db-panel-hdr-title');
-    var key = 'sl_panel_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : Math.random());
-    localStorage.setItem(key, open ? '1' : '0');
-  } catch(e) {}
 }
 
 function dbAnnToggle(strip) {
   strip.classList.toggle('ann-open');
 }
 
-// First-visit vs returning user panel state (mobile only)
-(function() {
-  if (window.innerWidth > 768) return; // desktop: CSS handles it, no JS needed
-  var key = 'sl_db_visited';
-  var standing = document.getElementById('db-panel-standing');
-  try {
-    var visited = localStorage.getItem(key);
-    if (!visited) {
-      // First visit — open Your Standing as orientation
-      if (standing) standing.classList.add('mob-open');
-      localStorage.setItem(key, '1');
-    }
-    // Returning visit — everything stays collapsed, user goes straight to Upload
-  } catch(e) {
-    // localStorage unavailable (private browsing etc) — default collapsed
-  }
-})();
+// Panels always start collapsed on mobile — no memory between visits
 
 function dbSearchUrl(q) {
   return '/dashboard' + (q ? '?q=' + encodeURIComponent(q) : '');
@@ -2195,24 +2167,21 @@ function dbHcardToggle(id) {
   body.style.display = open ? 'none' : 'block';
   if (hint) hint.textContent = open ? (_hintExpand[id] || 'See more \u25be') : (_hintCollapse[id] || 'Hide \u25b4');
   if (chev) chev.textContent = open ? '\u25b6' : '\u25bc';
-  try { localStorage.setItem('sl_hcard_'+id, open ? '0' : '1'); } catch(e) {}
+  // No localStorage — always reset to collapsed on next page load
 }
 
-// Restore hero card states — mobile only (desktop CSS forces open)
+// Always start collapsed on every page load — mobile + tablet
 (function() {
-  if (window.innerWidth >= 901) return; // Desktop: CSS handles display:block
+  if (window.innerWidth >= 901) return; // Desktop: CSS forces open
   var cards = ['standing', 'points', 'poty', 'referrals'];
   cards.forEach(function(id) {
     var body = document.getElementById('db-hcard-body-'+id);
     var chev = document.getElementById('db-hcard-chev-'+id);
     var hint = document.getElementById('db-hcard-hint-'+id);
     if (!body) return;
-    var stored;
-    try { stored = localStorage.getItem('sl_hcard_'+id); } catch(e) {}
-    var open = stored === '1';
-    body.style.display = open ? 'block' : 'none';
-    if (hint) hint.textContent = open ? (_hintCollapse[id] || 'Hide \u25b4') : (_hintExpand[id] || 'See more \u25be');
-    if (chev) chev.textContent = open ? '\u25bc' : '\u25b6';
+    body.style.display = 'none'; // Always collapsed
+    if (hint) hint.textContent = _hintExpand[id] || 'See more \u25be';
+    if (chev) chev.textContent = '\u25b6';
   });
 })();
 
@@ -2231,51 +2200,28 @@ function dbPotyToggle() {
   }
 })();
 
-// ── Section + panel collapse init — default collapsed, localStorage persists user preference ──
+// ── Section + panel collapse init — always collapsed on every page load ──
 (function() {
-  // db-section bodies: collapse all except the image gallery (identified by having a db-img-grid child)
+  // db-section bodies: collapse all except the image gallery
   var sectionHdrs = document.querySelectorAll('.db-section-hdr');
   sectionHdrs.forEach(function(hdr) {
     var body = hdr.parentElement.querySelector('.db-section-body');
     var chev = hdr.querySelector('.db-chevron');
     if (!body) return;
-    // Never auto-collapse the image gallery section
-    if (body.querySelector('.db-img-grid')) return;
-    var titleEl = hdr.querySelector('.db-section-title');
-    var key = 'sl_sec_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : '');
-    var stored;
-    try { stored = localStorage.getItem(key); } catch(e) {}
-    // Default collapsed (null = first visit)
-    var open = stored === '1';
-    if (!open) {
-      body.classList.add('collapsed');
-      if (chev) chev.classList.remove('open');
-    } else {
-      body.classList.remove('collapsed');
-      if (chev) chev.classList.add('open');
-    }
+    if (body.querySelector('.db-img-grid')) return; // Never collapse image gallery
+    body.classList.add('collapsed');
+    if (chev) chev.classList.remove('open');
   });
 
-  // db-panel bodies (right col): collapsed by default on mobile only, persist preference
-  // On desktop (>=769px) CSS already forces display:block !important — don't touch
+  // db-panel bodies (right col): always collapsed on mobile/tablet
   if (window.innerWidth < 769) {
     var panelHdrs = document.querySelectorAll('.db-panel-hdr');
     panelHdrs.forEach(function(hdr) {
       var panel = hdr.parentElement;
       var body  = panel.querySelector('.db-panel-body');
       if (!body) return;
-      var titleEl = hdr.querySelector('.db-panel-hdr-title');
-      var key = 'sl_panel_' + (titleEl ? titleEl.textContent.trim().substring(0,30) : '');
-      var stored;
-      try { stored = localStorage.getItem(key); } catch(e) {}
-      var open = stored === '1';
-      if (!open) {
-        panel.classList.remove('mob-open');
-        body.style.display = 'none';
-      } else {
-        panel.classList.add('mob-open');
-        body.style.display = '';
-      }
+      panel.classList.remove('mob-open');
+      body.style.display = 'none';
     });
   }
 })();
