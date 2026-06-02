@@ -2909,6 +2909,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             print(f"[auto_score] Species hint '{_species_hint}' looks like a description — ignoring as species name")
             _species_hint = ""
 
+    filename      = os.path.basename(image_path)
     vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=filename)
     scene_context = build_scene_context(vision, genre=genre)
 
