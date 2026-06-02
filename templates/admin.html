@@ -273,6 +273,9 @@
     <a href="{{ url_for("admin_contests") }}" class="admin-nav-btn gold">🏆 Programmes</a>
     <a href="{{ url_for("admin_mentors") }}" class="admin-nav-btn gold">&#127979; Mentors</a>
     <a href="{{ url_for("bulk_upload") }}" class="admin-nav-btn gold">⬆ Bulk Upload</a>
+    <a href="{{ url_for("admin_contact_inbox") }}" class="admin-nav-btn {% if unread_contact_count > 0 %}gold{% endif %}" style="{% if unread_contact_count > 0 %}background:#F5C518;{% endif %}">
+      ✉ Inbox{% if unread_contact_count > 0 %} <span class="badge-count">{{ unread_contact_count }}</span>{% endif %}
+    </a>
   </div>
 
   {# ── Action Required Banner ── #}
