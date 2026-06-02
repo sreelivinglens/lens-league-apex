@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Contact Inbox — Admin{% endblock %}
 {% block content %}
+{% set unread = messages|selectattr('replied','equalto',false)|list|length %}
 <div style="max-width:900px;margin:40px auto;padding:0 20px;">
 
   <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:space-between;">
@@ -8,8 +9,8 @@
       <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 4px 0;">ADMIN</p>
       <h1 style="color:#FFFFFF;font-size:20px;font-weight:700;margin:0;">Contact Inbox</h1>
     </div>
-    <span style="background:#F5C518;color:#1A1A18;font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:6px 16px;border-radius:4px;">
-      {{ messages|length }} messages
+    <span style="background:{% if unread > 0 %}#F5C518{% else %}#4A4840{% endif %};color:{% if unread > 0 %}#1A1A18{% else %}#FFFFFF{% endif %};font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:6px 16px;border-radius:4px;">
+      {{ unread }} unread &middot; {{ messages|length }} total
     </span>
   </div>
 
@@ -55,7 +56,7 @@
     {% if not msg.replied %}
     <!-- Reply form -->
     <form method="POST" action="{{ url_for('admin_contact_reply', msg_id=msg.id) }}">
-<label style="display:block;font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:6px;letter-spacing:0.5px;">REPLY</label>
+      <label style="display:block;font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:6px;letter-spacing:0.5px;">REPLY</label>
       <textarea name="reply_body" rows="5" placeholder="Type your reply here. This will be sent as a branded email from Shutter League."
         style="display:block;width:100%;padding:12px;border:1px solid #E0D8C8;border-radius:4px;font-size:15px;font-family:Arial,sans-serif;box-sizing:border-box;resize:vertical;line-height:1.6;"></textarea>
       <button type="submit"
