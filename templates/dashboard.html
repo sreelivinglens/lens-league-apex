@@ -774,7 +774,7 @@
     .db-ann-strip.ann-open .db-ann-body { display: block; }
     .db-ann-chevron {
       font-size: 12px;
-      color: rgba(255,255,255,0.5);
+      color: #FFFFFF;
       flex-shrink: 0;
       transition: transform 0.2s ease;
     }
@@ -834,7 +834,7 @@
     .db-panel[style*="background:#2C3E6B"] .db-panel-hdr-title,
     .db-panel[style*="background:#1A2744"] .db-panel-hdr-title { color: #F5C518; opacity: 1; }
     .db-panel[style*="background:#2C3E6B"] .db-panel-chevron,
-    .db-panel[style*="background:#1A2744"] .db-panel-chevron { color: rgba(255,255,255,0.55); opacity: 1; }
+    .db-panel[style*="background:#1A2744"] .db-panel-chevron { color: #FFFFFF; opacity: 1; }
   }
   @media (min-width: 769px) {
     /* On desktop: panel header is hidden, body always visible */
@@ -861,7 +861,7 @@
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+    color: #FFFFFF;
     margin-bottom: 4px;
   }
   .db-pct-num {
@@ -872,8 +872,8 @@
     margin-bottom: 3px;
   }
   .db-pct-sub {
-    font-size: 12px;
-    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    color: #FFFFFF;
     line-height: 1.4;
   }
   @media (max-width: 480px) {
@@ -1104,11 +1104,13 @@
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
+    color: #FFFFFF;
+    opacity: 1;
+    flex: 1;
   }
   .db-hcard-chev {
     font-size: 12px;
-    color: rgba(255,255,255,0.3);
+    color: #FFFFFF;
     transition: transform 0.2s;
     flex-shrink: 0;
   }
@@ -1120,7 +1122,7 @@
   .db-hcard-summary-txt {
     font-family: var(--font-mono);
     font-size: 12px;
-    color: rgba(255,255,255,0.55);
+    color: #FFFFFF;
     line-height: 1.5;
   }
   .db-hcard-summary-val { color: #F5C518; font-weight: 700; }
@@ -1139,7 +1141,7 @@
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
+    color: #FFFFFF;
     margin-bottom: 3px;
   }
   .db-pct-hero-num {
@@ -1149,8 +1151,8 @@
     line-height: 1;
     margin-bottom: 3px;
   }
-  .db-pct-hero-ctx { font-size: 13px; color: rgba(255,255,255,0.5); }
-  .db-pct-hero-gnr { font-size: 12px; color: rgba(255,255,255,0.32); margin-top: 2px; }
+  .db-pct-hero-ctx { font-size: 16px; color: #FFFFFF; }
+  .db-pct-hero-gnr { font-size: 16px; color: #FFFFFF; margin-top: 2px; }
   @media (max-width: 480px) {
     .db-pct-hero-num { font-size: 30px; }
   }
@@ -1241,15 +1243,15 @@
   }
   .db-hcard-pts-lbl {
     font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 3px;
+    text-transform: uppercase; color: #FFFFFF; margin-bottom: 3px;
   }
   .db-hcard-pts-val { font-size: 26px; font-weight: 700; color: #F5C518; line-height: 1; }
-  .db-hcard-pts-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .db-hcard-pts-sub { font-size: 14px; color: #FFFFFF; margin-top: 2px; }
   .db-hcard-pts-bar-wrap {
     height: 4px; background: var(--surface-3); border-radius: 99px; margin: 6px 0 5px;
   }
   .db-hcard-pts-bar-fill { height: 4px; border-radius: 99px; background: #2C3E6B; }
-  .db-hcard-pts-note { font-size: 16px; color: var(--text-primary); opacity: 0.55; margin-bottom: 10px; line-height: 1.5; }
+  .db-hcard-pts-note { font-size: 16px; color: var(--text-primary); margin-bottom: 10px; line-height: 1.5; }
   .db-hcard-redeem {
     display: flex; align-items: center; justify-content: center;
     background: #EAF3DE; border: 1.5px solid #3B6D11; color: #27500A;
@@ -1261,19 +1263,19 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px;
     padding-top: 10px; border-top: 0.5px solid var(--border);
   }
-  .db-hcard-qs-item { font-size: 13px; color: var(--text-primary); opacity: 0.55; }
-  .db-hcard-qs-val { font-family: var(--font-mono); font-weight: 700; opacity: 1; color: var(--text-primary); }
+  .db-hcard-qs-item { font-size: 16px; color: var(--text-primary); }
+  .db-hcard-qs-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
 
   /* POTY + referrals card */
   .db-hcard-poty-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-primary); opacity: 0.4; margin-bottom: 8px;
+    color: var(--text-primary); margin-bottom: 8px;
   }
   .db-hcard-ref-lbl {
     font-family: var(--font-mono); font-size: 12px; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-primary); opacity: 0.4;
+    color: var(--text-primary);
     display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
   }
   .db-hcard-div { height: 0.5px; background: var(--border); margin: 12px 0; }
@@ -1387,7 +1389,7 @@
   </a>
 </div>
 <div id="mentor-full-{{ rev.id }}" style="display:none;background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.3);border-left:3px solid #F5C518;border-radius:var(--radius-md);padding:18px 20px;margin-bottom:8px;">
-  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.5;margin-bottom:8px;">
+  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);margin-bottom:8px;">
     {{ rev.asset_name or 'Untitled' }} · {{ rev.mentor_name }}{% if rev.reviewed_at %} · {{ rev.reviewed_at.strftime('%d %b %Y') }}{% endif %}
   </div>
   <div style="font-size:16px;color:var(--text-primary);line-height:1.8;white-space:pre-line;text-align:justify;">{{ rev.review_text }}</div>
@@ -1492,7 +1494,7 @@
         </div>
         <div class="db-hcard-pts-stat">
           <div class="db-hcard-pts-lbl">Residency</div>
-          <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:16px;opacity:0.4;">/6</span></div>
+          <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:16px;color:#FFFFFF;">/6</span></div>
           <div class="db-hcard-pts-sub">months to ranking</div>
         </div>
       </div>
@@ -1565,10 +1567,10 @@
 ════════════════════════════════════════════════════════════════ #}
 {% if free_tier and free_tier.remaining == 0 and free_tier.shadow_rank %}
 <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:28px 32px;margin:14px 0;text-align:center;">
-  <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:12px;">Your Initial Assessment is Complete</div>
+  <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FFFFFF;margin-bottom:12px;">Your Initial Assessment is Complete</div>
   <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
   <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
-  <div style="font-size:16px;color:rgba(255,255,255,0.80);margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
+  <div style="font-size:16px;color:#FFFFFF;margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
     This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Official World Ranking.
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
@@ -1591,8 +1593,8 @@
 <div style="background:#1A2744;border-radius:8px;padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
   <div>
     <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F5C518;margin-bottom:4px;">&#127881; You have a referral discount</div>
-    <div style="font-size:16px;color:rgba(255,255,255,0.90);line-height:1.5;">
-      Subscribe now and get your first month at <strong style="color:#F5C518;">&#8377;85</strong> <span style="color:rgba(255,255,255,0.45);text-decoration:line-through;">&#8377;99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">&#8377;169</strong> <span style="color:rgba(255,255,255,0.45);text-decoration:line-through;">&#8377;199</span> (Camera).
+    <div style="font-size:16px;color:#FFFFFF;line-height:1.5;">
+      Subscribe now and get your first month at <strong style="color:#F5C518;">&#8377;85</strong> <span style="color:#FFFFFF;text-decoration:line-through;">&#8377;99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">&#8377;169</strong> <span style="color:#FFFFFF;text-decoration:line-through;">&#8377;199</span> (Camera).
     </div>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -1606,7 +1608,7 @@
 {% if not referred_discount and not current_user.is_subscribed %}
 <div id="referral-code-widget" style="background:#1A2744;border-radius:8px;padding:16px 20px;margin:14px 0;">
   <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F5C518;margin-bottom:6px;">&#127873; Have a referral code?</div>
-  <div style="font-size:16px;color:rgba(255,255,255,0.80);line-height:1.6;margin-bottom:12px;">Enter the code a friend shared with you to unlock first-month pricing: <strong style="color:#F5C518;">&#8377;85</strong> (Mobile) or <strong style="color:#F5C518;">&#8377;169</strong> (Camera).</div>
+  <div style="font-size:16px;color:#FFFFFF;line-height:1.6;margin-bottom:12px;">Enter the code a friend shared with you to unlock first-month pricing: <strong style="color:#F5C518;">&#8377;85</strong> (Mobile) or <strong style="color:#F5C518;">&#8377;169</strong> (Camera).</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
     <input id="referral-code-input" type="text" maxlength="10" placeholder="SL-XXXXXX"
            style="font-family:var(--font-mono);font-size:14px;padding:10px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;min-width:160px;min-height:44px;letter-spacing:1px;text-transform:uppercase;"
@@ -1623,7 +1625,7 @@
   <div>
     <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:2px;color:var(--text-primary);text-transform:uppercase;margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
     <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;">{{ active_challenge.prompt_title }}</div>
-    <div style="font-size:16px;color:var(--text-primary);margin-top:2px;opacity:0.7;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
+    <div style="font-size:16px;color:var(--text-primary);margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
   </div>
   <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Enter Challenge →</a>
 </div>
@@ -1832,7 +1834,7 @@
           Get expert feedback on your images.
         {% endif %}
       </div>
-      <div style="font-size:16px;color:rgba(255,255,255,0.75);margin-bottom:14px;line-height:1.6;">Structured feedback within 72 hours.</div>
+      <div style="font-size:16px;color:#FFFFFF;margin-bottom:14px;line-height:1.6;">Structured feedback within 72 hours.</div>
       <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;justify-content:center;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border-radius:var(--radius-sm);text-decoration:none;min-height:44px;">Choose a Mentor →</a>
       </div>{# /db-panel-body #}
     </div>
