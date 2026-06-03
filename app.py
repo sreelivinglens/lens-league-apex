@@ -3947,15 +3947,39 @@ def upload_edited_version(image_id):
     ).fetchall()
     versions = [Image.query.get(r[0]) for r in _ver_ids if Image.query.get(r[0])]
 
-    _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+    _pts_bal        = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
     _existing_edits = len(versions) - 1  # subtract root, count edits only
+    _is_sub         = getattr(current_user, 'is_subscribed', False)
+    _track          = getattr(current_user, 'subscription_track', None) or ''
+    _EDIT_PTS_COST  = 10
+    # Check monthly slot availability for subscribed users
+    _slots_ok = True
+    if _is_sub and _track in ('mobile', 'camera', 'learning') and _pts_bal < _EDIT_PTS_COST:
+        from datetime import date as _date
+        _month_start = datetime(_date.today().year, _date.today().month, 1)
+        _month_count = Image.query.filter(
+            Image.user_id == current_user.id,
+            Image.created_at >= _month_start,
+        ).count()
+        _limits = {'mobile': 8, 'camera': 5, 'learning': 12}
+        _slots_ok = _month_count < _limits.get(_track, 5)
+    # Free tier slot check
+    _free_slots_ok = True
+    if not _is_sub and _pts_bal < _EDIT_PTS_COST:
+        _lifetime = getattr(current_user, 'total_uploads_ever', None) or 0
+        _bonus    = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+        _free_slots_ok = _lifetime < (FREE_IMAGE_LIMIT + _bonus)
+    _can_upload = _pts_bal >= _EDIT_PTS_COST or _slots_ok or _free_slots_ok
+
     return render_template('upload_edited.html',
                            parent=parent, root=root,
                            versions=versions,
                            version_num=len(versions) + 1,
                            existing_edits=_existing_edits,
                            points_balance=_pts_bal,
-                           edit_pts_cost=10)
+                           edit_pts_cost=_EDIT_PTS_COST,
+                           can_upload=_can_upload,
+                           slots_ok=_slots_ok and _free_slots_ok)
 
 
 @app.route('/image/<int:image_id>')
