@@ -2224,6 +2224,14 @@ def dashboard():
         _lifetime = getattr(current_user, 'total_uploads_ever', None)
         if _lifetime is None:
             _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
+            try:
+                db.session.execute(
+                    db.text("UPDATE users SET total_uploads_ever = :n WHERE id = :uid AND total_uploads_ever IS NULL"),
+                    {'n': _lifetime, 'uid': current_user.id}
+                )
+                db.session.commit()
+            except Exception:
+                pass
         total_count = _lifetime
         # Compute shadow rank — position by avg DDI score across all public scored users
         _shadow_rank = None
@@ -2750,8 +2758,19 @@ def upload():
                 # Deleting images does NOT restore free slots.
                 _lifetime = getattr(current_user, 'total_uploads_ever', None)
                 if _lifetime is None:
-                    # Fallback for existing users before migration: count all images ever
+                    # total_uploads_ever is NULL — repair it now from current image count.
+                    # Using current count is safe here: if it's NULL the user predates the
+                    # migration and has never had the gate enforced, so current count is
+                    # the best available proxy. Once set it is never decremented.
                     _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
+                    try:
+                        db.session.execute(
+                            db.text("UPDATE users SET total_uploads_ever = :n WHERE id = :uid AND total_uploads_ever IS NULL"),
+                            {'n': _lifetime, 'uid': current_user.id}
+                        )
+                        db.session.commit()
+                    except Exception:
+                        pass
                 _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
                 if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
