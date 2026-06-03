@@ -95,19 +95,15 @@
   /* ── Categories 2-column grid (audit token) ── */
   .db-categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  /* ── Layout — override base.html main container to full width ── */
-  body:has(.db-wrap) main {
-    max-width: none !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
+  /* ── Layout — follows base.html main container, same as leaderboard ── */
   .db-wrap {
     width: 100%;
-    padding: 20px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
     box-sizing: border-box;
   }
   @media (max-width: 600px) {
-    .db-wrap { padding: 14px 14px; }
+    .db-wrap { padding: 0 2px; }
   }
 
   /* ── Top bar ── */
