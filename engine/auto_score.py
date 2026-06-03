@@ -361,6 +361,16 @@ WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
 - If a field has no actionable content, return null — do not fill space.
 - UNCERTAIN SUBJECT RULE: If the scene description flags any element as uncertain or
   unidentified, do NOT reference it in any text field. A wrong identification is worse than null.
+- ABSOLUTE BAN — NEVER write these words or phrases in ANY user-facing field (hard_truth,
+  mentor_technical, mentor_moment, mentor_next, byline_1, byline_2, edit_base, edit_creative):
+  "unidentified species", "unidentified bird", "unidentified animal", "unknown species",
+  "two unidentified", "species unknown", "cannot be identified", "unidentifiable".
+  If the species is unknown, write around it — describe the behaviour, the interaction,
+  the moment, the geometry. NEVER expose your identification failure to the user.
+  Example: instead of "two unidentified species in conflict" write
+  "two birds in interspecific conflict" or "a defender on bark and an attacker in flight".
+  The user submitted the image — they know what is in it. Your job is to score and advise,
+  not to document your own gaps.
 - BANNED phrases: "the image demonstrates", "this photograph shows", "the composition
   features", "the subject is positioned", "the technique showcases", "the exposure
   captures", "the scene reveals", "the frame contains".
@@ -408,18 +418,6 @@ Pick ONE direction and name it specifically in mentor_next.
 Technical fixes (lift shadows, burn corners) go in edit_base only.
 Creative vision goes in mentor_next.
 
-CRITICAL — EDIT BASE INTEGRITY RULE:
-Before writing edit_base, check the scores you just assigned for dod, disruption, wonder, and aq.
-If ANY of these are >= 8.0, the bold choices that produced those scores MUST NOT be undone by edit_base.
-Specifically:
-- If dod >= 8.0: do NOT suggest lifting shadows, opening up dark areas, or reducing contrast — these tonal decisions are what earned the difficulty score. The photographer made the harder call. Do not walk it back.
-- If disruption >= 8.0: do NOT suggest changes that reduce visual tension, flatten contrast, or normalise the frame.
-- If wonder >= 8.0: do NOT suggest edits that shift the image toward a more conventional or "safer" register.
-- If aq >= 8.0: do NOT suggest changes to the core aesthetic — the image is already coherent at a high level.
-For images with score >= 8.0, edit_base MUST be limited to: dust removal, minor colour cast correction, slight sharpening of the primary subject, or fixing an obvious technical error that is NOT related to the choices that scored well.
-If the image's bold tonal or contrast choices are what earned the score, say so explicitly in edit_base: e.g. "Your shadow retention is what earned the difficulty score here — do not lift the blacks. Limit edits to minor dust removal and primary subject sharpening only."
-For images with score < 6.0, edit_base should freely suggest corrective adjustments — the image needs help and the user needs direction.
-
 LOWER-SCORING IMAGES (score < 6.0):
 - Name the primary gap clearly and specifically.
 - Still offer one creative direction — what COULD this image become?
@@ -460,7 +458,7 @@ Return this exact JSON structure:
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
   "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
-  "edit_base":     "<BASE EDITS — post-processing only. INTEGRITY RULE: if score >= 8.0, DO NOT suggest edits that undo the tonal, contrast, or shadow choices that earned the score. For high-scoring images limit to: dust removal, minor colour cast correction, slight primary-subject sharpening. If bold choices (shadow retention, high contrast, dark register) are what scored, say so explicitly and tell the user not to change them. For score < 6.0: specific corrective adjustments — local exposure, dodging/burning, colour grading. Tool-specific. 1-2 sentences.>",
+  "edit_base":     "<BASE EDITS — post-processing only. Specific technical adjustments: local exposure, dodging/burning, colour grading within the original palette. Tool-specific. 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>"
 }}
@@ -2531,14 +2529,30 @@ def vision_analyse(img_data: str, media_type: str, title: str, subject: str, spe
         )
         prompt = prompt + species_hint_text
 
-    # Filename hint — lowest confidence, may contain species or subject clues
+    # Filename hint — may contain species names more specific than photographer's hint
+    # Upgraded to medium confidence when filename contains recognisable species/subject words
     if filename and filename.strip():
         import os as _os
         _fname = _os.path.splitext(filename.strip())[0].replace('_', ' ').replace('-', ' ')
-        filename_hint_text = (
-            f"\nFILENAME HINT (lowest confidence): The original filename suggests '{_fname}'. "
-            f"Use only if it provides useful context that aligns with what you see — do not treat it as fact."
-        )
+        # Detect if filename contains multiple species names (e.g. woodpecker_fending_the_drongo)
+        # In multi-species filenames, the PRIMARY subject is typically the stationary/defending one
+        _fname_lower = _fname.lower()
+        _fname_multi_species = any(w in _fname_lower for w in [
+            'fending', 'attacking', 'vs', 'versus', 'chasing', 'fighting', 'and', 'with'
+        ])
+        if _fname_multi_species:
+            filename_hint_text = (
+                f"\nFILENAME HINT (medium confidence — filename suggests two subjects): "
+                f"The original filename suggests '{_fname}'. "
+                f"This filename appears to name two species or subjects. "
+                f"Identify the PRIMARY subject (typically the stationary, defending, or larger subject) as species_id. "
+                f"Use visual analysis to confirm — trust what you see over the filename."
+            )
+        else:
+            filename_hint_text = (
+                f"\nFILENAME HINT (supporting evidence): The original filename suggests '{_fname}'. "
+                f"Use this as supporting evidence if it aligns with what you see — do not treat it as ground truth."
+            )
         prompt = prompt + filename_hint_text
 
     payload = {
@@ -2920,6 +2934,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     # - More than 5 words → likely a sentence, not a species name
     # - Contains verbs/behavioural words → description, not species
     # - Too long (>60 chars) → not a species name
+    # - Generic family names (Eagles, Birds, Hawks etc.) → too vague, filename often more specific
     if _species_hint:
         import re as _re_sp
         _hint_words = _species_hint.strip().split()
@@ -2928,11 +2943,22 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                         'sitting', 'standing', 'running', 'jumping', 'swimming',
                         'resting', 'sleeping', 'young', 'chick', 'chicks', 'nest',
                         'pair', 'group', 'flock', 'family', 'male', 'female'}
+        _generic_family = {
+            'eagle', 'eagles', 'bird', 'birds', 'hawk', 'hawks', 'owl', 'owls',
+            'fish', 'fishes', 'animal', 'animals', 'mammal', 'mammals', 'insect',
+            'insects', 'butterfly', 'butterflies', 'snake', 'snakes', 'lizard',
+            'lizards', 'frog', 'frogs', 'spider', 'spiders', 'bee', 'bees',
+            'dragonfly', 'dragonflies', 'heron', 'herons', 'duck', 'ducks',
+            'dove', 'doves', 'pigeon', 'pigeons', 'parrot', 'parrots',
+            'unknown', 'unidentified', 'wildlife', 'nature',
+        }
+        _hint_lower = _species_hint.strip().lower()
         _hint_lower_words = set(w.lower() for w in _hint_words)
         if (len(_hint_words) > 5
                 or len(_species_hint) > 60
-                or _hint_lower_words & _behavioural):
-            print(f"[auto_score] Species hint '{_species_hint}' looks like a description — ignoring as species name")
+                or _hint_lower_words & _behavioural
+                or _hint_lower in _generic_family):
+            print(f"[auto_score] Species hint '{_species_hint}' is generic or behavioural — ignoring, filename may be more specific")
             _species_hint = ""
 
     _filename     = os.path.basename(image_path)
