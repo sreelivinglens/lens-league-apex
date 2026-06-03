@@ -3945,7 +3945,15 @@ def upload_edited_version(image_id):
     ).fetchall()
     versions = [Image.query.get(r[0]) for r in _ver_ids if Image.query.get(r[0])]
 
-    _pts_bal        = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+    # Read points balance fresh from DB — ORM attribute may be stale
+    try:
+        _pts_row = db.session.execute(
+            db.text("SELECT points_balance FROM users WHERE id = :uid"),
+            {'uid': current_user.id}
+        ).fetchone()
+        _pts_bal = round(float(_pts_row[0] or 0), 1) if _pts_row else 0.0
+    except Exception:
+        _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
     _existing_edits = len(versions) - 1  # subtract root, count edits only
     _is_sub         = getattr(current_user, 'is_subscribed', False)
     _track          = getattr(current_user, 'subscription_track', None) or ''
