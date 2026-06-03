@@ -3677,7 +3677,13 @@ def upload_edited_version(image_id):
     parent = Image.query.get_or_404(image_id)
 
     # Walk up to find the root parent (handle chains: V1 -> V2 -> V3)
-    root_id = parent.parent_image_id or parent.id
+    # parent_image_id is a migration-only column — not in ORM model, read via SQL
+    _pid_row = db.session.execute(
+        db.text("SELECT parent_image_id FROM images WHERE id = :iid"),
+        {'iid': parent.id}
+    ).fetchone()
+    _parent_image_id = _pid_row[0] if _pid_row else None
+    root_id = _parent_image_id or parent.id
     root    = Image.query.get(root_id) if root_id != parent.id else parent
 
     # Only owner or admin
@@ -3725,12 +3731,10 @@ def upload_edited_version(image_id):
                     return redirect(url_for('image_detail', image_id=image_id))
 
         # ── Determine version number ──
-        sibling_count = Image.query.filter(
-            db.or_(
-                Image.id == root_id,
-                Image.parent_image_id == root_id
-            )
-        ).count()
+        sibling_count = db.session.execute(
+            db.text("SELECT COUNT(*) FROM images WHERE id = :rid OR parent_image_id = :rid"),
+            {'rid': root_id}
+        ).scalar() or 0
         version_num = sibling_count + 1
 
         # ── Ingest file ──
@@ -3751,9 +3755,11 @@ def upload_edited_version(image_id):
 
         # Duplicate check against siblings only (not global — it IS the same photo)
         from engine.processor import hash_similarity_pct
-        siblings = Image.query.filter(
-            db.or_(Image.id == root_id, Image.parent_image_id == root_id)
-        ).all()
+        _sib_ids = db.session.execute(
+            db.text("SELECT id FROM images WHERE id = :rid OR parent_image_id = :rid"),
+            {'rid': root_id}
+        ).fetchall()
+        siblings = [Image.query.get(r[0]) for r in _sib_ids if Image.query.get(r[0])]
         for sib in siblings:
             if sib.phash and hash_similarity_pct(phash, sib.phash) >= 98.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
@@ -3784,7 +3790,7 @@ def upload_edited_version(image_id):
             phash             = phash,
             status            = 'pending',
             is_public         = False,   # private until user chooses to publish
-            parent_image_id   = root_id,
+            # parent_image_id set via SQL after commit (migration-only column)
             exif_status=exif_status,
             exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
             exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
@@ -3795,13 +3801,20 @@ def upload_edited_version(image_id):
             ]))).replace('\x00', ''),
             exif_warning=(exif_warning or '').replace('\x00', ''),
         )
-        # Set version_number directly (migration column)
-        try:
-            img.version_number = version_num
-        except Exception:
-            pass
+        # version_number set via SQL after flush (see below)
 
         db.session.add(img)
+        db.session.flush()  # get img.id before commit
+
+        # Set parent_image_id and version_number via SQL (migration-only columns)
+        try:
+            db.session.execute(
+                db.text("UPDATE images SET parent_image_id = :pid, version_number = :vn WHERE id = :iid"),
+                {'pid': root_id, 'vn': version_num, 'iid': img.id}
+            )
+        except Exception as _e:
+            app.logger.warning(f'[upload_edit] parent_image_id set failed: {_e}')
+
         # Increment lifetime counter
         try:
             db.session.execute(
@@ -3895,9 +3908,11 @@ def upload_edited_version(image_id):
 
     # GET — render the upload form
     # Fetch all existing versions for display
-    versions = Image.query.filter(
-        db.or_(Image.id == root_id, Image.parent_image_id == root_id)
-    ).order_by(Image.id.asc()).all()
+    _ver_ids = db.session.execute(
+        db.text("SELECT id FROM images WHERE id = :rid OR parent_image_id = :rid ORDER BY id ASC"),
+        {'rid': root_id}
+    ).fetchall()
+    versions = [Image.query.get(r[0]) for r in _ver_ids if Image.query.get(r[0])]
 
     return render_template('upload_edited.html',
                            parent=parent, root=root,
