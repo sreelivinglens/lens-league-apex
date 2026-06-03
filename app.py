@@ -4768,6 +4768,16 @@ def delete_image(image_id):
         except Exception:
             pass
 
+    # NULL out parent_image_id on child versions before deleting
+    try:
+        db.session.execute(
+            db.text("UPDATE images SET parent_image_id = NULL WHERE parent_image_id = :iid"),
+            {'iid': iid}
+        )
+        db.session.commit()
+    except Exception:
+        pass
+
     try:
         db.session.execute(db.text("DELETE FROM images WHERE id = :iid AND user_id = :uid"),
                            {'iid': iid, 'uid': current_user.id})
@@ -4810,6 +4820,15 @@ def admin_delete_image(image_id):
             r2.delete_file(key)
         except Exception:
             pass
+    # NULL out parent_image_id on any child versions before deleting
+    try:
+        db.session.execute(
+            db.text("UPDATE images SET parent_image_id = NULL WHERE parent_image_id = :iid"),
+            {'iid': image_id}
+        )
+        db.session.commit()
+    except Exception:
+        pass
     # Delete all related records first to avoid NOT NULL FK violations.
     # Must match the full set in user-facing delete_image — 12 tables.
     iid = image_id
@@ -4867,6 +4886,15 @@ def admin_bulk_delete():
             img = Image.query.get(int(image_id))
             if not img:
                 continue
+            # NULL out parent_image_id on any child versions before deleting
+            try:
+                db.session.execute(
+                    db.text("UPDATE images SET parent_image_id = NULL WHERE parent_image_id = :iid"),
+                    {'iid': img.id}
+                )
+                db.session.commit()
+            except Exception:
+                pass
             if img.thumb_url:
                 try:
                     key = img.thumb_url.replace(r2.R2_PUBLIC_URL + '/', '')
