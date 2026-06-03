@@ -408,6 +408,18 @@ Pick ONE direction and name it specifically in mentor_next.
 Technical fixes (lift shadows, burn corners) go in edit_base only.
 Creative vision goes in mentor_next.
 
+CRITICAL — EDIT BASE INTEGRITY RULE:
+Before writing edit_base, check the scores you just assigned for dod, disruption, wonder, and aq.
+If ANY of these are >= 8.0, the bold choices that produced those scores MUST NOT be undone by edit_base.
+Specifically:
+- If dod >= 8.0: do NOT suggest lifting shadows, opening up dark areas, or reducing contrast — these tonal decisions are what earned the difficulty score. The photographer made the harder call. Do not walk it back.
+- If disruption >= 8.0: do NOT suggest changes that reduce visual tension, flatten contrast, or normalise the frame.
+- If wonder >= 8.0: do NOT suggest edits that shift the image toward a more conventional or "safer" register.
+- If aq >= 8.0: do NOT suggest changes to the core aesthetic — the image is already coherent at a high level.
+For images with score >= 8.0, edit_base MUST be limited to: dust removal, minor colour cast correction, slight sharpening of the primary subject, or fixing an obvious technical error that is NOT related to the choices that scored well.
+If the image's bold tonal or contrast choices are what earned the score, say so explicitly in edit_base: e.g. "Your shadow retention is what earned the difficulty score here — do not lift the blacks. Limit edits to minor dust removal and primary subject sharpening only."
+For images with score < 6.0, edit_base should freely suggest corrective adjustments — the image needs help and the user needs direction.
+
 LOWER-SCORING IMAGES (score < 6.0):
 - Name the primary gap clearly and specifically.
 - Still offer one creative direction — what COULD this image become?
@@ -448,7 +460,7 @@ Return this exact JSON structure:
   "ai_suspicion": <float 0.0-1.0>,
   "ai_suspicion_reason": "<concise reason if ai_suspicion >= 0.5, else null>",
   "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
-  "edit_base":     "<BASE EDITS — post-processing only. Specific technical adjustments: local exposure, dodging/burning, colour grading within the original palette. Tool-specific. 1-2 sentences.>",
+  "edit_base":     "<BASE EDITS — post-processing only. INTEGRITY RULE: if score >= 8.0, DO NOT suggest edits that undo the tonal, contrast, or shadow choices that earned the score. For high-scoring images limit to: dust removal, minor colour cast correction, slight primary-subject sharpening. If bold choices (shadow retention, high contrast, dark register) are what scored, say so explicitly and tell the user not to change them. For score < 6.0: specific corrective adjustments — local exposure, dodging/burning, colour grading. Tool-specific. 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>"
 }}
