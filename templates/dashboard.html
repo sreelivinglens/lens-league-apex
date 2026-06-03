@@ -2145,7 +2145,7 @@
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
         <p class="rp-label upcoming">Shoot monthly → qualify for Annual Excellence Award</p>
-        <p class="rp-desc">Shoot at least once a month in your best genre. Your highest score each month counts — your best months shape your annual ranking.</p>
+        <p class="rp-desc">Your best image each month counts — one score per month, any genre. Shoot across 6 months and your top 6 monthly scores qualify you for the Annual Excellence Award. Genre specialist or all-rounder — your choice.</p>
       </div>
     </div>
   </div>
@@ -2171,9 +2171,9 @@
         {% if _best_row %}
           {% set _pct = [(_best_count / 24 * 100)|int, 100]|min %}
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
-          <p class="rp-bar-label">{{ _best_count }} images in <strong>{{ _best_genre }}</strong> this year — keep shooting monthly</p>
+          <p class="rp-bar-label">{{ _best_count }} scored image{{ "s" if _best_count != 1 }} in <strong>{{ _best_genre }}</strong> this year — your best per month counts</p>
         {% endif %}
-        <p class="rp-desc active">Your highest score each month in <strong>{{ _best_genre }}</strong> counts. Keep shooting — your best months shape your Annual Excellence Award ranking.</p>
+        <p class="rp-desc active">Your best image each month counts — one per month, any genre. Your top 6 monthly scores across the year shape your Annual Excellence Award ranking. Shoot consistently in <strong>{{ _best_genre }}</strong> or across genres — your 6 best months are what qualify you.</p>
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
     </div>
