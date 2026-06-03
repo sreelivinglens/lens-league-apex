@@ -4850,8 +4850,26 @@ def admin_delete_image(image_id):
             db.session.execute(db.text(_sql), {'iid': iid})
         except Exception:
             pass
-    db.session.delete(img)
-    db.session.commit()
+    # Also clear brand_entries referencing this image
+    try:
+        db.session.execute(db.text("DELETE FROM brand_entries WHERE image_id = :iid"), {'iid': image_id})
+    except Exception:
+        pass
+    try:
+        db.session.delete(img)
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[admin_delete_image] DB delete failed for image {image_id}: {_e}')
+        # Try raw SQL as fallback
+        try:
+            db.session.execute(db.text("DELETE FROM images WHERE id = :iid"), {'iid': image_id})
+            db.session.commit()
+        except Exception as _e2:
+            db.session.rollback()
+            app.logger.error(f'[admin_delete_image] Raw SQL fallback also failed: {_e2}')
+            flash(f'Delete failed: {str(_e2)[:120]}', 'error')
+            return redirect(url_for('admin_dashboard'))
     flash(f'Image deleted.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -4885,6 +4903,7 @@ def admin_bulk_delete():
         try:
             img = Image.query.get(int(image_id))
             if not img:
+                app.logger.warning(f'[bulk delete] image {image_id} not found, skipping')
                 continue
             # NULL out parent_image_id on any child versions before deleting
             try:
@@ -4947,12 +4966,24 @@ def admin_bulk_delete():
                 db.session.execute(db.text("DELETE FROM open_contest_entries WHERE image_id = :iid"), {'iid': img.id})
             except Exception:
                 pass
-            db.session.delete(img)
+            try:
+                db.session.delete(img)
+            except Exception:
+                db.session.rollback()
+                # Fallback to raw SQL
+                try:
+                    db.session.execute(db.text("DELETE FROM images WHERE id = :iid"), {'iid': img.id})
+                except Exception:
+                    pass
             deleted += 1
         except Exception as e:
             db.session.rollback()
-            print(f'[bulk delete] image {image_id}: {e}')
-    db.session.commit()
+            app.logger.error(f'[bulk delete] image {image_id}: {e}')
+    try:
+        db.session.commit()
+    except Exception as _e:
+        db.session.rollback()
+        app.logger.error(f'[bulk delete] final commit failed: {_e}')
     flash(f'Deleted {deleted} image(s).', 'success')
     return redirect(url_for('admin_dashboard'))
 
