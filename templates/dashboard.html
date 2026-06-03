@@ -1884,8 +1884,8 @@
 <section class="rp-card" aria-label="Your path to rankings">
 <style>
 .rp-card {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: #1A2744;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-md);
   padding: 24px 28px;
   margin: 0 0 28px;
@@ -1897,14 +1897,13 @@
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--text-primary);
-  opacity: 0.5;
+  color: rgba(255,255,255,0.45);
   margin: 0 0 4px;
 }
 .rp-card .rp-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin: 0 0 20px;
   line-height: 1.3;
 }
@@ -1914,7 +1913,7 @@
   gap: 14px;
   align-items: flex-start;
   padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .rp-card .rp-step:last-child { border-bottom: none; padding-bottom: 0; }
 .rp-card .rp-icon {
@@ -1929,9 +1928,9 @@
   font-weight: 700;
   margin-top: 1px;
 }
-.rp-card .rp-icon.done     { background: rgba(245,197,24,0.15); color:var(--text-primary);font-weight:700; }
+.rp-card .rp-icon.done     { background: rgba(245,197,24,0.15); color: #F5C518; font-weight:700; }
 .rp-card .rp-icon.active   { background: var(--gold); color: #1a1a18; }
-.rp-card .rp-icon.upcoming { background: var(--surface-3); color: var(--text-primary); opacity: 0.4; }
+.rp-card .rp-icon.upcoming { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.35); opacity: 1; }
 .rp-card .rp-body { flex: 1; min-width: 0; }
 .rp-card .rp-label {
   font-family: var(--font-mono);
@@ -1940,21 +1939,22 @@
   text-transform: uppercase;
   margin: 0 0 4px;
   line-height: 1.4;
+  color: rgba(255,255,255,0.5);
 }
-.rp-card .rp-label.done     { color: var(--text-primary); }
-.rp-card .rp-label.active   { color: var(--text-primary); }
-.rp-card .rp-label.upcoming { color: var(--text-primary); opacity: 0.4; }
+.rp-card .rp-label.done     { color: #F5C518; }
+.rp-card .rp-label.active   { color: #F5C518; }
+.rp-card .rp-label.upcoming { color: rgba(255,255,255,0.35); opacity: 1; }
 .rp-card .rp-desc {
   font-size: 15px;
   line-height: 1.6;
-  color: var(--text-primary);
+  color: rgba(255,255,255,0.7);
   margin: 0 0 8px;
   text-align: justify;
-  opacity: 0.8;
+  opacity: 1;
 }
-.rp-card .rp-desc.active { opacity: 1; }
+.rp-card .rp-desc.active { color: rgba(255,255,255,0.85); }
 .rp-card .rp-bar-wrap {
-  background: var(--surface-3);
+  background: rgba(255,255,255,0.1);
   border-radius: 3px;
   height: 5px;
   margin-bottom: 6px;
@@ -1967,8 +1967,8 @@
 }
 .rp-card .rp-bar-label {
   font-size: 13px;
-  color: var(--text-primary);
-  opacity: 0.65;
+  color: rgba(255,255,255,0.55);
+  opacity: 1;
   margin: 0 0 8px;
 }
 .rp-card .rp-cta {
@@ -1994,9 +1994,9 @@
   font-family: var(--font-mono);
   padding: 3px 9px;
   border-radius: 3px;
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  background: var(--surface-1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.05);
 }
 .rp-card .rp-chip.lit {
   border-color:var(--text-primary);font-weight:700;
@@ -2004,8 +2004,8 @@
   background: rgba(245,197,24,0.06);
 }
 .rp-card .rp-done-box {
-  background: rgba(245,197,24,0.07);
-  border: 1px solid rgba(245,197,24,0.25);
+  background: rgba(245,197,24,0.1);
+  border: 1px solid rgba(245,197,24,0.3);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
 }
@@ -2013,11 +2013,11 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.6;
-  color: var(--text-primary);
+  color: rgba(255,255,255,0.85);
   text-align: justify;
 }
 .rp-card .rp-shadow-box {
-  background: var(--surface-3);
+  background: rgba(255,255,255,0.07);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
   margin-bottom: 16px;
@@ -2032,7 +2032,7 @@
 .rp-card .rp-shadow-box p {
   margin: 0;
   font-size: 14px;
-  color: var(--text-primary);
+  color: rgba(255,255,255,0.65);
   line-height: 1.5;
   text-align: justify;
 }
