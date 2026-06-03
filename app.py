@@ -3754,17 +3754,9 @@ def upload_edited_version(image_id):
         if os.path.exists(raw_path): os.remove(raw_path)
 
         # Duplicate check against siblings only (not global — it IS the same photo)
+        # No duplicate check for edited versions — they are intentionally similar to the original
+        # Global duplicate check (cross-user 98%+ match) still applies via normal upload
         from engine.processor import hash_similarity_pct
-        _sib_ids = db.session.execute(
-            db.text("SELECT id FROM images WHERE id = :rid OR parent_image_id = :rid"),
-            {'rid': root_id}
-        ).fetchall()
-        siblings = [Image.query.get(r[0]) for r in _sib_ids if Image.query.get(r[0])]
-        for sib in siblings:
-            if sib.phash and hash_similarity_pct(phash, sib.phash) >= 98.0:
-                if os.path.exists(thumb_path): os.remove(thumb_path)
-                flash(f'This edited version appears identical to an existing version ("{sib.asset_name}"). Please upload a meaningfully different edit.', 'warning')
-                return redirect(request.url)
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
@@ -3782,7 +3774,7 @@ def upload_edited_version(image_id):
             width=w, height=h, format=fmt,
             asset_name        = f"{root.asset_name or 'Untitled'} (V{version_num})",
             genre             = parent.genre,
-            subject           = parent.subject,
+            subject           = (parent.subject or '').split('] ', 1)[-1] if parent.subject and parent.subject.startswith('[') else (parent.subject or ''),
             location          = parent.location,
             conditions        = parent.conditions,
             photographer_name = parent.photographer_name,
