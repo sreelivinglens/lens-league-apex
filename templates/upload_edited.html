@@ -314,16 +314,20 @@
 </div>
 
 <script>
+// Global scope so onchange on checkbox can call it
+function updateUploadBtn() {
+  var input = document.getElementById('edit-file-input');
+  var ack   = document.getElementById('ack-checkbox');
+  var btn   = document.getElementById('upload-btn');
+  if (!btn) return;
+  btn.disabled = !(input && input.files.length > 0 && ack && ack.checked);
+}
+
 (function () {
   const input   = document.getElementById('edit-file-input');
   const dropZone= document.getElementById('drop-zone');
   const selMsg  = document.getElementById('file-selected-msg');
   const btn     = document.getElementById('upload-btn');
-
-  function updateUploadBtn() {
-    var ack = document.getElementById('ack-checkbox');
-    btn.disabled = !(input.files.length > 0 && ack && ack.checked);
-  }
 
   function showFile(file) {
     if (!file) return;
