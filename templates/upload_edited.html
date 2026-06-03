@@ -249,6 +249,18 @@
         </ul>
       </div>
 
+      {# ── Legal disclaimer ─────────────────────────────────────────── #}
+      <div style="margin-bottom:20px;padding:14px 16px;background:#FFF8E8;border:1px solid #E8D08A;border-radius:var(--radius-sm);font-size:14px;line-height:1.7;color:#4A4020;">
+        <strong style="display:block;margin-bottom:6px;">Important — please read before uploading</strong>
+        Edit guidance provided by the Apex DDI Engine is <strong>directional feedback</strong> to help you improve your craft —
+        it is not a guarantee of a higher score. Each version is scored independently on its own merits.
+        An edited version may score higher, lower, or the same as the original depending on the changes made.
+        <br><br>
+        By uploading an edited version, you acknowledge that <strong>Shutter League does not guarantee score
+        improvement</strong> and is not liable for outcomes on re-scored images. Your original score is
+        preserved and continues to count toward your rankings regardless of the edited version's result.
+      </div>
+
       <button type="submit" class="ue-submit" id="upload-btn" disabled>Upload &amp; Score V{{ version_num }} →</button>
       <a href="{{ url_for('image_detail', image_id=parent.id) }}" class="ue-back">← Cancel</a>
     </div>
