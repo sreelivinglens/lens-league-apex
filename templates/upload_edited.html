@@ -189,6 +189,22 @@
     <p>Score a new edit of <strong>{{ root.asset_name or 'Untitled' }}</strong>. Your edited version starts private — you decide if and when to make it public.</p>
   </div>
 
+  {# ── Wallet balance summary ──────────────────────────────────── #}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;gap:8px;">
+    <div style="font-size:14px;color:var(--text-secondary);">
+      <span style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.6;">Your Balance</span>
+      <span style="font-size:20px;font-weight:700;color:var(--text-primary);margin-left:10px;">{{ points_balance }} pts</span>
+      <span style="font-size:13px;color:var(--text-secondary);margin-left:6px;">(≈ ₹{{ (points_balance * 0.1) | int }})</span>
+    </div>
+    {% if version_num == 2 %}
+    <div style="font-size:13px;font-family:var(--font-mono);color:#14532D;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 12px;border-radius:20px;font-weight:700;">🎁 This edit is FREE</div>
+    {% elif points_balance >= edit_pts_cost %}
+    <div style="font-size:13px;font-family:var(--font-mono);color:#1E3A5F;background:#EFF6FF;border:1px solid #93C5FD;padding:4px 12px;border-radius:20px;font-weight:700;">💳 {{ edit_pts_cost }} pts will be deducted</div>
+    {% else %}
+    <div style="font-size:13px;font-family:var(--font-mono);color:#7C4A00;background:#FFF7ED;border:1px solid #FBBF24;padding:4px 12px;border-radius:20px;font-weight:700;">⚠ 1 upload slot will be used</div>
+    {% endif %}
+  </div>
+
   {# ── Existing versions strip ─────────────────────────────────── #}
   {% if versions %}
   <div class="ue-versions">
@@ -223,6 +239,27 @@
       </div>
     </div>
   </div>
+  {% endif %}
+
+  {# ── Cost banner — shown prominently before upload form ─────── #}
+  {% if version_num == 2 %}
+  <div style="margin-bottom:16px;padding:12px 16px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:var(--radius-sm);font-size:15px;color:#14532D;">
+    🎁 <strong>Your first edit is free</strong> — no points or upload slots used.
+  </div>
+  {% elif version_num > 2 %}
+    {% if points_balance >= edit_pts_cost %}
+  <div style="margin-bottom:16px;padding:12px 16px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:var(--radius-sm);font-size:15px;color:#1E3A5F;">
+    💳 <strong>{{ edit_pts_cost }} points (≈ ₹{{ (edit_pts_cost * 0.1) | int }}) will be deducted</strong> from your balance of <strong>{{ points_balance }} pts</strong> on upload.
+  </div>
+    {% elif points_balance > 0 %}
+  <div style="margin-bottom:16px;padding:12px 16px;background:#FFF7ED;border:1px solid #FBBf24;border-radius:var(--radius-sm);font-size:15px;color:#7C4A00;">
+    ⚠ <strong>1 upload slot will be used</strong> — you have {{ points_balance }} pts but need {{ edit_pts_cost }} pts to pay with points.
+  </div>
+    {% else %}
+  <div style="margin-bottom:16px;padding:12px 16px;background:#FFF7ED;border:1px solid #FBBF24;border-radius:var(--radius-sm);font-size:15px;color:#7C4A00;">
+    ⚠ <strong>1 upload slot will be used</strong> — no points balance. Top-up or subscribe to use points.
+  </div>
+    {% endif %}
   {% endif %}
 
   {# ── Affordability warning ──────────────────────────────────── #}
