@@ -225,8 +225,29 @@
   </div>
   {% endif %}
 
+  {# ── Affordability warning ──────────────────────────────────── #}
+  {% if version_num > 2 %}
+    {% if not can_upload %}
+    <div style="margin-bottom:20px;padding:16px 18px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:var(--radius-sm);font-size:14px;line-height:1.6;color:#7F1D1D;">
+      <strong>⛔ No points or upload slots available</strong><br>
+      You have {{ points_balance }} pts ({{ edit_pts_cost }} pts needed to redeem with points) and no upload slots remaining this month.
+      <ul style="margin:10px 0 10px;padding-left:20px;line-height:2.2;">
+        <li><strong>Top-up ₹99</strong> — get 5 scored images instantly, use one for this edit — <a href="{{ url_for('pricing') }}" style="color:#7F1D1D;font-weight:700;">Top up →</a></li>
+        <li><strong>Subscribe from ₹99/mo</strong> — 8 images/month included, no per-edit fees — <a href="{{ url_for('pricing') }}" style="color:#7F1D1D;font-weight:700;">See plans →</a></li>
+        <li><strong>Rate peer images</strong> — earn 10 pts per rating, 10 pts unlocks this edit — <a href="{{ url_for('rate') }}" style="color:#7F1D1D;font-weight:700;">Rate now →</a></li>
+      </ul>
+    </div>
+    {% elif points_balance < edit_pts_cost %}
+    <div style="margin-bottom:20px;padding:14px 16px;background:#FFF3CD;border:1px solid #FBBF24;border-radius:var(--radius-sm);font-size:14px;line-height:1.6;color:#7C4A00;">
+      <strong>⚠ Low points balance</strong> — you have {{ points_balance }} pts ({{ edit_pts_cost }} pts needed to use points).
+      This edit will use <strong>1 upload slot</strong> from your monthly allocation instead.
+      <a href="{{ url_for('rate') }}" style="color:#7C4A00;font-weight:700;">Rate peers to earn points →</a>
+    </div>
+    {% endif %}
+  {% endif %}
+
   {# ── Upload form ─────────────────────────────────────────────── #}
-  <form method="POST" enctype="multipart/form-data" id="edit-upload-form">
+  <form method="POST" enctype="multipart/form-data" id="edit-upload-form"{% if version_num > 2 and not can_upload %} style="opacity:0.5;pointer-events:none;"{% endif %}>
     <input type="hidden" name="_xhr" value="0">
 
     <div class="ue-card">
