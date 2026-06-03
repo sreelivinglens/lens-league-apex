@@ -3843,24 +3843,51 @@ def change_password():
 
 @app.route('/recent-work')
 def recent_work():
-    """Recent Work feed — latest public scored images, one per user, up to 48."""
+    """Recent Work feed — up to 3 images per photographer, max 48 total.
+    7-day window from midnight IST; falls back to all-time if empty.
+    TODO: add pagination when photographer count grows beyond ~15.
+    """
     try:
         import random as _random
-        rows = (db.session.execute(db.text("""
-            SELECT DISTINCT ON (i.user_id)
-                i.id, i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
-                i.photographer_name, i.scored_at, u.username
-            FROM images i
-            JOIN users u ON u.id = i.user_id
-            WHERE i.status = 'scored'
-              AND i.score IS NOT NULL
-              AND i.is_public = TRUE
-              AND i.is_flagged = FALSE
-              AND i.thumb_url IS NOT NULL
-            ORDER BY i.user_id, i.scored_at DESC
-            LIMIT 500
-        """)).fetchall())
-        images = [dict(r._mapping) for r in rows]
+        _now_utc   = datetime.utcnow()
+        _today_ist = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
+        _window_start = (_today_ist - timedelta(days=7)) - _IST_OFFSET
+
+        _base_q = (
+            "SELECT i.id, i.thumb_url, i.asset_name, i.genre, i.score, i.tier,"
+            " i.photographer_name, i.scored_at, u.username, i.user_id"
+            " FROM images i JOIN users u ON u.id = i.user_id"
+            " WHERE i.status = 'scored' AND i.score IS NOT NULL"
+            " AND i.is_public = TRUE AND i.is_flagged = FALSE"
+            " AND (i.needs_review = FALSE OR i.needs_review IS NULL)"
+            " AND (i.raw_disqualified = FALSE OR i.raw_disqualified IS NULL)"
+            " AND i.thumb_url IS NOT NULL"
+        )
+
+        def _fetch_and_cap(since):
+            if since:
+                rows = db.session.execute(db.text(
+                    _base_q + " AND i.scored_at >= :since ORDER BY i.scored_at DESC LIMIT 500"
+                ), {'since': since}).fetchall()
+            else:
+                rows = db.session.execute(db.text(
+                    _base_q + " ORDER BY i.scored_at DESC LIMIT 500"
+                )).fetchall()
+            # Cap at 3 per photographer
+            seen = {}
+            result = []
+            for r in rows:
+                d = dict(r._mapping)
+                uid = d['user_id']
+                if seen.get(uid, 0) < 3:
+                    seen[uid] = seen.get(uid, 0) + 1
+                    result.append(d)
+            return result
+
+        images = _fetch_and_cap(_window_start)
+        if not images:
+            images = _fetch_and_cap(None)
+            app.logger.info('[recent_work] 7-day window empty — showing all-time')
         _random.shuffle(images)
         images = images[:48]
     except Exception as _e:
