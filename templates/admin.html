@@ -1341,7 +1341,7 @@ function adminBulkDelete() {
   if (!confirm('Delete ' + ids.length + ' selected image(s)? This cannot be undone.')) return;
   const body = new URLSearchParams();
   ids.forEach(id => body.append('image_ids', id));
-  fetch('{{ url_for("admin_bulk_delete") | tojson }}', {
+  fetch('{{ url_for("admin_bulk_delete") }}', {
     method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: body.toString()
