@@ -955,26 +955,6 @@ with app.app_context():
             conn.commit()
         print('Database ready.')
 
-        # One-time backfill: set is_public=TRUE for scored images that are
-        # not flagged, not under review, not disqualified — they were hidden
-        # because RAW was triggered but admin cleared them or they scored normally.
-        try:
-            with db.engine.connect() as _pub_conn:
-                _pr = _pub_conn.execute(db.text(
-                    """UPDATE images
-                       SET is_public = TRUE
-                       WHERE status = 'scored'
-                         AND score IS NOT NULL
-                         AND is_flagged = FALSE
-                         AND (needs_review = FALSE OR needs_review IS NULL)
-                         AND (raw_disqualified = FALSE OR raw_disqualified IS NULL)
-                         AND is_public = FALSE"""
-                ))
-                _pub_conn.commit()
-            print(f'[is_public_backfill] Set {_pr.rowcount} scored images to public.')
-        except Exception as _pub_e:
-            print(f'[is_public_backfill] warning: {_pub_e}')
-
         # Sprint 3 — one-time residency backfill for existing subscribers
         try:
             # Import after full module load to avoid forward-reference error
@@ -3863,17 +3843,10 @@ def change_password():
 
 @app.route('/recent-work')
 def recent_work():
-    """Recent Work feed — scored images from past 7 days, one per user, up to 48.
-    Window: midnight IST today going back 7 days.
-    Falls back to all-time if 7-day window is empty.
-    """
+    """Recent Work feed — latest public scored images, one per user, up to 48."""
     try:
         import random as _random
-        _now_utc   = datetime.utcnow()
-        _today_ist = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
-        _window_start = (_today_ist - timedelta(days=7)) - _IST_OFFSET  # convert back to UTC
-
-        _base_q = """
+        rows = (db.session.execute(db.text("""
             SELECT DISTINCT ON (i.user_id)
                 i.id, i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
                 i.photographer_name, i.scored_at, u.username
@@ -3881,26 +3854,13 @@ def recent_work():
             JOIN users u ON u.id = i.user_id
             WHERE i.status = 'scored'
               AND i.score IS NOT NULL
-              AND i.is_flagged = FALSE
-              AND (i.needs_review = FALSE OR i.needs_review IS NULL)
-              AND (i.raw_disqualified = FALSE OR i.raw_disqualified IS NULL)
-              AND i.thumb_url IS NOT NULL
               AND i.is_public = TRUE
-              {date_clause}
+              AND i.is_flagged = FALSE
+              AND i.thumb_url IS NOT NULL
             ORDER BY i.user_id, i.scored_at DESC
             LIMIT 500
-        """
-        rows = db.session.execute(db.text(
-            _base_q.format(date_clause="AND i.scored_at >= :since")
-        ), {'since': _window_start}).fetchall()
+        """)).fetchall())
         images = [dict(r._mapping) for r in rows]
-        # Fallback to all-time if 7-day window is empty
-        if not images:
-            rows = db.session.execute(db.text(
-                _base_q.format(date_clause="")
-            )).fetchall()
-            images = [dict(r._mapping) for r in rows]
-            app.logger.info('[recent_work] 7-day window empty — showing all-time')
         _random.shuffle(images)
         images = images[:48]
     except Exception as _e:
@@ -10786,25 +10746,40 @@ def _auto_approve_jpeg_provenance(image_id, submission_id):
                 db.session.commit()
                 return
 
-            # Gate 1: file size — soft floor only (1MB absolute minimum)
-            # Fujifilm X100VI Small+Normal+1:1 produces ~1.5MB valid originals.
-            # 5MB floor was too aggressive and caused false rejections.
-            # Under 1MB = clearly web thumbnail → manual review (never auto-reject).
-            # 1MB–3MB = borderline → proceed to EXIF check but flag for manual review.
+            # Gate 1: file size
             size_mb = len(_data) / (1024 * 1024)
-            _size_flag = False
-            if size_mb < 1.0:
+            if size_mb < 5:
+                # Too small — reject, tell user to find original
                 db.session.execute(db.text(
-                    "UPDATE raw_submissions SET analysis_status='manual_review', "
-                    "auto_flag_reasons=:r WHERE id=:sid"
-                ), {'r': f'File very small ({size_mb:.2f}MB) — likely web export, manual review needed.',
+                    "UPDATE raw_submissions SET analysis_status='rejected', "
+                    "auto_decision='rejected', auto_flag_reasons=:r WHERE id=:sid"
+                ), {'r': f'File too small ({size_mb:.1f}MB). Original camera JPEG required (5MB–50MB+).',
                     'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET jpeg_provenance_status='rejected' WHERE id=:iid"
+                ), {'iid': image_id})
                 db.session.commit()
-                app.logger.info(f'[jpeg_provenance_auto] image={image_id} → manual (file {size_mb:.2f}MB < 1MB)')
+                if _email:
+                    _submit_url = f'{_site}/jpeg-provenance/submit/{image_id}'
+                    _html = (
+                        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#FFFFFF;">'
+                        '<div style="background:#1A2744;padding:20px 32px;">'
+                        '<p style="color:#F5C518;font-family:Courier New,monospace;font-weight:700;font-size:14px;letter-spacing:2px;margin:0;">SHUTTER LEAGUE</p>'
+                        '</div><div style="padding:32px;">'
+                        f'<p style="font-size:16px;color:#1A1A18;">Hi {_name},</p>'
+                        '<div style="background:#FFEBEE;border-left:4px solid #C0392B;padding:16px 20px;margin:0 0 20px 0;">'
+                        f'<p style="font-size:15px;color:#C0392B;font-weight:700;margin:0 0 4px 0;">File too small — {size_mb:.1f}MB received</p>'
+                        '<p style="font-size:14px;color:#1A1A18;margin:0;">We need the original JPEG from your camera, typically 5MB to 50MB+. The file you submitted appears to be a web-sized export.</p>'
+                        '</div>'
+                        f'<a href="{_submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0;">Resubmit Original File &#8594;</a>'
+                        '</div><div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
+                        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League · info@shutterleague.com</p>'
+                        '</div></div>'
+                    )
+                    send_email(_email, 'Resubmission Required — Original JPEG Needed', _html,
+                               f'Hi {_name},\n\nFile too small ({size_mb:.1f}MB). Need original camera JPEG (5MB–50MB+).\n\nResubmit: {_submit_url}\n\n-- Shutter League')
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} rejected — file too small {size_mb:.1f}MB')
                 return
-            if size_mb < 3.0:
-                _size_flag = True
-            app.logger.info(f'[jpeg_provenance_auto] image={image_id} size={size_mb:.1f}MB size_flag={_size_flag}')
 
             # Gate 2: EXIF cross-match
             try:
@@ -10851,8 +10826,8 @@ def _auto_approve_jpeg_provenance(image_id, submission_id):
                 db.session.commit()
                 return
 
-            if _approved and not _size_flag:
-                # AUTO-APPROVE — EXIF clean and file size above 3MB
+            if _approved:
+                # AUTO-APPROVE
                 db.session.execute(db.text(
                     "UPDATE raw_submissions SET analysis_status='approved', "
                     "auto_decision='approved', auto_decided_at=NOW() WHERE id=:sid"
@@ -10862,28 +10837,22 @@ def _auto_approve_jpeg_provenance(image_id, submission_id):
                     "jpeg_provenance_status='verified' WHERE id=:iid"
                 ), {'iid': image_id})
                 db.session.commit()
+                # Send approval email
                 if _email:
                     _send_jpeg_provenance_approved_email(_email, _name,
                         img.asset_name or 'Untitled', _score, _dash)
                 app.logger.info(f'[jpeg_provenance_auto] image={image_id} AUTO-APPROVED size={size_mb:.1f}MB')
-            elif _approved and _size_flag:
-                # EXIF clean but file is 1–3MB — send to manual review
-                # Small-sensor or low-quality JPEG settings can produce legitimate files in this range
-                db.session.execute(db.text(
-                    "UPDATE raw_submissions SET analysis_status='manual_review', "
-                    "auto_flag_reasons=:r WHERE id=:sid"
-                ), {'r': f'EXIF OK but file small ({size_mb:.1f}MB) — manual review recommended.',
-                    'sid': submission_id})
-                db.session.commit()
-                app.logger.info(f'[jpeg_provenance_auto] image={image_id} → manual (EXIF OK, size {size_mb:.1f}MB)')
             else:
-                # EXIF mismatch — manual review, never auto-disqualify
+                # REJECT
                 db.session.execute(db.text(
-                    "UPDATE raw_submissions SET analysis_status='manual_review', "
-                    "auto_flag_reasons=:r WHERE id=:sid"
+                    "UPDATE raw_submissions SET analysis_status='rejected', "
+                    "auto_decision='rejected', auto_flag_reasons=:r WHERE id=:sid"
                 ), {'r': _reject_reason, 'sid': submission_id})
+                db.session.execute(db.text(
+                    "UPDATE images SET jpeg_provenance_status='rejected' WHERE id=:iid"
+                ), {'iid': image_id})
                 db.session.commit()
-                app.logger.info(f'[jpeg_provenance_auto] image={image_id} → manual: {_reject_reason}')
+                app.logger.info(f'[jpeg_provenance_auto] image={image_id} rejected: {_reject_reason}')
 
         except Exception as _top_err:
             db.session.rollback()
@@ -11156,6 +11125,64 @@ def admin_raw_detail(image_id):
         appeal_pending=appeal_pending)
 
 
+def _send_raw_approved_email(photographer, img):
+    """Send approval notification after admin approves RAW verification.
+    Tells the photographer their image is now live with score and profile link."""
+    if not photographer or not photographer.email:
+        return
+    _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+    _img_url  = f'{_site}/image/{img.id}'
+    _dash_url = f'{_site}/dashboard'
+    _uname    = photographer.full_name or photographer.username
+    _score    = f'{img.score:.2f}' if img.score else '—'
+    _tier     = img.tier or ''
+    try:
+        send_email(
+            to_addresses=[photographer.email],
+            subject=f'[Shutter League] Your image is now live — {img.asset_name or "Untitled"}',
+            html_body=(
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                '<tr><td align="center">'
+                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Verification approved</p>'
+                '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.25;">Your image is now live</h1>'
+                '</td></tr>'
+                '<tr><td style="padding:24px 28px 20px;">'
+                '<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 20px;">Hi ' + _uname + ' &#8212; <strong>' + (img.asset_name or 'Untitled') + '</strong> has passed verification and is now public.</p>'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;padding:16px 18px;margin:0 0 20px;border:1px solid #E0D8C8;">'
+                '<tr><td width="50%">'
+                '<p style="margin:0 0 2px;font-size:11px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Score</p>'
+                '<p style="margin:0;font-size:22px;font-weight:700;color:#C8A84B;">' + _score + '</p>'
+                '<p style="margin:0;font-size:13px;color:#6a6458;">' + _tier + '</p>'
+                '</td><td width="50%">'
+                '<p style="margin:0 0 2px;font-size:11px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#6a6458;">Genre</p>'
+                '<p style="margin:0;font-size:16px;font-weight:700;color:#1a1a18;">' + (img.genre or '—') + '</p>'
+                '</td></tr>'
+                '</table>'
+                '<p style="margin:0 0 8px;text-align:center;"><a href="' + _img_url + '" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">View your image &#8594;</a></p>'
+                '<p style="font-size:12px;color:#6a6458;text-align:center;margin:0 0 18px;"><a href="' + _dash_url + '" style="color:#C8A84B;">Go to your dashboard</a></p>'
+                '</td></tr>'
+                '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League</p>'
+                '</td></tr>'
+                '</table></td></tr></table></body></html>'
+            ),
+            text_body=(
+                'Hi ' + _uname + ',\n\n'
+                + (img.asset_name or 'Untitled') + ' has passed verification and is now live.\n\n'
+                'Score: ' + _score + ' ' + _tier + '\n'
+                'View: ' + _img_url + '\n\n'
+                '-- Shutter League'
+            )
+        )
+    except Exception as _e:
+        app.logger.error(f'[raw_approved_email] {_e}')
+
+
 @app.route('/admin/image/<int:image_id>/mark-raw-verified', methods=['POST'])
 @login_required
 @admin_required
@@ -11171,7 +11198,9 @@ def admin_mark_raw_verified(image_id):
         "WHERE image_id=:iid AND admin_decision IS NULL"
     ), {'iid': image_id})
     db.session.commit()
-    flash(f'"{img.asset_name}" marked as RAW verified. It will now appear in the judge pool.', 'success')
+    owner = User.query.get(img.user_id)
+    _send_raw_approved_email(owner, img)
+    flash(f'"{img.asset_name}" marked as RAW verified. Photographer notified.', 'success')
     return redirect(url_for('admin_raw_detail', image_id=image_id))
 
 
@@ -11445,10 +11474,12 @@ def admin_raw_bulk_verify():
                 "WHERE image_id=:iid AND admin_decision IS NULL"
             ), {'iid': iid})
             verified += 1
+            db.session.commit()
+            _owner = User.query.get(img.user_id)
+            _send_raw_approved_email(_owner, img)
         except Exception:
             pass
-    db.session.commit()
-    flash(f'{verified} image(s) marked as RAW verified.', 'success')
+    flash(f'{verified} image(s) marked as RAW verified. Photographers notified.', 'success')
     return redirect(url_for('admin_raw_verification'))
 
 
@@ -11479,18 +11510,8 @@ def admin_raw_decide(image_id):
         db.session.execute(db.text(
             "UPDATE images SET raw_verified=TRUE, raw_disqualified=FALSE WHERE id=:iid"
         ), {'iid': image_id})
-        if photographer:
-            send_email(
-                photographer.email,
-                'RAW verification approved -- Shutter League',
-                (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
-                 f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
-                 f'<h2>RAW Verification Approved</h2>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image <strong>"{img.asset_name}"</strong> has passed RAW verification.</p>'
-                 f'{"<p>Admin note: " + notes + "</p>" if notes else ""}'
-                 f'</div>')
-            )
-        flash(f'RAW approved for "{img.asset_name}".', 'success')
+        _send_raw_approved_email(photographer, img)
+        flash(f'RAW approved for "{img.asset_name}". Photographer notified.', 'success')
 
     elif decision == 'rejected':
         db.session.execute(db.text(
@@ -11839,27 +11860,16 @@ def _run_raw_analysis(submission, img):
 
         # Extension whitelist check
         if _raw_ext not in _VALID_RAW_EXTENSIONS:
-            # JPEG submitted for a JPEG-only camera — route to JPEG provenance checker
-            if _raw_ext in ('jpg', 'jpeg') and check_jpeg_provenance_eligible(img):
-                app.logger.info(f'[raw_stage1] JPEG submitted for JPEG-eligible camera — routing to jpeg_provenance')
-                results['routed_to_jpeg_provenance'] = True
-                try:
-                    _auto_approve_jpeg_provenance(img.id, submission.id)
-                except Exception as _jpe:
-                    app.logger.error(f'[raw_stage1] jpeg_provenance error: {_jpe}')
-                    db.session.execute(db.text(
-                        "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
-                    ), {'sid': submission.id})
-                    db.session.commit()
-                return False, results
-            # Any other non-RAW file — route to manual review, never auto-disqualify
-            app.logger.warning(f'[raw_stage1] Non-RAW file (.{_raw_ext}) — routing to manual review')
-            db.session.execute(db.text(
-                "UPDATE raw_submissions SET analysis_status='manual_review' WHERE id=:sid"
-            ), {'sid': submission.id})
-            db.session.commit()
-            results['manual_review'] = True
-            return False, results
+            results['invalid_file_type'] = True
+            overall_flag = True
+            disqualify_reasons.append(
+                f'The submitted file (.{_raw_ext}) is not a valid RAW camera format. '
+                'Only original RAW files from your camera are accepted. '
+                'If you submitted a JPEG, PNG, or PDF, please resubmit with the original camera RAW file.'
+            )
+            app.logger.warning(f'[raw_stage1] Invalid extension: .{_raw_ext}')
+            results['disqualify_reasons'] = ' | '.join(disqualify_reasons)
+            return overall_flag, results
 
         # Download file for magic bytes check
         from storage import get_client, BUCKET
