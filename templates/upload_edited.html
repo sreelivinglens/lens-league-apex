@@ -197,7 +197,7 @@
       <span style="font-size:13px;color:var(--text-secondary);margin-left:6px;">(≈ ₹{{ (points_balance * 0.1) | int }})</span>
     </div>
     {% if version_num == 2 %}
-    <div style="font-size:13px;font-family:var(--font-mono);color:#14532D;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 12px;border-radius:20px;font-weight:700;">🎁 This edit is FREE</div>
+    <div style="font-size:13px;font-family:var(--font-mono);color:#14532D;background:#F0FDF4;border:1px solid #86EFAC;padding:4px 12px;border-radius:20px;font-weight:700;">🎁 This edit is FREE — subsequent edits cost {{ edit_pts_cost }} pts each</div>
     {% elif points_balance >= edit_pts_cost %}
     <div style="font-size:13px;font-family:var(--font-mono);color:#1E3A5F;background:#EFF6FF;border:1px solid #93C5FD;padding:4px 12px;border-radius:20px;font-weight:700;">💳 {{ edit_pts_cost }} pts will be deducted</div>
     {% else %}
@@ -244,7 +244,7 @@
   {# ── Cost banner — shown prominently before upload form ─────── #}
   {% if version_num == 2 %}
   <div style="margin-bottom:16px;padding:12px 16px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:var(--radius-sm);font-size:15px;color:#14532D;">
-    🎁 <strong>Your first edit is free</strong> — no points or upload slots used.
+    🎁 <strong>Your first edit is free</strong> — no points or upload slots used. From V3 onwards, each edit costs <strong>{{ edit_pts_cost }} pts (≈ ₹{{ (edit_pts_cost * 0.1) | int }})</strong> or 1 upload slot.
   </div>
   {% elif version_num > 2 %}
     {% if points_balance >= edit_pts_cost %}
@@ -304,7 +304,7 @@
           <li>The <strong>highest-scoring version</strong> automatically counts toward your leaderboard ranking.</li>
           <li>
             {% if version_num == 2 %}
-              🎁 <strong>This first edit is free</strong> — no points or upload slot used.
+              🎁 <strong>This first edit is free</strong> — no charge. From V3 onwards each edit costs <strong>{{ edit_pts_cost }} pts</strong> or 1 upload slot.
             {% elif points_balance >= edit_pts_cost %}
               💳 <strong>{{ edit_pts_cost }} points (≈ ₹{{ (edit_pts_cost * 0.1) | int }}) will be deducted</strong> from your balance of {{ points_balance }} pts automatically on upload.
             {% else %}
