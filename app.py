@@ -4065,6 +4065,42 @@ def leaderboard():
 
 
 # ---------------------------------------------------------------------------
+# Recent Work — one image per photographer, chronological, discovery feed
+# ---------------------------------------------------------------------------
+
+@app.route('/recent-work')
+def recent_work():
+    try:
+        # Fetch recent scored public images ordered by scored_at desc
+        # Then deduplicate in Python — keep only the first (most recent) image per user_id
+        _candidates = (
+            Image.query
+            .filter(
+                Image.status == 'scored',
+                Image.score.isnot(None),
+                Image.is_public == True,
+                db.or_(Image.is_flagged == False, Image.is_flagged == None),
+                db.or_(Image.needs_review == False, Image.needs_review == None),
+                Image.thumb_url.isnot(None),
+            )
+            .order_by(Image.scored_at.desc())
+            .limit(500)
+            .all()
+        )
+        seen_users = set()
+        feed_images = []
+        for img in _candidates:
+            if img.user_id not in seen_users:
+                seen_users.add(img.user_id)
+                feed_images.append(img)
+            if len(feed_images) >= 48:
+                break
+    except Exception:
+        feed_images = []
+    return render_template('recent_work.html', feed_images=feed_images)
+
+
+# ---------------------------------------------------------------------------
 # Admin routes
 # ---------------------------------------------------------------------------
 
