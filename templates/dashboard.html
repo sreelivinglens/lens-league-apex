@@ -1897,7 +1897,8 @@
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--text-primary);
+  opacity: 0.5;
   margin: 0 0 4px;
 }
 .rp-card .rp-title {
@@ -1928,7 +1929,7 @@
   font-weight: 700;
   margin-top: 1px;
 }
-.rp-card .rp-icon.done     { background: rgba(245,197,24,0.15); color: var(--gold); }
+.rp-card .rp-icon.done     { background: rgba(245,197,24,0.15); color:var(--text-primary);font-weight:700; }
 .rp-card .rp-icon.active   { background: var(--gold); color: #1a1a18; }
 .rp-card .rp-icon.upcoming { background: var(--surface-3); color: var(--text-primary); opacity: 0.4; }
 .rp-card .rp-body { flex: 1; min-width: 0; }
@@ -1940,8 +1941,8 @@
   margin: 0 0 4px;
   line-height: 1.4;
 }
-.rp-card .rp-label.done     { color: var(--gold); }
-.rp-card .rp-label.active   { color: var(--gold); }
+.rp-card .rp-label.done     { color: var(--text-primary); }
+.rp-card .rp-label.active   { color: var(--text-primary); }
 .rp-card .rp-label.upcoming { color: var(--text-primary); opacity: 0.4; }
 .rp-card .rp-desc {
   font-size: 15px;
@@ -1998,8 +1999,8 @@
   background: var(--surface-1);
 }
 .rp-card .rp-chip.lit {
-  border-color: var(--gold);
-  color: var(--gold);
+  border-color:var(--text-primary);font-weight:700;
+  color:var(--text-primary);font-weight:700;
   background: rgba(245,197,24,0.06);
 }
 .rp-card .rp-done-box {
@@ -2024,7 +2025,7 @@
 .rp-card .rp-shadow-rank {
   font-size: 26px;
   font-weight: 700;
-  color: var(--gold);
+  color:var(--text-primary);font-weight:700;
   line-height: 1;
   margin: 0 0 4px;
 }
@@ -2087,7 +2088,7 @@
   {# ALL DONE #}
   {% if _step == 4 %}
   <div class="rp-done-box">
-    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--gold);">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Your best 6 scores in this genre form your final ranking — keep shooting to strengthen your selection pool.</p>
+    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--text-primary);font-weight:700;">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Your best 6 scores in this genre form your final ranking — keep shooting to strengthen your selection pool.</p>
   </div>
 
   {# STEP 1 — no scored images yet #}
@@ -2129,7 +2130,7 @@
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
           <p class="rp-bar-label">{{ _best_count }} of 6 in <strong>{{ _best_genre }}</strong> — {{ [6 - _best_count, 0]|max }} to go</p>
         {% endif %}
-        <p class="rp-desc active">Once you reach 6 scored images in a single genre, your top-6 average shows against your name for that category.</p>
+        <p class="rp-desc active">Once you have 6 scored images in a single genre, your top-6 average appears on the League of Photographers for that category. <strong>POTY is per-genre</strong> — pick your strongest genre and focus there.</p>
         {% if poty_tracker and poty_tracker.genre_rows|length > 1 %}
         <div class="rp-chips">
           {% for row in poty_tracker.genre_rows %}
@@ -2157,7 +2158,7 @@
       <div class="rp-body">
         <p class="rp-label done">Genre average on the leaderboard</p>
         {% if _best_row and _best_row.top6_avg %}
-        <p class="rp-desc">Your top-6 average in <strong>{{ _best_genre }}</strong> is <strong style="color:var(--gold);">{{ _best_row.top6_avg }}</strong>.</p>
+        <p class="rp-desc">Your top-6 average in <strong>{{ _best_genre }}</strong> is <strong style="color:var(--text-primary);font-weight:700;">{{ _best_row.top6_avg }}</strong>.</p>
         {% else %}
         <p class="rp-desc">Your scores in <strong>{{ _best_genre }}</strong> appear on the League of Photographers.</p>
         {% endif %}
@@ -2172,7 +2173,7 @@
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
           <p class="rp-bar-label">{{ _best_count }} of 24 in <strong>{{ _best_genre }}</strong> — {{ [24 - _best_count, 0]|max }} to go</p>
         {% endif %}
-        <p class="rp-desc active">Your best 6 scores in this genre form your final annual ranking. Keep shooting to improve your selection pool.</p>
+        <p class="rp-desc active">Your best 6 scores in <strong>{{ _best_genre }}</strong> count toward the annual award. 24 images gives you enough depth to replace weaker scores with stronger ones as you improve.</p>
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
     </div>
@@ -2299,6 +2300,17 @@
               <a href="{{ url_for('pricing') }}" onclick="event.stopPropagation();">👥 Get peer validation →</a>
             </div>
               {% endif %}
+            {% endif %}
+            {# Edit button — scored images only, owner only #}
+            {% if img.status == 'scored' and img.score is not none and current_user.role != 'admin' %}
+            <div style="padding:6px 10px 8px;" onclick="event.preventDefault();event.stopPropagation();">
+              <a href="{{ url_for('upload_edited_version', image_id=img.id) }}"
+                 onclick="event.stopPropagation();"
+                 style="display:block;text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.55;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;text-decoration:none;min-height:32px;line-height:1.4;"
+                 onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.55'">
+                ✏ Upload Edit
+              </a>
+            </div>
             {% endif %}
           </a>
           {% endfor %}
