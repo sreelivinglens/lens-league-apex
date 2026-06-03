@@ -1084,7 +1084,7 @@
     grid-template-columns: repeat(2, minmax(0,1fr));
     gap: 10px;
     margin-bottom: 8px;
-    align-items: start;
+    align-items: stretch;
   }
   @media (max-width: 768px) {
     .db-hero-grid { grid-template-columns: 1fr; gap: 8px; }
@@ -1102,6 +1102,9 @@
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid #D8D2C8;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ── Header: dark navy band ── */
