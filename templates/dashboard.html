@@ -2213,7 +2213,7 @@
           <p class="rp-step-label upcoming">6 images in a genre → leaderboard average</p>
           <p class="rp-step-desc">
             {% if _best_count > 0 %}
-              You&#39;ve scored {{ _best_count }} image{{ _best_count|pluralize }} so far. Keep going — you need {{ [6 - _best_count, 0]|max }} more in the same genre.
+              You&#39;ve scored {{ _best_count }} image{{ 's' if _best_count != 1 else '' }} so far. Keep going — you need {{ [6 - _best_count, 0]|max }} more in the same genre.
             {% else %}
               Score 6 images in any one genre and your average will show on the leaderboard.
             {% endif %}
