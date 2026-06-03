@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import random
 import threading
 from datetime import datetime, date, timedelta
 from functools import wraps
@@ -1581,14 +1582,17 @@ def index():
                                  Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
                          .limit(12).all())
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
-        carousel_images = (Image.query
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5
+        # Pull top 40 by score, shuffle in Python — avoids ORDER BY RANDOM() full table scan
+        _carousel_pool = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
                                    Image.tier.in_(['Legend','Grandmaster','Master']),
                                    Image.score>=8.5)
-                           .order_by(db.func.random())
-                           .limit(12).all())
+                           .order_by(Image.score.desc())
+                           .limit(40).all())
+        random.shuffle(_carousel_pool)
+        carousel_images = _carousel_pool[:12]
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -1612,9 +1616,7 @@ def index():
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
                            now=datetime.utcnow()))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    resp.headers['Pragma']        = 'no-cache'
-    resp.headers['Expires']       = '0'
+    resp.headers['Cache-Control'] = 'public, max-age=60'
     return resp
 
 
