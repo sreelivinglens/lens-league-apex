@@ -887,9 +887,15 @@
     const FILL_SECS = 15, CIRC = 195;
 
     const phases = [
-      { from:0,  to:4,  p:'UPLOADING',  s:'Transferring your image…',    ss:'Sending to server securely.' },
-      { from:4,  to:10, p:'PROCESSING', s:'Preparing for analysis…',      ss:'Extracting metadata and verifying.' },
-      { from:10, to:15, p:'ANALYSING',  s:'Scoring your image…',           ss:'Technique · Composition · Moment · Emotion' },
+      { from:0,  to:4,  p:'UPLOADING',   s:'Transferring your image…',            ss:'Sending to the engine securely.' },
+      { from:4,  to:8,  p:'PROCESSING',  s:'Preparing for analysis…',             ss:'Extracting EXIF data and verifying authenticity.' },
+      { from:8,  to:14, p:'INHALING',    s:'Inhaling the scene…',                 ss:'The engine is reading light, form and spatial depth.' },
+      { from:14, to:20, p:'DEPTH',       s:'Mapping depth of difficulty…',        ss:'How hard was this image to capture?' },
+      { from:20, to:26, p:'MOMENT',      s:'Reading the decisive moment…',        ss:'Did you press the shutter at the right instant?' },
+      { from:26, to:32, p:'DISRUPTION',  s:'Measuring visual disruption…',        ss:'Does this image stop you? Does it demand attention?' },
+      { from:32, to:38, p:'WONDER',      s:'Calibrating wonder and emotion…',     ss:'What feeling does this image leave behind?' },
+      { from:38, to:44, p:'AESTHETIC',   s:'Evaluating aesthetic quality…',       ss:'Technique, light, colour, composition — all at once.' },
+      { from:44, to:50, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
     ];
 
     overlay.classList.add('active');

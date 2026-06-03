@@ -1515,7 +1515,7 @@
           if(d.status==='processing') return;
           clearInterval(pollInt);clearInterval(barInt);clearInterval(phInt);
           bar.style.width='100%';
-          if(d.status==='scored'){
+          if(d.status==='ok'||d.status==='scored'||d.status==='needs_review'){
             msg.textContent='Scored ✓';
             sub.textContent='Your edited version has been assessed.';
             scoreEl.textContent=d.score?parseFloat(d.score).toFixed(2):'—';
@@ -1524,7 +1524,9 @@
             result.style.display='block';
             document.getElementById('edit-scoring-anim').style.animation='none';
             document.getElementById('edit-scoring-anim').textContent='✓';
-            setTimeout(function(){window.location.href='/dashboard';},3000);
+            // Fix 2: Clean URL before reload to prevent re-triggering widget
+            var cleanUrl=window.location.pathname;
+            setTimeout(function(){window.location.href=cleanUrl;},3000);
           } else if(d.status==='error'||d.status==='flagged'){
             msg.textContent=d.status==='flagged'?'⛔ Image flagged':'Scoring failed';
             sub.textContent=d.message||'Please check your dashboard.';
