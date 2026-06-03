@@ -2496,6 +2496,20 @@ def dashboard():
     except Exception:
         _ref_discount = False
 
+    # Fetch version numbers for all images on this page (migration-only column)
+    _img_ids = [img.id for img in images.items]
+    _version_map = {}
+    if _img_ids:
+        try:
+            _vrows = db.session.execute(db.text(
+                "SELECT id, parent_image_id, version_number FROM images WHERE id = ANY(:ids)"
+            ), {'ids': _img_ids}).fetchall()
+            for r in _vrows:
+                if r[1]:  # has parent_image_id = is an edited version
+                    _version_map[r[0]] = r[2] or 2  # version_number, default 2
+        except Exception as _ve:
+            app.logger.warning(f'[dashboard] version_map: {_ve}')
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -3933,9 +3947,15 @@ def upload_edited_version(image_id):
     ).fetchall()
     versions = [Image.query.get(r[0]) for r in _ver_ids if Image.query.get(r[0])]
 
+    _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+    _existing_edits = len(versions) - 1  # subtract root, count edits only
     return render_template('upload_edited.html',
                            parent=parent, root=root,
-                           versions=versions, version_num=len(versions) + 1)
+                           versions=versions,
+                           version_num=len(versions) + 1,
+                           existing_edits=_existing_edits,
+                           points_balance=_pts_bal,
+                           edit_pts_cost=10)
 
 
 @app.route('/image/<int:image_id>')
