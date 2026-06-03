@@ -1,7 +1,6 @@
 import os
 import uuid
 import json
-import random
 import threading
 from datetime import datetime, date, timedelta
 from functools import wraps
@@ -499,6 +498,10 @@ with app.app_context():
                 # ── Referral system (Session 28) ──────────────────────────
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_bonus_uploads INTEGER DEFAULT 0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_discount BOOLEAN DEFAULT FALSE",
+                # ── Lifetime upload counter (Session 54) ──────────────────
+                # Counts every upload ever — never decremented on delete.
+                # Enforces free tier limit even if user deletes images.
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS total_uploads_ever INTEGER DEFAULT 0",
                 """CREATE TABLE IF NOT EXISTS referral_codes (
                     id         SERIAL PRIMARY KEY,
                     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -1582,17 +1585,14 @@ def index():
                                  Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
                          .limit(12).all())
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5
-        # Pull top 40 by score, shuffle in Python — avoids ORDER BY RANDOM() full table scan
-        _carousel_pool = (Image.query
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
+        carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
                                    Image.tier.in_(['Legend','Grandmaster','Master']),
                                    Image.score>=8.5)
-                           .order_by(Image.score.desc())
-                           .limit(40).all())
-        random.shuffle(_carousel_pool)
-        carousel_images = _carousel_pool[:12]
+                           .order_by(db.func.random())
+                           .limit(12).all())
         active_challenge = _get_active_challenge()
         # Top challenge entry thumb for Slide 2 carousel
         challenge_thumb = None
@@ -1616,7 +1616,9 @@ def index():
                            active_challenge=active_challenge,
                            challenge_thumb=challenge_thumb,
                            now=datetime.utcnow()))
-    resp.headers['Cache-Control'] = 'public, max-age=60'
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma']        = 'no-cache'
+    resp.headers['Expires']       = '0'
     return resp
 
 
@@ -2218,9 +2220,11 @@ def dashboard():
     # Free tier context for upgrade nudge
     free_tier = None
     if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
-        total_count = Image.query.filter(
-            Image.user_id == current_user.id,
-        ).count()
+        # Use lifetime counter for gate display — reflects true usage, not current image count
+        _lifetime = getattr(current_user, 'total_uploads_ever', None)
+        if _lifetime is None:
+            _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
+        total_count = _lifetime
         # Compute shadow rank — position by avg DDI score across all public scored users
         _shadow_rank = None
         _shadow_tier = None
@@ -2741,15 +2745,19 @@ def upload():
             _is_sub = getattr(current_user, 'is_subscribed', False)
 
             if not _is_sub:
-                # Free tier — 3 lifetime images + referral bonus uploads
-                total_count = Image.query.filter(
-                    Image.user_id == current_user.id,
-                ).count()
+                # Free tier — 3 lifetime assessments per user_id + referral bonus
+                # Uses total_uploads_ever — never decremented on delete.
+                # Deleting images does NOT restore free slots.
+                _lifetime = getattr(current_user, 'total_uploads_ever', None)
+                if _lifetime is None:
+                    # Fallback for existing users before migration: count all images ever
+                    _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
                 _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
-                if total_count >= (FREE_IMAGE_LIMIT + _bonus):
+                if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
-                    _msg = (f'You have used all {_limit_shown} free scored images. '
-                            'Upgrade to Mobile (₹99/mo) or Camera (₹199/mo) to keep uploading.')
+                    _msg = (f'You have used your {_limit_shown} free assessments. '
+                            'Deleting images does not restore free slots — '
+                            'upgrade to Mobile (₹99/mo) or Camera (₹199/mo) to keep uploading.')
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                         return jsonify({'error': True, 'message': _msg}), 403
                     flash(_msg, 'warning')
@@ -2890,6 +2898,15 @@ def upload():
         )
         db.session.add(img)
         img.sub_genre = sub_genre
+        # Increment lifetime upload counter — never decremented on delete.
+        # Used to enforce free tier limit even if user deletes images.
+        try:
+            db.session.execute(
+                db.text("UPDATE users SET total_uploads_ever = COALESCE(total_uploads_ever, 0) + 1 WHERE id = :uid"),
+                {'uid': current_user.id}
+            )
+        except Exception:
+            pass
         db.session.commit()
 
         # -- League integrity check (three-strike system) ------------------
@@ -4062,42 +4079,6 @@ def leaderboard():
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
     )
-
-
-# ---------------------------------------------------------------------------
-# Recent Work — one image per photographer, chronological, discovery feed
-# ---------------------------------------------------------------------------
-
-@app.route('/recent-work')
-def recent_work():
-    try:
-        # Fetch recent scored public images ordered by scored_at desc
-        # Then deduplicate in Python — keep only the first (most recent) image per user_id
-        _candidates = (
-            Image.query
-            .filter(
-                Image.status == 'scored',
-                Image.score.isnot(None),
-                Image.is_public == True,
-                db.or_(Image.is_flagged == False, Image.is_flagged == None),
-                db.or_(Image.needs_review == False, Image.needs_review == None),
-                Image.thumb_url.isnot(None),
-            )
-            .order_by(Image.scored_at.desc())
-            .limit(500)
-            .all()
-        )
-        seen_users = set()
-        feed_images = []
-        for img in _candidates:
-            if img.user_id not in seen_users:
-                seen_users.add(img.user_id)
-                feed_images.append(img)
-            if len(feed_images) >= 48:
-                break
-    except Exception:
-        feed_images = []
-    return render_template('recent_work.html', feed_images=feed_images)
 
 
 # ---------------------------------------------------------------------------
