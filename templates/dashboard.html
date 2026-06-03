@@ -2259,7 +2259,7 @@
                   {% elif img.raw_disqualified %}
                     <span style="color:var(--red,#c0392b);">✗ Disqualified</span>
                   {% elif img.score is not none %}
-                    ✓ Scored
+                    ✓ Scored{% if not img.is_public %} · <span style="color:var(--text-secondary);opacity:0.7;">🔒 Private</span>{% endif %}
                   {% elif img.is_in_peer_pool %}
                     <span style="color:var(--green,#2e7d32);">In Pool</span>
                   {% else %}

@@ -512,6 +512,21 @@
       {% else %}
         <strong style="color:var(--text-muted);">Private</strong>
       {% endif %}
+      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and not image.is_flagged and not image.needs_review %}
+      &nbsp;·&nbsp;
+      <form method="POST" action="{{ url_for('owner_toggle_visibility', image_id=image.id) }}" style="display:inline;" id="vis-toggle-form">
+        <button type="submit" class="btn" style="font-size:13px;padding:4px 12px;min-height:32px;">
+          {{ '🔒 Make Private' if image.is_public else '🌐 Make Public' }}
+        </button>
+      </form>
+      <script>
+      document.getElementById('vis-toggle-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+          .then(r => r.json()).then(d => { window.location.reload(); });
+      });
+      </script>
+      {% endif %}
     </div>
     {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
       {# ── Version compare panel ───────────────────────────────────── #}
