@@ -95,15 +95,19 @@
   /* ── Categories 2-column grid (audit token) ── */
   .db-categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  /* ── Layout — follows base.html main container, same as leaderboard ── */
+  /* ── Layout — override base.html main container to full width ── */
+  body:has(.db-wrap) main {
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
   .db-wrap {
     width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
+    padding: 20px 24px;
     box-sizing: border-box;
   }
   @media (max-width: 600px) {
-    .db-wrap { padding: 0 2px; }
+    .db-wrap { padding: 14px 14px; }
   }
 
   /* ── Top bar ── */
@@ -1129,7 +1133,7 @@
   }
   .db-hcard-hdr-title {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: #FFFFFF;
     display: block;
@@ -1138,7 +1142,7 @@
   }
   .db-hcard-hdr-sub {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 400;
     color: #FFFFFF;
     display: block;
@@ -1161,7 +1165,7 @@
   }
   .db-hcard-summary-txt {
     font-family: 'Inter', Arial, sans-serif !important;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #FFFFFF;
     line-height: 1.6;
@@ -1170,7 +1174,7 @@
   .db-hcard-summary-val {
     color: #F5C518;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 16px;
   }
 
   /* ── Tap button (mobile only) ── */
@@ -1781,7 +1785,7 @@
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
     <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Rank →</a>
-    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See League of Photographers →</a>
+    <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See Community →</a>
   </div>
 </div>
 {% elif free_tier and free_tier.remaining > 0 %}
