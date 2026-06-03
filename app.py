@@ -502,6 +502,8 @@ with app.app_context():
                 # Counts every upload ever — never decremented on delete.
                 # Enforces free tier limit even if user deletes images.
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS total_uploads_ever INTEGER DEFAULT 0",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS parent_image_id INTEGER REFERENCES images(id) ON DELETE SET NULL",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS version_number INTEGER DEFAULT 1",
                 """CREATE TABLE IF NOT EXISTS referral_codes (
                     id         SERIAL PRIMARY KEY,
                     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -3660,6 +3662,246 @@ def retry_score(image_id):
             flash(f'Scoring failed: {err[:120]}', 'error')
 
     return redirect(url_for('image_detail', image_id=image_id))
+
+
+@app.route('/image/<int:image_id>/upload-edit', methods=['GET', 'POST'])
+@login_required
+def upload_edited_version(image_id):
+    """
+    Upload an edited version of an existing scored image.
+    - Linked to parent via parent_image_id
+    - Scores normally, starts private (is_public=FALSE)
+    - Leaderboard always uses highest-scoring version per parent group
+    - Counts as a normal upload slot
+    """
+    parent = Image.query.get_or_404(image_id)
+
+    # Walk up to find the root parent (handle chains: V1 -> V2 -> V3)
+    root_id = parent.parent_image_id or parent.id
+    root    = Image.query.get(root_id) if root_id != parent.id else parent
+
+    # Only owner or admin
+    if root.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+
+    # Parent must be scored
+    if parent.status != 'scored':
+        flash('The original image must be scored before you can upload an edited version.', 'error')
+        return redirect(url_for('image_detail', image_id=image_id))
+
+    if request.method == 'POST':
+        file = request.files.get('image')
+        if not file or file.filename == '':
+            flash('No file selected.', 'error')
+            return redirect(request.url)
+        if not allowed_file(file.filename):
+            flash('File type not supported.', 'error')
+            return redirect(request.url)
+
+        # ── Upload quota check (same as normal upload, skip for admin/uat) ──
+        _plan = getattr(current_user, 'subscription_plan', None) or ''
+        if current_user.role != 'admin' and _plan not in ('beta', 'uat'):
+            from datetime import date as _date
+            today   = _date.today()
+            _track  = getattr(current_user, 'subscription_track', None) or ''
+            _is_sub = getattr(current_user, 'is_subscribed', False)
+            if not _is_sub:
+                _lifetime = getattr(current_user, 'total_uploads_ever', None)
+                if _lifetime is None:
+                    _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
+                _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
+                if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
+                    flash('You have used your free assessments. Subscribe to upload edited versions.', 'warning')
+                    return redirect(url_for('image_detail', image_id=image_id))
+            elif _track in ('mobile', 'camera', 'learning'):
+                month_start = datetime(today.year, today.month, 1)
+                month_count = Image.query.filter(
+                    Image.user_id == current_user.id,
+                    Image.created_at >= month_start,
+                ).count()
+                limits = {'mobile': 8, 'camera': 5, 'learning': 12}
+                if month_count >= limits.get(_track, 5):
+                    flash(f'You have used all your {_track.title()} images for this month.', 'warning')
+                    return redirect(url_for('image_detail', image_id=image_id))
+
+        # ── Determine version number ──
+        sibling_count = Image.query.filter(
+            db.or_(
+                Image.id == root_id,
+                Image.parent_image_id == root_id
+            )
+        ).count()
+        version_num = sibling_count + 1
+
+        # ── Ingest file ──
+        uid        = str(uuid.uuid4())
+        filename   = secure_filename(file.filename)
+        raw_path   = os.path.join(app.config['UPLOAD_FOLDER'], 'raw', f"{uid}_{filename}")
+        file.save(raw_path)
+        try:
+            thumb_path, w, h, fmt, phash = ingest_image(raw_path, app.config['UPLOAD_FOLDER'])
+        except Exception as e:
+            if os.path.exists(raw_path): os.remove(raw_path)
+            flash(f'Image processing failed: {e}', 'error')
+            return redirect(request.url)
+
+        from engine.exif_check import extract_exif
+        exif_status, exif_data, exif_warning = extract_exif(raw_path)
+        if os.path.exists(raw_path): os.remove(raw_path)
+
+        # Duplicate check against siblings only (not global — it IS the same photo)
+        from engine.processor import hash_similarity_pct
+        siblings = Image.query.filter(
+            db.or_(Image.id == root_id, Image.parent_image_id == root_id)
+        ).all()
+        for sib in siblings:
+            if sib.phash and hash_similarity_pct(phash, sib.phash) >= 98.0:
+                if os.path.exists(thumb_path): os.remove(thumb_path)
+                flash(f'This edited version appears identical to an existing version ("{sib.asset_name}"). Please upload a meaningfully different edit.', 'warning')
+                return redirect(request.url)
+
+        thumb_url = _r2_upload_thumb(thumb_path, uid)
+        if not thumb_url:
+            flash('Storage upload failed. Please try again.', 'error')
+            return redirect(request.url)
+
+        # ── Create image record — private by default ──
+        img = Image(
+            user_id           = current_user.id,
+            original_filename = filename,
+            stored_filename   = os.path.basename(thumb_path),
+            thumb_path        = thumb_path,
+            thumb_url         = thumb_url,
+            file_size_kb      = int(os.path.getsize(thumb_path) / 1024),
+            width=w, height=h, format=fmt,
+            asset_name        = f"{root.asset_name or 'Untitled'} (V{version_num})",
+            genre             = parent.genre,
+            subject           = parent.subject,
+            location          = parent.location,
+            conditions        = parent.conditions,
+            photographer_name = parent.photographer_name,
+            camera_track      = parent.camera_track,
+            phash             = phash,
+            status            = 'pending',
+            is_public         = False,   # private until user chooses to publish
+            parent_image_id   = root_id,
+            exif_status=exif_status,
+            exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
+            exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
+            exif_date_taken=(exif_data.get('date_taken', '') or '').replace('\x00', ''),
+            exif_settings=('  .  '.join(filter(None, [
+                exif_data.get('focal_length',''), exif_data.get('aperture',''),
+                exif_data.get('iso',''), exif_data.get('shutter',''),
+            ]))).replace('\x00', ''),
+            exif_warning=(exif_warning or '').replace('\x00', ''),
+        )
+        # Set version_number directly (migration column)
+        try:
+            img.version_number = version_num
+        except Exception:
+            pass
+
+        db.session.add(img)
+        # Increment lifetime counter
+        try:
+            db.session.execute(
+                db.text("UPDATE users SET total_uploads_ever = COALESCE(total_uploads_ever, 0) + 1 WHERE id = :uid"),
+                {'uid': current_user.id}
+            )
+        except Exception:
+            pass
+        db.session.commit()
+
+        # ── Background scoring ──
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        if api_key:
+            img.status = 'processing'
+            db.session.commit()
+
+            def _score_edit(image_id_inner, uid_inner, root_id_inner):
+                import traceback
+                from engine.auto_score import auto_score, build_audit_data
+                from engine.compositor import build_card1
+                with app.app_context():
+                    try:
+                        _img = Image.query.get(image_id_inner)
+                        if not _img: return
+                        result = auto_score(
+                            image_path=_img.thumb_path, genre=_img.genre,
+                            title=_img.asset_name, photographer=_img.photographer_name,
+                            subject=_img.subject, location=_img.location
+                        )
+                        _img.dod_score        = float(result.get('dod', 0))
+                        _img.disruption_score = float(result.get('disruption', 0))
+                        _img.dm_score         = float(result.get('dm', 0))
+                        _img.wonder_score     = float(result.get('wonder', 0))
+                        _img.aq_score         = float(result.get('aq', 0))
+                        _img.score            = float(result.get('score', 0))
+                        _img.tier             = get_tier(float(result.get('score', 0)))
+                        _img.archetype        = result.get('archetype', '')
+                        _img.soul_bonus       = result.get('soul_bonus', False)
+                        _img.status           = 'scored'
+                        _img.scored_at        = datetime.utcnow()
+                        audit = build_audit_data(result, _img)
+                        _img.set_audit(audit)
+                        db.session.commit()
+
+                        # Award points for subscribed users
+                        try:
+                            _u = User.query.get(_img.user_id)
+                            if _u and _u.is_subscribed and _img.score and not _img.is_flagged:
+                                award_points(_u, _img.score * 10, 'image_scored', commit=False)
+                                _cnt = Image.query.filter_by(user_id=_u.id, status='scored').count()
+                                check_tier_jump_bonus(_u, _img.tier, _cnt, commit=False)
+                                db.session.commit()
+                        except Exception:
+                            pass
+
+                        # Build scorecard
+                        try:
+                            card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
+                                          f"{secure_filename((_img.photographer_name or 'unknown').replace(' ',''))}_"
+                                          f"{_img.genre}_{_img.score}.jpg")
+                            card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                            build_card1(_img.thumb_path, audit, card_path)
+                            _img.card_path = card_path
+                            card_url = _r2_upload_card(card_path, uid_inner + '_card')
+                            if card_url: _img.card_url = card_url
+                            db.session.commit()
+                        except Exception:
+                            pass
+
+                    except Exception as e:
+                        app.logger.error(f'[upload_edit scoring] {traceback.format_exc()}')
+                        try:
+                            _img = Image.query.get(image_id_inner)
+                            if _img and _img.status == 'processing':
+                                _img.status = 'error'
+                                db.session.commit()
+                        except Exception:
+                            pass
+
+            threading.Thread(
+                target=_score_edit,
+                args=(img.id, uid, root_id),
+                daemon=True
+            ).start()
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+            return jsonify({'status': 'processing', 'image_id': img.id})
+
+        flash(f'Edited version uploaded — scoring in progress. It is private until you choose to publish it.', 'success')
+        return redirect(url_for('image_detail', image_id=img.id))
+
+    # GET — render the upload form
+    # Fetch all existing versions for display
+    versions = Image.query.filter(
+        db.or_(Image.id == root_id, Image.parent_image_id == root_id)
+    ).order_by(Image.id.asc()).all()
+
+    return render_template('upload_edited.html',
+                           parent=parent, root=root,
+                           versions=versions, version_num=len(versions) + 1)
 
 
 @app.route('/image/<int:image_id>')
