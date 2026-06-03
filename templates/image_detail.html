@@ -138,6 +138,20 @@
       {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' %}
       <a href="{{ url_for('upload_edited_version', image_id=image.id) }}" class="btn btn-solid" style="font-size:14px;">Upload Edited Version</a>
       {% endif %}
+      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' and not image.is_flagged and not image.needs_review %}
+      <form method="POST" action="{{ url_for('owner_toggle_visibility', image_id=image.id) }}" style="display:inline;" id="vis-toggle-top">
+        <button type="submit" class="btn" style="font-size:14px;">
+          {{ '🔒 Make Private' if image.is_public else '🌐 Make Public' }}
+        </button>
+      </form>
+      <script>
+      document.getElementById('vis-toggle-top').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}})
+          .then(r => r.json()).then(d => { window.location.reload(); });
+      });
+      </script>
+      {% endif %}
       <button onclick="document.getElementById('delete-modal').classList.add('open')" class="btn btn-danger">Delete</button>
     </div>
   </div>
