@@ -3339,7 +3339,7 @@ def upload():
                                     _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
                                     if _img.score >= 9.0 and ai_suspicion < 0.4:
                                         _img.raw_verification_required = True
-                                        _deadline = datetime.utcnow() + timedelta(days=7)
+                                        _deadline = datetime.utcnow() + timedelta(hours=72)
                                         # ── JPEG provenance path check ──
                                         if check_jpeg_provenance_eligible(_img):
                                             # Camera-direct JPEG — send the JPEG provenance emailer instead
@@ -3364,24 +3364,70 @@ def upload():
                                             pass
                                         send_email(
                                             to_addresses=[_u.email] if _u else [],
-                                            subject='[Shutter League] Grandmaster Score — RAW Verification Required',
+                                            subject='[Shutter League] Grandmaster Score — Submit your original file',
                                             html_body=(
-                                                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
-                                                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                                                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (_img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(_img.score) + '</strong> (' + (_img.tier or '') + ').</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
-                                                '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
-                                                '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
-                                                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                                                '</div>'
+                                                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                                                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                                                '<tr><td align="center">'
+                                                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                                                '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                                                '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                                                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Grandmaster score &#8212; action required</p>'
+                                                '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.25;">Submit your original file to go public</h1>'
+                                                '</td></tr>'
+                                                '<tr><td style="padding:24px 28px 20px;">'
+                                                '<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ' &#8212; <strong>' + (_img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#C8A84B;">' + str(_img.score) + ' ' + (_img.tier or '') + '</strong>. To confirm the result and publish your image, we need your original camera file within <strong>72 hours</strong>.</p>'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;padding:16px 18px;margin:0 0 16px;border:1px solid #E0D8C8;">'
+                                                '<tr><td>'
+                                                '<p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">What to send</p>'
+                                                '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">A</span>Original RAW file</p>'
+                                                '<p style="margin:0 0 14px 30px;font-size:13px;color:#6a6458;line-height:1.5;">.CR3, .NEF, .ARW, .RAF, .RW2 or any native camera RAW format. Preferred.</p>'
+                                                '<p style="margin:0 0 12px;font-size:12px;color:#6a6458;text-align:center;">&#8212; or if your camera doesn&#39;t shoot RAW &#8212;</p>'
+                                                '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">B</span>Original JPEG straight from camera</p>'
+                                                '<p style="margin:0 0 0 30px;font-size:13px;color:#6a6458;line-height:1.5;">Camera EXIF must be intact &#8212; make, model, lens, and capture timestamp. Do not re-export or open in editing software before sending.</p>'
+                                                '</td></tr>'
+                                                '</table>'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #C8A84B;padding:10px 14px;margin:0 0 20px;background:#FFF8E1;border-radius:0 6px 6px 0;">'
+                                                '<tr><td><p style="margin:0;font-size:13px;color:#5a4200;line-height:1.6;"><strong>Why we check:</strong> We verify that no objects were added or removed in post-processing by comparing camera EXIF metadata and image content against your submitted file. Normal exposure, colour grading, and crop edits are fine.</p></td></tr>'
+                                                '</table>'
+                                                '<p style="margin:0 0 8px;text-align:center;"><a href="' + _submit_url + '" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Submit your file &#8594;</a></p>'
+                                                '<p style="font-size:12px;color:#6a6458;text-align:center;margin:0 0 18px;"><a href="' + _submit_url + '" style="color:#C8A84B;">' + _submit_url + '</a></p>'
+                                                '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr>'
+                                                '<td width="50%" style="background:#F5F0E8;border-radius:6px;padding:12px 14px;border:1px solid #E0D8C8;">'
+                                                '<p style="margin:0 0 2px;font-size:11px;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">Deadline</p>'
+                                                '<p style="margin:0;font-size:14px;font-weight:700;color:#1a1a18;">72 hours from now</p>'
+                                                '</td>'
+                                                '<td width="8px"></td>'
+                                                '<td width="50%" style="background:#F5F0E8;border-radius:6px;padding:12px 14px;border:1px solid #E0D8C8;">'
+                                                '<p style="margin:0 0 2px;font-size:11px;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">If not received</p>'
+                                                '<p style="margin:0;font-size:14px;font-weight:700;color:#1a1a18;">Image stays hidden</p>'
+                                                '</td></tr></table>'
+                                                '<p style="margin:0;font-size:13px;color:#6a6458;line-height:1.6;">Questions? Reply to this email or contact <a href="mailto:' + CONTACT_EMAIL + '" style="color:#1a1a18;">' + CONTACT_EMAIL + '</a></p>'
+                                                '</td></tr>'
+                                                '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                                                '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League &nbsp;&middot;&nbsp; This image is held from public view until verified.</p>'
+                                                '</td></tr>'
+                                                '</table></td></tr></table></body></html>'
+                                            ),
+                                            text_body=(
+                                                'Hi ' + _uname + ',\n\n'
+                                                + (_img.asset_name or 'Untitled') + ' scored ' + str(_img.score) + ' ' + (_img.tier or '') + '.\n\n'
+                                                'To confirm the result and publish your image, we need your original camera file within 72 hours.\n\n'
+                                                'Option A: Original RAW file (.CR3, .NEF, .ARW, .RAF, .RW2 or any native camera RAW)\n'
+                                                'Option B: Original JPEG straight from camera with EXIF intact (make, model, lens, timestamp). Do not re-export before sending.\n\n'
+                                                'Why we check: We verify no objects were added or removed in post-processing by comparing EXIF metadata and image content. Normal exposure, colour, and crop edits are fine.\n\n'
+                                                'Submit here: ' + _submit_url + '\n\n'
+                                                'Deadline: 72 hours. Image stays hidden until verified.\n\n'
+                                                'Questions? ' + CONTACT_EMAIL + '\n\n'
+                                                '-- Shutter League'
                                             )
                                         )
                                         send_email(
                                             to_addresses=[ADMIN_EMAIL],
                                             subject='[Admin] Grandmaster RAW Required — ' + (_img.asset_name or 'Untitled') + ' (' + str(_img.score) + ')',
-                                            html_body=('<p>Grandmaster image auto-flagged for RAW verification. Submission record created. User notified with direct submit link.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' — ' + (_img.tier or '') + '</li><li>Photographer: ' + (_img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 7 days</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(_img.id) + '">View in RAW Queue</a></p>'),
-                                            text_body=('Grandmaster RAW auto-flagged\nImage: ' + (_img.asset_name or 'Untitled') + '\nScore: ' + str(_img.score) + '\nUser: ' + (_u.email if _u else 'unknown'))
+                                            html_body=('<p>Grandmaster image auto-flagged for RAW verification. User notified. Deadline: 72 hours.</p><ul><li>Image: ' + (_img.asset_name or 'Untitled') + '</li><li>Score: ' + str(_img.score) + ' &#8212; ' + (_img.tier or '') + '</li><li>Photographer: ' + (_img.photographer_name or _uname) + '</li><li>User: ' + (_u.email if _u else 'unknown') + '</li><li>Deadline: 72 hours</li></ul><p><a href="' + _site_url + '/admin/raw-verification/' + str(_img.id) + '">View in RAW Queue</a></p>'),
+                                            text_body=('Grandmaster RAW auto-flagged\nImage: ' + (_img.asset_name or 'Untitled') + '\nScore: ' + str(_img.score) + '\nUser: ' + (_u.email if _u else 'unknown') + '\nDeadline: 72 hours')
                                         )
                                     else:
                                         send_email(
@@ -7561,7 +7607,7 @@ def contest_enter_monthly(genre):
                 and not getattr(img, 'raw_verification_required', False)):
             try:
                 img.raw_verification_required = True
-                _deadline = datetime.utcnow() + timedelta(days=7)
+                _deadline = datetime.utcnow() + timedelta(hours=72)
                 _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
                 _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
                 try:
@@ -7577,38 +7623,60 @@ def contest_enter_monthly(genre):
                 _genre_label = GENRE_LABELS.get(genre, genre)
                 send_email(
                     to_addresses=[current_user.email],
-                    subject=f'[Shutter League] RAW File Required — {img.asset_name or "Your Entry"}',
+                    subject=f'[Shutter League] Submit your original file — {img.asset_name or "Your Entry"}',
                     html_body=(
-                        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
-                        'padding:32px;background:#fffef9;color:#111111;">'
-                        '<p style="font-family:Courier New,monospace;font-size:12px;'
-                        'letter-spacing:2px;text-transform:uppercase;color:#F5C518;'
-                        'margin-bottom:24px;">Shutter League</p>'
-                        '<h2 style="font-size:22px;font-weight:700;color:#111111;'
-                        'margin-bottom:16px;">RAW File Required for Contest Entry</h2>'
-                        '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
-                        'Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> '
-                        'has been entered into <strong>' + _genre_label + '</strong> POTY '
-                        'and scores <strong>' + str(round(img.score, 2)) + '</strong>. '
-                        'Images in this genre scoring 7.5 and above require RAW verification '
-                        'to confirm authenticity.</p>'
-                        '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
-                        'Please submit your original RAW file within <strong>7 days</strong> '
-                        'using the link below. Failure to submit will withdraw your entry.</p>'
-                        '<p style="margin:32px 0;">'
-                        '<a href="' + _submit_url + '" style="background:#F5C518;color:#111111;'
-                        'padding:14px 28px;text-decoration:none;font-weight:700;'
-                        'font-family:Courier New,monospace;letter-spacing:1px;'
-                        'text-transform:uppercase;display:inline-block;">'
-                        'Submit RAW File &#8594;</a></p>'
-                        '<p style="font-size:13px;color:#8A8478;">Deadline: '
-                        + _deadline.strftime('%d %B %Y') + '</p>'
-                        '</div>'
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                        '<tr><td align="center">'
+                        '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                        '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                        '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Original file required</p>'
+                        '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.25;">Submit your original file to confirm your entry</h1>'
+                        '</td></tr>'
+                        '<tr><td style="padding:24px 28px 20px;">'
+                        '<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + (current_user.full_name or current_user.username) + ' &#8212; <strong>' + (img.asset_name or 'Untitled') + '</strong> scores <strong style="color:#C8A84B;">' + str(round(img.score, 2)) + '</strong> in <strong>' + _genre_label + '</strong>. Images at this level require original file verification. Please submit within <strong>72 hours</strong>.</p>'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;padding:16px 18px;margin:0 0 16px;border:1px solid #E0D8C8;">'
+                        '<tr><td>'
+                        '<p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">What to send</p>'
+                        '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">A</span>Original RAW file</p>'
+                        '<p style="margin:0 0 14px 30px;font-size:13px;color:#6a6458;line-height:1.5;">.CR3, .NEF, .ARW, .RAF, .RW2 or any native camera RAW format. Preferred.</p>'
+                        '<p style="margin:0 0 12px;font-size:12px;color:#6a6458;text-align:center;">&#8212; or if your camera doesn&#39;t shoot RAW &#8212;</p>'
+                        '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">B</span>Original JPEG straight from camera</p>'
+                        '<p style="margin:0 0 0 30px;font-size:13px;color:#6a6458;line-height:1.5;">Camera EXIF must be intact &#8212; make, model, lens, and capture timestamp. Do not re-export or open in editing software before sending.</p>'
+                        '</td></tr>'
+                        '</table>'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #C8A84B;padding:10px 14px;margin:0 0 20px;background:#FFF8E1;border-radius:0 6px 6px 0;">'
+                        '<tr><td><p style="margin:0;font-size:13px;color:#5a4200;line-height:1.6;"><strong>Why we check:</strong> We verify that no objects were added or removed in post-processing by comparing camera EXIF metadata and image content against your submitted file. Normal exposure, colour grading, and crop edits are fine.</p></td></tr>'
+                        '</table>'
+                        '<p style="margin:0 0 8px;text-align:center;"><a href="' + _submit_url + '" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Submit your file &#8594;</a></p>'
+                        '<p style="font-size:12px;color:#6a6458;text-align:center;margin:0 0 18px;"><a href="' + _submit_url + '" style="color:#C8A84B;">' + _submit_url + '</a></p>'
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr>'
+                        '<td width="50%" style="background:#F5F0E8;border-radius:6px;padding:12px 14px;border:1px solid #E0D8C8;">'
+                        '<p style="margin:0 0 2px;font-size:11px;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">Deadline</p>'
+                        '<p style="margin:0;font-size:14px;font-weight:700;color:#1a1a18;">72 hours from now</p>'
+                        '</td><td width="8px"></td>'
+                        '<td width="50%" style="background:#F5F0E8;border-radius:6px;padding:12px 14px;border:1px solid #E0D8C8;">'
+                        '<p style="margin:0 0 2px;font-size:11px;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">If not received</p>'
+                        '<p style="margin:0;font-size:14px;font-weight:700;color:#1a1a18;">Entry withdrawn</p>'
+                        '</td></tr></table>'
+                        '<p style="margin:0;font-size:13px;color:#6a6458;line-height:1.6;">Questions? <a href="mailto:' + CONTACT_EMAIL + '" style="color:#1a1a18;">' + CONTACT_EMAIL + '</a></p>'
+                        '</td></tr>'
+                        '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                        '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League &nbsp;&middot;&nbsp; Your entry is held until verified.</p>'
+                        '</td></tr>'
+                        '</table></td></tr></table></body></html>'
                     ),
                     text_body=(
-                        'RAW File Required. Your image ' + (img.asset_name or 'Untitled') +
-                        ' entered into ' + _genre_label + ' POTY requires RAW verification. '
-                        'Submit within 7 days: ' + _submit_url
+                        'Hi ' + (current_user.full_name or current_user.username) + ',\n\n'
+                        + (img.asset_name or 'Untitled') + ' scores ' + str(round(img.score, 2)) + ' in ' + _genre_label + '. Please submit your original camera file within 72 hours.\n\n'
+                        'Option A: Original RAW file (.CR3, .NEF, .ARW, .RAF, .RW2)\n'
+                        'Option B: Original JPEG straight from camera with EXIF intact. Do not re-export before sending.\n\n'
+                        'Why we check: We verify no objects were added or removed by comparing EXIF metadata and image content.\n\n'
+                        'Submit here: ' + _submit_url + '\n\n'
+                        'Deadline: 72 hours. Entry withdrawn if not received.\n\n'
+                        '-- Shutter League'
                     )
                 )
                 send_email(
@@ -7630,8 +7698,8 @@ def contest_enter_monthly(genre):
                 )
                 flash(
                     f' Your score qualifies for {_genre_label} POTY. '
-                    f'RAW verification is required — check your email for the submission link. '
-                    f'You have 7 days to submit your original RAW file.',
+                    f'Original file verification is required — check your email for the submission link. '
+                    f'You have 72 hours to submit your original camera file.',
                     'warning'
                 )
                 app.logger.info(
@@ -11154,7 +11222,7 @@ def admin_request_raw(image_id):
         flash(f'RAW verification already requested for "{img.asset_name}".', 'info')
         return redirect(request.referrer or url_for('admin_dashboard'))
     img.raw_verification_required = True
-    _deadline = datetime.utcnow() + timedelta(days=7)
+    _deadline = datetime.utcnow() + timedelta(hours=72)
     try:
         db.session.execute(db.text(
             "INSERT INTO raw_submissions "
@@ -11172,17 +11240,51 @@ def admin_request_raw(image_id):
         _uname = owner.full_name or owner.username
         send_email(
             to_addresses=[owner.email],
-            subject='[Shutter League] RAW File Requested — ' + (img.asset_name or 'Untitled'),
+            subject='[Shutter League] Submit your original file — ' + (img.asset_name or 'Untitled'),
             html_body=(
-                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
-                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Requested</h2>'
-                '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + _uname + ',</p>'
-                '<p style="font-size:16px;line-height:1.7;color:#111111;">We are conducting a routine authenticity audit. Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been selected for RAW file verification.</p>'
-                '<p style="font-size:16px;line-height:1.7;color:#111111;">Please submit your original RAW file within <strong>7 days</strong> to confirm your result.</p>'
-                '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
-                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                '</div>'
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                '<tr><td align="center">'
+                '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                '<p style="margin:0 0 14px;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Authenticity audit</p>'
+                '<h1 style="margin:0;font-size:21px;color:#ffffff;font-weight:700;line-height:1.25;">Submit your original file</h1>'
+                '</td></tr>'
+                '<tr><td style="padding:24px 28px 20px;">'
+                '<p style="font-size:15px;line-height:1.7;color:#1a1a18;margin:0 0 16px;">Hi ' + _uname + ' &#8212; we are conducting a routine authenticity audit. Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> has been selected for original file verification. Please submit within <strong>72 hours</strong>.</p>'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;border-radius:6px;padding:16px 18px;margin:0 0 16px;border:1px solid #E0D8C8;">'
+                '<tr><td>'
+                '<p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#6a6458;font-family:Courier New,monospace;text-transform:uppercase;letter-spacing:1px;">What to send</p>'
+                '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">A</span>Original RAW file</p>'
+                '<p style="margin:0 0 14px 30px;font-size:13px;color:#6a6458;line-height:1.5;">.CR3, .NEF, .ARW, .RAF, .RW2 or any native camera RAW format. Preferred.</p>'
+                '<p style="margin:0 0 12px;font-size:12px;color:#6a6458;text-align:center;">&#8212; or if your camera doesn&#39;t shoot RAW &#8212;</p>'
+                '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#1a1a18;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1a1a18;border:1.5px solid #C8A84B;text-align:center;line-height:20px;font-size:11px;color:#C8A84B;margin-right:8px;">B</span>Original JPEG straight from camera</p>'
+                '<p style="margin:0 0 0 30px;font-size:13px;color:#6a6458;line-height:1.5;">Camera EXIF must be intact &#8212; make, model, lens, and capture timestamp. Do not re-export or open in editing software before sending.</p>'
+                '</td></tr>'
+                '</table>'
+                '<table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #C8A84B;padding:10px 14px;margin:0 0 20px;background:#FFF8E1;border-radius:0 6px 6px 0;">'
+                '<tr><td><p style="margin:0;font-size:13px;color:#5a4200;line-height:1.6;"><strong>Why we check:</strong> We verify that no objects were added or removed in post-processing by comparing camera EXIF metadata and image content against your submitted file. Normal exposure, colour grading, and crop edits are fine.</p></td></tr>'
+                '</table>'
+                '<p style="margin:0 0 8px;text-align:center;"><a href="' + _submit_url + '" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Submit your file &#8594;</a></p>'
+                '<p style="font-size:12px;color:#6a6458;text-align:center;margin:0 0 18px;"><a href="' + _submit_url + '" style="color:#C8A84B;">' + _submit_url + '</a></p>'
+                '<p style="margin:0;font-size:13px;color:#6a6458;">Questions? <a href="mailto:' + CONTACT_EMAIL + '" style="color:#1a1a18;">' + CONTACT_EMAIL + '</a></p>'
+                '</td></tr>'
+                '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                '<p style="margin:0;font-size:12px;color:#6a6458;">&#8212; Shutter League &nbsp;&middot;&nbsp; Your image is held from public view until verified.</p>'
+                '</td></tr>'
+                '</table></td></tr></table></body></html>'
+            ),
+            text_body=(
+                'Hi ' + _uname + ',\n\n'
+                'We are conducting a routine authenticity audit. Your image "' + (img.asset_name or 'Untitled') + '" has been selected for original file verification. Please submit within 72 hours.\n\n'
+                'Option A: Original RAW file (.CR3, .NEF, .ARW, .RAF, .RW2)\n'
+                'Option B: Original JPEG straight from camera with EXIF intact. Do not re-export before sending.\n\n'
+                'Why we check: We verify no objects were added or removed by comparing EXIF metadata and image content.\n\n'
+                'Submit here: ' + _submit_url + '\n\n'
+                'Questions? ' + CONTACT_EMAIL + '\n\n'
+                '-- Shutter League'
             )
         )
     flash(f'RAW verification requested for "{img.asset_name}" — photographer notified.', 'success')
