@@ -3841,6 +3841,34 @@ def change_password():
 # Leaderboard
 # ---------------------------------------------------------------------------
 
+@app.route('/recent-work')
+def recent_work():
+    """Recent Work feed — latest public scored images, one per user, up to 48."""
+    try:
+        import random as _random
+        rows = (db.session.execute(db.text("""
+            SELECT DISTINCT ON (i.user_id)
+                i.id, i.thumb_url, i.asset_name, i.genre, i.score, i.tier,
+                i.photographer_name, i.scored_at, u.username
+            FROM images i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'scored'
+              AND i.score IS NOT NULL
+              AND i.is_public = TRUE
+              AND i.is_flagged = FALSE
+              AND i.thumb_url IS NOT NULL
+            ORDER BY i.user_id, i.scored_at DESC
+            LIMIT 500
+        """)).fetchall())
+        images = [dict(r._mapping) for r in rows]
+        _random.shuffle(images)
+        images = images[:48]
+    except Exception as _e:
+        app.logger.error(f'[recent_work] {_e}')
+        images = []
+    return render_template('recent_work.html', images=images)
+
+
 @app.route('/leaderboard')
 def leaderboard():
     genre  = request.args.get('genre', 'all')
