@@ -3866,7 +3866,7 @@ def recent_work():
     except Exception as _e:
         app.logger.error(f'[recent_work] {_e}')
         images = []
-    return render_template('recent_work.html', images=images)
+    return render_template('recent_work.html', feed_images=images)
 
 
 @app.route('/leaderboard')
