@@ -3736,7 +3736,7 @@ def upload_edited_version(image_id):
             _track  = getattr(current_user, 'subscription_track', None) or ''
             _is_sub = getattr(current_user, 'is_subscribed', False)
             _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
-            _EDIT_PTS_COST = 10
+            _EDIT_PTS_COST = 200
 
             # Try points redemption first if balance available
             if _pts_bal >= _EDIT_PTS_COST:
@@ -3934,10 +3934,8 @@ def upload_edited_version(image_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
             return jsonify({'status': 'processing', 'image_id': img.id})
 
-        # Redirect to dashboard — same pattern as normal upload (avoids session cookie drop)
-        # Image shows as "Scoring..." on dashboard until background thread completes
-        flash(f'Edited version (V{version_num}) uploaded and scoring — it will appear on your dashboard shortly. It starts private.', 'success')
-        return redirect(url_for('dashboard'))
+        # Redirect to dashboard with scoring param — dashboard shows live scoring widget
+        return redirect(url_for('dashboard') + f'?scoring={img.id}&v={version_num}')
 
     # GET — render the upload form
     # Fetch all existing versions for display
@@ -3951,7 +3949,7 @@ def upload_edited_version(image_id):
     _existing_edits = len(versions) - 1  # subtract root, count edits only
     _is_sub         = getattr(current_user, 'is_subscribed', False)
     _track          = getattr(current_user, 'subscription_track', None) or ''
-    _EDIT_PTS_COST  = 10
+    _EDIT_PTS_COST  = 200
     # Check monthly slot availability for subscribed users
     _slots_ok = True
     if _is_sub and _track in ('mobile', 'camera', 'learning') and _pts_bal < _EDIT_PTS_COST:
