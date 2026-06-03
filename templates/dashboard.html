@@ -1468,6 +1468,72 @@
 {# ════════════════════════════════════════════════════════════════
    TOP BAR
 ════════════════════════════════════════════════════════════════ #}
+  {# ── Edit scoring live widget ────────────────────────────────── #}
+  <div id="edit-scoring-widget" style="display:none;margin-bottom:16px;padding:20px 24px;background:#1A2744;border-radius:var(--radius-md);color:#FFFFFF;">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div id="edit-scoring-anim" style="font-size:28px;animation:esc-pulse 1.5s ease-in-out infinite;">🔬</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">APEX DDI ENGINE</div>
+        <div id="edit-scoring-msg" style="font-size:16px;font-weight:600;color:#FFFFFF;"></div>
+        <div id="edit-scoring-sub" style="font-size:14px;color:rgba(255,255,255,0.6);margin-top:2px;">Inhaling the scene. Building the verdict.</div>
+      </div>
+      <div id="edit-scoring-result" style="display:none;text-align:right;">
+        <div id="edit-scoring-score" style="font-size:32px;font-weight:700;color:#F5C518;line-height:1;"></div>
+        <div id="edit-scoring-tier" style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:2px;"></div>
+        <a id="edit-scoring-link" href="#" style="font-size:13px;font-family:var(--font-mono);color:#F5C518;text-decoration:none;margin-top:6px;display:block;">View full analysis →</a>
+      </div>
+    </div>
+    <div style="margin-top:12px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+      <div id="edit-scoring-bar" style="height:100%;width:0%;background:#F5C518;border-radius:2px;transition:width 0.5s ease;"></div>
+    </div>
+  </div>
+  <style>@keyframes esc-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.7}}</style>
+  <script>
+  (function(){
+    var params=new URLSearchParams(window.location.search);
+    var sid=params.get('scoring'), vNum=params.get('v')||'';
+    if(!sid) return;
+    var widget=document.getElementById('edit-scoring-widget');
+    var msg=document.getElementById('edit-scoring-msg');
+    var sub=document.getElementById('edit-scoring-sub');
+    var bar=document.getElementById('edit-scoring-bar');
+    var result=document.getElementById('edit-scoring-result');
+    var scoreEl=document.getElementById('edit-scoring-score');
+    var tierEl=document.getElementById('edit-scoring-tier');
+    var linkEl=document.getElementById('edit-scoring-link');
+    widget.style.display='block';
+    msg.textContent='Analysing'+(vNum?' V'+vNum:'your edited version')+'…';
+    var pct=5;
+    var barInt=setInterval(function(){pct=Math.min(pct+(Math.random()*8),90);bar.style.width=pct+'%';},800);
+    var phases=['Inhaling the scene…','Mapping depth and difficulty…','Reading the decisive moment…','Measuring wonder and disruption…','Calibrating aesthetic quality…','Building the verdict…'];
+    var pi=0;
+    var phInt=setInterval(function(){if(pi<phases.length)sub.textContent=phases[pi++];},3500);
+    var pollInt=setInterval(function(){
+      fetch('/score-status/'+sid)
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.status==='processing') return;
+          clearInterval(pollInt);clearInterval(barInt);clearInterval(phInt);
+          bar.style.width='100%';
+          if(d.status==='scored'){
+            msg.textContent='Scored ✓';
+            sub.textContent='Your edited version has been assessed.';
+            scoreEl.textContent=d.score?parseFloat(d.score).toFixed(2):'—';
+            tierEl.textContent=d.tier||'';
+            linkEl.href='/image/'+sid;
+            result.style.display='block';
+            document.getElementById('edit-scoring-anim').style.animation='none';
+            document.getElementById('edit-scoring-anim').textContent='✓';
+            setTimeout(function(){window.location.href='/dashboard';},3000);
+          } else if(d.status==='error'||d.status==='flagged'){
+            msg.textContent=d.status==='flagged'?'⛔ Image flagged':'Scoring failed';
+            sub.textContent=d.message||'Please check your dashboard.';
+          }
+        }).catch(function(){});
+    },2000);
+  })();
+  </script>
+
 <div class="db-top-bar">
   <div>
     <div class="db-page-title">{{ current_user.full_name or current_user.username }}</div>

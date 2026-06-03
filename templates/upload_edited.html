@@ -269,7 +269,7 @@
             {% if version_num == 2 %}
               🎁 <strong>This first edit is free</strong> — no points or upload slot used.
             {% elif points_balance >= edit_pts_cost %}
-              💳 <strong>{{ edit_pts_cost }} points will be deducted</strong> from your balance of {{ points_balance }} pts automatically on upload.
+              💳 <strong>{{ edit_pts_cost }} points (≈ ₹{{ (edit_pts_cost * 0.1) | int }}) will be deducted</strong> from your balance of {{ points_balance }} pts automatically on upload.
             {% else %}
               ⚠ <strong>1 upload slot will be used</strong> — you have {{ points_balance }} pts ({{ edit_pts_cost }} pts needed to redeem with points).
             {% endif %}
@@ -296,7 +296,7 @@
           <span>I understand that edit guidance is directional and <strong>Shutter League does not guarantee a higher score</strong>. I accept that the assessment outcome is independent and final.
           {% if version_num > 2 %}
             {% if points_balance >= edit_pts_cost %}
-              I authorise the deduction of <strong>{{ edit_pts_cost }} points</strong> from my balance.
+              I authorise the deduction of <strong>{{ edit_pts_cost }} points (≈ ₹{{ (edit_pts_cost * 0.1) | int }})</strong> from my balance.
             {% else %}
               I acknowledge that <strong>1 upload slot</strong> will be used for this edit.
             {% endif %}
