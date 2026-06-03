@@ -1841,6 +1841,482 @@
 </div>
 {% endif %}
 
+
+{# ══ Your Path to Rankings card — Session 56 ══ #}
+{# ══════════════════════════════════════════════════════════════════════════════
+   "Your Path to Rankings" card — Session 56
+   Drop into dashboard.html wherever the card should appear.
+   Data deps:  wallet_hud, poty_tracker, free_tier  (all passed from dashboard())
+   ══════════════════════════════════════════════════════════════════════════════ #}
+
+{# ── Derive the step the user is currently on ──────────────────────────────── #}
+{% set _is_sub = current_user.is_subscribed %}
+
+{# Step helpers ── used only inside this block #}
+{% if _is_sub and wallet_hud %}
+  {% set _res_mo         = wallet_hud.residency_months %}
+  {% set _months_to_gate = wallet_hud.months_to_gate %}
+  {% set _ranked         = wallet_hud.officially_ranked %}
+
+  {# Best genre by count — first row is already sorted best-first by app.py #}
+  {% if poty_tracker and poty_tracker.genre_rows %}
+    {% set _best_row         = poty_tracker.genre_rows[0] %}
+    {% set _best_genre       = _best_row.genre %}
+    {% set _best_count       = _best_row.count %}
+    {% set _prize_eligible   = _best_row.qualifies %}
+  {% else %}
+    {% set _best_row         = none %}
+    {% set _best_genre       = none %}
+    {% set _best_count       = 0 %}
+    {% set _prize_eligible   = false %}
+  {% endif %}
+
+  {# Determine current step (1-indexed, shown = current + next only) #}
+  {# Step 1: subscribed ✓ — always done for subscribers                        #}
+  {# Step 2: 6 months subscribed → on standings                                #}
+  {# Step 3: 6 images in a genre → genre avg on leaderboard                    #}
+  {# Step 4: 24 images in a genre → Photographer of the Year eligible          #}
+
+  {% if not _ranked %}
+    {% if _res_mo < 6 %}
+      {% set _current_step = 2 %}
+    {% elif _best_count < 6 %}
+      {% set _current_step = 3 %}
+    {% else %}
+      {% set _current_step = 3 %}
+    {% endif %}
+  {% elif not _prize_eligible %}
+    {% set _current_step = 4 %}
+  {% else %}
+    {% set _current_step = 5 %}
+  {% endif %}
+
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════════
+   CARD HTML
+   ══════════════════════════════════════════════════════════════════════════════ #}
+<section class="rankings-path-card" aria-label="Your path to rankings">
+
+  {% block extra_css %}{% endblock %}
+  <style>
+  /* ── Rankings path card ──────────────────────────────────────────────── */
+  .rankings-path-card {
+    background: #1a1a18;
+    border: 1px solid rgba(200,168,75,0.25);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin: 0 0 32px;
+    font-family: 'Inter', sans-serif !important;
+  }
+  .rankings-path-card .rp-eyebrow {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #C8A84B;
+    margin: 0 0 6px;
+  }
+  .rankings-path-card .rp-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #F5F0E8;
+    margin: 0 0 24px;
+    line-height: 1.3;
+  }
+  .rankings-path-card .rp-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .rankings-path-card .rp-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(245,240,232,0.07);
+  }
+  .rankings-path-card .rp-step:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .rankings-path-card .rp-step-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-top: 1px;
+  }
+  .rankings-path-card .rp-step-icon.done {
+    background: rgba(200,168,75,0.18);
+    color: #C8A84B;
+  }
+  .rankings-path-card .rp-step-icon.active {
+    background: #C8A84B;
+    color: #1a1a18;
+  }
+  .rankings-path-card .rp-step-icon.upcoming {
+    background: rgba(245,240,232,0.07);
+    color: rgba(245,240,232,0.35);
+  }
+  .rankings-path-card .rp-step-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .rankings-path-card .rp-step-label {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .rankings-path-card .rp-step-label.done    { color: #C8A84B; }
+  .rankings-path-card .rp-step-label.active  { color: #F5C518; }
+  .rankings-path-card .rp-step-label.upcoming{ color: rgba(245,240,232,0.3); }
+  .rankings-path-card .rp-step-desc {
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 10px;
+    color: rgba(245,240,232,0.75);
+    text-align: justify;
+  }
+  .rankings-path-card .rp-step-desc.active {
+    color: #F5F0E8;
+  }
+  .rankings-path-card .rp-progress-bar-wrap {
+    background: rgba(245,240,232,0.1);
+    border-radius: 3px;
+    height: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .rankings-path-card .rp-progress-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #C8A84B, #F5C518);
+    transition: width 0.6s ease;
+  }
+  .rankings-path-card .rp-progress-text {
+    font-size: 13px;
+    color: rgba(245,240,232,0.55);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .rankings-path-card .rp-cta {
+    display: inline-block;
+    margin-top: 12px;
+    background: #C8A84B;
+    color: #1a1a18;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    min-height: 44px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+  }
+  .rankings-path-card .rp-cta:hover {
+    background: #F5C518;
+    color: #1a1a18;
+    text-decoration: none;
+  }
+  .rankings-path-card .rp-free-shadow {
+    background: rgba(200,168,75,0.08);
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .rankings-path-card .rp-free-shadow p {
+    margin: 0 0 4px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(245,240,232,0.8);
+    text-align: justify;
+  }
+  .rankings-path-card .rp-free-shadow .rp-shadow-rank {
+    font-size: 28px;
+    font-weight: 700;
+    color: #C8A84B;
+    line-height: 1;
+    margin: 0 0 6px;
+  }
+
+  /* ── Genre chip list ──────────────────────────────────────────────────── */
+  .rankings-path-card .rp-genre-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .rankings-path-card .rp-genre-chip {
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    line-height: 1.5;
+    font-family: 'Courier New', monospace;
+  }
+  .rankings-path-card .rp-genre-chip.unlocked {
+    background: rgba(200,168,75,0.15);
+    color: #C8A84B;
+    border: 1px solid rgba(200,168,75,0.3);
+  }
+  .rankings-path-card .rp-genre-chip.locked {
+    background: rgba(245,240,232,0.05);
+    color: rgba(245,240,232,0.35);
+    border: 1px solid rgba(245,240,232,0.1);
+  }
+
+  /* ── All done state ───────────────────────────────────────────────────── */
+  .rankings-path-card .rp-all-done {
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+  .rankings-path-card .rp-all-done .rp-trophy {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .rankings-path-card .rp-all-done p {
+    font-size: 16px;
+    color: rgba(245,240,232,0.8);
+    margin: 0;
+    line-height: 1.6;
+    text-align: justify;
+  }
+
+  @media (max-width: 600px) {
+    .rankings-path-card {
+      padding: 20px 16px;
+    }
+    .rankings-path-card .rp-title {
+      font-size: 18px;
+    }
+    .rankings-path-card .rp-step-desc {
+      font-size: 14px;
+    }
+    .rankings-path-card .rp-free-shadow .rp-shadow-rank {
+      font-size: 24px;
+    }
+  }
+  </style>
+
+  {# ── Eyebrow + title ───────────────────────────────────────────────────── #}
+  <p class="rp-eyebrow">League of Photographers</p>
+  <h2 class="rp-title">Your path to the standings</h2>
+
+  {# ══════════════════════════════════════════════════════════════════════════
+     FREE USER — show shadow rank + subscribe nudge
+     ══════════════════════════════════════════════════════════════════════════ #}
+  {% if not _is_sub %}
+
+    {% if free_tier and free_tier.shadow_rank %}
+    <div class="rp-free-shadow">
+      <p style="font-size:13px;font-family:'Courier New',monospace;letter-spacing:1px;color:rgba(245,240,232,0.45);margin:0 0 6px;">YOUR SHADOW RANK</p>
+      <p class="rp-shadow-rank">#{{ free_tier.shadow_rank }}</p>
+      <p>Based on your scored images, this is where you&#39;d sit in the league right now. Subscribe to make it official.</p>
+    </div>
+    {% endif %}
+
+    <div class="rp-steps">
+      {# Step 1 — active for free users #}
+      <div class="rp-step">
+        <div class="rp-step-icon active">1</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label active">Subscribe to start</p>
+          <p class="rp-step-desc active">Your ranking clock starts the day you subscribe. Photos you upload now will count once you&#39;re on a paid plan — nothing is wasted.</p>
+          <a href="{{ url_for('subscribe') }}" class="rp-cta">Subscribe — ₹99 / month →</a>
+        </div>
+      </div>
+      {# Step 2 — upcoming #}
+      <div class="rp-step">
+        <div class="rp-step-icon upcoming">2</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label upcoming">6 months subscribed → on the standings</p>
+          <p class="rp-step-desc">A 6-month residency window ensures rankings reflect consistent photographers, not one-time uploads.</p>
+        </div>
+      </div>
+      {# Step 3 — upcoming #}
+      <div class="rp-step">
+        <div class="rp-step-icon upcoming">3</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label upcoming">6 images in a genre → leaderboard average</p>
+          <p class="rp-step-desc">Once you have 6 scored images in any genre, your top-6 average appears on the League of Photographers leaderboard for that genre.</p>
+        </div>
+      </div>
+      {# Step 4 — upcoming #}
+      <div class="rp-step">
+        <div class="rp-step-icon upcoming">4</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label upcoming">24 images in a genre → Photographer of the Year eligible</p>
+          <p class="rp-step-desc">Your best 6 scores in that genre form your final POTY ranking. Annual awards recognise the top photographers per genre.</p>
+        </div>
+      </div>
+    </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════
+     SUBSCRIBED USER — personalised sequential card
+     ══════════════════════════════════════════════════════════════════════════ #}
+  {% elif _is_sub and wallet_hud %}
+
+    {# ALL DONE — POTY eligible #}
+    {% if _current_step == 5 %}
+    <div class="rp-all-done">
+      <div class="rp-trophy">🏆</div>
+      <p>You&#39;re Photographer of the Year eligible in <strong style="color:#C8A84B;">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Keep shooting — your top-6 average is what determines the final ranking.</p>
+    </div>
+
+    {# STEP 2 — clock running, not yet at 6 months #}
+    {% elif _current_step == 2 %}
+    <div class="rp-steps">
+      {# Step 1 done #}
+      <div class="rp-step">
+        <div class="rp-step-icon done">✓</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label done">Subscribed</p>
+          <p class="rp-step-desc">Your ranking clock is running.</p>
+        </div>
+      </div>
+      {# Step 2 active #}
+      <div class="rp-step">
+        <div class="rp-step-icon active">2</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label active">6 months subscribed → on the standings</p>
+          {% set _mo_pct = [((_res_mo / 6) * 100)|int, 100]|min %}
+          <div class="rp-progress-bar-wrap">
+            <div class="rp-progress-bar-fill" style="width:{{ _mo_pct }}%;"></div>
+          </div>
+          <p class="rp-progress-text">
+            {{ _res_mo }} of 6 months — 
+            {% if _months_to_gate == 1 %}1 month to go
+            {% elif _months_to_gate > 1 %}{{ _months_to_gate }} months to go
+            {% else %}almost there
+            {% endif %}
+          </p>
+          <p class="rp-step-desc active" style="margin-top:10px;">Once you hit 6 subscribed months you&#39;ll appear on the League of Photographers standings — your average score visible to everyone.</p>
+        </div>
+      </div>
+      {# Step 3 upcoming #}
+      <div class="rp-step">
+        <div class="rp-step-icon upcoming">3</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label upcoming">6 images in a genre → leaderboard average</p>
+          <p class="rp-step-desc">
+            {% if _best_count > 0 %}
+              You&#39;ve scored {{ _best_count }} image{{ _best_count|pluralize }} so far. Keep going — you need {{ [6 - _best_count, 0]|max }} more in the same genre.
+            {% else %}
+              Score 6 images in any one genre and your average will show on the leaderboard.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {# STEP 3 — on standings but need more images for leaderboard avg #}
+    {% elif _current_step == 3 %}
+    <div class="rp-steps">
+      {# Steps 1+2 done #}
+      <div class="rp-step">
+        <div class="rp-step-icon done">✓</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label done">Subscribed · {{ _res_mo }} months on the clock</p>
+          {% if _ranked %}
+          <p class="rp-step-desc">You&#39;re on the standings — your average is visible in the League of Photographers.</p>
+          {% else %}
+          <p class="rp-step-desc">{{ _res_mo }} of 6 months completed.</p>
+          {% endif %}
+        </div>
+      </div>
+      {# Step 3 active #}
+      <div class="rp-step">
+        <div class="rp-step-icon active">3</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label active">6 images in a genre → leaderboard average</p>
+          {% if _best_row %}
+            {% set _img_pct = [(_best_count / 6 * 100)|int, 100]|min %}
+            <div class="rp-progress-bar-wrap">
+              <div class="rp-progress-bar-fill" style="width:{{ _img_pct }}%;"></div>
+            </div>
+            <p class="rp-progress-text">{{ _best_count }} of 6 scored in <strong>{{ _best_genre }}</strong> — {{ [6 - _best_count, 0]|max }} to go</p>
+            <p class="rp-step-desc active" style="margin-top:10px;">Once you hit 6 in the same genre, your top-6 average shows on the leaderboard for that category.</p>
+
+            {# Show all genres with counts as chips #}
+            {% if poty_tracker.genre_rows|length > 1 %}
+            <div class="rp-genre-chips">
+              {% for row in poty_tracker.genre_rows %}
+              <span class="rp-genre-chip {{ 'unlocked' if row.has_enough else 'locked' }}">
+                {{ row.genre }} · {{ row.count }}
+              </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          {% else %}
+            <p class="rp-step-desc active">Score 6 images in any one genre and your average will appear on the leaderboard.</p>
+          {% endif %}
+          <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
+        </div>
+      </div>
+      {# Step 4 upcoming #}
+      <div class="rp-step">
+        <div class="rp-step-icon upcoming">4</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label upcoming">24 images in a genre → Photographer of the Year eligible</p>
+          <p class="rp-step-desc">Your best 6 scores in a genre count toward the annual award. 24 images gives you enough depth for a strong ranking.</p>
+        </div>
+      </div>
+    </div>
+
+    {# STEP 4 — on standings + leaderboard, working toward POTY eligibility #}
+    {% elif _current_step == 4 %}
+    <div class="rp-steps">
+      {# Steps 1-3 done #}
+      <div class="rp-step">
+        <div class="rp-step-icon done">✓</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label done">On the standings · leaderboard average active</p>
+          {% if _best_row and _best_row.top6_avg %}
+          <p class="rp-step-desc">Your top-6 average in <strong style="color:#C8A84B;">{{ _best_genre }}</strong> is <strong style="color:#C8A84B;">{{ _best_row.top6_avg }}</strong>.</p>
+          {% else %}
+          <p class="rp-step-desc">You&#39;re on the standings with {{ _best_count }} images in {{ _best_genre }}.</p>
+          {% endif %}
+        </div>
+      </div>
+      {# Step 4 active #}
+      <div class="rp-step">
+        <div class="rp-step-icon active">4</div>
+        <div class="rp-step-body">
+          <p class="rp-step-label active">24 images in a genre → Photographer of the Year eligible</p>
+          {% if _best_row %}
+            {% set _prize_pct = [(_best_count / 24 * 100)|int, 100]|min %}
+            <div class="rp-progress-bar-wrap">
+              <div class="rp-progress-bar-fill" style="width:{{ _prize_pct }}%;"></div>
+            </div>
+            <p class="rp-progress-text">{{ _best_count }} of 24 in <strong>{{ _best_genre }}</strong> — {{ [24 - _best_count, 0]|max }} to go</p>
+            <p class="rp-step-desc active" style="margin-top:10px;">Your best 6 scores in this genre form your final POTY ranking. Keep shooting to improve your selection pool.</p>
+          {% endif %}
+          <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
+        </div>
+      </div>
+    </div>
+
+    {% endif %}{# end current_step #}
+
+  {% endif %}{# end is_sub #}
+
+</section>
+{# ── End path_to_rankings card ── #}
+
 {# ════════════════════════════════════════════════════════════════
    4. MAIN TWO-COLUMN
 ════════════════════════════════════════════════════════════════ #}
