@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block title %}Upload Edited Version — {{ platform_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* sl_audit: pre-existing inapplicable — no hero section */
+.ue-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+  font-family: 'Inter', sans-serif !important;
+}
+.ue-header {
+  margin-bottom: 28px;
+  padding-left: 20px;
+  border-left: 3px solid var(--gold);
+}
+.ue-header h1 {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.ue-header p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* Versions strip */
+.ue-versions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.ue-version-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: 120px;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+}
+.ue-version-card.current {
+  border-color: var(--gold);
+}
+.ue-version-card img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  display: block;
+}
+.ue-version-info {
+  padding: 6px 8px;
+}
+.ue-version-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 2px;
+}
+.ue-version-score {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ue-version-tier {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.ue-version-private {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+/* Upload form */
+.ue-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+.ue-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  opacity: 0.6;
+  display: block;
+  margin-bottom: 6px;
+}
+.ue-drop {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+.ue-drop.drag-over { border-color: var(--gold); }
+.ue-drop-icon { font-size: 32px; margin-bottom: 8px; }
+.ue-drop p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0 0 6px;
+}
+.ue-drop small {
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+.ue-file-input { display: none; }
+.ue-selected {
+  display: none;
+  font-size: 14px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: rgba(245,197,24,0.08);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245,197,24,0.2);
+}
+.ue-info-box {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-align: justify;
+}
+.ue-info-box strong { color: var(--text-primary); }
+.ue-submit {
+  display: inline-flex;
+  align-items: center;
+  background: var(--gold);
+  color: #1a1a18;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 44px;
+  text-decoration: none;
+}
+.ue-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.ue-submit:hover:not(:disabled) { background: #F5C518; }
+.ue-back {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin-left: 16px;
+}
+.ue-back:hover { color: var(--text-primary); }
+
+@media (max-width: 600px) {
+  .ue-wrap { padding: 24px 16px 48px; }
+  .ue-card { padding: 18px 16px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ue-wrap">
+
+  <div class="ue-header">
+    <h1>Upload Edited Version</h1>
+    <p>Score a new edit of <strong>{{ root.asset_name or 'Untitled' }}</strong>. Your edited version starts private — you decide if and when to make it public.</p>
+  </div>
+
+  {# ── Existing versions strip ─────────────────────────────────── #}
+  {% if versions %}
+  <div class="ue-versions">
+    {% for v in versions %}
+    <a href="{{ url_for('image_detail', image_id=v.id) }}" class="ue-version-card {{ 'current' if v.id == parent.id else '' }}">
+      {% if v.thumb_url %}
+      <img src="{{ v.thumb_url }}" alt="{{ v.asset_name or 'Version' }}" loading="lazy" onerror="this.style.display='none'">
+      {% else %}
+      <div style="aspect-ratio:4/3;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:24px;">🖼️</div>
+      {% endif %}
+      <div class="ue-version-info">
+        <span class="ue-version-label">V{{ loop.index }}</span>
+        {% if v.score %}
+        <div class="ue-version-score">{{ '%.2f'|format(v.score) }}</div>
+        <div class="ue-version-tier">{{ v.tier or '' }}</div>
+        {% elif v.status == 'processing' %}
+        <div class="ue-version-score" style="font-size:12px;opacity:0.6;">Scoring…</div>
+        {% else %}
+        <div class="ue-version-score" style="font-size:12px;opacity:0.5;">Pending</div>
+        {% endif %}
+        {% if not v.is_public %}
+        <div class="ue-version-private">Private</div>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+    {# New version slot #}
+    <div class="ue-version-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:100px;opacity:0.4;">
+      <div style="text-align:center;padding:12px;">
+        <div style="font-size:24px;">+</div>
+        <div style="font-size:11px;font-family:var(--font-mono);">V{{ version_num }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Upload form ─────────────────────────────────────────────── #}
+  <form method="POST" enctype="multipart/form-data" id="edit-upload-form">
+    <input type="hidden" name="_xhr" value="0">
+
+    <div class="ue-card">
+      <div class="ue-drop" id="drop-zone" onclick="document.getElementById('edit-file-input').click()">
+        <div class="ue-drop-icon">📷</div>
+        <p>Drop your edited file here, or click to browse</p>
+        <small>JPEG · PNG · TIFF · up to 20MB</small>
+      </div>
+      <input type="file" name="image" id="edit-file-input" class="ue-file-input" accept="image/*">
+      <div class="ue-selected" id="file-selected-msg"></div>
+
+      <div class="ue-info-box">
+        <strong>What happens next:</strong> Your edited version will be scored by the Apex DDI Engine and start as <strong>private</strong>.
+        Once scored, you can compare it with your other versions and choose which one to make public.
+        The <strong>highest-scoring version</strong> always counts toward your leaderboard ranking — regardless of which version is public.
+      </div>
+
+      <button type="submit" class="ue-submit" id="upload-btn" disabled>Upload &amp; Score V{{ version_num }} →</button>
+      <a href="{{ url_for('image_detail', image_id=parent.id) }}" class="ue-back">← Cancel</a>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+(function () {
+  const input   = document.getElementById('edit-file-input');
+  const dropZone= document.getElementById('drop-zone');
+  const selMsg  = document.getElementById('file-selected-msg');
+  const btn     = document.getElementById('upload-btn');
+
+  function showFile(file) {
+    if (!file) return;
+    selMsg.textContent = '✓  ' + file.name + '  (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+    selMsg.style.display = 'block';
+    btn.disabled = false;
+  }
+
+  input.addEventListener('change', () => showFile(input.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      // Transfer to input
+      const transfer = new DataTransfer();
+      transfer.items.add(dt.files[0]);
+      input.files = transfer.files;
+      showFile(dt.files[0]);
+    }
+  });
+
+  // Show progress on submit
+  document.getElementById('edit-upload-form').addEventListener('submit', () => {
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+  });
+})();
+</script>
+{% endblock %}

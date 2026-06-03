@@ -135,6 +135,9 @@
           <button type="submit" class="btn btn-solid">Score Now</button>
         </form>
       {% endif %}
+      {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') and image.status == 'scored' %}
+      <a href="{{ url_for('upload_edited_version', image_id=image.id) }}" class="btn btn-solid" style="font-size:14px;">Upload Edited Version</a>
+      {% endif %}
       <button onclick="document.getElementById('delete-modal').classList.add('open')" class="btn btn-danger">Delete</button>
     </div>
   </div>
@@ -511,7 +514,23 @@
       {% endif %}
     </div>
     {% if image.status == 'scored' and not image.is_flagged and not image.needs_review %}
-    <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
+      {# ── Other versions ─────────────────────────────────────────────── #}
+  {% set _siblings = [] %}
+  {% if image.parent_image_id or image.id %}
+    {% set _root_id = image.parent_image_id or image.id %}
+  {% endif %}
+
+  {# ── Version indicator on this image ──────────────────────────── #}
+  {% if image.parent_image_id and current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
+  <div style="margin:0 0 16px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);font-size:14px;color:var(--text-primary);">
+    <span style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);">Edited Version</span>
+    &nbsp;·&nbsp; This is an edited version of
+    <a href="{{ url_for('image_detail', image_id=image.parent_image_id) }}" style="color:var(--gold);">the original</a>.
+    It is <strong>{{ 'public' if image.is_public else 'private' }}</strong>.
+  </div>
+  {% endif %}
+
+<a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
     {% endif %}
   </div>
 
