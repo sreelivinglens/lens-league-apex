@@ -243,8 +243,8 @@
         <ul style="margin:8px 0 0;padding-left:20px;line-height:2;">
           <li>Your edited version scores independently — it does not replace the original.</li>
           <li>It starts <strong>private</strong>. You decide if and when to make it public.</li>
-          <li>The <strong>highest-scoring version</strong> automatically counts toward your leaderboard ranking, regardless of which version is public.</li>
-          <li>Each edited version counts as a normal upload slot.</li>
+          <li>The <strong>highest-scoring version</strong> automatically counts toward your leaderboard ranking.</li>
+          <li>{% if version_num == 2 %}<strong>This edit is free</strong> — no upload slot used.{% else %}<strong>V{{ version_num }} costs 10 points</strong> or 1 upload slot. Points are deducted automatically if your balance allows.{% endif %}</li>
           <li>All previous versions are preserved — nothing is deleted.</li>
         </ul>
       </div>
