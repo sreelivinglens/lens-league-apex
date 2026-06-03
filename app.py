@@ -3848,7 +3848,6 @@ def recent_work():
     TODO: add pagination when photographer count grows beyond ~15.
     """
     try:
-        import random as _random
         _now_utc   = datetime.utcnow()
         _today_ist = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
         _window_start = (_today_ist - timedelta(days=7)) - _IST_OFFSET
@@ -3888,7 +3887,8 @@ def recent_work():
         if not images:
             images = _fetch_and_cap(None)
             app.logger.info('[recent_work] 7-day window empty — showing all-time')
-        _random.shuffle(images)
+        # Sort by scored_at descending (newest first) — no shuffle
+        images = sorted(images, key=lambda x: x.get('scored_at') or '', reverse=True)
         images = images[:48]
     except Exception as _e:
         app.logger.error(f'[recent_work] {_e}')
