@@ -87,6 +87,8 @@ class User(db.Model, UserMixin):
     tier_jump_last_checked_at = db.Column(db.DateTime, nullable=True)
     # v35 — re-engagement email tracking
     reengagement_sent_at      = db.Column(db.DateTime, nullable=True)
+    # Session 54 — lifetime upload counter (never decremented on delete)
+    total_uploads_ever        = db.Column(db.Integer, default=0, nullable=False)
 
     images = db.relationship('Image', backref='author', lazy=True)
 
