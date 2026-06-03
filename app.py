@@ -3903,8 +3903,10 @@ def upload_edited_version(image_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
             return jsonify({'status': 'processing', 'image_id': img.id})
 
-        flash(f'Edited version uploaded — scoring in progress. It is private until you choose to publish it.', 'success')
-        return redirect(url_for('image_detail', image_id=img.id))
+        # Redirect to dashboard — same pattern as normal upload (avoids session cookie drop)
+        # Image shows as "Scoring..." on dashboard until background thread completes
+        flash(f'Edited version (V{version_num}) uploaded and scoring — it will appear on your dashboard shortly. It starts private.', 'success')
+        return redirect(url_for('dashboard'))
 
     # GET — render the upload form
     # Fetch all existing versions for display
@@ -3936,7 +3938,28 @@ def image_detail(image_id):
             percentile_data = compute_percentile(float(img.score), genre=img.genre)
         except Exception as e:
             app.logger.warning(f'[percentile] {e}')
-    return render_template('image_detail.html', image=img, archetypes=ARCHETYPES, percentile=percentile_data)
+    # Fetch all versions of this image (siblings sharing same root)
+    _versions = []
+    _parent_img_id = None
+    try:
+        _pid_row = db.session.execute(
+            db.text("SELECT parent_image_id FROM images WHERE id = :iid"),
+            {'iid': img.id}
+        ).fetchone()
+        _parent_img_id = _pid_row[0] if _pid_row else None
+        _root_id = _parent_img_id or img.id
+        _ver_rows = db.session.execute(
+            db.text("SELECT id FROM images WHERE id = :rid OR parent_image_id = :rid ORDER BY id ASC"),
+            {'rid': _root_id}
+        ).fetchall()
+        _versions = [Image.query.get(r[0]) for r in _ver_rows if Image.query.get(r[0])]
+    except Exception as _ve:
+        app.logger.warning(f'[image_detail] versions fetch: {_ve}')
+
+    return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
+                           percentile=percentile_data,
+                           image_versions=_versions,
+                           parent_image_id=_parent_img_id)
 
 
 @app.route('/image/<int:image_id>/score', methods=['POST'])
