@@ -3704,20 +3704,44 @@ def upload_edited_version(image_id):
             flash('File type not supported.', 'error')
             return redirect(request.url)
 
-        # ── Upload quota check (same as normal upload, skip for admin/uat) ──
+        # ── Edit version quota ──────────────────────────────────────────────
+        # V2 (first edit) = FREE — no slot consumed
+        # V3+ = costs 1 upload slot OR 10 points if balance available
+        # Admin and UAT always free
         _plan = getattr(current_user, 'subscription_plan', None) or ''
-        if current_user.role != 'admin' and _plan not in ('beta', 'uat'):
+        _edit_version_count = db.session.execute(
+            db.text("SELECT COUNT(*) FROM images WHERE parent_image_id = :rid"),
+            {'rid': root_id}
+        ).scalar() or 0
+        # _edit_version_count = number of existing edits (not counting the root)
+        # 0 = this will be V2 (first edit) = free
+        # 1+ = this will be V3+ = costs slot or points
+        if current_user.role != 'admin' and _plan not in ('beta', 'uat') and _edit_version_count >= 1:
             from datetime import date as _date
             today   = _date.today()
             _track  = getattr(current_user, 'subscription_track', None) or ''
             _is_sub = getattr(current_user, 'is_subscribed', False)
-            if not _is_sub:
+            _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+            _EDIT_PTS_COST = 10
+
+            # Try points redemption first if balance available
+            if _pts_bal >= _EDIT_PTS_COST:
+                try:
+                    db.session.execute(
+                        db.text("UPDATE users SET points_balance = points_balance - :cost WHERE id = :uid"),
+                        {'cost': _EDIT_PTS_COST, 'uid': current_user.id}
+                    )
+                    db.session.commit()
+                    app.logger.info(f'[upload_edit] V{_edit_version_count+2} redeemed {_EDIT_PTS_COST}pts user={current_user.id}')
+                except Exception as _pe:
+                    app.logger.error(f'[upload_edit] points deduct failed: {_pe}')
+            elif not _is_sub:
                 _lifetime = getattr(current_user, 'total_uploads_ever', None)
                 if _lifetime is None:
                     _lifetime = Image.query.filter(Image.user_id == current_user.id).count()
                 _bonus = getattr(current_user, 'referral_bonus_uploads', 0) or 0
                 if _lifetime >= (FREE_IMAGE_LIMIT + _bonus):
-                    flash('You have used your free assessments. Subscribe to upload edited versions.', 'warning')
+                    flash('You have used your free assessments. Earn points by rating peers to unlock more edits (10 pts each).', 'warning')
                     return redirect(url_for('image_detail', image_id=image_id))
             elif _track in ('mobile', 'camera', 'learning'):
                 month_start = datetime(today.year, today.month, 1)
@@ -3727,8 +3751,9 @@ def upload_edited_version(image_id):
                 ).count()
                 limits = {'mobile': 8, 'camera': 5, 'learning': 12}
                 if month_count >= limits.get(_track, 5):
-                    flash(f'You have used all your {_track.title()} images for this month.', 'warning')
-                    return redirect(url_for('image_detail', image_id=image_id))
+                    if _pts_bal < _EDIT_PTS_COST:
+                        flash(f'Monthly upload limit reached. Earn 10 points by rating peers to unlock this edit.', 'warning')
+                        return redirect(url_for('image_detail', image_id=image_id))
 
         # ── Determine version number ──
         sibling_count = db.session.execute(
