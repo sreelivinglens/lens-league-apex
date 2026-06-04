@@ -15453,10 +15453,10 @@ def aea():
     today = date.today()
     if year == 2026:
         enrol_open  = date(2026, 12, 1)
-        enrol_close = date(2027, 1, 15)
+        enrol_close = date(2026, 12, 31)
     else:
         enrol_open  = date(year, 12, 1)
-        enrol_close = date(year + 1, 1, 15)
+        enrol_close = date(year, 12, 31)
 
     window_open = enrol_open <= today <= enrol_close
     is_free = (
@@ -15527,10 +15527,10 @@ def aea_enrol():
     today = date.today()
     if year == 2026:
         enrol_open  = date(2026, 12, 1)
-        enrol_close = date(2027, 1, 15)
+        enrol_close = date(2026, 12, 31)
     else:
         enrol_open  = date(year, 12, 1)
-        enrol_close = date(year + 1, 1, 15)
+        enrol_close = date(year, 12, 31)
     if not (enrol_open <= today <= enrol_close):
         flash('Participation is not open at this time.')
         return redirect(url_for('aea'))
