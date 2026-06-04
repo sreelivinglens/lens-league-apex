@@ -1769,7 +1769,7 @@
       <div class="db-hcard-hdr-txt" style="flex:1;">
         <span class="db-hcard-hdr-lbl">Annual Excellence Award</span>
         <span class="db-hcard-hdr-title">Annual Excellence Award</span>
-        <span class="db-hcard-hdr-sub">Shoot at least once a month — your best image each month counts toward your Annual Excellence Award standing.</span>
+        <span class="db-hcard-hdr-sub">Shoot at least once a month — each active month counts toward your Annual Excellence Award eligibility.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
     </div>
@@ -1916,7 +1916,7 @@
    Facts:
    - Any scored public image = you appear on League of Photographers immediately
    - 6 scored images in a genre = genre average shows on LOP
-   - Shoot at least 1 image/month in a genre to qualify for Annual Excellence Award
+   - Shoot at least 1 image/month to become eligible for Annual Excellence Award
    - 6-month residency clock = internal standing quality signal only, not a gate
 ───────────────────────────────────────────────────────────────────────────── #}
 
@@ -1952,8 +1952,8 @@
 <section class="rp-card" aria-label="Your path to your standing">
 <style>
 .rp-card {
-  background: #F5F0E8;
-  border: 1px solid #E0D8C8;
+  background: #F2F6FD;
+  border: 1px solid #D0DCEE;
   border-radius: var(--radius-md);
   padding: 24px 28px;
   margin: 0 0 28px;
@@ -1965,7 +1965,7 @@
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #6A6458;
+  color: #7090B8;
   margin: 0 0 4px;
 }
 .rp-card .rp-title {
@@ -1981,7 +1981,7 @@
   gap: 14px;
   align-items: flex-start;
   padding: 14px 0;
-  border-bottom: 1px solid #E0D8C8;
+  border-bottom: 1px solid #D8E4F2;
 }
 .rp-card .rp-step:last-child { border-bottom: none; padding-bottom: 0; }
 .rp-card .rp-icon {
@@ -2007,7 +2007,7 @@
   text-transform: uppercase;
   margin: 0 0 4px;
   line-height: 1.4;
-  color: #6A6458;
+  color: #7090B8;
 }
 .rp-card .rp-label.done     { color: #1A1A18; }
 .rp-card .rp-label.active   { color: #1A1A18; }
@@ -2144,7 +2144,7 @@
     <div class="rp-step">
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
-        <p class="rp-label upcoming">Shoot monthly → qualify for Annual Excellence Award</p>
+        <p class="rp-label upcoming">Shoot every month — every month counts</p>
         <p class="rp-desc">Your best 6 scores in a genre form your Annual Excellence Award participation score.</p>
       </div>
     </div>
@@ -2212,8 +2212,8 @@
     <div class="rp-step">
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
-        <p class="rp-label upcoming">Shoot monthly → qualify for Annual Excellence Award</p>
-        <p class="rp-desc">Your best image each month counts — one score per month, any genre. Shoot across 6 months and your top 6 monthly scores qualify you for the Annual Excellence Award. Genre specialist or all-rounder — your choice.</p>
+        <p class="rp-label upcoming">Shoot every month — every month counts</p>
+        <p class="rp-desc">Shoot at least once every month — each active month counts. Get 6 active months in a season and you become eligible for the Annual Excellence Award. Genre specialist or all-rounder — your choice.</p>
       </div>
     </div>
   </div>
@@ -2235,13 +2235,13 @@
     <div class="rp-step">
       <div class="rp-icon active">3</div>
       <div class="rp-body">
-        <p class="rp-label active">Shoot monthly → qualify for Annual Excellence Award</p>
+        <p class="rp-label active">Shoot every month — every month counts</p>
         {% if _best_row %}
           {% set _pct = [(_best_count / 24 * 100)|int, 100]|min %}
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
-          <p class="rp-bar-label">{{ _best_count }} scored image{{ "s" if _best_count != 1 }} in <strong>{{ _best_genre }}</strong> this year — your best per month counts</p>
+          <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
         {% endif %}
-        <p class="rp-desc active">Your best image each month counts — one per month, any genre. Your top 6 monthly scores across the year count toward your Annual Excellence Award standing. Shoot consistently in <strong>{{ _best_genre }}</strong> or across genres — your 6 best months are what qualify you.</p>
+        <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} this season. Keep shooting every month — each active month brings you closer to being considered for the Annual Excellence Award. You need 6 active months in a season to be eligible.</p>
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
     </div>
