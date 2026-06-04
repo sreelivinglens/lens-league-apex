@@ -250,14 +250,14 @@ if uri and uri.startswith('postgres://'):
 # ---------------------------------------------------------------------------
 PLATFORM_NAME    = os.getenv('PLATFORM_NAME',    'Shutter League')
 TERMS_VERSION    = 'v1'   # bump this whenever T&C page is updated
-CONTACT_EMAIL    = os.getenv('CONTACT_EMAIL',    'info@shutterleague.com')
+CONTACT_EMAIL    = os.getenv('CONTACT_EMAIL',    'support@shutterleague.com')
 ADMIN_EMAIL      = os.getenv('ADMIN_EMAIL',      'admin@shutterleague.com')
 ADMIN_NOTIFY_EMAIL = os.getenv('ADMIN_NOTIFY_EMAIL', 'admin@shutterleague.com')
 
 # Startup warnings for missing critical env vars
 _REQUIRED_ENV_VARS = [
     ('BREVO_API_KEY',       'emails will not send'),
-    ('CONTACT_EMAIL',       'falling back to info@shutterleague.com'),
+    ('CONTACT_EMAIL',       'falling back to support@shutterleague.com'),
     ('ADMIN_EMAIL',         'falling back to admin@shutterleague.com'),
     ('ADMIN_NOTIFY_EMAIL',  'falling back to admin@shutterleague.com'),
     ('RAZORPAY_KEY_ID',     'payments will not work'),
@@ -2871,14 +2871,14 @@ def upload():
                 return jsonify({'error': True, 'message':
                     f'A similar image already exists in your uploads ("{ex.asset_name or ex.original_filename}"). '
                     'Please delete the previous version and upload a fresh image, or submit a different photograph. '
-                    'If you feel this image is not similar, write to us at info@shutterleague.com and we will review it.'
+                    'If you feel this image is not similar, write to us at support@shutterleague.com and we will review it.'
                 }), 409
             elif ex.user_id != current_user.id and sim >= 98.0:
                 if os.path.exists(thumb_path): os.remove(thumb_path)
                 return jsonify({'error': True, 'message':
                     'We were unable to accept this image. Our system has detected that it may be identical to a photograph already in our database. '
                     'Please ensure you are submitting your own original work. '
-                    'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
+                    'If you believe this is an error, contact support@shutterleague.com and we will review it promptly.'
                 }), 409
 
         # Blocklist check — reject known confirmed AI images
@@ -2889,7 +2889,7 @@ def upload():
                 return jsonify({'error': True, 'message':
                     'We were unable to accept this image. '
                     'Please ensure you are submitting your own original work. '
-                    'If you believe this is an error, contact info@shutterleague.com and we will review it promptly.'
+                    'If you believe this is an error, contact support@shutterleague.com and we will review it promptly.'
                 }), 409
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
@@ -7286,10 +7286,10 @@ def contact():
                 '<p style="font-size:14px;color:#1A1A18;font-weight:700;margin:0 0 6px 0;">Your message:</p>'
                 f'<p style="font-size:14px;color:#555555;margin:0;font-style:italic;line-height:1.7;">' + message.replace('\n', '<br>') + '</p>'
                 '</div>'
-                '<p style="font-size:14px;color:#888888;margin:0;">If your query is urgent, you can also reach us directly at <a href="mailto:info@shutterleague.com" style="color:#F5C518;">info@shutterleague.com</a>.</p>'
+                '<p style="font-size:14px;color:#888888;margin:0;">If your query is urgent, you can also reach us directly at <a href="mailto:support@shutterleague.com" style="color:#F5C518;">support@shutterleague.com</a>.</p>'
                 '</div>'
                 '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-                '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+                '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
                 '</div>'
                 '</div>'
             )
@@ -7297,7 +7297,7 @@ def contact():
                 f'Hi {name},\n\n'
                 'Thank you for writing in. We have received your message and will respond within 3 working days.\n\n'
                 f'Your message:\n{message}\n\n'
-                'If urgent: info@shutterleague.com\n\n-- Shutter League'
+                'If urgent: support@shutterleague.com\n\n-- Shutter League'
             )
             try:
                 send_email(email, f'We received your message — Shutter League', _ar_html, _ar_text)
@@ -8929,7 +8929,7 @@ def bulk_upload():
                         if ex.user_id == current_user.id:
                             result_row['status'] = f'duplicate: already uploaded as "{ex.asset_name or ex.original_filename}"'
                         else:
-                            result_row['status'] = 'unable to accept: image may already exist in our database — contact info@shutterleague.com if you believe this is an error'
+                            result_row['status'] = 'unable to accept: image may already exist in our database — contact support@shutterleague.com if you believe this is an error'
                         duplicate_found = True
                         if os.path.exists(thumb_path): os.remove(thumb_path)
                         break
@@ -11094,7 +11094,7 @@ def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, ass
             '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;"><strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously — enabling RAW+JPEG Fine in your camera settings means every future frame is automatically eligible for contest qualifying rounds and the Photographer of the Year award without any extra steps.</p>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
@@ -11133,7 +11133,7 @@ def _send_jpeg_provenance_approved_email(user_email, user_name, asset_name, scor
             '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;">For future submissions, enabling RAW+JPEG Fine on your camera means verification is automatic — no extra steps required.</p>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
@@ -11229,7 +11229,7 @@ def _auto_approve_jpeg_provenance(image_id, submission_id):
                         '</div>'
                         f'<a href="{_submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0;">Resubmit Original File &#8594;</a>'
                         '</div><div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-                        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League · info@shutterleague.com</p>'
+                        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League · support@shutterleague.com</p>'
                         '</div></div>'
                     )
                     send_email(_email, 'Resubmission Required — Original JPEG Needed', _html,
@@ -11503,7 +11503,7 @@ def admin_contact_reply(msg_id):
         '</div>'
         '</div>'
         '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+        '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
         '</div>'
         '</div>'
     )
@@ -14320,7 +14320,7 @@ def send_welcome_email(user):
         ' accepted on ' + accepted_date + '.</p>'
         '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
         'Questions? Reply to this email or write to '
-        '<a href="mailto:info@shutterleague.com" style="color:#C8A84B;">info@shutterleague.com</a>'
+        '<a href="mailto:support@shutterleague.com" style="color:#C8A84B;">support@shutterleague.com</a>'
         ' &#8212; <a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a></p>'
         '</td></tr>'
     )
@@ -14369,7 +14369,7 @@ def send_welcome_email(user):
         'Upload 3 images. Your shadow rank is revealed after image 3.\n'
         'Upload now: ' + upload_url + '\n\n'
         'Agreement confirmed: Member Agreement & Terms accepted on ' + accepted_date + '.\n'
-        'Questions? info@shutterleague.com\n'
+        'Questions? support@shutterleague.com\n'
         'shutterleague.com'
     )
     if send_email(user.email, 'Welcome to Shutter League — you are in', html_body, text_body):
@@ -14877,7 +14877,7 @@ def admin_subscription_broadcast():
             f'<a href="{_subscribe_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:4px 0 8px 0;">Subscribe Now &#8594;</a>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
-            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; info@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
+            '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
             '</div>'
             '</div>'
         )
