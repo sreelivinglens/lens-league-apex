@@ -505,6 +505,15 @@
     padding: 3px 8px; border-radius: 3px; z-index: 2;
     pointer-events: none;
   }
+  .db-edited-badge {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(0,0,0,0.75); color: #fff;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; z-index: 2;
+    border: 1px solid rgba(255,255,255,0.35);
+    pointer-events: none;
+  }
 
   .db-img-body { padding: 10px 10px 11px; }
   .db-img-title {
@@ -2310,6 +2319,9 @@
               {% endif %}
               {% if img.tier %}
               <span class="db-img-tier">{{ img.tier }}</span>
+              {% endif %}
+              {% if img.id in edited_ids %}
+              <span class="db-edited-badge">EDITED</span>
               {% endif %}
               {% if img.raw_verification_required and not img.raw_verified and not img.raw_disqualified %}
               <span class="db-raw-pill">RAW DUE</span>
