@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "glossary_links.html" import glink %}
-{% block title %}League of Photographers — {{ platform_name }}{% endblock %}
+{% block title %}Programme Standings — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -403,8 +403,8 @@ a.lb-page-btn:focus-visible {
 <div class="lb-wrap">
 
   <div class="lb-header">
-    <h1>League of Photographers</h1>
-    <p class="lb-sub">Ranked by {{ glink("DDI")|safe }} score · updated on every rescore</p>
+    <h1>Programme Standings</h1>
+    <p class="lb-sub">Positioned by {{ glink("DDI")|safe }} score · updated on every rescore</p>
   </div>
 
   <div class="score-notice">
@@ -423,9 +423,9 @@ a.lb-page-btn:focus-visible {
       </div>
     </div>
     <div class="lb-filter-group">
-      <label>League</label>
+      <label>Plan</label>
       <div class="lb-pills">
-        {% for val, label in [('all','All Leagues'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
+        {% for val, label in [('all','All Plans'),('camera','📷 Camera'),('mobile','📱 Mobile')] %}
         <a href="?tab={{ tab }}&period={{ period }}&genre={{ genre }}&tier={{ tier }}&track={{ val }}&city={{ city }}"
            class="lb-pill {% if track == val %}active{% endif %}">{{ label }}</a>
         {% endfor %}
