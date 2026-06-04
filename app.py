@@ -947,12 +947,9 @@ with app.app_context():
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             """))
-            # Session 59: ensure genre column exists (table may already exist from S58)
             db.session.execute(db.text(
                 "ALTER TABLE poty_entries ADD COLUMN IF NOT EXISTS genre VARCHAR(64)"
             ))
-            # Session 59: drop old single-track unique index, replace with genre-aware one
-            # This allows one entry per genre per track per season (multi-genre entries)
             db.session.execute(db.text(
                 "DROP INDEX IF EXISTS uq_poty_entries_user_year_track"
             ))
@@ -2595,16 +2592,23 @@ def dashboard():
             app.logger.warning(f'[dashboard] version_map: {_ve}')
 
     # ── Annual Excellence Award — months active this season ──────────────────
+    # 2026 shortened season: Sep 1 – Dec 31. All other years: Jan 1 – Dec 31.
     try:
-        _season_start = datetime(datetime.utcnow().year, 1, 1)
+        _now = datetime.utcnow()
+        if _now.year == 2026:
+            _season_start = datetime(2026, 9, 1)
+        else:
+            _season_start = datetime(_now.year, 1, 1)
         _months_active = db.session.execute(db.text(
             "SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at)) "
             "FROM images WHERE user_id = :uid AND is_public = TRUE "
             "AND created_at >= :season_start AND score IS NOT NULL"
         ), {'uid': current_user.id, 'season_start': _season_start}).scalar() or 0
+        _season_start_label = '1 Sep 2026' if _now.year == 2026 else '1 Jan'
     except Exception as _mae:
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
+        _season_start_label = '1 Sep 2026'
 
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
@@ -2625,7 +2629,8 @@ def dashboard():
                            referral_stats=get_referral_stats(current_user),
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
                            referred_discount=_ref_discount,
-                           _months_active=_months_active)
+                           _months_active=_months_active,
+                           _season_start_label=_season_start_label)
 
 
 # ---------------------------------------------------------------------------
@@ -15514,13 +15519,11 @@ def aea_enrol():
         flash('Please select exactly 6 images.')
         return redirect(url_for('aea'))
 
-    # Server-side eligibility re-check
     elig = _aea_eligibility(current_user.id, year)
     if not elig['eligible']:
         flash(elig['reason'])
         return redirect(url_for('aea'))
 
-    # Participation window check
     today = date.today()
     if year == 2026:
         enrol_open  = date(2026, 12, 1)
@@ -15532,7 +15535,6 @@ def aea_enrol():
         flash('Participation is not open at this time.')
         return redirect(url_for('aea'))
 
-    # Duplicate check
     dupe = db.session.execute(db.text("""
         SELECT id FROM poty_entries
         WHERE user_id = :uid AND year = :yr AND track = :tr
@@ -15543,14 +15545,12 @@ def aea_enrol():
         flash(f'You already have a participation registered for this track{genre_label}.')
         return redirect(url_for('aea'))
 
-    # Validate all images are in eligible pool
     pool_ids = {img['id'] for img in elig['image_pool']}
     for iid in image_ids:
         if iid not in pool_ids:
             flash('One or more selected images are not eligible.')
             return redirect(url_for('aea'))
 
-    # Overall: enforce >=3 distinct genres
     if track == 'overall':
         genre_check = db.session.execute(db.text("""
             SELECT DISTINCT genre FROM images
@@ -15565,7 +15565,6 @@ def aea_enrol():
             )
             return redirect(url_for('aea'))
 
-    # Fetch scores — frozen at submission time per spec
     score_rows = db.session.execute(db.text("""
         SELECT id, score FROM images
         WHERE id = ANY(:ids) AND user_id = :uid AND score IS NOT NULL
@@ -15609,7 +15608,6 @@ def aea_enrol():
             VALUES (:eid, :iid, :pos, :score)
         """), {'eid': entry_id, 'iid': iid, 'pos': pos + 1, 'score': score_map[iid]})
 
-    # Mark images as used this year — raw SQL (poty_used_year NOT in ORM)
     for iid in image_ids:
         db.session.execute(db.text(
             "UPDATE images SET poty_used_year = :yr WHERE id = :iid"
