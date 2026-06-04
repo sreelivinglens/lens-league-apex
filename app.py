@@ -930,7 +930,7 @@ with app.app_context():
         except Exception as ce:
             print(f'raw_submissions migration warning: {ce}')
 
-        # ── Annual Excellence Award migrations (Session 58) ───────────────────
+        # ── Annual Excellence Award migrations (Session 58 + 59) ─────────────
         try:
             db.session.execute(db.text("""
                 CREATE TABLE IF NOT EXISTS poty_entries (
@@ -938,18 +938,27 @@ with app.app_context():
                     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                     year INTEGER NOT NULL,
                     track VARCHAR(20) NOT NULL,
-                    genre VARCHAR(50),
+                    genre VARCHAR(64),
                     entry_images JSON,
                     entry_score NUMERIC(4,2),
                     submitted_at TIMESTAMP,
-                    status VARCHAR(20) DEFAULT 'enrolled',
+                    status VARCHAR(20) DEFAULT 'submitted',
                     subscription_status VARCHAR(20),
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             """))
+            # Session 59: ensure genre column exists (table may already exist from S58)
             db.session.execute(db.text(
-                "CREATE UNIQUE INDEX IF NOT EXISTS uq_poty_entries_user_year_track "
-                "ON poty_entries (user_id, year, track)"
+                "ALTER TABLE poty_entries ADD COLUMN IF NOT EXISTS genre VARCHAR(64)"
+            ))
+            # Session 59: drop old single-track unique index, replace with genre-aware one
+            # This allows one entry per genre per track per season (multi-genre entries)
+            db.session.execute(db.text(
+                "DROP INDEX IF EXISTS uq_poty_entries_user_year_track"
+            ))
+            db.session.execute(db.text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_poty_entries_user_year_track_genre "
+                "ON poty_entries (user_id, year, track, COALESCE(genre, ''))"
             ))
             db.session.commit()
             print('poty_entries table OK.')
@@ -15312,6 +15321,302 @@ def run_mentor_reminders():
             app.logger.error(f'[mentor_reminder] Fatal error: {e}')
         finally:
             db.session.remove()  # v34: release session to pool cleanly, prevents WARNING flood
+
+
+# ---------------------------------------------------------------------------
+# Annual Excellence Award
+# ---------------------------------------------------------------------------
+
+def _aea_eligibility(user_id, year):
+    """
+    Returns eligibility dict for the AEA.
+    Keys: eligible, qualifying_months, required_months, active_plan,
+          reason, season_start, season_end, image_pool.
+    Rules:
+      - 2026 shortened season: Sep 1 – Dec 31 2026; all other years Jan 1 – Dec 31
+      - Lenient Dec 31: images uploaded before midnight count once scored
+      - Image pool = full platform history minus images locked to a DIFFERENT year
+      - Scores frozen at submission time (handled in enrol route)
+    """
+    if year == 2026:
+        season_start = date(2026, 9, 1)
+    else:
+        season_start = date(year, 1, 1)
+    season_end = date(year, 12, 31)
+    # Lenient: include day after Dec 31 to catch uploads before midnight
+    season_end_excl = date(year + 1, 1, 1)
+
+    user = db.session.get(User, user_id)
+    active_plan = (user.subscription_status in ('mobile', 'camera')) if user else False
+
+    qm_sql = db.text("""
+        SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
+        FROM images
+        WHERE user_id = :uid
+          AND is_public = TRUE
+          AND score IS NOT NULL
+          AND created_at >= :season_start
+          AND created_at < :season_end_excl
+    """)
+    qualifying_months = db.session.execute(qm_sql, {
+        'uid': user_id,
+        'season_start': season_start,
+        'season_end_excl': season_end_excl,
+    }).scalar() or 0
+
+    required_months = 6
+
+    pool_sql = db.text("""
+        SELECT i.id, i.asset_name, i.score, i.genre,
+               DATE_TRUNC('month', i.created_at)::date AS month,
+               i.poty_used_year
+        FROM images i
+        WHERE i.user_id = :uid
+          AND i.is_public = TRUE
+          AND i.score IS NOT NULL
+          AND (i.poty_used_year IS NULL OR i.poty_used_year = :year)
+        ORDER BY i.score DESC, i.created_at DESC
+    """)
+    pool_rows = db.session.execute(pool_sql, {'uid': user_id, 'year': year}).fetchall()
+    image_pool = [
+        {
+            'id': r[0],
+            'asset_name': r[1],
+            'score': float(r[2]) if r[2] else None,
+            'genre': r[3] or 'Uncategorised',
+            'month': r[4].strftime('%b %Y') if r[4] else '',
+            'poty_used_year': r[5],
+        }
+        for r in pool_rows
+    ]
+
+    eligible = active_plan and qualifying_months >= required_months
+
+    if not active_plan:
+        reason = 'An active Mobile or Camera plan is required to participate.'
+    elif qualifying_months < required_months:
+        months_needed = required_months - qualifying_months
+        reason = (
+            f'You have {qualifying_months} qualifying month'
+            f'{"s" if qualifying_months != 1 else ""} this season '
+            f'({required_months} required). '
+            f'{months_needed} more month{"s" if months_needed != 1 else ""} needed.'
+        )
+    else:
+        reason = ''
+
+    return {
+        'eligible': eligible,
+        'qualifying_months': qualifying_months,
+        'required_months': required_months,
+        'active_plan': active_plan,
+        'reason': reason,
+        'season_start': season_start.strftime('%-d %b %Y'),
+        'season_end': season_end.strftime('%-d %b %Y'),
+        'image_pool': image_pool,
+    }
+
+
+@app.route('/aea')
+@login_required
+def aea():
+    year = date.today().year
+    elig = _aea_eligibility(current_user.id, year)
+
+    existing_rows = db.session.execute(db.text("""
+        SELECT id, track, genre, entry_score, status, submitted_at
+        FROM poty_entries
+        WHERE user_id = :uid AND year = :yr
+        ORDER BY submitted_at DESC
+    """), {'uid': current_user.id, 'yr': year}).fetchall()
+
+    existing = [
+        {
+            'id': r[0],
+            'track': r[1],
+            'genre': r[2],
+            'entry_score': float(r[3]) if r[3] else None,
+            'status': r[4],
+            'submitted_at': r[5].strftime('%-d %b %Y') if r[5] else '',
+        }
+        for r in existing_rows
+    ]
+
+    today = date.today()
+    if year == 2026:
+        enrol_open  = date(2026, 12, 1)
+        enrol_close = date(2027, 1, 31)
+    else:
+        enrol_open  = date(year, 12, 1)
+        enrol_close = date(year + 1, 1, 31)
+
+    window_open = enrol_open <= today <= enrol_close
+    is_free = current_user.subscription_status in ('mobile', 'camera')
+
+    genre_rows = db.session.execute(db.text("""
+        SELECT DISTINCT genre FROM images
+        WHERE user_id = :uid
+          AND genre IS NOT NULL AND genre != ''
+          AND is_public = TRUE AND score IS NOT NULL
+        ORDER BY genre
+    """), {'uid': current_user.id}).fetchall()
+    available_genres = [r[0] for r in genre_rows]
+
+    entered_genres = {e['genre'] for e in existing if e['track'] == 'genre'}
+    has_overall_entry = any(e['track'] == 'overall' for e in existing)
+
+    return render_template('aea.html',
+        elig=elig,
+        existing=existing,
+        window_open=window_open,
+        enrol_open=enrol_open.strftime('%-d %b %Y'),
+        enrol_close=enrol_close.strftime('%-d %b %Y'),
+        is_free=is_free,
+        available_genres=available_genres,
+        entered_genres=entered_genres,
+        has_overall_entry=has_overall_entry,
+        year=year,
+    )
+
+
+@app.route('/aea/enrol', methods=['POST'])
+@login_required
+def aea_enrol():
+    year = date.today().year
+    track = request.form.get('track', '').strip().lower()
+    genre = request.form.get('genre', '').strip() or None
+    image_ids_raw = request.form.getlist('image_ids')
+
+    if track not in ('genre', 'overall'):
+        flash('Invalid track selected.')
+        return redirect(url_for('aea'))
+
+    if track == 'genre' and not genre:
+        flash('Please select a genre for your Genre participation.')
+        return redirect(url_for('aea'))
+
+    if track == 'overall':
+        genre = None
+
+    try:
+        image_ids = [int(i) for i in image_ids_raw]
+    except (ValueError, TypeError):
+        flash('Invalid image selection.')
+        return redirect(url_for('aea'))
+
+    if len(image_ids) != 6:
+        flash('Please select exactly 6 images.')
+        return redirect(url_for('aea'))
+
+    # Server-side eligibility re-check
+    elig = _aea_eligibility(current_user.id, year)
+    if not elig['eligible']:
+        flash(elig['reason'])
+        return redirect(url_for('aea'))
+
+    # Participation window check
+    today = date.today()
+    if year == 2026:
+        enrol_open  = date(2026, 12, 1)
+        enrol_close = date(2027, 1, 31)
+    else:
+        enrol_open  = date(year, 12, 1)
+        enrol_close = date(year + 1, 1, 31)
+    if not (enrol_open <= today <= enrol_close):
+        flash('Participation is not open at this time.')
+        return redirect(url_for('aea'))
+
+    # Duplicate check
+    dupe = db.session.execute(db.text("""
+        SELECT id FROM poty_entries
+        WHERE user_id = :uid AND year = :yr AND track = :tr
+          AND COALESCE(genre, '') = COALESCE(:genre, '')
+    """), {'uid': current_user.id, 'yr': year, 'tr': track, 'genre': genre}).fetchone()
+    if dupe:
+        genre_label = f' ({genre})' if genre else ''
+        flash(f'You already have a participation registered for this track{genre_label}.')
+        return redirect(url_for('aea'))
+
+    # Validate all images are in eligible pool
+    pool_ids = {img['id'] for img in elig['image_pool']}
+    for iid in image_ids:
+        if iid not in pool_ids:
+            flash('One or more selected images are not eligible.')
+            return redirect(url_for('aea'))
+
+    # Overall: enforce >=3 distinct genres
+    if track == 'overall':
+        genre_check = db.session.execute(db.text("""
+            SELECT DISTINCT genre FROM images
+            WHERE id = ANY(:ids) AND user_id = :uid
+              AND genre IS NOT NULL AND genre != ''
+        """), {'ids': image_ids, 'uid': current_user.id}).fetchall()
+        distinct_genres = [r[0] for r in genre_check]
+        if len(distinct_genres) < 3:
+            flash(
+                f'Your Overall participation must span at least 3 genres '
+                f'(you have {len(distinct_genres)}). Please adjust your selection.'
+            )
+            return redirect(url_for('aea'))
+
+    # Fetch scores — frozen at submission time per spec
+    score_rows = db.session.execute(db.text("""
+        SELECT id, score FROM images
+        WHERE id = ANY(:ids) AND user_id = :uid AND score IS NOT NULL
+    """), {'ids': image_ids, 'uid': current_user.id}).fetchall()
+    score_map = {r[0]: float(r[1]) for r in score_rows}
+
+    if len(score_map) != 6:
+        flash('One or more selected images have no DDI score yet.')
+        return redirect(url_for('aea'))
+
+    entry_score = sum(score_map.values()) / 6
+    sub_status  = current_user.subscription_status or 'none'
+
+    # TODO (pre-launch): add payment / points deduction here for non-subscribers
+
+    entry_images_json = json.dumps([
+        {'image_id': iid, 'position': pos + 1, 'score': score_map[iid]}
+        for pos, iid in enumerate(image_ids)
+    ])
+
+    result = db.session.execute(db.text("""
+        INSERT INTO poty_entries
+            (user_id, year, track, genre, entry_images, entry_score,
+             submitted_at, status, subscription_status, created_at)
+        VALUES
+            (:uid, :yr, :tr, :genre, :imgs::jsonb, :score,
+             :now, 'submitted', :sub_status, :now)
+        RETURNING id
+    """), {
+        'uid': current_user.id, 'yr': year, 'tr': track,
+        'genre': genre, 'imgs': entry_images_json,
+        'score': entry_score, 'now': datetime.utcnow(),
+        'sub_status': sub_status,
+    })
+    entry_id = result.fetchone()[0]
+
+    for pos, iid in enumerate(image_ids):
+        db.session.execute(db.text("""
+            INSERT INTO poty_entry_images
+                (entry_id, image_id, position, score_at_submission)
+            VALUES (:eid, :iid, :pos, :score)
+        """), {'eid': entry_id, 'iid': iid, 'pos': pos + 1, 'score': score_map[iid]})
+
+    # Mark images as used this year — raw SQL (poty_used_year NOT in ORM)
+    for iid in image_ids:
+        db.session.execute(db.text(
+            "UPDATE images SET poty_used_year = :yr WHERE id = :iid"
+        ), {'yr': year, 'iid': iid})
+
+    db.session.commit()
+
+    track_label = f'{genre} Genre' if track == 'genre' else 'Overall'
+    flash(
+        f'Your {track_label} participation has been registered. '
+        f'Average DDI score: {entry_score:.2f}'
+    )
+    return redirect(url_for('aea'))
 
 
 # ---------------------------------------------------------------------------
