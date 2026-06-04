@@ -1827,7 +1827,7 @@
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-poty" onclick="dbHcardToggle('poty')">
       {% if poty_tracker and poty_tracker.genre_rows %}
-      <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months this season</span>
+      <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months since {{ _season_start_label|default('1 Sep 2026') }}</span>
       {% else %}
       <span class="db-hcard-summary-txt">No activity yet this season<br><span style="font-size:16px;color:#FFFFFF;">Upload images to start building your Annual Excellence Award standing</span></span>
       {% endif %}
@@ -1846,11 +1846,9 @@
         <div class="db-poty-bw"><div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div></div>
       </div>
       {% endfor %}
-      <a href="{{ url_for('aea') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;margin-top:14px;display:inline-flex;align-items:center;">View eligibility &amp; register →</a>
       {% else %}
       <div style="font-size:16px;color:var(--text-primary);line-height:1.6;padding:4px 0 8px;">Get your images evaluated to start building your Annual Excellence Award standing. Your best 6 images from this season form your participation.</div>
       <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Upload an image →</a>
-      <a href="{{ url_for('aea') }}" style="display:block;margin-top:10px;font-size:14px;color:var(--text-primary);text-decoration:underline;text-underline-offset:3px;">View Annual Excellence Award eligibility →</a>
       {% endif %}
     </div>
   </div>
@@ -2293,9 +2291,9 @@
         {% if _best_row %}
           {% set _pct = [(_best_count / 24 * 100)|int, 100]|min %}
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
-          <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
+          <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active since {{ _season_start_label|default('1 Sep 2026') }} {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
         {% endif %}
-        <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} this season. Keep shooting every month — each active month brings you closer to being considered for the Annual Excellence Award. You need 6 active months in a season to be eligible.</p>
+        <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} since {{ _season_start_label|default('1 Sep 2026') }}. Keep shooting every month — each active month brings you closer to being considered for the Annual Excellence Award. You need 6 active months in a season to be eligible.</p>
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
     </div>
