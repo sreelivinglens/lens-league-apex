@@ -11646,6 +11646,22 @@ def admin_contact_unspam(msg_id):
     return redirect(url_for('admin_contact_inbox', spam='1'))
 
 
+@app.route('/admin/contact-inbox/<int:msg_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_delete(msg_id):
+    db.session.execute(db.text(
+        "DELETE FROM contact_messages WHERE id=:mid"
+    ), {'mid': msg_id})
+    db.session.commit()
+    flash('Message deleted.', 'success')
+    # Return to wherever the user came from — spam folder or inbox
+    came_from = request.form.get('came_from', '')
+    if came_from == 'spam':
+        return redirect(url_for('admin_contact_inbox', spam='1'))
+    return redirect(url_for('admin_contact_inbox'))
+
+
 # ---------------------------------------------------------------------------
 
 @app.route('/admin/raw-verification')
