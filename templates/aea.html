@@ -29,24 +29,24 @@
 }
 .aea-title {
     font-size: 28px; font-weight: 700;
-    color: #f0f0f0; margin: 0 0 6px; line-height: 1.2;
+    color: #1A1A18; margin: 0 0 6px; line-height: 1.2;
 }
-.aea-subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
+.aea-subtitle { font-size: 14px; color: #6A6458; margin: 0; }
 
 /* ── Season bar ── */
 .aea-season-bar {
     display: flex; gap: 24px; flex-wrap: wrap;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #F5F0E8;
+    border: 1px solid #E0D8C8;
     border-radius: 8px; padding: 16px 20px; margin-bottom: 28px;
 }
 .aea-season-item { display: flex; flex-direction: column; gap: 3px; }
 .aea-season-lbl {
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-muted);
+    color: #6A6458;
 }
-.aea-season-val { font-size: 14px; color: #f0f0f0; font-weight: 500; }
+.aea-season-val { font-size: 14px; color: #1A1A18; font-weight: 500; }
 
 /* ── Eligibility card ── */
 .aea-elig-card {
@@ -65,32 +65,32 @@
 .aea-elig-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .aea-elig-card.eligible .aea-elig-dot { background: #22c55e; }
 .aea-elig-card.ineligible .aea-elig-dot { background: #ef4444; }
-.aea-elig-status { font-size: 15px; font-weight: 600; color: #f0f0f0; }
-.aea-elig-reason { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.6; }
+.aea-elig-status { font-size: 15px; font-weight: 600; color: #1A1A18; }
+.aea-elig-reason { font-size: 14px; color: #6A6458; margin: 0; line-height: 1.6; }
 .aea-progress-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .aea-progress-bar {
-    flex: 1; height: 4px; background: rgba(255,255,255,0.1);
+    flex: 1; height: 4px; background: #E0D8C8;
     border-radius: 2px; overflow: hidden;
 }
 .aea-progress-fill { height: 100%; border-radius: 2px; background: #22c55e; }
 .aea-progress-fill.partial { background: #C8A84B; }
 .aea-progress-lbl {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: var(--text-muted); white-space: nowrap;
+    font-size: 12px; color: #6A6458; white-space: nowrap;
 }
 
 /* ── Window notice ── */
 .aea-window-notice {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #F7F5F2;
+    border: 1px solid #E0D8C8;
     border-radius: 8px; padding: 16px 20px; margin-bottom: 28px;
-    font-size: 14px; color: var(--text-muted); line-height: 1.6;
+    font-size: 14px; color: #6A6458; line-height: 1.6;
 }
-.aea-window-notice strong { color: #f0f0f0; }
+.aea-window-notice strong { color: #1A1A18; }
 
 /* ── Section title ── */
 .aea-section-title {
-    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    font-size: 12px; font-weight: 600; color: #6A6458;
     text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px;
 }
 
@@ -98,8 +98,8 @@
 .aea-participations-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
 .aea-participation-row {
     display: flex; align-items: center; gap: 14px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #F5F0E8;
+    border: 1px solid #E0D8C8;
     border-radius: 8px; padding: 14px 18px;
     /* 2-col layout within row */
     grid-template-columns: 1fr 1fr;
@@ -108,7 +108,7 @@
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #C8A84B; min-width: 72px;
 }
-.aea-participation-genre { font-size: 15px; color: #f0f0f0; font-weight: 500; flex: 1; }
+.aea-participation-genre { font-size: 15px; color: #1A1A18; font-weight: 500; flex: 1; }
 .aea-participation-score {
     font-family: 'Courier New', Courier, monospace;
     font-size: 13px; letter-spacing: 0.02em; color: #C8A84B; /* score display */
@@ -116,29 +116,29 @@
 .aea-participation-status {
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-muted);
+    color: #6A6458;
 }
 
 /* ── Track tabs ── */
 .aea-track-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
 .aea-track-tab {
     flex: 1; padding: 14px 16px;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid #D8D2C8;
     border-radius: 8px; background: transparent;
-    color: var(--text-muted);
+    color: #6A6458;
     font-size: 14px; font-weight: 500;
     cursor: pointer; text-align: left;
     transition: all 0.15s ease; position: relative;
     min-height: 44px;
 }
-.aea-track-tab:hover { border-color: rgba(200,168,75,0.4); color: #f0f0f0; }
+.aea-track-tab:hover { border-color: rgba(200,168,75,0.4); color: #1A1A18; }
 .aea-track-tab.active {
     border-color: #C8A84B;
-    background: rgba(200,168,75,0.08); color: #f0f0f0;
+    background: rgba(200,168,75,0.08); color: #1A1A18;
 }
 .aea-track-tab.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 .aea-track-name { display: block; font-weight: 600; margin-bottom: 3px; font-size: 15px; }
-.aea-track-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.aea-track-desc { font-size: 13px; color: #6A6458; line-height: 1.4; }
 .aea-track-tab.active .aea-track-desc { color: rgba(240,240,240,0.55); }
 .aea-done-badge {
     position: absolute; top: 10px; right: 10px;
@@ -153,14 +153,14 @@
 .aea-genre-row { margin-bottom: 20px; display: none; }
 .aea-genre-row.visible { display: block; }
 .aea-field-lbl {
-    display: block; font-size: 13px; color: var(--text-muted);
+    display: block; font-size: 13px; color: #6A6458;
     margin-bottom: 8px; font-weight: 500;
 }
 .aea-genre-select {
     width: 100%; max-width: 320px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 6px; color: #f0f0f0;
+    background: #FFFFFF;
+    border: 1px solid #D8D2C8;
+    border-radius: 6px; color: #1A1A18;
     font-size: 15px; padding: 10px 12px;
     appearance: none; cursor: pointer;
     min-height: 44px;
@@ -174,7 +174,7 @@
 }
 .aea-select-counter {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: var(--text-muted);
+    font-size: 12px; color: #6A6458;
 }
 .aea-select-counter .counter-val { letter-spacing: 0.02em; color: #C8A84B; font-weight: 600; /* score */ }
 
@@ -186,13 +186,13 @@
 }
 .aea-image-grid::-webkit-scrollbar { width: 4px; }
 .aea-image-grid::-webkit-scrollbar-track { background: transparent; }
-.aea-image-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+.aea-image-grid::-webkit-scrollbar-thumb { background: #E0D8C8; border-radius: 2px; }
 
 .aea-img-card {
     position: relative; border-radius: 7px; overflow: hidden;
     cursor: pointer; border: 2px solid transparent;
     transition: border-color 0.15s ease, transform 0.1s ease;
-    aspect-ratio: 1; background: rgba(255,255,255,0.04);
+    aspect-ratio: 1; background: #F5F0E8;
     min-height: 44px;
 }
 .aea-img-card:hover { transform: scale(1.02); border-color: rgba(200,168,75,0.4); }
@@ -226,10 +226,10 @@
 /* ── Genre spread (overall) ── */
 .aea-genre-spread {
     display: none;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #F7F5F2;
+    border: 1px solid #E0D8C8;
     border-radius: 6px; padding: 12px 16px; margin-bottom: 20px;
-    font-size: 13px; color: var(--text-muted);
+    font-size: 13px; color: #6A6458;
 }
 .aea-genre-spread.visible { display: block; }
 .aea-genre-spread-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -237,14 +237,14 @@
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
     padding: 3px 8px; border-radius: 3px;
-    border: 1px solid rgba(255,255,255,0.12); color: var(--text-muted);
+    border: 1px solid #D8D2C8; color: #6A6458;
 }
 .aea-genre-tag.met { border-color: rgba(34,197,94,0.4); color: #22c55e; }
 
 /* ── Fee row ── */
 .aea-fee-row {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 20px; font-size: 14px; color: var(--text-muted);
+    margin-bottom: 20px; font-size: 14px; color: #6A6458;
 }
 .aea-fee-free {
     font-family: 'Courier New', Courier, monospace;
@@ -275,7 +275,7 @@
 /* ── Empty pool ── */
 .aea-empty-pool {
     text-align: center; padding: 40px 20px;
-    color: var(--text-muted); font-size: 14px;
+    color: #6A6458; font-size: 14px;
 }
 
 /* ── Flash ── */
