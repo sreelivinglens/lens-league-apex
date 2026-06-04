@@ -332,7 +332,7 @@
         </div>
         <div class="aea-season-item">
             <span class="aea-season-lbl">Participation closes</span>
-            <span class="aea-season-val">15 Jan 2027</span>
+            <span class="aea-season-val">31 Dec 2026, 23:59 IST</span>
         </div>
         <div class="aea-season-item">
             <span class="aea-season-lbl">Titles announced</span>
@@ -367,10 +367,7 @@
     <!-- Window closed notice -->
     {% if not window_open %}
     <div class="aea-window-notice">
-        Participation for {{ year }} opens on <strong>{{ enrol_open }}</strong> and closes on <strong>{{ enrol_close }}</strong>.
-        {% if elig.eligible %}
-            Keep adding scored public images to build your pool before the window opens.
-        {% endif %}
+        Participation for {{ year }} opens on <strong>1 Dec {{ year }}</strong> and closes on <strong>31 Dec {{ year }} at 23:59 IST</strong>. You can submit the scored images for evaluation upto 15 Jan 23:59 hrs IST. Only scored images till 31 Dec count as qualifier.
     </div>
     {% endif %}
 
