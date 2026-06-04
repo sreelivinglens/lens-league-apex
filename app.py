@@ -2510,6 +2510,18 @@ def dashboard():
         except Exception as _ve:
             app.logger.warning(f'[dashboard] version_map: {_ve}')
 
+    # ── Annual Excellence Award — months active this season ──────────────────
+    try:
+        _season_start = datetime(datetime.utcnow().year, 1, 1)
+        _months_active = db.session.execute(db.text(
+            "SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at)) "
+            "FROM images WHERE user_id = :uid AND is_public = TRUE "
+            "AND created_at >= :season_start AND score IS NOT NULL"
+        ), {'uid': current_user.id, 'season_start': _season_start}).scalar() or 0
+    except Exception as _mae:
+        app.logger.warning(f'[dashboard] months_active: {_mae}')
+        _months_active = 0
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2528,7 +2540,8 @@ def dashboard():
                            referral_code=get_or_create_referral_code(current_user),
                            referral_stats=get_referral_stats(current_user),
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
-                           referred_discount=_ref_discount)
+                           referred_discount=_ref_discount,
+                           _months_active=_months_active)
 
 
 # ---------------------------------------------------------------------------
