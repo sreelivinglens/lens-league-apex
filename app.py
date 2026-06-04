@@ -15414,8 +15414,8 @@ def _aea_eligibility(user_id, year):
         'required_months': required_months,
         'active_plan': active_plan,
         'reason': reason,
-        'season_start': season_start.strftime('%-d %b %Y'),
-        'season_end': season_end.strftime('%-d %b %Y'),
+        'season_start': season_start.strftime('%d %b %Y').lstrip('0'),
+        'season_end': season_end.strftime('%d %b %Y').lstrip('0'),
         'image_pool': image_pool,
     }
 
@@ -15440,7 +15440,7 @@ def aea():
             'genre': r[2],
             'entry_score': float(r[3]) if r[3] else None,
             'status': r[4],
-            'submitted_at': r[5].strftime('%-d %b %Y') if r[5] else '',
+            'submitted_at': r[5].strftime('%d %b %Y').lstrip('0') if r[5] else '',
         }
         for r in existing_rows
     ]
@@ -15475,8 +15475,8 @@ def aea():
         elig=elig,
         existing=existing,
         window_open=window_open,
-        enrol_open=enrol_open.strftime('%-d %b %Y'),
-        enrol_close=enrol_close.strftime('%-d %b %Y'),
+        enrol_open=enrol_open.strftime('%d %b %Y').lstrip('0'),
+        enrol_close=enrol_close.strftime('%d %b %Y').lstrip('0'),
         is_free=is_free,
         available_genres=available_genres,
         entered_genres=entered_genres,
