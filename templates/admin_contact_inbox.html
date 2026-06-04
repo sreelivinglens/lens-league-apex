@@ -8,20 +8,20 @@
     <div>
       <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 4px 0;">ADMIN</p>
       <h1 style="color:#FFFFFF;font-size:20px;font-weight:700;margin:0;">
-        {% if show_spam %}Spam Folder{% else %}Contact Inbox{% endif %}
+        {% if show_spam is defined and show_spam %}Spam Folder{% else %}Contact Inbox{% endif %}
       </h1>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      {% if not show_spam %}
+      {% if not (show_spam is defined and show_spam) %}
       <span style="background:{% if unread > 0 %}#F5C518{% else %}#4A4840{% endif %};color:{% if unread > 0 %}#1A1A18{% else %}#FFFFFF{% endif %};font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:6px 16px;border-radius:4px;">
         {{ unread }} unread &middot; {{ messages|length }} total
       </span>
       {% endif %}
-      {% if show_spam %}
+      {% if show_spam is defined and show_spam %}
       <a href="{{ url_for('admin_contact_inbox') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">← Back to Inbox</a>
       {% else %}
       <a href="{{ url_for('admin_contact_inbox', spam='1') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">
-        🚫 Spam{% if spam_count > 0 %} ({{ spam_count }}){% endif %}
+        🚫 Spam{% if spam_count is defined and spam_count > 0 %} ({{ spam_count }}){% endif %}
       </a>
       {% endif %}
     </div>
@@ -29,7 +29,7 @@
 
   {% if not messages %}
   <div style="background:#FFFFFF;border:1px solid #E0D8C8;border-top:none;padding:40px;text-align:center;">
-    <p style="color:#888;font-size:16px;margin:0;">{% if show_spam %}No spam messages.{% else %}No contact messages yet.{% endif %}</p>
+    <p style="color:#888;font-size:16px;margin:0;">{% if show_spam is defined and show_spam %}No spam messages.{% else %}No contact messages yet.{% endif %}</p>
   </div>
   {% endif %}
 
@@ -46,7 +46,7 @@
         </p>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        {% if show_spam %}
+        {% if show_spam is defined and show_spam %}
         <span style="background:#FDECEA;color:#B71C1C;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">🚫 Spam</span>
         <form method="POST" action="{{ url_for('admin_contact_unspam', msg_id=msg.id) }}" style="display:inline;">
           <button type="submit" style="background:#E8F5E9;color:#3B6D11;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;white-space:nowrap;">↩ Restore</button>
@@ -78,7 +78,7 @@
     </div>
     {% endif %}
 
-    {% if not msg.replied and not show_spam %}
+    {% if not msg.replied and not (show_spam is defined and show_spam) %}
     <!-- Reply form -->
     <form method="POST" action="{{ url_for('admin_contact_reply', msg_id=msg.id) }}">
       <label style="display:block;font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:6px;letter-spacing:0.5px;">REPLY</label>
