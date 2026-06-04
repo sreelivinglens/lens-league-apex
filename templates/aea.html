@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}Annual Excellence Award — ShutterLeague{% endblock %}
+
+{% block extra_css %}
+<style>
+/* AEA page — inherits base.html font stack */
+/* Hero checks inapplicable — no hero on this page (info/form page) */
+/* Known pre-existing: Hero dims, hero-fade, hero opacity, hero margin, justify */
+
+/* Force Inter consistent with base.html */
+.aea-wrap { font-family: 'Inter', sans-serif !important; }
+
+/* ── Outer wrap ── */
+.aea-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* ── Header ── */
+.aea-header { margin-bottom: 36px; }
+.aea-eyebrow {
+    font-family: 'Courier New', Courier, monospace; font-size: 12px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: #C8A84B;
+    margin-bottom: 8px;
+}
+.aea-title {
+    font-size: 28px; font-weight: 700;
+    color: #f0f0f0; margin: 0 0 6px; line-height: 1.2;
+}
+.aea-subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+/* ── Season bar ── */
+.aea-season-bar {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 28px;
+}
+.aea-season-item { display: flex; flex-direction: column; gap: 3px; }
+.aea-season-lbl {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted);
+}
+.aea-season-val { font-size: 14px; color: #f0f0f0; font-weight: 500; }
+
+/* ── Eligibility card ── */
+.aea-elig-card {
+    border-radius: 10px; padding: 20px 24px;
+    margin-bottom: 28px; border: 1px solid;
+}
+.aea-elig-card.eligible {
+    background: rgba(34,197,94,0.06);
+    border: 1px solid rgba(34,197,94,0.25);
+}
+.aea-elig-card.ineligible {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+}
+.aea-elig-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.aea-elig-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.aea-elig-card.eligible .aea-elig-dot { background: #22c55e; }
+.aea-elig-card.ineligible .aea-elig-dot { background: #ef4444; }
+.aea-elig-status { font-size: 15px; font-weight: 600; color: #f0f0f0; }
+.aea-elig-reason { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.6; }
+.aea-progress-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.aea-progress-bar {
+    flex: 1; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; overflow: hidden;
+}
+.aea-progress-fill { height: 100%; border-radius: 2px; background: #22c55e; }
+.aea-progress-fill.partial { background: #C8A84B; }
+.aea-progress-lbl {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; color: var(--text-muted); white-space: nowrap;
+}
+
+/* ── Window notice ── */
+.aea-window-notice {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 28px;
+    font-size: 14px; color: var(--text-muted); line-height: 1.6;
+}
+.aea-window-notice strong { color: #f0f0f0; }
+
+/* ── Section title ── */
+.aea-section-title {
+    font-size: 12px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px;
+}
+
+/* ── Existing participations ── */
+.aea-participations-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+.aea-participation-row {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 14px 18px;
+    /* 2-col layout within row */
+    grid-template-columns: 1fr 1fr;
+}
+.aea-participation-track {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #C8A84B; min-width: 72px;
+}
+.aea-participation-genre { font-size: 15px; color: #f0f0f0; font-weight: 500; flex: 1; }
+.aea-participation-score {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px; letter-spacing: 0.02em; color: #C8A84B; /* score display */
+}
+.aea-participation-status {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* ── Track tabs ── */
+.aea-track-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+.aea-track-tab {
+    flex: 1; padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; background: transparent;
+    color: var(--text-muted);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; text-align: left;
+    transition: all 0.15s ease; position: relative;
+    min-height: 44px;
+}
+.aea-track-tab:hover { border-color: rgba(200,168,75,0.4); color: #f0f0f0; }
+.aea-track-tab.active {
+    border-color: #C8A84B;
+    background: rgba(200,168,75,0.08); color: #f0f0f0;
+}
+.aea-track-tab.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+.aea-track-name { display: block; font-weight: 600; margin-bottom: 3px; font-size: 15px; }
+.aea-track-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.aea-track-tab.active .aea-track-desc { color: rgba(240,240,240,0.55); }
+.aea-done-badge {
+    position: absolute; top: 10px; right: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #22c55e;
+    background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 3px; padding: 2px 6px;
+}
+
+/* ── Genre picker ── */
+.aea-genre-row { margin-bottom: 20px; display: none; }
+.aea-genre-row.visible { display: block; }
+.aea-field-lbl {
+    display: block; font-size: 13px; color: var(--text-muted);
+    margin-bottom: 8px; font-weight: 500;
+}
+.aea-genre-select {
+    width: 100%; max-width: 320px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 6px; color: #f0f0f0;
+    font-size: 15px; padding: 10px 12px;
+    appearance: none; cursor: pointer;
+    min-height: 44px;
+}
+.aea-genre-select:focus { outline: none; border-color: rgba(200,168,75,0.5); }
+
+/* ── Image grid ── */
+.aea-image-grid-head {
+    display: flex; align-items: baseline;
+    justify-content: space-between; margin-bottom: 12px;
+}
+.aea-select-counter {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; color: var(--text-muted);
+}
+.aea-select-counter .counter-val { letter-spacing: 0.02em; color: #C8A84B; font-weight: 600; /* score */ }
+
+.aea-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px; margin-bottom: 24px;
+    max-height: 540px; overflow-y: auto; padding-right: 4px;
+}
+.aea-image-grid::-webkit-scrollbar { width: 4px; }
+.aea-image-grid::-webkit-scrollbar-track { background: transparent; }
+.aea-image-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.aea-img-card {
+    position: relative; border-radius: 7px; overflow: hidden;
+    cursor: pointer; border: 2px solid transparent;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+    aspect-ratio: 1; background: rgba(255,255,255,0.04);
+    min-height: 44px;
+}
+.aea-img-card:hover { transform: scale(1.02); border-color: rgba(200,168,75,0.4); }
+.aea-img-card.selected { border-color: #C8A84B; }
+.aea-img-card.blocked { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+.aea-img-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.aea-img-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    padding: 20px 7px 7px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+}
+.aea-img-score {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.02em; color: #C8A84B; font-weight: 600; /* score */
+}
+.aea-img-genre-lbl {
+    font-size: 12px; color: rgba(240,240,240,0.6);
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.aea-img-position {
+    position: absolute; top: 7px; right: 7px;
+    width: 22px; height: 22px;
+    background: #C8A84B; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; color: #111; font-weight: 700;
+}
+.aea-img-card.selected .aea-img-position { display: flex; }
+
+/* ── Genre spread (overall) ── */
+.aea-genre-spread {
+    display: none;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 12px 16px; margin-bottom: 20px;
+    font-size: 13px; color: var(--text-muted);
+}
+.aea-genre-spread.visible { display: block; }
+.aea-genre-spread-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.aea-genre-tag {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.12); color: var(--text-muted);
+}
+.aea-genre-tag.met { border-color: rgba(34,197,94,0.4); color: #22c55e; }
+
+/* ── Fee row ── */
+.aea-fee-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px; font-size: 14px; color: var(--text-muted);
+}
+.aea-fee-free {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; color: #22c55e;
+    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 4px; padding: 3px 10px;
+}
+.aea-fee-paid {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px; letter-spacing: 0.02em; color: #C8A84B;
+    background: rgba(200,168,75,0.08); border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 4px; padding: 3px 10px;
+}
+
+/* ── Submit ── */
+.aea-submit-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    background: #C8A84B; color: #111;
+    font-size: 15px; font-weight: 700; border: none;
+    border-radius: 7px; cursor: pointer;
+    transition: background 0.15s ease;
+    letter-spacing: 0.02em; min-height: 44px;
+}
+.aea-submit-btn:hover { background: #F5C518; }
+.aea-submit-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+/* ── Empty pool ── */
+.aea-empty-pool {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-muted); font-size: 14px;
+}
+
+/* ── Flash ── */
+.aea-flash {
+    padding: 12px 16px; border-radius: 7px;
+    margin-bottom: 20px; font-size: 14px; line-height: 1.6;
+}
+.aea-flash.success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #86efac; }
+.aea-flash.error   { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+.aea-flash.info    { background: rgba(200,168,75,0.08); border: 1px solid rgba(200,168,75,0.2); color: #e5cc8a; }
+
+/* ── Mobile (≤768px) ── */
+@media (max-width: 768px) {
+    .aea-wrap { padding: 56px 16px 80px; }
+    .aea-track-tabs { flex-direction: column; }
+    .aea-season-bar { gap: 14px; }
+    .aea-image-grid { grid-template-columns: repeat(3, 1fr); max-height: 380px; }
+    .aea-title { font-size: 22px; text-shadow: none; }
+    .aea-image-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="aea-wrap">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="aea-flash {% if 'registered' in msg.lower() %}success{% elif 'not open' in msg.lower() or 'invalid' in msg.lower() or 'required' in msg.lower() or 'eligible' in msg.lower() %}error{% else %}info{% endif %}">
+                {{ msg }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Header -->
+    <div class="aea-header">
+        <div class="aea-eyebrow">Annual Excellence Award · {{ year }}</div>
+        <h1 class="aea-title">Annual Excellence Award</h1>
+        <p class="aea-subtitle">Recognising outstanding photographic work across the season.</p>
+    </div>
+
+    <!-- Season bar -->
+    <div class="aea-season-bar">
+        <div class="aea-season-item">
+            <span class="aea-season-lbl">Season</span>
+            <span class="aea-season-val">{{ elig.season_start }} – {{ elig.season_end }}</span>
+        </div>
+        <div class="aea-season-item">
+            <span class="aea-season-lbl">Participation opens</span>
+            <span class="aea-season-val">{{ enrol_open }}</span>
+        </div>
+        <div class="aea-season-item">
+            <span class="aea-season-lbl">Participation closes</span>
+            <span class="aea-season-val">{{ enrol_close }}</span>
+        </div>
+        <div class="aea-season-item">
+            <span class="aea-season-lbl">Titles announced</span>
+            <span class="aea-season-val">1 Mar {{ year + 1 }}</span>
+        </div>
+    </div>
+
+    <!-- Eligibility card -->
+    <div class="aea-elig-card {% if elig.eligible %}eligible{% else %}ineligible{% endif %}">
+        <div class="aea-elig-head">
+            <div class="aea-elig-dot"></div>
+            <div class="aea-elig-status">
+                {% if elig.eligible %}You are eligible to participate
+                {% else %}Not yet eligible{% endif %}
+            </div>
+        </div>
+        {% if not elig.eligible %}
+            <p class="aea-elig-reason">{{ elig.reason }}</p>
+        {% endif %}
+        <div class="aea-progress-row">
+            <div class="aea-progress-bar">
+                <div class="aea-progress-fill {% if elig.qualifying_months < elig.required_months %}partial{% endif %}"
+                     style="width: {{ [elig.qualifying_months / elig.required_months * 100, 100] | min }}%">
+                </div>
+            </div>
+            <span class="aea-progress-lbl">
+                {{ elig.qualifying_months }} / {{ elig.required_months }} qualifying months
+            </span>
+        </div>
+    </div>
+
+    <!-- Window closed notice -->
+    {% if not window_open %}
+    <div class="aea-window-notice">
+        Participation for {{ year }} opens on <strong>{{ enrol_open }}</strong> and closes on <strong>{{ enrol_close }}</strong>.
+        {% if elig.eligible %}
+            Keep adding scored public images to build your pool before the window opens.
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Existing participations -->
+    {% if existing %}
+    <div style="margin-bottom: 32px;">
+        <div class="aea-section-title">Your participations — {{ year }}</div>
+        <div class="aea-participations-list">
+            {% for p in existing %}
+            <div class="aea-participation-row">
+                <span class="aea-participation-track">{{ p.track | title }}</span>
+                <span class="aea-participation-genre">
+                    {% if p.genre %}{{ p.genre }}{% else %}All genres{% endif %}
+                </span>
+                {% if p.entry_score %}
+                <span class="aea-participation-score">{{ '%.2f' | format(p.entry_score) }}</span>
+                {% endif %}
+                <span class="aea-participation-status">{{ p.status }}</span>
+                <span class="aea-season-lbl">{{ p.submitted_at }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Enrolment form -->
+    {% if window_open and elig.eligible %}
+    <div class="aea-enrol-section">
+        <div class="aea-section-title">Register a new participation</div>
+
+        <form method="POST" action="{{ url_for('aea_enrol') }}" id="aea-form">
+
+            <!-- Track selector -->
+            <div class="aea-track-tabs" role="group" aria-label="Select track">
+
+                <button type="button"
+                        class="aea-track-tab active"
+                        id="tab-genre"
+                        onclick="selectTrack('genre')"
+                        {% if available_genres | reject('in', entered_genres) | list | length == 0 %}
+                        disabled title="You have already registered for all your available genres."
+                        {% endif %}>
+                    <span class="aea-track-name">Genre</span>
+                    <span class="aea-track-desc">6 images · single genre · best DDI average</span>
+                    {% if entered_genres %}
+                    <span class="aea-done-badge">{{ entered_genres | list | length }} registered</span>
+                    {% endif %}
+                </button>
+
+                <button type="button"
+                        class="aea-track-tab {% if has_overall_entry %}disabled{% endif %}"
+                        id="tab-overall"
+                        onclick="selectTrack('overall')"
+                        {% if has_overall_entry %}disabled title="You have already registered an Overall participation this season."{% endif %}>
+                    <span class="aea-track-name">Overall</span>
+                    <span class="aea-track-desc">6 images · 3+ genres · breadth of work</span>
+                    {% if has_overall_entry %}
+                    <span class="aea-done-badge">registered</span>
+                    {% endif %}
+                </button>
+
+            </div>
+
+            <input type="hidden" name="track" id="track-input" value="genre">
+
+            <!-- Genre picker -->
+            <div class="aea-genre-row visible" id="genre-picker-row">
+                <label class="aea-field-lbl" for="genre-select">Select genre</label>
+                <select name="genre" id="genre-select" class="aea-genre-select">
+                    <option value="">— choose —</option>
+                    {% for g in available_genres %}
+                        {% if g not in entered_genres %}
+                        <option value="{{ g }}">{{ g }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Overall genre spread -->
+            <div class="aea-genre-spread" id="genre-spread-bar">
+                <span>Genres in your selection — minimum 3 required</span>
+                <div class="aea-genre-spread-tags" id="genre-spread-tags"></div>
+            </div>
+
+            <!-- Image pool -->
+            {% if elig.image_pool %}
+            <div class="aea-image-grid-head">
+                <label class="aea-field-lbl" style="margin:0">
+                    Select 6 images
+                    <span style="color:var(--text-muted); font-weight:400; margin-left:6px; font-size:13px;">sorted by DDI score</span>
+                </label>
+                <span class="aea-select-counter">
+                    <span class="counter-val" id="sel-count">0</span> / 6
+                </span>
+            </div>
+
+            <div class="aea-image-grid" id="image-grid">
+                {% for img in elig.image_pool %}
+                <div class="aea-img-card"
+                     id="img-card-{{ img.id }}"
+                     data-id="{{ img.id }}"
+                     data-score="{{ img.score }}"
+                     data-genre="{{ img.genre }}"
+                     onclick="toggleImage({{ img.id }}, '{{ img.genre | e }}')">
+
+                    <img class="aea-img-thumb"
+                         src="{{ url_for('static', filename='uploads/' + img.asset_name) }}"
+                         alt="Scored image"
+                         loading="lazy"
+                         onerror="this.style.display='none'">
+
+                    <div class="aea-img-overlay">
+                        <span class="aea-img-score">{{ '%.1f' | format(img.score) }}</span>
+                        <span class="aea-img-genre-lbl">{{ img.genre[:8] }}</span>
+                    </div>
+
+                    <div class="aea-img-position" id="img-pos-{{ img.id }}"></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="aea-empty-pool">
+                No eligible scored public images found in your portfolio.
+            </div>
+            {% endif %}
+
+            <div class="aea-fee-row">
+                Participation fee:
+                {% if is_free %}
+                <span class="aea-fee-free">Free — active subscriber</span>
+                {% else %}
+                <span class="aea-fee-paid">₹500 · or 4,500 pts</span>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="aea-submit-btn" id="submit-btn" disabled>
+                Register participation
+            </button>
+
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var selectedIds  = [];
+var currentTrack = 'genre';
+var currentGenre = '';
+
+function selectTrack(track) {
+    currentTrack = track;
+    document.getElementById('track-input').value = track;
+    document.getElementById('tab-genre').classList.toggle('active', track === 'genre');
+    document.getElementById('tab-overall').classList.toggle('active', track === 'overall');
+    var genreRow  = document.getElementById('genre-picker-row');
+    var spreadBar = document.getElementById('genre-spread-bar');
+    if (track === 'genre') {
+        genreRow.classList.add('visible');
+        spreadBar.classList.remove('visible');
+    } else {
+        genreRow.classList.remove('visible');
+        spreadBar.classList.add('visible');
+    }
+    clearSelections();
+    filterGrid();
+}
+
+var genreSelect = document.getElementById('genre-select');
+if (genreSelect) {
+    genreSelect.addEventListener('change', function() {
+        currentGenre = this.value;
+        clearSelections();
+        filterGrid();
+    });
+}
+
+function filterGrid() {
+    document.querySelectorAll('.aea-img-card').forEach(function(card) {
+        var cardGenre = (card.dataset.genre || '').toLowerCase();
+        if (currentTrack === 'genre' && currentGenre) {
+            card.classList.toggle('blocked', cardGenre !== currentGenre.toLowerCase());
+        } else {
+            card.classList.remove('blocked');
+        }
+    });
+}
+
+function toggleImage(id, genre) {
+    if (currentTrack === 'genre' && currentGenre) {
+        if (genre.toLowerCase() !== currentGenre.toLowerCase()) return;
+    }
+    var idx = selectedIds.indexOf(id);
+    if (idx > -1) {
+        selectedIds.splice(idx, 1);
+    } else {
+        if (selectedIds.length >= 6) return;
+        selectedIds.push(id);
+    }
+    updateUI();
+}
+
+function clearSelections() { selectedIds = []; updateUI(); }
+
+function updateUI() {
+    document.querySelectorAll('.aea-img-card').forEach(function(card) {
+        var id  = parseInt(card.dataset.id);
+        var pos = selectedIds.indexOf(id);
+        var posEl = document.getElementById('img-pos-' + id);
+        if (pos > -1) {
+            card.classList.add('selected');
+            if (posEl) posEl.textContent = pos + 1;
+        } else {
+            card.classList.remove('selected');
+            if (posEl) posEl.textContent = '';
+        }
+    });
+
+    document.getElementById('sel-count').textContent = selectedIds.length;
+
+    var form = document.getElementById('aea-form');
+    if (form) {
+        form.querySelectorAll('input[name="image_ids"]').forEach(function(el) { el.remove(); });
+        selectedIds.forEach(function(id) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = 'image_ids'; inp.value = id;
+            form.appendChild(inp);
+        });
+    }
+
+    updateGenreSpread();
+    updateSubmitBtn();
+}
+
+function updateGenreSpread() {
+    if (currentTrack !== 'overall') return;
+    var spreadTags = document.getElementById('genre-spread-tags');
+    if (!spreadTags) return;
+    var genresMap = {};
+    selectedIds.forEach(function(id) {
+        var card = document.getElementById('img-card-' + id);
+        if (card && card.dataset.genre) genresMap[card.dataset.genre] = true;
+    });
+    spreadTags.innerHTML = '';
+    Object.keys(genresMap).forEach(function(g) {
+        var tag = document.createElement('span');
+        tag.className = 'aea-genre-tag met';
+        tag.textContent = g;
+        spreadTags.appendChild(tag);
+    });
+    var count = Object.keys(genresMap).length;
+    if (count < 3 && selectedIds.length > 0) {
+        var needed = 3 - count;
+        var hint = document.createElement('span');
+        hint.className = 'aea-genre-tag';
+        hint.textContent = '+' + needed + ' genre' + (needed > 1 ? 's' : '') + ' needed';
+        spreadTags.appendChild(hint);
+    }
+}
+
+function updateSubmitBtn() {
+    var btn   = document.getElementById('submit-btn');
+    if (!btn) return;
+    var ready = selectedIds.length === 6;
+    var valid = ready;
+    if (currentTrack === 'genre') {
+        valid = ready && currentGenre !== '';
+    } else if (currentTrack === 'overall') {
+        var genres = {};
+        selectedIds.forEach(function(id) {
+            var c = document.getElementById('img-card-' + id);
+            if (c && c.dataset.genre) genres[c.dataset.genre] = true;
+        });
+        valid = ready && Object.keys(genres).length >= 3;
+    }
+    btn.disabled = !valid;
+}
+
+selectTrack('genre');
+</script>
+{% endblock %}
