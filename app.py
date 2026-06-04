@@ -913,6 +913,15 @@ with app.app_context():
                     reply_body TEXT
                 )"""
             ))
+            db.session.execute(db.text(
+                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS is_spam BOOLEAN DEFAULT FALSE"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS spam_marked_at TIMESTAMP"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS spam_marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL"
+            ))
             db.session.commit()
             print('contact_messages schema OK.')
         except Exception as _cme:
@@ -2522,17 +2531,6 @@ def dashboard():
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
 
-    # ── Edited badge — images that are edited versions (parent_image_id IS NOT NULL) ──
-    # NOTE: parent_image_id is NOT in the ORM model — always use raw SQL
-    try:
-        _edit_rows = db.session.execute(db.text(
-            "SELECT id FROM images WHERE user_id = :uid AND parent_image_id IS NOT NULL"
-        ), {'uid': current_user.id}).fetchall()
-        _edited_ids = {r[0] for r in _edit_rows}
-    except Exception as _ebe:
-        app.logger.warning(f'[dashboard] edited_ids: {_ebe}')
-        _edited_ids = set()
-
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2552,8 +2550,7 @@ def dashboard():
                            referral_stats=get_referral_stats(current_user),
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
                            referred_discount=_ref_discount,
-                           _months_active=_months_active,
-                           edited_ids=_edited_ids)
+                           _months_active=_months_active)
 
 
 # ---------------------------------------------------------------------------
@@ -11489,10 +11486,20 @@ def raw_status(image_id):
 @login_required
 @admin_required
 def admin_contact_inbox():
-    messages = db.session.execute(db.text(
-        "SELECT * FROM contact_messages ORDER BY received_at DESC LIMIT 100"
-    )).fetchall()
-    return render_template('admin_contact_inbox.html', messages=messages)
+    show_spam = request.args.get('spam') == '1'
+    if show_spam:
+        messages = db.session.execute(db.text(
+            "SELECT * FROM contact_messages WHERE is_spam=TRUE ORDER BY received_at DESC LIMIT 100"
+        )).fetchall()
+    else:
+        messages = db.session.execute(db.text(
+            "SELECT * FROM contact_messages WHERE is_spam IS NOT TRUE ORDER BY received_at DESC LIMIT 100"
+        )).fetchall()
+    spam_count = db.session.execute(db.text(
+        "SELECT COUNT(*) FROM contact_messages WHERE is_spam=TRUE"
+    )).scalar() or 0
+    return render_template('admin_contact_inbox.html', messages=messages,
+                           show_spam=show_spam, spam_count=spam_count)
 
 
 @app.route('/admin/contact-inbox/<int:msg_id>/reply', methods=['POST'])
@@ -11547,6 +11554,30 @@ def admin_contact_reply(msg_id):
         flash('Failed to send reply. Please try again.', 'error')
 
     return redirect(url_for('admin_contact_inbox'))
+
+
+@app.route('/admin/contact-inbox/<int:msg_id>/spam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_spam(msg_id):
+    db.session.execute(db.text(
+        "UPDATE contact_messages SET is_spam=TRUE, spam_marked_at=NOW(), spam_marked_by=:by WHERE id=:mid"
+    ), {'by': current_user.id, 'mid': msg_id})
+    db.session.commit()
+    flash('Message marked as spam.', 'success')
+    return redirect(url_for('admin_contact_inbox'))
+
+
+@app.route('/admin/contact-inbox/<int:msg_id>/unspam', methods=['POST'])
+@login_required
+@admin_required
+def admin_contact_unspam(msg_id):
+    db.session.execute(db.text(
+        "UPDATE contact_messages SET is_spam=FALSE, spam_marked_at=NULL, spam_marked_by=NULL WHERE id=:mid"
+    ), {'mid': msg_id})
+    db.session.commit()
+    flash('Message restored to inbox.', 'success')
+    return redirect(url_for('admin_contact_inbox', spam='1'))
 
 
 # ---------------------------------------------------------------------------
