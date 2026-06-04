@@ -1775,7 +1775,7 @@
     </div>
     <div class="db-hcard-summary" id="db-hcard-sum-poty" onclick="dbHcardToggle('poty')">
       {% if poty_tracker and poty_tracker.genre_rows %}
-      <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].count }} img{{ 's' if poty_tracker.genre_rows[0].count != 1 }}</span> scored this year</span>
+      <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months this season</span>
       {% else %}
       <span class="db-hcard-summary-txt">No activity yet this season<br><span style="font-size:16px;color:#FFFFFF;">Upload images to start building your Annual Excellence Award standing</span></span>
       {% endif %}
