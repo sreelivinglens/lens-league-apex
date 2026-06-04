@@ -4,19 +4,30 @@
 {% set unread = messages|selectattr('replied','equalto',false)|list|length %}
 <div style="max-width:900px;margin:40px auto;padding:0 20px;">
 
-  <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:space-between;">
+  <div style="background:#1A2744;padding:20px 28px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div>
       <p style="color:#F5C518;font-family:'Courier New',monospace;font-weight:700;font-size:12px;letter-spacing:2px;margin:0 0 4px 0;">ADMIN</p>
-      <h1 style="color:#FFFFFF;font-size:20px;font-weight:700;margin:0;">Contact Inbox</h1>
+      <h1 style="color:#FFFFFF;font-size:20px;font-weight:700;margin:0;">
+        {% if show_spam %}Spam Folder{% else %}Contact Inbox{% endif %}
+      </h1>
     </div>
-    <span style="background:{% if unread > 0 %}#F5C518{% else %}#4A4840{% endif %};color:{% if unread > 0 %}#1A1A18{% else %}#FFFFFF{% endif %};font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:6px 16px;border-radius:4px;">
-      {{ unread }} unread &middot; {{ messages|length }} total
-    </span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      {% if not show_spam %}
+      <span style="background:{% if unread > 0 %}#F5C518{% else %}#4A4840{% endif %};color:{% if unread > 0 %}#1A1A18{% else %}#FFFFFF{% endif %};font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:6px 16px;border-radius:4px;">
+        {{ unread }} unread &middot; {{ messages|length }} total
+      </span>
+      <a href="{{ url_for('admin_contact_inbox', spam='1') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">
+        🚫 Spam{% if spam_count > 0 %} ({{ spam_count }}){% endif %}
+      </a>
+      {% else %}
+      <a href="{{ url_for('admin_contact_inbox') }}" style="background:#4A4840;color:#FFFFFF;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:6px 14px;border-radius:4px;text-decoration:none;letter-spacing:1px;">← Back to Inbox</a>
+      {% endif %}
+    </div>
   </div>
 
   {% if not messages %}
   <div style="background:#FFFFFF;border:1px solid #E0D8C8;border-top:none;padding:40px;text-align:center;">
-    <p style="color:#888;font-size:16px;margin:0;">No contact messages yet.</p>
+    <p style="color:#888;font-size:16px;margin:0;">{% if show_spam %}No spam messages.{% else %}No contact messages yet.{% endif %}</p>
   </div>
   {% endif %}
 
@@ -32,11 +43,23 @@
           &nbsp;·&nbsp; {{ msg.received_at.strftime('%d %b %Y, %H:%M') if msg.received_at else '—' }}
         </p>
       </div>
-      {% if msg.replied %}
-      <span style="background:#E8F5E9;color:#3B6D11;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">✓ Replied</span>
-      {% else %}
-      <span style="background:#FFF3CD;color:#BA7517;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">Pending reply</span>
-      {% endif %}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        {% if show_spam %}
+          <span style="background:#FDECEA;color:#B71C1C;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">🚫 Spam</span>
+          <form method="POST" action="{{ url_for('admin_contact_unspam', msg_id=msg.id) }}" style="display:inline;">
+            <button type="submit" style="background:#E8F5E9;color:#3B6D11;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;white-space:nowrap;">↩ Restore</button>
+          </form>
+        {% else %}
+          {% if msg.replied %}
+          <span style="background:#E8F5E9;color:#3B6D11;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">✓ Replied</span>
+          {% else %}
+          <span style="background:#FFF3CD;color:#BA7517;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;white-space:nowrap;">Pending reply</span>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin_contact_spam', msg_id=msg.id) }}" style="display:inline;">
+            <button type="submit" style="background:#FDECEA;color:#B71C1C;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;border:none;cursor:pointer;white-space:nowrap;">🚫 Mark Spam</button>
+          </form>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Subject + message -->
@@ -46,15 +69,13 @@
     </p>
 
     {% if msg.replied and msg.reply_body %}
-    <!-- Previous reply -->
     <div style="border-left:3px solid #3B6D11;padding:10px 16px;margin:0 0 16px 0;background:#F0F7F0;">
       <p style="font-size:12px;color:#3B6D11;font-weight:700;margin:0 0 6px 0;letter-spacing:1px;text-transform:uppercase;">Your reply</p>
       <p style="font-size:14px;color:#1A1A18;margin:0;line-height:1.7;">{{ msg.reply_body | replace('\n', '<br>') | safe }}</p>
     </div>
     {% endif %}
 
-    {% if not msg.replied %}
-    <!-- Reply form -->
+    {% if not msg.replied and not show_spam %}
     <form method="POST" action="{{ url_for('admin_contact_reply', msg_id=msg.id) }}">
       <label style="display:block;font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:6px;letter-spacing:0.5px;">REPLY</label>
       <textarea name="reply_body" rows="5" placeholder="Type your reply here. This will be sent as a branded email from Shutter League."
