@@ -6902,8 +6902,12 @@ def about():
 
 
 @app.route('/shipping-policy')
+@app.route('/shipping-returns')
+@app.route('/returns-policy')
 def shipping_policy():
-    return render_template('shipping_policy.html')
+    # Permanent 301 redirect — Shutter League sells digital services only.
+    # No physical goods, no shipping. Renamed to Refund Policy for KYC compliance.
+    return redirect(url_for('refund_policy'), code=301)
 
 
 @app.route('/terms')
@@ -7150,6 +7154,16 @@ def portfolio_photo_presign():
 def robots_txt():
     content = (
         "User-agent: *\n"
+        "Allow: /\n"
+        "Allow: /terms\n"
+        "Allow: /privacy\n"
+        "Allow: /refund-policy\n"
+        "Allow: /about\n"
+        "Allow: /contact\n"
+        "Allow: /pricing\n"
+        "Allow: /how-it-works\n"
+        "Allow: /faq\n"
+        "Allow: /programme-rules\n"
         "Disallow: /admin\n"
         "Disallow: /sree-admin\n"
         "Disallow: /dashboard\n"
@@ -7178,7 +7192,7 @@ def sitemap():
         ('/terms', '0.8', 'monthly'),
         ('/privacy', '0.8', 'monthly'),
         ('/refund-policy', '0.8', 'monthly'),
-        ('/shipping-policy', '0.8', 'monthly'),
+        # /shipping-policy removed — 301 redirects to /refund-policy (no physical goods)
         ('/contact', '0.7', 'monthly'),
         ('/mentors', '0.8', 'weekly'),
         ('/science', '0.7', 'monthly'),
