@@ -913,15 +913,6 @@ with app.app_context():
                     reply_body TEXT
                 )"""
             ))
-            db.session.execute(db.text(
-                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS is_spam BOOLEAN DEFAULT FALSE"
-            ))
-            db.session.execute(db.text(
-                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS spam_marked_at TIMESTAMP"
-            ))
-            db.session.execute(db.text(
-                "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS spam_marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL"
-            ))
             db.session.commit()
             print('contact_messages schema OK.')
         except Exception as _cme:
@@ -929,6 +920,72 @@ with app.app_context():
             print(f'contact_messages migration warning: {_cme}')
         except Exception as ce:
             print(f'raw_submissions migration warning: {ce}')
+
+        # ── Annual Excellence Award migrations (Session 58) ───────────────────
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS poty_entries (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    year INTEGER NOT NULL,
+                    track VARCHAR(20) NOT NULL,
+                    genre VARCHAR(50),
+                    entry_images JSON,
+                    entry_score NUMERIC(4,2),
+                    submitted_at TIMESTAMP,
+                    status VARCHAR(20) DEFAULT 'enrolled',
+                    subscription_status VARCHAR(20),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.session.execute(db.text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_poty_entries_user_year_track "
+                "ON poty_entries (user_id, year, track)"
+            ))
+            db.session.commit()
+            print('poty_entries table OK.')
+        except Exception as _pe:
+            db.session.rollback()
+            print(f'poty_entries migration warning: {_pe}')
+
+        try:
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS poty_entry_images (
+                    id SERIAL PRIMARY KEY,
+                    entry_id INTEGER REFERENCES poty_entries(id) ON DELETE CASCADE,
+                    image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+                    position INTEGER NOT NULL,
+                    score_at_submission NUMERIC(4,2)
+                )
+            """))
+            db.session.commit()
+            print('poty_entry_images table OK.')
+        except Exception as _pei:
+            db.session.rollback()
+            print(f'poty_entry_images migration warning: {_pei}')
+
+        try:
+            # NOTE: poty_used_year is NOT in ORM model — always access via raw SQL
+            db.session.execute(db.text(
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS poty_used_year INTEGER"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS ranking_season_images INTEGER DEFAULT 0"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS ranking_season_months JSON"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS ranking_public BOOLEAN DEFAULT FALSE"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS ranking_last_active DATE"
+            ))
+            db.session.commit()
+            print('AEA columns OK.')
+        except Exception as _aea:
+            db.session.rollback()
+            print(f'AEA columns migration warning: {_aea}')
 
         print('Columns migrated OK.')
 
@@ -11486,20 +11543,10 @@ def raw_status(image_id):
 @login_required
 @admin_required
 def admin_contact_inbox():
-    show_spam = request.args.get('spam') == '1'
-    if show_spam:
-        messages = db.session.execute(db.text(
-            "SELECT * FROM contact_messages WHERE is_spam=TRUE ORDER BY received_at DESC LIMIT 100"
-        )).fetchall()
-    else:
-        messages = db.session.execute(db.text(
-            "SELECT * FROM contact_messages WHERE is_spam IS NOT TRUE ORDER BY received_at DESC LIMIT 100"
-        )).fetchall()
-    spam_count = db.session.execute(db.text(
-        "SELECT COUNT(*) FROM contact_messages WHERE is_spam=TRUE"
-    )).scalar() or 0
-    return render_template('admin_contact_inbox.html', messages=messages,
-                           show_spam=show_spam, spam_count=spam_count)
+    messages = db.session.execute(db.text(
+        "SELECT * FROM contact_messages ORDER BY received_at DESC LIMIT 100"
+    )).fetchall()
+    return render_template('admin_contact_inbox.html', messages=messages)
 
 
 @app.route('/admin/contact-inbox/<int:msg_id>/reply', methods=['POST'])
@@ -11554,30 +11601,6 @@ def admin_contact_reply(msg_id):
         flash('Failed to send reply. Please try again.', 'error')
 
     return redirect(url_for('admin_contact_inbox'))
-
-
-@app.route('/admin/contact-inbox/<int:msg_id>/spam', methods=['POST'])
-@login_required
-@admin_required
-def admin_contact_spam(msg_id):
-    db.session.execute(db.text(
-        "UPDATE contact_messages SET is_spam=TRUE, spam_marked_at=NOW(), spam_marked_by=:by WHERE id=:mid"
-    ), {'by': current_user.id, 'mid': msg_id})
-    db.session.commit()
-    flash('Message marked as spam.', 'success')
-    return redirect(url_for('admin_contact_inbox'))
-
-
-@app.route('/admin/contact-inbox/<int:msg_id>/unspam', methods=['POST'])
-@login_required
-@admin_required
-def admin_contact_unspam(msg_id):
-    db.session.execute(db.text(
-        "UPDATE contact_messages SET is_spam=FALSE, spam_marked_at=NULL, spam_marked_by=NULL WHERE id=:mid"
-    ), {'mid': msg_id})
-    db.session.commit()
-    flash('Message restored to inbox.', 'success')
-    return redirect(url_for('admin_contact_inbox', spam='1'))
 
 
 # ---------------------------------------------------------------------------
