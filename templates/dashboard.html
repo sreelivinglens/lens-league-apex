@@ -1829,7 +1829,7 @@
       {% if poty_tracker and poty_tracker.genre_rows %}
       <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br>
         {% if _months_active|default(0) == 0 %}
-          <span style="color:#7A5800;">Season opens 1 Sep 2026 — start shooting from September</span>
+          <span style="color:#7A5800;">Season opens 1 Sep 2026 — get your images evaluated from September</span>
         {% else %}
           <span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months · season started {{ _season_start_label|default('1 Sep 2026') }}
         {% endif %}
@@ -1852,6 +1852,7 @@
         <div class="db-poty-bw"><div class="db-poty-bf" style="width:{% if row.top6_avg %}{{ row.bar_pct }}%{% else %}{{ [[(row.count / (poty_tracker.min_images or 6) * 100)|int, 0]|max, 95]|min }}%{% endif %};{% if not row.top6_avg %}opacity:0.35;{% endif %}"></div></div>
       </div>
       {% endfor %}
+      <a href="{{ url_for('aea') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;margin-top:14px;display:inline-flex;align-items:center;">View eligibility &amp; register →</a>
       {% else %}
       <div style="font-size:16px;color:var(--text-primary);line-height:1.6;padding:4px 0 8px;">Get your images evaluated to start building your Annual Excellence Award standing. Your best 6 images from this season form your participation.</div>
       <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Upload an image →</a>
