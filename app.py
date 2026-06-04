@@ -2522,6 +2522,17 @@ def dashboard():
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
 
+    # ── Edited badge — images that are edited versions (parent_image_id IS NOT NULL) ──
+    # NOTE: parent_image_id is NOT in the ORM model — always use raw SQL
+    try:
+        _edit_rows = db.session.execute(db.text(
+            "SELECT id FROM images WHERE user_id = :uid AND parent_image_id IS NOT NULL"
+        ), {'uid': current_user.id}).fetchall()
+        _edited_ids = {r[0] for r in _edit_rows}
+    except Exception as _ebe:
+        app.logger.warning(f'[dashboard] edited_ids: {_ebe}')
+        _edited_ids = set()
+
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
@@ -2541,7 +2552,8 @@ def dashboard():
                            referral_stats=get_referral_stats(current_user),
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
                            referred_discount=_ref_discount,
-                           _months_active=_months_active)
+                           _months_active=_months_active,
+                           edited_ids=_edited_ids)
 
 
 # ---------------------------------------------------------------------------
