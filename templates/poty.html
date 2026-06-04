@@ -1131,16 +1131,20 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
             Key Dates
           </div>
           <div class="sl-poty-kd-row">
-            <div class="sl-poty-kd-date">Jan 1</div>
-            <div class="sl-poty-kd-event">Award Year Begins</div>
+            <div class="sl-poty-kd-date">1 Sep 2026</div>
+            <div class="sl-poty-kd-event">2026 Season Opens</div>
           </div>
           <div class="sl-poty-kd-row">
-            <div class="sl-poty-kd-date">Dec 31</div>
-            <div class="sl-poty-kd-event">Final Submission Deadline</div>
+            <div class="sl-poty-kd-date">1 Dec 2026</div>
+            <div class="sl-poty-kd-event">Participation Opens</div>
           </div>
           <div class="sl-poty-kd-row">
-            <div class="sl-poty-kd-date">Feb (Next Year)</div>
-            <div class="sl-poty-kd-event">Recipients Announced</div>
+            <div class="sl-poty-kd-date">31 Jan 2027</div>
+            <div class="sl-poty-kd-event">Participation Closes</div>
+          </div>
+          <div class="sl-poty-kd-row">
+            <div class="sl-poty-kd-date">1 Mar 2027</div>
+            <div class="sl-poty-kd-event">Titles Announced</div>
           </div>
         </div>
         <div class="sl-poty-cat-block">
@@ -1199,9 +1203,16 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
           <p class="sl-poty-cta-body">Keep creating. Keep growing. The Annual Excellence Award is your recognition.</p>
         </div>
       </div>
-      <a href="{{ url_for('register') }}" class="sl-poty-cta-btn">
-        Start Your Journey
-      </a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('aea') }}" class="sl-poty-cta-btn">
+          Register Participation
+          <span class="sl-poty-cta-micro">View your eligibility →</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="sl-poty-cta-btn">
+          Start Your Journey
+        </a>
+      {% endif %}
     </div>
   </section>
 
