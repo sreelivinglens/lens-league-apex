@@ -95,7 +95,7 @@
   /* ── Categories 2-column grid (audit token) ── */
   .db-categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  /* ── Layout — follows base.html main container, same as leaderboard ── */
+  /* ── Layout — follows base.html main container, same as standings ── */
   .db-wrap {
     width: 100%;
     max-width: 1100px;
@@ -1560,7 +1560,7 @@
 {% for ann in contest_banners %}
 <div class="db-ann-strip" onclick="dbAnnToggle(this)">
   <div class="db-ann-hdr">
-    <span class="db-ann-tag">{{ ann.contest_type | upper if ann.contest_type else 'Announcement' }}</span>
+    <span class="db-ann-tag">{{ ann.contest_type | upper if ann.contest_type else 'Update' }}</span>
     {% if ann.title %}<span class="db-ann-text" style="font-weight:700;">{{ ann.title }}</span>{% endif %}
     <span class="db-ann-chevron">▼</span>
   </div>
@@ -1709,14 +1709,14 @@
     </div>
   </div>
 
-  {# ── Card 2: Points & Ranking ── #}
+  {# ── Card 2: Points & Standing ── #}
   {% if wallet_hud %}
   <div class="db-hcard" id="db-hcard-points">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('points')">
       <div class="db-hcard-hdr-txt" style="flex:1;">
-        <span class="db-hcard-hdr-lbl">Points &amp; ranking</span>
+        <span class="db-hcard-hdr-lbl">Points &amp; standing</span>
         <span class="db-hcard-hdr-title">Your points wallet</span>
-        <span class="db-hcard-hdr-sub">Earn points every time you upload. Redeem for free uploads, entries and subscription discounts.</span>
+        <span class="db-hcard-hdr-sub">Earn points every time you upload. Redeem for free uploads, programme participation and subscription discounts.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-points">▶</span>
     </div>
@@ -1733,14 +1733,14 @@
         <div class="db-hcard-pts-stat">
           <div class="db-hcard-pts-lbl">Residency</div>
           <div class="db-hcard-pts-val" style="font-size:22px;">{{ wallet_hud.residency_months }}<span style="font-size:16px;color:#FFFFFF;">/6</span></div>
-          <div class="db-hcard-pts-sub">months to ranking</div>
+          <div class="db-hcard-pts-sub">months to your standing</div>
         </div>
       </div>
       <div class="db-hcard-pts-bar-wrap">
         <div class="db-hcard-pts-bar-fill" style="width:{{ [[(wallet_hud.residency_months / 6 * 100)|int, 0]|max, 100]|min }}%;"></div>
       </div>
       {% if wallet_hud.officially_ranked %}
-      <div style="font-size:16px;color:var(--green,#2e7d32);font-weight:500;margin-bottom:10px;">✓ Official World Ranking — Live</div>
+      <div style="font-size:16px;color:var(--green,#2e7d32);font-weight:500;margin-bottom:10px;">✓ Official Shutter League Standing — Live</div>
       {% else %}
       <div class="db-hcard-pts-note">{{ wallet_hud.imgs_to_gate }} more image{{ 's' if wallet_hud.imgs_to_gate != 1 }} to appear in the community.</div>
       {% endif %}
@@ -1767,9 +1767,9 @@
   <div class="db-hcard" id="db-hcard-poty">
     <div class="db-hcard-hdr" onclick="dbHcardToggle('poty')">
       <div class="db-hcard-hdr-txt" style="flex:1;">
-        <span class="db-hcard-hdr-lbl">Annual ranking</span>
-        <span class="db-hcard-hdr-title">Photographer of the Year</span>
-        <span class="db-hcard-hdr-sub">Your best scores each month build your POTY ranking. The top scorer at year-end wins the title.</span>
+        <span class="db-hcard-hdr-lbl">Annual Excellence Award</span>
+        <span class="db-hcard-hdr-title">Annual Excellence Award</span>
+        <span class="db-hcard-hdr-sub">Shoot at least once a month — your best image each month counts toward your Annual Excellence Award standing.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
     </div>
@@ -1777,13 +1777,13 @@
       {% if poty_tracker and poty_tracker.genre_rows %}
       <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br><span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].count }} img{{ 's' if poty_tracker.genre_rows[0].count != 1 }}</span> scored this year</span>
       {% else %}
-      <span class="db-hcard-summary-txt">No scores yet this year<br><span style="font-size:16px;color:#FFFFFF;">Upload images to start your POTY ranking</span></span>
+      <span class="db-hcard-summary-txt">No activity yet this season<br><span style="font-size:16px;color:#FFFFFF;">Upload images to start building your Annual Excellence Award standing</span></span>
       {% endif %}
-      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">See my POTY ranking ▾</span>
+      <span class="db-hcard-tap-hint" id="db-hcard-hint-poty">See my Annual Excellence Award standing ▾</span>
     </div>
     <div class="db-hcard-body" id="db-hcard-body-poty">
       {% if poty_tracker and poty_tracker.genre_rows %}
-      <div class="db-hcard-poty-lbl">Your scores by genre this year</div>
+      <div class="db-hcard-poty-lbl">Your evaluations by genre this season</div>
       {% for row in poty_tracker.genre_rows %}
       <div class="db-poty-row">
         <div class="db-poty-row-top">
@@ -1795,7 +1795,7 @@
       </div>
       {% endfor %}
       {% else %}
-      <div style="font-size:16px;color:var(--text-primary);line-height:1.6;padding:4px 0 8px;">Upload and get scored to start building your POTY ranking. Your best 6 scores per genre each month count.</div>
+      <div style="font-size:16px;color:var(--text-primary);line-height:1.6;padding:4px 0 8px;">Get your images evaluated to start building your Annual Excellence Award standing. Your best 6 images from this season form your participation.</div>
       <a href="{{ url_for('upload') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Upload an image →</a>
       {% endif %}
     </div>
@@ -1849,7 +1849,7 @@
   <div style="font-size:38px;font-weight:700;color:#1A1A18;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
   <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
   <div style="font-size:16px;color:#FFFFFF;margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
-    This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Official World Ranking.
+    This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Shutter League standing.
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
     <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Rank →</a>
@@ -1910,14 +1910,14 @@
 {% endif %}
 
 
-{# ══ Your Path to Rankings card — Session 56 rev2 ══ #}
+{# ══ Your Path to Standing card — Session 56 rev2 ══ #}
 {# ─────────────────────────────────────────────────────────────────────────────
    Data deps: wallet_hud, poty_tracker, free_tier (all passed from dashboard())
    Facts:
    - Any scored public image = you appear on League of Photographers immediately
    - 6 scored images in a genre = genre average shows on LOP
    - Shoot at least 1 image/month in a genre to qualify for Annual Excellence Award
-   - 6-month residency clock = internal ranking quality signal only, not a gate
+   - 6-month residency clock = internal standing quality signal only, not a gate
 ───────────────────────────────────────────────────────────────────────────── #}
 
 {% set _is_sub = current_user.is_subscribed %}
@@ -1949,7 +1949,7 @@
   {% endif %}
 {% endif %}
 
-<section class="rp-card" aria-label="Your path to rankings">
+<section class="rp-card" aria-label="Your path to your standing">
 <style>
 .rp-card {
   background: #F5F0E8;
@@ -2112,7 +2112,7 @@
 </style>
 
 <p class="rp-eyebrow">League of Photographers</p>
-<h2 class="rp-title">Your path to the rankings</h2>
+<h2 class="rp-title">Your path to your standing</h2>
 
 {# ── FREE USER ─────────────────────────────────────────────────────────────── #}
 {% if not _is_sub %}
@@ -2137,7 +2137,7 @@
     <div class="rp-step">
       <div class="rp-icon upcoming">2</div>
       <div class="rp-body">
-        <p class="rp-label upcoming">6 images in a genre → genre average on the leaderboard</p>
+        <p class="rp-label upcoming">6 images in a genre → genre average in the programme standings</p>
         <p class="rp-desc">Once you have 6 scored images in any one genre, your top-6 average appears against your name on the League of Photographers.</p>
       </div>
     </div>
@@ -2145,7 +2145,7 @@
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
         <p class="rp-label upcoming">Shoot monthly → qualify for Annual Excellence Award</p>
-        <p class="rp-desc">Your best 6 scores in a genre form your final annual ranking. The top scorer per genre at year-end wins the title.</p>
+        <p class="rp-desc">Your best 6 scores in a genre form your Annual Excellence Award participation score.</p>
       </div>
     </div>
   </div>
@@ -2156,7 +2156,7 @@
   {# ALL DONE #}
   {% if _step == 4 %}
   <div class="rp-done-box">
-    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--text-primary);font-weight:700;">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Your best 6 scores in this genre form your final ranking — keep shooting to strengthen your selection pool.</p>
+    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--text-primary);font-weight:700;">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Your best 6 scores in this genre form your Annual Excellence Award participation score — keep shooting to strengthen your selection.</p>
   </div>
 
   {# STEP 1 — no scored images yet #}
@@ -2186,13 +2186,13 @@
       <div class="rp-icon done">✓</div>
       <div class="rp-body">
         <p class="rp-label done">On the League of Photographers</p>
-        <p class="rp-desc">Your scored images are visible on the leaderboard.</p>
+        <p class="rp-desc">Your evaluations are visible in the programme standings.</p>
       </div>
     </div>
     <div class="rp-step">
       <div class="rp-icon active">2</div>
       <div class="rp-body">
-        <p class="rp-label active">6 images in a genre → genre average on the leaderboard</p>
+        <p class="rp-label active">6 images in a genre → genre average in the programme standings</p>
         {% if _best_row %}
           {% set _pct = [(_best_count / 6 * 100)|int, 100]|min %}
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
@@ -2224,7 +2224,7 @@
     <div class="rp-step">
       <div class="rp-icon done">✓</div>
       <div class="rp-body">
-        <p class="rp-label done">Genre average on the leaderboard</p>
+        <p class="rp-label done">Genre average in the programme standings</p>
         {% if _best_row and _best_row.top6_avg %}
         <p class="rp-desc">Your top-6 average in <strong>{{ _best_genre }}</strong> is <strong style="color:var(--text-primary);font-weight:700;">{{ _best_row.top6_avg }}</strong>.</p>
         {% else %}
@@ -2241,7 +2241,7 @@
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
           <p class="rp-bar-label">{{ _best_count }} scored image{{ "s" if _best_count != 1 }} in <strong>{{ _best_genre }}</strong> this year — your best per month counts</p>
         {% endif %}
-        <p class="rp-desc active">Your best image each month counts — one per month, any genre. Your top 6 monthly scores across the year shape your Annual Excellence Award ranking. Shoot consistently in <strong>{{ _best_genre }}</strong> or across genres — your 6 best months are what qualify you.</p>
+        <p class="rp-desc active">Your best image each month counts — one per month, any genre. Your top 6 monthly scores across the year count toward your Annual Excellence Award standing. Shoot consistently in <strong>{{ _best_genre }}</strong> or across genres — your 6 best months are what qualify you.</p>
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
     </div>
@@ -2252,7 +2252,7 @@
 {% endif %}
 
 </section>
-{# ── End path_to_rankings card ── #}
+{# ── End path to standing card ── #}
 
 
 {# ════════════════════════════════════════════════════════════════
@@ -2594,13 +2594,13 @@ function dbSearchUrl(q) {
 var _hintExpand = {
     standing:  'See full breakdown \u25be',
     points:    'See points & redeem \u25be',
-    poty:      'See my POTY ranking \u25be',
+    poty:      'See my Annual Excellence Award standing \u25be',
     referrals: 'Share my code \u25be'
   };
   var _hintCollapse = {
     standing:  'Hide breakdown \u25b4',
     points:    'Hide details \u25b4',
-    poty:      'Hide ranking \u25b4',
+    poty:      'Hide \u25b4',
     referrals: 'Hide \u25b4'
   };
 
@@ -2705,7 +2705,7 @@ function applyReferralCode() {
 <script>
 (function() {
   var _ru = {{ referral_url | tojson }};
-  var _db = 'I\u2019ve been using Shutter League to get my photography scored by AI and build my ranking. Use my referral link for a special first-month price: ' + _ru;
+  var _db = 'I\u2019ve been using Shutter League to get my photography scored by AI and build my standing. Use my referral link for a special first-month price: ' + _ru;
   var _ch = 'whatsapp';
   var _subj = encodeURIComponent('Join me on Shutter League');
 
