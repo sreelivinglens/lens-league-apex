@@ -136,12 +136,12 @@ def send_challenge_notification(challenge):
 
       <!-- Header -->
       <tr><td style="background:#1a1a18;padding:24px 32px;">
-        <p style="margin:0;font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
+        <p style="margin:0;font-family:"Courier New",monospace;font-size:13px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">SHUTTER LEAGUE</p>
       </td></tr>
 
       <!-- Challenge banner -->
       <tr><td style="background:#1a1a18;padding:0 32px 28px;">
-        <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Assignment . {challenge.week_ref}</p>
+        <p style="margin:0 0 6px;font-family:"Courier New",monospace;font-size:11px;letter-spacing:2px;color:#6a6458;text-transform:uppercase;">Weekly Assignment . {challenge.week_ref}</p>
         <h1 style="margin:0;font-size:36px;font-style:italic;color:#C8A84B;line-height:1.1;">{challenge.prompt_title}</h1>
       </td></tr>
 
@@ -156,13 +156,13 @@ def send_challenge_notification(challenge):
         <p style="margin:0 0 24px;font-size:14px;color:#8a8070;">
           Closes {(challenge.closes_at + _IST_OFFSET).strftime('%A %d %B, %H:%M IST')}
         </p>
-        <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:'Courier New',monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
+        <a href="{challenge_url}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:"Courier New",monospace;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">{cta_text}</a>
       </td></tr>
 
       <!-- Footer -->
       <tr><td style="padding:20px 32px;border-top:1px solid #E0D8C8;">
         <p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">
-          You're receiving this because you have an account on Shutter League.<br>
+          You&#39;re receiving this because you have an account on Shutter League.<br>
           <a href="{site_url}" style="color:#C8A84B;">shutterleague.com</a>
         </p>
       </td></tr>
@@ -1383,7 +1383,7 @@ def run_points_reset_warning_dec():
       <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">16 days to protect your points, {name}.</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your balance: <strong>{balance} points.</strong></p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the deadline and <strong>{at_risk} points</strong> reset on 1 January.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the date and <strong>{at_risk} points</strong> reset on 1 January.</p>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">You&#39;ve earned these. Take one shot before the year ends.</p>
       <div style="margin:28px 0;">
         <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload Now — 16 Days Left &#8594;</a>
@@ -7925,7 +7925,7 @@ def bow_submit():
         db.session.add(sub)
         db.session.commit()
 
-        flash(f' Your Body of Work "{series_title}" has been submitted successfully  -  {len(selected_ids)} images. Jury evaluation will begin after Month 11 submissions close.', 'success')
+        flash(f' Your Body of Work "{series_title}" has been submitted successfully  -  {len(selected_ids)} images. Jury evaluation will begin after Month 11 participation closes.', 'success')
         return redirect(url_for('bow_submit'))
 
     return render_template('bow_submit.html',
@@ -7949,7 +7949,7 @@ def contest_enter_monthly(genre):
     from datetime import date as _date
 
     if not getattr(current_user, 'is_subscribed', False):
-        flash('An active subscription is required to enter contests.', 'error')
+        flash('An active subscription is required to participate in programmes.', 'error')
         return redirect(url_for('pricing'))
 
     if getattr(current_user, 'league_suspended', False):
@@ -7994,7 +7994,7 @@ def contest_enter_monthly(genre):
             existing.image_id   = image_id
             existing.entered_at = datetime.utcnow()
             db.session.commit()
-            flash(f'Your {GENRE_LABELS.get(genre, genre)} entry has been updated to "{img.asset_name}".', 'success')
+            flash(f'Your {GENRE_LABELS.get(genre, genre)} programme image has been updated to "{img.asset_name}".', 'success')
         else:
             entry = ContestEntry(
                 user_id       = current_user.id,
@@ -8033,7 +8033,7 @@ def contest_enter_monthly(genre):
                 _genre_label = GENRE_LABELS.get(genre, genre)
                 send_email(
                     to_addresses=[current_user.email],
-                    subject=f'[Shutter League] RAW File Required — {img.asset_name or "Your Entry"}',
+                    subject=f'[Shutter League] RAW File Required — {img.asset_name or "Your Image"}',
                     html_body=(
                         '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;'
                         'padding:32px;background:#fffef9;color:#111111;">'
@@ -8041,52 +8041,53 @@ def contest_enter_monthly(genre):
                         'letter-spacing:2px;text-transform:uppercase;color:#F5C518;'
                         'margin-bottom:24px;">Shutter League</p>'
                         '<h2 style="font-size:22px;font-weight:700;color:#111111;'
-                        'margin-bottom:16px;">RAW File Required for Contest Entry</h2>'
+                        'margin-bottom:16px;">RAW File Required for Programme Participation</h2>'
                         '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
                         'Your image <strong>' + (img.asset_name or 'Untitled') + '</strong> '
-                        'has been entered into <strong>' + _genre_label + '</strong> POTY '
-                        'and scores <strong>' + str(round(img.score, 2)) + '</strong>. '
+                        'in <strong>' + _genre_label + '</strong> '
+                        'scored <strong>' + str(round(img.score, 2)) + '</strong>. '
                         'Images in this genre scoring 7.5 and above require RAW verification '
                         'to confirm authenticity.</p>'
                         '<p style="font-size:15px;line-height:1.7;color:#4A4840;">'
                         'Please submit your original RAW file within <strong>7 days</strong> '
-                        'using the link below. Failure to submit will withdraw your entry.</p>'
+                        'using the link below. Images without verified RAW files will not be '
+                        'considered for the programme standings.</p>'
                         '<p style="margin:32px 0;">'
                         '<a href="' + _submit_url + '" style="background:#F5C518;color:#111111;'
                         'padding:14px 28px;text-decoration:none;font-weight:700;'
                         'font-family:Courier New,monospace;letter-spacing:1px;'
                         'text-transform:uppercase;display:inline-block;">'
                         'Submit RAW File &#8594;</a></p>'
-                        '<p style="font-size:13px;color:#8A8478;">Deadline: '
+                        '<p style="font-size:13px;color:#8A8478;">Submit by: '
                         + _deadline.strftime('%d %B %Y') + '</p>'
                         '</div>'
                     ),
                     text_body=(
                         'RAW File Required. Your image ' + (img.asset_name or 'Untitled') +
-                        ' entered into ' + _genre_label + ' POTY requires RAW verification. '
+                        ' in ' + _genre_label + ' requires RAW verification. '
                         'Submit within 7 days: ' + _submit_url
                     )
                 )
                 send_email(
                     to_addresses=[ADMIN_EMAIL],
-                    subject=f'[Admin] RAW Required — Contest Entry — {img.asset_name or "Untitled"}',
+                    subject=f'[Admin] RAW Required — Programme Entry — {img.asset_name or "Untitled"}',
                     html_body=(
-                        '<p>RAW verification triggered at contest entry.</p><ul>'
+                        '<p>RAW verification triggered at programme participation.</p><ul>'
                         '<li>Image: ' + (img.asset_name or 'Untitled') + '</li>'
                         '<li>Genre: ' + _genre_label + '</li>'
                         '<li>Score: ' + str(round(img.score, 2)) + '</li>'
                         '<li>User: ' + current_user.email + '</li>'
-                        '<li>Deadline: ' + _deadline.strftime('%d %B %Y') + '</li></ul>'
+                        '<li>Submit by: ' + _deadline.strftime('%d %B %Y') + '</li></ul>'
                     ),
                     text_body=(
-                        'RAW required at contest entry. Image: ' + (img.asset_name or 'Untitled') +
+                        'RAW required for programme image. Image: ' + (img.asset_name or 'Untitled') +
                         ' Score: ' + str(round(img.score, 2)) +
                         ' User: ' + current_user.email
                     )
                 )
                 flash(
-                    f' Your score qualifies for {_genre_label} POTY. '
-                    f'RAW verification is required — check your email for the submission link. '
+                    f' Your score qualifies for {_genre_label} programme standings. '
+                    f'RAW verification is required — check your email for the upload link. '
                     f'You have 7 days to submit your original RAW file.',
                     'warning'
                 )
@@ -8100,7 +8101,7 @@ def contest_enter_monthly(genre):
         return redirect(url_for('contests'))
 
     genre_label = GENRE_LABELS.get(genre, genre)
-    return render_template('contest_enter.html',
+    return render_template('programme_enter.html',
         genre        = genre,
         genre_label  = genre_label,
         track        = track,
@@ -8120,7 +8121,7 @@ def my_contest_entries():
                .filter_by(user_id=current_user.id, contest_type='monthly')
                .order_by(ContestEntry.entered_at.desc())
                .all())
-    return render_template('my_entries.html',
+    return render_template('my_participations.html',
         entries      = entries,
         current_month= month,
         genre_labels = GENRE_LABELS,
@@ -8132,11 +8133,11 @@ def my_contest_entries():
 @login_required
 def open_contest_enter():
     if not is_open_contest_active():
-        flash('The Open Competition is not currently accepting entries. Check back closer to Grand Prix.', 'info')
+        flash('The Open Programme is not currently accepting participants. Check back closer to Grand Prix.', 'info')
         return redirect(url_for('contests'))
 
     if not getattr(current_user, 'is_subscribed', False):
-        flash('An active Camera or Mobile subscription is required to enter the Open Competition.', 'error')
+        flash('An active Camera or Mobile subscription is required to participate in the Open Programme.', 'error')
         return redirect(url_for('pricing'))
 
     platform_year = datetime.utcnow().year
@@ -8210,11 +8211,11 @@ def open_contest_enter():
                 )
                 db.session.add(entry)
                 db.session.commit()
-                flash(f' Entry confirmed! "{img.asset_name}" is entered in {GENRE_LABELS.get(genre, genre)}  -  Open Competition {platform_year}.', 'success')
+                flash(f' Participation confirmed! "{img.asset_name}" is entered in {GENRE_LABELS.get(genre, genre)}  -  Open Programme {platform_year}.', 'success')
                 return redirect(url_for('contests'))
             except Exception:
                 db.session.rollback()
-                flash('Entry already exists for this genre, or a database error occurred.', 'error')
+                flash('A participation record already exists for this genre, or a database error occurred.', 'error')
                 return redirect(url_for('contests'))
         else:
             # Step 2  -  show summary for confirmation
@@ -8375,11 +8376,11 @@ def challenge_withdraw(sub_id):
     """Withdraw a submission  -  only allowed while challenge is still open."""
     sub = WeeklySubmission.query.filter_by(id=sub_id, user_id=current_user.id).first_or_404()
     if sub.challenge.is_closed:
-        flash('Challenge is closed  -  submissions cannot be withdrawn.', 'error')
+        flash('Challenge is closed  -  images cannot be withdrawn.', 'error')
         return redirect(url_for('weekly_challenge'))
     db.session.delete(sub)
     db.session.commit()
-    flash('Submission withdrawn.', 'info')
+    flash('Image withdrawn from challenge.', 'info')
     return redirect(url_for('weekly_challenge'))
 
 
@@ -9223,7 +9224,7 @@ def submit_rating():
     """Submit a completed peer rating."""
     assignment_id = request.form.get('assignment_id', type=int)
     if not assignment_id:
-        flash('Invalid submission.', 'error')
+        flash('Invalid request.', 'error')
         return redirect(url_for('rate'))
 
     assignment = RatingAssignment.query.get(assignment_id)
@@ -9283,7 +9284,7 @@ def submit_rating():
 
         flash(f'Rating submitted! Peer LL-Score: {rating.peer_ll_score} . +1 credit earned.', 'success')
         if (current_user.lifetime_ratings_given or 0) % 5 == 0:
-            flash(' You\'ve unlocked a peer pool entry! Go to your dashboard to choose an image to submit for peer rating.', 'info')
+            flash(' You\'ve unlocked a peer pool slot! Go to your dashboard to choose an image for peer rating.', 'info')
 
         # Zone notifications
         img = assignment.image
@@ -9348,7 +9349,7 @@ def submit_rating():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[submit_rating] {e}')
-        flash('Submission failed. Please try again.', 'error')
+        flash('Upload failed. Please try again.', 'error')
 
     return redirect(url_for('rate'))
 
@@ -9563,7 +9564,7 @@ def admin_contests():
             )
             db.session.add(bc)
             db.session.commit()
-            flash(f'Brand contest "{title}" created as draft.', 'success')
+            flash(f'Brand programme "{title}" created as draft.', 'success')
             return redirect(url_for('admin_contests'))
 
         elif action in ('brand_activate', 'brand_close', 'brand_judging', 'brand_publish'):
@@ -10073,7 +10074,7 @@ def enter_peer_pool():
     unlocks_pending = unlocks_earned - unlocks_used
 
     if unlocks_pending <= 0:
-        flash('No pool entry unlocks available. Rate more images to earn one.', 'warning')
+        flash('No peer pool slots available. Rate more images to earn one.', 'warning')
         return redirect(url_for('dashboard'))
 
     # Verify the image belongs to this user and is eligible
@@ -10868,17 +10869,17 @@ def admin_contest_go_live():
             continue
         send_email(
             photographer.email,
-            f'🏆 You placed {ordinals[rank]} in {contest_ref} — Shutter League',
+            f'🏆 Your result in {contest_ref} — Shutter League',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#C8A84B;">Shutter League</p>'
              f'<h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">Congratulations, {photographer.full_name or photographer.username}!</h2>'
-             f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>"{row.asset_name}"</strong> ({row.genre}) has placed <strong style="color:#C8A84B;">{ordinals[rank]}</strong> in <strong>{contest_ref}</strong>.</p>'
-             f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">The results are now live on the leaderboard.</p>'
-             f'<a href="{site_url}/leaderboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Leaderboard →</a>'
+             f'<p style="font-size:18px;color:#4A4840;line-height:1.7;">Your image <strong>&quot;{row.asset_name}&quot;</strong> ({row.genre}) has achieved <strong style="color:#C8A84B;">{ordinals[rank]}</strong> position in <strong>{contest_ref}</strong>.</p>'
+             f'<p style="font-size:16px;color:#4A4840;line-height:1.7;">The results are now live in the programme standings.</p>'
+             f'<a href="{site_url}/leaderboard" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">View Standings &#8594;</a>'
              f'</div>')
         )
 
-    flash(f'Leaderboard published for {contest_ref}. Results are now live. {len(winners)} top scorer(s) notified by email.', 'success')
+    flash(f'Standings published for {contest_ref}. Results are now live. {len(winners)} top position(s) notified by email.', 'success')
     return redirect(url_for('admin_judge_config'))
 
 
@@ -10994,7 +10995,7 @@ def raw_submit(contest_type, image_id):
                 flash('Please provide a shareable link to your RAW file.', 'error')
                 return redirect(request.url)
         else:
-            flash('Invalid submission method.', 'error')
+            flash('Invalid request method.', 'error')
             return redirect(request.url)
 
         contest_ref = request.form.get('contest_ref', '')
@@ -11075,7 +11076,7 @@ def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, ass
             '</div>'
             '<div style="padding:32px;">'
             f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {user_name},</p>'
-            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your image <strong>{asset_name}</strong> scored <strong style="color:#F5C518;font-size:20px;">{score}</strong> — Grandmaster tier. Scores above 9.0 are held for verification before going live on the leaderboard.</p>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your image <strong>{asset_name}</strong> scored <strong style="color:#F5C518;font-size:20px;">{score}</strong> — Grandmaster tier. Scores above 9.0 are held for verification before going live in the programme standings.</p>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">We can see your image was shot on your camera with the original EXIF data intact. You do not need to submit a RAW file — but we need the <strong>original full-size JPEG</strong> exactly as it came off your memory card or camera roll.</p>'
             '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
             '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">What to submit:</p>'
@@ -11087,11 +11088,11 @@ def _send_jpeg_provenance_email(image_id, submit_url, user_email, user_name, ass
             '</div>'
             '<div style="background:#FFF3CD;border-left:4px solid #F5C518;padding:14px 20px;margin:20px 0;">'
             '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 4px 0;">&#9203; Submit within 72 hours</p>'
-            '<p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster scores are automatically hidden from the leaderboard.</p>'
+            '<p style="font-size:14px;color:#1A1A18;margin:0;">After 72 hours, unverified Grandmaster scores are automatically hidden from the programme standings.</p>'
             '</div>'
             f'<a href="{submit_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit Original JPEG &#8594;</a>'
             f'<p style="font-size:13px;color:#888888;">Or visit: <a href="{submit_url}" style="color:#F5C518;">{submit_url}</a></p>'
-            '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;"><strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously — enabling RAW+JPEG Fine in your camera settings means every future frame is automatically eligible for contest qualifying rounds and the Photographer of the Year award without any extra steps.</p>'
+            '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;"><strong>Going forward:</strong> Your camera can shoot RAW alongside JPEG simultaneously — enabling RAW+JPEG Fine in your camera settings means every future frame is automatically eligible for programme participation and the Annual Excellence Award without any extra steps.</p>'
             '</div>'
             '<div style="background:#F5F3EF;border-top:1px solid #E0D8C8;padding:16px 32px;">'
             '<p style="color:#888888;font-size:12px;margin:0;">Shutter League &nbsp;·&nbsp; support@shutterleague.com &nbsp;·&nbsp; shutterleague.com</p>'
@@ -11128,7 +11129,7 @@ def _send_jpeg_provenance_approved_email(user_email, user_name, asset_name, scor
             '<p style="font-size:18px;color:#3B6D11;font-weight:700;margin:0 0 4px 0;">&#10003; Verification Approved</p>'
             f'<p style="font-size:15px;color:#1A1A18;margin:0;">Your image <strong>{asset_name}</strong> has been verified.</p>'
             '</div>'
-            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your <strong style="color:#F5C518;font-size:20px;">{score}</strong> Grandmaster score is now live on your profile and the leaderboard.</p>'
+            f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Your <strong style="color:#F5C518;font-size:20px;">{score}</strong> Grandmaster score is now live on your profile and in the programme standings.</p>'
             f'<a href="{dashboard_url}" style="display:inline-block;background:#F5C518;color:#1A1A18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">View Your Score &#8594;</a>'
             '<p style="font-size:14px;color:#555555;margin-top:24px;line-height:1.7;">For future submissions, enabling RAW+JPEG Fine on your camera means verification is automatic — no extra steps required.</p>'
             '</div>'
@@ -11800,7 +11801,7 @@ def admin_raw_send_reminder(image_id):
                 'RAW File Required &#8212; Action Needed</h2>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + uname + ',</p>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Your RAW file for '
-                '<strong>' + ititle + '</strong> is required to confirm your contest standing.</p>'
+                '<strong>' + ititle + '</strong> is required to confirm your programme standing.</p>'
                 '<p style="font-size:16px;line-height:1.7;color:#111111;">'
                 'Deadline: <strong style="color:#F5C518;">' + deadline_str + '</strong></p>'
                 '<a href="' + submit_url + '" style="display:inline-block;background:#F5C518;'
@@ -11831,7 +11832,7 @@ def admin_raw_delete_submission(image_id):
         'DELETE FROM raw_submissions WHERE image_id=:iid'
     ), {'iid': image_id})
     db.session.commit()
-    flash('RAW submission record deleted for "' + (img.asset_name or 'Untitled') + '".', 'success')
+    flash('RAW verification record deleted for "' + (img.asset_name or 'Untitled') + '".', 'success')
     return redirect(url_for('admin_raw_verification'))
 
 
@@ -11853,7 +11854,7 @@ def admin_raw_bulk_delete():
         except Exception:
             pass
     db.session.commit()
-    flash(f'{deleted} RAW submission record(s) deleted.', 'success')
+    flash(f'{deleted} RAW verification record(s) deleted.', 'success')
     return redirect(url_for('admin_raw_verification'))
 
 
@@ -11892,7 +11893,7 @@ def admin_raw_bulk_remind():
                     '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
                     '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">RAW File Required &#8212; Action Needed</h2>'
                     '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + uname + ',</p>'
-                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Your RAW file for <strong>' + ititle + '</strong> is required to confirm your contest standing.</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#111111;">Your RAW file for <strong>' + ititle + '</strong> is required to confirm your programme standing.</p>'
                     '<p style="font-size:16px;line-height:1.7;color:#111111;">Deadline: <strong style="color:#F5C518;">' + deadline_str + '</strong></p>'
                     '<a href="' + submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
                     '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + submit_url + '" style="color:#F5C518;">' + submit_url + '</a></p>'
@@ -12024,7 +12025,7 @@ def admin_raw_decide(image_id):
                  f'<a href="{site_url}/raw/status/{image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">Resubmit RAW</a>'
                  f'</div>')
             )
-        flash(f'Resubmission requested for "{img.asset_name}".', 'info')
+        flash(f'RAW resubmission requested for "{img.asset_name}".', 'info')
 
     db.session.commit()
     return redirect(url_for('admin_raw_verification'))
@@ -12099,7 +12100,7 @@ def admin_raw_trigger_analysis(image_id):
         "SELECT * FROM raw_submissions WHERE image_id=:iid ORDER BY submitted_at DESC LIMIT 1"
     ), {'iid': image_id}).fetchone()
     if not submission:
-        flash('No RAW submission found for this image.', 'error')
+        flash('No RAW verification record found for this image.', 'error')
         return redirect(url_for('admin_raw_detail', image_id=image_id))
 
     img = Image.query.get_or_404(image_id)
@@ -12847,7 +12848,7 @@ def _auto_decide_raw(image_id, submission_id):
                             '<p style="font-size:16px;line-height:1.7;color:#4A4840;">We have received your RAW file for <strong>"' + (img.asset_name or 'Untitled') + '"</strong>. '
                             'Your camera&#39;s RAW format requires manual verification by our team. '
                             'We will review it within <strong>48 hours</strong> and notify you of the outcome.</p>'
-                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image remains active and your contest standing is not affected during this review.</p>'
+                            '<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your image remains active and your programme standing is not affected during this review.</p>'
                             '<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
                             '</div>'
                         )
@@ -13115,7 +13116,7 @@ def raw_appeal(image_id):
     ), {'iid': image_id}).fetchone()
 
     if not submission:
-        flash('No RAW submission found for this image.', 'error')
+        flash('No RAW verification record found for this image.', 'error')
         return redirect(url_for('dashboard'))
 
     # Must be auto-disqualified and not already appealed
@@ -13166,7 +13167,7 @@ def raw_appeal(image_id):
              f'</div>')
         )
 
-        flash('Your appeal has been submitted. Our admin team will review your RAW file manually and notify you of the outcome.', 'success')
+        flash('Your appeal has been received. Our admin team will review your RAW file manually and notify you of the outcome.', 'success')
         return redirect(url_for('raw_status', image_id=image_id))
 
     return render_template('raw_appeal.html', img=img, submission=submission)
@@ -13209,7 +13210,7 @@ def admin_raw_appeal_decide(image_id):
                  f'<p style="margin:0;font-size:16px;font-weight:700;color:#C0392B;">The disqualification stands.</p>'
                  + (f'<p style="margin:8px 0 0;font-size:15px;color:#4A4840;">Reason: {admin_note}</p>' if admin_note else '')
                  + f'</div>'
-                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your account remains active and all your other scores and contest standings are unaffected. You are welcome to continue participating in future contests.</p>'
+                 f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Your account remains active and all your other scores and programme standings are unaffected. You are welcome to continue participating in future programmes.</p>'
                  f'<p style="font-size:14px;color:#8a8070;margin-top:24px;">— Shutter League</p>'
                  f'</div>')
             )
@@ -13681,7 +13682,7 @@ def admin_notify_winners():
 
         send_email(
             photographer.email,
-            f'Congratulations — provisional top scorer in {contest_ref}',
+            f'Congratulations — provisional top position in {contest_ref}',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2>Congratulations, {photographer.full_name or photographer.username}.</h2>'
@@ -13776,8 +13777,8 @@ def cron_raw_reminders():
                  f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
                  f'<h2 style="font-size:20px;{"color:#C0392B;" if hours==24 else ""}">RAW file due in {label}</h2>'
                  f'<p style="font-size:16px;line-height:1.7;color:#4A4840;"><strong>"{row.asset_name}"</strong><br>'
-                 f'Deadline: <strong>{row.deadline.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
-                 f'<p style="font-size:15px;color:#C0392B;">Failure to submit will result in disqualification.</p>'
+                 f'Submit by: <strong>{row.deadline.strftime("%d %B %Y, %H:%M UTC")}</strong></p>'
+                 f'<p style="font-size:15px;color:#C0392B;">Images without a verified RAW file will not be included in the programme standings.</p>'
                  f'<a href="{site_url}/raw/submit/{row.contest_type}/{row.image_id}" style="display:inline-block;background:#C8A84B;color:#1a1a18;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;text-decoration:none;border-radius:4px;margin:16px 0;">Submit RAW Now</a>'
                  f'</div>')
             )
@@ -13806,14 +13807,14 @@ def cron_raw_reminders():
         ), {'iid': row.image_id})
         send_email(
             row.email,
-            f'Your image was not considered for this competition -- RAW file not received',
+            f'Your image was not considered for this programme -- RAW file not received',
             (f'<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;color:#1a1a18;">'
              f'<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
              f'<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">We are sorry -- your image could not be considered</h2>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>"{row.asset_name}"</strong> was not considered for this competition because the RAW file was not received within the required deadline.</p>'
-             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional top scorers to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">We regret to inform you that your image <strong>&quot;{row.asset_name}&quot;</strong> was not considered for this programme because the RAW file was not received within the required timeframe.</p>'
+             f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">RAW verification is a mandatory step for all provisional top positions to confirm the authenticity of the original photograph. Without it, we are unable to confirm your result.</p>'
              f'<div style="background:#F5F0E8;border-left:3px solid #C8A84B;padding:16px 20px;margin:20px 0;font-size:16px;color:#4A4840;line-height:1.7;">'
-             f'<strong style="color:#1a1a18;">You are welcome to continue entering.</strong> The same image may be entered again in future programmes. If your image achieves a provisional top-scoring position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
+             f'<strong style="color:#1a1a18;">You are welcome to continue participating.</strong> The same image may be submitted again in future programmes. If your image achieves a provisional top position, please ensure you submit your RAW file within the timeframe stated in the notification email.'
              f'</div>'
              f'<p style="font-size:15px;color:#8A8478;line-height:1.7;">If you believe this notice was sent in error, please write to <a href="mailto:'+CONTACT_EMAIL+'" style="color:#C8A84B;">'+CONTACT_EMAIL+'</a> within 48 hours.</p>'
              f'<p style="font-size:14px;color:#8A8478;margin-top:24px;">Your account remains active and your DDI scores are unaffected.</p>'
@@ -14216,7 +14217,7 @@ def send_welcome_email(user):
         'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
         'Photography has never had the equivalent for 200 years &#8212; until now.</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Your best scores build your Photographer of the Year (POTY) average across eight tiers:</p>'
+        'Your best scores build your Annual Excellence Award standing across eight tiers:</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#1a1a18;line-height:2.1;">'
         'Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman<br>'
         'Maverick &#8594; Master &#8594; Grandmaster &#8594; <strong>Legend</strong></p>'
@@ -14236,7 +14237,7 @@ def send_welcome_email(user):
         '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
         '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Weekly Assignment</p>'
         '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Every week, a theme. Submit your best image &#8212; every entry earns points just for participating. '
+        'Every week, a theme. Submit your best image &#8212; every image earns points just for participating. '
         'Top 3 earn additional points. Results every Monday. '
         'It is the fastest way to stretch your eye &#8212; one theme, one week, one image that has to say everything.</p>'
         '<a href="' + challenge_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; See this week&#39;s challenge</a>'
@@ -14301,9 +14302,9 @@ def send_welcome_email(user):
         '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
         'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your First Goal</p>'
         '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Upload 3 images. After your third scored image, your shadow rank is revealed &#8212; '
+        'Upload 3 images. After your third scored image, your shadow position is revealed &#8212; '
         'you&#39;ll see exactly where you stand among photographers like you. '
-        'Subscribe to lock in your rank and start your official 6-month clock.</p>'
+        'Subscribe to lock in your position and start your official 6-month activity clock.</p>'
         '<a href="' + upload_url + '" style="display:block;background:#F5C518;color:#1a1a18;'
         'font-family:Courier New,monospace;font-size:14px;font-weight:700;letter-spacing:2px;'
         'text-transform:uppercase;padding:16px;text-decoration:none;border-radius:4px;'
@@ -14346,12 +14347,12 @@ def send_welcome_email(user):
         '5. Affective Quotient - the specific emotion the image creates: loneliness, joy, defiance, awe\n'
         'Read the science: ' + science_url + '\n'
         'How it works: ' + hiw_url + '\n\n'
-        'YOUR RANK\n'
+        'YOUR STANDING\n'
         'Eight tiers: Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
-        'Your best scores build your Photographer of the Year (POTY) average.\n'
+        'Your best scores build your Annual Excellence Award standing.\n'
         'Consistency wins. One great image is not enough.\n\n'
         'WHAT AWAITS YOU\n'
-        'Weekly Assignment: Every week, a theme. Every entry earns points. Top 3 earn additional points.\n'
+        'Weekly Assignment: Every week, a theme. Every image earns points. Top 3 earn additional points.\n'
         + challenge_url + '\n\n'
         'Body of Work: 6-10 images. One story. Jury evaluation in December.\n'
         + bow_url + '\n\n'
@@ -14366,7 +14367,7 @@ def send_welcome_email(user):
         '- Camera League: DSLR or mirrorless only.\n'
         '- Keep your RAW files. May be requested for verification.\n\n'
         'YOUR FIRST GOAL\n'
-        'Upload 3 images. Your shadow rank is revealed after image 3.\n'
+        'Upload 3 images. Your shadow position is revealed after image 3.\n'
         'Upload now: ' + upload_url + '\n\n'
         'Agreement confirmed: Member Agreement & Terms accepted on ' + accepted_date + '.\n'
         'Questions? support@shutterleague.com\n'
@@ -14856,13 +14857,13 @@ def admin_subscription_broadcast():
             '</div>'
             '<div style="padding:32px;">'
             f'<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Hi {_name},</p>'
-            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">You have already experienced what Shutter League does — your images have been scored, your rank is live, and the DDI engine has given you the kind of honest, specific feedback that most photographers never receive.</p>'
+            '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">You have already experienced what Shutter League does — your images have been scored, your standing is live, and the DDI engine has given you the kind of honest, specific feedback that most photographers never receive.</p>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">Now take it further.</p>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 16px 0;line-height:1.7;">A subscription gives you:</p>'
             '<ul style="font-size:16px;color:#1A1A18;margin:0 0 20px 0;padding-left:24px;line-height:2.2;">'
             '<li><strong>Scored images every month</strong> — track your progress over time</li>'
-            '<li><strong>Your rank on the national leaderboard</strong> — updated with every submission</li>'
-            '<li><strong>Eligibility for the Photographer of the Year award</strong> — the first ranking in Indian photography built on continuous performance, not a single image on a single day</li>'
+            '<li><strong>Your standing in the programme</strong> — updated with every evaluation</li>'
+            '<li><strong>Eligibility for the Annual Excellence Award</strong> — the first recognition in Indian photography built on continuous performance, not a single image on a single day</li>'
             '<li><strong>Access to the mentor marketplace</strong> — one-on-one review from working professionals</li>'
             '</ul>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 8px 0;line-height:1.7;">This platform is being built now, and the photographers who join early are the ones who shape it.</p>'
@@ -14884,8 +14885,8 @@ def admin_subscription_broadcast():
         _txt = (
             f'Hi {_name},\n\n'
             'You have already seen your scores. Now take it further.\n\n'
-            'A Shutter League subscription gives you scored images every month, your rank on the national leaderboard, '
-            'and eligibility for the Photographer of the Year award.\n\n'
+            'A Shutter League subscription gives you scored images every month, your standing in the programme, '
+            'and eligibility for the Annual Excellence Award.\n\n'
             'Mobile Track: ₹99/month (8 scored images)\n'
             'Camera Track: ₹199/month (5 images + full suite)\n\n'
             'Payment note: Indian debit card, credit card, UPI, or net banking required.\n\n'
