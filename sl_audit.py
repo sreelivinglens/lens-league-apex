@@ -25,7 +25,11 @@ KYC_TERMS = [
      ["url_for('contests')", "url_for('contest_enter')", "url_for('contest')",
       'contest_enter', 'contest_rules', 'programme_enter',
       'contest_banners', 'contest_wins', 'contest_type', 'contest_month',
-      'contest_entries', 'ann.contest']),
+      'contest_entries', 'ann.contest',
+      # Flask endpoint checks in templates — route names not visible copy
+      "endpoint == 'contests'", "endpoint in ['contests'",
+      "endpoint == 'contest'", "in ['contests',",
+      "contests_redirect", "'contest'"]),
     ('No KYC: prize',       ' prize',        []),
     ('No KYC: winner',      ' winner',       []),
     ('No KYC: winners',     ' winners',      []),
@@ -33,7 +37,9 @@ KYC_TERMS = [
     ('No KYC: ranking',     'ranking',       ['url_for', 'ranking_season', 'ranking_public',
                                               'ranking_last_active', 'poty_used_year',
                                               'path_to_rank', 'rp-card', 'rp_card']),
-    ('No KYC: leaderboard', 'leaderboard',   ["url_for('leaderboard')", 'url_for("leaderboard")']),
+    ('No KYC: leaderboard', 'leaderboard',   ["url_for('leaderboard')", 'url_for("leaderboard")',
+                                              # Flask endpoint checks
+                                              "endpoint == 'leaderboard'", "endpoint == \"leaderboard\""]),
     ('No KYC: reward',      ' reward',       []),
     ('No KYC: deadline',    'deadline',      []),
     ('No KYC: submission',  'submission',    ['url_for', 'poty_entry', 'form']),
