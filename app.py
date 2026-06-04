@@ -7154,16 +7154,6 @@ def portfolio_photo_presign():
 def robots_txt():
     content = (
         "User-agent: *\n"
-        "Allow: /\n"
-        "Allow: /terms\n"
-        "Allow: /privacy\n"
-        "Allow: /refund-policy\n"
-        "Allow: /about\n"
-        "Allow: /contact\n"
-        "Allow: /pricing\n"
-        "Allow: /how-it-works\n"
-        "Allow: /faq\n"
-        "Allow: /programme-rules\n"
         "Disallow: /admin\n"
         "Disallow: /sree-admin\n"
         "Disallow: /dashboard\n"
