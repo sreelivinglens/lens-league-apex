@@ -15337,17 +15337,20 @@ def _aea_eligibility(user_id, year):
       - Lenient Dec 31: images uploaded before midnight count once scored
       - Image pool = full platform history minus images locked to a DIFFERENT year
       - Scores frozen at submission time (handled in enrol route)
+      - Active plan = is_subscribed AND subscription_track in ('mobile', 'camera')
     """
     if year == 2026:
         season_start = date(2026, 9, 1)
     else:
         season_start = date(year, 1, 1)
     season_end = date(year, 12, 31)
-    # Lenient: include day after Dec 31 to catch uploads before midnight
     season_end_excl = date(year + 1, 1, 1)
 
     user = db.session.get(User, user_id)
-    active_plan = (user.subscription_status in ('mobile', 'camera')) if user else False
+    active_plan = (
+        getattr(user, 'is_subscribed', False) and
+        getattr(user, 'subscription_track', None) in ('mobile', 'camera')
+    ) if user else False
 
     qm_sql = db.text("""
         SELECT COUNT(DISTINCT DATE_TRUNC('month', created_at))
@@ -15451,7 +15454,10 @@ def aea():
         enrol_close = date(year + 1, 1, 31)
 
     window_open = enrol_open <= today <= enrol_close
-    is_free = current_user.subscription_status in ('mobile', 'camera')
+    is_free = (
+        getattr(current_user, 'is_subscribed', False) and
+        getattr(current_user, 'subscription_track', None) in ('mobile', 'camera')
+    )
 
     genre_rows = db.session.execute(db.text("""
         SELECT DISTINCT genre FROM images
@@ -15571,7 +15577,7 @@ def aea_enrol():
         return redirect(url_for('aea'))
 
     entry_score = sum(score_map.values()) / 6
-    sub_status  = current_user.subscription_status or 'none'
+    sub_status  = getattr(current_user, 'subscription_track', None) or 'none'
 
     # TODO (pre-launch): add payment / points deduction here for non-subscribers
 
