@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Annual Excellence Award — Standings {{ year }} — ShutterLeague{% endblock %}
+
+{% block extra_css %}
+<style>
+/* AEA Standings — inapplicable: hero dims, hero-fade, hero opacity, hero margin, justify */
+.aeas-wrap {
+    font-family: 'Inter', sans-serif !important;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* ── Header ── */
+.aeas-eyebrow {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #1A1A18; margin-bottom: 8px; font-weight: 700;
+}
+.aeas-title {
+    font-size: 28px; font-weight: 700;
+    color: #1A1A18; margin: 0 0 6px; line-height: 1.2;
+}
+.aeas-subtitle { font-size: 16px; color: #1A1A18; margin: 0 0 28px; }
+
+/* ── Season info bar ── */
+.aeas-info-bar {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    background: #F5F0E8; border: 1px solid #D0C8B8;
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 32px;
+}
+.aeas-info-item { display: flex; flex-direction: column; gap: 3px; }
+.aeas-info-lbl {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1A1A18;
+}
+.aeas-info-val { font-size: 16px; color: #1A1A18; font-weight: 600; }
+
+/* ── Section heading ── */
+.aeas-section-hdr {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px; font-weight: 700; text-transform: uppercase;
+    color: #1A1A18; margin: 0 0 12px;
+    padding-bottom: 8px; border-bottom: 2px solid #D0C8B8;
+}
+
+/* ── Genre group heading ── */
+.aeas-genre-hdr {
+    font-size: 17px; font-weight: 700; color: #1A1A18;
+    margin: 32px 0 10px;
+}
+.aeas-genre-hdr:first-of-type { margin-top: 0; }
+
+/* ── Standings table ── */
+.aeas-table {
+    width: 100%; border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+.aeas-table thead tr {
+    border-bottom: 2px solid #D0C8B8;
+}
+.aeas-table th {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px; font-weight: 700; text-transform: uppercase;
+    color: #1A1A18;
+    padding: 8px 12px 10px; text-align: left;
+}
+.aeas-table th.num { text-align: right; }
+.aeas-table td {
+    padding: 13px 12px; border-bottom: 1px solid #E8E0D0;
+    color: #1A1A18; vertical-align: middle;
+    max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.aeas-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; max-width: none; }
+.aeas-table td.participant { white-space: normal; }
+.aeas-table tr:last-child td { border-bottom: none; }
+.aeas-table tr.me td { background: rgba(200,168,75,0.10); }
+.aeas-table tr:hover td { background: #FAF8F4; }
+.aeas-table tr.me:hover td { background: rgba(200,168,75,0.16); }
+
+/* ── Rank badge ── */
+.aeas-rank {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px; font-weight: 700;
+    background: #E8E0D0; color: #1A1A18;
+}
+.aeas-rank.gold   { background: #F5C518; color: #1A1A18; }
+.aeas-rank.silver { background: #B8B8B8; color: #1A1A18; }
+.aeas-rank.bronze { background: #B87040; color: #fff; }
+
+/* ── Score ── */
+.aeas-score {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px; font-weight: 700; color: #1A1A18;
+}
+
+/* ── Plan badge ── */
+.aeas-plan {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px; color: #fff;
+    background: #3A3830;
+}
+.aeas-plan.mobile { background: #1A4F7A; }
+.aeas-plan.camera { background: #4A2E7A; }
+
+/* ── Me label ── */
+.aeas-me-tag {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    color: #1A1A18; margin-left: 8px; vertical-align: middle;
+    background: #F5C518; padding: 1px 6px; border-radius: 3px;
+}
+
+/* ── Empty state ── */
+.aeas-empty {
+    background: #F5F0E8; border: 1px solid #D0C8B8;
+    border-radius: 8px; padding: 28px 24px;
+    color: #1A1A18; font-size: 16px; text-align: center;
+    margin-bottom: 16px;
+}
+
+/* ── Back link ── */
+.aeas-back {
+    font-size: 16px; font-weight: 700;
+    color: #1A1A18; text-decoration: underline; margin-bottom: 24px;
+    display: inline-block;
+}
+.aeas-back:hover { color: #1A1A18; }
+
+/* ── Judging notice ── */
+.aeas-notice {
+    background: #F5F0E8; border: 1px solid #D0C8B8;
+    border-left: 4px solid #1A1A18; border-radius: 6px;
+    padding: 16px 20px; font-size: 16px; color: #1A1A18;
+    margin-bottom: 28px; line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+    .aeas-table th, .aeas-table td { padding: 10px 8px; font-size: 15px; }
+    .aeas-table th.hide-mobile,
+    .aeas-table td.hide-mobile { display: none; }
+    .aeas-title { font-size: 24px; }
+    .aeas-subtitle { font-size: 15px; }
+    .aeas-wrap { padding: 24px 16px 80px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="aeas-wrap">
+
+    <a href="{{ url_for('aea') }}" class="aeas-back">← Back to Annual Excellence Award</a>
+
+    <div style="margin-bottom:28px;">
+        <div class="aeas-eyebrow">Annual Excellence Award {{ year }}</div>
+        <h1 class="aeas-title">Programme Standings</h1>
+        <p class="aeas-subtitle">Participation closes {{ enrol_close }} · Titles announced 1 Mar {{ year + 1 }}</p>
+    </div>
+
+    <div class="aeas-info-bar">
+        <div class="aeas-info-item">
+            <span class="aeas-info-lbl">Participation window</span>
+            <span class="aeas-info-val">{{ enrol_open }} – {{ enrol_close }}</span>
+        </div>
+        <div class="aeas-info-item">
+            <span class="aeas-info-lbl">Overall entries</span>
+            <span class="aeas-info-val">{{ overall | length }}</span>
+        </div>
+        <div class="aeas-info-item">
+            <span class="aeas-info-lbl">Genre entries</span>
+            <span class="aeas-info-val">{{ genres_dict.values() | map('length') | sum }}</span>
+        </div>
+    </div>
+
+    <div class="aeas-notice">
+        Standings shown here are based on DDI scores frozen at the time of participation registration.
+        Final titles are announced on 1 Mar {{ year + 1 }} following the judging period (16 Jan – 21 Feb {{ year + 1 }}).
+    </div>
+
+    {# ── OVERALL TRACK ── #}
+    <p class="aeas-section-hdr">Overall — {{ overall | length }} participant{{ 's' if overall | length != 1 }}</p>
+
+    {% if overall %}
+    <table class="aeas-table">
+        <thead>
+            <tr>
+                <th style="width:44px;">#</th>
+                <th>Participant</th>
+                <th class="num">Avg DDI</th>
+                <th class="hide-mobile">Plan</th>
+                <th class="num hide-mobile">Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in overall %}
+        <tr {% if e.is_me %}class="me"{% endif %}>
+            <td>
+                <span class="aeas-rank{% if e.rank == 1 %} gold{% elif e.rank == 2 %} silver{% elif e.rank == 3 %} bronze{% endif %}">
+                    {{ e.rank }}
+                </span>
+            </td>
+            <td>
+                {{ e.username }}
+                {% if e.is_me %}<span class="aeas-me-tag">you</span>{% endif %}
+            </td>
+            <td class="num"><span class="aeas-score">{{ '%.2f'|format(e.entry_score) }}</span></td>
+            <td class="hide-mobile">
+                {% if e.subscription_track %}
+                <span class="aeas-plan {{ e.subscription_track }}">{{ e.subscription_track | title }}</span>
+                {% else %}—{% endif %}
+            </td>
+            <td class="num hide-mobile" style="color:#1A1A18;font-size:15px;">{{ e.submitted_at }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="aeas-empty">No Overall participations registered yet for {{ year }}.</div>
+    {% endif %}
+
+    {# ── GENRE TRACK ── #}
+    {% if genres_dict %}
+    <p class="aeas-section-hdr" style="margin-top:40px;">
+        Genre — {{ genres_dict.values() | map('length') | sum }} participant{{ 's' if (genres_dict.values() | map('length') | sum) != 1 }}
+        across {{ genres_dict | length }} genre{{ 's' if genres_dict | length != 1 }}
+    </p>
+
+    {% for genre, entries in genres_dict.items() %}
+    <p class="aeas-genre-hdr">{{ genre }} <span style="font-weight:600;color:#1A1A18;font-size:15px;">({{ entries | length }})</span></p>
+    <table class="aeas-table">
+        <thead>
+            <tr>
+                <th style="width:44px;">#</th>
+                <th>Participant</th>
+                <th class="num">Avg DDI</th>
+                <th class="hide-mobile">Plan</th>
+                <th class="num hide-mobile">Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in entries %}
+        <tr {% if e.is_me %}class="me"{% endif %}>
+            <td>
+                <span class="aeas-rank{% if e.rank == 1 %} gold{% elif e.rank == 2 %} silver{% elif e.rank == 3 %} bronze{% endif %}">
+                    {{ e.rank }}
+                </span>
+            </td>
+            <td>
+                {{ e.username }}
+                {% if e.is_me %}<span class="aeas-me-tag">you</span>{% endif %}
+            </td>
+            <td class="num"><span class="aeas-score">{{ '%.2f'|format(e.entry_score) }}</span></td>
+            <td class="hide-mobile">
+                {% if e.subscription_track %}
+                <span class="aeas-plan {{ e.subscription_track }}">{{ e.subscription_track | title }}</span>
+                {% else %}—{% endif %}
+            </td>
+            <td class="num hide-mobile" style="color:#1A1A18;font-size:15px;">{{ e.submitted_at }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+
+    {% else %}
+    <p class="aeas-section-hdr" style="margin-top:40px;">Genre</p>
+    <div class="aeas-empty">No Genre participations registered yet for {{ year }}.</div>
+    {% endif %}
+
+</div>
+{% endblock %}

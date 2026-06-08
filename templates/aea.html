@@ -248,14 +248,14 @@
 }
 .aea-fee-free {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; color: #22c55e;
-    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+    font-size: 14px; font-weight: 700; color: #1A1A18;
+    background: #E8F5E8; border: 1px solid #A0C8A0;
     border-radius: 4px; padding: 3px 10px;
 }
 .aea-fee-paid {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px; letter-spacing: 0.02em; color: #C8A84B;
-    background: rgba(200,168,75,0.08); border: 1px solid rgba(200,168,75,0.2);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.02em; color: #1A1A18;
+    background: #F5F0E8; border: 1px solid #D0C8B8;
     border-radius: 4px; padding: 3px 10px;
 }
 
@@ -318,6 +318,7 @@
         <div class="aea-eyebrow">Annual Excellence Award · {{ year }}</div>
         <h1 class="aea-title">Annual Excellence Award</h1>
         <p class="aea-subtitle">Recognising outstanding photographic work across the season.</p>
+        <a href="{{ url_for('aea_standings') }}" style="display:inline-block;margin-top:12px;font-size:16px;font-weight:700;color:#1A1A18;text-decoration:underline;">View programme standings &rarr;</a>
     </div>
 
     <!-- Season bar -->
@@ -495,12 +496,23 @@
             </div>
             {% endif %}
 
-            <div class="aea-fee-row">
+            <div class="aea-fee-row" style="flex-wrap:wrap;">
                 Participation fee:
                 {% if is_free %}
                 <span class="aea-fee-free">Free — active subscriber</span>
+                <input type="hidden" name="pay_method" value="free">
                 {% else %}
                 <span class="aea-fee-paid">₹500 · or 4,500 pts</span>
+                <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:16px;color:#1A1A18;cursor:pointer;font-weight:600;">
+                        <input type="radio" name="pay_method" value="points" id="pay-points" required style="width:20px;height:20px;cursor:pointer;">
+                        Use 4,500 pts
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:16px;color:#1A1A18;cursor:not-allowed;font-weight:600;" title="Coming soon">
+                        <input type="radio" name="pay_method" value="monetary" id="pay-monetary" disabled style="width:20px;height:20px;">
+                        Pay ₹500 <span style="font-size:14px;font-weight:400;color:#1A1A18;">(coming soon)</span>
+                    </label>
+                </div>
                 {% endif %}
             </div>
 
@@ -631,6 +643,8 @@ function updateGenreSpread() {
     }
 }
 
+var isFreeEntry = {{ 'true' if is_free else 'false' }};
+
 function updateSubmitBtn() {
     var btn   = document.getElementById('submit-btn');
     if (!btn) return;
@@ -646,8 +660,18 @@ function updateSubmitBtn() {
         });
         valid = ready && Object.keys(genres).length >= 3;
     }
+    if (!isFreeEntry) {
+        var payPts = document.getElementById('pay-points');
+        valid = valid && payPts && payPts.checked;
+    }
     btn.disabled = !valid;
 }
+
+// Re-check submit when payment method changes
+document.addEventListener('DOMContentLoaded', function() {
+    var payPts = document.getElementById('pay-points');
+    if (payPts) payPts.addEventListener('change', updateSubmitBtn);
+});
 
 selectTrack('genre');
 </script>
