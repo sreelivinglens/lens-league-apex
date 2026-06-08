@@ -15578,7 +15578,41 @@ def aea_enrol():
     entry_score = sum(score_map.values()) / 6
     sub_status  = getattr(current_user, 'subscription_track', None) or 'none'
 
-    # TODO (pre-launch): add payment / points deduction here for non-subscribers
+    # Payment gate — non-subscribers pay ₹500 or 4,500 pts
+    _AEA_PTS_COST = 4500
+    _is_active_sub = (
+        getattr(current_user, 'is_subscribed', False) and
+        sub_status in ('mobile', 'camera')
+    )
+    if not _is_active_sub:
+        pay_method = request.form.get('pay_method', '').strip()  # 'points' (monetary TBD)
+        if pay_method == 'points':
+            _pts_bal = round(getattr(current_user, 'points_balance', 0.0) or 0.0, 1)
+            if _pts_bal < _AEA_PTS_COST:
+                flash(
+                    f'You need {_AEA_PTS_COST} pts to register — '
+                    f'your balance is {int(_pts_bal)} pts.'
+                )
+                return redirect(url_for('aea'))
+            try:
+                db.session.execute(
+                    db.text("UPDATE users SET points_balance = points_balance - :cost WHERE id = :uid"),
+                    {'cost': _AEA_PTS_COST, 'uid': current_user.id}
+                )
+                db.session.flush()
+                app.logger.info(f'[aea_enrol] deducted {_AEA_PTS_COST}pts user={current_user.id}')
+            except Exception as _pe:
+                db.session.rollback()
+                app.logger.error(f'[aea_enrol] points deduct failed: {_pe}')
+                flash('Points deduction failed — please try again.')
+                return redirect(url_for('aea'))
+        else:
+            # Monetary payment not yet wired — gate the route until payment gateway is live
+            flash(
+                'Monetary payment is not yet available. '
+                'Please use points (4,500 pts) to register, or subscribe to register for free.'
+            )
+            return redirect(url_for('aea'))
 
     entry_images_json = json.dumps([
         {'image_id': iid, 'position': pos + 1, 'score': score_map[iid]}
@@ -15621,6 +15655,76 @@ def aea_enrol():
         f'Average DDI score: {entry_score:.2f}'
     )
     return redirect(url_for('aea'))
+
+
+@app.route('/aea/standings')
+@login_required
+def aea_standings():
+    year = date.today().year
+
+    # Overall track standings
+    overall_rows = db.session.execute(db.text("""
+        SELECT pe.id, pe.user_id, pe.entry_score, pe.submitted_at,
+               u.username, u.subscription_track
+        FROM poty_entries pe
+        JOIN users u ON u.id = pe.user_id
+        WHERE pe.year = :yr AND pe.track = 'overall' AND pe.status = 'submitted'
+        ORDER BY pe.entry_score DESC
+    """), {'yr': year}).fetchall()
+
+    overall = [
+        {
+            'rank': i + 1,
+            'user_id': r[1],
+            'entry_score': float(r[2]) if r[2] else None,
+            'submitted_at': r[3].strftime('%d %b %Y').lstrip('0') if r[3] else '',
+            'username': r[4],
+            'subscription_track': r[5],
+            'is_me': r[1] == current_user.id,
+        }
+        for i, r in enumerate(overall_rows)
+    ]
+
+    # Genre track standings — grouped by genre
+    genre_rows = db.session.execute(db.text("""
+        SELECT pe.id, pe.user_id, pe.genre, pe.entry_score, pe.submitted_at,
+               u.username, u.subscription_track
+        FROM poty_entries pe
+        JOIN users u ON u.id = pe.user_id
+        WHERE pe.year = :yr AND pe.track = 'genre' AND pe.status = 'submitted'
+        ORDER BY pe.genre ASC, pe.entry_score DESC
+    """), {'yr': year}).fetchall()
+
+    genres_dict = {}
+    for r in genre_rows:
+        g = r[2] or 'Uncategorised'
+        if g not in genres_dict:
+            genres_dict[g] = []
+        genres_dict[g].append({
+            'rank': len(genres_dict[g]) + 1,
+            'user_id': r[1],
+            'entry_score': float(r[3]) if r[3] else None,
+            'submitted_at': r[4].strftime('%d %b %Y').lstrip('0') if r[4] else '',
+            'username': r[5],
+            'subscription_track': r[6],
+            'is_me': r[1] == current_user.id,
+        })
+
+    # Participation window info
+    if year == 2026:
+        enrol_open  = date(2026, 12, 1)
+        enrol_close = date(2026, 12, 31)
+    else:
+        enrol_open  = date(year, 12, 1)
+        enrol_close = date(year, 12, 31)
+
+    return render_template('aea_standings.html',
+        year=year,
+        overall=overall,
+        genres_dict=genres_dict,
+        enrol_open=enrol_open.strftime('%d %b %Y').lstrip('0'),
+        enrol_close=enrol_close.strftime('%d %b %Y').lstrip('0'),
+    )
 
 
 # ---------------------------------------------------------------------------
