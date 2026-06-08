@@ -42,7 +42,8 @@
     --text-disabled:  #888888 !important;
   }
 
-  .profile-wrap { max-width: 560px; margin: 0 auto; }
+  /* Force Inter consistent with base.html */
+  .profile-wrap { font-family: 'Inter', sans-serif !important; max-width: 560px; margin: 0 auto; }
 
   .profile-section {
     background: var(--surface-2);
@@ -53,10 +54,10 @@
   }
   .profile-section-label {
     font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     letter-spacing: 3px;
-    color: var(--gold);
+    color: var(--text-primary);
     text-transform: uppercase;
     margin-bottom: 20px;
     padding-bottom: 12px;
@@ -66,23 +67,23 @@
   .subscription-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 14px; background: var(--gold-subtle); border: 1px solid var(--gold-dark);
-    border-radius: 99px; font-family: var(--font-mono); font-size: 12px;
-    font-weight: 600; letter-spacing: 1.5px; color: var(--gold);
+    border-radius: 99px; font-family: var(--font-mono); font-size: 14px;
+    font-weight: 700; letter-spacing: 1.5px; color: #1A1A18;
     text-transform: uppercase; margin-bottom: 20px;
   }
   .free-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 14px; background: var(--surface-3); border: 1px solid var(--border);
-    border-radius: 99px; font-family: var(--font-mono); font-size: 12px;
-    font-weight: 600; letter-spacing: 1.5px; color: var(--text-primary);
+    border-radius: 99px; font-family: var(--font-mono); font-size: 14px;
+    font-weight: 700; letter-spacing: 1.5px; color: var(--text-primary);
     text-transform: uppercase; margin-bottom: 20px;
   }
   .pw-strength-track { height: 5px; background: var(--surface-3); border-radius: 99px; margin-top: 8px; overflow: hidden; }
   .pw-strength-fill  { height: 100%; width: 0%; border-radius: 99px; transition: width 0.3s, background 0.3s; }
-  .pw-strength-label { font-size: 13px; margin-top: 5px; color: var(--text-primary); font-family: var(--font-mono); }
+  .pw-strength-label { font-size: 15px; margin-top: 5px; color: var(--text-primary); font-family: var(--font-mono); }
   .danger-zone { background: var(--surface-2); border: 1px solid #5a1a1a; border-radius: var(--radius-lg); padding: 24px 32px; }
-  .danger-zone-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; display: block; }
-  .danger-zone p { font-size: 14px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
+  .danger-zone-label { font-family: var(--font-mono); font-size: 15px; font-weight: 700; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; display: block; }
+  .danger-zone p { font-size: 16px; color: var(--text-primary); margin-bottom: 16px; line-height: 1.6; }
 
   /* ── Progress Dashboard ──────────────────────────────────────── */
   .progress-summary-row {
@@ -102,11 +103,11 @@
     font-family: var(--font-mono);
     font-size: 20px;
     font-weight: 700;
-    color: var(--gold);
+    color: var(--text-primary);
     line-height: 1.1;
   }
   .progress-stat-label {
-    font-size: 12px;
+    font-size: 15px;
     color: var(--text-primary);
     margin-top: 4px;
     letter-spacing: 0.5px;
@@ -123,7 +124,7 @@
   }
   .progress-chart-title {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 2px;
     color: var(--text-primary);
@@ -157,14 +158,14 @@
   }
   .progress-callout-tag {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 6px;
   }
-  .progress-callout-tag.strength { color: #4CAF73; }
-  .progress-callout-tag.growth   { color: var(--gold); }
+  .progress-callout-tag.strength { color: #1A1A18; }
+  .progress-callout-tag.growth   { color: #1A1A18; }
   .progress-callout-dim {
     font-size: 16px;
     font-weight: 600;
@@ -172,12 +173,12 @@
     margin-bottom: 2px;
   }
   .progress-callout-sub {
-    font-size: 12px;
+    font-size: 15px;
     color: var(--text-primary);
     line-height: 1.4;
   }
   .progress-unlock-hint {
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text-primary);
     line-height: 1.6;
     background: var(--surface-3);
@@ -192,12 +193,16 @@
     .progress-charts-row { grid-template-columns: 1fr; }
     .progress-summary-row { grid-template-columns: 1fr 1fr; }
     .progress-trend-wrap { aspect-ratio: 3 / 2; }
+    .progress-callouts { grid-template-columns: 1fr; }
+    .profile-wrap { padding: 56px 16px 40px; }
+    .profile-wrap h1 { text-shadow: none; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="profile-wrap">
+{# onerror="this.style.display='none'" — inapplicable: no DB images on profile page #}
 
   <div class="page-header">
     <h1>My Profile</h1>
@@ -264,8 +269,8 @@
         </div>
         <a href="{{ url_for('mentors') }}"
            style="display:inline-block; margin-top:12px; background:#F5C518; color:#000;
-                  font-family:var(--font-mono); font-size:13px; font-weight:700;
-                  letter-spacing:1px; text-transform:uppercase; padding:9px 16px;
+                  font-family:var(--font-mono); font-size:15px; font-weight:700;
+                  letter-spacing:1px; text-transform:uppercase; padding:10px 16px;
                   text-decoration:none; border-radius:4px; white-space:nowrap;">
           Get Mentor Feedback →
         </a>
@@ -310,7 +315,7 @@
 
       <div class="form-group">
         <label for="username">Username
-          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(visible on leaderboard)</span>
+          <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(visible on programme standings)</span>
         </label>
         <input type="text" id="username" name="username"
                value="{{ current_user.username }}"
@@ -321,13 +326,13 @@
         <label>Email Address</label>
         <input type="email" value="{{ current_user.email }}" disabled
                style="opacity:0.5; cursor:not-allowed;">
-        <div style="font-size:12px; color:var(--text-primary); margin-top:5px;">
+        <div style="font-size:15px; color:var(--text-primary); margin-top:5px;">
           Email cannot be changed. Contact support if needed.
         </div>
       </div>
 
       <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; margin-top:24px; font-size:12px; letter-spacing:2px;">
+              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
         Save Changes
       </button>
     </form>
@@ -366,14 +371,14 @@
 
       <div style="background:var(--surface-3); border:1px solid var(--border);
                   border-left:3px solid var(--amber); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
-                  padding:12px 16px; font-size:13px; color:var(--text-primary);
+                  padding:12px 16px; font-size:15px; color:var(--text-primary);
                   margin-top:20px; line-height:1.6;">
         ⚠️ You will be <strong style="color:var(--text-primary);">logged out</strong> after changing your password.
       </div>
 
       <button type="submit" class="btn"
-              style="width:100%; padding:14px; margin-top:20px; font-size:12px; letter-spacing:2px;
-                     border-color:var(--gold-dark); color:var(--gold);">
+              style="width:100%; padding:14px; margin-top:20px; font-size:15px; letter-spacing:2px;
+                     border-color:var(--gold-dark); color:var(--text-primary);">
         Update Password
       </button>
     </form>
@@ -384,9 +389,9 @@
   <div class="profile-section" style="border-color:var(--gold-dark);
        background:linear-gradient(135deg, var(--surface-2), rgba(245,197,24,0.15));">
     <span class="profile-section-label">Upgrade Your Plan</span>
-    <p style="font-size:14px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
+    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
       You have used <strong style="color:var(--text-primary);">{{ images_used }}/3</strong> free images.
-      Upgrade to get 4 images per month, programme entry, and POTY Annual Honours eligibility.
+      Upgrade to get 4 images per month, programme participation, and POTY Annual Honours eligibility.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="padding:12px 24px;">
@@ -406,12 +411,12 @@
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
       <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary);">Refer a friend</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
-        <span style="background:#fff; border:1px solid rgba(26,39,68,0.20); font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--text-primary); padding:3px 10px; border-radius:99px;">+20 pts on signup</span>
+        <span style="background:#F5C518; color:#1A2744; font-family:var(--font-mono); font-size:14px; font-weight:700; padding:3px 10px; border-radius:99px;">Pro: +500 pts</span>
+        <span style="background:#fff; border:1px solid rgba(26,39,68,0.20); font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); padding:3px 10px; border-radius:99px;">+20 pts on signup</span>
       </div>
     </div>
 
-    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:8px;">Your referral link</div>
+    <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:8px;">Your referral link</div>
     <div style="background:#fff; border:1px solid rgba(26,39,68,0.15); border-radius:6px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
       <span style="font-family:var(--font-mono); font-size:16px; font-weight:700; letter-spacing:0.08em; color:var(--text-primary);">{{ referral_code }}</span>
       <a href="#"
@@ -547,18 +552,18 @@
     </div>
 
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px;">
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">Your referral stats</div>
+      <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">Your referral stats</div>
       <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px;">
         <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Sent</div>
+          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Sent</div>
           <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.total_referred }}</div>
         </div>
         <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Signed up</div>
+          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Signed up</div>
           <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.signed_up }}</div>
         </div>
         <div style="background:#fff; border:1px solid rgba(26,39,68,0.10); border-radius:6px; padding:10px 12px; text-align:center;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Subscribed</div>
+          <div style="font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:4px;">Subscribed</div>
           <div style="font-size:24px; font-weight:700; color:var(--text-primary);">{{ referral_stats.subscribed }}</div>
         </div>
       </div>

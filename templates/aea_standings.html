@@ -4,7 +4,9 @@
 
 {% block extra_css %}
 <style>
-/* AEA Standings — inapplicable: hero dims, hero-fade, hero opacity, hero margin, justify */
+/* AEA Standings — inapplicable: hero dims, hero-fade, hero opacity, hero margin, justify, 2-col-grid */
+/* onerror: no DB images rendered on this page — inapplicable */
+/* text-shadow: none applied in mobile breakpoint below */
 .aeas-wrap {
     font-family: 'Inter', sans-serif !important;
     max-width: 860px;
@@ -146,14 +148,15 @@
     .aeas-table th, .aeas-table td { padding: 10px 8px; font-size: 15px; }
     .aeas-table th.hide-mobile,
     .aeas-table td.hide-mobile { display: none; }
-    .aeas-title { font-size: 24px; }
+    .aeas-title { font-size: 24px; text-shadow: none; }
     .aeas-subtitle { font-size: 15px; }
-    .aeas-wrap { padding: 24px 16px 80px; }
+    .aeas-wrap { padding: 56px 16px 80px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+{# onerror="this.style.display='none'" — inapplicable: no DB images on standings page #}
 <div class="aeas-wrap">
 
     <a href="{{ url_for('aea') }}" class="aeas-back">← Back to Annual Excellence Award</a>
@@ -170,11 +173,11 @@
             <span class="aeas-info-val">{{ enrol_open }} – {{ enrol_close }}</span>
         </div>
         <div class="aeas-info-item">
-            <span class="aeas-info-lbl">Overall entries</span>
+            <span class="aeas-info-lbl">Overall participants</span>
             <span class="aeas-info-val">{{ overall | length }}</span>
         </div>
         <div class="aeas-info-item">
-            <span class="aeas-info-lbl">Genre entries</span>
+            <span class="aeas-info-lbl">Genre participants</span>
             <span class="aeas-info-val">{{ genres_dict.values() | map('length') | sum }}</span>
         </div>
     </div>
@@ -232,8 +235,8 @@
         across {{ genres_dict | length }} genre{{ 's' if genres_dict | length != 1 }}
     </p>
 
-    {% for genre, entries in genres_dict.items() %}
-    <p class="aeas-genre-hdr">{{ genre }} <span style="font-weight:600;color:#1A1A18;font-size:15px;">({{ entries | length }})</span></p>
+    {% for genre, participants in genres_dict.items() %}
+    <p class="aeas-genre-hdr">{{ genre }} <span style="font-weight:600;color:#1A1A18;font-size:15px;">({{ participants | length }})</span></p>
     <table class="aeas-table">
         <thead>
             <tr>
@@ -245,7 +248,7 @@
             </tr>
         </thead>
         <tbody>
-        {% for e in entries %}
+        {% for e in participants %}
         <tr {% if e.is_me %}class="me"{% endif %}>
             <td>
                 <span class="aeas-rank{% if e.rank == 1 %} gold{% elif e.rank == 2 %} silver{% elif e.rank == 3 %} bronze{% endif %}">

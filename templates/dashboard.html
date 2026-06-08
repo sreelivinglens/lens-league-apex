@@ -2415,7 +2415,7 @@
             <div class="db-pool-entry" onclick="event.preventDefault();">
               <form method="POST" action="{{ url_for('enter_peer_pool') }}" onclick="event.stopPropagation();">
                 <input type="hidden" name="image_id" value="{{ img.id }}">
-                <button type="submit" class="btn btn-solid" style="font-size:16px;width:100%;min-height:44px;">🔓 Enter Peer Pool</button>
+                <button type="submit" class="btn btn-solid" style="font-size:14px;width:100%;min-height:44px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🔓 Enter Peer Pool</button>
               </form>
             </div>
             {% endif %}
@@ -2438,7 +2438,7 @@
           {# Edit button — outside card <a> to avoid nested anchor invalid HTML #}
           {% if img.status == 'scored' and img.score is not none and current_user.role != 'admin' %}
           <a href="{{ url_for('upload_edited_version', image_id=img.id) }}"
-             style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);padding:12px 10px;text-decoration:none;min-height:44px;line-height:1.4;margin-top:-1px;display:flex;align-items:center;justify-content:center;"
+             style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);padding:12px 10px;text-decoration:none;min-height:44px;line-height:1.4;margin-top:-1px;display:flex;align-items:center;justify-content:center;white-space:nowrap;"
              onmouseover="this.style.opacity='1';this.style.borderColor='var(--gold)'" onmouseout="this.style.opacity='0.55';this.style.borderColor='var(--border)'">
             ✏ Upload Edit
           </a>
