@@ -559,7 +559,8 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   }
   .sl-hiw-example-wrap {
     min-height: 0;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: unset;
+    overflow: visible;
     display: flex;
     flex-direction: column;
   }
@@ -570,11 +571,30 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     flex: none;
     object-position: center top;
   }
+  /* Score chip — smaller on mobile so it doesn't cover the face */
+  .sl-hiw-score-chip {
+    padding: 7px 11px;
+    top: 12px;
+    left: 12px;
+    gap: 2px;
+  }
+  .sl-hiw-score-num {
+    font-size: 20px;
+  }
+  .sl-hiw-score-tier {
+    font-size: 12px;
+  }
+  .sl-hiw-soul {
+    font-size: 12px;
+  }
   /* On mobile: improvement panel comes out of absolute position and sits below image */
   .sl-hiw-improvement {
     position: static;
     background: #1A1810;
     padding: 20px 20px 24px;
+  }
+  .sl-hiw-imp-label {
+    font-size: 13px;
   }
   .sl-hiw-imp-text {
     font-size: 16px;
