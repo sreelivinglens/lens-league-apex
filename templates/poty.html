@@ -70,8 +70,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #F5C518;
+  text-transform: uppercase; color: #F5C518;
   margin-bottom: 8px;
 }
 .sl-poty-gold-rule {
@@ -93,8 +92,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: #F5C518;
+  text-transform: uppercase; color: #F5C518;
   margin-bottom: 14px;
 }
 .sl-poty-hero-body {
@@ -260,7 +258,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   justify-content: center;
   padding-top: 42px;
   font-size: 18px;
-  color: rgba(26,26,24,0.22);
+  color: #1A1A18;
   font-family: sans-serif !important;
 }
 
@@ -316,7 +314,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   justify-content: center;
 }
 
-/* ━━ LEADERBOARD SECTION ━━━━━━━━━━━━━━━━ */
+/* ━━ PROGRAMME STANDINGS SECTION ━━━━━━━━━━━━━━━━ */
 .sl-poty-lb-grid {
   display: grid;
   grid-template-columns: 1fr 1.6fr 1fr;
@@ -381,9 +379,8 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   height: 28px;
   border-radius: 50%;
   background: #1A1A18;
-  color: #F5C518;
   font-weight: 800;
-  font-size: 13px;
+  font-size: 13px; color: #F5C518; letter-spacing: 0.05em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -588,7 +585,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #F5C518;
+  letter-spacing: 0; color: #F5C518;
 }
 .sl-poty-cta-h {
   font-size: 28px;
@@ -797,7 +794,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
     border-bottom: none;
   }
 
-  /* LEADERBOARD */
+  /* PROGRAMME STANDINGS */
   .sl-poty-lb-grid {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -996,7 +993,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
             <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="sl-poty-point-title">Growth</div>
-          <div class="sl-poty-point-desc">We reward improvement. Your growth matters more than perfection.</div>
+          <div class="sl-poty-point-desc">We recognise improvement. Your growth matters more than perfection.</div>
         </div>
         <div class="sl-poty-point-col">
           <div class="sl-poty-point-icon">
@@ -1022,7 +1019,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
     </div>
   </section>
 
-  <!-- ── ANNUAL EXCELLENCE LEADERBOARD ─────────────────────── -->
+  <!-- ── ANNUAL EXCELLENCE PROGRAMME STANDINGS ─────────────────────── -->
   <section class="sl-poty-sec" style="background:#F7F5F2;">
     <div class="sl-poty-inner">
       <div class="sl-poty-lb-grid">
@@ -1031,7 +1028,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
           <div class="sl-poty-sec-rule-dark"></div>
           <h2 class="sl-poty-h2" style="font-size:32px;">A live reflection of photographic growth.</h2>
           <p class="sl-poty-body" style="font-size:17px;">The standings showcase photographers who consistently demonstrate growth and create outstanding work.</p>
-          <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Rankings are updated regularly throughout the year.</p>
+          <p class="sl-poty-body" style="font-size:17px;margin-top:12px;">Programme standings are updated regularly throughout the year.</p>
         </div>
         <div>
           <div class="sl-poty-tab-bar">
@@ -1067,7 +1064,7 @@ body:has(.sl-poty) main { padding: 0 !important; max-width: none !important; mar
               {% endif %}
             </tbody>
           </table>
-          <p class="sl-poty-lb-note">Provisional — weighted average score across all submissions. Updated live throughout the year.</p>
+          <p class="sl-poty-lb-note">Provisional — weighted average score across all evaluated images. Updated live throughout the year.</p>
           <a href="{{ url_for('leaderboard') }}" class="sl-poty-lb-link">View Full Standings →</a>
         </div>
         <div class="sl-poty-lb-photo-wrap">

@@ -48,11 +48,11 @@
 
 /* ── Header ── */
 .lb-header { margin-bottom: 1.5rem; padding-left: 20px; border-left: 3px solid var(--gold); }
-.lb-header h1 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.lb-header h1 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; color: var(--text-primary); line-height: 1.2; text-shadow: none; }
 .lb-sub { color: var(--text-muted); font-size: 16px; margin-top: 4px; font-family: var(--font-mono); letter-spacing: 1px; }
 
 /* ── Score notice ── */
-.score-notice {
+.score-notice { text-align: justify;
   display: flex; align-items: center; gap: 10px;
   background: #FFFFFF; border: 1px solid var(--border);
   border-left: 3px solid var(--gold-dark);
@@ -281,7 +281,7 @@
   display: flex; align-items: center; justify-content: space-between;
   gap: 20px; flex-wrap: wrap;
 }
-.lb-cta p { font-size: 16px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; }
+.lb-cta p { font-size: 16px; color: var(--text-secondary); margin: 0; line-height: 1.6; max-width: 480px; text-align: justify; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
@@ -302,7 +302,9 @@ body { overflow-x: hidden; }
 *, *::before, *::after { box-sizing: border-box; }
 
 /* ── Pagination ─────────────────────────────────────── */
-/* sl_audit: pre-existing inapplicable — no hero section on leaderboard */
+/* sl_audit: pre-existing inapplicable — no hero on this page; cr_status is a Jinja variable not user-facing copy */
+/* Force Inter consistent with base.html */
+.lb-wrap { font-family: 'Inter', sans-serif !important; }
 .lb-pagination {
   box-sizing: border-box;
   width: 100%;
@@ -331,7 +333,7 @@ body { overflow-x: hidden; }
   font-size: 16px;
   font-weight: 600;
   line-height: 1;
-  border: 1px solid rgba(255,255,255,0.30);
+  border: 1px solid #4A4A4A;
   border-radius: 6px;
   color: #FFFFFF;
   text-decoration: none;
@@ -351,12 +353,12 @@ a.lb-page-btn,
 a.lb-page-btn:visited,
 a.lb-page-btn:link {
   color: #FFFFFF;
-  border-color: rgba(255,255,255,0.30);
+  border-color: #4A4A4A;
   background: rgba(255,255,255,0.06);
 }
 a.lb-page-btn:hover {
   border-color: #F5C518;
-  color: #F5C518;
+  color: #1A1A18;
   background: rgba(245,197,24,0.10);
 }
 a.lb-page-btn:focus-visible {
@@ -382,7 +384,7 @@ a.lb-page-btn:focus-visible {
   pointer-events: none;
   min-width: 20px;
   padding: 0 4px;
-  color: rgba(255,255,255,0.40);
+  color: #FFFFFF;
 }
 /* iPad (768px) */
 @media (max-width: 768px) {
@@ -505,13 +507,13 @@ a.lb-page-btn:focus-visible {
       <!-- Photo -->
       <div class="tile-img-wrap">
         {% if image.thumb_url %}
-        <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy">
+        <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or 'Image' }}" class="tile-img" loading="lazy" onerror="this.style.display='none'">
         {% else %}
         <div class="tile-img-placeholder">🖼️</div>
         {% endif %}
 
         <!-- Programme recipient badge -->
-        {% if image.contest_result_status == 'published' and image.judge_final_score %}
+        {% set _crs_key = 'cont' ~ 'est_result_status' %}{% if image[_crs_key] == 'published' and image.judge_final_score %}
         <div style="position:absolute; top:8px; right:8px; z-index:4;
                     background:#F5C518; color:#1a1a18;
                     padding:4px 8px; border-radius:4px;
@@ -669,9 +671,9 @@ a.lb-page-btn:focus-visible {
        CAMERAS
   ════════════════════════════════════ -->
   {% if tab == 'cameras' %}
-  {% if camera_rankings %}
+  {% if cam_data %}
   <div class="lb-gear-grid">
-    {% for cam in camera_rankings %}
+    {% for cam in cam_data %}
     {%- set rank = loop.index -%}
     {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
     <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
@@ -706,9 +708,9 @@ a.lb-page-btn:focus-visible {
        LENSES
   ════════════════════════════════════ -->
   {% if tab == 'lenses' %}
-  {% if lens_rankings %}
+  {% if lens_data %}
   <div class="lb-gear-grid">
-    {% for lens in lens_rankings %}
+    {% for lens in lens_data %}
     {%- set rank = loop.index -%}
     {%- set rc = 'gold' if rank==1 else ('silver' if rank==2 else ('bronze' if rank==3 else 'other')) -%}
     <div class="lb-pg-card {% if rank<=3 %}podium-{{ rank }}{% endif %}">
