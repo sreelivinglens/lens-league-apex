@@ -415,7 +415,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
 .sl-hiw-imp-text {
   font-size: 16px;
   font-weight: 500;
-  color: rgba(255,255,255,0.90);
+  color: #FFFFFF;
   line-height: 1.6;
   text-align: left;
 }
@@ -558,11 +558,27 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     aspect-ratio: 16 / 9;
   }
   .sl-hiw-example-wrap {
-    min-height: 280px;
+    min-height: 0;
     aspect-ratio: 4 / 3;
+    display: flex;
+    flex-direction: column;
+  }
+  .sl-hiw-example-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    height: auto;
+    flex: none;
+    object-position: center top;
+  }
+  /* On mobile: improvement panel comes out of absolute position and sits below image */
+  .sl-hiw-improvement {
+    position: static;
+    background: #1A1810;
+    padding: 20px 20px 24px;
   }
   .sl-hiw-imp-text {
     font-size: 16px;
+    color: #FFFFFF;
   }
   .sl-hiw-feature-text {
     padding: 40px 20px;
