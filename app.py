@@ -2631,11 +2631,13 @@ def dashboard():
             "FROM images WHERE user_id = :uid AND is_public = TRUE "
             "AND created_at >= :season_start AND score IS NOT NULL"
         ), {'uid': current_user.id, 'season_start': _season_start}).scalar() or 0
-        _season_start_label = '1 Sep 2026' if _now.year == 2026 else '1 Jan'
+        _season_start_label = '1 September 2026' if _now.year == 2026 else '1 January'
+        _pre_season         = (_now.year == 2026 and _now < datetime(2026, 9, 1))
     except Exception as _mae:
         app.logger.warning(f'[dashboard] months_active: {_mae}')
         _months_active = 0
-        _season_start_label = '1 Sep 2026'
+        _season_start_label = '1 September 2026'
+        _pre_season         = True
 
     return render_template('dashboard.html', images=images, stats=stats,
                            query=query, search_enabled=(total_images >= 20),
@@ -2657,7 +2659,8 @@ def dashboard():
                            referral_url=(os.getenv('SITE_URL','https://shutterleague.com') + '/ref/' + (get_or_create_referral_code(current_user) or '')),
                            referred_discount=_ref_discount,
                            _months_active=_months_active,
-                           _season_start_label=_season_start_label)
+                           _season_start_label=_season_start_label,
+                           _pre_season=_pre_season)
 
 
 # ---------------------------------------------------------------------------
@@ -14924,6 +14927,10 @@ def send_welcome_email(user):
         '<p style="margin:0 0 12px;font-size:16px;color:#1a1a18;line-height:2.1;">'
         'Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman<br>'
         'Maverick &#8594; Master &#8594; Grandmaster &#8594; <strong>Legend</strong></p>'
+        '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
+        'The 2026 Annual Excellence Award season opens 1 September 2026. '
+        'Keep shooting now &#8212; your standing, tier, and average build continuously from the day you join. '
+        'Annual Excellence Award eligibility months count from September.</p>'
         '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.75;font-style:italic;">'
         'Consistency wins. One great image is not enough.</p>'
         '</td></tr></table>'
@@ -15053,7 +15060,11 @@ def send_welcome_email(user):
         'YOUR STANDING\n'
         'Eight tiers: Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
         'Your best scores build your Annual Excellence Award standing.\n'
+        'The 2026 Annual Excellence Award season opens 1 September 2026. '
+        'Keep shooting now — your standing, tier, and average build continuously from the day you join. '
+        'Annual Excellence Award eligibility months count from September.\n'
         'Consistency wins. One great image is not enough.\n\n'
+
         'WHAT AWAITS YOU\n'
         'Weekly Assignment: Every week, a theme. Every image earns points. Top 3 earn additional points.\n'
         + challenge_url + '\n\n'
