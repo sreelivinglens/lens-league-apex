@@ -414,24 +414,22 @@ a.lb-page-btn:focus-visible {
   white-space: nowrap;
   line-height: 1.4;
 }
-/* On image tile — overlaid bottom-right of image */
+/* On image tile — inline in tile body below photographer name */
 .tile-uq-tag {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  z-index: 4;
+  display: inline-block;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
-  background: rgba(13,13,11,0.78);
+  background: rgba(0,0,0,0.06);
   color: #888888;
-  border: 1px solid rgba(255,255,255,0.12);
-  pointer-events: none;
+  border: 1px solid rgba(0,0,0,0.10);
+  white-space: nowrap;
   line-height: 1.4;
+  margin-top: 4px;
 }
 </style>
 {% endblock %}
@@ -564,10 +562,6 @@ a.lb-page-btn:focus-visible {
           <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
           {% endif %}
         </div>
-
-        {% if user_join_map.get(image.user_id) %}
-        <span class="tile-uq-tag">Under Qualification for Standing</span>
-        {% endif %}
       </div>
 
       <!-- Info -->
@@ -576,6 +570,9 @@ a.lb-page-btn:focus-visible {
         <div class="tile-genre">{{ image.genre or '—' }}</div>
         {% if image.archetype %}<div class="tile-archetype">{{ image.archetype }}</div>{% endif %}
         <div class="tile-photographer">{{ image.photographer_name or '—' }}</div>
+        {% if user_join_map.get(image.user_id) %}
+        <span class="tile-uq-tag">Pending Standings</span>
+        {% endif %}
       </div>
 
     </a>
@@ -672,7 +669,7 @@ a.lb-page-btn:focus-visible {
 
       {% if p.under_qualification %}
       <div style="margin-top:-6px;">
-        <span class="uq-tag">Under Qualification for Standing</span>
+        <span class="uq-tag">Pending Standings</span>
       </div>
       {% endif %}
 
