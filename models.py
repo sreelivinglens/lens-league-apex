@@ -166,6 +166,7 @@ class Image(db.Model):
     genre               = db.Column(db.String(60),  nullable=True)
     subject             = db.Column(db.String(180), nullable=True)
     location            = db.Column(db.String(180), nullable=True)
+    species_hint        = db.Column(db.String(120), nullable=True)
     conditions          = db.Column(db.String(180), nullable=True)
     photographer_name   = db.Column(db.String(120), nullable=True)
 
