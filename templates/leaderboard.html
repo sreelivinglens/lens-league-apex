@@ -398,6 +398,41 @@ a.lb-page-btn:focus-visible {
   .lb-page-btn { height: 36px; min-width: 36px; font-size: 16px; padding: 0 8px; }
   .lb-page-btn.prev-btn, .lb-page-btn.next-btn { padding: 0 10px; }
 }
+/* ── Under Qualification tag ────────────────────────────────────────── */
+.uq-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: #888888;
+  border: 1px solid rgba(255,255,255,0.15);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+/* On image tile — overlaid bottom-right of image */
+.tile-uq-tag {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(13,13,11,0.78);
+  color: #888888;
+  border: 1px solid rgba(255,255,255,0.12);
+  pointer-events: none;
+  line-height: 1.4;
+}
 </style>
 {% endblock %}
 
@@ -529,6 +564,10 @@ a.lb-page-btn:focus-visible {
           <span class="tile-peer-count"><span class="peer-dot"></span>{{ image.peer_rating_count }}</span>
           {% endif %}
         </div>
+
+        {% if user_join_map.get(image.user_id) %}
+        <span class="tile-uq-tag">Under Qualification for Standing</span>
+        {% endif %}
       </div>
 
       <!-- Info -->
@@ -630,6 +669,12 @@ a.lb-page-btn:focus-visible {
         <span class="pg-peer"><span class="peer-dot"></span>{{ p.total_peer_ratings }} peer</span>
         {% endif %}
       </div>
+
+      {% if p.under_qualification %}
+      <div style="margin-top:-6px;">
+        <span class="uq-tag">Under Qualification for Standing</span>
+      </div>
+      {% endif %}
 
     </div>
     {% endfor %}
