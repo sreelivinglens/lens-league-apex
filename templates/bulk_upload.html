@@ -637,12 +637,33 @@ form.addEventListener('submit', function(e) {
       clockSecs.textContent = '✓';
       clockRing.style.strokeDashoffset = '0';
       clockRing.style.stroke = 'rgba(200,168,75,0.9)';
-      overlayPhase.textContent  = 'COMPLETE';
-      overlayStatus.textContent = `All ${fileArray.length} image${fileArray.length > 1 ? 's' : ''} processed!`;
-      overlaySub.textContent    = 'Redirecting to your dashboard…';
+      overlayPhase.textContent = 'COMPLETE';
       if (breathLabel) breathLabel.textContent = '🙏';
       sessionStorage.removeItem('bulk_processing');
-      setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
+
+      // Build per-image summary
+      const scored  = allResults.filter(r => r.score);
+      const skipped = allResults.filter(r => !r.score && r.status && r.status.startsWith('skipped'));
+      const errors  = allResults.filter(r => !r.score && r.status && (r.status.includes('error') || r.status.includes('duplicate')));
+
+      let summaryLines = [];
+      if (scored.length)  summaryLines.push(`${scored.length} scored`);
+      if (skipped.length) summaryLines.push(`${skipped.length} skipped (too small)`);
+      if (errors.length)  summaryLines.push(`${errors.length} failed`);
+
+      overlayStatus.textContent = summaryLines.join(' · ') || 'Done';
+
+      // Show per-file breakdown
+      let breakdown = allResults.map(r => {
+        if (r.score) return `✓ ${r.filename} — ${r.score} ${r.tier || ''}`;
+        if (r.status && r.status.startsWith('skipped')) return `⚠ ${r.filename} — ${r.status}`;
+        return `✗ ${r.filename} — ${r.status || 'unknown error'}`;
+      }).join('
+');
+      overlaySub.textContent = breakdown;
+
+      // Give user time to read summary before redirecting
+      setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
       return;
     }
 
@@ -652,7 +673,9 @@ form.addEventListener('submit', function(e) {
     // Resolution gate — same 1500px min as single upload
     const shortSide = await checkResolution(file);
     if (shortSide < 1500) {
-      allResults.push({ filename: file.name, status: `low resolution (${shortSide}px — min 1500px)` });
+      allResults.push({ filename: file.name, status: `skipped — image too small (${shortSide}px short side, minimum 1500px required)`, score: null, tier: null });
+      overlayStatus.textContent = `Skipped ${file.name} — too small`;
+      overlaySub.textContent = `Minimum 1500px required. Moving to next image…`;
       await sendNext();
       return;
     }
