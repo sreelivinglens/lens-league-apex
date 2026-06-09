@@ -4429,10 +4429,15 @@ def change_password():
 
 @app.route('/recent-work')
 def recent_work():
-    """Recent Work feed — up to 3 images per photographer, max 48 total.
+    """Recent Work feed — up to 3 images per photographer, paginated at 24 per page.
     7-day window from midnight IST; falls back to all-time if empty.
-    TODO: add pagination when photographer count grows beyond ~15.
     """
+    _PER_PAGE = 24
+    try:
+        page = max(1, request.args.get('page', 1, type=int))
+    except Exception:
+        page = 1
+
     try:
         _now_utc   = datetime.utcnow()
         _today_ist = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -4469,17 +4474,31 @@ def recent_work():
                     result.append(d)
             return result
 
-        images = _fetch_and_cap(_window_start)
-        if not images:
-            images = _fetch_and_cap(None)
+        all_images = _fetch_and_cap(_window_start)
+        if not all_images:
+            all_images = _fetch_and_cap(None)
             app.logger.info('[recent_work] 7-day window empty — showing all-time')
-        # Sort by scored_at descending (newest first) — no shuffle
-        images = sorted(images, key=lambda x: x.get('scored_at') or '', reverse=True)
-        images = images[:48]
+
+        # Sort by scored_at descending (newest first)
+        all_images = sorted(all_images, key=lambda x: x.get('scored_at') or '', reverse=True)
+
+        total       = len(all_images)
+        total_pages = max(1, (total + _PER_PAGE - 1) // _PER_PAGE)
+        page        = min(page, total_pages)
+        offset      = (page - 1) * _PER_PAGE
+        images      = all_images[offset: offset + _PER_PAGE]
+
     except Exception as _e:
         app.logger.error(f'[recent_work] {_e}')
-        images = []
-    return render_template('recent_work.html', feed_images=images)
+        images, total, total_pages, page = [], 0, 1, 1
+
+    return render_template(
+        'recent_work.html',
+        feed_images  = images,
+        page         = page,
+        total_pages  = total_pages,
+        total        = total,
+    )
 
 
 @app.route('/leaderboard')
