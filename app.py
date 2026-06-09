@@ -3124,20 +3124,20 @@ def upload():
             # Fail open — network or API error must never block a legitimate upload
             app.logger.warning(f'[upload] watermark check failed (non-fatal): {_wm_err}')
 
-        # ── NSFW / Nudity detection (v62) ─────────────────────────────────────
-        # Uses Hive visual moderation API — synchronous, before R2 upload or DB save.
-        # Hard reject on nudity/explicit content.
-        # Breastfeeding: passes upload but flagged for admin approval (needs_review=True).
+        # ── NSFW / Nudity detection (v63) ─────────────────────────────────────
+        # Uses Claude Haiku vision — same pattern as watermark check above.
+        # Hard reject: nudity / explicit content → delete thumb, block upload.
+        # Breastfeeding: passes upload, flagged for scoring-thread sub-genre check.
         # Fails open — API error never blocks a legitimate upload.
         _nsfw_breastfeeding_flagged = False
         try:
-            _nsfw_hive_key = os.getenv('HIVE_API_KEY', '')
-            if _nsfw_hive_key and os.path.exists(thumb_path):
-                import urllib.request as _nsfw_ur, json as _nsfw_json, base64 as _nsfw_b64
+            _nsfw_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+            if _nsfw_api_key and os.path.exists(thumb_path):
+                import base64 as _nsfw_b64, urllib.request as _nsfw_ur, json as _nsfw_json
                 from PIL import Image as _PIL_nsfw
                 import io as _nsfw_io
 
-                # Encode thumb for Hive
+                # Resize to 1024px max — nudity is obvious at low res, saves tokens
                 _nsfw_pil = _PIL_nsfw.open(thumb_path).convert('RGB')
                 if max(_nsfw_pil.size) > 1024:
                     _nsfw_pil.thumbnail((1024, 1024))
@@ -3145,53 +3145,61 @@ def upload():
                 _nsfw_pil.save(_nsfw_buf, format='JPEG', quality=80)
                 _nsfw_b64_data = _nsfw_b64.b64encode(_nsfw_buf.getvalue()).decode('utf-8')
 
+                _nsfw_prompt = (
+                    'Examine this photograph carefully. Respond ONLY with JSON — no other text. '
+                    'Return: {"nudity": true/false, "breastfeeding": true/false, "description": "one short phrase or null"} '
+                    'Where: '
+                    '"nudity" = true if the image contains explicit nudity, exposed genitalia, bare breasts '
+                    '(other than breastfeeding), or explicit sexual content. '
+                    'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
+                    '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
+                    'this overrides nudity=true when present. '
+                    '"description" = one short phrase describing what was detected, or null if clean.'
+                )
+
                 _nsfw_payload = _nsfw_json.dumps({
-                    'input': [{'image': {'data': _nsfw_b64_data}}]
+                    'model': 'claude-haiku-4-5-20251001',
+                    'max_tokens': 80,
+                    'messages': [{
+                        'role': 'user',
+                        'content': [
+                            {'type': 'image', 'source': {
+                                'type': 'base64', 'media_type': 'image/jpeg', 'data': _nsfw_b64_data
+                            }},
+                            {'type': 'text', 'text': _nsfw_prompt}
+                        ]
+                    }]
                 }).encode('utf-8')
+
                 _nsfw_req = _nsfw_ur.Request(
-                    'https://api.thehive.ai/api/v3/task/sync',
+                    'https://api.anthropic.com/v1/messages',
                     data=_nsfw_payload,
                     headers={
-                        'Authorization': f'Bearer {_nsfw_hive_key}',
                         'Content-Type': 'application/json',
+                        'x-api-key': _nsfw_api_key,
+                        'anthropic-version': '2023-06-01',
                     },
                     method='POST'
                 )
                 with _nsfw_ur.urlopen(_nsfw_req, timeout=20) as _nsfw_resp:
                     _nsfw_result = _nsfw_json.loads(_nsfw_resp.read().decode('utf-8'))
 
-                # Parse Hive visual moderation classes
-                _nsfw_classes = (
-                    _nsfw_result.get('output', [{}])[0]
-                    .get('classes', [])
-                )
-                _nsfw_scores = {c['class']: float(c['value']) for c in _nsfw_classes}
+                _nsfw_raw = _nsfw_result.get('content', [{}])[0].get('text', '{}')
+                _nsfw_raw = _nsfw_raw.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _nsfw_data = _nsfw_json.loads(_nsfw_raw)
 
-                # Hard reject classes — nudity or explicit content
-                # Note: yes_suggestive intentionally excluded — too broad, false-positives
-                # on intimate documentary (e.g. breastfeeding, Mother and Child genre).
-                _REJECT_CLASSES = {
-                    'yes_sexual_activity',
-                    'yes_nudity',
-                    'yes_male_nudity',
-                    'yes_female_nudity',
-                    'yes_explicit',
-                }
-                _REJECT_THRESHOLD = 0.85
+                _nsfw_reject          = bool(_nsfw_data.get('nudity', False))
+                _nsfw_breastfeeding_flagged = bool(_nsfw_data.get('breastfeeding', False))
 
-                _nsfw_reject = any(
-                    _nsfw_scores.get(cls, 0.0) >= _REJECT_THRESHOLD
-                    for cls in _REJECT_CLASSES
-                )
-
-                # Breastfeeding — flag for admin review, do not reject
-                _bf_score = _nsfw_scores.get('yes_breastfeeding', 0.0)
-                _nsfw_breastfeeding_flagged = _bf_score >= 0.70
+                # Breastfeeding overrides nudity reject — do not hard-reject
+                if _nsfw_breastfeeding_flagged:
+                    _nsfw_reject = False
 
                 app.logger.info(
-                    f'[upload] nsfw check: reject={_nsfw_reject} '
+                    f'[upload] nsfw check (haiku): nudity={_nsfw_reject} '
                     f'breastfeeding={_nsfw_breastfeeding_flagged} '
-                    f'scores={_nsfw_scores}'
+                    f'description={_nsfw_data.get("description")} '
+                    f'uid={current_user.id}'
                 )
 
                 if _nsfw_reject:
