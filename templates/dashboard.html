@@ -1821,7 +1821,7 @@
       <div class="db-hcard-hdr-txt" style="flex:1;">
         <span class="db-hcard-hdr-lbl">Annual Excellence Award</span>
         <span class="db-hcard-hdr-title">Annual Excellence Award</span>
-        <span class="db-hcard-hdr-sub">The 2026 season opens 1 Sep 2026. Shoot at least once a month from September — each active month counts toward your eligibility.</span>
+        <span class="db-hcard-hdr-sub">{% if _pre_season|default(true) %}The 2026 Annual Excellence Award season opens 1 September 2026. Keep shooting now — your standing, tier, and average build continuously. Annual Excellence Award eligibility months count from September.{% else %}Shoot at least once a month — each active month counts toward your Annual Excellence Award eligibility.{% endif %}</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-poty">▶</span>
     </div>
@@ -1829,9 +1829,9 @@
       {% if poty_tracker and poty_tracker.genre_rows %}
       <span class="db-hcard-summary-txt">Best: <span class="db-hcard-summary-val">{{ poty_tracker.genre_rows[0].genre }}</span><br>
         {% if _months_active|default(0) == 0 %}
-          <span style="color:#7A5800;">Season opens 1 Sep 2026 — get your images evaluated from September</span>
+          <span style="color:#7A5800;">{% if _pre_season|default(true) %}Season opens 1 September 2026 — keep shooting now, eligibility months count from September{% else %}Get your images evaluated every month from September{% endif %}</span>
         {% else %}
-          <span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months · season started {{ _season_start_label|default('1 Sep 2026') }}
+          <span class="db-hcard-summary-val">{{ _months_active|default(0) }} of 6</span> active months · season started {{ _season_start_label|default('1 September 2026') }}
         {% endif %}
       </span>
       {% else %}
@@ -2270,7 +2270,7 @@
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
         <p class="rp-label upcoming">Shoot every month — every month counts</p>
-        <p class="rp-desc">Shoot at least once every month from 1 Sep 2026 — each active month counts. Get 6 active months in a season and you become eligible for the Annual Excellence Award. Genre specialist or all-rounder — your choice.</p>
+        <p class="rp-desc">{% if _pre_season|default(true) %}Keep shooting now — your standing, tier, and average build continuously from today. Annual Excellence Award eligibility months count from 1 September 2026. Get 6 active months in the season and you become eligible. Genre specialist or all-rounder — your choice.{% else %}Shoot at least once every month — each active month counts. Get 6 active months in a season and you become eligible for the Annual Excellence Award. Genre specialist or all-rounder — your choice.{% endif %}</p>
       </div>
     </div>
   </div>
@@ -2296,12 +2296,12 @@
         {% if _best_row %}
           {% set _pct = [(_best_count / 24 * 100)|int, 100]|min %}
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
-          <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active · 2026 season: 1 Sep – 31 Dec {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
+          <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active · 2026 season: 1 September – 31 December {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
         {% endif %}
         {% if _months_active|default(0) == 0 %}
-        <p class="rp-desc active">The 2026 Annual Excellence Award season opens 1 Sep 2026 and runs until 31 Dec 2026. Shoot and get at least one image evaluated every month from September — 6 active months makes you eligible to participate.</p>
+        <p class="rp-desc active">{% if _pre_season|default(true) %}The 2026 Annual Excellence Award season opens 1 September 2026 and runs until 31 December 2026. Keep shooting now — your standing, tier, and average build continuously. Annual Excellence Award eligibility months count from September. 6 active months from September makes you eligible to participate.{% else %}The 2026 Annual Excellence Award season opens 1 September 2026 and runs until 31 December 2026. Shoot and get at least one image evaluated every month from September — 6 active months makes you eligible to participate.{% endif %}</p>
         {% else %}
-        <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} this season (started {{ _season_start_label|default('1 Sep 2026') }}). Keep shooting every month — each active month brings you closer to the Annual Excellence Award. You need 6 active months to be eligible.</p>
+        <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} this season (started {{ _season_start_label|default('1 September 2026') }}). Keep shooting every month — each active month brings you closer to the Annual Excellence Award. You need 6 active months to be eligible.</p>
         {% endif %}
         <a href="{{ url_for('upload') }}" class="rp-cta">Upload an image →</a>
       </div>
