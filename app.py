@@ -12588,21 +12588,27 @@ def _run_raw_analysis(submission, img):
     # AUTO-DISQUALIFY (no appeal) on any positive flag.
     try:
         jpg_b64 = None
-        if img.thumb_url:
+        if img.stored_filename:
             try:
-                # Use R2 direct download to avoid 403 on public URL from server
+                # Load the ORIGINAL stored file — NOT thumb_url/card_url which carry
+                # the platform's own © SHUTTERLEAGUE.COM watermark overlay and would
+                # cause the vision model to flag watermark_in_raw as a false positive.
                 from storage import get_client, BUCKET
                 import io as _io3
-                _thumb_key = img.thumb_url.split('/thumbs/')[-1] if '/thumbs/' in img.thumb_url else None
-                if _thumb_key:
-                    _thumb_buf = _io3.BytesIO()
-                    get_client().download_fileobj(BUCKET, f'thumbs/{_thumb_key}', _thumb_buf)
-                    jpg_b64 = base64.b64encode(_thumb_buf.getvalue()).decode('utf-8')
-                    app.logger.info(f'[raw_stage4] submitted JPEG loaded via R2 ({len(jpg_b64)} chars b64)')
-                else:
-                    raise ValueError(f'Could not extract thumb key from URL: {img.thumb_url}')
+                _orig_buf = _io3.BytesIO()
+                get_client().download_fileobj(BUCKET, img.stored_filename, _orig_buf)
+                _orig_bytes = _orig_buf.getvalue()
+                # Normalise to JPEG for vision API (stored file may be JPEG or converted)
+                from PIL import Image as _PIL_orig
+                _orig_pil = _PIL_orig.open(_io3.BytesIO(_orig_bytes)).convert('RGB')
+                if max(_orig_pil.size) > 2048:
+                    _orig_pil.thumbnail((2048, 2048))
+                _orig_jbuf = _io3.BytesIO()
+                _orig_pil.save(_orig_jbuf, format='JPEG', quality=90)
+                jpg_b64 = base64.b64encode(_orig_jbuf.getvalue()).decode('utf-8')
+                app.logger.info(f'[raw_stage4] original stored file loaded via R2 ({len(jpg_b64)} chars b64)')
             except Exception as _jpg_err:
-                app.logger.warning(f'[raw_stage4] could not load submitted JPEG: {_jpg_err}')
+                app.logger.warning(f'[raw_stage4] could not load original stored file: {_jpg_err}')
 
         if not jpg_b64:
             app.logger.warning('[raw_stage4] submitted JPEG unavailable — routing to manual review')
@@ -12764,7 +12770,9 @@ def _run_raw_analysis(submission, img):
                             '(e.g. log, pen, petal, person, cloud removed by cloning/healing). '
                             '3. objects_added: Elements in Image A not in Image B '
                             '(e.g. composited subject, added light effect, sky replacement). '
-                            '4. watermark_in_raw: Image B contains a watermark or logo. '
+                            '4. watermark_in_raw: Image A (the submitted photograph) contains a photographer-added watermark or logo overlaid on the image. '
+                            'Do NOT flag platform/service copyright notices (e.g. © SHUTTERLEAGUE.COM) — these are added by the platform, not the photographer. '
+                            'Only flag if the photographer has embedded their own branding, studio logo, or signature text over the image. '
                             '5. subject_different: Main subject/scene completely different between A and B. '
                             'FLAG IF THERE IS REASONABLE EVIDENCE — subtle removals count. '
                             'A missing petal, leaf, log, branch, pen, or any element present in the RAW '
