@@ -370,6 +370,22 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE",
+                """CREATE TABLE IF NOT EXISTS scored_phash_cache (
+                    id           SERIAL PRIMARY KEY,
+                    user_id      INTEGER NOT NULL,
+                    phash        VARCHAR(64) NOT NULL,
+                    genre        VARCHAR(80),
+                    score        FLOAT NOT NULL,
+                    tier         VARCHAR(40),
+                    dod_score    FLOAT, disruption_score FLOAT, dm_score FLOAT,
+                    wonder_score FLOAT, aq_score FLOAT,
+                    archetype    VARCHAR(120),
+                    soul_bonus   BOOLEAN DEFAULT FALSE,
+                    original_image_id INTEGER,
+                    scored_at    TIMESTAMP DEFAULT NOW(),
+                    UNIQUE (user_id, phash, genre)
+                )""",
+                "CREATE INDEX IF NOT EXISTS ix_scored_phash_cache_user_phash ON scored_phash_cache (user_id, phash)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS flagged_at TIMESTAMP",
@@ -3011,6 +3027,33 @@ def upload():
                     'If you believe this is an error, contact support@shutterleague.com and we will review it promptly.'
                 }), 409
 
+        # ── Score anchor — phash cache (v63) ──────────────────────────────────
+        # If this user previously uploaded and scored this identical image
+        # (same phash, same genre), return the cached score instead of calling
+        # the engine again. Prevents score re-rolling via delete + re-upload.
+        # Stored in scored_phash_cache which survives image deletion.
+        _anchored_score = None
+        try:
+            _cache_row = db.session.execute(
+                db.text(
+                    "SELECT score, tier, dod_score, disruption_score, dm_score, "
+                    "wonder_score, aq_score, archetype, soul_bonus "
+                    "FROM scored_phash_cache "
+                    "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
+                    "ORDER BY scored_at DESC LIMIT 1"
+                ),
+                {'uid': current_user.id, 'ph': phash,
+                 'genre': normalise_genre(request.form.get('genre', '').strip())}
+            ).fetchone()
+            if _cache_row:
+                _anchored_score = dict(_cache_row._mapping)
+                app.logger.info(
+                    f'[upload] phash cache hit: user={current_user.id} '
+                    f'phash={phash[:16]}… anchored_score={_anchored_score["score"]}'
+                )
+        except Exception as _cache_err:
+            app.logger.warning(f'[upload] phash cache lookup failed (non-fatal): {_cache_err}')
+
         # ── Watermark / logo detection (v62) ──────────────────────────────────
         # Runs synchronously before DB save or R2 upload — immediate rejection.
         # Uses Haiku for speed and cost. Fails open (upload proceeds) if API is
@@ -3308,8 +3351,29 @@ def upload():
         # The browser polls /score-status/<image_id> every 2s until done.
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         if api_key:
-            img.status = 'processing'
-            db.session.commit()
+
+            # ── Score anchor: cache hit → skip engine entirely ─────────────
+            if _anchored_score:
+                img.dod_score        = _anchored_score.get('dod_score') or 0.0
+                img.disruption_score = _anchored_score.get('disruption_score') or 0.0
+                img.dm_score         = _anchored_score.get('dm_score') or 0.0
+                img.wonder_score     = _anchored_score.get('wonder_score') or 0.0
+                img.aq_score         = _anchored_score.get('aq_score') or 0.0
+                img.score            = _anchored_score.get('score') or 0.0
+                img.tier             = _anchored_score.get('tier') or get_tier(img.score)
+                img.archetype        = _anchored_score.get('archetype') or ''
+                img.soul_bonus       = bool(_anchored_score.get('soul_bonus', False))
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                img.scoring_flash    = f'Score anchored: {img.score} ({img.tier})'
+                db.session.commit()
+                app.logger.info(
+                    f'[upload] score anchored from cache: image={img.id} '
+                    f'score={img.score} user={current_user.id}'
+                )
+            else:
+                img.status = 'processing'
+                db.session.commit()
 
             def _score_in_background(image_id, _uid):
                 import traceback
@@ -3713,6 +3777,55 @@ def upload():
                             _img.set_audit(audit)
                             db.session.commit()
 
+                            # ── Write to scored_phash_cache (v63) ──────────────────────────
+                            # Anchors score to phash so delete+reupload returns same score.
+                            # Only caches clean scores (ai_suspicion < 0.4, not flagged).
+                            try:
+                                if (_img.phash and _img.score
+                                        and not _img.is_flagged and ai_suspicion < 0.4):
+                                    _cache_sql = (
+                                        "INSERT INTO scored_phash_cache "
+                                        "(user_id, phash, genre, score, tier, "
+                                        " dod_score, disruption_score, dm_score, "
+                                        " wonder_score, aq_score, archetype, "
+                                        " soul_bonus, original_image_id, scored_at) "
+                                        "VALUES "
+                                        "(:uid, :ph, :genre, :score, :tier, "
+                                        " :dod, :dis, :dm, :wonder, :aq, :arch, "
+                                        " :soul, :iid, NOW()) "
+                                        "ON CONFLICT (user_id, phash, genre) "
+                                        "DO UPDATE SET "
+                                        " score=EXCLUDED.score, tier=EXCLUDED.tier, "
+                                        " dod_score=EXCLUDED.dod_score, "
+                                        " disruption_score=EXCLUDED.disruption_score, "
+                                        " dm_score=EXCLUDED.dm_score, "
+                                        " wonder_score=EXCLUDED.wonder_score, "
+                                        " aq_score=EXCLUDED.aq_score, "
+                                        " archetype=EXCLUDED.archetype, "
+                                        " soul_bonus=EXCLUDED.soul_bonus, "
+                                        " original_image_id=EXCLUDED.original_image_id, "
+                                        " scored_at=NOW()"
+                                    )
+                                    db.session.execute(db.text(_cache_sql), {
+                                        'uid':   _img.user_id,  'ph':    _img.phash,
+                                        'genre': _img.genre,    'score': _img.score,
+                                        'tier':  _img.tier,     'dod':   _img.dod_score,
+                                        'dis':   _img.disruption_score,
+                                        'dm':    _img.dm_score, 'wonder':_img.wonder_score,
+                                        'aq':    _img.aq_score, 'arch':  _img.archetype,
+                                        'soul':  bool(_img.soul_bonus), 'iid': _img.id,
+                                    })
+                                    db.session.commit()
+                                    app.logger.info(
+                                        f'[scoring] phash cache written: image={_img.id} '
+                                        f'score={_img.score} phash={_img.phash[:16]}…'
+                                    )
+                            except Exception as _cache_write_err:
+                                app.logger.warning(
+                                    f'[scoring] phash cache write failed (non-fatal): {_cache_write_err}'
+                                )
+                            # ── END scored_phash_cache write ───────────────────────────────
+
                             # Sprint 2 — award points for scored image (subscribers only)
                             try:
                                 _pts_user = User.query.get(_img.user_id)
@@ -3831,17 +3944,19 @@ def upload():
                         except Exception:
                             pass
 
-            threading.Thread(
-                target=_score_in_background,
-                args=(img.id, uid),
-                daemon=True
-            ).start()
+            if not _anchored_score:
+                threading.Thread(
+                    target=_score_in_background,
+                    args=(img.id, uid),
+                    daemon=True
+                ).start()
 
         else:
             flash('Image uploaded! Add scores below.', 'success')
 
-        # XHR (upload.html) gets JSON — return 'processing' immediately.
-        # Browser polls /score-status/<image_id> every 2s until scored.
+        # XHR (upload.html) gets JSON.
+        # Cache hit → status 'processing' still works because score-status
+        # polls and finds status='scored' immediately on first poll.
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
             _next = request.args.get('next', '')
             return jsonify({
@@ -9535,33 +9650,90 @@ def bulk_upload_one():
         if api_key:
             from engine.auto_score import auto_score, build_audit_data
             from engine.compositor import build_card1 as _build_card
-            scored = auto_score(image_path=img.thumb_path, genre=genre,
-                                sub_genre=img.sub_genre,
-                                title=img.asset_name, photographer=photographer)
-            img.dod_score        = float(scored.get('dod', 0))
-            img.disruption_score = float(scored.get('disruption', 0))
-            img.dm_score         = float(scored.get('dm', 0))
-            img.wonder_score     = float(scored.get('wonder', 0))
-            img.aq_score         = float(scored.get('aq', 0))
-            img.score            = float(scored.get('score', 0))
-            img.tier             = get_tier(float(scored.get('score', 0)))
-            img.archetype        = scored.get('archetype', '')
-            img.soul_bonus       = scored.get('soul_bonus', False)
-            img.status           = 'scored'
-            img.scored_at        = datetime.utcnow()
-            audit = build_audit_data(scored, img)
-            img.set_audit(audit)
-            card_fname = ('LL_' + date.today().strftime('%Y%m%d') + '_'
-                          + secure_filename(photographer.replace(' ', ''))
-                          + '_' + genre + '_' + str(img.score) + '.jpg')
-            card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-            _build_card(img.thumb_path, audit, card_path)
-            img.card_path = card_path
-            card_url = _r2_upload_card(card_path, uid + '_card')
-            if card_url:
-                img.card_url = card_url
-            result = {'filename': file.filename, 'score': img.score,
-                      'tier': img.tier, 'status': 'scored'}
+
+            # ── Score anchor check ─────────────────────────────────────────
+            _bulk_cached = None
+            try:
+                _bulk_cache_row = db.session.execute(
+                    db.text(
+                        "SELECT score, tier, dod_score, disruption_score, dm_score, "
+                        "wonder_score, aq_score, archetype, soul_bonus "
+                        "FROM scored_phash_cache "
+                        "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
+                        "ORDER BY scored_at DESC LIMIT 1"
+                    ),
+                    {'uid': current_user.id, 'ph': phash, 'genre': genre}
+                ).fetchone()
+                if _bulk_cache_row:
+                    _bulk_cached = dict(_bulk_cache_row._mapping)
+            except Exception as _bce:
+                app.logger.warning(f'[bulk_upload_one] cache lookup failed: {_bce}')
+
+            if _bulk_cached:
+                img.dod_score        = _bulk_cached.get('dod_score') or 0.0
+                img.disruption_score = _bulk_cached.get('disruption_score') or 0.0
+                img.dm_score         = _bulk_cached.get('dm_score') or 0.0
+                img.wonder_score     = _bulk_cached.get('wonder_score') or 0.0
+                img.aq_score         = _bulk_cached.get('aq_score') or 0.0
+                img.score            = _bulk_cached.get('score') or 0.0
+                img.tier             = _bulk_cached.get('tier') or get_tier(img.score)
+                img.archetype        = _bulk_cached.get('archetype') or ''
+                img.soul_bonus       = bool(_bulk_cached.get('soul_bonus', False))
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                result = {'filename': file.filename, 'score': img.score,
+                          'tier': img.tier, 'status': 'scored (anchored)'}
+                app.logger.info(f'[bulk_upload_one] score anchored: image={img.id} score={img.score}')
+            else:
+                scored = auto_score(image_path=img.thumb_path, genre=genre,
+                                    sub_genre=img.sub_genre,
+                                    title=img.asset_name, photographer=photographer)
+                img.dod_score        = float(scored.get('dod', 0))
+                img.disruption_score = float(scored.get('disruption', 0))
+                img.dm_score         = float(scored.get('dm', 0))
+                img.wonder_score     = float(scored.get('wonder', 0))
+                img.aq_score         = float(scored.get('aq', 0))
+                img.score            = float(scored.get('score', 0))
+                img.tier             = get_tier(float(scored.get('score', 0)))
+                img.archetype        = scored.get('archetype', '')
+                img.soul_bonus       = scored.get('soul_bonus', False)
+                img.status           = 'scored'
+                img.scored_at        = datetime.utcnow()
+                audit = build_audit_data(scored, img)
+                img.set_audit(audit)
+                card_fname = ('LL_' + date.today().strftime('%Y%m%d') + '_'
+                              + secure_filename(photographer.replace(' ', ''))
+                              + '_' + genre + '_' + str(img.score) + '.jpg')
+                card_path  = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
+                _build_card(img.thumb_path, audit, card_path)
+                img.card_path = card_path
+                card_url = _r2_upload_card(card_path, uid + '_card')
+                if card_url:
+                    img.card_url = card_url
+                result = {'filename': file.filename, 'score': img.score,
+                          'tier': img.tier, 'status': 'scored'}
+                # Write to cache
+                try:
+                    if img.phash and img.score and not getattr(img, 'is_flagged', False):
+                        _bcs = (
+                            "INSERT INTO scored_phash_cache "
+                            "(user_id, phash, genre, score, tier, dod_score, disruption_score, "
+                            " dm_score, wonder_score, aq_score, archetype, soul_bonus, "
+                            " original_image_id, scored_at) "
+                            "VALUES (:uid,:ph,:genre,:score,:tier,:dod,:dis,:dm,:wonder,:aq,:arch,:soul,:iid,NOW()) "
+                            "ON CONFLICT (user_id, phash, genre) DO UPDATE SET "
+                            " score=EXCLUDED.score, tier=EXCLUDED.tier, scored_at=NOW()"
+                        )
+                        db.session.execute(db.text(_bcs), {
+                            'uid': img.user_id, 'ph': img.phash, 'genre': img.genre,
+                            'score': img.score, 'tier': img.tier,
+                            'dod': img.dod_score, 'dis': img.disruption_score,
+                            'dm': img.dm_score, 'wonder': img.wonder_score,
+                            'aq': img.aq_score, 'arch': img.archetype,
+                            'soul': bool(img.soul_bonus), 'iid': img.id,
+                        })
+                except Exception as _bcwe:
+                    app.logger.warning(f'[bulk_upload_one] cache write failed: {_bcwe}')
         else:
             img.status = 'pending'
             result = {'filename': file.filename, 'score': None,
