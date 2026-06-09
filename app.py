@@ -3798,6 +3798,7 @@ def upload():
                             # wasn't already scored from cache (breastfeeding+cache path).
                             # In that case auto_score was called for sub-genre only;
                             # the cached scores must be preserved.
+                            audit = None  # initialise here — may stay None on cache-hit+BF path
                             _already_scored = bool(_img.score)  # True on cache-hit+BF path
                             if not _already_scored:
                                 _img.dod_score        = float(result.get('dod', 0))
@@ -3963,12 +3964,15 @@ def upload():
                                               f"{secure_filename((_img.photographer_name or 'unknown').replace(' ',''))}_"
                                               f"{_img.genre}_{_img.score}.jpg")
                                 card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                                build_card1(_img.thumb_path, audit, card_path)
-                                _img.card_path = card_path
-                                card_url = _r2_upload_card(card_path, _uid + '_card')
-                                if card_url:
-                                    _img.card_url = card_url
-                                db.session.commit()
+                                if audit is not None:
+                                    build_card1(_img.thumb_path, audit, card_path)
+                                    _img.card_path = card_path
+                                    card_url = _r2_upload_card(card_path, _uid + '_card')
+                                    if card_url:
+                                        _img.card_url = card_url
+                                    db.session.commit()
+                                else:
+                                    app.logger.info(f'[upload] card build skipped: cache-hit path, audit not available image={_img.id}')
                             except Exception:
                                 app.logger.error(f'[upload card build error] {traceback.format_exc()}')
 
@@ -9597,7 +9601,15 @@ def bulk_upload():
         if is_xhr:
             return jsonify({'ok': True, 'results': results, 'redirect': url_for('dashboard')})
         return redirect(url_for('dashboard'))
-    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
+    import json as _json
+    return render_template(
+        'bulk_upload.html',
+        genres=GENRE_IDS,
+        genre_choices=GENRE_CHOICES,
+        subgenre_map=SUBGENRE_MAP,
+        subgenre_map_json=_json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
+        results=results,
+    )
 
 
 
