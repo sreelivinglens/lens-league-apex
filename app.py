@@ -3125,12 +3125,13 @@ def upload():
                 _nsfw_scores = {c['class']: float(c['value']) for c in _nsfw_classes}
 
                 # Hard reject classes — nudity or explicit content
+                # Note: yes_suggestive intentionally excluded — too broad, false-positives
+                # on intimate documentary (e.g. breastfeeding, Mother and Child genre).
                 _REJECT_CLASSES = {
                     'yes_sexual_activity',
                     'yes_nudity',
                     'yes_male_nudity',
                     'yes_female_nudity',
-                    'yes_suggestive',
                     'yes_explicit',
                 }
                 _REJECT_THRESHOLD = 0.85
@@ -3228,42 +3229,21 @@ def upload():
             pass
         db.session.commit()
 
-        # ── Breastfeeding flag — hold for admin approval ───────────────────
+        # ── Breastfeeding flag — hold pending DDI sub-genre resolution ───────────
+        # Admin email is NOT sent here. Sub-genre detection happens async in the scoring
+        # thread. If DDI returns lifestyle_intimate → auto-approve (whitelist).
+        # Otherwise → admin email fires from scoring thread after DDI scores.
+        # See breastfeeding whitelist block in _score_in_background below.
         if _nsfw_breastfeeding_flagged:
             try:
-                img.needs_review = True
-                img.is_public    = False
-                img.flagged_reason = 'Breastfeeding content detected — held for admin approval before going public.'
-                img.flagged_at   = datetime.utcnow()
+                img.needs_review   = True
+                img.is_public      = False
+                img.flagged_reason = 'Breastfeeding content detected — held pending sub-genre check.'
+                img.flagged_at     = datetime.utcnow()
                 db.session.commit()
-                # Admin email
-                _bf_admin_emails = _admin_notify_emails()
-                if not _bf_admin_emails:
-                    _bf_admin_emails = [ADMIN_NOTIFY_EMAIL]
-                _bf_site = os.getenv('SITE_URL', 'https://shutterleague.com')
-                send_email(
-                    _bf_admin_emails,
-                    f'[Content Review] Breastfeeding Image — {img.asset_name or "Untitled"} (ID: {img.id})',
-                    (
-                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
-                        '<p style="color:#C8A84B;font-weight:700;font-size:15px;">CONTENT REVIEW REQUIRED — BREASTFEEDING IMAGE</p>'
-                        f'<p>Image: <strong>{img.asset_name or "Untitled"}</strong> (ID: {img.id})<br>'
-                        f'Photographer: {current_user.username} ({current_user.email})<br>'
-                        f'Genre: {img.genre or "—"}</p>'
-                        '<p>This image has been held from public view pending your review. '
-                        'Breastfeeding photography is permitted subject to admin approval.</p>'
-                        f'<a href="{_bf_site}/admin/image/{img.id}" '
-                        'style="display:inline-block;background:#C8A84B;color:#1a1a18;'
-                        'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
-                        'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
-                        'text-decoration:none;border-radius:4px;margin:16px 0;">'
-                        'Review &amp; Approve &#8594;</a>'
-                        '</div>'
-                    )
-                )
-                app.logger.info(f'[upload] breastfeeding flag: image={img.id} held for admin review')
+                app.logger.info(f'[upload] breastfeeding flag: image={img.id} held pending scoring thread sub-genre check')
             except Exception as _bf_err:
-                app.logger.warning(f'[upload] breastfeeding flag/email failed: {_bf_err}')
+                app.logger.warning(f'[upload] breastfeeding flag failed: {_bf_err}')
 
         # -- League integrity check (three-strike system) ------------------
         # Mobile League users uploading camera EXIF images get graduated penalties.
@@ -3585,6 +3565,71 @@ def upload():
                         _img.ai_suspicion        = ai_suspicion
                         _img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
                         _img.needs_review        = bool(result.get('needs_review', False))
+
+                        # ── Breastfeeding whitelist — resolve hold set at upload ────────────────
+                        # Upload set needs_review=True, is_public=False when Hive detected
+                        # breastfeeding (>=0.70). Now DDI sub-genre is known. Two paths:
+                        #   lifestyle_intimate  → whitelist: clear hold, go public, no email
+                        #   any other sub-genre → admin review: send email, stay held
+                        _bf_held = (
+                            'breastfeeding' in (_img.flagged_reason or '').lower()
+                            and _img.needs_review
+                            and not _img.is_flagged  # not already hard-rejected for AI etc.
+                        )
+                        if _bf_held:
+                            _effective_subgenre = (result.get('_effective_subgenre') or '').strip().lower()
+                            if _effective_subgenre == 'lifestyle_intimate':
+                                # Whitelisted — fine art documentary, auto-approve
+                                _img.needs_review  = False
+                                _img.is_public     = True
+                                _img.flagged_reason = None
+                                db.session.commit()
+                                app.logger.info(
+                                    f'[scoring] breastfeeding whitelist cleared: '
+                                    f'image={image_id} subgenre={_effective_subgenre}'
+                                )
+                            else:
+                                # Non-intimate sub-genre — send admin review email now
+                                try:
+                                    _bf_admin_emails = _admin_notify_emails()
+                                    if not _bf_admin_emails:
+                                        _bf_admin_emails = [ADMIN_NOTIFY_EMAIL]
+                                    _bf_site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                                    _bf_u = User.query.get(_img.user_id)
+                                    _img.flagged_reason = (
+                                        f'Breastfeeding content detected — held for admin approval. '
+                                        f'Sub-genre: {_effective_subgenre or "undetected"}.'
+                                    )
+                                    db.session.commit()
+                                    send_email(
+                                        _bf_admin_emails,
+                                        f'[Content Review] Breastfeeding Image — {_img.asset_name or "Untitled"} (ID: {_img.id})',
+                                        (
+                                            '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                                            '<p style="color:#C8A84B;font-weight:700;font-size:15px;">CONTENT REVIEW REQUIRED — BREASTFEEDING IMAGE</p>'
+                                            f'<p>Image: <strong>{_img.asset_name or "Untitled"}</strong> (ID: {_img.id})<br>'
+                                            f'Photographer: {(_bf_u.username if _bf_u else "unknown")} ({(_bf_u.email if _bf_u else "unknown")})<br>'
+                                            f'Genre: {_img.genre or "—"}<br>'
+                                            f'Sub-genre: <strong>{_effective_subgenre or "undetected"}</strong></p>'
+                                            '<p>This image has been held from public view pending your review. '
+                                            'Breastfeeding photography requires admin approval when sub-genre is not '
+                                            '<em>lifestyle_intimate</em>.</p>'
+                                            f'<a href="{_bf_site}/admin/image/{_img.id}" '
+                                            'style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+                                            'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
+                                            'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+                                            'text-decoration:none;border-radius:4px;margin:16px 0;">'
+                                            'Review &amp; Approve &#8594;</a>'
+                                            '</div>'
+                                        )
+                                    )
+                                    app.logger.info(
+                                        f'[scoring] breastfeeding admin email sent: '
+                                        f'image={image_id} subgenre={_effective_subgenre}'
+                                    )
+                                except Exception as _bf_email_err:
+                                    app.logger.warning(f'[scoring] breastfeeding admin email failed: {_bf_email_err}')
+                        # ── END breastfeeding whitelist ─────────────────────────────────────────
 
                         if ai_suspicion >= 0.7:
                             # TIER 3 — auto-flagged AI-generated
