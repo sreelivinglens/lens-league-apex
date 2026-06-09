@@ -9862,7 +9862,15 @@ def bulk_upload():
         if is_xhr:
             return jsonify({'ok': True, 'results': results, 'redirect': url_for('dashboard')})
         return redirect(url_for('dashboard'))
-    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
+    import json as _json
+    return render_template(
+        'bulk_upload.html',
+        genres=GENRE_IDS,
+        genre_choices=GENRE_CHOICES,
+        subgenre_map=SUBGENRE_MAP,
+        subgenre_map_json=_json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
+        results=results,
+    )
 
 
 
