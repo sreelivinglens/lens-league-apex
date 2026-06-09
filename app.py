@@ -490,6 +490,7 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
                 # v35 - DDI sub-genre support
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS sub_genre VARCHAR(60)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS species_hint VARCHAR(120)",
                 # v33 - Points/Loyalty Engine (Sprint 1)
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_balance FLOAT DEFAULT 0.0",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS points_lifetime_earned FLOAT DEFAULT 0.0",
@@ -3798,7 +3799,6 @@ def upload():
                             # wasn't already scored from cache (breastfeeding+cache path).
                             # In that case auto_score was called for sub-genre only;
                             # the cached scores must be preserved.
-                            audit = None  # initialise here — may stay None on cache-hit+BF path
                             _already_scored = bool(_img.score)  # True on cache-hit+BF path
                             if not _already_scored:
                                 _img.dod_score        = float(result.get('dod', 0))
@@ -3935,6 +3935,10 @@ def upload():
                                                 '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
                                                 '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (_img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(_img.score) + '</strong> (' + (_img.tier or '') + ').</p>'
                                                 '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
+                                                '<div style="background:#fffbea;border:1px solid #F5C518;border-radius:6px;padding:14px 18px;margin:16px 0;">'
+                                                '<p style="margin:0 0 6px;font-size:12px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#8a6a00;">Why is this required?</p>'
+                                                '<p style="margin:0;font-size:15px;line-height:1.7;color:#4A3800;">All Grandmaster scores (9.00 and above) require RAW file verification. This is standard procedure to confirm the result is based on an original camera capture. It applies to every photographer equally. Exposure, colour, cropping, and other editing are fully permitted &#8212; we only verify that your submitted image originates from a real camera file.</p>'
+                                                '</div>'
                                                 '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
                                                 '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
                                                 '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
@@ -3964,15 +3968,12 @@ def upload():
                                               f"{secure_filename((_img.photographer_name or 'unknown').replace(' ',''))}_"
                                               f"{_img.genre}_{_img.score}.jpg")
                                 card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                                if audit is not None:
-                                    build_card1(_img.thumb_path, audit, card_path)
-                                    _img.card_path = card_path
-                                    card_url = _r2_upload_card(card_path, _uid + '_card')
-                                    if card_url:
-                                        _img.card_url = card_url
-                                    db.session.commit()
-                                else:
-                                    app.logger.info(f'[upload] card build skipped: cache-hit path, audit not available image={_img.id}')
+                                build_card1(_img.thumb_path, audit, card_path)
+                                _img.card_path = card_path
+                                card_url = _r2_upload_card(card_path, _uid + '_card')
+                                if card_url:
+                                    _img.card_url = card_url
+                                db.session.commit()
                             except Exception:
                                 app.logger.error(f'[upload card build error] {traceback.format_exc()}')
 
@@ -9601,15 +9602,7 @@ def bulk_upload():
         if is_xhr:
             return jsonify({'ok': True, 'results': results, 'redirect': url_for('dashboard')})
         return redirect(url_for('dashboard'))
-    import json as _json
-    return render_template(
-        'bulk_upload.html',
-        genres=GENRE_IDS,
-        genre_choices=GENRE_CHOICES,
-        subgenre_map=SUBGENRE_MAP,
-        subgenre_map_json=_json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
-        results=results,
-    )
+    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
 
 
 
@@ -13097,7 +13090,7 @@ def _run_raw_analysis(submission, img):
         if not _candidates:
             raise ValueError('No embedded JPEG found in RAW file')
         _jpeg = max(_candidates, key=len)
-        if len(_jpeg) < 50000:
+        if len(_jpeg) < 20000:
             raise ValueError(f'Embedded JPEG too small ({len(_jpeg)} bytes) — likely a thumbnail')
         return _PIL.open(_io2.BytesIO(_jpeg)).convert('RGB')
 
@@ -13242,7 +13235,7 @@ def _run_raw_analysis(submission, img):
                 _contours, _ = _cv2.findContours(
                     _thresh, _cv2.RETR_EXTERNAL, _cv2.CHAIN_APPROX_SIMPLE)
 
-                _min_area = _a.shape[0] * _a.shape[1] * 0.0003
+                _min_area = _a.shape[0] * _a.shape[1] * 0.00005  # lowered: catch small removed subjects (birds, etc.)
                 _sig = [c for c in _contours if _cv2.contourArea(c) > _min_area]
                 diff_region_count = len(_sig)
 
@@ -13324,8 +13317,11 @@ def _run_raw_analysis(submission, img):
                             'impossible bokeh, overly sharp subjects against soft backgrounds. '
                             'Wildlife images showing dramatic impossible animal interactions are almost '
                             'always AI-generated. Set ai_generated=true if ANY of these tells are present. '
-                            '2. objects_removed: Elements in Image B (RAW) missing in Image A '
-                            '(e.g. log, pen, petal, person, cloud removed by cloning/healing). '
+                            '2. objects_removed: Elements visible in Image B (RAW) that are absent or hidden in Image A (submitted JPEG). '
+                            'This includes ANY subject removed regardless of size — a bird, animal, person, branch, petal, log, or any element '
+                            'clearly present in the RAW but missing in the JPEG is ALWAYS objects_removed=true. '
+                            'Do not dismiss small or peripheral subjects. A single bird in the corner of the RAW that is gone in the JPEG is a clear violation. '
+                            '(e.g. bird removed, log removed, person removed, cloud cloned out, any object healed away). '
                             '3. objects_added: Elements in Image A not in Image B '
                             '(e.g. composited subject, added light effect, sky replacement). '
                             '4. watermark_in_raw: Image A (the submitted photograph) contains a photographer-added watermark or logo overlaid on the image. '
@@ -13582,7 +13578,7 @@ def _auto_decide_raw(image_id, submission_id):
                     (
                         '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
                         '<p style="color:#C8A84B;font-weight:700;">RAW MANUAL REVIEW REQUIRED</p>'
-                        '<p>Camera RAW format could not be decoded by automated system (likely newer Nikon Z-series, Sony, or Canon format).</p>'
+                        '<p>Camera RAW format requires manual verification by our team (automated decode unavailable for this camera model).</p>'
                         '<p>Image: ' + (img.asset_name or 'Untitled') + ' (ID: ' + str(image_id) + ')<br>'
                         'Photographer: ' + (photographer.username if photographer else 'unknown') + '<br>'
                         'Score: ' + str(img.score) + ' · ' + (img.genre or '') + '</p>'
