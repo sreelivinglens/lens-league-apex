@@ -3291,6 +3291,11 @@ def upload():
                 img.is_public      = False
                 img.flagged_reason = 'Breastfeeding content detected — held pending sub-genre check.'
                 img.flagged_at     = datetime.utcnow()
+                img.scoring_flash  = (
+                    'Your image is under review — breastfeeding photography is permitted '
+                    'and usually cleared automatically. '
+                    'If not resolved within 24 hours, contact support@shutterleague.com.'
+                )
                 db.session.commit()
                 app.logger.info(f'[upload] breastfeeding flag: image={img.id} held pending scoring thread sub-genre check')
             except Exception as _bf_err:
@@ -3379,6 +3384,18 @@ def upload():
                     f'[upload] score anchored from cache: image={img.id} '
                     f'score={img.score} user={current_user.id}'
                 )
+
+                # ── Breastfeeding + cache hit: still need sub-genre check ──
+                # The engine wasn't called so _effective_subgenre is unknown.
+                # Spin a lightweight thread to call auto_score for sub-genre
+                # only — re-uses the scoring thread's whitelist logic.
+                # This is the only case where cache hit still needs a thread.
+                if _nsfw_breastfeeding_flagged:
+                    img.status = 'processing'
+                    db.session.commit()
+                    app.logger.info(
+                        f'[upload] breastfeeding+cache: spinning sub-genre thread image={img.id}'
+                    )
             else:
                 img.status = 'processing'
                 db.session.commit()
@@ -3649,12 +3666,17 @@ def upload():
                             and not _img.is_flagged  # not already hard-rejected for AI etc.
                         )
                         if _bf_held:
-                            _effective_subgenre = (result.get('_effective_subgenre') or '').strip().lower()
+                            # _effective_subgenre: read from image record (set by DDI during
+                            # scoring) rather than from result dict — auto_score() doesn't
+                            # return this field. Re-query to get the freshest value.
+                            db.session.refresh(_img)
+                            _effective_subgenre = (_img.sub_genre or result.get('_effective_subgenre') or '').strip().lower()
                             if _effective_subgenre == 'lifestyle_intimate':
                                 # Whitelisted — fine art documentary, auto-approve
                                 _img.needs_review  = False
                                 _img.is_public     = True
                                 _img.flagged_reason = None
+                                _img.scoring_flash  = None  # clear hold message
                                 db.session.commit()
                                 app.logger.info(
                                     f'[scoring] breastfeeding whitelist cleared: '
@@ -3769,21 +3791,26 @@ def upload():
                                 app.logger.error(f'[AI flag email error] {_me}')
 
                         else:
-                            # Score normally
-                            _img.dod_score        = float(result.get('dod', 0))
-                            _img.disruption_score = float(result.get('disruption', 0))
-                            _img.dm_score         = float(result.get('dm', 0))
-                            _img.wonder_score     = float(result.get('wonder', 0))
-                            _img.aq_score         = float(result.get('aq', 0))
-                            _img.score            = float(result.get('score', 0))
-                            _img.tier             = get_tier(float(result.get('score', 0)))
-                            _img.archetype        = result.get('archetype', '')
-                            _img.soul_bonus       = result.get('soul_bonus', False)
-                            _img.status           = 'scored'
-                            _img.scored_at        = datetime.utcnow()
-                            audit = build_audit_data(result, _img)
-                            _img.set_audit(audit)
-                            db.session.commit()
+                            # Score normally — but only write engine scores if image
+                            # wasn't already scored from cache (breastfeeding+cache path).
+                            # In that case auto_score was called for sub-genre only;
+                            # the cached scores must be preserved.
+                            _already_scored = bool(_img.score)  # True on cache-hit+BF path
+                            if not _already_scored:
+                                _img.dod_score        = float(result.get('dod', 0))
+                                _img.disruption_score = float(result.get('disruption', 0))
+                                _img.dm_score         = float(result.get('dm', 0))
+                                _img.wonder_score     = float(result.get('wonder', 0))
+                                _img.aq_score         = float(result.get('aq', 0))
+                                _img.score            = float(result.get('score', 0))
+                                _img.tier             = get_tier(float(result.get('score', 0)))
+                                _img.archetype        = result.get('archetype', '')
+                                _img.soul_bonus       = result.get('soul_bonus', False)
+                                _img.status           = 'scored'
+                                _img.scored_at        = datetime.utcnow()
+                                audit = build_audit_data(result, _img)
+                                _img.set_audit(audit)
+                                db.session.commit()
 
                             # ── Write to scored_phash_cache (v63) ──────────────────────────
                             # Anchors score to phash so delete+reupload returns same score.
@@ -3952,7 +3979,9 @@ def upload():
                         except Exception:
                             pass
 
-            if not _anchored_score:
+            if not _anchored_score or _nsfw_breastfeeding_flagged:
+                # Fire scoring thread when: no cache (normal path), OR
+                # breastfeeding flagged (needs sub-genre check even on cache hit)
                 threading.Thread(
                     target=_score_in_background,
                     args=(img.id, uid),
