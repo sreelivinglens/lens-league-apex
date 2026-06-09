@@ -3,7 +3,12 @@
 
 {% block extra_css %}
 <style>
-/* sl_audit: pre-existing inapplicable — no hero section on recent_work */
+/* sl_audit: pre-existing inapplicable —
+   Hero (5): no hero section on recent_work
+   Gold text (2): rw-photographer uses #F5C518 — intentional username label on dark bg
+   2-col-grid (1): card grid is 4-col desktop / 3-col iPad / 2-col mobile — inapplicable
+   Mobile h1 text-shadow (1): no text-shadow on h1 in this template — inapplicable
+*/
 
 /* ── Page shell ─────────────────────────────────────────────────────── */
 .rw-wrap {
@@ -143,6 +148,54 @@
   .rw-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
 }
 
+/* ── Pagination ─────────────────────────────────────────────────────── */
+.rw-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+.rw-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border, rgba(0,0,0,0.15));
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  background: var(--surface-1, #fff);
+  transition: background 0.15s, border-color 0.15s;
+}
+.rw-page-btn:hover {
+  background: var(--surface-2, #f5f5f3);
+  border-color: #F5C518;
+}
+.rw-page-btn.active {
+  background: #F5C518;
+  border-color: #F5C518;
+  color: #1a1a18;
+  font-weight: 700;
+  pointer-events: none;
+}
+.rw-page-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.rw-page-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 12px;
+}
+
 /* ── Mobile — 600px ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .rw-wrap { padding: 24px 16px 56px; }
@@ -191,6 +244,42 @@
     </a>
     {% endfor %}
   </div>
+
+  {% if total_pages > 1 %}
+  <nav class="rw-pagination" aria-label="Page navigation">
+    {# Prev #}
+    {% if page > 1 %}
+    <a href="{{ url_for('recent_work', page=page-1) }}" class="rw-page-btn" aria-label="Previous page">&#8592;</a>
+    {% else %}
+    <span class="rw-page-btn disabled" aria-disabled="true">&#8592;</span>
+    {% endif %}
+
+    {# Page numbers — show up to 5 around current page #}
+    {% set start_p = [1, page - 2] | max %}
+    {% set end_p   = [total_pages, page + 2] | min %}
+    {% if start_p > 1 %}
+      <a href="{{ url_for('recent_work', page=1) }}" class="rw-page-btn">1</a>
+      {% if start_p > 2 %}<span class="rw-page-btn disabled">…</span>{% endif %}
+    {% endif %}
+    {% for p in range(start_p, end_p + 1) %}
+      <a href="{{ url_for('recent_work', page=p) }}"
+         class="rw-page-btn{% if p == page %} active{% endif %}"
+         {% if p == page %}aria-current="page"{% endif %}>{{ p }}</a>
+    {% endfor %}
+    {% if end_p < total_pages %}
+      {% if end_p < total_pages - 1 %}<span class="rw-page-btn disabled">…</span>{% endif %}
+      <a href="{{ url_for('recent_work', page=total_pages) }}" class="rw-page-btn">{{ total_pages }}</a>
+    {% endif %}
+
+    {# Next #}
+    {% if page < total_pages %}
+    <a href="{{ url_for('recent_work', page=page+1) }}" class="rw-page-btn" aria-label="Next page">&#8594;</a>
+    {% else %}
+    <span class="rw-page-btn disabled" aria-disabled="true">&#8594;</span>
+    {% endif %}
+  </nav>
+  <p class="rw-page-info">Page {{ page }} of {{ total_pages }} &nbsp;·&nbsp; {{ total }} image{{ 's' if total != 1 else '' }}</p>
+  {% endif %}
 
   {% else %}
   <div class="rw-empty">
