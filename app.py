@@ -9459,8 +9459,8 @@ def bulk_upload():
 def bulk_upload_one():
     """Process one image at a time — called in a loop by the bulk upload frontend.
     Keeps each request well under Gunicorn worker timeout regardless of batch size."""
-    if current_user.role != 'admin':
-        abort(403)
+    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
+        return jsonify({'status': 'error', 'message': 'Subscription required for bulk upload.'}), 403
 
     file = request.files.get('image')
     if not file or not file.filename:
@@ -9477,6 +9477,10 @@ def bulk_upload_one():
     photographer = (request.form.get('photographer_name') or '').strip() \
                    or current_user.full_name or current_user.username
     is_public    = request.form.get('is_public', '1') == '1'
+    sub_genre    = (request.form.get('sub_genre') or '').strip() or None
+    location     = (request.form.get('location') or '').strip() or None
+    subject      = (request.form.get('subject') or '').strip() or None
+    species_hint = (request.form.get('species_hint') or '').strip() or None
     api_key      = os.getenv('ANTHROPIC_API_KEY', '')
 
     result = {'filename': file.filename, 'score': None, 'tier': None, 'status': 'failed'}
@@ -9516,8 +9520,12 @@ def bulk_upload_one():
             asset_name       = auto_title(filename, genre),
             phash            = phash,
             genre            = genre,
+            sub_genre        = sub_genre,
             photographer_name= photographer,
             camera_track     = getattr(current_user, 'subscription_track', None),
+            location         = location,
+            subject          = subject,
+            species_hint     = species_hint,
             status           = 'pending',
             is_public        = is_public,
         )
