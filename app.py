@@ -2880,6 +2880,251 @@ def profile():
                            referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url)
 
 
+# ---------------------------------------------------------------------------
+# Account deletion — DPDP Act 2023 compliance (right to erasure)
+# ---------------------------------------------------------------------------
+
+@app.route('/account/delete', methods=['GET', 'POST'])
+@login_required
+def account_delete():
+    """GET: Show confirmation page. POST: Execute deletion."""
+    if current_user.role == 'admin':
+        flash('Admin accounts cannot be self-deleted. Contact another admin.', 'error')
+        return redirect(url_for('profile'))
+
+    if request.method == 'GET':
+        image_count = Image.query.filter_by(user_id=current_user.id).count()
+        return render_template('account_delete_confirm.html', image_count=image_count)
+
+    # POST — execute deletion
+    if current_user.role == 'admin':
+        flash('Admin accounts cannot be self-deleted.', 'error')
+        return redirect(url_for('profile'))
+
+    confirmation = request.form.get('confirmation', '').strip()
+    if confirmation != 'DELETE':
+        flash('Please type DELETE (in capitals) to confirm account deletion.', 'error')
+        return redirect(url_for('account_delete'))
+
+    user_id      = current_user.id
+    user_email   = current_user.email
+    user_name    = current_user.full_name or current_user.username
+    user_track   = getattr(current_user, 'subscription_track', None)
+
+    # Log out before deletion so session is clean
+    logout_user()
+
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return redirect(url_for('index'))
+
+        image_ids = [img.id for img in user.images]
+
+        # 1. CalibrationNotes
+        try:
+            from models import CalibrationNote
+            CalibrationNote.query.filter_by(admin_id=user_id).delete()
+            if image_ids:
+                CalibrationNote.query.filter(
+                    CalibrationNote.image_id.in_(image_ids)
+                ).delete(synchronize_session=False)
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] calibration notes: {_e}')
+
+        # 2. ImageReports
+        try:
+            ImageReport.query.filter_by(reporter_id=user_id).delete()
+            if image_ids:
+                ImageReport.query.filter(
+                    ImageReport.image_id.in_(image_ids)
+                ).delete(synchronize_session=False)
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] image reports: {_e}')
+
+        # 3. Peer ratings given + received
+        try:
+            PeerRating.query.filter_by(rater_id=user_id).delete()
+            if image_ids:
+                PeerRating.query.filter(
+                    PeerRating.image_id.in_(image_ids)
+                ).delete(synchronize_session=False)
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] peer ratings: {_e}')
+
+        # 4. Rating assignments
+        try:
+            RatingAssignment.query.filter_by(rater_id=user_id).delete()
+            if image_ids:
+                RatingAssignment.query.filter(
+                    RatingAssignment.image_id.in_(image_ids)
+                ).delete(synchronize_session=False)
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] rating assignments: {_e}')
+
+        # 5. Peer pool entries
+        try:
+            PeerPoolEntry.query.filter_by(user_id=user_id).delete()
+            if image_ids:
+                PeerPoolEntry.query.filter(
+                    PeerPoolEntry.image_id.in_(image_ids)
+                ).delete(synchronize_session=False)
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] peer pool: {_e}')
+
+        # 6. Contest entries
+        try:
+            ContestEntry.query.filter_by(user_id=user_id).delete()
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] contest entries: {_e}')
+
+        # 7. Open contest entries
+        try:
+            OpenContestEntry.query.filter_by(user_id=user_id).delete()
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] open contest entries: {_e}')
+
+        # 8. BOW submissions
+        try:
+            from models import BowSubmission
+            BowSubmission.query.filter_by(user_id=user_id).delete()
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] bow submissions: {_e}')
+
+        # 9. POTY entries
+        try:
+            db.session.execute(
+                db.text('DELETE FROM poty_entries WHERE user_id = :uid'),
+                {'uid': user_id}
+            )
+            db.session.execute(
+                db.text('DELETE FROM poty_entry_images WHERE entry_id IN '
+                        '(SELECT id FROM poty_entries WHERE user_id = :uid)'),
+                {'uid': user_id}
+            )
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] poty entries: {_e}')
+
+        # 10. RAW submissions + scored_phash_cache
+        try:
+            if image_ids:
+                db.session.execute(
+                    db.text('DELETE FROM raw_submissions WHERE image_id = ANY(:ids)'),
+                    {'ids': image_ids}
+                )
+            db.session.execute(
+                db.text('DELETE FROM scored_phash_cache WHERE user_id = :uid'),
+                {'uid': user_id}
+            )
+        except Exception as _e:
+            app.logger.warning(f'[self_delete] raw/cache: {_e}')
+
+        # 11. Images + R2 cleanup
+        for img in list(user.images):
+            if img.thumb_url:
+                try:
+                    key = img.thumb_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            if img.card_url:
+                try:
+                    key = img.card_url.split(r2.R2_PUBLIC_URL + '/')[-1]
+                    r2.delete_file(key)
+                except Exception:
+                    pass
+            db.session.delete(img)
+
+        # 12. Delete user record
+        db.session.delete(user)
+        db.session.commit()
+
+        app.logger.info(
+            f'[self_delete] user_id={user_id} email={user_email} '
+            f'track={user_track} — permanently deleted'
+        )
+
+        # Send farewell confirmation email
+        try:
+            _site = os.getenv('SITE_URL', 'https://shutterleague.com')
+            send_email(
+                to_addresses=[user_email],
+                subject='Your Shutter League account has been deleted',
+                html_body=(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+                    '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px;">'
+                    '<tr><td align="center">'
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+                    '<tr><td style="background:#1a1a18;padding:20px 28px 16px;">'
+                    '<p style="margin:0;font-family:Courier New,monospace;font-size:11px;font-weight:700;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;">Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="padding:28px 28px 24px;">'
+                    '<h2 style="font-size:20px;font-weight:700;color:#1a1a18;margin:0 0 16px;">Account deleted</h2>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">Hi ' + user_name + ',</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'Your Shutter League account and all associated data have been permanently deleted. '
+                    'This action cannot be undone.</p>'
+                    '<p style="font-size:16px;line-height:1.7;color:#4A4840;margin:0 0 14px;">'
+                    'What was deleted: your profile, all uploaded images, scores, standings, and personal data.</p>'
+                    '<p style="font-size:15px;line-height:1.7;color:#4A4840;margin:0 0 24px;">'
+                    'If you did not request this deletion or believe it was made in error, '
+                    'please contact us immediately at '
+                    '<a href="mailto:' + CONTACT_EMAIL + '" style="color:#C8A84B;">' + CONTACT_EMAIL + '</a>.</p>'
+                    '<p style="font-size:14px;color:#8a8070;margin:0;">&#8212; Shutter League</p>'
+                    '</td></tr>'
+                    '<tr><td style="border-top:1px solid #E0D8C8;padding:12px 28px;">'
+                    '<p style="margin:0;font-size:12px;color:#8a8070;">Shutter League &nbsp;&#183;&nbsp; '
+                    '<a href="' + _site + '" style="color:#C8A84B;">shutterleague.com</a></p>'
+                    '</td></tr>'
+                    '</table></td></tr></table></body></html>'
+                ),
+                text_body=(
+                    'Hi ' + user_name + ',\n\n'
+                    'Your Shutter League account and all associated data have been permanently deleted.\n\n'
+                    'What was deleted: your profile, all uploaded images, scores, standings, and personal data.\n\n'
+                    'If you did not request this or believe it was made in error, '
+                    'contact us at ' + CONTACT_EMAIL + '\n\n'
+                    '-- Shutter League'
+                )
+            )
+        except Exception as _email_err:
+            app.logger.warning(f'[self_delete] farewell email failed: {_email_err}')
+
+        # Notify admin
+        try:
+            send_email(
+                to_addresses=[ADMIN_EMAIL],
+                subject=f'[Admin] Account self-deleted — {user_email}',
+                html_body=(
+                    '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                    '<p style="color:#C8A84B;font-weight:700;">ACCOUNT SELF-DELETED</p>'
+                    '<p>User: ' + user_name + ' (' + user_email + ')<br>'
+                    'User ID: ' + str(user_id) + '<br>'
+                    'Track: ' + (user_track or 'none') + '</p>'
+                    '<p style="color:#8a8070;">All data permanently deleted per DPDP Act 2023 right to erasure.</p>'
+                    '</div>'
+                )
+            )
+        except Exception:
+            pass
+
+    except Exception as _del_err:
+        db.session.rollback()
+        app.logger.error(f'[self_delete] failed for user_id={user_id}: {_del_err}')
+        # User is already logged out — redirect to home with generic message
+        return redirect(url_for('index'))
+
+    return redirect(url_for('account_deleted'))
+
+
+@app.route('/account/deleted')
+def account_deleted():
+    """Landing page shown after successful account deletion."""
+    return render_template('account_deleted.html')
+
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
@@ -4638,10 +4883,25 @@ def score_image(image_id):
 
 
 @app.route('/image/<int:image_id>/download')
+@login_required
 def download_card(image_id):
     img = Image.query.get_or_404(image_id)
     if not img.score:
         return "This image has not been scored yet.", 404
+
+    # Free tier gate — per investor doc, free users get score + tier only.
+    # Full evaluation PDF (Hard Truth, Gap Analysis, Edit Guide, mentor fields)
+    # is a subscriber-only feature. This is the primary conversion hook.
+    _is_sub = getattr(current_user, 'is_subscribed', False)
+    _is_owner = (img.user_id == current_user.id)
+    _is_admin = (current_user.role == 'admin')
+    if _is_owner and not _is_sub and not _is_admin:
+        flash(
+            'The full evaluation PDF is available to subscribers. '
+            'Subscribe to Camera or Mobile League to download your complete analysis.',
+            'info'
+        )
+        return redirect(url_for('pricing'))
 
     import io, tempfile, os as _os
     from engine.compositor import build_card1, build_card2
