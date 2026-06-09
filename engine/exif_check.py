@@ -15,10 +15,15 @@ TAG_DATETIME_O  = 36867 # DateTimeOriginal
 TAG_SOFTWARE    = 305   # Software (Photoshop, Instagram etc)
 TAG_GPS_INFO    = 34853 # GPS data present
 TAG_FOCAL       = 37386 # Focal length
+TAG_FOCAL_35MM  = 41989 # FocalLengthIn35mmFormat — critical for device tier detection
 TAG_APERTURE    = 33437 # F-number
 TAG_ISO         = 34855 # ISO
 TAG_SHUTTER     = 33434 # Exposure time
 TAG_LENS_MODEL  = 42036 # Lens model
+TAG_EXP_PROG    = 34850 # ExposureProgram (Manual=1, Auto=2 etc.)
+TAG_WB          = 41987 # WhiteBalance (0=Auto, 1=Manual)
+TAG_FLASH       = 37385 # Flash fired/not fired
+TAG_METERING    = 37383 # MeteringMode
 
 
 def extract_exif(image_path):
@@ -95,6 +100,77 @@ def extract_exif(image_path):
 
     gps = exif_data.get(TAG_GPS_INFO, {})
     result['has_gps'] = bool(gps)
+
+    # ── Extended fields for device-aware DDI ──────────────────────────────────
+    # Raw make/model stored separately for device tier detection
+    result['make']  = str(make).strip()  if make  else ''
+    result['model'] = str(model).strip() if model else ''
+
+    # FocalLengthIn35mmFormat — key for telephoto detection on mobile devices
+    fl35 = exif_data.get(TAG_FOCAL_35MM, {}).get('value', '')
+    if fl35:
+        try:
+            fl35_val = float(fl35[0]) / float(fl35[1]) if isinstance(fl35, tuple) else float(fl35)
+            result['focal_length_35mm'] = round(fl35_val, 1)
+        except Exception:
+            pass
+
+    # Raw numeric values for DDI context (used by build_exif_context)
+    aperture_raw = exif_data.get(TAG_APERTURE, {}).get('value', '')
+    if aperture_raw:
+        try:
+            result['aperture_raw'] = round(
+                float(aperture_raw[0]) / float(aperture_raw[1])
+                if isinstance(aperture_raw, tuple) else float(aperture_raw), 1
+            )
+        except Exception:
+            pass
+
+    iso_raw = exif_data.get(TAG_ISO, {}).get('value', '')
+    if iso_raw:
+        try:
+            result['iso_raw'] = int(iso_raw)
+        except Exception:
+            pass
+
+    shutter_raw = exif_data.get(TAG_SHUTTER, {}).get('value', '')
+    if shutter_raw:
+        try:
+            s = (float(shutter_raw[0]) / float(shutter_raw[1])
+                 if isinstance(shutter_raw, tuple) else float(shutter_raw))
+            result['shutter_raw'] = round(s, 6)  # seconds as float
+        except Exception:
+            pass
+
+    focal_raw = exif_data.get(TAG_FOCAL, {}).get('value', '')
+    if focal_raw:
+        try:
+            result['focal_length_raw'] = round(
+                float(focal_raw[0]) / float(focal_raw[1])
+                if isinstance(focal_raw, tuple) else float(focal_raw), 1
+            )
+        except Exception:
+            pass
+
+    # Exposure program, white balance, flash, metering
+    exp_prog = exif_data.get(TAG_EXP_PROG, {}).get('value', '')
+    if exp_prog is not None and exp_prog != '':
+        result['exposure_program'] = int(exp_prog) if str(exp_prog).isdigit() else str(exp_prog)
+
+    wb = exif_data.get(TAG_WB, {}).get('value', '')
+    if wb is not None and wb != '':
+        result['white_balance'] = int(wb) if str(wb).isdigit() else str(wb)
+
+    flash = exif_data.get(TAG_FLASH, {}).get('value', '')
+    if flash is not None and flash != '':
+        try:
+            result['flash_fired'] = bool(int(flash) & 0x1)  # bit 0 = flash fired
+        except Exception:
+            pass
+
+    metering = exif_data.get(TAG_METERING, {}).get('value', '')
+    if metering is not None and metering != '':
+        result['metering_mode'] = int(metering) if str(metering).isdigit() else str(metering)
 
     # ── Determine verification status ─────────────────────────────────────────
     has_camera  = bool(result.get('camera'))

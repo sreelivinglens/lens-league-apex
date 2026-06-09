@@ -342,6 +342,7 @@ GENRE CONTEXT: {genre_context}
 {species_context}
 {calibration_examples}
 {calibration_notes}
+{exif_context}
 
 MANDATORY: If genre is 'Creative' — apply STEP 0 override immediately.
 Sharpness is never penalised. Score DoD on technique difficulty.
@@ -2925,7 +2926,209 @@ def build_species_context(research: dict) -> str:
     return "\n".join(lines)
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint=""):
+def get_device_tier(exif_data: dict) -> str:
+    """
+    Classify device capability from EXIF make/model/focal_length_35mm.
+    Returns a tier string used to gate advice in the DDI prompt.
+
+    Tiers:
+      iphone_pro          — iPhone Pro/Pro Max (15, 16 series): 0.5x + 1x + 5x, ProRAW
+      iphone_standard     — iPhone standard (13+): 0.5x + 1x + 2x crop, no true telephoto
+      android_ultra       — Samsung Ultra, Pixel Pro, OnePlus flagship: multi-lens incl. telephoto
+      android_flagship    — Samsung S-series standard, Pixel standard: wide + ultrawide, limited zoom
+      android_mid         — Other Android: wide + ultrawide assumed, no telephoto
+      telephoto_confirmed — Any device where EXIF proves telephoto was used (35mm equiv >= 70mm)
+      ultrawide_confirmed — Any device where EXIF proves ultrawide was used (35mm equiv <= 20mm)
+      camera              — Dedicated camera (Canon, Nikon, Sony, Fuji etc.) — full advice always valid
+      unknown_mobile      — Mobile confirmed but device unrecognised — conservative, no telephoto advice
+      unknown             — No EXIF or unrecognised make — conservative fallback
+    """
+    make  = (exif_data.get('make')  or '').lower().strip()
+    model = (exif_data.get('model') or '').lower().strip()
+    fl35  = exif_data.get('focal_length_35mm') or 0
+
+    # EXIF-proven focal length overrides everything — works for any device
+    if fl35 >= 70:
+        return 'telephoto_confirmed'
+    if fl35 > 0 and fl35 <= 20:
+        return 'ultrawide_confirmed'
+
+    # Dedicated camera brands — full advice always valid
+    _camera_brands = (
+        'canon', 'nikon', 'sony', 'fuji', 'fujifilm', 'olympus',
+        'panasonic', 'leica', 'hasselblad', 'pentax', 'sigma',
+        'ricoh', 'om system', 'om-system', 'phase one', 'mamiya',
+    )
+    if any(b in make for b in _camera_brands):
+        return 'camera'
+
+    # Apple iPhones
+    if 'apple' in make or 'iphone' in model:
+        # Pro/Pro Max — confirmed telephoto (5x on 15 Pro+, 3x on earlier)
+        if any(x in model for x in ('pro max', 'pro')):
+            return 'iphone_pro'
+        return 'iphone_standard'
+
+    # Samsung
+    if 'samsung' in make:
+        if 'ultra' in model:
+            return 'android_ultra'
+        # Galaxy S-series flagship (S20+)
+        if any(x in model for x in ('s20', 's21', 's22', 's23', 's24', 's25', 's26')):
+            return 'android_flagship'
+        return 'android_mid'
+
+    # Google Pixel
+    if 'google' in make or 'pixel' in model:
+        if 'pro' in model:
+            return 'android_ultra'
+        return 'android_flagship'
+
+    # OnePlus — flagships have 3.5x+ telephoto
+    if 'oneplus' in make or 'oneplus' in model:
+        # OnePlus 10+, 11, 12, 13, 15 have telephoto
+        for gen in ('10', '11', '12', '13', '14', '15'):
+            if gen in model:
+                return 'android_ultra'
+        return 'android_mid'
+
+    # Xiaomi/Redmi flagships
+    if any(b in make for b in ('xiaomi', 'redmi', 'poco')):
+        if any(x in model for x in ('ultra', 'pro', '14', '15')):
+            return 'android_ultra'
+        return 'android_mid'
+
+    # Other known mobile brands
+    _mobile_brands = ('huawei', 'honor', 'oppo', 'vivo', 'realme', 'motorola', 'nokia', 'lg', 'htc')
+    if any(b in make for b in _mobile_brands):
+        return 'android_mid'
+
+    # Generic Android (no brand match)
+    if 'android' in model or not make:
+        return 'unknown_mobile'
+
+    return 'unknown'
+
+
+# Mode advice gating by device tier
+# Maps tier → set of advice types that are VALID for that device
+_TIER_VALID_ADVICE = {
+    'iphone_pro':           {'ultrawide', 'wide', 'telephoto_2x', 'telephoto_5x', 'portrait_mode', 'night_mode', 'proraw', 'manual_exposure'},
+    'iphone_standard':      {'ultrawide', 'wide', 'telephoto_2x', 'portrait_mode', 'night_mode'},
+    'android_ultra':        {'ultrawide', 'wide', 'telephoto', 'portrait_mode', 'night_mode', 'manual_exposure'},
+    'android_flagship':     {'ultrawide', 'wide', 'portrait_mode', 'night_mode'},
+    'android_mid':          {'ultrawide', 'wide', 'night_mode'},
+    'telephoto_confirmed':  {'ultrawide', 'wide', 'telephoto', 'portrait_mode', 'night_mode', 'manual_exposure'},
+    'ultrawide_confirmed':  {'ultrawide', 'wide', 'portrait_mode', 'night_mode'},
+    'camera':               {'ultrawide', 'wide', 'telephoto', 'portrait_mode', 'manual_exposure', 'raw', 'tilt_shift', 'nd_filter'},
+    'unknown_mobile':       {'ultrawide', 'wide', 'portrait_mode', 'night_mode'},
+    'unknown':              {'wide'},
+}
+
+
+def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
+    """
+    Build a human-readable EXIF block to inject into the DDI scoring prompt.
+    Includes device tier and gated advice rules so the engine gives
+    actionable advice only for what the photographer's device can actually do.
+
+    camera_track: 'mobile' | 'camera' | None — from subscription plan.
+    exif_data: dict returned by extract_exif().
+    """
+    if not exif_data:
+        return ''
+
+    lines = ['\nDEVICE & CAPTURE CONTEXT (verified from EXIF — use this for all advice):']
+
+    # Device identification
+    make  = exif_data.get('make',  '') or ''
+    model = exif_data.get('model', '') or ''
+    if make or model:
+        lines.append(f'Device: {(make + " " + model).strip()}')
+    elif camera_track == 'mobile':
+        lines.append('Device: Mobile phone (make/model not in EXIF)')
+
+    # Lens/focal
+    lens = exif_data.get('lens', '')
+    if lens:
+        lines.append(f'Lens: {lens}')
+
+    fl_display = exif_data.get('focal_length', '')
+    fl35       = exif_data.get('focal_length_35mm', 0)
+    if fl_display:
+        lines.append(f'Focal length: {fl_display}' + (f' ({fl35:.0f}mm full-frame equiv.)' if fl35 else ''))
+    elif fl35:
+        lines.append(f'Focal length: {fl35:.0f}mm full-frame equiv.')
+
+    # Exposure triangle
+    aperture = exif_data.get('aperture', '')
+    shutter  = exif_data.get('shutter',  '')
+    iso      = exif_data.get('iso',      '')
+    if aperture or shutter or iso:
+        lines.append(f'Exposure: {" · ".join(filter(None, [aperture, shutter, iso]))}')
+
+    # Software
+    software = exif_data.get('software', '')
+    if software:
+        lines.append(f'Processed with: {software}')
+
+    # Device tier + advice gating
+    tier = get_device_tier(exif_data)
+
+    # Override to camera if subscription track says camera and no mobile make detected
+    _mobile_makes = ('apple', 'samsung', 'google', 'oneplus', 'xiaomi', 'huawei',
+                     'oppo', 'vivo', 'realme', 'motorola', 'nokia', 'lg', 'htc', 'honor')
+    _make_lower = make.lower()
+    if camera_track == 'camera' and not any(b in _make_lower for b in _mobile_makes):
+        tier = 'camera'
+
+    valid_advice = _TIER_VALID_ADVICE.get(tier, {'wide'})
+
+    # Human-readable device capability summary for the engine
+    _tier_descriptions = {
+        'iphone_pro':          'iPhone Pro/Pro Max — has ultrawide (0.5x), wide (1x), and 5x telephoto. ProRAW available.',
+        'iphone_standard':     'iPhone standard — has ultrawide (0.5x), wide (1x), and 2x crop zoom. No true telephoto.',
+        'android_ultra':       'Android flagship with telephoto — has ultrawide, wide, and optical telephoto zoom.',
+        'android_flagship':    'Android flagship — has ultrawide and wide. No confirmed telephoto.',
+        'android_mid':         'Android mid-range — ultrawide and wide assumed. No telephoto.',
+        'telephoto_confirmed': 'Telephoto lens confirmed via EXIF — all focal length advice is valid.',
+        'ultrawide_confirmed': 'Ultrawide lens confirmed via EXIF.',
+        'camera':              'Dedicated camera — full lens and technique advice is valid.',
+        'unknown_mobile':      'Mobile phone — device unrecognised. Assume wide + ultrawide only.',
+        'unknown':             'Device unknown — give only wide-angle advice.',
+    }
+    lines.append(f'Device capability: {_tier_descriptions.get(tier, "Unknown device")}')
+
+    # Hard advice gate — injected directly into prompt so engine cannot hallucinate equipment
+    lines.append('')
+    lines.append('ADVICE CONSTRAINTS — STRICTLY ENFORCE:')
+
+    if 'telephoto' not in valid_advice and 'telephoto_5x' not in valid_advice and 'telephoto_2x' not in valid_advice:
+        lines.append('- DO NOT suggest telephoto, longer focal length, or zoom compression — this device has no telephoto lens.')
+
+    if 'proraw' not in valid_advice:
+        lines.append('- DO NOT suggest ProRAW or RAW shooting — not available on this device.')
+
+    if 'manual_exposure' not in valid_advice:
+        lines.append('- DO NOT suggest manual exposure mode unless framed as "if your device supports it".')
+
+    if tier in ('iphone_pro', 'android_ultra', 'telephoto_confirmed'):
+        lines.append('- Telephoto advice IS valid — this device has an optical telephoto lens.')
+
+    if 'portrait_mode' in valid_advice:
+        lines.append('- Portrait mode / computational bokeh IS available on this device.')
+
+    if 'night_mode' in valid_advice:
+        lines.append('- Night mode IS available on this device — valid suggestion for low-light work.')
+
+    if tier == 'camera':
+        lines.append('- Full lens, focal length, and technique advice is valid — dedicated camera confirmed.')
+
+    lines.append('')
+    return '\n'.join(lines)
+
+
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context=""):
     """
     Score an image using the Apex DDI Engine.
 
@@ -2936,6 +3139,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     species_hint: photographer-supplied species name for Wildlife/Nature images.
                   Passed to vision_analyse() as ground truth — prevents
                   misidentification on high-key or processed images.
+    exif_context: pre-built string from build_exif_context() — device capability
+                  summary and advice constraints injected into the DDI prompt.
     """
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
@@ -3107,6 +3312,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         species_context      = species_context,
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
+        exif_context         = exif_context or '',
     )
 
     payload = {
