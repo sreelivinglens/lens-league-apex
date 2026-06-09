@@ -3242,7 +3242,7 @@ def upload():
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
-            is_public         = (request.form.get('is_public', '1') == '1'),
+            is_public         = (request.form.get('is_public', '0') == '1'),
             exif_status=exif_status, exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
             exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
             exif_date_taken=(exif_data.get('date_taken', '') or '').replace('\x00', ''),
@@ -9415,7 +9415,7 @@ def cancel_subscription():
 @app.route('/bulk-upload', methods=['GET', 'POST'])
 @login_required
 def bulk_upload():
-    if current_user.role != 'admin':
+    if current_user.role != 'admin' and not getattr(current_user, 'is_subscribed', False):
         abort(403)
     is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     results = []
@@ -9494,7 +9494,7 @@ def bulk_upload():
                     phash=phash, genre=genre, photographer_name=photographer,
                     camera_track=getattr(current_user, 'subscription_track', None),
                     status='pending',
-                    is_public=(request.form.get('is_public', '1') == '1'),
+                    is_public=(request.form.get('is_public', '0') == '1'),
                 )
                 db.session.add(img)
                 db.session.flush()
@@ -9591,7 +9591,7 @@ def bulk_upload_one():
 
     photographer = (request.form.get('photographer_name') or '').strip() \
                    or current_user.full_name or current_user.username
-    is_public    = request.form.get('is_public', '1') == '1'
+    is_public    = request.form.get('is_public', '0') == '1'
     sub_genre    = (request.form.get('sub_genre') or '').strip() or None
     location     = (request.form.get('location') or '').strip() or None
     subject      = (request.form.get('subject') or '').strip() or None
