@@ -243,6 +243,46 @@
         <div id="bulkTrackHint" style="font-size:12px; color:var(--red); margin-top:6px; display:none;">Please select Camera or Mobile before uploading.</div>
       </div>
 
+      <!-- ── Sub-genre override (hidden by default, shown per genre) ── -->
+      <div id="bulk-sub-genre-toggle-row" style="display:none; margin-bottom:4px;">
+        <a href="#" id="bulk-sub-genre-toggle-link"
+           style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.5px;color:var(--text-muted);text-decoration:none;opacity:0.65;"
+           onclick="toggleBulkSubGenre(event)">▸ Override engine detection</a>
+      </div>
+      <div class="form-group" id="bulk-sub-genre-row" style="display:none; margin-bottom:16px;">
+        <label style="font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">
+          Image Type <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(override — engine detects automatically)</span>
+        </label>
+        <select name="sub_genre" id="bulk_sub_genre">
+          <option value="">— Auto-detect (recommended) —</option>
+        </select>
+      </div>
+
+      <!-- Species hint — shown for Wildlife / Nature only -->
+      <div class="form-group" id="bulk-species-row" style="display:none; margin-bottom:16px;">
+        <label>Species <span style="font-weight:400;color:var(--text-muted);text-transform:none;">— what did you photograph?</span></label>
+        <input type="text" name="bulk_species_hint" id="bulk_species_hint"
+               placeholder="e.g. Green Bee-eater, Bengal Tiger"
+               maxlength="120">
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Engine uses this as ground truth — overrides vision detection.</div>
+      </div>
+
+      <!-- Location -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Location <span style="font-weight:400;color:var(--text-muted);text-transform:none;">(optional — applies to all)</span></label>
+        <input type="text" name="bulk_location" id="bulk_location"
+               placeholder="e.g. Keoladeo National Park, Rajasthan"
+               maxlength="180">
+      </div>
+
+      <!-- Subject / Story -->
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>Subject / Story <span style="font-weight:400;color:var(--text-muted);text-transform:none;">(optional — applies to all)</span></label>
+        <textarea name="bulk_subject" id="bulk_subject"
+                  placeholder="Brief context — subject, conditions, technique…"
+                  maxlength="500" style="min-height:72px;"></textarea>
+      </div>
+
       <div style="background:var(--surface-3); border:1px solid var(--border); border-left:3px solid var(--gold-dark); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 18px; font-size:14px; color:var(--text-secondary); line-height:1.65; margin-bottom:20px;">
         <strong style="color:var(--gold);">How bulk upload works:</strong><br>
         The Apex DDI Engine analyses each image automatically. Allow ~35 seconds per image. <strong style="color:var(--amber);">Maximum 10 images per batch.</strong> Keep this tab open until complete.<br><br>
@@ -544,8 +584,7 @@ form.addEventListener('submit', function(e) {
     secs++;
     const imgNum    = Math.min(Math.ceil(secs / PER_IMAGE), total);
     const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;
-    const imgRemain = Math.max(PER_IMAGE - imgSecs, 0);
-    clockSecs.textContent = imgRemain;
+    clockSecs.textContent = imgSecs;  // counts up 1→35 per image
     clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
     if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;          overlaySub.textContent = 'Transferring to server.'; }
     else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`;            overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
@@ -567,6 +606,22 @@ form.addEventListener('submit', function(e) {
   const is_public    = form.querySelector('[name="is_public"]') &&
                        form.querySelector('[name="is_public"]').checked ? '1' : '0';
   const fileArray    = Array.from(files).slice(0, 10);
+
+  // ── Resolution check — same 1500px min as upload.html ─────────────────
+  // Check each file client-side before firing the overlay
+  async function checkResolution(file) {
+    return new Promise(resolve => {
+      const r = new FileReader();
+      r.onload = ev => {
+        const img = new window.Image();
+        img.onload  = () => resolve(Math.min(img.naturalWidth, img.naturalHeight));
+        img.onerror = () => resolve(9999); // fail open
+        img.src = ev.target.result;
+      };
+      r.onerror = () => resolve(9999);
+      r.readAsDataURL(file);
+    });
+  }
   const allResults   = [];
   let   imgIndex     = 0;
 
@@ -590,11 +645,24 @@ form.addEventListener('submit', function(e) {
     const file = fileArray[imgIndex];
     imgIndex++;
 
+    // Resolution gate — same 1500px min as single upload
+    const shortSide = await checkResolution(file);
+    if (shortSide < 1500) {
+      allResults.push({ filename: file.name, status: `low resolution (${shortSide}px — min 1500px)` });
+      sendNext();
+      return;
+    }
+
     const fd = new FormData();
     fd.append('image', file);
     fd.append('genre', genre);
     fd.append('photographer_name', photographer);
     fd.append('is_public', is_public);
+    fd.append('camera_track', form.querySelector('[name="camera_track"]:checked')?.value || '');
+    fd.append('sub_genre',    (form.querySelector('[name="sub_genre"]')?.value || ''));
+    fd.append('location',     (form.querySelector('[name="bulk_location"]')?.value || ''));
+    fd.append('subject',      (form.querySelector('[name="bulk_subject"]')?.value || ''));
+    fd.append('species_hint', (form.querySelector('[name="bulk_species_hint"]')?.value || ''));
 
     try {
       const resp = await fetch('/bulk-upload/one', {
@@ -617,6 +685,51 @@ form.addEventListener('submit', function(e) {
   }
 
   sendNext();
+});
+
+// ── Sub-genre + species JS (parity with upload.html) ──────────────────
+const BULK_SUBGENRE_MAP = {{ subgenre_map_json | safe }};
+var _bulkSubGenreOpen = false;
+
+function updateBulkSubGenre(genreValue) {
+  var subs = BULK_SUBGENRE_MAP[genreValue] || [];
+  var sel  = document.getElementById('bulk_sub_genre');
+  var toggleRow = document.getElementById('bulk-sub-genre-toggle-row');
+  var subRow    = document.getElementById('bulk-sub-genre-row');
+  var speciesRow = document.getElementById('bulk-species-row');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Auto-detect (recommended) —</option>';
+  if (subs.length) {
+    subs.forEach(function(sg) {
+      var opt = document.createElement('option');
+      opt.value = sg[0]; opt.textContent = sg[1];
+      sel.appendChild(opt);
+    });
+    toggleRow.style.display = '';
+    if (!_bulkSubGenreOpen) subRow.style.display = 'none';
+  } else {
+    toggleRow.style.display = 'none';
+    subRow.style.display = 'none';
+    sel.value = '';
+    _bulkSubGenreOpen = false;
+  }
+  if (speciesRow) {
+    speciesRow.style.display = (genreValue === 'Wildlife' || genreValue === 'Nature') ? 'block' : 'none';
+  }
+}
+
+function toggleBulkSubGenre(e) {
+  e.preventDefault();
+  _bulkSubGenreOpen = !_bulkSubGenreOpen;
+  document.getElementById('bulk-sub-genre-row').style.display = _bulkSubGenreOpen ? '' : 'none';
+  var link = document.getElementById('bulk-sub-genre-toggle-link');
+  link.textContent = _bulkSubGenreOpen ? '▾ Override engine detection' : '▸ Override engine detection';
+  if (!_bulkSubGenreOpen) document.getElementById('bulk_sub_genre').value = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var genreEl = document.querySelector('[name="genre"]');
+  if (genreEl) genreEl.addEventListener('change', function() { updateBulkSubGenre(this.value); });
 });
 
 window.addEventListener('DOMContentLoaded', initPage);
