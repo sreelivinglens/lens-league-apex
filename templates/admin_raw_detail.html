@@ -197,7 +197,8 @@
                 text-transform:uppercase;margin-bottom:16px;">Actions</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;">
 
-      <!-- Mark verified -->
+      <!-- Mark verified — only show if not already verified -->
+      {% if not img.raw_verified %}
       <form method="POST" action="{{ url_for('admin_mark_raw_verified', image_id=img.id) }}"
             onsubmit="return confirm('Mark this image as RAW verified?')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
@@ -208,6 +209,13 @@
           ✓ Mark Verified
         </button>
       </form>
+      {% else %}
+      <div style="background:transparent;color:#2E7D4F;font-family:var(--font-mono);font-size:12px;
+                  font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;
+                  border:1px solid #2E7D4F;border-radius:var(--radius-sm);">
+        ✓ Verified
+      </div>
+      {% endif %}
 
       <!-- Send reminder -->
       {% if submission and not submission.admin_decision %}
