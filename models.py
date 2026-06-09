@@ -184,6 +184,17 @@ class Image(db.Model):
     exif_original_width    = db.Column(db.Integer,     nullable=True)
     exif_original_height   = db.Column(db.Integer,     nullable=True)
     exif_capture_datetime  = db.Column(db.String(40),  nullable=True)
+    # v62: Extended EXIF for device-aware DDI advice
+    exif_make              = db.Column(db.String(80),  nullable=True)  # e.g. "Apple", "Samsung"
+    exif_model             = db.Column(db.String(120), nullable=True)  # e.g. "iPhone 15 Pro"
+    exif_focal_length_35mm = db.Column(db.Float,       nullable=True)  # Full-frame equiv mm
+    exif_focal_length_raw  = db.Column(db.Float,       nullable=True)  # Actual focal length mm
+    exif_aperture_raw      = db.Column(db.Float,       nullable=True)  # f-number as float
+    exif_iso_raw           = db.Column(db.Integer,     nullable=True)  # ISO value
+    exif_shutter_raw       = db.Column(db.Float,       nullable=True)  # Shutter speed in seconds
+    exif_software          = db.Column(db.String(180), nullable=True)  # Processing software
+    exif_has_gps           = db.Column(db.Boolean,     nullable=True)  # GPS present (internal only, never displayed)
+    exif_device_tier       = db.Column(db.String(40),  nullable=True)  # iphone_pro / android_ultra etc.
 
     dod_score           = db.Column(db.Float, nullable=True)
     disruption_score    = db.Column(db.Float, nullable=True)

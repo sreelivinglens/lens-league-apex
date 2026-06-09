@@ -557,6 +557,17 @@ with app.app_context():
                 )""",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_slug ON mentor_profiles(slug)",
                 "CREATE INDEX IF NOT EXISTS ix_mentor_profiles_user_id ON mentor_profiles(user_id)",
+                # v62 — extended EXIF for device-aware DDI advice
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_make VARCHAR(80)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_model VARCHAR(120)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_focal_length_35mm FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_focal_length_raw FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_aperture_raw FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_iso_raw INTEGER",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_shutter_raw FLOAT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_software VARCHAR(180)",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_has_gps BOOLEAN",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_device_tier VARCHAR(40)",
             ]
             for sql in _migrations:
                 try:
@@ -2962,6 +2973,12 @@ def upload():
             exif_data.get('iso',''), exif_data.get('shutter',''),
         ]))
 
+        # ── Device tier detection (v62) ────────────────────────────────────────
+        from engine.auto_score import get_device_tier, build_exif_context
+        _camera_track_for_tier = request.form.get('camera_track') or getattr(current_user, 'subscription_track', None)
+        _device_tier   = get_device_tier(exif_data)
+        _exif_context  = build_exif_context(exif_data, camera_track=_camera_track_for_tier)
+
         if os.path.exists(raw_path): os.remove(raw_path)
 
         from engine.processor import hash_similarity_pct
@@ -2993,6 +3010,76 @@ def upload():
                     'Please ensure you are submitting your own original work. '
                     'If you believe this is an error, contact support@shutterleague.com and we will review it promptly.'
                 }), 409
+
+        # ── Watermark / logo detection (v62) ──────────────────────────────────
+        # Runs synchronously before DB save or R2 upload — immediate rejection.
+        # Uses Haiku for speed and cost. Fails open (upload proceeds) if API is
+        # unavailable so a network blip never blocks legitimate uploads.
+        try:
+            _wm_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+            if _wm_api_key and os.path.exists(thumb_path):
+                import base64 as _b64, urllib.request as _wmur, json as _wmjson
+                from PIL import Image as _PILWM
+                import io as _wmio
+
+                # Resize to 1024px max for speed — watermarks are visible at low res
+                _wm_pil = _PILWM.open(thumb_path).convert('RGB')
+                if max(_wm_pil.size) > 1024:
+                    _wm_pil.thumbnail((1024, 1024))
+                _wm_buf = _wmio.BytesIO()
+                _wm_pil.save(_wm_buf, format='JPEG', quality=80)
+                _wm_b64 = _b64.b64encode(_wm_buf.getvalue()).decode('utf-8')
+
+                _wm_payload = _wmjson.dumps({
+                    'model': 'claude-haiku-4-5-20251001',
+                    'max_tokens': 100,
+                    'messages': [{
+                        'role': 'user',
+                        'content': [
+                            {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': _wm_b64}},
+                            {'type': 'text', 'text': (
+                                'Does this photograph contain a photographer-added watermark, text overlay, '
+                                'studio logo, social media handle (@username), copyright text, or any branding '
+                                'embedded into the image by the photographer? '
+                                'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                                'platform watermarks, or natural scene text. '
+                                'Only flag overlays added on top of the photograph after capture. '
+                                'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
+                            )}
+                        ]
+                    }]
+                }).encode('utf-8')
+
+                _wm_req = _wmur.Request(
+                    'https://api.anthropic.com/v1/messages',
+                    data=_wm_payload,
+                    headers={'Content-Type': 'application/json', 'x-api-key': _wm_api_key,
+                             'anthropic-version': '2023-06-01'},
+                    method='POST'
+                )
+                with _wmur.urlopen(_wm_req, timeout=15) as _wmresp:
+                    _wm_result = _wmjson.loads(_wmresp.read().decode())
+
+                _wm_text = _wm_result.get('content', [{}])[0].get('text', '{}')
+                _wm_text = _wm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _wm_data = _wmjson.loads(_wm_text)
+
+                if _wm_data.get('watermark_detected'):
+                    if os.path.exists(thumb_path): os.remove(thumb_path)
+                    app.logger.info(f'[upload] watermark rejected: {_wm_data.get("description")} uid={current_user.id}')
+                    _wm_msg = (
+                        'Your image appears to contain a watermark, logo, or text overlay. '
+                        'Shutter League evaluates the original photograph only — please remove any '
+                        'added text, handles, or branding and re-upload the clean image.'
+                    )
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                        return jsonify({'error': True, 'message': _wm_msg}), 422
+                    flash(_wm_msg, 'error')
+                    return redirect(request.url)
+
+        except Exception as _wm_err:
+            # Fail open — network or API error must never block a legitimate upload
+            app.logger.warning(f'[upload] watermark check failed (non-fatal): {_wm_err}')
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
@@ -3032,6 +3119,17 @@ def upload():
             exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
             exif_date_taken=(exif_data.get('date_taken', '') or '').replace('\x00', ''),
             exif_settings=(exif_settings or '').replace('\x00', ''), exif_warning=(exif_warning or '').replace('\x00', ''),
+            # v62 extended EXIF fields
+            exif_make             = (exif_data.get('make',  '') or '').replace('\x00', '') or None,
+            exif_model            = (exif_data.get('model', '') or '').replace('\x00', '') or None,
+            exif_focal_length_35mm= exif_data.get('focal_length_35mm') or None,
+            exif_focal_length_raw = exif_data.get('focal_length_raw')  or None,
+            exif_aperture_raw     = exif_data.get('aperture_raw')      or None,
+            exif_iso_raw          = exif_data.get('iso_raw')           or None,
+            exif_shutter_raw      = exif_data.get('shutter_raw')       or None,
+            exif_software         = (exif_data.get('software', '') or '').replace('\x00', '') or None,
+            exif_has_gps          = exif_data.get('has_gps')           or False,
+            exif_device_tier      = _device_tier or None,
         )
         db.session.add(img)
         img.sub_genre = sub_genre
@@ -3114,7 +3212,7 @@ def upload():
 
             def _score_in_background(image_id, _uid):
                 import traceback
-                from engine.auto_score import auto_score, build_audit_data
+                from engine.auto_score import auto_score, build_audit_data, build_exif_context
                 from engine.compositor import build_card1
                 with app.app_context():
                     try:
@@ -3348,7 +3446,18 @@ def upload():
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
                             title=_img.asset_name, photographer=_img.photographer_name,
-                            subject=_img.subject, location=_img.location
+                            subject=_img.subject, location=_img.location,
+                            exif_context=build_exif_context(
+                                {
+                                    'make': _img.exif_make, 'model': _img.exif_model,
+                                    'focal_length_35mm': _img.exif_focal_length_35mm,
+                                    'focal_length': _img.exif_settings,
+                                    'aperture': None, 'shutter': None, 'iso': None,
+                                    'lens': _img.exif_lens, 'software': _img.exif_software,
+                                    'has_gps': _img.exif_has_gps,
+                                },
+                                camera_track=_img.camera_track,
+                            ) if _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -3670,7 +3779,7 @@ def retry_score(image_id):
 
     try:
         import traceback, tempfile
-        from engine.auto_score import auto_score, build_audit_data
+        from engine.auto_score import auto_score, build_audit_data, build_exif_context
         from engine.compositor import build_card1
 
         thumb_path = img.thumb_path
@@ -3688,6 +3797,14 @@ def retry_score(image_id):
                 flash(f'Could not retrieve image for scoring: {e}', 'error')
                 return redirect(url_for('image_detail', image_id=image_id))
 
+        _rescore_exif_ctx = build_exif_context(
+            {'make': img.exif_make, 'model': img.exif_model,
+             'focal_length_35mm': img.exif_focal_length_35mm,
+             'lens': img.exif_lens, 'software': img.exif_software,
+             'has_gps': img.exif_has_gps},
+            camera_track=img.camera_track,
+        ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
+
         result = auto_score(
             image_path   = thumb_path,
             genre        = img.genre,
@@ -3696,6 +3813,7 @@ def retry_score(image_id):
             photographer = img.photographer_name,
             subject      = img.subject,
             location     = img.location,
+            exif_context = _rescore_exif_ctx,
         )
 
         img.dod_score        = float(result.get('dod', 0))
