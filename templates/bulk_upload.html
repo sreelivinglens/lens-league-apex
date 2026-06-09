@@ -447,11 +447,12 @@ function proceedToUpload() {
 
 const input    = document.getElementById('filesInput');
 const dropzone = document.getElementById('dropzone');
+let selectedFiles = null;  // stores files from either drag-drop or file picker
 
 function handleDrop(e) {
   e.preventDefault(); dropzone.classList.remove('dragover');
-  try { input.files = e.dataTransfer.files; } catch(err) {}
-  showFiles(e.dataTransfer.files);
+  selectedFiles = e.dataTransfer.files;
+  showFiles(selectedFiles);
 }
 
 function showFiles(files) {
@@ -486,7 +487,10 @@ function showFiles(files) {
   sw.style.display = hasLarge ? 'block' : 'none';
 }
 
-input.addEventListener('change', () => showFiles(input.files));
+input.addEventListener('change', () => {
+  selectedFiles = input.files;
+  showFiles(selectedFiles);
+});
 
 function dismissOverlayError() {
   document.getElementById('scoringOverlay').classList.remove('active');
@@ -501,8 +505,8 @@ const submitBtn = document.getElementById('submitBtn');
 form.addEventListener('submit', function(e) {
   e.preventDefault();
 
-  const files = input.files;
-  if (!files.length) { alert('Please select images first.'); return; }
+  const files = selectedFiles || input.files;
+  if (!files || !files.length) { alert('Please select images first.'); return; }
 
   const trackSelected = document.querySelector('input[name="camera_track"]:checked');
   if (!trackSelected) {
@@ -649,7 +653,7 @@ form.addEventListener('submit', function(e) {
     const shortSide = await checkResolution(file);
     if (shortSide < 1500) {
       allResults.push({ filename: file.name, status: `low resolution (${shortSide}px — min 1500px)` });
-      sendNext();
+      await sendNext();
       return;
     }
 
@@ -681,7 +685,7 @@ form.addEventListener('submit', function(e) {
       allResults.push({ filename: file.name, status: 'network error — check dashboard' });
     }
 
-    sendNext();
+    await sendNext();
   }
 
   sendNext();
