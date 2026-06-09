@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Delete Account — Shutter League{% endblock %}
+
+{% block extra_css %}
+<style>
+  .del-wrap {
+    max-width: 560px;
+    margin: 64px auto 80px;
+    padding: 0 var(--page-pad);
+  }
+  .del-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 36px 32px;
+  }
+  .del-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+  }
+  .del-sub {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin: 0 0 24px;
+  }
+  .del-warning {
+    background: rgba(200,50,50,0.07);
+    border: 1px solid rgba(200,50,50,0.25);
+    border-left: 3px solid var(--red);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .del-warning p {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .del-warning p:last-child { margin: 0; }
+  .del-list {
+    margin: 8px 0 0 18px;
+    padding: 0;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.8;
+  }
+  .del-label {
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .del-input {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }
+  .del-input:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+  .del-btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-delete {
+    background: var(--red);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 22px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .btn-delete:hover { opacity: 0.85; }
+  .btn-cancel {
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  @media (max-width: 600px) {
+    .del-wrap { margin-top: 32px; }
+    .del-card { padding: 24px 18px; }
+    .del-btn-row { flex-direction: column; }
+    .btn-delete, .btn-cancel { width: 100%; justify-content: center; text-align: center; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="del-wrap">
+  <div class="del-card">
+
+    <p class="del-sub">Permanent Action</p>
+    <h1 class="del-title">Delete Your Account</h1>
+
+    <div class="del-warning">
+      <p><strong>This cannot be undone.</strong> Deleting your account will permanently remove:</p>
+      <ul class="del-list">
+        <li>Your profile and login credentials</li>
+        <li>All {{ image_count }} uploaded image{{ 's' if image_count != 1 }} and their DDI scores</li>
+        <li>Your standing, tier, and ranking history</li>
+        <li>Your points balance and loyalty history</li>
+        <li>All participation records</li>
+      </ul>
+      <p style="margin-top:10px;">Your subscription (if active) will no longer be charged after deletion.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('account_delete_execute') }}"
+          onsubmit="return confirm('This is permanent and cannot be undone. Are you absolutely sure?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+      <label class="del-label" for="confirmation">
+        To confirm, type <strong>DELETE</strong> in the box below:
+      </label>
+      <input type="text" id="confirmation" name="confirmation"
+             class="del-input" placeholder="DELETE"
+             autocomplete="off" spellcheck="false">
+
+      <div class="del-btn-row">
+        <button type="submit" class="btn-delete">✗ Permanently Delete My Account</button>
+        <a href="{{ url_for('profile') }}" class="btn-cancel">← Cancel</a>
+      </div>
+    </form>
+
+    <p style="font-size:14px;color:var(--text-muted);margin-top:24px;line-height:1.6;">
+      If you just want a break, you can cancel your subscription instead — your images and scores are preserved.
+      Questions? Email <a href="mailto:support@shutterleague.com" style="color:var(--text-primary);">support@shutterleague.com</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
