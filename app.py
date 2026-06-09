@@ -12863,8 +12863,8 @@ def _run_raw_analysis(submission, img):
                      'original RAW file (e.g. composited subjects, added light effects, sky replacement). '
                      'Adding elements not captured in-camera is not permitted.'),
                     ('vision_logo_trademark',
-                     'A watermark or logo was detected in your RAW file. '
-                     'Original camera RAW files do not contain watermarks.'),
+                     'A photographer-added watermark or logo was detected in your submitted image. '
+                     'Please remove any personal branding or watermark overlays before submitting.'),
                     ('vision_meaning_changed',
                      'The main subject or scene in your submitted image appears materially different '
                      'from your RAW file. Please ensure you submit the RAW file for your entered photograph.'),
