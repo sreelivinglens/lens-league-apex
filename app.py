@@ -3081,6 +3081,90 @@ def upload():
             # Fail open — network or API error must never block a legitimate upload
             app.logger.warning(f'[upload] watermark check failed (non-fatal): {_wm_err}')
 
+        # ── NSFW / Nudity detection (v62) ─────────────────────────────────────
+        # Uses Hive visual moderation API — synchronous, before R2 upload or DB save.
+        # Hard reject on nudity/explicit content.
+        # Breastfeeding: passes upload but flagged for admin approval (needs_review=True).
+        # Fails open — API error never blocks a legitimate upload.
+        _nsfw_breastfeeding_flagged = False
+        try:
+            _nsfw_hive_key = os.getenv('HIVE_API_KEY', '')
+            if _nsfw_hive_key and os.path.exists(thumb_path):
+                import urllib.request as _nsfw_ur, json as _nsfw_json, base64 as _nsfw_b64
+                from PIL import Image as _PIL_nsfw
+                import io as _nsfw_io
+
+                # Encode thumb for Hive
+                _nsfw_pil = _PIL_nsfw.open(thumb_path).convert('RGB')
+                if max(_nsfw_pil.size) > 1024:
+                    _nsfw_pil.thumbnail((1024, 1024))
+                _nsfw_buf = _nsfw_io.BytesIO()
+                _nsfw_pil.save(_nsfw_buf, format='JPEG', quality=80)
+                _nsfw_b64_data = _nsfw_b64.b64encode(_nsfw_buf.getvalue()).decode('utf-8')
+
+                _nsfw_payload = _nsfw_json.dumps({
+                    'input': [{'image': {'data': _nsfw_b64_data}}]
+                }).encode('utf-8')
+                _nsfw_req = _nsfw_ur.Request(
+                    'https://api.thehive.ai/api/v3/task/sync',
+                    data=_nsfw_payload,
+                    headers={
+                        'Authorization': f'Bearer {_nsfw_hive_key}',
+                        'Content-Type': 'application/json',
+                    },
+                    method='POST'
+                )
+                with _nsfw_ur.urlopen(_nsfw_req, timeout=20) as _nsfw_resp:
+                    _nsfw_result = _nsfw_json.loads(_nsfw_resp.read().decode('utf-8'))
+
+                # Parse Hive visual moderation classes
+                _nsfw_classes = (
+                    _nsfw_result.get('output', [{}])[0]
+                    .get('classes', [])
+                )
+                _nsfw_scores = {c['class']: float(c['value']) for c in _nsfw_classes}
+
+                # Hard reject classes — nudity or explicit content
+                _REJECT_CLASSES = {
+                    'yes_sexual_activity',
+                    'yes_nudity',
+                    'yes_male_nudity',
+                    'yes_female_nudity',
+                    'yes_suggestive',
+                    'yes_explicit',
+                }
+                _REJECT_THRESHOLD = 0.85
+
+                _nsfw_reject = any(
+                    _nsfw_scores.get(cls, 0.0) >= _REJECT_THRESHOLD
+                    for cls in _REJECT_CLASSES
+                )
+
+                # Breastfeeding — flag for admin review, do not reject
+                _bf_score = _nsfw_scores.get('yes_breastfeeding', 0.0)
+                _nsfw_breastfeeding_flagged = _bf_score >= 0.70
+
+                app.logger.info(
+                    f'[upload] nsfw check: reject={_nsfw_reject} '
+                    f'breastfeeding={_nsfw_breastfeeding_flagged} '
+                    f'scores={_nsfw_scores}'
+                )
+
+                if _nsfw_reject:
+                    if os.path.exists(thumb_path): os.remove(thumb_path)
+                    _nsfw_msg = (
+                        'Nudity or explicit content was detected in your image. '
+                        'Please re-upload a clean image that complies with Shutter League programme rules.'
+                    )
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                        return jsonify({'error': True, 'message': _nsfw_msg}), 422
+                    flash(_nsfw_msg, 'error')
+                    return redirect(request.url)
+
+        except Exception as _nsfw_err:
+            # Fail open — API error must never block a legitimate upload
+            app.logger.warning(f'[upload] nsfw check failed (non-fatal): {_nsfw_err}')
+
         thumb_url = _r2_upload_thumb(thumb_path, uid)
         if not thumb_url:
             app.logger.error(f'[upload] R2 thumb upload failed for uid={uid}')
@@ -3143,6 +3227,43 @@ def upload():
         except Exception:
             pass
         db.session.commit()
+
+        # ── Breastfeeding flag — hold for admin approval ───────────────────
+        if _nsfw_breastfeeding_flagged:
+            try:
+                img.needs_review = True
+                img.is_public    = False
+                img.flagged_reason = 'Breastfeeding content detected — held for admin approval before going public.'
+                img.flagged_at   = datetime.utcnow()
+                db.session.commit()
+                # Admin email
+                _bf_admin_emails = _admin_notify_emails()
+                if not _bf_admin_emails:
+                    _bf_admin_emails = [ADMIN_NOTIFY_EMAIL]
+                _bf_site = os.getenv('SITE_URL', 'https://shutterleague.com')
+                send_email(
+                    _bf_admin_emails,
+                    f'[Content Review] Breastfeeding Image — {img.asset_name or "Untitled"} (ID: {img.id})',
+                    (
+                        '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                        '<p style="color:#C8A84B;font-weight:700;font-size:15px;">CONTENT REVIEW REQUIRED — BREASTFEEDING IMAGE</p>'
+                        f'<p>Image: <strong>{img.asset_name or "Untitled"}</strong> (ID: {img.id})<br>'
+                        f'Photographer: {current_user.username} ({current_user.email})<br>'
+                        f'Genre: {img.genre or "—"}</p>'
+                        '<p>This image has been held from public view pending your review. '
+                        'Breastfeeding photography is permitted subject to admin approval.</p>'
+                        f'<a href="{_bf_site}/admin/image/{img.id}" '
+                        'style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+                        'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
+                        'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+                        'text-decoration:none;border-radius:4px;margin:16px 0;">'
+                        'Review &amp; Approve &#8594;</a>'
+                        '</div>'
+                    )
+                )
+                app.logger.info(f'[upload] breastfeeding flag: image={img.id} held for admin review')
+            except Exception as _bf_err:
+                app.logger.warning(f'[upload] breastfeeding flag/email failed: {_bf_err}')
 
         # -- League integrity check (three-strike system) ------------------
         # Mobile League users uploading camera EXIF images get graduated penalties.
