@@ -4576,6 +4576,7 @@ def leaderboard():
             User.full_name,
             User.city,
             User.state,
+            User.created_at.label('user_created_at'),
             func.avg(Image.score).label('avg_score'),
             func.max(Image.score).label('best_score'),
             func.count(Image.id).label('image_count'),
@@ -4588,7 +4589,7 @@ def leaderboard():
     pg_per_page = 25
     pg_all      = (
         pg_base
-        .group_by(Image.user_id, User.username, User.full_name, User.city, User.state)
+        .group_by(Image.user_id, User.username, User.full_name, User.city, User.state, User.created_at)
         .order_by(desc('avg_score'))
         .all()
     )
@@ -4604,8 +4605,16 @@ def leaderboard():
             if _row.user_id == _cu.id:
                 user_pg_rank = _i + 1
                 break
+    # Helper — whole calendar months since a datetime
+    def _months_since(dt):
+        if not dt:
+            return 99  # unknown join date → treat as qualified
+        _n = datetime.utcnow()
+        return (_n.year - dt.year) * 12 + (_n.month - dt.month)
+
     photographer_stats = []
     for row in pg_rows:
+        _jm = _months_since(row.user_created_at)
         photographer_stats.append({
             'user_id':            row.user_id,
             'username':           row.username,
@@ -4616,6 +4625,8 @@ def leaderboard():
             'best_score':         float(row.best_score) if row.best_score else 0,
             'image_count':        row.image_count,
             'total_peer_ratings': int(row.total_peer_ratings or 0),
+            'joined_months':      _jm,
+            'under_qualification': _jm < 6,
         })
 
     # Cities for filter dropdown
@@ -4716,6 +4727,17 @@ def leaderboard():
         except Exception:
             lens_rankings = []
 
+    # Build join-date qualification map for image tiles
+    # Keyed by user_id — used in template to tag images from under-qualification photographers
+    try:
+        _join_rows = db.session.query(User.id, User.created_at).all()
+        user_join_map = {
+            r.id: (_months_since(r.created_at) < 6)
+            for r in _join_rows
+        }
+    except Exception:
+        user_join_map = {}
+
     return render_template('leaderboard.html',
         top_images         = top_images,
         photographer_stats = photographer_stats,
@@ -4738,6 +4760,7 @@ def leaderboard():
         pg_total           = pg_total,
         user_img_rank      = user_img_rank,
         user_pg_rank       = user_pg_rank,
+        user_join_map      = user_join_map,
     )
 
 
