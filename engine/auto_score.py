@@ -441,6 +441,13 @@ The EXIF data is provided with the image. Read it carefully before writing any t
 - If the camera is a smartphone NEVER describe it as drone/aerial/UAV.
 - Do not identify technical flaws (lens flare, dust, noise) unless clearly visible.
 - Never invent equipment or techniques not supported by EXIF or the image.
+- MOBILE PHONE LANGUAGE RULE: If the device is a smartphone, write all advice in phone-native language.
+  Never say "85mm", "50mm", "longer lens", "compression", "focal length" in any user-facing field.
+  Instead say: "use your telephoto lens" (if available), "switch to your zoom camera",
+  "move physically closer", "use portrait mode for subject isolation",
+  "try your ultrawide for environmental context". Phone photographers do not think in mm equivalents.
+- DEDICATED CAMERA LANGUAGE: If the device is a dedicated camera (DSLR/mirrorless), mm
+  recommendations are appropriate and expected.
 
 COMPOSITION_TECHNIQUE — identify the PRIMARY compositional structure:
 GOLDEN_SPIRAL | LEADING_LINES | DIAGONAL | RULE_OF_THIRDS | SYMMETRY |
@@ -3104,7 +3111,7 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
     lines.append('ADVICE CONSTRAINTS — STRICTLY ENFORCE:')
 
     if 'telephoto' not in valid_advice and 'telephoto_5x' not in valid_advice and 'telephoto_2x' not in valid_advice:
-        lines.append('- DO NOT suggest telephoto, longer focal length, or zoom compression — this device has no telephoto lens.')
+        lines.append('- DO NOT suggest telephoto, longer focal length, zoom compression, or any mm-equivalent lens change — this device has no telephoto lens. Do not say "85mm", "50mm", "longer lens", or "compression". If closer framing is needed say "move physically closer" or "use portrait mode".')
 
     if 'proraw' not in valid_advice:
         lines.append('- DO NOT suggest ProRAW or RAW shooting — not available on this device.')
@@ -3112,8 +3119,14 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
     if 'manual_exposure' not in valid_advice:
         lines.append('- DO NOT suggest manual exposure mode unless framed as "if your device supports it".')
 
-    if tier in ('iphone_pro', 'android_ultra', 'telephoto_confirmed'):
+    if tier == 'iphone_pro':
+        lines.append('- Telephoto advice IS valid — this is an iPhone Pro/Pro Max with a 5x optical telephoto lens.')
+        lines.append('- When suggesting telephoto use, say "use your 5x telephoto lens" or "shoot on the 5x zoom" — NOT "85mm" or "longer focal length". Phone users do not think in mm.')
+    elif tier == 'android_ultra':
         lines.append('- Telephoto advice IS valid — this device has an optical telephoto lens.')
+        lines.append('- When suggesting telephoto use, say "use your telephoto lens" or "switch to the zoom camera" — NOT "85mm" or "longer focal length". Phone users do not think in mm.')
+    elif tier == 'telephoto_confirmed':
+        lines.append('- Telephoto advice IS valid — telephoto confirmed via EXIF.')
 
     if 'portrait_mode' in valid_advice:
         lines.append('- Portrait mode / computational bokeh IS available on this device.')
