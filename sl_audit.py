@@ -26,7 +26,6 @@ KYC_TERMS = [
       'contest_enter', 'contest_rules', 'programme_enter',
       'contest_banners', 'contest_wins', 'contest_type', 'contest_month',
       'contest_entries', 'ann.contest',
-      # Flask endpoint checks in templates — route names not visible copy
       "endpoint == 'contests'", "endpoint in ['contests'",
       "endpoint == 'contest'", "in ['contests',",
       "contests_redirect", "'contest'"]),
@@ -38,7 +37,6 @@ KYC_TERMS = [
                                               'ranking_last_active', 'poty_used_year',
                                               'path_to_rank', 'rp-card', 'rp_card']),
     ('No KYC: leaderboard', 'leaderboard',   ["url_for('leaderboard')", 'url_for("leaderboard")',
-                                              # Flask endpoint checks
                                               "endpoint == 'leaderboard'", "endpoint == \"leaderboard\""]),
     ('No KYC: reward',      ' reward',       []),
     ('No KYC: deadline',    'deadline',      []),
@@ -87,7 +85,6 @@ def _gold_on_light(content):
     lines = content.split('\n')
     for i, line in enumerate(lines):
         l = line.lower()
-        # Skip legitimate gold uses: borders, backgrounds, score displays, badges, mono labels, SVG
         if any(x in l for x in [
             'border', 'background', 'fill:', 'stroke:', 'box-shadow',
             'score', 'tier', 'badge', 'mono', 'font-mono', 'gold-dark',
@@ -118,7 +115,6 @@ def _non_black_white_body_text(content):
         try:
             r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)
             brightness = (r*299 + g*587 + b*114) / 1000
-            # Flag mid-range colours — not dark (< 80) and not light (> 180)
             if 80 < brightness < 180:
                 hits.append(m)
         except Exception:
@@ -129,33 +125,33 @@ def _non_black_white_body_text(content):
 
 def _banner():
     print()
-    print('═' * 60)
+    print('=' * 60)
     print('  SHUTTER LEAGUE — PRE-DEPLOY AUDIT')
-    print('  sl_audit.py  ·  Unified  ·  June 2026')
+    print('  sl_audit.py  .  Unified  .  June 2026')
     print('  Rule 9: No push without explicit founder approval')
-    print('═' * 60)
+    print('=' * 60)
 
 def _section(title):
-    print(f'\n  ── {title}')
+    print(f'\n  -- {title}')
 
-def _ok(label):   print(f'    ✓  {label}')
-def _fail(label): print(f'    ✗  {label}')
-def _note(label): print(f'    ~  {label}')
+def _ok(label):   print(f'    OK  {label}')
+def _fail(label): print(f'    XX  {label}')
+def _note(label): print(f'    ~~  {label}')
 
 def _result(fails, filepath):
     print()
-    print('─' * 60)
+    print('-' * 60)
     if fails == 0:
-        print(f'  ✓  CLEAN — SAFE TO DELIVER    {os.path.basename(filepath)}')
+        print(f'  OK  CLEAN -- SAFE TO DELIVER    {os.path.basename(filepath)}')
     else:
-        print(f'  ✗  DO NOT DELIVER — {fails} failure{"s" if fails != 1 else ""}    {os.path.basename(filepath)}')
-    print('─' * 60)
+        print(f'  XX  DO NOT DELIVER -- {fails} failure{"s" if fails != 1 else ""}    {os.path.basename(filepath)}')
+    print('-' * 60)
     return fails == 0
 
 # ── KYC check (shared: html + email) ─────────────────────────────────────────
 
 def _run_kyc_checks(content, fails, context='template'):
-    _section(f'KYC Language — {context}')
+    _section(f'KYC Language -- {context}')
     cl = content.lower()
     for label, term, exclusions in KYC_TERMS:
         stripped = _strip_exclusions(cl, [e.lower() for e in exclusions])
@@ -164,14 +160,167 @@ def _run_kyc_checks(content, fails, context='template'):
             fails += 1
         else:
             _ok(label)
-    # Gold as text colour
     gold_hits = _gold_on_light(content)
     if gold_hits:
-        _fail(f'No gold text colour — gold permitted only for scores/badges/borders ({len(gold_hits)} hit(s))')
+        _fail(f'No gold text colour -- gold permitted only for scores/badges/borders ({len(gold_hits)} hit(s))')
         fails += 1
     else:
         _ok('No gold used as body/heading text colour')
     return fails
+
+
+# ── Shared 70-yr + browser helper — runs on HTML content string ──────────────
+
+def _run_readability_and_browser_checks(content, fails, viewport='desktop'):
+    """
+    Run 70-year-old readability and Safari/Chrome browser safety checks.
+    viewport: 'mobile', 'ipad', or 'desktop'
+    Checks font size, line-height, tap targets, contrast, abbreviations,
+    and browser-specific CSS hazards for the named viewport context.
+    """
+    # ── Font sizes ────────────────────────────────────────────────────────────
+    # Minimum body font per viewport (mobile needs larger text for small screens)
+    min_body_px = {'mobile': 16, 'ipad': 16, 'desktop': 16}[viewport]
+
+    all_font_sizes = [int(s) for s in re.findall(r'font-size:\s*(\d+)px', content)]
+    tiny = [s for s in all_font_sizes if s < 12]
+    small = [s for s in all_font_sizes if 12 <= s < 14]
+
+    if tiny:
+        _fail(f'[{viewport}] Font below 12px found {tiny} -- unreadable for elderly users')
+        fails += 1
+    else:
+        _ok(f'[{viewport}] No font below 12px')
+
+    if small:
+        _note(f'[{viewport}] Font 12-13px found {list(set(small))} -- acceptable for metadata/labels only')
+    else:
+        _ok(f'[{viewport}] No 12-13px fonts used as body copy')
+
+    if any(f'font-size: {s}px' in content for s in range(min_body_px, 25)):
+        _ok(f'[{viewport}] Body font size >= {min_body_px}px present')
+    else:
+        _fail(f'[{viewport}] No body font >= {min_body_px}px found -- elderly users need {min_body_px}px minimum')
+        fails += 1
+
+    # ── Line height ───────────────────────────────────────────────────────────
+    lh_vals = re.findall(r'line-height:\s*([0-9.]+)', content)
+    lh_floats = [float(v) for v in lh_vals if re.match(r'^[0-9.]+$', v)]
+    lh_bad = [v for v in lh_floats if v < 1.5]
+    if lh_bad:
+        _fail(f'[{viewport}] Line-height below 1.5 found {lh_bad} -- use 1.6+ for readability')
+        fails += 1
+    elif not lh_floats:
+        _note(f'[{viewport}] No line-height values detected -- verify body paragraphs have line-height >= 1.6')
+    else:
+        _ok(f'[{viewport}] Line-height all >= 1.5')
+
+    # ── Tap / click targets ───────────────────────────────────────────────────
+    # Minimum target size: 44px mobile/iPad (Apple HIG), 32px desktop
+    min_tap = {'mobile': 44, 'ipad': 44, 'desktop': 32}[viewport]
+    tap_pads = re.findall(r'padding:\s*(\d+)px', content)
+    tap_large = [int(p) for p in tap_pads if int(p) >= (min_tap // 3)]
+    if tap_large:
+        _ok(f'[{viewport}] Button/CTA padding adequate for tap targets (>= {min_tap//3}px found)')
+    else:
+        _fail(f'[{viewport}] No button padding >= {min_tap//3}px -- CTA may be too small to tap/click')
+        fails += 1
+
+    # ── Contrast ─────────────────────────────────────────────────────────────
+    light_grey = re.findall(r'color:\s*#([bcdefBCDEF][0-9a-fA-F]{5})', content)
+    if light_grey:
+        _note(f'[{viewport}] Light hex text colours found ({len(light_grey)}) -- verify WCAG AA contrast (4.5:1): #{light_grey[0]}...')
+    else:
+        _ok(f'[{viewport}] No obviously light/low-contrast hex text colours')
+
+    if 'color: rgba(26,26,24,0.2)' in content or 'color: rgba(255,255,255,0.2)' in content:
+        _fail(f'[{viewport}] Grey-on-grey text detected -- fails contrast for elderly users')
+        fails += 1
+    else:
+        _ok(f'[{viewport}] No grey-on-grey contrast violations')
+
+    # ── Abbreviations in visible copy ─────────────────────────────────────────
+    abbrev_pats = [r'\bSep\b', r'\bOct\b', r'\bNov\b', r'\bDec\b', r'\bJan\b',
+                   r'\bFeb\b', r'\bMar\b', r'\bApr\b', r'\bJun\b', r'\bJul\b',
+                   r'\bAug\b', r'\bSept\b', r'w/\b', r'\bapprox\b', r'\betc\b',
+                   r'\bcta\b', r'\bTBC\b', r'\bTBD\b', r'\bN/A\b']
+    # Only check inside Jinja2 string literals / visible text, not Python variable names
+    visible = re.sub(r'\{%.*?%\}', '', content, flags=re.DOTALL)  # strip Jinja tags
+    abbrev_hits = [p for p in abbrev_pats if re.search(p, visible, re.I)]
+    if abbrev_hits:
+        _note(f'[{viewport}] Possible abbreviations in template copy {abbrev_hits} -- use full words for elderly users')
+    else:
+        _ok(f'[{viewport}] No abbreviations in visible copy')
+
+    # ── Safari-specific CSS hazards ───────────────────────────────────────────
+    _section(f'Safari/Chrome compatibility -- {viewport}')
+
+    # Safari: -webkit- prefixes missing for common properties
+    webkit_needed = [
+        ('appearance', '-webkit-appearance'),
+        ('user-select', '-webkit-user-select'),
+        ('backdrop-filter', '-webkit-backdrop-filter'),
+    ]
+    for prop, wprop in webkit_needed:
+        if prop in content and wprop not in content:
+            _note(f'[{viewport}] CSS "{prop}" used without "{wprop}" -- may not render in Safari iOS')
+
+    # Safari: position:sticky needs -webkit- on older iOS
+    if 'position: sticky' in content or 'position:sticky' in content:
+        if '-webkit-sticky' not in content:
+            _note(f'[{viewport}] position:sticky without -webkit-sticky -- verify iOS Safari 12 and below')
+        else:
+            _ok(f'[{viewport}] position:sticky has -webkit-sticky fallback')
+
+    # Safari: input zoom — font-size below 16px on inputs triggers zoom on iOS Safari
+    input_font_sizes = re.findall(r'input[^{]{0,60}font-size:\s*(\d+)px', content)
+    input_small = [int(s) for s in input_font_sizes if int(s) < 16]
+    if input_small:
+        _fail(f'[{viewport}] Input font-size below 16px: {input_small} -- iOS Safari auto-zooms on focus, breaks layout')
+        fails += 1
+    else:
+        _ok(f'[{viewport}] No input font-size below 16px (no iOS Safari zoom trigger)')
+
+    # Safari: 100vh bug -- use -webkit-fill-available or min-height fallback
+    if '100vh' in content:
+        if '-webkit-fill-available' in content or 'min-height' in content:
+            _ok(f'[{viewport}] 100vh has fallback for Safari mobile address bar bug')
+        else:
+            _note(f'[{viewport}] 100vh used without -webkit-fill-available -- Safari mobile cuts off content behind address bar')
+
+    # Chrome: scrollbar styling — only works in Chrome/Edge, not Safari/Firefox
+    if '::-webkit-scrollbar' in content:
+        _note(f'[{viewport}] ::-webkit-scrollbar used -- Chrome/Edge only, ignored by Safari/Firefox (verify fallback acceptable)')
+    else:
+        _ok(f'[{viewport}] No Chrome-only scrollbar styling')
+
+    # Chrome/Safari: gap in flex containers — supported in modern browsers but verify
+    if 'display: flex' in content and 'gap:' in content.replace(' ', ''):
+        _ok(f'[{viewport}] flex gap used -- supported in Safari 14.1+, Chrome 84+')
+
+    # Safari: object-fit on images -- needs verification on older iOS
+    if 'object-fit' in content:
+        _ok(f'[{viewport}] object-fit present -- supported Safari 10+, Chrome 31+')
+
+    # Both: avoid fixed positioning issues on mobile Safari
+    if viewport in ('mobile', 'ipad') and 'position: fixed' in content:
+        _note(f'[{viewport}] position:fixed used -- verify scroll behaviour in Safari iOS (known rubber-band issue)')
+
+    # Both: -webkit-tap-highlight-color for touch feedback
+    if viewport in ('mobile', 'ipad'):
+        if '-webkit-tap-highlight-color' in content:
+            _ok(f'[{viewport}] -webkit-tap-highlight-color set -- touch feedback controlled')
+        else:
+            _note(f'[{viewport}] -webkit-tap-highlight-color not set -- default blue flash on tap in Safari iOS')
+
+    # font smoothing — Chrome and Safari handle differently
+    if '-webkit-font-smoothing' in content:
+        _ok(f'[{viewport}] -webkit-font-smoothing set -- Safari renders subpixel antialiasing correctly')
+    else:
+        _note(f'[{viewport}] -webkit-font-smoothing not set -- text may appear heavier in Safari vs Chrome')
+
+    return fails
+
 
 # ── HTML audit ────────────────────────────────────────────────────────────────
 
@@ -186,7 +335,7 @@ def audit_html(filepath):
     checks = [
         ('Hero 480px desktop',              'height: 480px' in content or 'min-height: 480px' in content),
         ('Hero mobile standard',            'height: 360px' in content or 'min-height: 360px' in content or 'aspect-ratio: 16 / 9' in content),
-        ('Hero img→fade→content structure', 'hero-fade' in content),
+        ('Hero img->fade->content structure', 'hero-fade' in content),
         ('Hero onerror on img',             "onerror=\"this.style.display='none'\"" in content),
         ('Hero fade opacity 0.45',          'rgba(13,13,11,0.45)' in content),
         ('Hero content margin 64px',        'margin: 48px 64px' in content or 'margin: 0 64px' in content),
@@ -199,7 +348,7 @@ def audit_html(filepath):
     # ── Fonts ─────────────────────────────────────────────────────────────────
     _section('Fonts')
     checks = [
-        ('Inter font only — !important override', "font-family: 'Inter', sans-serif !important" in content),
+        ('Inter font only -- !important override', "font-family: 'Inter', sans-serif !important" in content),
         ('No Georgia in page CSS',                'Georgia' not in content.split('{% block content %}')[0]),
         ('No JetBrains Mono in page CSS',         'JetBrains' not in content.split('{% block content %}')[0]),
     ]
@@ -209,33 +358,28 @@ def audit_html(filepath):
 
     # ── Colour & font colour rules ────────────────────────────────────────────
     _section('Colour & font colour rules')
-
-    # Gold as text
     gold_hits = _gold_on_light(content)
     if gold_hits:
-        _fail(f'Gold used as text colour — use only for scores/badges/borders ({len(gold_hits)} hit(s)): {gold_hits[:2]}')
+        _fail(f'Gold used as text colour -- use only for scores/badges/borders ({len(gold_hits)} hit(s)): {gold_hits[:2]}')
         fails += 1
     else:
         _ok('No gold text colour in templates')
 
-    # Shaded / low-opacity fonts
     shaded = _shaded_fonts(content)
     if shaded:
-        _fail(f'Shaded/low-opacity font colour found ({len(shaded)} hit(s)) — use var(--text-muted) only for metadata: {shaded[:2]}')
+        _fail(f'Shaded/low-opacity font colour found ({len(shaded)} hit(s)) -- use var(--text-muted) only for metadata: {shaded[:2]}')
         fails += 1
     else:
         _ok('No shaded/low-opacity font colours')
 
-    # Non-black/white hex text colours
     mid = _non_black_white_body_text(content)
     if mid:
-        _note(f'Mid-range hex text colour(s) — verify these are metadata only, not body copy: {mid[:3]}')
+        _note(f'Mid-range hex text colour(s) -- verify these are metadata only, not body copy: {mid[:3]}')
     else:
         _ok('Hex text colours are near-black or near-white only')
 
-    # No grey-on-grey
     if 'color: rgba(26,26,24,0.2)' in content or 'color: rgba(255,255,255,0.2)' in content:
-        _fail('Grey-on-grey text detected — insufficient contrast')
+        _fail('Grey-on-grey text detected -- insufficient contrast')
         fails += 1
     else:
         _ok('No grey-on-grey contrast issues')
@@ -256,44 +400,299 @@ def audit_html(filepath):
         if result: _ok(label)
         else: _fail(label); fails += 1
 
-    # ── Mobile integrity (≤768px) ─────────────────────────────────────────────
-    _section('Mobile integrity (≤768px)')
+    # ── Mobile integrity (<=768px) — layout ───────────────────────────────────
+    _section('Mobile layout integrity (<=768px)')
     checks = [
         ('Mobile breakpoint defined',           'max-width: 768px' in content or 'max-width: 600px' in content or 'max-width: 480px' in content),
         ('Mobile section padding 56px',         '56px' in content),
         ('Mobile text-shadow none on h1',       'text-shadow: none' in content),
         ('Touch targets min 44px',              '44px' in content or 'min-height: 44' in content or 'padding: 1' in content),
         ('No fixed px widths on containers',    not any(f'width: {n}px' in content for n in range(400, 1400, 10)) or 'max-width' in content),
-        ('Grids collapse — auto-fill or 1fr',   'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content),
+        ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content),
         ('Tables have mobile stacking',         'table' not in content.lower() or 'display: block' in content or 'overflow-x' in content or '@media' in content),
     ]
     for label, result in checks:
         if result: _ok(label)
         else: _fail(label); fails += 1
 
-    # ── iPad integrity (768px–1024px) ─────────────────────────────────────────
-    _section('iPad integrity (768px–1024px)')
+    # ── iPad integrity (768px-1024px) — layout ────────────────────────────────
+    _section('iPad layout integrity (768px-1024px)')
     ipad_bp = 'max-width: 1024px' in content or 'max-width: 900px' in content or 'min-width: 768px' in content
     if ipad_bp:
         _ok('iPad breakpoint defined')
     else:
-        _note('No explicit iPad breakpoint — verify 4-col grids do not produce cards < 170px wide')
+        _note('No explicit iPad breakpoint -- verify 4-col grids do not produce cards < 170px wide')
     if 'minmax(170px' in content or 'minmax(180px' in content or 'minmax(200px' in content or 'minmax(220px' in content:
         _ok('Grid minmax prevents narrow cards on iPad')
     else:
-        _note('Verify grid cards are not narrower than 170px on iPad (768–1024px viewport)')
+        _note('Verify grid cards are not narrower than 170px on iPad (768-1024px viewport)')
 
-    # ── 70-year-old readability ───────────────────────────────────────────────
-    _section('70-year-old readability standard')
-    checks = [
-        ('Body font size >= 16px',              'font-size: 16px' in content or 'font-size: 17px' in content or 'font-size: 18px' in content),
-        ('No font below 12px in content area',  not _has_tiny_font(content)),
-        ('Line height >= 1.5 on body text',     'line-height: 1.5' in content or 'line-height: 1.6' in content or 'line-height: 1.7' in content or 'line-height: 1.75' in content),
-        ('CTA buttons large enough (>= 10px pad)', 'padding: 10px' in content or 'padding: 12px' in content or 'padding: 14px' in content or 'padding: 16px' in content),
-    ]
-    for label, result in checks:
-        if result: _ok(label)
-        else: _fail(label); fails += 1
+    # ── Desktop integrity ─────────────────────────────────────────────────────
+    _section('Desktop layout integrity (>1024px)')
+    if 'max-width' in content:
+        _ok('max-width set -- content does not stretch to full 2560px on wide monitors')
+    else:
+        _fail('No max-width found -- content will stretch on wide desktop monitors')
+        fails += 1
+    wide_fixed = [n for n in range(1200, 2000, 10) if f'width: {n}px' in content]
+    if wide_fixed:
+        _note(f'Wide fixed px widths found {wide_fixed[:3]} -- verify these are max-width containers, not content boxes')
+    else:
+        _ok('No problematic wide fixed-px widths')
+
+    # ── 70-yr readability: Mobile ─────────────────────────────────────────────
+    _section('70-year-old readability -- Mobile (<=768px)')
+    # Extract mobile media query content for targeted checks
+    mobile_css = ' '.join(re.findall(r'@media[^{]*max-width:\s*(?:768|600|480)px[^{]*\{([\s\S]*?)(?=\n\s*@media|\Z)', content))
+    mobile_check_content = mobile_css if mobile_css else content  # fall back to full if no MQ found
+
+    # Font size in mobile context
+    mobile_fonts = [int(s) for s in re.findall(r'font-size:\s*(\d+)px', mobile_check_content)]
+    mobile_tiny = [s for s in mobile_fonts if s < 14]
+    if mobile_tiny and mobile_css:
+        _fail(f'[mobile] Font below 14px inside mobile breakpoint {mobile_tiny} -- elderly users on small screens need >= 14px')
+        fails += 1
+    elif not _has_tiny_font(content):
+        _ok('[mobile] No font below 12px in content area')
+    else:
+        _fail('[mobile] Font below 12px found in content area -- unreadable on mobile')
+        fails += 1
+
+    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+        _ok('[mobile] Body font size >= 16px present')
+    else:
+        _fail('[mobile] Body font size < 16px -- elderly users on mobile need 16px minimum')
+        fails += 1
+
+    # Line height mobile
+    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+        _ok('[mobile] Line-height >= 1.5 on body text')
+    else:
+        _fail('[mobile] No line-height >= 1.5 -- body text too cramped for elderly mobile users')
+        fails += 1
+
+    # Tap targets mobile — must be 44px (Apple HIG)
+    if '44px' in content or 'min-height: 44' in content:
+        _ok('[mobile] 44px tap targets present (Apple HIG minimum)')
+    else:
+        _fail('[mobile] No 44px tap targets -- buttons may be too small for elderly fingers on mobile')
+        fails += 1
+
+    # Input zoom prevention
+    input_fonts = re.findall(r'input[^{]{0,60}font-size:\s*(\d+)px', content)
+    input_small = [int(s) for s in input_fonts if int(s) < 16]
+    if input_small:
+        _fail(f'[mobile] Input font-size below 16px: {input_small} -- iOS Safari auto-zooms, disorients elderly users')
+        fails += 1
+    else:
+        _ok('[mobile] No input font below 16px (no iOS Safari zoom trigger)')
+
+    # CTA button padding mobile
+    cta_pads = re.findall(r'padding:\s*(\d+)px', content)
+    cta_large = [int(p) for p in cta_pads if int(p) >= 12]
+    if cta_large:
+        _ok(f'[mobile] CTA padding >= 12px present {cta_large[:3]}')
+    else:
+        _fail('[mobile] No CTA padding >= 12px -- buttons too small to tap for elderly users')
+        fails += 1
+
+    # Label readability
+    label_sizes = re.findall(r'(?:label|\.label)[^{]{0,60}font-size:\s*(\d+)px', content)
+    tiny_labels = [int(s) for s in label_sizes if int(s) < 13]
+    if tiny_labels:
+        _fail(f'[mobile] Label font-size below 13px: {tiny_labels} -- use 13px minimum')
+        fails += 1
+    else:
+        _ok('[mobile] No label font-size below 13px')
+
+    # Abbreviations
+    abbrev_pats = [r'\bSep\b', r'\bOct\b', r'\bNov\b', r'\bDec\b', r'\bJan\b',
+                   r'\bFeb\b', r'\bMar\b', r'\bApr\b', r'\bJun\b', r'\bJul\b',
+                   r'\bAug\b', r'\bSept\b', r'w/\b', r'\bapprox\b', r'\betc\.?\b', r'\bTBC\b', r'\bTBD\b']
+    visible = re.sub(r'\{%.*?%\}', '', content, flags=re.DOTALL)
+    abbrev_hits = [p for p in abbrev_pats if re.search(p, visible, re.I)]
+    if abbrev_hits:
+        _note(f'[mobile] Abbreviations in template copy {abbrev_hits} -- use full words for elderly users')
+    else:
+        _ok('[mobile] No abbreviations in visible copy')
+
+    # Safari iOS / Chrome Android checks — mobile
+    _section('Safari iOS / Chrome Android -- Mobile')
+    if '100vh' in content:
+        if '-webkit-fill-available' in content or 'dvh' in content:
+            _ok('[mobile] 100vh has -webkit-fill-available or dvh fallback for Safari address bar')
+        else:
+            _fail('[mobile] 100vh without fallback -- Safari iOS hides content behind address bar')
+            fails += 1
+    else:
+        _ok('[mobile] No bare 100vh (no Safari address bar issue)')
+
+    if 'position: fixed' in content or 'position:fixed' in content:
+        _note('[mobile] position:fixed used -- verify scroll/bounce behaviour in Safari iOS')
+    else:
+        _ok('[mobile] No position:fixed (no Safari iOS scroll conflict)')
+
+    if '-webkit-tap-highlight-color' in content:
+        _ok('[mobile] -webkit-tap-highlight-color set -- tap flash controlled in Safari iOS')
+    else:
+        _note('[mobile] -webkit-tap-highlight-color not set -- default blue tap flash on Safari iOS')
+
+    if '-webkit-font-smoothing' in content:
+        _ok('[mobile] -webkit-font-smoothing set -- consistent rendering Safari vs Chrome')
+    else:
+        _note('[mobile] -webkit-font-smoothing not set -- text may appear heavier in Safari vs Chrome')
+
+    input_fonts_all = re.findall(r'font-size:\s*(\d+)px', content)
+    if any(int(s) < 16 for s in input_fonts_all if s.isdigit()):
+        if 'input' in content.lower() or 'select' in content.lower() or 'textarea' in content.lower():
+            _fail('[mobile] Fonts below 16px present and form inputs found -- verify no iOS Safari auto-zoom on inputs')
+            fails += 1
+    else:
+        _ok('[mobile] No sub-16px fonts near form inputs (no Chrome Android zoom risk)')
+
+    if '::-webkit-scrollbar' in content:
+        _note('[mobile] ::-webkit-scrollbar used -- Chrome only, ignored by Safari iOS and Firefox')
+    else:
+        _ok('[mobile] No Chrome-only scrollbar styling')
+
+    # ── 70-yr readability: iPad ───────────────────────────────────────────────
+    _section('70-year-old readability -- iPad (768px-1024px)')
+
+    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+        _ok('[iPad] Body font size >= 16px present')
+    else:
+        _fail('[iPad] Body font size < 16px -- elderly iPad users need 16px minimum')
+        fails += 1
+
+    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+        _ok('[iPad] Line-height >= 1.5 on body text')
+    else:
+        _fail('[iPad] No line-height >= 1.5 -- cramped text for elderly iPad users')
+        fails += 1
+
+    if '44px' in content or 'min-height: 44' in content:
+        _ok('[iPad] 44px tap targets present (Apple HIG minimum for iPad)')
+    else:
+        _note('[iPad] No 44px tap targets found -- verify buttons are large enough for elderly iPad users')
+
+    # Contrast iPad
+    light_grey = re.findall(r'color:\s*#([bcdefBCDEF][0-9a-fA-F]{5})', content)
+    if light_grey:
+        _note(f'[iPad] Light hex text colours ({len(light_grey)}) -- verify WCAG AA contrast on iPad display: #{light_grey[0]}...')
+    else:
+        _ok('[iPad] No obviously low-contrast hex text colours')
+
+    # Abbreviations (same check, iPad context)
+    if abbrev_hits:
+        _note(f'[iPad] Abbreviations in copy {abbrev_hits} -- same concern on iPad landscape where users read longer text blocks')
+    else:
+        _ok('[iPad] No abbreviations in visible copy')
+
+    # Safari iPadOS / Chrome iPad checks
+    _section('Safari iPadOS / Chrome iPad')
+
+    if '100vh' in content:
+        if '-webkit-fill-available' in content or 'dvh' in content:
+            _ok('[iPad] 100vh has fallback for Safari iPadOS viewport quirks')
+        else:
+            _note('[iPad] 100vh without dvh/fill-available fallback -- verify Safari iPadOS split-screen view')
+
+    if 'position: fixed' in content or 'position:fixed' in content:
+        _note('[iPad] position:fixed used -- verify in Safari iPadOS split-screen and slide-over modes')
+    else:
+        _ok('[iPad] No position:fixed (no iPadOS split-screen conflict)')
+
+    if 'pointer-events' in content:
+        _note('[iPad] pointer-events used -- verify touch behaviour on Safari iPadOS (pointer vs touch model differs from Chrome)')
+    else:
+        _ok('[iPad] No pointer-events (no Safari iPadOS touch model risk)')
+
+    if 'hover' in content and (':hover' in content):
+        _note('[iPad] :hover rules present -- Safari iPadOS may not fire hover on tap; verify interactive state works without hover')
+    else:
+        _ok('[iPad] No :hover-only interactive states')
+
+    if '-webkit-font-smoothing' in content:
+        _ok('[iPad] -webkit-font-smoothing set -- consistent rendering Safari iPadOS vs Chrome')
+    else:
+        _note('[iPad] -webkit-font-smoothing not set -- text rendering differs between Safari and Chrome on iPad')
+
+    # ── 70-yr readability: Desktop ────────────────────────────────────────────
+    _section('70-year-old readability -- Desktop (>1024px)')
+
+    if any(f'font-size: {s}px' in content for s in range(16, 25)):
+        _ok('[desktop] Body font size >= 16px present')
+    else:
+        _fail('[desktop] Body font size < 16px -- elderly desktop users also need 16px minimum')
+        fails += 1
+
+    if any(f'line-height: {v}' in content for v in ['1.5', '1.6', '1.7', '1.75', '1.8']):
+        _ok('[desktop] Line-height >= 1.5 on body text')
+    else:
+        _fail('[desktop] No line-height >= 1.5 -- cramped body text for elderly desktop users')
+        fails += 1
+
+    cta_desktop = [int(p) for p in re.findall(r'padding:\s*(\d+)px', content) if int(p) >= 10]
+    if cta_desktop:
+        _ok(f'[desktop] CTA/button padding >= 10px present {cta_desktop[:3]}')
+    else:
+        _fail('[desktop] No CTA padding >= 10px -- buttons hard to click for elderly users with impaired dexterity')
+        fails += 1
+
+    if 'cursor: pointer' in content:
+        _ok('[desktop] cursor:pointer set -- clear affordance for elderly desktop users')
+    else:
+        _note('[desktop] cursor:pointer not found -- verify interactive elements show pointer cursor')
+
+    if light_grey:
+        _note(f'[desktop] Light hex text colours ({len(light_grey)}) -- verify WCAG AA contrast on desktop monitors (varies by calibration)')
+    else:
+        _ok('[desktop] No obviously low-contrast text colours')
+
+    if abbrev_hits:
+        _note(f'[desktop] Abbreviations in copy {abbrev_hits} -- elderly desktop users read more carefully, ambiguous abbreviations cause confusion')
+    else:
+        _ok('[desktop] No abbreviations in visible copy')
+
+    # Safari macOS / Chrome Desktop checks
+    _section('Safari macOS / Chrome Desktop')
+
+    if '-webkit-font-smoothing' in content:
+        _ok('[desktop] -webkit-font-smoothing set -- consistent font rendering Safari macOS vs Chrome')
+    else:
+        _note('[desktop] -webkit-font-smoothing not set -- text renders heavier in Safari macOS vs Chrome (especially on non-Retina)')
+
+    if 'backdrop-filter' in content:
+        if '-webkit-backdrop-filter' in content:
+            _ok('[desktop] backdrop-filter has -webkit- prefix for Safari macOS')
+        else:
+            _fail('[desktop] backdrop-filter without -webkit-backdrop-filter -- broken in Safari macOS 12 and below')
+            fails += 1
+    else:
+        _ok('[desktop] No backdrop-filter (no Safari prefix issue)')
+
+    if 'gap:' in content.replace(' ', '') or 'gap: ' in content:
+        _ok('[desktop] CSS gap used -- supported Safari 14.1+, Chrome 66+')
+
+    if '::-webkit-scrollbar' in content:
+        _note('[desktop] ::-webkit-scrollbar used -- Chrome/Edge only, ignored by Safari macOS (uses system scrollbar overlay)')
+    else:
+        _ok('[desktop] No Chrome-only scrollbar styling')
+
+    if ':focus-visible' in content:
+        _ok('[desktop] :focus-visible used -- keyboard accessibility, supported Chrome 86+, Safari 15.4+')
+    elif ':focus' in content:
+        _note('[desktop] :focus used -- consider :focus-visible to avoid showing ring on mouse click (Chrome 86+, Safari 15.4+)')
+    else:
+        _note('[desktop] No :focus/:focus-visible styles -- verify keyboard navigation focus rings are visible for elderly/disabled users')
+
+    if 'subgrid' in content:
+        _note('[desktop] CSS subgrid used -- Safari 16+, Chrome 117+ -- verify fallback for older browsers')
+    else:
+        _ok('[desktop] No CSS subgrid (no browser support risk)')
+
+    if '@supports' in content:
+        _ok('[desktop] @supports used -- progressive enhancement present')
 
     # ── KYC language ─────────────────────────────────────────────────────────
     fails = _run_kyc_checks(content, fails, context='HTML template')
@@ -321,7 +720,7 @@ def audit_email(filepath):
         if result: _ok(label)
         else: _fail(label); fails += 1
 
-    _section('Colour — email')
+    _section('Colour -- email')
     gold_hits = _gold_on_light(content)
     if gold_hits:
         _fail(f'Gold used as text colour in email ({len(gold_hits)} hit(s))')
@@ -336,23 +735,125 @@ def audit_email(filepath):
     else:
         _ok('No shaded font colours in email')
 
+    # ── 70-yr readability: email (all viewports) ──────────────────────────────
+    _section('70-year-old readability -- Email Mobile (iOS Mail / Gmail app)')
+
+    email_fonts = [int(s) for s in re.findall(r'font-size:\s*(\d+)px', content)]
+    tiny_email = [s for s in email_fonts if s < 12]
+    small_email = [s for s in email_fonts if 12 <= s < 14]
+
+    if tiny_email:
+        _fail(f'[email/mobile] Font below 12px: {tiny_email} -- unreadable on mobile email')
+        fails += 1
+    else:
+        _ok('[email/mobile] No font below 12px')
+    if small_email:
+        _note(f'[email/mobile] Font 12-13px found {list(set(small_email))} -- metadata/labels only, not body copy')
+    else:
+        _ok('[email/mobile] No 12-13px fonts as body copy')
+
+    p_sizes = re.findall(r'<p[^>]*font-size:\s*(\d+)px', content)
+    p_small = [int(s) for s in p_sizes if int(s) < 15]
+    if p_small:
+        _fail(f'[email/mobile] <p> font-size below 15px: {p_small} -- use 15-16px for body paragraphs')
+        fails += 1
+    else:
+        _ok('[email/mobile] Email <p> body font-size >= 15px')
+
+    lh_vals = re.findall(r'line-height:\s*([0-9.]+)', content)
+    lh_floats = [float(v) for v in lh_vals if re.match(r'^[0-9.]+$', v)]
+    lh_bad = [v for v in lh_floats if v < 1.5]
+    if lh_bad:
+        _fail(f'[email/mobile] Line-height below 1.5: {lh_bad} -- use 1.6+ for readability')
+        fails += 1
+    elif not lh_floats:
+        _note('[email/mobile] No line-height values -- verify paragraphs have line-height >= 1.6')
+    else:
+        _ok('[email/mobile] Line-height all >= 1.5')
+
+    cta_em = re.findall(r'display:inline-block[^"]{0,300}padding:\s*(\d+)px\s+(\d+)px', content)
+    cta_v = [int(t) for t, _ in cta_em]
+    if cta_v and min(cta_v) < 12:
+        _fail(f'[email/mobile] CTA button vertical padding below 12px: {cta_v} -- elderly users need larger tap targets')
+        fails += 1
+    elif cta_v:
+        _ok(f'[email/mobile] CTA button padding >= 12px vertical {cta_v}')
+    else:
+        _note('[email/mobile] No CTA button found -- verify if one is needed')
+
+    _section('70-year-old readability -- Email Desktop (Outlook / Apple Mail)')
+
+    if any(f'font-size: {s}px' in content for s in range(15, 25)):
+        _ok('[email/desktop] Body font size >= 15px for desktop email clients')
+    else:
+        _fail('[email/desktop] No body font >= 15px -- desktop email clients need at least 15px')
+        fails += 1
+
+    if 'max-width: 560px' in content or 'max-width: 600px' in content:
+        _ok('[email/desktop] Email container max-width 560-600px -- readable column width on desktop')
+    else:
+        _note('[email/desktop] Container max-width not 560-600px -- verify email does not stretch too wide on desktop')
+
+    abbrev_pats = [r'\bSep\b', r'\bOct\b', r'\bNov\b', r'\bDec\b', r'\bJan\b',
+                   r'\bFeb\b', r'\bMar\b', r'\bApr\b', r'\bJun\b', r'\bJul\b',
+                   r'\bAug\b', r'\bSept\b', r'w/\b', r'\bapprox\b', r'\bTBC\b', r'\bTBD\b']
+    abbrev_hits = [p for p in abbrev_pats if re.search(p, content, re.I)]
+    if abbrev_hits:
+        _note(f'[email] Possible abbreviations {abbrev_hits} -- use full words for elderly readers')
+    else:
+        _ok('[email] No abbreviated month names or shorthand')
+
+    # ── Email Safari iOS / Gmail / Outlook compatibility ──────────────────────
+    _section('Safari iOS Mail / Gmail App / Outlook compatibility')
+
+    if re.search(r'width:\s*[6-9]\d\d\s*px', content):
+        _fail('[email] Fixed width > 600px -- breaks on mobile email clients (iOS Mail, Gmail app)')
+        fails += 1
+    else:
+        _ok('[email] No fixed width > 600px (safe for iOS Mail and Gmail app)')
+
+    if 'table' in content.lower():
+        _ok('[email] Table-based layout -- maximum Outlook compatibility')
+    else:
+        _note('[email] No table layout -- verify Outlook 2016/2019 renders correctly (div-only layouts break in Outlook)')
+
+    if 'mso-' in content or '<!--[if mso]' in content:
+        _ok('[email] MSO conditional comments present -- Outlook rendering handled')
+    else:
+        _note('[email] No MSO conditionals -- verify layout renders in Outlook 2016/2019 (Word rendering engine)')
+
+    if 'media' in content and 'max-width' in content:
+        _ok('[email] Media query present -- responsive email for iOS Mail and Gmail app')
+    else:
+        _note('[email] No media query -- email will not reflow on mobile (iOS Mail ignores, Gmail Android may clip)')
+
+    if 'background-color' in content or 'bgcolor' in content:
+        _ok('[email] Background colour set -- renders in dark mode email clients')
+    else:
+        _note('[email] No background-color -- email may render incorrectly in dark mode (iOS Mail, Gmail)')
+
+    if 'color-scheme' in content or 'prefers-color-scheme' in content:
+        _ok('[email] color-scheme/prefers-color-scheme set -- dark mode email handling present')
+    else:
+        _note('[email] No dark mode handling -- text may become unreadable in iOS Mail dark mode')
+
     fails = _run_kyc_checks(content, fails, context='email template')
     return _result(fails, filepath)
 
 
-# ── app.py audit (merged verify_app.py) ──────────────────────────────────────
+# ── app.py audit ──────────────────────────────────────────────────────────────
 
 def audit_apppy(filepath):
     _banner()
     print(f'\n  FILE: {filepath}  [FLASK APP]')
     print()
-    _note('Site is LIVE and in KYC state with PayU — zero tolerance for breakage')
-    _note('Rule 9: Present change for approval first. One change → one deploy → one verify.')
+    _note('Site is LIVE and in KYC state with PayU -- zero tolerance for breakage')
+    _note('Rule 9: Present change for approval first. One change -> one deploy -> one verify.')
 
     try:
         import sqlparse
     except ImportError:
-        print('\n  ✗  sqlparse not installed — run: pip install sqlparse --break-system-packages')
+        print('\n  XX  sqlparse not installed -- run: pip install sqlparse --break-system-packages')
         sys.exit(1)
 
     try:
@@ -370,12 +871,11 @@ def audit_apppy(filepath):
     _section('AST parse')
     try:
         tree = ast.parse(src)
-        _ok('AST parse clean — no syntax errors')
+        _ok('AST parse clean -- no syntax errors')
     except SyntaxError as e:
         _fail(f'SyntaxError at line {e.lineno}: {e.msg}')
         sys.exit(1)
 
-    # Python 3.13 f-string backslash check
     violations = []
     for node in ast.walk(tree):
         if isinstance(node, ast.JoinedStr):
@@ -423,7 +923,7 @@ def audit_apppy(filepath):
             sql_errors.append(f'line {lineno}: sqlparse exception: {e}: {full_sql[:60]!r}')
             continue
         if re.search(r'ADD\s+CONSTRAINT\s+IF\s+NOT\s+EXISTS', upper):
-            sql_errors.append(f'line {lineno}: ADD CONSTRAINT IF NOT EXISTS — invalid PG syntax')
+            sql_errors.append(f'line {lineno}: ADD CONSTRAINT IF NOT EXISTS -- invalid PG syntax')
         if re.search(r'DROP\s+CONSTRAINT\s+(?!IF\s+EXISTS)[A-Z_]', upper):
             sql_errors.append(f'line {lineno}: DROP CONSTRAINT without IF EXISTS: {full_sql[:80]!r}')
         if re.search(r'ADD\s+COLUMN\s+(?!IF\s+NOT\s+EXISTS)[A-Z_]', upper) and 'ALTER' in upper:
@@ -441,14 +941,14 @@ def audit_apppy(filepath):
     # ── ALTER TABLE rules ─────────────────────────────────────────────────────
     _section('ALTER TABLE rules (Rule 5)')
     if re.search(r'ADD\s+CONSTRAINT\s+IF\s+NOT\s+EXISTS', src, re.I):
-        _fail('ADD CONSTRAINT IF NOT EXISTS in source — invalid PostgreSQL, use try/except')
+        _fail('ADD CONSTRAINT IF NOT EXISTS in source -- invalid PostgreSQL, use try/except')
         fails += 1
     else:
         _ok('No ADD CONSTRAINT IF NOT EXISTS')
 
     alter_count = len(re.findall(r'ALTER\s+TABLE', src, re.I))
     if alter_count:
-        _note(f'{alter_count} ALTER TABLE statement(s) — Rule 6: test each migration in isolation first')
+        _note(f'{alter_count} ALTER TABLE statement(s) -- Rule 6: test each migration in isolation first')
     else:
         _ok('No ALTER TABLE statements')
 
@@ -466,24 +966,24 @@ def audit_apppy(filepath):
             m = re.search(pat, msrc, re.DOTALL)
             if m:
                 model_fields[cls] = re.findall(r'^\s{4}(\w+)\s*=\s*db\.Column', m.group(1), re.MULTILINE)
-        _ok(f'models.py loaded — {len(model_fields)} models found')
+        _ok(f'models.py loaded -- {len(model_fields)} models found')
         user_f = model_fields.get('User', [])
         img_f  = model_fields.get('Image', [])
         if 'display_name' in user_f:
-            _fail('User model has display_name — should not exist'); fails += 1
+            _fail('User model has display_name -- should not exist'); fails += 1
         else:
-            _ok('User model: no display_name ✓')
+            _ok('User model: no display_name')
         if 'uploaded_at' in img_f:
-            _fail('Image model has uploaded_at — should be created_at'); fails += 1
+            _fail('Image model has uploaded_at -- should be created_at'); fails += 1
         else:
-            _ok('Image model: no uploaded_at ✓')
+            _ok('Image model: no uploaded_at')
         for req in ['raw_verification_required','raw_verified','raw_disqualified',
                     'created_at','score','tier','user_id']:
             if req not in img_f:
                 _fail(f'Image model missing required field: {req}'); fails += 1
         _ok('Image model required fields present')
     else:
-        _note('models.py not found — upload alongside app.py for full field validation')
+        _note('models.py not found -- upload alongside app.py for full field validation')
 
     # ── ORM field access rules ────────────────────────────────────────────────
     _section('ORM field access rules')
@@ -497,7 +997,7 @@ def audit_apppy(filepath):
     else: _ok('No uploaded_at (correct field is created_at)')
 
     if re.search(r'db\.relationship\s*\(\s*["\']User["\']', src):
-        _fail("db.relationship('User') on Image — use User.query.get(img.user_id)"); fails += 1
+        _fail("db.relationship('User') on Image -- use User.query.get(img.user_id)"); fails += 1
     else:
         _ok("No db.relationship('User') on Image")
 
@@ -509,7 +1009,7 @@ def audit_apppy(filepath):
     if not email_blocks:
         _ok('No html_body email blocks found in app.py')
     else:
-        _ok(f'{len(email_blocks)} html_body block(s) found — checking KYC + apostrophes')
+        _ok(f'{len(email_blocks)} html_body block(s) found -- checking KYC + apostrophes')
         _note("Known false positives: Python docstrings/f-strings captured by block regex are filtered but some may remain")
         false_positive_contexts = [
             'courier new', 'strftime(', 'prompt_body', 'challenge_url',
@@ -521,8 +1021,6 @@ def audit_apppy(filepath):
         for i, m in enumerate(email_blocks):
             blk = m.group(0)
             ln = src[:m.start()].count('\n') + 1
-
-            # Skip admin-only email blocks
             blk_lower = blk.lower()
             if any(x in blk_lower for x in [
                 'admin_email', 'to_addresses=[admin_email', 'admin_notify',
@@ -530,17 +1028,14 @@ def audit_apppy(filepath):
                 '[admin]', 'admin panel', 'admin dashboard',
                 'rankings are set', 'auto-releases available',
                 'integrity hold', 'release_url',
-                # Admin-only RAW flagging emails
                 'grandmaster image auto-flagged', 'raw verification. submission record created',
                 'view in raw queue', 'flagged for review',
-                # Mentor review operational emails — internal service, not contest
                 'shutter league \u00b7 mentor', 'review deadline reminder',
                 'mentor dashboard', 'you have a review due in',
                 'pending sessions', 'write review now',
             ]):
                 continue
 
-            # KYC on email body — with email-specific smart exclusions
             EMAIL_EXCL = [
                 'winners_html', 'winners_text', 'for w in sorted(winners',
                 'send_winners', 'raw_submissions', 'submission_count',
@@ -551,40 +1046,30 @@ def audit_apppy(filepath):
                 'deadline =', 'deadline)', 'deadline,', 'deadline }',
                 'ranking_season', 'ranking_public', 'ranking_last',
                 'result_rank', 'ordinals', 'medals',
-                # Python docstrings/comments inside capture range
                 'formal submission', 'contestant has verified',
                 'no user or winner emails', 'no scoreable submissions',
                 'raw verified without', 'manual override',
                 'already ranked', 'preview + release',
-                # Surrounding function docstrings captured by regex
                 'without a formal submission', 'mark image as raw verified',
                 'used for testing', 'mark_raw_verified',
-                # More docstring/comment patterns
-                'without a formal submission', 'formal submission',
                 'admin shortcut', 'admin_mark_raw',
-                # Mentor review operational deadline — not a contest deadline
                 'review deadline reminder', 'deadline_ist',
                 'complete your review before the deadline',
                 'shutter league \u00b7 mentor', 'mentor dashboard',
                 'you have a review due',
             ]
-            # Skip known false-positive blocks (Python context bled in)
             is_false_positive_block = any(x in blk_lower for x in false_positive_contexts)
 
             for label, term, exclusions in KYC_TERMS:
                 EMAIL_EXCL_FULL = EMAIL_EXCL + (false_positive_contexts if is_false_positive_block else [])
-                # For false positive blocks, also add the bare term itself to exclusions
-                # since the term appears only in code context, not email HTML
                 if is_false_positive_block:
                     EMAIL_EXCL_FULL = EMAIL_EXCL_FULL + [term.strip()]
                 stripped = _strip_exclusions(blk_lower, [e.lower() for e in exclusions + EMAIL_EXCL_FULL])
                 if term.lower() in stripped:
                     _fail(f'Email body ~line {ln}: KYC term "{term}" found')
                     fails += 1
-            # Apostrophe check — HTML email content only, not Python code
-            # Remove Python code patterns before checking
+
             clean = blk.replace("&#39;", '').replace("\\'", '')
-            # Remove Python code lines and Courier New font declarations (contain apostrophes)
             clean_lines = [l for l in clean.split('\n')
                           if not l.strip().startswith('#')
                           and not re.match(r'\s*(def |class |"""|\'\'\')(.*)', l)
@@ -601,9 +1086,9 @@ def audit_apppy(filepath):
                           and "f'" not in l]
             clean_html = '\n'.join(clean_lines)
             if re.search(r"[a-zA-Z]'[a-zA-Z]", clean_html):
-                _fail(f'Email body ~line {ln}: raw apostrophe — use &#39;')
+                _fail(f'Email body ~line {ln}: raw apostrophe -- use &#39;')
                 fails += 1
-            # Gold text colour — only flag body/heading text, not CTAs/scores/labels
+
             gold_lines = [l for l in blk.split('\n') if any(g in l for g in GOLD_VALS) and 'color' in l.lower()]
             real_gold = []
             for gl in gold_lines:
@@ -618,16 +1103,12 @@ def audit_apppy(filepath):
                     'font-size:11px', 'font-size:12px', 'font-size:13px',
                     'font-size: 11px', 'font-size: 12px', 'font-size: 13px',
                     'score', 'tier', '8.', '9.', '7.',
-                    # h1/h2 headings in emails are brand headers — legitimate
                     '<h1', '<h2', 'font-style:italic', 'font-style: italic',
                     'font-size:30px', 'font-size:24px', 'font-size:22px',
                     'margin-bottom:20px', 'margin-bottom:24px',
-                    # Shutter League brand label in email header
                     'shutter league', 'f5c518;text-transform',
-                    # Hyperlinks are legitimate gold colour usage
                     '<a href', 'style="color:#c8a84b', "style='color:#c8a84b",
                     'style="color:#f5c518', "style='color:#f5c518",
-                    # Rank/position displays
                     '<strong style="color:#c8a84b', "strong style='color:#c8a84b",
                     'placed <strong', 'position <strong',
                 ]):
@@ -637,7 +1118,87 @@ def audit_apppy(filepath):
                 _fail(f'Email body ~line {ln}: gold used as body text colour: {real_gold[:1]}')
                 fails += 1
 
-    # Subject line KYC
+    # ── 70-yr readability — inline email HTML (all viewports) ─────────────────
+    _all_inline_html = ' '.join(re.findall(
+        r'html_body\s*=\s*[\s\S]{0,8000}?(?=\n\s*(?:msg\.|send_|flash|return|#))', src
+    ))
+    _flash_texts = re.findall(r"flash\s*\(\s*[f]?['\"]([^'\"]{0,200})['\"]", src)
+
+    _section('70-year-old readability -- Inline email HTML (mobile + desktop)')
+
+    em_fonts = [int(s) for s in re.findall(r'font-size:\s*(\d+)px', _all_inline_html)]
+    em_tiny = [s for s in em_fonts if s < 12]
+    em_small = [s for s in em_fonts if 12 <= s < 14]
+    if em_tiny:
+        _fail(f'Inline email: font-size below 12px {em_tiny} -- unreadable on any device')
+        fails += 1
+    else:
+        _ok('No font below 12px in inline email HTML')
+    if em_small:
+        _note(f'Inline email: font-size 12-13px {list(set(em_small))} -- metadata/labels only, not body copy')
+    else:
+        _ok('No 12-13px fonts as body copy in inline email HTML')
+
+    p_em = re.findall(r'<p[^>]*font-size:\s*(\d+)px', _all_inline_html)
+    p_em_small = [int(s) for s in p_em if int(s) < 15]
+    if p_em_small:
+        _fail(f'Inline email: <p> font-size below 15px: {p_em_small} -- use 15-16px minimum')
+        fails += 1
+    else:
+        _ok('Inline email <p> body font-size >= 15px')
+
+    lh_em = [float(v) for v in re.findall(r'line-height:\s*([0-9.]+)', _all_inline_html) if re.match(r'^[0-9.]+$', v)]
+    lh_em_bad = [v for v in lh_em if v < 1.5]
+    if lh_em_bad:
+        _fail(f'Inline email: line-height below 1.5: {lh_em_bad} -- use 1.6+ for readability')
+        fails += 1
+    elif not lh_em:
+        _note('Inline email: no line-height values detected -- verify paragraphs have line-height >= 1.6')
+    else:
+        _ok('Inline email line-height all >= 1.5')
+
+    cta_em = re.findall(r'display:inline-block[^"]{0,300}padding:\s*(\d+)px\s+(\d+)px', _all_inline_html)
+    cta_v_em = [int(t) for t, _ in cta_em]
+    if cta_v_em and min(cta_v_em) < 12:
+        _fail(f'Inline email CTA button vertical padding below 12px: {cta_v_em} -- use 12-14px min')
+        fails += 1
+    elif cta_v_em:
+        _ok(f'Inline email CTA button padding >= 12px vertical {cta_v_em}')
+    else:
+        _note('No CTA button in inline email HTML -- verify if one is needed')
+
+    # Safari iOS Mail / Gmail / Outlook — inline email
+    _section('Safari iOS Mail / Gmail / Outlook -- Inline email HTML')
+
+    if re.search(r'width:\s*[6-9]\d\d\s*px', _all_inline_html):
+        _fail('Inline email: fixed width > 600px -- breaks in iOS Mail and Gmail app')
+        fails += 1
+    else:
+        _ok('Inline email: no fixed width > 600px (safe for iOS Mail / Gmail app)')
+
+    if _all_inline_html and 'max-width' not in _all_inline_html:
+        _note('Inline email: no max-width on container -- email may stretch on desktop clients')
+    elif _all_inline_html:
+        _ok('Inline email: max-width set on container')
+
+    if _all_inline_html and ('background-color' in _all_inline_html or 'bgcolor' in _all_inline_html):
+        _ok('Inline email: background-color set -- renders in dark mode email clients')
+    elif _all_inline_html:
+        _note('Inline email: no background-color -- may render incorrectly in iOS Mail dark mode')
+
+    # ── Flash message abbreviations ───────────────────────────────────────────
+    abbrev_flash_pats = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar',
+                         'Apr', 'Jun', 'Jul', 'Aug', 'Sept']
+    abbrev_flash_hits = []
+    for ft in _flash_texts:
+        if any(re.search(r'\b' + p + r'\b', ft, re.I) for p in abbrev_flash_pats):
+            abbrev_flash_hits.append(ft[:60])
+    if abbrev_flash_hits:
+        _note(f'Flash messages with abbreviated month names ({len(abbrev_flash_hits)}) -- use full month names: {abbrev_flash_hits[:2]}')
+    else:
+        _ok('Flash messages: no abbreviated month names detected')
+
+    # ── Subject line KYC ─────────────────────────────────────────────────────
     for subj in subject_lines:
         subj_l = subj.lower()
         for label, term, exclusions in KYC_TERMS:
@@ -659,42 +1220,38 @@ def audit_apppy(filepath):
     else:
         _ok('No duplicate routes')
 
-    # Template name checks — KYC-safe names
+    # ── Template name KYC compliance ──────────────────────────────────────────
     _section('Template name KYC compliance')
     old_templates = ['contest_enter.html', 'my_entries.html']
     new_templates = ['programme_enter.html', 'my_participations.html']
     for t in old_templates:
-        # Exact match — not substring (e.g. open_contest_enter.html is different)
         if f"'{t}'" in src or f'"{t}"' in src:
-            _fail(f'KYC-unsafe template name still referenced: {t} — should be renamed')
+            _fail(f'KYC-unsafe template name still referenced: {t} -- should be renamed')
             fails += 1
         else:
-            _ok(f'{t} — not referenced ✓')
+            _ok(f'{t} -- not referenced')
     for t in new_templates:
         if t in src:
-            _ok(f'{t} — KYC-safe name in use ✓')
+            _ok(f'{t} -- KYC-safe name in use')
         else:
-            _note(f'{t} — not yet referenced (rename pending)')
+            _note(f'{t} -- not yet referenced (rename pending)')
 
-    # Required templates present
     for t in ['dashboard.html', 'login.html', 'upload.html']:
         if t in src: _ok(f"render_template('{t}') present")
         else: _fail(f"render_template('{t}') missing"); fails += 1
 
-    # ── Mobile rendering flags ────────────────────────────────────────────────
+    # ── Mobile & rendering safety ─────────────────────────────────────────────
     _section('Mobile & rendering safety (Rule 1)')
     wide_px = re.findall(r'width:\s*[6-9]\d\d\s*px', src)
     if wide_px:
-        _note(f'{len(wide_px)} fixed px width(s) in email HTML — verify iOS/Android/Safari/Chrome')
+        _note(f'{len(wide_px)} fixed px width(s) in email HTML -- verify iOS/Android/Safari/Chrome')
     else:
         _ok('No wide fixed-px widths in email HTML')
 
-    # ── KYC on app.py render_template strings + flash messages ───────────────
+    # ── KYC on flash messages + render context ────────────────────────────────
     _section('KYC language in app.py (flash messages + render context)')
-    flash_msgs = re.findall(r"flash\s*\(\s*[f]?['\"]([^'\"]{0,200})['\"]", src)
     render_strings = re.findall(r"render_template\s*\('[^']+',([^)]{0,400})\)", src)
-    combined_copy = ' '.join(flash_msgs + render_strings).lower()
-    # Add app-specific exclusions for variable names and admin-only messages
+    combined_copy = ' '.join(_flash_texts + render_strings).lower()
     APP_EXCL = [
         'contest_type', 'contest_ref', 'contest_period', 'contest_banner',
         'contest_announce', 'contest_judge', 'contest_month', 'brand_contest',
@@ -706,7 +1263,6 @@ def audit_apppy(filepath):
         'ranking_season', 'ranking_public', 'ranking_last',
         'raw verification record', 'verification record',
         'no raw verification', 'raw resubmission',
-        # Admin-only flash messages — not user-facing
         'contest period saved', 'contest reference is required',
         'judge config saved for', 'in this contest have not been reviewed',
         'submission(s). deactivate', 'submission(s) deleted',
@@ -720,7 +1276,6 @@ def audit_apppy(filepath):
         'a reason is required when rejecting or requesting resubmission',
         'raw resubmission requested', 'no ranked submissions found',
         'cannot delete', 'deactivate it instead',
-        # F-string variable patterns picked up by regex
         'winner emails', 'winner_count', 'no user or winner',
         'top_winners', 'num_winners', 'len(winners)',
         'entries_per', 'max_entries', 'num_entries',
@@ -733,8 +1288,8 @@ def audit_apppy(filepath):
             kyc_fails_app.append(term)
     if kyc_fails_app:
         for t in kyc_fails_app:
-            _note(f'KYC term "{t}" in flash/render context — verify admin-only (not user-facing)')
-        _note(f'{len(kyc_fails_app)} term(s) above are likely admin flash messages — review manually if deploying after KYC submission')
+            _note(f'KYC term "{t}" in flash/render context -- verify admin-only (not user-facing)')
+        _note(f'{len(kyc_fails_app)} term(s) above are likely admin flash messages -- review manually if deploying after KYC submission')
     else:
         _ok('No KYC terms in flash messages or render_template context strings')
 
@@ -757,7 +1312,7 @@ if __name__ == '__main__':
     all_passed = True
     for filepath in sys.argv[1:]:
         if not os.path.exists(filepath):
-            print(f'\n  ✗  File not found: {filepath}')
+            print(f'\n  XX  File not found: {filepath}')
             all_passed = False
             continue
         name = os.path.basename(filepath).lower()
@@ -768,18 +1323,18 @@ if __name__ == '__main__':
         elif filepath.endswith('.html'):
             passed = audit_html(filepath)
         else:
-            print(f'\n  ~  Skipping unknown file type: {filepath}')
+            print(f'\n  ~~  Skipping unknown file type: {filepath}')
             passed = True
         if not passed:
             all_passed = False
 
     if len(sys.argv[1:]) > 1:
         print()
-        print('═' * 60)
+        print('=' * 60)
         if all_passed:
-            print('  ✓  ALL FILES CLEAN — SAFE TO DELIVER')
+            print('  OK  ALL FILES CLEAN -- SAFE TO DELIVER')
         else:
-            print('  ✗  ONE OR MORE FILES FAILED — DO NOT DELIVER')
+            print('  XX  ONE OR MORE FILES FAILED -- DO NOT DELIVER')
         print('  Rule 9: Await explicit founder approval before pushing.')
-        print('═' * 60)
+        print('=' * 60)
         print()
