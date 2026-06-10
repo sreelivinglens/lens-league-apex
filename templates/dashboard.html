@@ -1824,7 +1824,7 @@
         <div class="db-hcard-qs-item">Best DDI <span class="db-hcard-qs-val">{{ stats.best_score or '—' }}</span></div>
         <div class="db-hcard-qs-item">Avg score <span class="db-hcard-qs-val">{{ '%.1f'|format(stats.avg_score) if stats.avg_score else '—' }}</span></div>
         <div class="db-hcard-qs-item">Scored <span class="db-hcard-qs-val">{{ stats.scored }}</span></div>
-        <div class="db-hcard-qs-item">Upload credits <span class="db-hcard-qs-val">{{ current_user.upload_credits_balance or 0 }}</span></div>
+        <div class="db-hcard-qs-item">Upload credits <span class="db-hcard-qs-val">{{ upload_credits_balance }}</span></div>
         <div class="db-hcard-qs-item">Peer credits <span class="db-hcard-qs-val">{{ rating_widget.credits if rating_widget else '—' }}</span></div>
         <div class="db-hcard-qs-item">Total images <span class="db-hcard-qs-val">{{ stats.total }}</span></div>
       </div>
