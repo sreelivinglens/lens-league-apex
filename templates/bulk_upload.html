@@ -737,11 +737,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }).join(' · ');
         overlaySub.textContent = breakdown;
 
-        // Store pending count so dashboard can show a banner
-        const pendingCount = total - scored.length - skipped.length - errors.length;
-        if (pendingCount > 0) {
-          sessionStorage.setItem('bulk_pending', pendingCount);
-        }
+        // Always show a banner on dashboard after bulk upload
+        sessionStorage.setItem('bulk_done', scored.length + '/' + total);
         setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
         return;
       }

@@ -1523,13 +1523,19 @@
 </div>
 <script>
 (function() {
-  var n = sessionStorage.getItem('bulk_pending');
-  if (n) {
+  var v = sessionStorage.getItem('bulk_done');
+  if (v) {
     var b = document.getElementById('bulkPendingBanner');
     var m = document.getElementById('bulkPendingMsg');
-    m.textContent = n + ' image' + (parseInt(n) > 1 ? 's are' : ' is') + ' still being scored in the background — refresh this page in 2 minutes to see your results.';
+    var parts = v.split('/');
+    var scored = parseInt(parts[0]); var total = parseInt(parts[1]);
+    if (scored < total) {
+      m.textContent = scored + ' of ' + total + ' images scored — ' + (total - scored) + ' still processing in the background. Refresh in 2 minutes to see all results.';
+    } else {
+      m.textContent = 'All ' + total + ' images scored successfully. Scroll down to see your results.';
+    }
     b.style.display = 'flex';
-    sessionStorage.removeItem('bulk_pending');
+    sessionStorage.removeItem('bulk_done');
   }
 })();
 </script>
