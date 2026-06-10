@@ -138,7 +138,7 @@
     <div class="comp-honours">
       <div class="comp-honour-item"><strong>Minimum 6 scored images</strong> per genre to appear on standings</div>
       <div class="comp-honour-item"><strong>Minimum 24 scored images</strong> in your qualifying genre — one genre qualifies, you do not need images in every genre</div>
-      <div class="comp-honour-item"><strong>6 months active subscription</strong> required within the calendar year to qualify for awards</div>
+      <div class="comp-honour-item"><strong>3 active months</strong> with at least 1 scored image required in 2026 to qualify for awards</div>
       <div class="comp-honour-item"><strong>Gold, Silver, Bronze</strong> recognition across 8 genres per league</div>
       <div class="comp-honour-item"><strong>Grand Recipient</strong> Camera Users and Mobile Users — platform's highest annual honour</div>
       <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
@@ -150,11 +150,11 @@
           <span class="comp-action-note">Your scores build automatically each month</span>
         {% else %}
           <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Qualify →</a>
-          <span class="comp-action-note">You need 6 months of active subscription within the calendar year to qualify for the Annual Excellence Award.</span>
+          <span class="comp-action-note">You need 3 active months with at least 1 scored image in 2026 to qualify for the Annual Excellence Award.</span>
         {% endif %}
       {% else %}
         <a href="{{ url_for('register') }}" class="btn btn-solid">Start Building Your Score →</a>
-        <span class="comp-action-note">Subscription required · 6 months within the calendar year to qualify for awards</span>
+        <span class="comp-action-note">Subscription required · 3 active months in 2026 to qualify for awards</span>
       {% endif %}
       <a href="{{ url_for('poty') }}" class="btn" style="padding:11px 28px; font-size:1rem;">Annual Excellence Award →</a>
     </div>
