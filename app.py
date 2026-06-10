@@ -10189,6 +10189,34 @@ def bulk_upload_one():
                 img.flagged_reason = f'Breastfeeding content detected — held for admin review. Sub-genre: {_bf_subgenre or "undetected"}.'
                 img.flagged_at     = datetime.utcnow()
                 app.logger.info(f'[bulk_upload_one] breastfeeding flag set: image={img.id} subgenre={_bf_subgenre}')
+                # Send admin review email
+                try:
+                    _bfu_emails = _admin_notify_emails() or [ADMIN_NOTIFY_EMAIL]
+                    _bfu_site   = os.getenv('SITE_URL', 'https://shutterleague.com')
+                    _bfu_u      = User.query.get(img.user_id)
+                    send_email(
+                        _bfu_emails,
+                        f'[Content Review] Breastfeeding Image — {img.asset_name or "Untitled"} (ID: {img.id})',
+                        (
+                            '<div style="font-family:Courier New,monospace;max-width:560px;margin:0 auto;padding:32px;">'
+                            '<p style="color:#C8A84B;font-weight:700;font-size:15px;">CONTENT REVIEW REQUIRED — BREASTFEEDING IMAGE</p>'
+                            f'<p>Image: <strong>{img.asset_name or "Untitled"}</strong> (ID: {img.id})<br>'
+                            f'Photographer: {(_bfu_u.username if _bfu_u else "unknown")} ({(_bfu_u.email if _bfu_u else "unknown")})<br>'
+                            f'Genre: {img.genre or "—"}<br>'
+                            f'Sub-genre: <strong>{_bf_subgenre or "undetected"}</strong></p>'
+                            '<p>This image has been held from public view pending your review.</p>'
+                            f'<a href="{_bfu_site}/admin/image/{img.id}" '
+                            'style="display:inline-block;background:#C8A84B;color:#1a1a18;'
+                            'font-family:Courier New,monospace;font-size:13px;font-weight:700;'
+                            'letter-spacing:1px;text-transform:uppercase;padding:12px 24px;'
+                            'text-decoration:none;border-radius:4px;margin:16px 0;">'
+                            'Review &amp; Approve &#8594;</a>'
+                            '</div>'
+                        )
+                    )
+                    app.logger.info(f'[bulk_upload_one] breastfeeding admin email sent: image={img.id}')
+                except Exception as _bfu_email_err:
+                    app.logger.warning(f'[bulk_upload_one] breastfeeding admin email failed: {_bfu_email_err}')
 
         db.session.commit()
 
