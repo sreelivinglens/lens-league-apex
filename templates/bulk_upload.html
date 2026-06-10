@@ -385,11 +385,11 @@
 
 {% block extra_js %}
 <script>
-const AGREED_KEY  = 'bulk_upload_agreed';
-const MAX_MB      = 20;   // hard limit per file
-const WARN_MB     = 5;    // soft advisory threshold
+const AGREED_KEY = 'bulk_upload_agreed';
+const MAX_MB     = 20;
+const WARN_MB    = 5;
 
-// ── Carousel ─────────────────────────────────────────────────────────────
+// ── Carousel ──────────────────────────────────────────────────────────────────
 (function() {
   const carousel = document.getElementById('uploadCarousel');
   const track    = document.getElementById('carouselTrack');
@@ -415,6 +415,14 @@ const WARN_MB     = 5;    // soft advisory threshold
   });
 })();
 
+// ── Global state ──────────────────────────────────────────────────────────────
+let selectedFiles = null;
+let input = null;
+let dropzone = null;
+let form = null;
+let submitBtn = null;
+
+// ── Global functions (called from HTML attributes) ────────────────────────────
 function initPage() {
   sessionStorage.removeItem('bulk_processing');
   {% if results %}
@@ -431,12 +439,6 @@ function initPage() {
   {% endif %}
 }
 
-let selectedFiles = null;  // stores files from either drag-drop or file picker
-let input    = null;
-let dropzone = null;
-let form     = null;
-let submitBtn = null;
-
 function proceedToUpload() {
   if (!document.getElementById('modalCheckbox').checked) return;
   sessionStorage.setItem(AGREED_KEY, '1');
@@ -452,34 +454,28 @@ function handleDrop(e) {
 }
 
 function showFiles(files) {
-  if (!files.length) return;
+  if (!files || !files.length) return;
   const fc = document.getElementById('filecount');
   const fl = document.getElementById('filelist');
   const sw = document.getElementById('bulkSizeWarning');
-
-  const overLimit  = files.length > 10;
-  let   hasLarge   = false;
-
+  const overLimit = files.length > 10;
+  let hasLarge = false;
   fc.textContent = overLimit
     ? `⚠️ ${files.length} files — maximum is 10.`
     : `${files.length} file${files.length > 1 ? 's' : ''} selected`;
   fc.style.color   = overLimit ? 'var(--red)' : 'var(--gold)';
   fc.style.display = 'block';
   if (dropzone) dropzone.style.borderColor = 'var(--gold)';
-
   fl.innerHTML = Array.from(files).map(f => {
     const sizeMB = f.size > 0 ? (f.size / 1024 / 1024).toFixed(1) : '?';
     if (f.size > 0 && f.size > WARN_MB * 1024 * 1024) hasLarge = true;
-    const sizeColor = (f.size > 0 && f.size > WARN_MB * 1024 * 1024)
-      ? 'color:var(--amber);'
-      : 'color:var(--text-muted);';
-    return `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+    const sizeColor = (f.size > 0 && f.size > WARN_MB * 1024 * 1024) ? 'color:var(--amber);' : 'color:var(--text-muted);';
+    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
       <span>${f.name}</span>
-      <span style="font-family:var(--font-mono); margin-left:12px; ${sizeColor}">${sizeMB}MB</span>
+      <span style="font-family:var(--font-mono);margin-left:12px;${sizeColor}">${sizeMB}MB</span>
     </div>`;
   }).join('');
   fl.style.display = 'block';
-
   sw.style.display = hasLarge ? 'block' : 'none';
 }
 
@@ -490,249 +486,9 @@ function dismissOverlayError() {
   document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Score All';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  initPage();
-
-  input    = document.getElementById('filesInput');
-  dropzone = document.getElementById('dropzone');
-  form     = document.getElementById('bulkForm');
-  submitBtn = document.getElementById('submitBtn');
-
-  document.getElementById('modalCheckbox').addEventListener('change', function() {
-    const btn = document.getElementById('agreeBtn');
-    btn.disabled = !this.checked;
-    btn.style.opacity = this.checked ? '1' : '0.4';
-    btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
-  });
-
-  var genreEl = document.querySelector('[name="genre"]');
-  if (genreEl) genreEl.addEventListener('change', function() { updateBulkSubGenre(this.value); });
-
-  input.addEventListener('change', () => {
-    selectedFiles = input.files;
-    showFiles(selectedFiles);
-  });
-
-  form.addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  const files = selectedFiles || input.files;
-  if (!files || !files.length) { alert('Please select images first.'); return; }
-
-  const trackSelected = document.querySelector('input[name="camera_track"]:checked');
-  if (!trackSelected) {
-    document.getElementById('bulkTrackHint').style.display = 'block';
-    document.getElementById('bulkTrackHint').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  // Hard block only files genuinely over 20 MB
-  let oversized = [];
-  for (let f of files) {
-    if (f.size > 0 && f.size > MAX_MB * 1024 * 1024) oversized.push(f.name);
-  }
-  if (oversized.length) {
-    alert(
-      `These files exceed 20 MB — please reduce their size before uploading:\n` +
-      oversized.join('\n') +
-      `\n\nOn iPhone: share → choose "Medium" size.\nOn Samsung: use Gallery resize option.`
-    );
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Processing…';
-
-  _initAudio();
-
-  const total        = Math.min(files.length, 10);
-  const overlay      = document.getElementById('scoringOverlay');
-  const clockRing    = document.getElementById('clockRing');
-  const clockSecs    = document.getElementById('clockSecs');
-  const overlayPhase = document.getElementById('overlayPhase');
-  const overlayStatus= document.getElementById('overlayStatus');
-  const overlaySub   = document.getElementById('overlaySubstatus');
-  const breathLabel  = document.getElementById('breathLabel');
-
-  const PER_IMAGE    = 35;
-  const CIRCUMFERENCE= 195;
-
-  overlay.classList.add('active');
-  document.getElementById('overlayError').style.display = 'none';
-  clockSecs.textContent = PER_IMAGE;
-
-  // VIBGYOR colours — cycle on every breath phase
-  const VIBGYOR = [
-    { ring: 'rgba(148,0,211,0.85)',  glow: 'rgba(148,0,211,0.25)',  dot: '#9400D3' },
-    { ring: 'rgba(75,0,130,0.85)',   glow: 'rgba(75,0,130,0.25)',   dot: '#4B0082'  },
-    { ring: 'rgba(0,0,255,0.85)',    glow: 'rgba(0,0,255,0.25)',    dot: '#0000FF'  },
-    { ring: 'rgba(0,168,107,0.85)',  glow: 'rgba(0,168,107,0.25)',  dot: '#00A86B'  },
-    { ring: 'rgba(255,191,0,0.85)',  glow: 'rgba(255,191,0,0.25)',  dot: '#FFBF00'  },
-    { ring: 'rgba(255,127,0,0.85)',  glow: 'rgba(255,127,0,0.25)',  dot: '#FF7F00'  },
-    { ring: 'rgba(255,0,0,0.85)',    glow: 'rgba(255,0,0,0.25)',    dot: '#FF0000'  },
-  ];
-  let breathColorIdx = 0;
-  const breathRing    = document.querySelector('.breath-ring-hero');
-  const breathDot     = document.querySelector('.breath-inner-dot');
-
-  function applyBreathColor(idx) {
-    const c = VIBGYOR[idx % VIBGYOR.length];
-    if (breathRing) {
-      breathRing.style.borderColor = c.ring;
-      breathRing.style.boxShadow   = `0 0 48px 10px ${c.glow}`;
-      breathRing.style.background  = `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`;
-    }
-    if (breathDot) breathDot.style.background = c.dot;
-  }
-  applyBreathColor(breathColorIdx);
-
-  let breathPhase = 0;
-  const breathCycle = setInterval(() => {
-    breathPhase = (breathPhase + 1) % 2;
-    if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
-    breathColorIdx = (breathColorIdx + 1) % VIBGYOR.length;
-    applyBreathColor(breathColorIdx);
-  }, 4000);
-
-  let secs = 0;
-  const ticker = setInterval(() => {
-    secs++;
-    const imgNum    = Math.min(Math.ceil(secs / PER_IMAGE), total);
-    const imgSecs   = ((secs - 1) % PER_IMAGE) + 1;
-    clockSecs.textContent = imgSecs;  // counts up 1→35 per image
-    clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
-    if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;          overlaySub.textContent = 'Transferring to server.'; }
-    else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`;            overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
-    else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;     overlaySub.textContent = 'Applying genre weights and safeguards.'; }
-    else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`;     overlaySub.textContent = 'Building archetype and improvement tip.'; }
-  }, 1000);
-
-  function showOverlayError(msg) {
-    clearInterval(ticker); clearInterval(breathCycle);
-    document.getElementById('overlayErrorMsg').textContent = msg;
-    document.getElementById('overlayError').style.display = 'block';
-    submitBtn.disabled = false;
-    submitBtn.textContent = '⬆ Upload & Auto-Score All';
-  }
-
-  // Send one image at a time — avoids Gunicorn timeout on large batches
-  const genre        = form.querySelector('[name="genre"]').value;
-  const photographer = form.querySelector('[name="photographer_name"]').value;
-  const is_public    = form.querySelector('[name="is_public"]') &&
-                       form.querySelector('[name="is_public"]').checked ? '1' : '0';
-  const fileArray    = Array.from(files).slice(0, 10);
-
-  // ── Resolution check — same 1500px min as upload.html ─────────────────
-  // Check each file client-side before firing the overlay
-  async function checkResolution(file) {
-    return new Promise(resolve => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new window.Image();
-        img.onload  = () => resolve(Math.min(img.naturalWidth, img.naturalHeight));
-        img.onerror = () => resolve(9999); // fail open
-        img.src = ev.target.result;
-      };
-      r.onerror = () => resolve(9999);
-      r.readAsDataURL(file);
-    });
-  }
-  const allResults   = [];
-  let   imgIndex     = 0;
-
-  async function sendNext() {
-    if (imgIndex >= fileArray.length) {
-      // All done
-      clearInterval(ticker); clearInterval(breathCycle);
-      notifyComplete();
-      clockSecs.textContent = '✓';
-      clockRing.style.strokeDashoffset = '0';
-      clockRing.style.stroke = 'rgba(200,168,75,0.9)';
-      overlayPhase.textContent = 'COMPLETE';
-      if (breathLabel) breathLabel.textContent = '🙏';
-      sessionStorage.removeItem('bulk_processing');
-
-      // Build per-image summary
-      const scored  = allResults.filter(r => r.score);
-      const skipped = allResults.filter(r => !r.score && r.status && r.status.startsWith('skipped'));
-      const errors  = allResults.filter(r => !r.score && r.status && (r.status.includes('error') || r.status.includes('duplicate')));
-
-      let summaryLines = [];
-      if (scored.length)  summaryLines.push(`${scored.length} scored`);
-      if (skipped.length) summaryLines.push(`${skipped.length} skipped (too small)`);
-      if (errors.length)  summaryLines.push(`${errors.length} failed`);
-
-      overlayStatus.textContent = summaryLines.join(' · ') || 'Done';
-
-      // Show per-file breakdown
-      let breakdown = allResults.map(r => {
-        if (r.score) return `✓ ${r.filename} — ${r.score} ${r.tier || ''}`;
-        if (r.status && r.status.startsWith('skipped')) return `⚠ ${r.filename} — ${r.status}`;
-        return `✗ ${r.filename} — ${r.status || 'unknown error'}`;
-      }).join(' · ');
-      overlaySub.textContent = breakdown;
-
-      // Give user time to read summary before redirecting
-      setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
-      return;
-    }
-
-    const file = fileArray[imgIndex];
-    imgIndex++;
-
-    // Resolution gate — same 1500px min as single upload
-    const shortSide = await checkResolution(file);
-    if (shortSide < 1500) {
-      allResults.push({ filename: file.name, status: `skipped — image too small (${shortSide}px short side, minimum 1500px required)`, score: null, tier: null });
-      overlayStatus.textContent = `Skipped ${file.name} — too small`;
-      overlaySub.textContent = `Minimum 1500px required. Moving to next image…`;
-      await sendNext();
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append('image', file);
-    fd.append('genre', genre);
-    fd.append('photographer_name', photographer);
-    fd.append('is_public', is_public);
-    fd.append('camera_track', form.querySelector('[name="camera_track"]:checked')?.value || '');
-    fd.append('sub_genre',    (form.querySelector('[name="sub_genre"]')?.value || ''));
-    fd.append('location',     (form.querySelector('[name="bulk_location"]')?.value || ''));
-    fd.append('subject',      (form.querySelector('[name="bulk_subject"]')?.value || ''));
-    fd.append('species_hint', (form.querySelector('[name="bulk_species_hint"]')?.value || ''));
-
-    try {
-      const resp = await fetch('/bulk-upload/one', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: fd
-      });
-      if (!resp.ok) {
-        allResults.push({ filename: file.name, status: 'server error ' + resp.status });
-      } else {
-        const data = await resp.json();
-        allResults.push(data);
-      }
-    } catch(err) {
-      allResults.push({ filename: file.name, status: 'network error — check dashboard' });
-    }
-
-    await sendNext();
-  }
-
-  sendNext();
-});
-
-}); // end DOMContentLoaded
-
-// ── Sub-genre + species JS (parity with upload.html) ──────────────────
-const BULK_SUBGENRE_MAP = {{ subgenre_map_json | safe }};
-var _bulkSubGenreOpen = false;
-
 function updateBulkSubGenre(genreValue) {
   var subs = BULK_SUBGENRE_MAP[genreValue] || [];
-  var sel  = document.getElementById('bulk_sub_genre');
+  var sel       = document.getElementById('bulk_sub_genre');
   var toggleRow = document.getElementById('bulk-sub-genre-toggle-row');
   var subRow    = document.getElementById('bulk-sub-genre-row');
   var speciesRow = document.getElementById('bulk-species-row');
@@ -766,9 +522,11 @@ function toggleBulkSubGenre(e) {
   if (!_bulkSubGenreOpen) document.getElementById('bulk_sub_genre').value = '';
 }
 
+// ── Sub-genre map (injected by Flask) ─────────────────────────────────────────
+const BULK_SUBGENRE_MAP = {{ subgenre_map_json | safe }};
+var _bulkSubGenreOpen = false;
 
-
-// ── Audio — context created at submit (user gesture), played at completion ──
+// ── Audio ─────────────────────────────────────────────────────────────────────
 var _audioCtx = null;
 function _initAudio() {
   try {
@@ -794,17 +552,241 @@ function playBowl() {
 function haptic() { try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch(e) {} }
 function notifyComplete() { playBowl(); haptic(); }
 
-// Gallery toggle
-(function() {
-  const cb = document.getElementById('isPublicToggle');
+// ── DOMContentLoaded — wire up DOM-dependent listeners ───────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  initPage();
+
+  input     = document.getElementById('filesInput');
+  dropzone  = document.getElementById('dropzone');
+  form      = document.getElementById('bulkForm');
+  submitBtn = document.getElementById('submitBtn');
+
+  document.getElementById('modalCheckbox').addEventListener('change', function() {
+    const btn = document.getElementById('agreeBtn');
+    btn.disabled = !this.checked;
+    btn.style.opacity = this.checked ? '1' : '0.4';
+    btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
+  });
+
+  var genreEl = document.querySelector('[name="genre"]');
+  if (genreEl) genreEl.addEventListener('change', function() { updateBulkSubGenre(this.value); });
+
+  input.addEventListener('change', function() {
+    selectedFiles = input.files;
+    showFiles(selectedFiles);
+  });
+
+  // Gallery toggle
+  const cb    = document.getElementById('isPublicToggle');
   const track = document.getElementById('bulkToggleTrack');
   const thumb = document.getElementById('bulkToggleThumb');
   const label = document.getElementById('bulkToggleLabel');
-  if (!cb) return;
-  cb.addEventListener('change', function() {
-    if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
-    else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
-  });
-})();
+  if (cb) {
+    cb.addEventListener('change', function() {
+      if (this.checked) { track.style.background = 'var(--gold)'; thumb.style.left = '23px'; label.style.color = 'var(--gold)'; label.textContent = 'Public'; }
+      else { track.style.background = 'var(--border)'; thumb.style.left = '3px'; label.style.color = 'var(--text-muted)'; label.textContent = 'Hidden'; }
+    });
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const files = selectedFiles || input.files;
+    if (!files || !files.length) { alert('Please select images first.'); return; }
+
+    const trackSelected = document.querySelector('input[name="camera_track"]:checked');
+    if (!trackSelected) {
+      document.getElementById('bulkTrackHint').style.display = 'block';
+      document.getElementById('bulkTrackHint').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    let oversized = [];
+    for (let f of files) {
+      if (f.size > 0 && f.size > MAX_MB * 1024 * 1024) oversized.push(f.name);
+    }
+    if (oversized.length) {
+      alert(
+        `These files exceed 20 MB — please reduce their size before uploading:\n` +
+        oversized.join('\n') +
+        `\n\nOn iPhone: share → choose "Medium" size.\nOn Samsung: use Gallery resize option.`
+      );
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing…';
+    _initAudio();
+
+    const total         = Math.min(files.length, 10);
+    const overlay       = document.getElementById('scoringOverlay');
+    const clockRing     = document.getElementById('clockRing');
+    const clockSecs     = document.getElementById('clockSecs');
+    const overlayPhase  = document.getElementById('overlayPhase');
+    const overlayStatus = document.getElementById('overlayStatus');
+    const overlaySub    = document.getElementById('overlaySubstatus');
+    const breathLabel   = document.getElementById('breathLabel');
+    const PER_IMAGE     = 35;
+    const CIRCUMFERENCE = 195;
+
+    overlay.classList.add('active');
+    document.getElementById('overlayError').style.display = 'none';
+    clockSecs.textContent = PER_IMAGE;
+
+    const VIBGYOR = [
+      { ring: 'rgba(148,0,211,0.85)',  glow: 'rgba(148,0,211,0.25)',  dot: '#9400D3' },
+      { ring: 'rgba(75,0,130,0.85)',   glow: 'rgba(75,0,130,0.25)',   dot: '#4B0082' },
+      { ring: 'rgba(0,0,255,0.85)',    glow: 'rgba(0,0,255,0.25)',    dot: '#0000FF' },
+      { ring: 'rgba(0,168,107,0.85)',  glow: 'rgba(0,168,107,0.25)',  dot: '#00A86B' },
+      { ring: 'rgba(255,191,0,0.85)',  glow: 'rgba(255,191,0,0.25)',  dot: '#FFBF00' },
+      { ring: 'rgba(255,127,0,0.85)',  glow: 'rgba(255,127,0,0.25)',  dot: '#FF7F00' },
+      { ring: 'rgba(255,0,0,0.85)',    glow: 'rgba(255,0,0,0.25)',    dot: '#FF0000' },
+    ];
+    let breathColorIdx = 0;
+    const breathRing = document.querySelector('.breath-ring-hero');
+    const breathDot  = document.querySelector('.breath-inner-dot');
+
+    function applyBreathColor(idx) {
+      const c = VIBGYOR[idx % VIBGYOR.length];
+      if (breathRing) {
+        breathRing.style.borderColor = c.ring;
+        breathRing.style.boxShadow   = `0 0 48px 10px ${c.glow}`;
+        breathRing.style.background  = `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`;
+      }
+      if (breathDot) breathDot.style.background = c.dot;
+    }
+    applyBreathColor(breathColorIdx);
+
+    let breathPhase = 0;
+    const breathCycle = setInterval(() => {
+      breathPhase = (breathPhase + 1) % 2;
+      if (breathLabel) breathLabel.textContent = breathPhase === 0 ? 'Inhale' : 'Exhale';
+      breathColorIdx = (breathColorIdx + 1) % VIBGYOR.length;
+      applyBreathColor(breathColorIdx);
+    }, 4000);
+
+    let secs = 0;
+    const ticker = setInterval(() => {
+      secs++;
+      const imgNum  = Math.min(Math.ceil(secs / PER_IMAGE), total);
+      const imgSecs = ((secs - 1) % PER_IMAGE) + 1;
+      clockSecs.textContent = imgSecs;
+      clockRing.style.strokeDashoffset = CIRCUMFERENCE - ((imgSecs / PER_IMAGE) * CIRCUMFERENCE);
+      if (imgSecs < 4)       { overlayPhase.textContent = `UPLOADING ${imgNum}/${total}`;  overlayStatus.textContent = `Sending image ${imgNum} of ${total}…`;        overlaySub.textContent = 'Transferring to server.'; }
+      else if (imgSecs < 10) { overlayPhase.textContent = `ANALYSING ${imgNum}/${total}`;  overlayStatus.textContent = `DDI Engine scoring image ${imgNum}…`;          overlaySub.textContent = 'DoD · Disruption · DM · Wonder · AQ'; }
+      else if (imgSecs < 28) { overlayPhase.textContent = `SCORING ${imgNum}/${total}`;    overlayStatus.textContent = `Calculating DDI score for image ${imgNum}…`;   overlaySub.textContent = 'Applying genre weights and safeguards.'; }
+      else                   { overlayPhase.textContent = `FINALISING ${imgNum}/${total}`; overlayStatus.textContent = `Generating score card for image ${imgNum}…`;   overlaySub.textContent = 'Building archetype and improvement tip.'; }
+    }, 1000);
+
+    function showOverlayError(msg) {
+      clearInterval(ticker); clearInterval(breathCycle);
+      document.getElementById('overlayErrorMsg').textContent = msg;
+      document.getElementById('overlayError').style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = '⬆ Upload & Auto-Score All';
+    }
+
+    const genre        = form.querySelector('[name="genre"]').value;
+    const photographer = form.querySelector('[name="photographer_name"]').value;
+    const is_public    = form.querySelector('[name="is_public"]') &&
+                         form.querySelector('[name="is_public"]').checked ? '1' : '0';
+    const fileArray    = Array.from(files).slice(0, 10);
+
+    async function checkResolution(file) {
+      return new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = ev => {
+          const img = new window.Image();
+          img.onload  = () => resolve(Math.min(img.naturalWidth, img.naturalHeight));
+          img.onerror = () => resolve(9999);
+          img.src = ev.target.result;
+        };
+        r.onerror = () => resolve(9999);
+        r.readAsDataURL(file);
+      });
+    }
+
+    const allResults = [];
+    let imgIndex = 0;
+
+    async function sendNext() {
+      if (imgIndex >= fileArray.length) {
+        clearInterval(ticker); clearInterval(breathCycle);
+        notifyComplete();
+        clockSecs.textContent = '✓';
+        clockRing.style.strokeDashoffset = '0';
+        clockRing.style.stroke = 'rgba(200,168,75,0.9)';
+        overlayPhase.textContent = 'COMPLETE';
+        if (breathLabel) breathLabel.textContent = '🙏';
+        sessionStorage.removeItem('bulk_processing');
+
+        const scored  = allResults.filter(r => r.score);
+        const skipped = allResults.filter(r => !r.score && r.status && r.status.startsWith('skipped'));
+        const errors  = allResults.filter(r => !r.score && r.status && (r.status.includes('error') || r.status.includes('duplicate')));
+
+        let summaryLines = [];
+        if (scored.length)  summaryLines.push(`${scored.length} scored`);
+        if (skipped.length) summaryLines.push(`${skipped.length} skipped (too small)`);
+        if (errors.length)  summaryLines.push(`${errors.length} failed`);
+        overlayStatus.textContent = summaryLines.join(' · ') || 'Done';
+
+        let breakdown = allResults.map(r => {
+          if (r.score) return `✓ ${r.filename} — ${r.score} ${r.tier || ''}`;
+          if (r.status && r.status.startsWith('skipped')) return `⚠ ${r.filename} — ${r.status}`;
+          return `✗ ${r.filename} — ${r.status || 'unknown error'}`;
+        }).join(' · ');
+        overlaySub.textContent = breakdown;
+
+        setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
+        return;
+      }
+
+      const file = fileArray[imgIndex];
+      imgIndex++;
+
+      const shortSide = await checkResolution(file);
+      if (shortSide < 1500) {
+        allResults.push({ filename: file.name, status: `skipped — image too small (${shortSide}px short side, minimum 1500px required)`, score: null, tier: null });
+        overlayStatus.textContent = `Skipped ${file.name} — too small`;
+        overlaySub.textContent = `Minimum 1500px required. Moving to next image…`;
+        await sendNext();
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('genre', genre);
+      fd.append('photographer_name', photographer);
+      fd.append('is_public', is_public);
+      fd.append('camera_track', form.querySelector('[name="camera_track"]:checked')?.value || '');
+      fd.append('sub_genre',    (form.querySelector('[name="sub_genre"]')?.value || ''));
+      fd.append('location',     (form.querySelector('[name="bulk_location"]')?.value || ''));
+      fd.append('subject',      (form.querySelector('[name="bulk_subject"]')?.value || ''));
+      fd.append('species_hint', (form.querySelector('[name="bulk_species_hint"]')?.value || ''));
+
+      try {
+        const resp = await fetch('/bulk-upload/one', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: fd
+        });
+        if (!resp.ok) {
+          allResults.push({ filename: file.name, status: 'server error ' + resp.status });
+        } else {
+          const data = await resp.json();
+          allResults.push(data);
+        }
+      } catch(err) {
+        allResults.push({ filename: file.name, status: 'network error — check dashboard' });
+      }
+
+      await sendNext();
+    }
+
+    sendNext();
+  }); // end form.addEventListener('submit')
+
+}); // end DOMContentLoaded
 </script>
 {% endblock %}
