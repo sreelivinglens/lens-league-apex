@@ -16358,8 +16358,10 @@ def _aea_eligibility(user_id, year):
     """
     if year == 2026:
         season_start = date(2026, 9, 1)
+        qualifying_start = date(2026, 1, 1)  # pre-Sep months count toward eligibility
     else:
         season_start = date(year, 1, 1)
+        qualifying_start = date(year, 1, 1)
     season_end = date(year, 12, 31)
     season_end_excl = date(year + 1, 1, 1)
 
@@ -16375,16 +16377,16 @@ def _aea_eligibility(user_id, year):
         WHERE user_id = :uid
           AND is_public = TRUE
           AND score IS NOT NULL
-          AND created_at >= :season_start
+          AND created_at >= :qualifying_start
           AND created_at < :season_end_excl
     """)
     qualifying_months = db.session.execute(qm_sql, {
         'uid': user_id,
-        'season_start': season_start,
+        'qualifying_start': qualifying_start,
         'season_end_excl': season_end_excl,
     }).scalar() or 0
 
-    required_months = 6
+    required_months = 3 if year == 2026 else 6
 
     pool_sql = db.text("""
         SELECT i.id, i.asset_name, i.score, i.genre,
