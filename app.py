@@ -3926,6 +3926,14 @@ def upload():
                                 _img.is_public     = True
                                 _img.flagged_reason = None
                                 _img.scoring_flash  = None  # clear hold message
+                                # Save audit if not already present
+                                if not _img.audit_json:
+                                    try:
+                                        from engine.auto_score import build_audit_data
+                                        audit = build_audit_data(result, _img)
+                                        _img.set_audit(audit)
+                                    except Exception as _bf_audit_err:
+                                        app.logger.warning(f'[scoring] breastfeeding audit save failed: {_bf_audit_err}')
                                 db.session.commit()
                                 app.logger.info(
                                     f'[scoring] breastfeeding whitelist cleared: '
