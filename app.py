@@ -3934,7 +3934,7 @@ def upload():
                                 _img.status        = 'scored'
                                 _img.scored_at     = _img.scored_at or datetime.utcnow()
                                 # Save audit if not already present
-                                if not _img.audit_json:
+                                if not _img.get_audit():
                                     try:
                                         audit = build_audit_data(result, _img)
                                         _img.set_audit(audit)
@@ -16435,6 +16435,12 @@ def _aea_eligibility(user_id, year):
         'season_end': season_end.strftime('%d %b %Y').lstrip('0'),
         'image_pool': image_pool,
     }
+
+
+@app.route('/aea/standings')
+@login_required
+def aea_standings():
+    return redirect(url_for('poty'))
 
 
 @app.route('/aea')
