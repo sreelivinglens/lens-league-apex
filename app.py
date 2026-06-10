@@ -3939,6 +3939,17 @@ def upload():
                                 _img.scoring_flash  = None  # clear hold message
                                 _img.status        = 'scored'
                                 _img.scored_at     = _img.scored_at or datetime.utcnow()
+                                # Write scores if not already present from cache
+                                if not _img.score:
+                                    _img.score            = float(result.get('score', 0))
+                                    _img.tier             = get_tier(float(result.get('score', 0)))
+                                    _img.dod_score        = float(result.get('dod', 0))
+                                    _img.disruption_score = float(result.get('disruption', 0))
+                                    _img.dm_score         = float(result.get('dm', 0))
+                                    _img.wonder_score     = float(result.get('wonder', 0))
+                                    _img.aq_score         = float(result.get('aq', 0))
+                                    _img.archetype        = result.get('archetype', '')
+                                    _img.soul_bonus       = result.get('soul_bonus', False)
                                 # Save audit if not already present
                                 if not _img.get_audit():
                                     try:
