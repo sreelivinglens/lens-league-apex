@@ -1250,11 +1250,6 @@
     box-sizing: border-box;
     cursor: pointer;
   }
-  /* Per-card tap-hint colour overrides — all cards have light backgrounds */
-  #db-hcard-standing  .db-hcard-tap-hint { color: #1A2744; background: rgba(42,74,122,0.10);  border-color: rgba(42,74,122,0.20); }
-  #db-hcard-points    .db-hcard-tap-hint { color: #085041; background: rgba(15,110,86,0.10);  border-color: rgba(15,110,86,0.20); }
-  #db-hcard-poty      .db-hcard-tap-hint { color: #7A5800; background: rgba(160,120,32,0.10); border-color: rgba(160,120,32,0.20); }
-  #db-hcard-referrals .db-hcard-tap-hint { color: var(--text-primary); background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
 
   /* ── Body: WHITE background, black text ── */
   .db-hcard-body {
@@ -1829,6 +1824,7 @@
         <div class="db-hcard-qs-item">Best DDI <span class="db-hcard-qs-val">{{ stats.best_score or '—' }}</span></div>
         <div class="db-hcard-qs-item">Avg score <span class="db-hcard-qs-val">{{ '%.1f'|format(stats.avg_score) if stats.avg_score else '—' }}</span></div>
         <div class="db-hcard-qs-item">Scored <span class="db-hcard-qs-val">{{ stats.scored }}</span></div>
+        <div class="db-hcard-qs-item">Upload credits <span class="db-hcard-qs-val">{{ current_user.upload_credits_balance or 0 }}</span></div>
         <div class="db-hcard-qs-item">Peer credits <span class="db-hcard-qs-val">{{ rating_widget.credits if rating_widget else '—' }}</span></div>
         <div class="db-hcard-qs-item">Total images <span class="db-hcard-qs-val">{{ stats.total }}</span></div>
       </div>
