@@ -431,12 +431,11 @@ function initPage() {
   {% endif %}
 }
 
-document.getElementById('modalCheckbox').addEventListener('change', function() {
-  const btn = document.getElementById('agreeBtn');
-  btn.disabled = !this.checked;
-  btn.style.opacity = this.checked ? '1' : '0.4';
-  btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
-});
+let selectedFiles = null;  // stores files from either drag-drop or file picker
+let input    = null;
+let dropzone = null;
+let form     = null;
+let submitBtn = null;
 
 function proceedToUpload() {
   if (!document.getElementById('modalCheckbox').checked) return;
@@ -445,12 +444,32 @@ function proceedToUpload() {
   document.getElementById('uploadContent').style.display = 'block';
 }
 
-const input    = document.getElementById('filesInput');
-const dropzone = document.getElementById('dropzone');
-let selectedFiles = null;  // stores files from either drag-drop or file picker
+document.addEventListener('DOMContentLoaded', function() {
+  initPage();
+
+  input    = document.getElementById('filesInput');
+  dropzone = document.getElementById('dropzone');
+  form     = document.getElementById('bulkForm');
+  submitBtn = document.getElementById('submitBtn');
+
+  document.getElementById('modalCheckbox').addEventListener('change', function() {
+    const btn = document.getElementById('agreeBtn');
+    btn.disabled = !this.checked;
+    btn.style.opacity = this.checked ? '1' : '0.4';
+    btn.style.cursor  = this.checked ? 'pointer' : 'not-allowed';
+  });
+
+  var genreEl = document.querySelector('[name="genre"]');
+  if (genreEl) genreEl.addEventListener('change', function() { updateBulkSubGenre(this.value); });
+
+  input.addEventListener('change', () => {
+    selectedFiles = input.files;
+    showFiles(selectedFiles);
+  });
 
 function handleDrop(e) {
-  e.preventDefault(); dropzone.classList.remove('dragover');
+  e.preventDefault();
+  if (dropzone) dropzone.classList.remove('dragover');
   selectedFiles = e.dataTransfer.files;
   showFiles(selectedFiles);
 }
@@ -487,11 +506,6 @@ function showFiles(files) {
   sw.style.display = hasLarge ? 'block' : 'none';
 }
 
-input.addEventListener('change', () => {
-  selectedFiles = input.files;
-  showFiles(selectedFiles);
-});
-
 function dismissOverlayError() {
   document.getElementById('scoringOverlay').classList.remove('active');
   document.getElementById('overlayError').style.display = 'none';
@@ -499,10 +513,7 @@ function dismissOverlayError() {
   document.getElementById('submitBtn').textContent = '⬆ Upload & Auto-Score All';
 }
 
-const form      = document.getElementById('bulkForm');
-const submitBtn = document.getElementById('submitBtn');
-
-form.addEventListener('submit', function(e) {
+  form.addEventListener('submit', function(e) {
   e.preventDefault();
 
   const files = selectedFiles || input.files;
@@ -714,6 +725,8 @@ form.addEventListener('submit', function(e) {
   sendNext();
 });
 
+}); // end DOMContentLoaded
+
 // ── Sub-genre + species JS (parity with upload.html) ──────────────────
 const BULK_SUBGENRE_MAP = {{ subgenre_map_json | safe }};
 var _bulkSubGenreOpen = false;
@@ -754,12 +767,7 @@ function toggleBulkSubGenre(e) {
   if (!_bulkSubGenreOpen) document.getElementById('bulk_sub_genre').value = '';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var genreEl = document.querySelector('[name="genre"]');
-  if (genreEl) genreEl.addEventListener('change', function() { updateBulkSubGenre(this.value); });
-});
 
-window.addEventListener('DOMContentLoaded', initPage);
 
 // ── Audio — context created at submit (user gesture), played at completion ──
 var _audioCtx = null;
