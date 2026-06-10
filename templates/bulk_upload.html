@@ -669,8 +669,7 @@ function dismissOverlayError() {
         if (r.score) return `✓ ${r.filename} — ${r.score} ${r.tier || ''}`;
         if (r.status && r.status.startsWith('skipped')) return `⚠ ${r.filename} — ${r.status}`;
         return `✗ ${r.filename} — ${r.status || 'unknown error'}`;
-      }).join('
-');
+      }).join(' · ');
       overlaySub.textContent = breakdown;
 
       // Give user time to read summary before redirecting
