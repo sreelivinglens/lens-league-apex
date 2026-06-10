@@ -10174,13 +10174,21 @@ def bulk_upload_one():
             result = {'filename': file.filename, 'score': None,
                       'tier': None, 'status': 'uploaded'}
 
-        # ── Breastfeeding flag — hold pending sub-genre check ─────────────────
+        # ── Breastfeeding flag ────────────────────────────────────────────────
+        # bulk_upload_one scores synchronously so sub_genre is already known.
+        # If engine detected lifestyle_intimate — auto-approve, no hold needed.
+        # Any other sub-genre — hold for admin review.
         if _bulk_nsfw_breastfeeding:
-            img.needs_review   = True
-            img.is_public      = False
-            img.flagged_reason = 'Breastfeeding content detected — held pending sub-genre check.'
-            img.flagged_at     = datetime.utcnow()
-            app.logger.info(f'[bulk_upload_one] breastfeeding flag set: image={img.id}')
+            _bf_subgenre = (img.sub_genre or '').strip().lower()
+            if _bf_subgenre == 'lifestyle_intimate':
+                # Whitelisted — fine art documentary, already public from scoring
+                app.logger.info(f'[bulk_upload_one] breastfeeding whitelisted: image={img.id} subgenre={_bf_subgenre}')
+            else:
+                img.needs_review   = True
+                img.is_public      = False
+                img.flagged_reason = f'Breastfeeding content detected — held for admin review. Sub-genre: {_bf_subgenre or "undetected"}.'
+                img.flagged_at     = datetime.utcnow()
+                app.logger.info(f'[bulk_upload_one] breastfeeding flag set: image={img.id} subgenre={_bf_subgenre}')
 
         db.session.commit()
 
