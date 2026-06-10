@@ -2293,7 +2293,7 @@
       <div class="rp-icon upcoming">3</div>
       <div class="rp-body">
         <p class="rp-label upcoming">Shoot every month — every month counts</p>
-        <p class="rp-desc">{% if _pre_season|default(true) %}Keep shooting now — your standing, tier, and average build continuously from today. The 2026 season runs September to December — 4 months. Upload at least one scored image across 3 of those months to become eligible. Genre specialist or all-rounder — your choice.{% else %}Shoot at least once every month — each active month counts. Upload at least one scored image in 3 of the 4 season months to become eligible for the Annual Excellence Award. Genre specialist or all-rounder — your choice.{% endif %}</p>
+        <p class="rp-desc">{% if _pre_season|default(true) %}Score at least one image every month — July, August, September, October, November, December all count toward your eligibility. Genre specialist or all-rounder — your choice.{% else %}Score at least one image in 3 of the 4 season months to be eligible. Genre specialist or all-rounder — your choice.{% endif %}</p>
       </div>
     </div>
   </div>
@@ -2322,7 +2322,7 @@
           <p class="rp-bar-label">{{ _months_active|default(0) }} of 6 months active · 2026 season: 1 September – 31 December {% for i in range(_months_active|default(0)) %}●{% endfor %}{% for i in range(6 - _months_active|default(0)) %}○{% endfor %}</p>
         {% endif %}
         {% if _months_active|default(0) == 0 %}
-        <p class="rp-desc active">{% if _pre_season|default(true) %}The 2026 Annual Excellence Award season opens 1 September 2026 and runs until 31 December 2026. Keep shooting now — your standing, tier, and average build continuously. Upload at least one scored image in 3 of the 4 season months to become eligible.{% else %}The 2026 Annual Excellence Award season opens 1 September 2026 and runs until 31 December 2026. Upload at least one scored image in at least 3 of the 4 season months to become eligible to participate.{% endif %}</p>
+        <p class="rp-desc active">{% if _pre_season|default(true) %}The Annual Excellence Award 2026 opens 1 September and closes 31 December 2026. Every month you score at least one image counts — July, August, September all count. Keep shooting every month between now and December and you will be eligible.{% else %}The Annual Excellence Award 2026 is open and runs until 31 December 2026. Score at least one image in 3 of the 4 season months — September, October, November, December — to be eligible. Joining in October? You still qualify.{% endif %}</p>
         {% else %}
         <p class="rp-desc active">You are active for {{ _months_active|default(0) }} month{{ 's' if _months_active|default(0) != 1 }} this season (started {{ _season_start_label|default('1 September 2026') }}). Keep shooting every month — each active month brings you closer to the Annual Excellence Award. You need at least 3 active months across the 4-month 2026 season to be eligible.</p>
         {% endif %}
