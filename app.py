@@ -9931,6 +9931,98 @@ def bulk_upload_one():
 
         thumb_url = _r2_upload_thumb(thumb_path, uid)
 
+        # ── Watermark detection ───────────────────────────────────────────────
+        try:
+            _bwm_key = os.getenv('ANTHROPIC_API_KEY', '')
+            if _bwm_key and os.path.exists(thumb_path):
+                import base64 as _bwm_b64, urllib.request as _bwm_ur, json as _bwm_json
+                from PIL import Image as _PILBWM
+                import io as _bwm_io
+                _bwm_pil = _PILBWM.open(thumb_path).convert('RGB')
+                if max(_bwm_pil.size) > 1024: _bwm_pil.thumbnail((1024, 1024))
+                _bwm_buf = _bwm_io.BytesIO()
+                _bwm_pil.save(_bwm_buf, format='JPEG', quality=80)
+                _bwm_payload = _bwm_json.dumps({
+                    'model': 'claude-haiku-4-5-20251001', 'max_tokens': 100,
+                    'messages': [{'role': 'user', 'content': [
+                        {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                            'data': _bwm_b64.b64encode(_bwm_buf.getvalue()).decode('utf-8')}},
+                        {'type': 'text', 'text': (
+                            'Does this photograph contain a photographer-added watermark, text overlay, '
+                            'studio logo, social media handle (@username), copyright text, or any branding '
+                            'embedded into the image by the photographer? '
+                            'Do NOT flag: image content (signs, billboards, labels that are part of the scene), '
+                            'platform watermarks, or natural scene text. '
+                            'Only flag overlays added on top of the photograph after capture. '
+                            'Respond ONLY with JSON: {"watermark_detected": true/false, "description": "one short phrase or null"}'
+                        )}
+                    ]}]
+                }).encode('utf-8')
+                _bwm_req = _bwm_ur.Request('https://api.anthropic.com/v1/messages',
+                    data=_bwm_payload,
+                    headers={'Content-Type': 'application/json', 'x-api-key': _bwm_key,
+                             'anthropic-version': '2023-06-01'}, method='POST')
+                with _bwm_ur.urlopen(_bwm_req, timeout=15) as _bwm_resp:
+                    _bwm_result = _bwm_json.loads(_bwm_resp.read().decode())
+                _bwm_text = _bwm_result.get('content', [{}])[0].get('text', '{}')
+                _bwm_text = _bwm_text.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _bwm_data = _bwm_json.loads(_bwm_text)
+                if _bwm_data.get('watermark_detected'):
+                    if os.path.exists(thumb_path): os.remove(thumb_path)
+                    app.logger.info(f'[bulk_upload_one] watermark rejected: {_bwm_data.get("description")} uid={current_user.id}')
+                    return jsonify({'filename': file.filename, 'status': 'rejected — watermark or logo detected. Please remove any added text or branding and re-upload the clean image.', 'score': None, 'tier': None}), 200
+        except Exception as _bwm_err:
+            app.logger.warning(f'[bulk_upload_one] watermark check failed (non-fatal): {_bwm_err}')
+
+        # ── NSFW / Nudity detection ───────────────────────────────────────────
+        _bulk_nsfw_breastfeeding = False
+        try:
+            _bnsfw_key = os.getenv('ANTHROPIC_API_KEY', '')
+            if _bnsfw_key and os.path.exists(thumb_path):
+                import base64 as _bnsfw_b64, urllib.request as _bnsfw_ur, json as _bnsfw_json
+                from PIL import Image as _PIL_bnsfw
+                import io as _bnsfw_io
+                _bnsfw_pil = _PIL_bnsfw.open(thumb_path).convert('RGB')
+                if max(_bnsfw_pil.size) > 1024: _bnsfw_pil.thumbnail((1024, 1024))
+                _bnsfw_buf = _bnsfw_io.BytesIO()
+                _bnsfw_pil.save(_bnsfw_buf, format='JPEG', quality=80)
+                _bnsfw_payload = _bnsfw_json.dumps({
+                    'model': 'claude-haiku-4-5-20251001', 'max_tokens': 80,
+                    'messages': [{'role': 'user', 'content': [
+                        {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                            'data': _bnsfw_b64.b64encode(_bnsfw_buf.getvalue()).decode('utf-8')}},
+                        {'type': 'text', 'text': (
+                            'Examine this photograph carefully. Respond ONLY with JSON — no other text. '
+                            'Return: {"nudity": true/false, "breastfeeding": true/false, "description": "one short phrase or null"} '
+                            'Where: '
+                            '"nudity" = true if the image contains explicit nudity, exposed genitalia, bare breasts '
+                            '(other than breastfeeding), or explicit sexual content. '
+                            'Fine art nude studies with no explicit or sexual context should still be flagged as nudity=true. '
+                            '"breastfeeding" = true ONLY if a mother is visibly breastfeeding an infant — '
+                            'this overrides nudity=true when present. '
+                            '"description" = one short phrase describing what was detected, or null if clean.'
+                        )}
+                    ]}]
+                }).encode('utf-8')
+                _bnsfw_req = _bnsfw_ur.Request('https://api.anthropic.com/v1/messages',
+                    data=_bnsfw_payload,
+                    headers={'Content-Type': 'application/json', 'x-api-key': _bnsfw_key,
+                             'anthropic-version': '2023-06-01'}, method='POST')
+                with _bnsfw_ur.urlopen(_bnsfw_req, timeout=20) as _bnsfw_resp:
+                    _bnsfw_result = _bnsfw_json.loads(_bnsfw_resp.read().decode('utf-8'))
+                _bnsfw_raw = _bnsfw_result.get('content', [{}])[0].get('text', '{}')
+                _bnsfw_raw = _bnsfw_raw.strip().lstrip('`').lstrip('json').strip('`').strip()
+                _bnsfw_data = _bnsfw_json.loads(_bnsfw_raw)
+                _bnsfw_reject = bool(_bnsfw_data.get('nudity', False))
+                _bulk_nsfw_breastfeeding = bool(_bnsfw_data.get('breastfeeding', False))
+                if _bulk_nsfw_breastfeeding: _bnsfw_reject = False
+                app.logger.info(f'[bulk_upload_one] nsfw: nudity={_bnsfw_reject} breastfeeding={_bulk_nsfw_breastfeeding} uid={current_user.id}')
+                if _bnsfw_reject:
+                    if os.path.exists(thumb_path): os.remove(thumb_path)
+                    return jsonify({'filename': file.filename, 'status': 'rejected — nudity or explicit content detected. Please re-upload a clean image.', 'score': None, 'tier': None}), 200
+        except Exception as _bnsfw_err:
+            app.logger.warning(f'[bulk_upload_one] nsfw check failed (non-fatal): {_bnsfw_err}')
+
         from models import Image as ImageModel
         img = ImageModel(
             user_id          = current_user.id,
@@ -9965,7 +10057,7 @@ def bulk_upload_one():
                 _bulk_cache_row = db.session.execute(
                     db.text(
                         "SELECT score, tier, dod_score, disruption_score, dm_score, "
-                        "wonder_score, aq_score, archetype, soul_bonus, original_image_id "
+                        "wonder_score, aq_score, archetype, soul_bonus "
                         "FROM scored_phash_cache "
                         "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
                         "ORDER BY scored_at DESC LIMIT 1"
@@ -9976,24 +10068,6 @@ def bulk_upload_one():
                     _bulk_cached = dict(_bulk_cache_row._mapping)
             except Exception as _bce:
                 app.logger.warning(f'[bulk_upload_one] cache lookup failed: {_bce}')
-
-            # If cache hit but original image has no audit_json, fall through to engine
-            if _bulk_cached:
-                _orig_id = _bulk_cached.get('original_image_id')
-                _has_audit = False
-                if _orig_id:
-                    try:
-                        _audit_check = db.session.execute(
-                            db.text("SELECT audit_json FROM images WHERE id = :iid"),
-                            {'iid': _orig_id}
-                        ).fetchone()
-                        if _audit_check and _audit_check[0]:
-                            _has_audit = True
-                    except Exception:
-                        pass
-                if not _has_audit:
-                    app.logger.info(f'[bulk_upload_one] cache hit but no audit on original {_orig_id} — falling through to engine')
-                    _bulk_cached = None
 
             if _bulk_cached:
                 img.dod_score        = _bulk_cached.get('dod_score') or 0.0
@@ -10007,11 +10081,12 @@ def bulk_upload_one():
                 img.soul_bonus       = bool(_bulk_cached.get('soul_bonus', False))
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
-                # Copy audit_json from original image
+                # Copy audit_json from original image so detail page shows full evaluation
                 _orig_id = _bulk_cached.get('original_image_id')
                 if _orig_id:
                     try:
-                        _orig = Image.query.get(_orig_id)
+                        from models import Image as _OrigImg
+                        _orig = _OrigImg.query.get(_orig_id)
                         if _orig and _orig.audit_json:
                             img.audit_json = _orig.audit_json
                     except Exception as _ae:
@@ -10073,6 +10148,14 @@ def bulk_upload_one():
             img.status = 'pending'
             result = {'filename': file.filename, 'score': None,
                       'tier': None, 'status': 'uploaded'}
+
+        # ── Breastfeeding flag — hold pending sub-genre check ─────────────────
+        if _bulk_nsfw_breastfeeding:
+            img.needs_review   = True
+            img.is_public      = False
+            img.flagged_reason = 'Breastfeeding content detected — held pending sub-genre check.'
+            img.flagged_at     = datetime.utcnow()
+            app.logger.info(f'[bulk_upload_one] breastfeeding flag set: image={img.id}')
 
         db.session.commit()
 
