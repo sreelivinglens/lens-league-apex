@@ -3654,6 +3654,7 @@ def upload():
                 from engine.auto_score import auto_score, build_audit_data, build_exif_context
                 from engine.compositor import build_card1
                 with app.app_context():
+                    audit = None  # initialise — prevents UnboundLocalError on all paths
                     try:
                         _img = Image.query.get(image_id)
                         if not _img:
@@ -3926,10 +3927,11 @@ def upload():
                                 _img.is_public     = True
                                 _img.flagged_reason = None
                                 _img.scoring_flash  = None  # clear hold message
+                                _img.status        = 'scored'
+                                _img.scored_at     = _img.scored_at or datetime.utcnow()
                                 # Save audit if not already present
                                 if not _img.audit_json:
                                     try:
-                                        from engine.auto_score import build_audit_data
                                         audit = build_audit_data(result, _img)
                                         _img.set_audit(audit)
                                     except Exception as _bf_audit_err:
