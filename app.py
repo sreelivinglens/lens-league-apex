@@ -3939,17 +3939,6 @@ def upload():
                                 _img.scoring_flash  = None  # clear hold message
                                 _img.status        = 'scored'
                                 _img.scored_at     = _img.scored_at or datetime.utcnow()
-                                # Write scores if not already present from cache
-                                if not _img.score:
-                                    _img.score            = float(result.get('score', 0))
-                                    _img.tier             = get_tier(float(result.get('score', 0)))
-                                    _img.dod_score        = float(result.get('dod', 0))
-                                    _img.disruption_score = float(result.get('disruption', 0))
-                                    _img.dm_score         = float(result.get('dm', 0))
-                                    _img.wonder_score     = float(result.get('wonder', 0))
-                                    _img.aq_score         = float(result.get('aq', 0))
-                                    _img.archetype        = result.get('archetype', '')
-                                    _img.soul_bonus       = result.get('soul_bonus', False)
                                 # Save audit if not already present
                                 if not _img.get_audit():
                                     try:
@@ -15245,270 +15234,20 @@ def send_welcome_email(user):
     accepted_date = user.terms_accepted_at.strftime('%d %b %Y') if user.terms_accepted_at else 'today'
     master_img    = 'https://pub-1b176cd1cfcc4e699e024f0907bef610.r2.dev/thumbs/b0ce03d1-b5b1-4b42-914f-8964b4a6ca43.jpg'
 
-    p = []
-
-    # Wrapper open
-    p.append(
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1.0,shrink-to-fit=no"></head>'
-        '<body style="margin:0;padding:0;background:#F5F0E8;font-family:Georgia,serif;">'
-        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:24px 12px;">'
-        '<tr><td align="center">'
-        '<table cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #E0D8C8;'
-        'border-radius:8px;overflow:hidden;max-width:560px;width:100%;">'
+    html_body = render_template(
+        'email_welcome.html',
+        name          = name,
+        upload_url    = upload_url,
+        science_url   = science_url,
+        hiw_url       = hiw_url,
+        bow_url       = bow_url,
+        challenge_url = challenge_url,
+        portfolio_url = portfolio_url,
+        dashboard_url = dashboard_url,
+        terms_url     = terms_url,
+        accepted_date = accepted_date,
+        master_img    = master_img,
     )
-
-    # Header
-    p.append(
-        '<tr><td style="background:#1A2744;padding:20px 24px 0;">'
-        '<p style="margin:0;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:4px;color:#F5C518;text-transform:uppercase;">SHUTTER LEAGUE</p>'
-        '</td></tr>'
-        '<tr><td style="background:#1A2744;padding:8px 24px 22px;">'
-        '<h1 style="margin:0;font-size:24px;font-style:italic;font-weight:700;color:#F5C518;line-height:1.3;">'
-        'Welcome to Shutter League, ' + name + '.</h1>'
-        '</td></tr>'
-    )
-
-    # Score card
-    p.append(
-        '<tr><td style="background:#F5F0E8;border-bottom:1px solid #E0D8C8;">'
-        '<img src="' + master_img + '" width="560" alt="Flowers — Master level, Ashok Kochhar"'
-        ' style="display:block;width:100%;max-width:560px;height:auto;border:0;"'
-        ' onerror="this.style.display=\'none\'">'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;padding:14px 20px 4px;">'
-        '<tr><td>'
-        '<table cellpadding="0" cellspacing="0">'
-        '<tr>'
-        '<td style="font-size:40px;font-weight:700;color:#1A2744;font-family:Arial,sans-serif;'
-        'line-height:1;padding-right:10px;vertical-align:middle;">8.84</td>'
-        '<td style="vertical-align:middle;">'
-        '<p style="margin:0;font-family:Courier New,monospace;font-size:13px;font-weight:700;'
-        'letter-spacing:2px;color:#1A2744;text-transform:uppercase;">MASTER</p>'
-        '</td>'
-        '</tr>'
-        '</table>'
-        '<p style="margin:6px 0 2px;font-size:16px;font-weight:700;color:#1a1a18;">Flowers &middot; Creative</p>'
-        '<p style="margin:0 0 12px;font-size:14px;color:#6a6460;font-family:Courier New,monospace;">Ashok Kochhar</p>'
-        '</td></tr>'
-        '</table>'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;padding:0 20px 16px;border-collapse:separate;border-spacing:4px;">'
-        '<tr>'
-        '<td style="background:#1A2744;border-radius:4px;padding:8px 4px;text-align:center;width:20%;">'
-        '<p style="margin:0 0 2px;font-size:10px;color:rgba(255,255,255,0.55);font-family:Courier New,monospace;letter-spacing:1px;">DOD</p>'
-        '<p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">8.8</p>'
-        '</td>'
-        '<td style="background:#1A2744;border-radius:4px;padding:8px 4px;text-align:center;width:20%;">'
-        '<p style="margin:0 0 2px;font-size:10px;color:rgba(255,255,255,0.55);font-family:Courier New,monospace;letter-spacing:1px;">VD</p>'
-        '<p style="margin:0;font-size:16px;font-weight:700;color:#F5C518;font-family:Arial,sans-serif;">9.2</p>'
-        '</td>'
-        '<td style="background:#1A2744;border-radius:4px;padding:8px 4px;text-align:center;width:20%;">'
-        '<p style="margin:0 0 2px;font-size:10px;color:rgba(255,255,255,0.55);font-family:Courier New,monospace;letter-spacing:1px;">DM</p>'
-        '<p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">8.5</p>'
-        '</td>'
-        '<td style="background:#1A2744;border-radius:4px;padding:8px 4px;text-align:center;width:20%;">'
-        '<p style="margin:0 0 2px;font-size:10px;color:rgba(255,255,255,0.55);font-family:Courier New,monospace;letter-spacing:1px;">WF</p>'
-        '<p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">9.0</p>'
-        '</td>'
-        '<td style="background:#1A2744;border-radius:4px;padding:8px 4px;text-align:center;width:20%;">'
-        '<p style="margin:0 0 2px;font-size:10px;color:rgba(255,255,255,0.55);font-family:Courier New,monospace;letter-spacing:1px;">AQ</p>'
-        '<p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">8.7</p>'
-        '</td>'
-        '</tr>'
-        '</table>'
-        '</td></tr>'
-    )
-
-    # Opening copy — Option A
-    p.append(
-        '<tr><td style="padding:24px 24px 8px;">'
-        '<p style="margin:0 0 12px;font-size:17px;color:#1a1a18;line-height:1.7;font-weight:700;">'
-        'Photography has always deserved an honest mirror.</p>'
-        '<p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'You joined because you want to know if your photograph is actually good.</p>'
-        '<p style="margin:0 0 14px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Not whether it gets likes. Not whether your friends say &#8220;wow.&#8221; '
-        'The honest answer &#8212; the one most platforms are built to avoid giving you.</p>'
-        '<p style="margin:0 0 24px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Shutter League gives you that answer. Every image you upload is evaluated by the '
-        '<strong style="color:#1a1a18;">Apex DDI Engine</strong> across five dimensions, scored 0&#8211;10. '
-        'You see exactly what&#39;s working and exactly what to fix. Then you shoot again.</p>'
-        '</td></tr>'
-    )
-
-    # DDI block — cream background
-    p.append(
-        '<tr><td style="padding:0 24px 24px;">'
-        '<table cellpadding="0" cellspacing="0" style="background:#F5F0E8;border:1px solid #E0D8C8;'
-        'border-radius:6px;width:100%;padding:20px 18px;">'
-        '<tr><td>'
-        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1A2744;text-transform:uppercase;">The Dimensional Depth Index</p>'
-        '<p style="margin:0 0 16px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'DDI was developed to evaluate the dimensions that shape how photographs communicate, '
-        'resonate, and hold attention &#8212; beyond technical perfection alone.</p>'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">1. Depth of Difficulty</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Technical execution, physical risk, access difficulty, and environmental challenge.</p>'
-        '</td></tr>'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">2. Visual Disruption</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Visual surprise, unconventional framing, breaks from convention.</p>'
-        '</td></tr>'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">3. Decisive Moment</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'Timing, anticipation, gesture, and the unrepeatable instant.</p>'
-        '</td></tr>'
-        '<tr><td style="padding:10px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">4. Wonder Factor</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'The feeling the image creates — compositional find, access, cultural depth, or specific named emotion.</p>'
-        '</td></tr>'
-        '<tr><td style="padding:10px 0;">'
-        '<p style="margin:0 0 2px;font-size:16px;font-weight:700;color:#1A2744;">5. Affective Quotient</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        'The specific emotion the image creates in the viewer — loneliness, joy, defiance, tenderness, awe.</p>'
-        '</td></tr>'
-        '</table>'
-        '<p style="margin:14px 0 0;font-size:16px;color:#1A2744;">'
-        '<a href="' + science_url + '" style="color:#1A2744;text-decoration:underline;margin-right:20px;">&#8594; Read the science</a>'
-        '<a href="' + hiw_url + '" style="color:#1A2744;text-decoration:underline;">&#8594; How it works</a></p>'
-        '</td></tr></table>'
-        '</td></tr>'
-    )
-
-    # Rank block
-    p.append(
-        '<tr><td style="padding:0 24px 24px;">'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
-        '<tr><td>'
-        '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Rank</p>'
-        '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
-        'Photography has never had the equivalent for 200 years &#8212; until now.</p>'
-        '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Your best scores build your Annual Excellence Award standing across eight tiers:</p>'
-        '<p style="margin:0 0 12px;font-size:16px;color:#1a1a18;line-height:2.1;">'
-        'Rookie &#8594; Shooter &#8594; Contender &#8594; Craftsman<br>'
-        'Maverick &#8594; Master &#8594; Grandmaster &#8594; <strong>Legend</strong></p>'
-        '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'The 2026 Annual Excellence Award season opens 1 September 2026. '
-        'Keep shooting now &#8212; your standing, tier, and average build continuously from the day you join. '
-        'Annual Excellence Award eligibility months count from September.</p>'
-        '<p style="margin:0;font-size:16px;color:#4A4840;line-height:1.75;font-style:italic;">'
-        'Consistency wins. One great image is not enough.</p>'
-        '</td></tr></table>'
-        '</td></tr>'
-    )
-
-    # Go Further block — 4 sections
-    p.append(
-        '<tr><td style="padding:0 24px 24px;">'
-        '<p style="margin:0 0 16px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">What Awaits You</p>'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">'
-
-        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Weekly Assignment</p>'
-        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Every week, a theme. Submit your best image &#8212; every image earns points just for participating. '
-        'Top 3 earn additional points. Results every Monday. '
-        'It is the fastest way to stretch your eye &#8212; one theme, one week, one image that has to say everything.</p>'
-        '<a href="' + challenge_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; See this week&#39;s challenge</a>'
-        '</td></tr>'
-
-        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Body of Work</p>'
-        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Not your best photographs &#8212; a story. Six to ten images connected by a theme, event, or point of view. '
-        'Submitted in December, evaluated by Legend-tier jury photographers. '
-        'Your most intentional work, recognised.</p>'
-        '<a href="' + bow_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; Learn about Body of Work</a>'
-        '</td></tr>'
-
-        '<tr><td style="padding:14px 0;border-bottom:1px solid #E0D8C8;">'
-        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Your Portfolio Page</p>'
-        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Free for every member. A public link you control. Each image displays its DDI score &#8212; '
-        'an independently verifiable credential you can share with clients, not just a gallery.</p>'
-        '<a href="' + portfolio_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; Set up your portfolio</a>'
-        '</td></tr>'
-
-        '<tr><td style="padding:14px 0;">'
-        '<p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#1a1a18;">Points Wallet</p>'
-        '<p style="margin:0 0 8px;font-size:16px;color:#4A4840;line-height:1.7;">'
-        'Every scored image earns points proportional to your score. '
-        'Rate another member&#39;s image and earn more. '
-        'Redeem for extra uploads, or a mentor session with the photographer of your choice.</p>'
-        '<a href="' + dashboard_url + '" style="font-size:16px;color:#1A2744;text-decoration:underline;">&#8594; View your wallet on the dashboard</a>'
-        '</td></tr>'
-
-        '</table>'
-        '</td></tr>'
-    )
-
-    # Upload rules
-    p.append(
-        '<tr><td style="padding:0 24px 24px;">'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
-        '<tr><td>'
-        '<p style="margin:0 0 12px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Before You Upload</p>'
-        '<table cellpadding="0" cellspacing="0" style="width:100%;">'
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #E0D8C8;font-size:16px;color:#4A4840;line-height:1.6;">'
-        '&#10003;&nbsp; Your original photograph &#8212; no AI generation, no compositing</td></tr>'
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #E0D8C8;font-size:16px;color:#4A4840;line-height:1.6;">'
-        '&#10003;&nbsp; Minimum 1500px on the long edge</td></tr>'
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #E0D8C8;font-size:16px;color:#4A4840;line-height:1.6;">'
-        '&#10003;&nbsp; Mobile League &#8212; smartphone photographs only</td></tr>'
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #E0D8C8;font-size:16px;color:#4A4840;line-height:1.6;">'
-        '&#10003;&nbsp; Camera League &#8212; DSLR or mirrorless only</td></tr>'
-        '<tr><td style="padding:8px 0;font-size:16px;color:#4A4840;line-height:1.6;">'
-        '&#10003;&nbsp; Keep your RAW files &#8212; may be requested for verification</td></tr>'
-        '</table>'
-        '</td></tr></table>'
-        '</td></tr>'
-    )
-
-    # First goal + CTA
-    p.append(
-        '<tr><td style="padding:0 24px 28px;">'
-        '<p style="margin:0 0 6px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your First Goal</p>'
-        '<p style="margin:0 0 20px;font-size:16px;color:#4A4840;line-height:1.75;">'
-        'Upload 3 images. After your third scored image, your shadow position is revealed &#8212; '
-        'you&#39;ll see exactly where you stand among photographers like you. '
-        'Subscribe to lock in your position and start your official 6-month activity clock.</p>'
-        '<a href="' + upload_url + '" style="display:block;background:#F5C518;color:#1a1a18;'
-        'font-family:Courier New,monospace;font-size:14px;font-weight:700;letter-spacing:2px;'
-        'text-transform:uppercase;padding:16px;text-decoration:none;border-radius:4px;'
-        'text-align:center;">UPLOAD YOUR FIRST IMAGE &#8594;</a>'
-        '</td></tr>'
-    )
-
-    # Footer
-    p.append(
-        '<tr><td style="padding:18px 24px;border-top:1px solid #E0D8C8;background:#F5F0E8;">'
-        '<p style="margin:0 0 6px;font-size:13px;color:#8a8070;line-height:1.6;">'
-        '<strong style="color:#1a1a18;">Agreement confirmed</strong> &#8212; '
-        'Member Agreement &amp; <a href="' + terms_url + '" style="color:#C8A84B;">Terms &amp; Conditions</a>'
-        ' accepted on ' + accepted_date + '.</p>'
-        '<p style="margin:0;font-size:13px;color:#8a8070;line-height:1.6;">'
-        'Questions? Reply to this email or write to '
-        '<a href="mailto:support@shutterleague.com" style="color:#C8A84B;">support@shutterleague.com</a>'
-        ' &#8212; <a href="' + site_url + '" style="color:#C8A84B;">shutterleague.com</a></p>'
-        '</td></tr>'
-    )
-
-    # Wrapper close
-    p.append('</table></td></tr></table></body></html>')
-
-    html_body = ''.join(p)
 
     text_body = (
         'SHUTTER LEAGUE\n'
@@ -15518,22 +15257,14 @@ def send_welcome_email(user):
         'Not whether it gets likes. Not whether your friends say wow.\n'
         'Shutter League gives you that answer. Every image is evaluated by the Apex DDI Engine\n'
         'across five dimensions, scored 0-10. You see exactly what\'s working and what to fix.\n\n'
-        'THE DIMENSIONAL DEPTH INDEX (DDI)\n'
-        '1. Depth of Difficulty - technical execution, physical risk, access, environmental challenge\n'
-        '2. Visual Disruption - visual surprise, unconventional framing, breaks from convention\n'
-        '3. Decisive Moment - timing, anticipation, gesture, the unrepeatable instant\n'
-        '4. Wonder Factor - compositional find, access wonder, cultural depth, emotional wonder\n'
-        '5. Affective Quotient - the specific emotion the image creates: loneliness, joy, defiance, awe\n'
-        'Read the science: ' + science_url + '\n'
-        'How it works: ' + hiw_url + '\n\n'
-        'YOUR STANDING\n'
-        'Eight tiers: Rookie > Shooter > Contender > Craftsman > Maverick > Master > Grandmaster > Legend\n'
-        'Your best scores build your Annual Excellence Award standing.\n'
-        'The 2026 Annual Excellence Award season opens 1 September 2026. '
-        'Keep shooting now — your standing, tier, and average build continuously from the day you join. '
-        'Annual Excellence Award eligibility months count from September.\n'
-        'Consistency wins. One great image is not enough.\n\n'
-
+        'YOUR 2026 SEASON\n'
+        'Score at least 1 image in any 3 calendar months before 31 December 2026 to qualify\n'
+        'for the Annual Excellence Award. Images scored in any month of 2026 count.\n'
+        'Once you have 6 scored images in a genre, your top-6 average appears on standings.\n\n'
+        'FROM 2027\n'
+        'Full season: 1 January - 31 December. 6 active months required to qualify.\n'
+        'Standings reset on 1 January. Scores, tier, and points carry forward.\n'
+        'Points reduce by 20% on 1 January - they never expire entirely.\n\n'
         'WHAT AWAITS YOU\n'
         'Weekly Assignment: Every week, a theme. Every image earns points. Top 3 earn additional points.\n'
         + challenge_url + '\n\n'
@@ -15560,8 +15291,6 @@ def send_welcome_email(user):
         app.logger.info('[welcome_email] Sent to ' + user.email)
     else:
         app.logger.warning('[welcome_email] Failed to send to ' + user.email)
-
-
 
 def auto_publish_weekly_challenge():
     """
