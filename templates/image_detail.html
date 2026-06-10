@@ -180,7 +180,11 @@
     </div>
     {% else %}
     <div class="status-banner review">
-      <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
+      {% if image.flagged_reason and 'breastfeeding' in image.flagged_reason.lower() %}
+        <strong>⏳ Under Review</strong> — Your image contains breastfeeding content and is being reviewed before going public. This is usually cleared automatically within 24 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
+      {% else %}
+        <strong>⏳ Under Review</strong> — This image is being reviewed before going public. Usually resolved within 24–48 hours. Questions? Contact <span style="color:var(--text-primary); font-weight:700;">{{ contact_email }}</span>
+      {% endif %}
     </div>
     {% endif %}
   {% endif %}
