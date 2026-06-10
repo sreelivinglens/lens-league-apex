@@ -9862,15 +9862,7 @@ def bulk_upload():
         if is_xhr:
             return jsonify({'ok': True, 'results': results, 'redirect': url_for('dashboard')})
         return redirect(url_for('dashboard'))
-    import json as _json
-    return render_template(
-        'bulk_upload.html',
-        genres=GENRE_IDS,
-        genre_choices=GENRE_CHOICES,
-        subgenre_map=SUBGENRE_MAP,
-        subgenre_map_json=_json.dumps({k: list(v) for k, v in SUBGENRE_MAP.items()}),
-        results=results,
-    )
+    return render_template('bulk_upload.html', genres=GENRE_IDS, results=results)
 
 
 
@@ -9994,6 +9986,16 @@ def bulk_upload_one():
                 img.soul_bonus       = bool(_bulk_cached.get('soul_bonus', False))
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
+                # Copy audit_json from original image so detail page shows full evaluation
+                _orig_id = _bulk_cached.get('original_image_id')
+                if _orig_id:
+                    try:
+                        from models import Image as _OrigImg
+                        _orig = _OrigImg.query.get(_orig_id)
+                        if _orig and _orig.audit_json:
+                            img.audit_json = _orig.audit_json
+                    except Exception as _ae:
+                        app.logger.warning(f'[bulk_upload_one] audit copy failed: {_ae}')
                 result = {'filename': file.filename, 'score': img.score,
                           'tier': img.tier, 'status': 'scored (anchored)'}
                 app.logger.info(f'[bulk_upload_one] score anchored: image={img.id} score={img.score}')
