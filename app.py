@@ -3690,7 +3690,7 @@ def upload():
                                     },
                                     method='POST'
                                 )
-                                with _ureq.urlopen(_hive_req, timeout=180) as _hr:
+                                with _ureq.urlopen(_hive_req, timeout=15) as _hr:
                                     _hive_resp = _hjson.loads(_hr.read().decode('utf-8'))
                                 # Parse V3 response — output[0].classes
                                 _classes = (
@@ -3903,7 +3903,11 @@ def upload():
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
                         _img.ai_suspicion        = ai_suspicion
                         _img.ai_suspicion_reason = result.get('ai_suspicion_reason') or None
-                        _img.needs_review        = bool(result.get('needs_review', False))
+                        # NOTE: do NOT overwrite needs_review here — breastfeeding images
+                        # arrive with needs_review=True set at upload. The whitelist block
+                        # below resolves it. Overwriting here would break _bf_held detection.
+                        if not ('breastfeeding' in (_img.flagged_reason or '').lower()):
+                            _img.needs_review = bool(result.get('needs_review', False))
 
                         # ── Breastfeeding whitelist — resolve hold set at upload ────────────────
                         # Upload set needs_review=True, is_public=False when Hive detected
@@ -3941,6 +3945,7 @@ def upload():
                                     f'[scoring] breastfeeding whitelist cleared: '
                                     f'image={image_id} subgenre={_effective_subgenre}'
                                 )
+                                return  # fully handled — skip ai_suspicion + score blocks
                             else:
                                 # Non-intimate sub-genre — send admin review email now
                                 try:
@@ -4219,11 +4224,12 @@ def upload():
                             db.session.commit()
 
                             try:
+                                _card_audit = audit or _img.get_audit() or {}
                                 card_fname = (f"LL_{date.today().strftime('%Y%m%d')}_"
                                               f"{secure_filename((_img.photographer_name or 'unknown').replace(' ',''))}_"
                                               f"{_img.genre}_{_img.score}.jpg")
                                 card_path = os.path.join(app.config['UPLOAD_FOLDER'], 'cards', card_fname)
-                                build_card1(_img.thumb_path, audit, card_path)
+                                build_card1(_img.thumb_path, _card_audit, card_path)
                                 _img.card_path = card_path
                                 card_url = _r2_upload_card(card_path, _uid + '_card')
                                 if card_url:
