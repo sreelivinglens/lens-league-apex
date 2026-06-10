@@ -1517,6 +1517,23 @@
 {% block content %}
 <div class="db-wrap">
 
+{# Bulk upload pending banner #}
+<div id="bulkPendingBanner" style="display:none; background:rgba(200,168,75,0.08); border:1px solid var(--gold); border-radius:var(--radius-md); padding:12px 20px; margin-bottom:16px; font-size:14px; color:var(--gold); align-items:center; gap:10px;">
+  ⏳ <span id="bulkPendingMsg"></span>
+</div>
+<script>
+(function() {
+  var n = sessionStorage.getItem('bulk_pending');
+  if (n) {
+    var b = document.getElementById('bulkPendingBanner');
+    var m = document.getElementById('bulkPendingMsg');
+    m.textContent = n + ' image' + (parseInt(n) > 1 ? 's are' : ' is') + ' still being scored in the background — refresh this page in 2 minutes to see your results.';
+    b.style.display = 'flex';
+    sessionStorage.removeItem('bulk_pending');
+  }
+})();
+</script>
+
 {# ════════════════════════════════════════════════════════════════
    TOP BAR
 ════════════════════════════════════════════════════════════════ #}

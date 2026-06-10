@@ -737,6 +737,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }).join(' · ');
         overlaySub.textContent = breakdown;
 
+        // Store pending count so dashboard can show a banner
+        const pendingCount = total - scored.length - skipped.length - errors.length;
+        if (pendingCount > 0) {
+          sessionStorage.setItem('bulk_pending', pendingCount);
+        }
         setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
         return;
       }
@@ -765,16 +770,12 @@ document.addEventListener('DOMContentLoaded', function() {
       fd.append('species_hint', (form.querySelector('[name="bulk_species_hint"]')?.value || ''));
 
       try {
-        const controller = new AbortController();
-        const fetchTimeout = setTimeout(() => controller.abort(), 180000); // 3 min per image
         const resp = await fetch('/bulk-upload/one', {
           method: 'POST',
           credentials: 'include',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          body: fd,
-          signal: controller.signal
+          body: fd
         });
-        clearTimeout(fetchTimeout);
         if (!resp.ok) {
           allResults.push({ filename: file.name, status: 'server error ' + resp.status });
         } else {
