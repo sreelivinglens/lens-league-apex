@@ -10057,7 +10057,7 @@ def bulk_upload_one():
                 _bulk_cache_row = db.session.execute(
                     db.text(
                         "SELECT score, tier, dod_score, disruption_score, dm_score, "
-                        "wonder_score, aq_score, archetype, soul_bonus "
+                        "wonder_score, aq_score, archetype, soul_bonus, original_image_id "
                         "FROM scored_phash_cache "
                         "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
                         "ORDER BY scored_at DESC LIMIT 1"
@@ -10068,6 +10068,24 @@ def bulk_upload_one():
                     _bulk_cached = dict(_bulk_cache_row._mapping)
             except Exception as _bce:
                 app.logger.warning(f'[bulk_upload_one] cache lookup failed: {_bce}')
+
+            # If cache hit but original has no audit_json — fall through to engine
+            if _bulk_cached:
+                _orig_id = _bulk_cached.get('original_image_id')
+                _has_audit = False
+                if _orig_id:
+                    try:
+                        _audit_check = db.session.execute(
+                            db.text("SELECT audit_json FROM images WHERE id = :iid"),
+                            {'iid': _orig_id}
+                        ).fetchone()
+                        if _audit_check and _audit_check[0]:
+                            _has_audit = True
+                    except Exception:
+                        pass
+                if not _has_audit:
+                    app.logger.info(f'[bulk_upload_one] cache hit but no audit on original {_orig_id} — falling through to engine')
+                    _bulk_cached = None
 
             if _bulk_cached:
                 img.dod_score        = _bulk_cached.get('dod_score') or 0.0
@@ -10081,12 +10099,11 @@ def bulk_upload_one():
                 img.soul_bonus       = bool(_bulk_cached.get('soul_bonus', False))
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
-                # Copy audit_json from original image so detail page shows full evaluation
+                # Copy audit_json from original image
                 _orig_id = _bulk_cached.get('original_image_id')
                 if _orig_id:
                     try:
-                        from models import Image as _OrigImg
-                        _orig = _OrigImg.query.get(_orig_id)
+                        _orig = Image.query.get(_orig_id)
                         if _orig and _orig.audit_json:
                             img.audit_json = _orig.audit_json
                     except Exception as _ae:
