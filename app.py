@@ -519,7 +519,6 @@ with app.app_context():
                 # Counts every upload ever — never decremented on delete.
                 # Enforces free tier limit even if user deletes images.
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS total_uploads_ever INTEGER DEFAULT 0",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS upload_credits_balance INTEGER NOT NULL DEFAULT 0",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS parent_image_id INTEGER REFERENCES images(id) ON DELETE SET NULL",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS version_number INTEGER DEFAULT 1",
                 """CREATE TABLE IF NOT EXISTS referral_codes (
@@ -1046,22 +1045,6 @@ with app.app_context():
         except Exception as _ub_e:
             print(f'[uat_backfill] warning: {_ub_e}')
 
-        # Session 68 — seed upload_credits_balance for existing subscribers who have 0
-        try:
-            _credits_r = db.session.execute(db.text(
-                "UPDATE users SET upload_credits_balance = CASE "
-                "WHEN subscription_track = 'mobile' THEN 8 "
-                "WHEN subscription_track = 'camera' THEN 5 "
-                "ELSE 0 END "
-                "WHERE is_subscribed = TRUE "
-                "AND subscription_track IN ('mobile', 'camera') "
-                "AND (upload_credits_balance IS NULL OR upload_credits_balance = 0)"
-            ))
-            db.session.commit()
-            print(f'[credits_backfill] OK — seeded {_credits_r.rowcount} users.')
-        except Exception as _cb_e:
-            print(f'[credits_backfill] warning: {_cb_e}')
-
     except Exception as e:
         print(f'Migration warning: {e}')
 
@@ -1558,11 +1541,6 @@ def run_monthly_residency_clock():
             if not u.residency_started_at:
                 u.residency_started_at = now
             u.residency_months = (u.residency_months or 0) + 1
-            # Add monthly upload credits — carry-forward model (Session 68)
-            if u.subscription_track == 'mobile':
-                u.upload_credits_balance = (u.upload_credits_balance or 0) + 8
-            elif u.subscription_track == 'camera':
-                u.upload_credits_balance = (u.upload_credits_balance or 0) + 5
             incremented += 1
         db.session.commit()
         app.logger.info(
@@ -2683,7 +2661,11 @@ def dashboard():
                            referred_discount=_ref_discount,
                            _months_active=_months_active,
                            _season_start_label=_season_start_label,
-                           _pre_season=_pre_season)
+                           _pre_season=_pre_season,
+                           upload_credits_balance=db.session.execute(
+                               db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
+                               {'uid': current_user.id}
+                           ).scalar() or 0)
 
 
 # ---------------------------------------------------------------------------
@@ -3206,15 +3188,31 @@ def upload():
                 flash(_msg, 'warning')
                 return redirect(url_for('dashboard'))
             elif _track in ('mobile', 'camera', 'learning'):
-                # Session 68 — credits balance model (carry-forward, no monthly reset)
-                _credits = getattr(current_user, 'upload_credits_balance', 0) or 0
-                if _track == 'learning':
-                    # Learning track still uses monthly count (fixed allocation, no carry-forward)
-                    month_start = datetime(today.year, today.month, 1)
-                    month_count = Image.query.filter(
-                        Image.user_id == current_user.id,
-                        Image.created_at >= month_start,
-                    ).count()
+                # Subscribed tracks — check monthly count
+                month_start = datetime(today.year, today.month, 1)
+                month_count = Image.query.filter(
+                    Image.user_id == current_user.id,
+                    Image.created_at >= month_start,
+                ).count()
+                if _track == 'mobile':
+                    MOBILE_IMAGE_LIMIT = 8
+                    if month_count >= MOBILE_IMAGE_LIMIT:
+                        _msg = (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
+                                'Your quota resets on the 1st of next month.')
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _msg}), 403
+                        flash(_msg, 'warning')
+                        return redirect(url_for('dashboard'))
+                elif _track == 'camera':
+                    CAMERA_IMAGE_LIMIT = 5
+                    if month_count >= CAMERA_IMAGE_LIMIT:
+                        _msg = (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
+                                'Your quota resets on the 1st of next month.')
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
+                            return jsonify({'error': True, 'message': _msg}), 403
+                        flash(_msg, 'warning')
+                        return redirect(url_for('dashboard'))
+                elif _track == 'learning':
                     if month_count >= LEARNING_IMAGE_LIMIT:
                         _msg = (f'You have used all {LEARNING_IMAGE_LIMIT} Learning tier images for this month. '
                                 'Upgrade to Mobile or Camera to upload more.')
@@ -3222,17 +3220,6 @@ def upload():
                             return jsonify({'error': True, 'message': _msg}), 403
                         flash(_msg, 'warning')
                         return redirect(url_for('dashboard'))
-                elif _credits <= 0:
-                    _next = (today.replace(day=1) + timedelta(days=32)).replace(day=1)
-                    _msg = (f'You have no upload credits remaining. '
-                            f'Your next credits arrive on 1 {_next.strftime("%B")}.')
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
-                        return jsonify({'error': True, 'message': _msg}), 403
-                    flash(_msg, 'warning')
-                    return redirect(url_for('dashboard'))
-                else:
-                    # Deduct one credit — written to DB after successful upload
-                    current_user.upload_credits_balance = _credits - 1
             # Mentor track — unlimited, no check needed
 
         uid       = str(uuid.uuid4())
@@ -8295,31 +8282,17 @@ def redeem_action():
         ), {'cost': cost, 'uid': current_user.id})
         db.session.commit()
 
-        # Session 68 — topup automatically adds 5 upload credits (no manual action needed)
-        if item_type == 'upload_topup':
-            db.session.execute(db.text(
-                "UPDATE users SET upload_credits_balance = upload_credits_balance + 5 WHERE id = :uid"
-            ), {'uid': current_user.id})
-            db.session.commit()
-
         new_bal = round(bal - cost, 1)
         app.logger.info(
             f'[redeem_action] user={current_user.id} ({current_user.email}) '
             f'item={item_type} cost={cost}pts bal_before={bal} bal_after={new_bal}'
         )
-        if item_type == 'upload_topup':
-            flash(
-                f'Top-up redeemed — 5 upload credits added to your account. '
-                f'Points deducted: {cost}. New balance: {new_bal} pts.',
-                'success'
-            )
-        else:
-            flash(
-                f'Redeemed: {label} — {cost} points deducted. '
-                f'New balance: {new_bal} pts. '
-                f'Our team will action this within 24 hours.',
-                'success'
-            )
+        flash(
+            f'Redeemed: {label} — {cost} points deducted. '
+            f'New balance: {new_bal} pts. '
+            f'Our team will action this within 24 hours.',
+            'success'
+        )
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'[redeem_action] error user={current_user.id} item={item_type}: {e}')
@@ -9578,9 +9551,6 @@ def subscribe(track):
             current_user.subscribed_at        = datetime.utcnow()
             current_user.is_subscribed        = True
             current_user.razorpay_sub_id      = subscription_id
-            # Seed first month's upload credits (Session 68)
-            _seed_credits = 8 if track == 'mobile' else 5 if track == 'camera' else 0
-            current_user.upload_credits_balance = (current_user.upload_credits_balance or 0) + _seed_credits
             db.session.execute(
                 db.text('UPDATE users SET referred_discount = FALSE WHERE id = :uid'),
                 {'uid': current_user.id}
