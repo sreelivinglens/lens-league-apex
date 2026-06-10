@@ -1530,9 +1530,9 @@
     var parts = v.split('/');
     var scored = parseInt(parts[0]); var total = parseInt(parts[1]);
     if (scored < total) {
-      m.textContent = scored + ' of ' + total + ' images scored — ' + (total - scored) + ' still processing in the background. Refresh in 2 minutes to see all results.';
+      m.textContent = total + ' images are being scored in the background — refresh this page in 2 minutes to see your results.';
     } else {
-      m.textContent = 'All ' + total + ' images scored successfully. Scroll down to see your results.';
+      m.textContent = 'All ' + total + ' images scored. Scroll down to see your results.';
     }
     b.style.display = 'flex';
     sessionStorage.removeItem('bulk_done');
