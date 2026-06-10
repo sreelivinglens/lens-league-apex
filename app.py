@@ -3536,9 +3536,11 @@ def upload():
         # See breastfeeding whitelist block in _score_in_background below.
         if _nsfw_breastfeeding_flagged:
             try:
+                _user_wanted_private = not img.is_public  # capture before we override
                 img.needs_review   = True
                 img.is_public      = False
-                img.flagged_reason = 'Breastfeeding content detected — held pending sub-genre check.'
+                img.flagged_reason = ('Breastfeeding content detected — held pending sub-genre check.'
+                                      + (' user_private' if _user_wanted_private else ''))
                 img.flagged_at     = datetime.utcnow()
                 img.scoring_flash  = (
                     'Your image is under review — breastfeeding photography is permitted '
@@ -3927,8 +3929,12 @@ def upload():
                             _effective_subgenre = (_img.sub_genre or result.get('_effective_subgenre') or '').strip().lower()
                             if _effective_subgenre == 'lifestyle_intimate':
                                 # Whitelisted — fine art documentary, auto-approve
-                                _img.needs_review  = False
-                                _img.is_public     = True
+                                # Respect user's original visibility choice: flagged_reason
+                                # stores 'user_private' marker if user chose hidden at upload.
+                                _img.needs_review   = False
+                                _user_chose_private = 'user_private' in (_img.flagged_reason or '')
+                                if not _user_chose_private:
+                                    _img.is_public = True
                                 _img.flagged_reason = None
                                 _img.scoring_flash  = None  # clear hold message
                                 _img.status        = 'scored'
@@ -10189,7 +10195,9 @@ def bulk_upload_one():
         if _bulk_nsfw_breastfeeding:
             _bf_subgenre = (img.sub_genre or '').strip().lower()
             if _bf_subgenre == 'lifestyle_intimate':
-                # Whitelisted — fine art documentary, already public from scoring
+                # Whitelisted — fine art documentary, respect user's visibility choice
+                if img.is_public is not False:  # only make public if user didn't choose hidden
+                    img.is_public = True
                 app.logger.info(f'[bulk_upload_one] breastfeeding whitelisted: image={img.id} subgenre={_bf_subgenre}')
             else:
                 img.needs_review   = True
