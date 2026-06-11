@@ -2,7 +2,7 @@
 {% block title %}Pricing — Shutter League{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="Two leagues. One scientific standard. Get three free scored images to begin. Camera League ₹199/month. Mobile League ₹99/month.">
+<meta name="description" content="One plan. One scientific standard. Get three free scored images to begin. Camera League and Mobile League — ₹200/month. Founding Member rate until 1 January 2027.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -760,7 +760,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
     <div class="sl-pr-hero-fade"></div>
     <div class="sl-pr-hero-content">
       <span class="sl-pr-eyebrow">Pricing &amp; Participation</span>
-      <h1>Two leagues.<br><em>One scientific</em> standard.</h1>
+      <h1>One plan.<br><em>One scientific</em> standard.</h1>
       <p class="sl-pr-hero-copy">Get three free scored images to begin.</p>
       <p class="sl-pr-hero-copy" style="color:rgba(255,255,255,0.65);font-size:15px;">When you're ready to participate consistently, choose the League that matches how you photograph.</p>
       <p class="sl-pr-hero-note">Every image is evaluated through the same DDI framework — regardless of device, experience, or genre.</p>
@@ -809,7 +809,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
         <span class="sl-pr-sec-eyebrow">Leagues</span>
         <h2 class="sl-pr-h2">Choose your League</h2>
       </div>
-      <p>Both Leagues use the same DDI evaluation framework. The distinction is simply how you photograph.</p>
+      <p>Both Leagues use the same DDI evaluation framework. The distinction is simply how you photograph. One plan — ₹200/month — covers both.</p>
     </div>
     <div class="sl-pr-league-grid">
 
@@ -830,11 +830,11 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
         </div>
         <div class="sl-pr-league-pricing">
           <div class="sl-pr-league-alloc">
-            <strong>5</strong>
-            images / month
+            <strong>4</strong>
+            shoots / month
           </div>
           <div class="sl-pr-league-price">
-            <span class="num">₹199</span>
+            <span class="num">₹200</span>
             <span class="mo">/ month</span>
           </div>
         </div>
@@ -843,7 +843,9 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
           <li>Weekly Assignment access</li>
           <li>Annual Excellence eligibility</li>
           <li>Growth tracking dashboard</li>
+          <li style="font-weight:700;">Founding Member rate — locks in forever</li>
         </ul>
+        <p style="font-size:14px;color:var(--text-muted);margin:0 0 12px;line-height:1.5;">New subscribers from 1 January 2027 pay ₹299/month.</p>
         <a href="#" onclick="slShowPaymentSoon('camera');return false;" class="sl-pr-btn-gold" style="width:100%;text-align:center;display:block">Join Camera League</a>
       </div>
 
@@ -864,11 +866,11 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
         </div>
         <div class="sl-pr-league-pricing">
           <div class="sl-pr-league-alloc">
-            <strong>8</strong>
-            images / month
+            <strong>4</strong>
+            shoots / month
           </div>
           <div class="sl-pr-league-price">
-            <span class="num">₹99</span>
+            <span class="num">₹200</span>
             <span class="mo">/ month</span>
           </div>
         </div>
@@ -877,7 +879,9 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
           <li>Weekly Assignment access</li>
           <li>Annual Excellence eligibility</li>
           <li>Growth tracking dashboard</li>
+          <li style="font-weight:700;">Founding Member rate — locks in forever</li>
         </ul>
+        <p style="font-size:14px;color:var(--text-muted);margin:0 0 12px;line-height:1.5;">New subscribers from 1 January 2027 pay ₹299/month.</p>
         <a href="#" onclick="slShowPaymentSoon('mobile');return false;" class="sl-pr-btn-gold" style="width:100%;text-align:center;display:block">Join Mobile League</a>
       </div>
 
@@ -939,8 +943,8 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
         <p>Purchase additional scored uploads without changing your League or billing cycle.</p>
       </div>
       <div class="sl-pr-topup-right">
-        <div class="sl-pr-topup-price">+5 scored images <span>per pack</span></div>
-        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">₹99 cash <span style="font-weight:400;color:rgba(26,26,24,0.45)">or</span> 1,000 pts</div>
+        <div class="sl-pr-topup-price">+3 shoots <span>per pack</span></div>
+        <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px;">₹140 cash <span style="font-weight:400;color:rgba(26,26,24,0.45)">or</span> 1,000 pts</div>
         <a href="{{ url_for('redeem') }}" class="sl-pr-btn-gold">Purchase Top-up</a>
       </div>
     </div>
@@ -1022,7 +1026,7 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 <div id="sl-payment-modal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;">
   <div id="sl-payment-backdrop" onclick="slClosePaymentSoon()" style="position:absolute;inset:0;background:rgba(13,13,11,0.72);backdrop-filter:blur(3px);"></div>
   <div style="position:relative;z-index:1;background:#1A2744;border-radius:12px;padding:40px 36px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.5);border:1px solid rgba(245,197,24,0.2);">
-    <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#F5C518;margin-bottom:16px;" id="sl-modal-league-label">CAMERA LEAGUE · ₹199/month</div>
+    <div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#F5C518;margin-bottom:16px;" id="sl-modal-league-label">CAMERA LEAGUE · ₹200/month</div>
     <div style="font-family:'Inter',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;letter-spacing:-0.02em;">Payment gateway<br>coming soon.</div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;color:rgba(255,255,255,0.75);line-height:1.65;margin-bottom:20px;">
       We're in the final stages of KYC clearance with our payment partner. Subscriptions will open shortly.<br><br>
@@ -1047,9 +1051,9 @@ body:has(.sl-pr) main { padding: 0 !important; max-width: none !important; margi
 function slShowPaymentSoon(league) {
   var label = document.getElementById('sl-modal-league-label');
   if (league === 'camera') {
-    label.textContent = 'CAMERA LEAGUE · ₹199/month';
+    label.textContent = 'CAMERA LEAGUE · ₹200/month';
   } else {
-    label.textContent = 'MOBILE LEAGUE · ₹99/month';
+    label.textContent = 'MOBILE LEAGUE · ₹200/month';
   }
   var modal = document.getElementById('sl-payment-modal');
   modal.style.display = 'flex';
