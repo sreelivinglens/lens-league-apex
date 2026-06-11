@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% block title %}One last thing — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .oi-wrap {
+    min-height: 70vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+  }
+  .oi-card {
+    width: 100%; max-width: 480px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 36px 32px;
+  }
+
+  /* Progress dots */
+  .oi-progress {
+    display: flex; gap: 6px; margin-bottom: 32px;
+  }
+  .oi-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    transition: background 0.25s;
+  }
+  .oi-dot.active { background: var(--gold); }
+  .oi-dot.done   { background: var(--text-muted); }
+
+  /* Screen label */
+  .oi-label {
+    font-family: var(--font-mono);
+    font-size: 13px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  /* Heading */
+  .oi-heading {
+    font-size: 22px; font-weight: 700;
+    color: var(--text-primary); line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  .oi-sub {
+    font-size: 15px; color: var(--text-secondary);
+    line-height: 1.6; margin-bottom: 24px;
+  }
+
+  /* Option tiles */
+  .oi-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 8px;
+  }
+  .oi-options.single-col { grid-template-columns: 1fr; }
+
+  .oi-option {
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: var(--surface-1);
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    text-align: left; line-height: 1.4;
+    user-select: none;
+  }
+  .oi-option:hover {
+    border-color: var(--gold-dark);
+    color: var(--text-primary);
+  }
+  .oi-option.selected {
+    border-color: var(--gold);
+    background: rgba(200,168,75,0.1);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .oi-option .oi-opt-num {
+    font-family: var(--font-mono);
+    font-size: 13px; color: var(--gold);
+    font-weight: 700; margin-bottom: 2px;
+    display: none;
+  }
+  .oi-option.selected .oi-opt-num { display: block; }
+
+  /* Skip link */
+  .oi-skip {
+    margin-top: 20px; text-align: center;
+    font-size: 14px; color: var(--text-muted);
+  }
+  .oi-skip a {
+    color: var(--text-muted); text-decoration: underline; cursor: pointer;
+  }
+  .oi-skip a:hover { color: var(--text-secondary); }
+
+  /* Screen 4 — payoff */
+  .oi-payoff {
+    text-align: center; padding: 8px 0;
+  }
+  .oi-payoff-score {
+    font-family: var(--font-mono);
+    font-size: 48px; font-weight: 700;
+    color: var(--gold); line-height: 1;
+    margin-bottom: 8px;
+  }
+  .oi-payoff-heading {
+    font-size: 22px; font-weight: 700;
+    color: var(--text-primary); margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .oi-payoff-body {
+    font-size: 16px; color: var(--text-secondary);
+    line-height: 1.7; margin-bottom: 28px;
+  }
+
+  @media (max-width: 480px) {
+    .oi-card { padding: 28px 20px; }
+    .oi-options { grid-template-columns: 1fr; }
+    .oi-heading { font-size: 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="oi-wrap">
+<div class="oi-card">
+
+  {# Hidden form — submitted on screen 3 completion #}
+  <form id="oi-form" method="POST" action="{{ url_for('onboarding_interests') }}" style="display:none;">
+    <input type="hidden" name="genre_interests"    id="f-genres">
+    <input type="hidden" name="shooting_frequency" id="f-freq">
+    <input type="hidden" name="primary_motivation" id="f-motive">
+  </form>
+
+  {# Progress dots — 3 dots for 3 screens #}
+  <div class="oi-progress" id="oi-progress">
+    <div class="oi-dot active" id="dot-0"></div>
+    <div class="oi-dot"        id="dot-1"></div>
+    <div class="oi-dot"        id="dot-2"></div>
+  </div>
+
+  {# ── SCREEN 1 — Genre ── #}
+  <div id="screen-1">
+    <div class="oi-label">Your eye</div>
+    <div class="oi-heading">What do you shoot?</div>
+    <div class="oi-sub">Tap up to 3. Your first tap is your primary genre.</div>
+    <div class="oi-options" id="genre-options">
+      {% for g in [
+        'Wildlife', 'Street', 'Landscape', 'People',
+        'Wedding', 'Macro', 'Drone & Aerial', 'Creative'
+      ] %}
+      <div class="oi-option" data-genre="{{ g }}" onclick="selectGenre(this)">
+        <div class="oi-opt-num"></div>
+        {{ g }}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="oi-skip"><a onclick="skipTo(2)">Skip for now</a></div>
+  </div>
+
+  {# ── SCREEN 2 — Frequency ── #}
+  <div id="screen-2" style="display:none;">
+    <div class="oi-label">Your rhythm</div>
+    <div class="oi-heading">How often do you go out to shoot?</div>
+    <div class="oi-sub">Be honest — the platform will calibrate to where you are, not where you want to be.</div>
+    <div class="oi-options single-col">
+      {% for f in [
+        ('daily',    'Every day'),
+        ('weekly',   'A few times a week'),
+        ('biweekly', 'About once a week'),
+        ('monthly',  'A few times a month'),
+        ('occasional','Whenever the moment finds me'),
+      ] %}
+      <div class="oi-option" data-freq="{{ f[0] }}" onclick="selectFreq(this)">{{ f[1] }}</div>
+      {% endfor %}
+    </div>
+    <div class="oi-skip"><a onclick="skipTo(3)">Skip for now</a></div>
+  </div>
+
+  {# ── SCREEN 3 — Motivation ── #}
+  <div id="screen-3" style="display:none;">
+    <div class="oi-label">Your why</div>
+    <div class="oi-heading">What brings you here?</div>
+    <div class="oi-sub">One tap and you're in.</div>
+    <div class="oi-options single-col">
+      {% for m in [
+        ('improve',   'Get better at photography'),
+        ('portfolio', 'Build a serious portfolio'),
+        ('feedback',  'Get honest feedback, not likes'),
+        ('programme', 'Participate in the programmes'),
+        ('all',       'All of the above'),
+      ] %}
+      <div class="oi-option" data-motive="{{ m[0] }}" onclick="selectMotive(this)">{{ m[1] }}</div>
+      {% endfor %}
+    </div>
+    <div class="oi-skip"><a onclick="submitForm('skip')">Skip and go to dashboard</a></div>
+  </div>
+
+  {# ── SCREEN 4 — Payoff ── #}
+  <div id="screen-4" style="display:none;">
+    <div class="oi-payoff">
+      <div class="oi-payoff-score">3</div>
+      <div class="oi-payoff-heading">Free scored images waiting for you.</div>
+      <div class="oi-payoff-body">
+        Upload your first frame. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions, in 60 seconds.
+      </div>
+      <a href="{{ url_for('upload') }}" class="btn btn-solid" style="padding:14px 32px;font-size:16px;min-height:44px;display:inline-flex;align-items:center;">
+        Upload Your First Frame →
+      </a>
+      <div style="margin-top:16px;">
+        <a href="{{ url_for('dashboard') }}" style="font-size:14px;color:var(--text-muted);text-decoration:none;">
+          Go to dashboard instead
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+var selectedGenres = [];   // ordered by tap sequence
+var selectedFreq   = null;
+var selectedMotive = null;
+var currentScreen  = 1;
+
+// ── Progress dots ──────────────────────────────────────────────────────────
+function updateDots(screen) {
+  for (var i = 0; i < 3; i++) {
+    var dot = document.getElementById('dot-' + i);
+    dot.className = 'oi-dot';
+    if (i < screen - 1)      dot.classList.add('done');
+    else if (i === screen - 1) dot.classList.add('active');
+  }
+}
+
+// ── Screen transitions ─────────────────────────────────────────────────────
+function showScreen(n) {
+  document.getElementById('screen-' + currentScreen).style.display = 'none';
+  document.getElementById('screen-' + n).style.display = 'block';
+  if (n <= 3) {
+    document.getElementById('oi-progress').style.display = 'flex';
+    updateDots(n);
+  } else {
+    document.getElementById('oi-progress').style.display = 'none';
+  }
+  currentScreen = n;
+  // Scroll to top of card on mobile
+  window.scrollTo(0, 0);
+}
+
+function skipTo(n) {
+  if (n > 3) { submitForm('skip'); return; }
+  showScreen(n);
+}
+
+// ── Genre selection ────────────────────────────────────────────────────────
+function selectGenre(el) {
+  var genre = el.getAttribute('data-genre');
+  var idx   = selectedGenres.indexOf(genre);
+
+  if (idx > -1) {
+    // Deselect
+    selectedGenres.splice(idx, 1);
+    el.classList.remove('selected');
+    el.querySelector('.oi-opt-num').textContent = '';
+    // Re-number remaining selections
+    renumberGenres();
+  } else {
+    if (selectedGenres.length >= 3) return; // max 3
+    selectedGenres.push(genre);
+    el.classList.add('selected');
+    el.querySelector('.oi-opt-num').textContent = '#' + selectedGenres.length;
+  }
+
+  // Auto-advance when 3 selected
+  if (selectedGenres.length === 3) {
+    setTimeout(function() { showScreen(2); }, 300);
+  }
+}
+
+function renumberGenres() {
+  var options = document.querySelectorAll('#genre-options .oi-option');
+  options.forEach(function(opt) {
+    var g   = opt.getAttribute('data-genre');
+    var idx = selectedGenres.indexOf(g);
+    var num = opt.querySelector('.oi-opt-num');
+    if (idx > -1) {
+      num.textContent = '#' + (idx + 1);
+    } else {
+      num.textContent = '';
+    }
+  });
+}
+
+// ── Frequency selection ────────────────────────────────────────────────────
+function selectFreq(el) {
+  document.querySelectorAll('#screen-2 .oi-option').forEach(function(o) {
+    o.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  selectedFreq = el.getAttribute('data-freq');
+  setTimeout(function() { showScreen(3); }, 250);
+}
+
+// ── Motivation selection ───────────────────────────────────────────────────
+function selectMotive(el) {
+  document.querySelectorAll('#screen-3 .oi-option').forEach(function(o) {
+    o.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  selectedMotive = el.getAttribute('data-motive');
+  setTimeout(function() { submitForm(); }, 300);
+}
+
+// ── Save and continue ─────────────────────────────────────────────────────
+function submitForm(mode) {
+  document.getElementById('f-genres').value = JSON.stringify(selectedGenres);
+  document.getElementById('f-freq').value   = selectedFreq   || '';
+  document.getElementById('f-motive').value = selectedMotive || '';
+
+  if (mode === 'skip') {
+    // Submit form but redirect to dashboard
+    document.getElementById('oi-form').submit();
+    return;
+  }
+
+  // Show payoff screen first, then submit after 3s
+  showScreen(4);
+  setTimeout(function() {
+    document.getElementById('oi-form').submit();
+  }, 4000);
+}
+</script>
+{% endblock %}
