@@ -5023,7 +5023,7 @@ def image_detail(image_id):
                             _dims.append({
                                 'label':      _label,
                                 'current':    _vals[-1],
-                                'values':     [round(v, 1) for v in _vals],
+                                'score_values': [round(v, 1) for v in _vals],
                                 'sparkline':  _sp,
                                 'points':     _pts,
                                 'color':      _flat_color if _is_flat else _color,
