@@ -1216,8 +1216,8 @@ _TIER_JUMP_POINTS = {
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
 REFERRAL_DISCOUNT_PRICES = {
-    'mobile': {'monthly': 80,  'annual': 800},
-    'camera': {'monthly': 169, 'annual': 1690},
+    'mobile': {'monthly': 170, 'annual': 1700},
+    'camera': {'monthly': 170, 'annual': 1700},
 }
 
 def _generate_referral_code():
@@ -1403,7 +1403,7 @@ def run_annual_points_expiry():
             if not _user_is_inactive(u, today, days=180):
                 skipped_active += 1
                 continue  # Active in last 6 months — full balance carries forward
-            reset_amount = round(u.points_balance * 0.10, 1)
+            reset_amount = round(u.points_balance * 0.20, 1)
             if reset_amount > 0:
                 u.points_balance     = round(u.points_balance - reset_amount, 1)
                 u.points_last_expiry = today
@@ -1437,15 +1437,15 @@ def run_points_reset_warning_nov():
                         continue
                     name    = u.full_name or u.username or 'Photographer'
                     balance = round(u.points_balance or 0, 1)
-                    at_risk = round(balance * 0.10, 1)
+                    at_risk = round(balance * 0.20, 1)
                     subject = f'Your {balance} points — upload before 31 Dec to keep them all'
                     html_body = f"""
     <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
       <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">Your points are waiting, {name}.</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">You have <strong>{balance} points</strong> in your wallet.</p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">We haven&#39;t seen a new upload from you in a while. Points only reset for inactive accounts — upload one image before <strong>31 December</strong> and your full balance carries forward into the new year.</p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">If you don&#39;t upload before then, <strong>{at_risk} points</strong> (10%) will reset on 1 January.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">A reminder that Shutter League points decay at <strong>20% per year</strong> on 1 January — this applies to all accounts. Upload before 31 December and your activity is noted, but the annual decay still applies.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">On 1 January, <strong>{at_risk} points</strong> (20%) will reset. The remaining 80% carry forward. Use your points before then or redeem them toward top-up credits.</p>
       <div style="margin:28px 0;">
         <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload &amp; Protect Your Points &#8594;</a>
       </div>
@@ -1485,15 +1485,15 @@ def run_points_reset_warning_dec():
                         continue
                     name    = u.full_name or u.username or 'Photographer'
                     balance = round(u.points_balance or 0, 1)
-                    at_risk = round(balance * 0.10, 1)
+                    at_risk = round(balance * 0.20, 1)
                     subject = f'16 days left — protect your {balance} points before 31 Dec'
                     html_body = f"""
     <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
       <div style="font-family:monospace;font-size:12px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:20px;">Shutter League &middot; Points</div>
       <h2 style="font-size:22px;font-weight:700;color:#1A1A18;margin:0 0 16px;">16 days to protect your points, {name}.</h2>
       <p style="font-size:16px;line-height:1.7;color:#4A4840;">Your balance: <strong>{balance} points.</strong></p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points only reset for accounts with no recent uploads. One image before <strong>31 December</strong> and your full {balance} points carry forward. Miss the date and <strong>{at_risk} points</strong> reset on 1 January.</p>
-      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You&#39;ve earned these. Take one shot before the year ends.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">Points decay at 20% on 1 January — 16 days away. On 1 January <strong>{at_risk} points</strong> reset. Redeem them now or use them toward your next shoot.</p>
+      <p style="font-size:16px;line-height:1.7;color:#4A4840;">You&#39;ve earned these. Use them before the year ends.</p>
       <div style="margin:28px 0;">
         <a href="{site_url}/upload" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">Upload Now — 16 Days Left &#8594;</a>
       </div>
@@ -3174,7 +3174,8 @@ def upload():
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
                     _msg = (f'You have used your {_limit_shown} free assessments. '
                             'Deleting images does not restore free slots — '
-                            'upgrade to Mobile (₹99/mo) or Camera (₹199/mo) to keep uploading.')
+                            'upgrade to ₹200/month to keep uploading. '
+                            'Founding Member rate — increases to ₹299 on 1 Jan 2027.')
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                         return jsonify({'error': True, 'message': _msg}), 403
                     flash(_msg, 'warning')
@@ -3195,7 +3196,7 @@ def upload():
                     Image.created_at >= month_start,
                 ).count()
                 if _track == 'mobile':
-                    MOBILE_IMAGE_LIMIT = 8
+                    MOBILE_IMAGE_LIMIT = 4
                     if month_count >= MOBILE_IMAGE_LIMIT:
                         _msg = (f'You have used all {MOBILE_IMAGE_LIMIT} Mobile images for this month. '
                                 'Your quota resets on the 1st of next month.')
@@ -3204,7 +3205,7 @@ def upload():
                         flash(_msg, 'warning')
                         return redirect(url_for('dashboard'))
                 elif _track == 'camera':
-                    CAMERA_IMAGE_LIMIT = 5
+                    CAMERA_IMAGE_LIMIT = 4
                     if month_count >= CAMERA_IMAGE_LIMIT:
                         _msg = (f'You have used all {CAMERA_IMAGE_LIMIT} Camera images for this month. '
                                 'Your quota resets on the 1st of next month.')
@@ -7104,8 +7105,8 @@ def admin_mentors():
                            members=members,
                            tier_options=[
                                ('legend', 'Legend Mentor', 100, 1000),
-                               ('expert', 'Expert Mentor', 75, 750),
-                               ('senior', 'Senior Mentor', 50, 500),
+                               ('expert', 'Grandmaster Mentor', 75, 750),
+                               ('senior', 'Master Mentor', 50, 500),
                            ])
 
 
@@ -7119,10 +7120,10 @@ def admin_mentor_create():
 
     tier_map = {
         'legend': ('Legend Mentor', 100, 1000),
-        'expert': ('Expert Mentor', 75,  750),
-        'senior': ('Senior Mentor', 50,  500),
+        'expert': ('Grandmaster Mentor', 75,  750),
+        'senior': ('Master Mentor', 50,  500),
     }
-    tier_label, price, points_cost = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
+    tier_label, price, points_cost = tier_map.get(tier_class, ('Master Mentor', 50, 500))
 
     if not slug or not display_name:
         flash('Slug and display name are required.', 'error')
@@ -7235,10 +7236,10 @@ def admin_mentor_edit(slug):
 
     tier_map = {
         'legend': ('Legend Mentor', 100, 1000),
-        'expert': ('Expert Mentor', 75,  750),
-        'senior': ('Senior Mentor', 50,  500),
+        'expert': ('Grandmaster Mentor', 75,  750),
+        'senior': ('Master Mentor', 50,  500),
     }
-    tier_label, default_price, default_points = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
+    tier_label, default_price, default_points = tier_map.get(tier_class, ('Master Mentor', 50, 500))
     if price is None:
         price = default_price
     if points_cost is None:
@@ -8257,8 +8258,8 @@ def redeem_action():
         'subscription_offset':  'Monthly subscription offset',
         'free_month_mobile':    'Free month — Mobile League',
         'free_month_camera':    'Free month — Camera League',
-        'mentor_senior':        'Senior Mentor session',
-        'mentor_expert':        'Expert Mentor session',
+        'mentor_senior':        'Master Mentor session',
+        'mentor_expert':        'Grandmaster Mentor session',
         'mentor_legend':        'Legend Mentor session',
     }
 
@@ -8382,7 +8383,7 @@ MENTORS = {
     'gopal': {
         'slug':        'gopal',
         'name':        'Gopal MS',
-        'tier_label':  'Expert Mentor',
+        'tier_label':  'Grandmaster Mentor',
         'tier_class':  'expert',
         'price':       75,
         'points_cost': 750,
@@ -8393,7 +8394,7 @@ MENTORS = {
     'sreekumar': {
         'slug':        'sreekumar',
         'name':        'Sreekumar Krishnan',
-        'tier_label':  'Senior Mentor',
+        'tier_label':  'Master Mentor',
         'tier_class':  'senior',
         'price':       50,
         'points_cost': 500,
@@ -9517,8 +9518,8 @@ def subscribe(track):
         },
     }
     display_prices = {
-        'mobile':   {'monthly': 99,   'annual': 999},
-        'camera':   {'monthly': 199,  'annual': 1999},
+        'mobile':   {'monthly': 200,  'annual': 2000},
+        'camera':   {'monthly': 200,  'annual': 2000},
         'learning': {'monthly': 100,  'annual': 999},
         'mentor':   {'monthly': 999,  'annual': 9999},
     }
@@ -9602,8 +9603,8 @@ def subscribe(track):
             'mentor':   'Human + AI Mentor',
         }
         track_descriptions = {
-            'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
-            'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
+            'camera':   '4 shoots/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
+            'mobile':   '4 shoots/month · Annual Excellence Award (POTY) · Programmes',
             'learning': '12 scored images/month · AI mentor · Improvement paths',
             'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
         }
@@ -9647,8 +9648,8 @@ def subscribe(track):
         'mentor':   'Human + AI Mentor',
     }
     track_descriptions = {
-        'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
-        'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
+        'camera':   '4 shoots/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
+        'mobile':   '4 shoots/month · Annual Excellence Award (POTY) · Programmes',
         'learning': '12 scored images/month · AI mentor · Improvement paths',
         'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
     }
@@ -10947,8 +10948,8 @@ def admin_export_subscriptions():
         'monthly_value_inr', 'subscribed_at', 'razorpay_sub_id',
     ])
     price_map = {
-        ('mobile', 'monthly'): 99,   ('mobile', 'annual'): 999,
-        ('camera', 'monthly'): 199,  ('camera', 'annual'): 1999,
+        ('mobile', 'monthly'): 200,  ('mobile', 'annual'): 2000,
+        ('camera', 'monthly'): 200,  ('camera', 'annual'): 2000,
     }
     for u in subs:
         price = price_map.get((u.subscription_track, u.subscription_plan), 0)
@@ -16044,9 +16045,9 @@ def admin_subscription_broadcast():
             '</ul>'
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 8px 0;line-height:1.7;">This platform is being built now, and the photographers who join early are the ones who shape it.</p>'
             '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
-            '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">Subscription</p>'
-            '<p style="font-size:15px;color:#1A1A18;margin:0 0 4px 0;">Mobile Track &nbsp;&#8212;&nbsp; <strong>&#8377;99/month</strong> &nbsp;(8 scored images)</p>'
-            '<p style="font-size:15px;color:#1A1A18;margin:0;">Camera Track &nbsp;&#8212;&nbsp; <strong>&#8377;199/month</strong> &nbsp;(5 scored images + full suite)</p>'
+            '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">Founding Member Pricing</p>'
+            '<p style="font-size:15px;color:#1A1A18;margin:0 0 4px 0;"><strong>&#8377;200/month</strong> &nbsp;&mdash;&nbsp; 4 shoots &middot; Camera &amp; Mobile &middot; Full suite</p>'
+            '<p style="font-size:13px;color:#888888;margin:4px 0 0 0;">Founding Member rate locks in at &#8377;200 forever. New subscribers from 1 January 2027 pay &#8377;299.</p>'
             '</div>'
             '<div style="background:#FFF8E1;border-left:4px solid #F5C518;padding:14px 20px;margin:0 0 20px 0;">'
             '<p style="font-size:14px;color:#1A1A18;margin:0;line-height:1.7;"><strong>Payment note:</strong> Shutter League currently accepts Indian payment methods — Indian debit card, credit card, UPI, or net banking. An Indian bank account or card is required to subscribe.</p>'
@@ -16061,10 +16062,10 @@ def admin_subscription_broadcast():
         _txt = (
             f'Hi {_name},\n\n'
             'You have already seen your scores. Now take it further.\n\n'
-            'A Shutter League subscription gives you scored images every month, your standing in the programme, '
+            'A Shutter League subscription gives you 4 shoots every month, your standing in the programme, '
             'and eligibility for the Annual Excellence Award.\n\n'
-            'Mobile Track: ₹99/month (8 scored images)\n'
-            'Camera Track: ₹199/month (5 images + full suite)\n\n'
+            'Founding Member: ₹200/month — Camera & Mobile · 4 shoots · Full suite\n'
+            'Rate locks in at ₹200 forever. New subscribers from 1 January 2027 pay ₹299.\n\n'
             'Payment note: Indian debit card, credit card, UPI, or net banking required.\n\n'
             f'Subscribe: {_subscribe_url}\n\n'
             '-- Shutter League'
