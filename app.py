@@ -421,6 +421,11 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS league_suspended_reason TEXT",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(128)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT TRUE",
+                # v69 — onboarding interests flow
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS genre_interests TEXT",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS shooting_frequency VARCHAR(30)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_motivation VARCHAR(40)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS interests_complete BOOLEAN DEFAULT FALSE",
                 # v52  -  legal consent tracking
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(20)",
@@ -2116,11 +2121,8 @@ def onboarding():
         except Exception as _we:
             app.logger.warning('[welcome_email] Error: ' + str(_we))
         flash('Welcome to Shutter League! Your account is ready.', 'success')
-        # Redirect to intended destination if set before login
-        post_next = session.pop('post_login_next', None)
-        if post_next:
-            return redirect(post_next)
-        return redirect(url_for('dashboard'))
+        # Go to interests flow before dashboard
+        return redirect(url_for('onboarding_interests'))
 
     _loc = {}
     for _s, _c in INDIA_STATES_CITIES.items():
@@ -2142,7 +2144,52 @@ def onboarding():
     )
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/onboarding-interests', methods=['GET', 'POST'])
+@login_required
+def onboarding_interests():
+    """
+    Post-onboarding interest capture — genre, frequency, motivation.
+    Fires once after the welcome/KYC onboarding screen.
+    Skipped if interests_complete is already True.
+    """
+    # Skip if already done or onboarding not yet complete
+    if not getattr(current_user, 'onboarding_complete', False):
+        return redirect(url_for('onboarding'))
+    if getattr(current_user, 'interests_complete', False):
+        post_next = session.pop('post_login_next', None)
+        return redirect(post_next or url_for('dashboard'))
+
+    if request.method == 'POST':
+        import json as _json
+        genre_interests    = request.form.get('genre_interests', '').strip()
+        shooting_frequency = request.form.get('shooting_frequency', '').strip()
+        primary_motivation = request.form.get('primary_motivation', '').strip()
+
+        # Validate genre_interests is valid JSON array
+        try:
+            _genres = _json.loads(genre_interests) if genre_interests else []
+            if not isinstance(_genres, list):
+                _genres = []
+            genre_interests = _json.dumps(_genres[:3])  # max 3
+        except Exception:
+            genre_interests = '[]'
+
+        current_user.genre_interests    = genre_interests
+        current_user.shooting_frequency = shooting_frequency[:30] if shooting_frequency else None
+        current_user.primary_motivation = primary_motivation[:40] if primary_motivation else None
+        current_user.interests_complete = True
+        db.session.commit()
+        app.logger.info(
+            f'[onboarding_interests] user={current_user.id} '
+            f'genres={genre_interests} freq={shooting_frequency} motivation={primary_motivation}'
+        )
+        post_next = session.pop('post_login_next', None)
+        return redirect(post_next or url_for('dashboard'))
+
+    return render_template('onboarding_interests.html')
+
+
+
 def login():
     if current_user.is_authenticated:
         # Judge already logged in -- send to jury dashboard
@@ -4154,56 +4201,6 @@ def upload():
                                     db.session.commit()
                             except Exception as _pe:
                                 app.logger.error(f'[points hook] image_scored error: {_pe}')
-
-                            # ── Score notification email ──────────────────────────
-                            try:
-                                _score_user = User.query.get(_img.user_id)
-                                if _score_user and _score_user.email and not _img.is_flagged:
-                                    _s_audit       = audit or _img.get_audit() or {}
-                                    _s_hard_truth  = (_s_audit.get('hard_truth') or '').strip()
-                                    _s_mentor_next = ''
-                                    _s_rows        = _s_audit.get('rows', [])
-                                    if len(_s_rows) > 2:
-                                        _s_mentor_next = (_s_rows[2][1] or '').strip()
-                                    _s_byline2     = (_s_audit.get('byline_2_body') or _s_audit.get('byline_2') or '').strip()
-                                    _s_next_line   = _s_mentor_next or _s_byline2
-
-                                    # Subject — hard_truth truncated, fallback to score
-                                    _s_ht_short = (_s_hard_truth[:57] + '…') if len(_s_hard_truth) > 57 else _s_hard_truth
-                                    _s_subject  = _s_ht_short if _s_ht_short else f'Your eye caught something. {_img.score:.2f} · {_img.tier or "Scored"}'
-
-                                    _s_name     = _score_user.full_name or _score_user.username or 'Photographer'
-                                    _s_genre    = _img.genre or 'Photography'
-                                    _s_tier     = (_img.tier or '').title()
-                                    _s_score    = f'{_img.score:.2f}'
-                                    _s_site     = os.getenv('SITE_URL', 'https://shutterleague.com')
-                                    _s_img_url  = f'{_s_site}/image/{_img.id}'
-
-                                    _s_html = f"""
-    <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FDFCF8;">
-      <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#C8A84B;text-transform:uppercase;margin-bottom:24px;">Shutter League</div>
-
-      <p style="font-size:18px;font-weight:700;color:#1A1A18;line-height:1.5;margin:0 0 8px;">Your eye caught something real.</p>
-      <p style="font-family:monospace;font-size:13px;color:#C8A84B;letter-spacing:1px;margin:0 0 28px;">{_s_score} &middot; {_s_tier} &middot; {_s_genre}</p>
-
-      <hr style="border:none;border-top:1px solid #E8E4DC;margin:0 0 28px;">
-
-      {'<p style="font-size:16px;line-height:1.8;color:#1A1A18;margin:0 0 20px;">' + _s_next_line + '</p>' if _s_next_line else ''}
-
-      <div style="margin:28px 0;">
-        <a href="{_s_img_url}" style="display:inline-block;background:#1A1A18;color:#F5C518;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;">See Your Scorecard &#8594;</a>
-      </div>
-
-      <hr style="border:none;border-top:1px solid #E8E4DC;margin:28px 0 20px;">
-      <p style="font-size:12px;color:#8a8070;line-height:1.6;font-family:monospace;">Shutter League &middot; shutterleague.com<br>
-      <a href="{_s_site}/profile" style="color:#8a8070;">Manage email preferences</a></p>
-    </div>"""
-
-                                    send_email(_score_user.email, _s_subject, _s_html)
-                                    app.logger.info(f'[score_notify] sent to user {_img.user_id} image {_img.id}')
-                            except Exception as _sne:
-                                app.logger.error(f'[score_notify] failed for image {_img.id}: {_sne}')
-                            # ── End score notification email ──────────────────────
 
                             # TIER 2 — needs human review
                             if ai_suspicion >= 0.4 or _img.score >= 9.0:
