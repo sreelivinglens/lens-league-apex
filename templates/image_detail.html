@@ -3,8 +3,18 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
-<meta property="og:title" content="Image — Shutter League">
-<meta property="og:description" content="Photography evaluation by the Apex DDI Engine. 5 dimensions. Honest feedback.">
+<meta property="og:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
+<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex DDI Engine.">
+{% if image.thumb_url %}
+<meta property="og:image" content="{{ image.thumb_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
+<meta name="twitter:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }}">
+{% if image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
+<link rel="canonical" href="{{ request.url }}">
 {% endblock %}
 {% block extra_css %}
 <style>
@@ -50,7 +60,7 @@
   @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-  .ddi-lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.5px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; margin-top: 4px; }
+  .ddi-lbl { font-family: var(--font-mono); font-size:13px; letter-spacing: 0.5px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; margin-top: 4px; }
   /* glink_inline — glossary links on light backgrounds */
   .glink-inline {
     color: var(--text-muted); text-decoration: underline; text-decoration-color: rgba(245,197,24,0.55);
@@ -74,7 +84,7 @@
   }
   .peer-block-nudge { background: rgba(245,197,24,0.06); }
   .peer-block-hdr {
-    font-size: 13px; font-weight: 700; color: var(--gold);
+    font-size: 13px; font-weight: 700; color: var(--text-primary);
     letter-spacing: 1px; text-transform: uppercase;
     font-family: var(--font-mono); margin-bottom: 10px;
   }
@@ -109,6 +119,50 @@
   @media (max-width: 480px) {
     .cta-download-row { flex-direction: column !important; }
     .cta-download-row a { min-width: 0 !important; width: 100%; text-align: center; }
+  }
+
+  /* Sprint 3 — new scorecard responsive */
+
+  /* iPad portrait (768px) — 4 cards → 2 cols, 3-col stats → 2 cols */
+  @media (max-width: 768px) {
+    .sc-four-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-hero-score { font-size: 52px !important; }
+  }
+
+  /* Mobile (600px) — everything single column */
+  @media (max-width: 600px) {
+    /* Hero */
+    .sc-hero-inner { flex-direction: column !important; gap: 8px !important; }
+    .sc-hero-score-num { font-size: 48px !important; }
+    /* What stood out — single column */
+    .sc-verdict-grid { grid-template-columns: 1fr !important; }
+    .sc-verdict-grid > div:last-child {
+      border-left: none !important;
+      border-top: 1px solid var(--border);
+      padding-left: 0 !important;
+      padding-top: 16px !important;
+      margin-top: 8px;
+    }
+    /* 4 story cards — single column */
+    .sc-four-grid { grid-template-columns: 1fr !important; }
+    /* All 2-col grids → single column */
+    .sc-two-grid { grid-template-columns: 1fr !important; }
+    /* 3-col stats → single column */
+    .sc-three-grid { grid-template-columns: 1fr !important; }
+    /* Location detail grid */
+    .sc-loc-grid { grid-template-columns: 1fr !important; }
+    /* DDI dims → 3 cols on mobile */
+    .ddi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    /* Buttons full width */
+    .sc-share-btn { width: 100% !important; }
+  }
+
+  /* Small mobile (480px) */
+  @media (max-width: 480px) {
+    .sc-hero-score-num { font-size: 40px !important; }
+    .sc-hero-name { font-size: 18px !important; }
+    .sc-four-grid { grid-template-columns: 1fr !important; }
   }
 
   #delete-modal {
@@ -201,46 +255,371 @@
   </div>
   {% endif %}
 
-  {# ── Score card ──────────────────────────────────────────────────── #}
+  {# ══════════════════════════════════════════════════════════════════ #}
+  {# NEW SCORECARD LAYOUT — Sprint 3                                   #}
+  {# ══════════════════════════════════════════════════════════════════ #}
   {% if image.status == 'scored' and image.score %}
-  <div class="score-card">
-    <div class="score-main">
-      <div class="score-number">{{ "%.2f"|format(image.score) }}</div>
+  {% set audit = image.get_audit() %}
 
-      <div>
-        <div class="score-tier-badge">{{ image.tier or 'Scored' }}</div>
-        {% if image.soul_bonus %}<div style="font-family:var(--font-mono); font-size:14px; color:var(--gold); margin-top:4px; letter-spacing:1px;">✦ SOUL BONUS</div>{% endif %}
-      </div>
-    </div>
-    {% if image.archetype %}
-    <div class="score-archetype">{{ image.archetype }}</div>
+  {# ── HERO — full bleed photo, score, name, tier ────────────────── #}
+  <div style="position:relative; border-radius:14px; overflow:hidden; margin-bottom:16px; background:#1a1a18; min-height:280px;">
+
+    {# Photo background — bleeds behind the overlay #}
+    {% if image.thumb_url %}
+    <img src="{{ image.thumb_url }}"
+         alt="{{ image.asset_name or image.original_filename }}"
+         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.45; display:block;">
     {% endif %}
 
-    {# Hard Truth — owner/admin only #}
-    {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
-    {% set audit_ht = image.get_audit() %}
-    {% if audit_ht and audit_ht.hard_truth %}
-    <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:18px 22px;margin-bottom:20px;">
-      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Apex Verdict</div>
-      <div style="font-size:17px;color:#ffffff;line-height:1.65;font-style:italic;">{{ audit_ht.hard_truth }}</div>
-      {% if audit_ht.wikipedia_url %}
-      <div style="margin-top:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:0.5px;color:rgba(255,255,255,0.35);">
-        Species data: <a href="{{ audit_ht.wikipedia_url }}" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,0.45);text-decoration:underline;text-underline-offset:2px;">Wikipedia · {{ audit_ht.wikipedia_title or audit_ht.species_id }}</a>
+    {# Gradient over image for text legibility #}
+    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(26,26,24,0.55) 0%, rgba(26,26,24,0.25) 40%, rgba(26,26,24,0.75) 100%);"></div>
+
+    {# Content overlay #}
+    <div style="position:relative; padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; min-height:280px;" class="sc-hero-outer">
+
+      {# Top row — label + score #}
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;" class="sc-hero-inner">
+        <div>
+          <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase;">
+            Your {{ image.genre }} Photography
+          </p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:28px; font-weight:700; color:#fff; line-height:1; letter-spacing:-0.5px;">SCORECARD</p>
+        </div>
+        <div style="text-align:right;">
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Your score</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:64px; font-weight:700; color:#F5C518; line-height:1;" class="sc-hero-score-num">{{ "%.2f"|format(image.score) }}</p>
+          <p style="margin:2px 0 0; font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.45);">Out of 10</p>
+        </div>
       </div>
+
+      {# Bottom row — name, tier, title, meta #}
+      <div style="margin-top:20px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+          <span style="font-family:var(--font-mono); font-size:22px; font-weight:700; color:#fff;" class="sc-hero-name">
+            {{ image.photographer_name or current_user.full_name or current_user.username }}
+          </span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:#F5C518; color:#1a1a18; padding:4px 12px; border-radius:4px;">
+            {{ image.tier or 'Scored' }}
+          </span>
+          {% if image.soul_bonus %}
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#F5C518;">✦ SOUL BONUS</span>
+          {% endif %}
+        </div>
+        <p style="margin:0 0 4px; font-size:16px; font-style:italic; color:rgba(255,255,255,0.8);">{{ image.asset_name or image.original_filename }}</p>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          {% if image.exif_date_taken %}
+          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.exif_date_taken }}</span>
+          {% elif image.created_at %}
+          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.created_at.strftime('%d %b %Y') }}</span>
+          {% endif %}
+          {% if image.location %}
+          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.location }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Owner / admin gate — all scorecard detail below ──────────── #}
+  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
+
+  {# ── Scored As banner ─────────────────────────────────────────── #}
+  {% if audit and audit.subgenre_overridden and audit.effective_subgenre %}
+  <div style="margin-bottom:14px; padding:12px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</span>
+    <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit.effective_subgenre.replace('_',' ') }}</span>
+    {% if audit.vision_subgenre_reason %}<span style="font-size:14px;color:var(--text-secondary);">{{ audit.vision_subgenre_reason }}</span>{% endif %}
+  </div>
+  {% endif %}
+
+  {# ── Genre Insight banner ──────────────────────────────────────── #}
+  {% if audit and audit.genre_suggestion and audit.genre_suggestion.suggested_genre and not audit.subgenre_overridden %}
+  <div id="genre-insight-banner" style="margin-bottom:16px; padding:18px 22px; background:var(--surface-2); border:2px solid var(--gold); border-radius:var(--radius-md); position:relative;">
+    <button onclick="document.getElementById('genre-insight-banner').style.display='none'" style="position:absolute;top:10px;right:12px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;" aria-label="Dismiss">×</button>
+    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Genre Insight</div>
+        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:6px;">{{ audit.genre_suggestion.reason }}</div>
+        {% if audit.genre_suggestion.score_note %}<div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">{{ audit.genre_suggestion.score_note }}</div>{% endif %}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0;">
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">Try: {{ audit.genre_suggestion.suggested_genre }}</div>
+        <a href="{{ url_for('upload') }}?genre={{ audit.genre_suggestion.suggested_genre }}&sub_genre={{ audit.genre_suggestion.suggested_subgenre or '' }}" class="btn btn-solid" style="font-size:13px;padding:8px 16px;white-space:nowrap;">Re-submit →</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── WHAT STOOD OUT — hero card ─────────────────────────────────── #}
+  {% if audit %}
+  {# Option A fallback: what_stood_out → hard_truth #}
+  {% set _hero_headline = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
+  {% if _hero_headline %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:22px;" class="sc-verdict-grid">
+    <div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:16px;">★</span>
+        </div>
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
+      </div>
+      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.25;">{{ _hero_headline }}</p>
+      {# Option A fallback: transferable_advice → mentor_next #}
+      {% set _advice = audit.transferable_advice if audit.transferable_advice else '' %}
+      {% if not _advice %}
+        {% for row in audit.rows %}{% if row[0] == 'Next' and row[1] %}{% set _advice = row[1] %}{% endif %}{% endfor %}
+      {% endif %}
+      {% if _advice %}
+      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ _advice }}</p>
+      {% endif %}
+    </div>
+    <div style="border-left:1px solid var(--border); padding-left:22px; display:flex; align-items:center;">
+      {% if audit.mentor_technical %}
+      <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_technical }}"</p>
+      {% elif audit.mentor_moment %}
+      <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_moment }}"</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ── SUBSCRIBER GATE — full scorecard for subscribers, UAT, admin ─ #}
+  {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' %}
+  {% if _can_see_full %}
+
+  {# ── 4 STORY CARDS ─────────────────────────────────────────────── #}
+  {% if audit %}
+  {% set _next_row = namespace(val='') %}
+  {% set _tech_row = namespace(val='') %}
+  {% set _mom_row  = namespace(val='') %}
+  {% for row in audit.rows %}
+    {% if row[0] == 'Next'      and row[1] %}{% set _next_row.val = row[1] %}{% endif %}
+    {% if row[0] == 'Technical' and row[1] %}{% set _tech_row.val = row[1] %}{% endif %}
+    {% if row[0] == 'Moment'    and row[1] %}{% set _mom_row.val  = row[1] %}{% endif %}
+  {% endfor %}
+
+  {# Option A fallback: background_check → byline_1 #}
+  {% set _bgcheck = audit.background_check if audit.background_check else audit.byline_1 %}
+
+  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-four-grid">
+
+    {# Card 1 — The photographer's advice #}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
+      <div style="width:34px; height:34px; border-radius:8px; background:#EAF0FA; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
+        <span style="font-size:16px; color:#185FA5;">📷</span>
+      </div>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
+        {%- if audit.transferable_advice -%}Trust the darkness.{%- elif _tech_row.val -%}{{ _tech_row.val[:50] }}…{%- else -%}Trust what you saw.{%- endif -%}
+      </p>
+      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
+        {{ audit.transferable_advice or _tech_row.val or '' }}
+      </p>
+    </div>
+
+    {# Card 2 — What you controlled #}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
+      <div style="width:34px; height:34px; border-radius:8px; background:#EAF5EE; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
+        <span style="font-size:16px; color:#27500A;">▲</span>
+      </div>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
+        {%- if audit.byline_2_body or audit.byline_2 -%}
+          {{ (audit.byline_2_body or audit.byline_2)[:60] }}…
+        {%- else -%}Only yours held this.{%- endif -%}
+      </p>
+      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
+        {{ audit.byline_2_body or audit.byline_2 or _mom_row.val or '' }}
+      </p>
+    </div>
+
+    {# Card 3 — What to watch next #}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
+      <div style="width:34px; height:34px; border-radius:8px; background:#F5EAF0; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
+        <span style="font-size:16px; color:#72243E;">◎</span>
+      </div>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">One second before you press.</p>
+      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
+        {{ _bgcheck or _next_row.val or '' }}
+      </p>
+    </div>
+
+    {# Card 4 — Keep this in mind #}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
+      <div style="width:34px; height:34px; border-radius:8px; background:#FDF3E3; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
+        <span style="font-size:16px; color:#854F0B;">💡</span>
+      </div>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">Don't touch the blacks.</p>
+      <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
+        {{ audit.edit_base or '' }}
+      </p>
+    </div>
+
+  </div>
+  {% endif %}
+
+  {# ── THIS WEEK'S CHALLENGE ─────────────────────────────────────── #}
+  {% if weekly_challenge %}
+  <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <div>
+      <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
+      <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
+    </div>
+    <a href="{{ url_for('challenge_detail', challenge_id=weekly_challenge.id) }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
+  </div>
+  {% endif %}
+
+  {# ── HOW YOU'RE DEVELOPING + 2025 STATS ───────────────────────── #}
+  {# Trend lines — only shown when user has 5+ photographs evaluated #}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
+
+    {% if portfolio_data and portfolio_data.has_trends %}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+        <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
+        <span style="margin-left:auto; font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">Score</span>
+      </div>
+      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.count }} photographs evaluated</p>
+
+      {% for dim in portfolio_data.dimensions %}
+      <div style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+          <div>
+            <p style="margin:0; font-size:15px; color:var(--text-primary);">{{ dim.label }}</p>
+            {% if dim.pill %}
+            <span style="font-size:13px; font-family:var(--font-mono); font-weight:700; color:{{ dim.pill_color }}; display:inline-block; background:{{ dim.pill_bg }}; padding:2px 8px; border-radius:4px; margin-top:3px;">{{ dim.pill }}</span>
+            {% endif %}
+          </div>
+          <span style="font-size:26px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); flex-shrink:0; margin-left:10px;">{{ "%.1f"|format(dim.current) }}</span>
+        </div>
+        <svg viewBox="0 0 300 32" width="100%" height="32" preserveAspectRatio="none">
+          <polyline points="{{ dim.sparkline }}" fill="none" stroke="{{ dim.color }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" {% if dim.flat %}stroke-dasharray="7,4"{% endif %}/>
+          {% for pt in dim.points %}
+          <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ '5' if loop.last else '3.5' }}" fill="{{ dim.color }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
+          {% endfor %}
+        </svg>
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          {% for v in dim.values %}
+          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ v }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    {# Fewer than 5 images — show teaser #}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:12px;">
+      <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
+      <p style="margin:0; font-size:15px; color:var(--text-muted); line-height:1.7;">Available after your 5th photograph. Your trend lines will show how your eye is improving across every dimension.</p>
+      {% if portfolio_data %}
+      <div style="font-family:var(--font-mono); font-size:24px; font-weight:700; color:var(--gold);">{{ portfolio_data.count }}/5</div>
       {% endif %}
     </div>
     {% endif %}
-    {% endif %}
 
-    {# DDI dimensions #}
-    {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+    {# 2025 Stats — always shown #}
+    <div style="display:flex; flex-direction:column; gap:10px;" class="sc-three-grid">
+      <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase;">2025 stats</p>
+      <div style="background:linear-gradient(135deg,#FDF3E3,#F0D9A8); border:0.5px solid rgba(186,117,23,0.3); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Best this year</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '—' }}</p>
+        {% if stats and stats.best_genre %}<p style="margin:4px 0 0; font-size:13px; color:#4A3010;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
+      </div>
+      <div style="background:linear-gradient(135deg,#EAF5EE,#C8E8D4); border:0.5px solid rgba(39,80,10,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase;">This month</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(image.score) }}</p>
+        <p style="margin:4px 0 0; font-size:13px; color:#1E3A0A;">{{ stats.this_month_count or 1 }} photograph{{ 's' if (stats.this_month_count or 1) != 1 else '' }} evaluated</p>
+      </div>
+      {% if percentile and percentile.percentile %}
+      <div style="background:linear-gradient(135deg,#EAF0FA,#C8D8F0); border:0.5px solid rgba(44,62,107,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Your standing</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">Top {{ 100 - percentile.percentile|int }}%</p>
+        <p style="margin:4px 0 0; font-size:13px; color:#1A3A5C;">{{ image.genre }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {# ── EDIT GUIDE ────────────────────────────────────────────────── #}
+  {% if audit and (audit.edit_base or audit.edit_creative) %}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
+    {% if audit.edit_base %}
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:34px; height:34px; border-radius:8px; background:#EAF0FA; display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:15px; color:#185FA5;">⚙</span>
+        </div>
+        <div>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Standard edit</p>
+          <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Balanced · Light editing</p>
+        </div>
+      </div>
+      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_base }}</p>
+    </div>
+    {% endif %}
+    {% if audit.edit_creative %}
+    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:34px; height:34px; border-radius:8px; background:#FDF3E3; display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:15px; color:#854F0B;">🎨</span>
+        </div>
+        <div>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Creative edit</p>
+          <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Artistic · Heavy editing</p>
+        </div>
+      </div>
+      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_creative }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── MENTOR LOCATION INTELLIGENCE ──────────────────────────────── #}
+  {% if audit and audit.mentor_location_1 %}
+  <div style="background:linear-gradient(135deg,#0F2318,#163020); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(126,200,160,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <span style="font-size:15px;">📍</span>
+      </div>
+      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
+    </div>
+    <p style="margin:0 0 16px; font-size:18px; color:#fff; line-height:1.85; font-weight:700;">{{ audit.mentor_location_1 | truncate(120) }}</p>
+    {% if audit.mentor_location_2 %}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid">
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
+        <p style="margin:0; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Coming up</p>
+        <p style="margin:0; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
+      </div>
+    </div>
+    {% endif %}
+    {% if audit.days_since_language %}
+    <div style="margin-top:14px; padding-top:12px; border-top:0.5px solid rgba(255,255,255,0.1);">
+      <p style="margin:0; font-size:16px; color:#F5C518; font-style:italic;">{{ audit.days_since_language }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── DDI DIMENSIONS ────────────────────────────────────────────── #}
+  {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
+    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension scores</a></p>
     <div class="ddi-grid">
       {% set dims = [
-        ('DoD', image.dod_score, 'Depth of Difficulty', 'DEPTH OF', 'DIFFICULTY (DOD)'),
-        ('Disruption', image.disruption_score, 'Visual Disruption', 'VISUAL', 'DISRUPTION'),
-        ('DM', image.dm_score, 'Decisive Moment', 'DECISIVE', 'MOMENT (DM)'),
-        ('Wonder', image.wonder_score, 'Wonder Factor', 'WONDER', 'FACTOR'),
-        ('AQ', image.aq_score, 'Aesthetic Quality', 'AESTHETIC', 'QUALITY (AQ)'),
+        ('DoD',        image.dod_score,        'Depth of Difficulty',  'HOW DIFFICULT', 'IT WAS'),
+        ('Disruption', image.disruption_score,  'Visual Disruption',   'VISUAL',        'DISRUPTION'),
+        ('DM',         image.dm_score,          'Decisive Moment',     'WHETHER THE',   'TIMING WAS RIGHT'),
+        ('Wonder',     image.wonder_score,      'Wonder Factor',       'WHETHER IT MADE','YOU FEEL SOMETHING'),
+        ('AQ',         image.aq_score,          'Aesthetic Quality',   'THE EMOTION',   'IT CREATES'),
       ] %}
       {% for lbl, val, title, line1, line2 in dims %}
       <div class="ddi-dim">
@@ -249,174 +628,70 @@
       </div>
       {% endfor %}
     </div>
-    {% endif %}
-
-    {# Peer rating info #}
-    {% if image.peer_rating_count and image.peer_rating_count > 0 %}
-    <div class="peer-block">
-      <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
-      <div class="peer-strip">
-        <div class="peer-item">Ratings <strong>{{ image.peer_rating_count }}</strong></div>
-        {% if image.peer_avg_score %}<div class="peer-item">Peer avg <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
-        {% if image.blended_score %}<div class="peer-item">Blended score <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
-      </div>
-    </div>
-    {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id %}
-    <div class="peer-block peer-block-nudge">
-      <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
-      <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">
-        Your AI score is live. Want human photographers to validate it?
-        Peer rating shows how real photographers score your work alongside the AI.
-      </div>
-      {% if current_user.is_subscribed %}
-      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Rate others to unlock &#x2192;</a>
-      {% else %}
-      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Unlock peer validation &#x2192;</a>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    {# Percentile #}
-    {% if percentile and percentile.percentile %}
-    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:4px;">Percentile — {{ image.genre }}</div>
-      <div class="percentile-bar-track">
-        <div class="percentile-bar-fill" style="width:{{ percentile.percentile|int }}%;"></div>
-      </div>
-      <div style="font-size:14px; color:var(--text-secondary);">Top <strong style="color:var(--text-primary);">{{ 100 - percentile.percentile|int }}%</strong> of {{ image.genre }} images on the platform</div>
-    </div>
-    {% endif %}
-  </div>
-
-  {# ── Analysis — owner and admin only ──────────────────────────── #}
-  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
-
-  {# ── DDI qualifier note ────────────────────────────────────────── #}
-  {% if image.status == 'scored' and image.score %}
-  <div style="font-size: 14px; color:var(--text-muted); line-height:1.6;
-              padding:10px 14px; margin-bottom:20px;
-              border-left:3px solid var(--border);
-              font-family:var(--font-mono);">
-    <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-decoration-color:rgba(0,0,0,0.25); text-underline-offset:2px; font-family:inherit; font-size:inherit; letter-spacing:inherit;">DDI</a> scores are consistent and science-based. As with any AI assessment,
-    individual scores may vary slightly — your tier reflects performance
-    across multiple images, not any single result.
   </div>
   {% endif %}
 
-  {# ── Scored As banner — shows when engine overrode sub-genre ────── #}
-  {% set audit_sa = image.get_audit() %}
-  {% if audit_sa and audit_sa.subgenre_overridden and audit_sa.effective_subgenre %}
-  <div style="margin-bottom:16px; padding:14px 20px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</div>
-    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">{{ image.genre }} · {{ audit_sa.effective_subgenre.replace('_',' ') }}</div>
-    {% if audit_sa.vision_subgenre_reason %}
-    <div style="font-size:14px;color:var(--text-secondary);flex:1;min-width:200px;">{{ audit_sa.vision_subgenre_reason }}</div>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  {# ── Genre Insight banner ──────────────────────────────────────── #}
-  {% set audit_gi = image.get_audit() %}
-  {% if audit_gi and audit_gi.genre_suggestion and audit_gi.genre_suggestion.suggested_genre and not audit_gi.subgenre_overridden %}
-  <div id="genre-insight-banner" style="margin-bottom:24px; padding:20px 24px; background:var(--surface-2); border:2px solid var(--gold); border-radius:var(--radius-md); position:relative;">
-    <button onclick="document.getElementById('genre-insight-banner').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;" aria-label="Dismiss">×</button>
-    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:200px;">
-        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Genre Insight</div>
-        <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:8px;">
-          {{ audit_gi.genre_suggestion.reason }}
-        </div>
-        {% if audit_gi.genre_suggestion.score_note %}
-        <div style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);">{{ audit_gi.genre_suggestion.score_note }}</div>
-        {% endif %}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex-shrink:0;">
-        <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;">Try: {{ audit_gi.genre_suggestion.suggested_genre }}</div>
-        <a href="{{ url_for('upload') }}?genre={{ audit_gi.genre_suggestion.suggested_genre }}&sub_genre={{ audit_gi.genre_suggestion.suggested_subgenre or '' }}" class="btn btn-solid" style="font-size:14px;padding:10px 18px;white-space:nowrap;">Re-submit →</a>
-      </div>
+  {# ── PEER VALIDATION ───────────────────────────────────────────── #}
+  {% if image.peer_rating_count and image.peer_rating_count > 0 %}
+  <div class="peer-block" style="margin-bottom:14px;">
+    <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
+    <div class="peer-strip">
+      <div class="peer-item">Ratings <strong>{{ image.peer_rating_count }}</strong></div>
+      {% if image.peer_avg_score %}<div class="peer-item">Peer avg <strong>{{ '%.1f'|format(image.peer_avg_score) }}</strong></div>{% endif %}
+      {% if image.blended_score %}<div class="peer-item">Blended score <strong>{{ '%.2f'|format(image.blended_score) }}</strong></div>{% endif %}
     </div>
   </div>
-  {% endif %}
-
-  {# ── Audit analysis rows ────────────────────────────────────────── #}
-  {% set audit = image.get_audit() %}
-  {% if audit and audit.rows %}
-  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;"><a href="/science" class="glink-inline" style="color:var(--text-primary); text-decoration-color:rgba(44,62,107,0.5);" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.5)'">DDI Analysis</a></div>
-    {% set dim_links = {
-      'DoD': '/science#dimensions', 'Depth of Difficulty': '/science#dimensions',
-      'DM': '/science#dimensions', 'Decisive Moment': '/science#dimensions',
-      'AQ': '/science#dimensions', 'Aesthetic Quality': '/science#dimensions',
-      'Wonder': '/science#dimensions',
-      'Disruption': '/science#dimensions', 'Visual Disruption': '/science#dimensions',
-      'DDI': '/science',
-      'Technical': '/science#dimensions',
-      'Moment': '/science#dimensions',
-    } %}
-    {# Technical + Moment — visible to all #}
-    {% for row in audit.rows %}
-    {% if row[1] and row[0] in ('Technical', 'Moment') %}
-    <div class="audit-row">
-      <div class="audit-row-label">{% if row[0] in dim_links %}<a href="{{ dim_links[row[0]] }}" style="color:var(--text-primary); text-decoration:underline; text-decoration-color:rgba(44,62,107,0.4); text-underline-offset:2px; font-family:inherit; font-size:inherit; font-weight:inherit; letter-spacing:inherit; text-transform:inherit;" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.4)'">{{ row[0] }}</a>{% else %}{{ row[0] }}{% endif %}</div>
-      <div class="audit-row-text">{{ row[1] }}</div>
-    </div>
-    {% endif %}
-    {% endfor %}
-
-    {# Next + Creative Direction + Edit Guide — subscribers, UAT users, and admin #}
-    {% set _can_see_full = current_user.is_subscribed or current_user.subscription_plan == 'uat' or current_user.role == 'admin' %}
-    {% if current_user.is_authenticated and _can_see_full %}
-    {% for row in audit.rows %}
-    {% if row[1] and row[0] not in ('Technical', 'Moment') %}
-    <div class="audit-row">
-      <div class="audit-row-label">{% if row[0] in dim_links %}<a href="{{ dim_links[row[0]] }}" style="color:var(--text-primary); text-decoration:underline; text-decoration-color:rgba(44,62,107,0.4); text-underline-offset:2px; font-family:inherit; font-size:inherit; font-weight:inherit; letter-spacing:inherit; text-transform:inherit;" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.4)'">{{ row[0] }}</a>{% else %}{{ row[0] }}{% endif %}</div>
-      <div class="audit-row-text">{{ row[1] }}</div>
-    </div>
-    {% endif %}
-    {% endfor %}
-    {% if audit.byline_2_body or audit.byline_2 %}
-    <div style="margin-top:20px;padding:16px 20px;background:#2C3E6B;border-radius:var(--radius-md);">
-      <div style="font-family:var(--font-mono);font-size: 14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;">Creative Direction</div>
-      <div style="font-size:16px;color:#ffffff;line-height:1.7;">{{ audit.byline_2_body or audit.byline_2 }}</div>
-    </div>
-    {% endif %}
-    {% if audit.byline_1 %}
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next Image</div>
-      <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
-    </div>
-    {% endif %}
-    {# Edit Guide — Base Edits / Creative Edits #}
-    {% if audit.edit_base or audit.edit_creative %}
-    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;color:var(--text-primary);text-transform:uppercase;margin-bottom:16px;">Edit Guide</div>
-      {% set edit_tiers = [
-        ('BASE EDITS',     'var(--gold)',   'Post-processing only.',    audit.edit_base),
-        ('CREATIVE EDITS', 'var(--green)',  'Artistic. Heavy editing.', audit.edit_creative),
-      ] %}
-      {% for tier_label, tier_col, tier_sub, tier_body in edit_tiers %}
-      {% if tier_body %}
-      <div style="margin-bottom:14px;padding:14px 18px;background:var(--surface-3);border-radius:var(--radius-sm);border:1px solid var(--border);">
-        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;margin-bottom:6px;">
-          <span style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:1.5px;color:{{ tier_col }};text-transform:uppercase;">{{ tier_label }}</span>
-          <span style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);">· {{ tier_sub }}</span>
-        </div>
-        <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;word-break:break-word;">{{ tier_body }}</div>
-      </div>
-      {% endif %}
-      {% endfor %}
-    </div>
-    {% endif %}
+  {% elif image.score is not none and current_user.is_authenticated and image.user_id == current_user.id %}
+  <div class="peer-block peer-block-nudge" style="margin-bottom:14px;">
+    <div class="peer-block-hdr">&#x1F465; Peer Validation</div>
+    <div style="font-size:16px;color:var(--text-primary);line-height:1.6;margin-bottom:12px;">Your AI score is live. Want human photographers to validate it?</div>
+    {% if current_user.is_subscribed %}
+    <a href="{{ url_for('rate') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Rate others to unlock &#x2192;</a>
     {% else %}
-    {# Free tier CTA — unlock improvement directions #}
-    <div style="margin-top:20px;padding:20px 24px;background:var(--surface-3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 var(--radius-md) var(--radius-md) 0;">
-      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Improvement Directions &amp; Edit Guide</div>
-      <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Subscribe to unlock what to shoot next, creative directions, and a full edit guide for this image.</div>
-      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px;font-size:15px;">Subscribe to unlock →</a>
-    </div>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:10px 24px;">Unlock peer validation &#x2192;</a>
     {% endif %}
   </div>
   {% endif %}
+
+  {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
+  {% if image.scored_at %}
+  {% set _days = ((now - image.scored_at).days) if now else 0 %}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+    <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
+      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">
+        {{ audit.days_since_language if audit and audit.days_since_language else 'Your camera is waiting.' }}
+      </p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
+      {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
+      <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn btn-solid" style="font-size:15px; padding:14px; text-align:center;">Share this scorecard</a>
+      <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank" class="btn" style="font-size:15px; padding:14px; text-align:center;">Download full scorecard</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── QUOTE ─────────────────────────────────────────────────────── #}
+  <div style="border-left:4px solid var(--gold); padding:16px 22px; margin-bottom:14px;">
+    <p style="margin:0 0 8px; font-size:17px; color:var(--text-primary); line-height:1.85; font-style:italic;">"To photograph is to hold one's breath when all faculties converge to capture fleeting reality."</p>
+    <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">— Henri Cartier-Bresson</p>
+  </div>
+
+  {# ── DDI qualifier note ───────────────────────────────────────── #}
+  <div style="font-size:13px; color:var(--text-muted); line-height:1.6; padding:10px 14px; margin-bottom:14px; border-left:3px solid var(--border); font-family:var(--font-mono);">
+    <a href="/science" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">DDI</a> scores are consistent and science-based. Your tier reflects performance across multiple photographs, not any single result.
+  </div>
+
+  {% else %}
+  {# ── Free tier CTA ─────────────────────────────────────────────── #}
+  <div style="padding:20px 24px; background:var(--surface-2); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:0 var(--radius-md) var(--radius-md) 0; margin-bottom:14px;">
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">What to do next</div>
+    <div style="font-size:16px; color:var(--text-secondary); line-height:1.7; margin-bottom:16px;">Subscribe to see the full scorecard — the mentor's advice, the creative direction, the edit guide, and where to shoot next.</div>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px; font-size:15px;">Unlock →</a>
+  </div>
+  {% endif %}{# end subscriber gate #}
+
+  {% endif %}{# end owner/admin gate #}
   {% endif %}{# end if scored #}
 
   {# ── Mentor CTA ──────────────────────────────────────────────────── #}
@@ -429,8 +704,6 @@
     <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:12px 24px; font-size:15px;">Book Mentor Review →</a>
   </div>
   {% endif %}
-
-  {% endif %}{# end owner/admin analysis gate #}
 
   {# ── Metadata grid ───────────────────────────────────────────────── #}
   <div class="meta-grid">
@@ -481,29 +754,29 @@
   {# ── Technical details ─────────────────────────────────────────────── #}
   {% if image.original_filename or (image.width and image.height) or image.file_size_kb %}
   <div style="border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 22px; margin-bottom:24px; background:var(--surface-2);">
-    <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">File Details</div>
+    <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px;">File Details</div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 24px;">
       {% if image.original_filename %}
       <div>
-        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Filename</div>
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Filename</div>
         <div style="font-size:14px; font-weight:600; color:var(--text-primary); word-break:break-all;">{{ image.original_filename }}</div>
       </div>
       {% endif %}
       {% if image.format %}
       <div>
-        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Format</div>
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Format</div>
         <div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ image.format.upper() }}</div>
       </div>
       {% endif %}
       {% if image.width and image.height %}
       <div>
-        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Dimensions</div>
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Dimensions</div>
         <div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ image.width }} × {{ image.height }}px</div>
       </div>
       {% endif %}
       {% if image.file_size_kb %}
       <div>
-        <div style="font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">File Size</div>
+        <div style="font-family:var(--font-mono); font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">File Size</div>
         <div style="font-size:14px; font-weight:600; color:var(--text-primary);">
           {% if image.file_size_kb >= 1024 %}{{ "%.1f"|format(image.file_size_kb / 1024) }} MB{% else %}{{ image.file_size_kb }} KB{% endif %}
         </div>
@@ -555,7 +828,7 @@
       {# ── Version compare panel ───────────────────────────────────── #}
   {% if image_versions and image_versions|length > 1 and current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   <div style="margin:0 0 20px;padding:18px 20px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);">
-    <p style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.5;margin:0 0 14px;">All Versions</p>
+    <p style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);opacity:0.5;margin:0 0 14px;">All Versions</p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;">
       {% for v in image_versions %}
       {% set _is_current = (v.id == image.id) %}
@@ -570,22 +843,22 @@
         <div style="width:100%;aspect-ratio:4/3;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:20px;">🖼️</div>
         {% endif %}
         <div style="padding:6px 8px;">
-          <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:{{ 'var(--gold)' if _is_current else 'var(--text-secondary)' }};margin-bottom:2px;">
+          <div style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:{{ 'var(--gold)' if _is_current else 'var(--text-secondary)' }};margin-bottom:2px;">
             V{{ loop.index }}{% if _is_current %} · Now{% endif %}
           </div>
           {% if v.score %}
           <div style="font-size:16px;font-weight:700;color:var(--text-primary);line-height:1;">{{ '%.2f'|format(v.score) }}</div>
-          <div style="font-size:12px;color:var(--text-secondary);">{{ v.tier or '' }}</div>
+          <div style="font-size:13px;color:var(--text-secondary);">{{ v.tier or '' }}</div>
           {% elif v.status == 'processing' %}
-          <div style="font-size:12px;color:var(--text-secondary);">Scoring…</div>
+          <div style="font-size:13px;color:var(--text-secondary);">Scoring…</div>
           {% else %}
-          <div style="font-size:12px;color:var(--text-secondary);">Pending</div>
+          <div style="font-size:13px;color:var(--text-secondary);">Pending</div>
           {% endif %}
-          <div style="font-size:12px;margin-top:3px;font-family:var(--font-mono);color:var(--text-secondary);opacity:0.6;">
+          <div style="font-size:13px;margin-top:3px;font-family:var(--font-mono);color:var(--text-secondary);opacity:0.6;">
             {{ '🌐 Public' if v.is_public else '🔒 Private' }}
           </div>
           {% if _is_best and image_versions|selectattr('score')|list|length > 1 %}
-          <div style="font-size:12px;font-family:var(--font-mono);color:var(--gold);margin-top:2px;">★ Best</div>
+          <div style="font-size:13px;font-family:var(--font-mono);color:var(--gold);margin-top:2px;">★ Best</div>
           {% endif %}
         </div>
       </a>
@@ -611,8 +884,8 @@
   </div>
   {% elif parent_image_id and current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
   <div style="margin:0 0 16px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);font-size:14px;color:var(--text-primary);">
-    <span style="font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);">Edited Version</span>
-    &nbsp;·&nbsp; <a href="{{ url_for('image_detail', image_id=parent_image_id) }}" style="color:var(--gold);">View original</a>
+    <span style="font-family:var(--font-mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);">Edited Version</span>
+    &nbsp;·&nbsp; <a href="{{ url_for('image_detail', image_id=parent_image_id) }}" style="color:var(--text-muted);">View original</a>
     &nbsp;·&nbsp; {{ 'Public' if image.is_public else 'Private' }}
   </div>
   {% endif %}
@@ -620,19 +893,6 @@
 <a href="{{ url_for('share_image', image_id=image.id) }}" class="btn" style="font-size: 14px;">Share →</a>
     {% endif %}
   </div>
-
-  {# ── Download + Share row ────────────────────────────────────────── #}
-  {% if image.status == 'scored' and image.score and not image.is_flagged %}
-  {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
-  <div class="cta-download-row" style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
-    <a href="{{ url_for('download_card', image_id=image.id) }}" target="_blank"
-       class="btn btn-solid" style="flex:1; min-width:140px; text-align:center; padding:13px 14px; font-size:14px; white-space:nowrap;">&#8595; Download Review</a>
-    <a href="{{ url_for('share_image', image_id=image.id) }}"
-       class="btn" style="flex:1; min-width:140px; text-align:center; padding:13px 14px; font-size:14px; white-space:nowrap;">&#8593; Share Score</a>
-  </div>
-  <div style="font-size:14px; color:var(--text-muted); margin-bottom:28px; line-height:1.5;">Download saves your full evaluation. Share shows your score only — no analysis visible to others.</div>
-  {% endif %}
-  {% endif %}
 
   {# ── Admin section ───────────────────────────────────────────────── #}
   {% if current_user.role == 'admin' %}

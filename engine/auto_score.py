@@ -343,6 +343,8 @@ GENRE CONTEXT: {genre_context}
 {calibration_examples}
 {calibration_notes}
 {exif_context}
+{seasonal_context}
+{portfolio_context}
 
 MANDATORY: If genre is 'Creative' — apply STEP 0 override immediately.
 Sharpness is never penalised. Score DoD on technique difficulty.
@@ -374,7 +376,10 @@ WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
   not to document your own gaps.
 - BANNED phrases: "the image demonstrates", "this photograph shows", "the composition
   features", "the subject is positioned", "the technique showcases", "the exposure
-  captures", "the scene reveals", "the frame contains".
+  captures", "the scene reveals", "the frame contains", "solid foundation",
+  "technically sound", "compositional awareness", "demonstrates", "showcases",
+  "areas to develop", "moving forward", "well-executed", "good use of",
+  "effectively captures", "nicely done", "great shot".
 
 SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
 - This image worked. The mentor job is to name exactly what made it work, then offer
@@ -480,7 +485,13 @@ Return this exact JSON structure:
   "species_id": "<For Wildlife and Nature genres only: precise common name from scene description. Null for all other genres.>",
   "edit_base":     "<BASE EDITS — post-processing only. INTEGRITY RULE: if score >= 8.0, DO NOT suggest edits that undo the tonal, contrast, or shadow choices that earned the score. For high-scoring images limit to: dust removal, minor colour cast correction, slight primary-subject sharpening. If bold choices (shadow retention, high contrast, dark register) are what scored, say so explicitly and tell the user not to change them. For score < 6.0: specific corrective adjustments — local exposure, dodging/burning, colour grading. Tool-specific. 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
-  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>"
+  "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>",
+  "what_stood_out": "<SCORECARD HERO LINE. One sentence. The bold, proud statement of what this image achieved. Written in the Sherpa voice — direct, specific, never generic. This is the headline the photographer reads first. For high-scoring images: name the specific creative decision that separated this image. NEVER start with 'This image' or 'The photograph'. KYC: no jargon, no banned words. Examples: 'You made the harder call.' / 'Only yours held the sky.' / 'You were there for one of those seconds that doesn't repeat.'>",
+  "transferable_advice": "<SCORECARD CARD 1 BODY. 2-3 sentences. The lesson this image teaches that applies to every future shoot — not just this location or subject. CRITICAL: NEVER say 'go back and reshoot' — the moment is gone. Teach the principle the photographer now owns. Reference a master (McCurry, Adams, Cartier-Bresson, Raghu Rai, Salgado) when the principle connects to their work. Warm, specific, never generic. KYC: no jargon — write 'when the sky was doing something extraordinary' not 'backlit scene'. Write 'you exposed for the sky' not 'silhouette exposure'. Plain language throughout. If portfolio_context shows a trend in feeling/timing/difficulty, reference it naturally.>",
+  "background_check": "<SCORECARD CARD 3 BODY. 2-3 sentences. The Bresson habit — 'reading the field': knowing what is behind your subject before the moment arrives. Name the specific element in THIS image that the habit would have resolved. Frame it as something the photographer almost had — not a failure. Then state the habit as transferable: 'That one-second glance behind your subject lifts every photograph you make — Wildlife at the waterhole, Street in the market, a face in a crowd.' KYC: plain language only.>",
+  "mentor_location_1": "<SCORECARD MENTOR LOCATION 1. Populated ONLY when seasonal_context is provided in the prompt. 3-4 sentences in the Sherpa voice — warm, specific, like a friend who knows the reserve. Include: the specific subject active NOW, why this window is special this season, why it connects directly to the photographer's growth opportunity. Specific enough that the photographer starts planning immediately. If no seasonal_context in prompt, return null.>",
+  "mentor_location_2": "<SCORECARD MENTOR LOCATION 2. The upcoming window — plan ahead. Same voice as mentor_location_1. If seasonal_context only has one location, or if no seasonal_context provided, return null.>",
+  "days_since_language": "<SCORECARD DAYS-SINCE LINE. One sentence. Genre-specific, tied to mentor_location_1 subject if available. For Wildlife with black leopard: 'The black leopard doesn't wait. Neither should you.' For Wildlife generally: reference the specific animal or seasonal window. For Street: reference the light window. For Landscape: reference the seasonal moment. For Wedding/People: warm personal line. NEVER 'your camera is waiting' — that is the fallback only when nothing specific is available.>"
 }}
 
 AI DETECTION — evaluate BEFORE scoring:
@@ -3141,7 +3152,47 @@ def build_exif_context(exif_data: dict, camera_track: str = None) -> str:
     return '\n'.join(lines)
 
 
-def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context=""):
+def _build_portfolio_context(portfolio_summary: dict) -> str:
+    """
+    Build the portfolio_context string from the portfolio_summary dict.
+    Only called when user has 5+ scored images — gated in app.py before call.
+    Returns "" if portfolio_summary is None or malformed.
+    """
+    if not portfolio_summary or not isinstance(portfolio_summary, dict):
+        return ""
+    feeling    = portfolio_summary.get("feeling", [])
+    timing     = portfolio_summary.get("timing", [])
+    difficulty = portfolio_summary.get("difficulty", [])
+    if len(feeling) < 5:
+        return ""
+
+    def _avg(lst):
+        return round(sum(lst) / len(lst), 2) if lst else 0.0
+
+    def _trend(lst):
+        if len(lst) < 3:
+            return "insufficient data"
+        first_half = _avg(lst[:len(lst)//2])
+        second_half = _avg(lst[len(lst)//2:])
+        diff = second_half - first_half
+        if diff > 0.3:
+            return "climbing"
+        if diff < -0.3:
+            return "declining"
+        return "steady"
+
+    return (
+        f"\nPORTFOLIO CONTEXT — last {len(feeling)} photographs in this genre:\n"
+        f"  Whether it made you feel something: {feeling} (avg {_avg(feeling)}, {_trend(feeling)})\n"
+        f"  Whether the timing was right:       {timing} (avg {_avg(timing)}, {_trend(timing)})\n"
+        f"  How difficult it was:               {difficulty} (avg {_avg(difficulty)}, {_trend(difficulty)})\n"
+        f"Use this to identify strongest dimension (highest avg) and weakest (lowest avg or steadiest trend).\n"
+        f"Reference portfolio trajectory naturally in transferable_advice and days_since_language.\n"
+        f"Do NOT invent trends not visible in the data.\n"
+    )
+
+
+def auto_score(image_path, genre, title, photographer, subject="", location="", sub_genre=None, species_hint="", exif_context="", seasonal_context="", portfolio_summary=None, user_city="", primary_genre=""):
     """
     Score an image using the Apex DDI Engine.
 
@@ -3154,6 +3205,15 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                   misidentification on high-key or processed images.
     exif_context: pre-built string from build_exif_context() — device capability
                   summary and advice constraints injected into the DDI prompt.
+    seasonal_context: pre-built string from build_seasonal_context() — genre-aware
+                  location intelligence for the user's city and month.
+                  Injected into the scoring prompt to generate mentor_location_1/2
+                  and days_since_language. Empty string = not available.
+    portfolio_summary: dict with user's last 8 dimension scores per trend dimension,
+                  only passed when user has 5+ scored images. None otherwise.
+                  Format: {"feeling": [6.1,6.2,...], "timing": [...], "difficulty": [...]}
+    user_city:    user.city — used for location attribution in scorecard fields.
+    primary_genre: user's primary genre from genre_interests[0].
     """
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
@@ -3326,6 +3386,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         calibration_examples = calibration_block,
         calibration_notes    = correction_block,
         exif_context         = exif_context or '',
+        seasonal_context     = seasonal_context or '',
+        portfolio_context    = _build_portfolio_context(portfolio_summary),
     )
 
     payload = {
@@ -3510,6 +3572,13 @@ def build_audit_data(result, image_obj):
         ],
         "byline_1":      result.get("byline_1", ""),
         "byline_2_body": result.get("byline_2", ""),
-        "badges_g":      result.get("badges_g", []),
-        "badges_w":      result.get("badges_w", []),
+        "badges_g":          result.get("badges_g", []),
+        "badges_w":          result.get("badges_w", []),
+        # ── Sprint 2 — scorecard redesign fields ─────────────────────────────
+        "what_stood_out":    result.get("what_stood_out", ""),
+        "transferable_advice": result.get("transferable_advice", ""),
+        "background_check":  result.get("background_check", ""),
+        "mentor_location_1": result.get("mentor_location_1", None),
+        "mentor_location_2": result.get("mentor_location_2", None),
+        "days_since_language": result.get("days_since_language", ""),
     }
