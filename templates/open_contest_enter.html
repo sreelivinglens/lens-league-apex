@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Enter Open Programme — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
   .oc-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
@@ -106,7 +109,7 @@
 
   <div class="oc-eyebrow">Open Programme {{ platform_year }}</div>
   <h1 class="oc-heading">Enter the Open.</h1>
-  <p class="oc-sub">No track split. Camera and Mobile participate together. One recipient per genre. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for submission fees.</p>
+  <p class="oc-sub">No track split. Camera and Mobile participate together. One recipient per genre. See <a href="{{ url_for('poty') }}" style="color:var(--gold);">Awards page</a> for participation fees.</p>
 
   <!-- Step indicators -->
   <div class="oc-steps">
@@ -158,7 +161,7 @@
       <span class="oc-label">2 — Choose Your Image</span>
       {% if entered_genres %}
       <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;letter-spacing:.5px;">
-        ✓ marked genres already have an entry this year.
+        ✓ marked genres already have a participation record this year.
       </p>
       {% endif %}
       <div class="image-grid">
@@ -180,7 +183,7 @@
     </div>
 
     <div class="oc-actions">
-      <button type="submit" class="oc-btn-primary">Review Entry →</button>
+      <button type="submit" class="oc-btn-primary">Review →</button>
       <a href="{{ url_for('contests') }}" class="oc-btn-secondary">Cancel</a>
     </div>
   </form>
@@ -206,11 +209,11 @@
         <span class="summary-val">{{ genre_labels.get(selected_genre, selected_genre) }}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-key">Competition</span>
+        <span class="summary-key">Programme</span>
         <span class="summary-val">Open Programme {{ platform_year }} · No Track Split</span>
       </div>
       <div class="summary-row">
-        <span class="summary-key">Submission Fee</span>
+        <span class="summary-key">Participation Fee</span>
         <span class="summary-val summary-fee"><a href="{{ url_for('poty') }}" style="color:var(--gold); text-decoration:none;">View awards →</a></span>
       </div>
     </div>
@@ -220,7 +223,7 @@
     <div class="payment-stub-icon">💳</div>
     <div class="payment-stub-text">
       <div class="payment-stub-title">Payment Gateway</div>
-      <div class="payment-stub-note">Razorpay integration coming soon — entry confirmed at no charge during beta.</div>
+      <div class="payment-stub-note">Razorpay integration coming soon — participation confirmed at no charge during beta.</div>
     </div>
   </div>
 
@@ -229,7 +232,7 @@
     <input type="hidden" name="genre" value="{{ selected_genre }}">
     <input type="hidden" name="image_id" value="{{ selected_image.id }}">
     <div class="oc-actions">
-      <button type="submit" class="oc-btn-primary">🎯 Confirm Entry</button>
+      <button type="submit" class="oc-btn-primary">🎯 Confirm →</button>
       <a href="{{ url_for('open_contest_enter') }}" class="oc-btn-secondary">← Change Selection</a>
     </div>
   </form>

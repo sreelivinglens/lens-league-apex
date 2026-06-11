@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Welcome — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
   .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -18,7 +21,7 @@
         Hi, {{ current_user.full_name or current_user.username }} 👋
       </h1>
       <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
-        Tell us where you're based so we can rank you on your city leaderboard.<br>
+        Tell us where you're based so we can place you on your city standings.<br>
         Takes 10 seconds.
       </p>
     </div>
@@ -27,7 +30,7 @@
     <div style="background:#1A2744; border-radius:8px; padding:16px 20px; margin-bottom:24px;">
       <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:6px;">🎉 You have a referral discount</div>
       <div style="font-size:16px; color:rgba(255,255,255,0.90); line-height:1.6;">
-        Your first month is <strong style="color:#F5C518;">₹85</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">₹99</span> (Mobile) &nbsp;or&nbsp; <strong style="color:#F5C518;">₹169</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">₹199</span> (Camera).
+        Your first month is <strong style="color:#F5C518;">₹170 (first month — Founding Member rate)).
       </div>
       <div style="font-size:13px; color:rgba(255,255,255,0.50); margin-top:6px; line-height:1.5;">Complete setup below — your discount will be waiting on your dashboard.</div>
     </div>
@@ -40,7 +43,7 @@
           Your Location
         </div>
         <p style="font-size:15px; color:var(--text-muted); margin-bottom:18px; margin-top:-8px; line-height:1.6;">
-          Used for city rankings — "Master · 📷 · Bengaluru". Helps brands find local photographers.
+          Used for city standings — "Master · 📷 · Bengaluru". Helps brands find local photographers.
         </p>
 
         <div class="location-row" style="margin-bottom:24px;">
@@ -151,7 +154,7 @@
         <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
         <li>You shoot in the correct league for your device — Camera League for DSLR/mirrorless/film, Mobile League for smartphones.</li>
         <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
-        <li>Fraud = all images removed, account permanently deleted, all prizes forfeited.</li>
+        <li>Fraud = all images removed, account permanently deleted, all recognition forfeited.</li>
         <li>You retain full copyright on all images. Shutter League gets a non-exclusive licence to display them on the platform.</li>
       </ol>
     </div>

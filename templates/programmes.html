@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Photography Programmes — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Three ways to go further. Annual Excellence Award, Open Programme, Body of Work. One scientific standard.">
+<meta property="og:title" content="Photography Programmes — Shutter League">
+<meta property="og:description" content="Annual Excellence Award. Open Programme. Body of Work. Three programmes, one scientific standard.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 {% block extra_css %}
 <style>
   .programmes-wrap { max-width: 880px; margin: 0 auto; padding: 0 0 clamp(3rem,6vw,5rem); }
@@ -106,7 +113,7 @@
   </div>
 
   <p style="font-size:1rem; color:var(--text-secondary); line-height:1.8; margin-bottom:2rem; max-width:580px;">
-    Your uploaded images build your Annual Excellence Award standing continuously through the calendar year. The Open Submission is an annual deliberate entry. The Body of Work is the platform's most prestigious annual submission.
+    Your uploaded images build your Annual Excellence Award standing continuously through the calendar year. The Open Programme is an annual deliberate participation. The Body of Work is the platform's most prestigious annual programme.
   </p>
 
   <!-- ── ELIGIBILITY ── -->
@@ -117,7 +124,7 @@
       <li>All programmes are open to registered Shutter League subscribers in good standing. Subscription requires a valid Indian bank account and PAN card — programmes are currently available to Indian residents and NRIs with active Indian bank accounts. Programmes are governed by Indian law and applicable regulations.</li>
       <li>All programmes run on the calendar year: <strong>1 January – 31 December</strong>. Scores, standings, and qualifying history reset on 1 January each year.</li>
       <li>Images must be the photographer's original work. AI-generated images, composites, and stolen images are disqualified. RAW file verification applies to all programme recipients.</li>
-      <li>Full submission rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
+      <li>Full programme rules, IP rights, rejection grounds, and recourse process: <a href="{{ url_for('contest_rules') }}" style="color:var(--text-primary);font-weight:700;text-decoration:underline;">Programme Rules</a>.</li>
     </ul>
   </div>
 
@@ -166,38 +173,38 @@
   <div class="comp-block open" id="open">
     <div class="comp-header">
       <div>
-        <div class="comp-freq">Annual · Submissions Open Oct · Close Dec &nbsp;·&nbsp; <strong style="color:var(--gold);">2026: 1 Oct – 31 Dec</strong></div>
-        <div class="comp-title">Open Submission Programme</div>
+        <div class="comp-freq">Annual · Opens Oct · Closes Dec &nbsp;·&nbsp; <strong style="color:var(--gold);">2026: 1 Oct – 31 Dec</strong></div>
+        <div class="comp-title">Open Programme</div>
       </div>
-      <div class="comp-dates">Oct – Dec<small>Submission Window</small></div>
+      <div class="comp-dates">Oct – Dec<small>Open Window</small></div>
     </div>
     <div class="comp-desc">
-      The Open Submission is a single-entry annual programme with no league split — Camera Users and Mobile Users are evaluated in the same pool. You select one image per genre, pay &#8377;50 per submission, and participate for genre recognition. The Grand Open Recipient is selected by jury from all 8 genre recipients.
+      The Open is a single-image annual programme with no league split — Camera Users and Mobile Users are evaluated in the same pool. You select one image per genre, pay &#8377;50 per image, and participate for genre recognition. The Grand Open Recipient is selected by jury from all 8 genre recipients.
       <br><br>
-      Unlike the Monthly Programme and Annual Excellence Award, the Open has no automatic entry — you choose your best image deliberately and submit it during the October to December window each calendar year.
+      Unlike the Monthly Programme and Annual Excellence Award, the Open has no automatic participation — you choose your best image deliberately and submit it during the October to December window each calendar year.
     </div>
     <div class="comp-honours">
       <div class="comp-honour-item"><strong>Genre Recipient × 8 genres</strong> Badge and Certificate</div>
       <div class="comp-honour-item"><strong>Grand Open Recipient</strong> Platform recognition</div>
-      <div class="comp-honour-item"><strong>&#8377;50 per submission</strong> per genre</div>
+      <div class="comp-honour-item"><strong>&#8377;50 per image</strong> per genre</div>
       <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
     </div>
     <div class="comp-note">
-      2026 submissions open 1 October and close 31 December 2026 at 23:59 IST. Results announced 1 February 2027. You will be notified when the submission window opens.
+      2026 participation opens 1 October and close 31 December 2026 at 23:59 IST. Results announced 1 February 2027. You will be notified when the window opens.
       <br><br>
       <strong>Award eligibility:</strong> Open to all registered subscribers. Recognition includes certificates, badges, and platform standing.
     </div>
     <div class="comp-actions">
       {% if open_contest_active %}
         {% if current_user.is_authenticated and current_user.is_subscribed %}
-          <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid">Submit to Open Programme →</a>
+          <a href="{{ url_for('open_contest_enter') }}" class="btn btn-solid">Join Open Programme →</a>
         {% elif current_user.is_authenticated %}
           <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Participate →</a>
         {% else %}
           <a href="{{ url_for('register') }}" class="btn btn-solid">Join to Participate →</a>
         {% endif %}
       {% else %}
-        <span style="font-family:var(--font-mono); font-size:1rem; color:var(--text-muted); letter-spacing:1px;">OPENS 1 OCTOBER 2026 · SUBMISSIONS CLOSE 31 DECEMBER 2026</span>
+        <span style="font-family:var(--font-mono); font-size:1rem; color:var(--text-muted); letter-spacing:1px;">OPENS 1 OCTOBER 2026 · CLOSES 31 DECEMBER 2026</span>
       {% endif %}
     </div>
   </div>
@@ -206,15 +213,15 @@
   <div class="comp-block bow" id="bow">
     <div class="comp-header">
       <div>
-        <div class="comp-freq">Annual · Submission Window December</div>
+        <div class="comp-freq">Annual · Programme Window December</div>
         <div class="comp-title">Body of Work</div>
       </div>
-      <div class="comp-dates">December<small>Submission Window</small></div>
+      <div class="comp-dates">December<small>December Window</small></div>
     </div>
     <div class="comp-desc">
       The Body of Work is the platform's most prestigious programme — and the hardest to enter. You submit 6 to 12 images as a single unified thematic series in one genre or subject of your choice. Not a collection. A series with a narrative arc, a visual language, a point of view.
       <br><br>
-      Your chosen genre or subject does not need to match the platform's standard categories — submissions in Environment, Conservation, Humanity, Water, Street, or any cohesive photographic subject are welcome. Evaluated exclusively by Jury Legends. No peer rating.
+      Your chosen genre or subject does not need to match the platform's standard categories — work in Environment, Conservation, Humanity, Water, Street, or any cohesive photographic subject are welcome. Evaluated exclusively by Jury Legends. No peer rating.
     </div>
     <div class="comp-honours">
       <div class="comp-honour-item"><strong>Gold Honour</strong> Jury's highest recognition</div>
@@ -224,7 +231,7 @@
     </div>
     <div class="comp-actions">
       <a href="/bow" class="btn btn-solid">Know More →</a>
-      <span class="comp-action-note">Qualifying criteria and submission details</span>
+      <span class="comp-action-note">Qualifying criteria and programme details</span>
     </div>
   </div>
 

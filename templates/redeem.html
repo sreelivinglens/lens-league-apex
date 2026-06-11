@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Redeem Points — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Redeem your Shutter League points for top-ups, free months, and mentor sessions.">
+{% endblock %}
 {% block extra_css %}
 <style>
   .redeem-wrap { max-width: 760px; margin: 0 auto; }
@@ -52,7 +56,7 @@
 
   <div class="page-header">
     <h1>Redeem Points</h1>
-    <p>Use your points for entries, top-ups, free months, and mentor sessions.</p>
+    <p>Use your points for top-ups, free months, programme access, and mentor sessions.</p>
   </div>
 
   {# Flash messages #}
@@ -69,7 +73,7 @@
     <div>
       <div class="redeem-balance-pts">{{ wallet_hud.balance | round(1) }}</div>
       <div class="redeem-balance-label">Your Points Balance</div>
-      <div class="redeem-balance-sub" id="redeem-decay-nudge" style="display:none;">Upload before 31 Dec — inactive accounts lose 10% on Jan 1.</div>
+      <div class="redeem-balance-sub" id="redeem-decay-nudge" style="display:none;">Upload before 31 Dec — points decay 20% annually on 1 Jan for all accounts.</div>
     </div>
     <div class="redeem-balance-note">
       <div>Points don&#39;t expire if you stay active</div>
@@ -101,21 +105,21 @@
   </div>
   {% endmacro %}
 
-  {# Programme Entries #}
-  <div class="redeem-section-label">Programme Entries</div>
+  {# Programme Access #}
+  <div class="redeem-section-label">Programme Access</div>
   <div class="redeem-table">
-    {{ redeem_row(50,  'Weekly Challenge entry',  'Free for subscribers · non-subscribers redeem pts per entry', 'challenge_entry') }}
-    {{ redeem_row(100, 'Open Submission entry',   'Annual Open Programme · one image, one genre · ₹50 cash for non-subscribers', 'open_entry') }}
-    {{ redeem_row(350, 'Body of Work entry',      'Annual BOW · curated series 6–12 images · ₹999 cash for non-subscribers', 'bow_entry') }}
-    {{ redeem_row(500, 'Annual Excellence Award — Photographer of the Year entry', 'Subscribers only', 'poty_entry') }}
+    {{ redeem_row(50,  'Weekly Challenge credit',  'Free for subscribers · non-subscribers redeem pts per credit', 'challenge_entry') }}
+    {{ redeem_row(100, 'Open Programme access',   'Annual Open Programme · one image, one genre · ₹50 cash for non-subscribers', 'open_entry') }}
+    {{ redeem_row(350, 'Body of Work access',      'Annual BOW · curated series 6–12 images · ₹999 cash for non-subscribers', 'bow_entry') }}
+    {{ redeem_row(500, 'Annual Excellence Award — participation', 'Subscribers only', 'poty_entry') }}
   </div>
 
   {# Upload Credits #}
   <div class="redeem-section-label">Upload Credits</div>
   <div class="redeem-table">
     {{ redeem_row(10,   'Single upload',                'One additional scored image · rank eligible · Annual Excellence Award eligible · earns pts', 'upload_single') }}
-    {{ redeem_row(1000, 'Top-up pack — 5 images',       'Same as ₹99 cash top-up · Camera or Mobile League · subscribers earn full points', 'upload_topup') }}
-    {{ redeem_row(2500, 'Monthly subscription offset',  'Covers one month · Mobile ₹99 or Camera ₹199', 'subscription_offset') }}
+    {{ redeem_row(1000, 'Top-up pack — 3 shoots',       'Same as ₹140 cash top-up · Camera or Mobile League · subscribers earn full points', 'upload_topup') }}
+    {{ redeem_row(2500, 'Monthly subscription offset',  'Covers one month · ₹200 (Founding Member rate)', 'subscription_offset') }}
   </div>
 
   {# Free Month #}
@@ -130,8 +134,8 @@
   {# Mentor Sessions #}
   <div class="redeem-section-label">Mentor Sessions</div>
   <div class="redeem-table">
-    {{ redeem_row(500,  'Senior Mentor session', 'or ₹50 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_senior') }}
-    {{ redeem_row(750,  'Expert Mentor session',  'or ₹75 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_expert') }}
+    {{ redeem_row(500,  'Master Mentor session', 'or ₹50 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_senior') }}
+    {{ redeem_row(750,  'Grandmaster Mentor session',  'or ₹75 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_expert') }}
     {{ redeem_row(1000, 'Legend Mentor session',  'or ₹100 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_legend') }}
   </div>
 
@@ -144,7 +148,7 @@
       <li><strong>Tier badges are permanent.</strong> Earning a tier badge (Rookie through Legend) is a lifetime achievement and does not expire regardless of your points balance.</li>
       <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions are available to all registered users via cash payment.</li>
       <li><strong>Non-reversible.</strong> Once points are redeemed, the transaction cannot be undone. Redeemed points are deducted immediately from your balance.</li>
-      <li><strong>Subject to availability.</strong> Programme entries (Open, BOW, Annual Excellence Award) are only redeemable during the relevant entry window. Mentor sessions are subject to mentor availability.</li>
+      <li><strong>Subject to availability.</strong> Programme credits (Open, BOW, Annual Excellence Award) are only redeemable during the relevant window. Mentor sessions are subject to mentor availability.</li>
       <li><strong>Rate changes.</strong> {{ platform_name }} may adjust redemption rates or add new redemption options at any time with a minimum of 14 days&#39; notice to active subscribers.</li>
       <li><strong>Payment infrastructure.</strong> Points redemption for cash-equivalent items is subject to payment infrastructure being operational. {{ platform_name }}&#39;s obligation is to activate redemption within 30 days of payment infrastructure going live.</li>
       <li><strong>Disputes.</strong> Any dispute regarding points balances or redemptions must be raised within 30 days of the transaction by contacting <a href="mailto:{{ contact_email }}" style="color:var(--text-primary);font-weight:700;">{{ contact_email }}</a>.</li>

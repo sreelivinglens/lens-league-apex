@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Refund Policy — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta property="og:title" content="Refund Policy — Shutter League">
+<meta property="og:description" content="Shutter League refund and cancellation policy. Digital services platform. Refunds considered for technical failures and duplicate charges.">
+{% endblock %}
 {% block extra_css %}
 <style>
   .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
@@ -85,27 +89,27 @@
         <tr>
           <td>Monthly Subscription — technical failure</td>
           <td><span class="eligible">Yes</span></td>
-          <td>If subscription benefits (upload access, programme entry) were not available due to a platform error, a pro-rated refund or credit will be issued.</td>
+          <td>If subscription benefits (upload access, programme access) were not available due to a platform error, a pro-rated refund or credit will be issued.</td>
         </tr>
         <tr>
-          <td>Open Programme submission fee — before submission closes</td>
+          <td>Open Programme participation fee — before participation window closes</td>
           <td><span class="eligible">Yes — within 48 hours</span></td>
-          <td>If you request a refund within 48 hours of payment and the programme submission window has not yet closed, a full refund will be issued.</td>
+          <td>If you request a refund within 48 hours of payment and the programme participation window has not yet closed, a full refund will be issued.</td>
         </tr>
         <tr>
-          <td>Open Programme submission fee — after submission closes</td>
+          <td>Open Programme participation fee — after participation window closes</td>
           <td><span class="not-eligible">No</span></td>
-          <td>Once the programme submission window closes, submission fees are non-refundable as judging has commenced.</td>
+          <td>Once the programme participation window closes, participation fees are non-refundable as judging has commenced.</td>
         </tr>
         <tr>
-          <td>Body of Work (BOW) submission fee — before judging begins</td>
+          <td>Body of Work (BOW) participation fee — before judging begins</td>
           <td><span class="eligible">Yes — within 7 days</span></td>
           <td>If you request a refund before the judging period begins (typically 1 January), a full refund will be issued.</td>
         </tr>
         <tr>
-          <td>Body of Work (BOW) submission fee — after judging begins</td>
+          <td>Body of Work (BOW) participation fee — after judging begins</td>
           <td><span class="not-eligible">No</span></td>
-          <td>Once the judging period begins, BOW entry fees are non-refundable.</td>
+          <td>Once the judging period begins, BOW participation fees are non-refundable.</td>
         </tr>
         <tr>
           <td>Duplicate / accidental charge</td>
@@ -154,7 +158,7 @@
   <details class="sl-accordion">
       <summary class="sl-accordion-trigger">Disqualification <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
-      <p>If a member is disqualified from a programme due to a violation of our Terms and Conditions (including submission of AI-generated images, plagiarism, or manipulation), no refund will be issued for any programme submission fee paid.</p>
+      <p>If a member is disqualified from a programme due to a violation of our Terms and Conditions (including uploading AI-generated images, plagiarism, or manipulation), no refund will be issued for any programme participation fee paid.</p>
         </div>
     </details>
 

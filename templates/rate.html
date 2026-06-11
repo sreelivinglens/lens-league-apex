@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Rate Images — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Rate images on the Shutter League peer rating system. Earn credits, help calibrate the platform.">
+{% endblock %}
 {% block extra_css %}
 <style>
   .rate-wrap { max-width: 720px; margin: 0 auto; }
@@ -95,7 +99,7 @@
 
   <div class="page-header">
     <h1>Rate Images</h1>
-    <p>Blind peer ratings — help calibrate the platform, earn pool entries</p>
+    <p>Blind peer ratings — help calibrate the platform, earn pool credits</p>
   </div>
 
   {% if not is_subscriber %}
@@ -105,7 +109,7 @@
     <h2 style="font-size:22px; font-weight:700; margin-bottom:10px;">Peer Rating is for subscribers</h2>
     <p style="font-size:16px; color:var(--text-secondary); line-height:1.7; max-width:480px; margin:0 auto 24px;">
       Rate other photographers' images using the DDI framework. Earn credits,
-      unlock peer pool entries, and help keep scores honest.
+      unlock peer pool access, and help keep scores honest.
     </p>
     <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Rate →</a>
   </div>
@@ -239,7 +243,7 @@
     </div>
     <div class="how-row">
       <div class="how-num">3</div>
-      <div class="how-text"><strong>Pool entries.</strong> When your image is in the peer pool, other subscribers rate it. You receive a peer average score alongside your DDI score.</div>
+      <div class="how-text"><strong>Pool access.</strong> When your image is in the peer pool, other subscribers rate it. You receive a peer average score alongside your DDI score.</div>
     </div>
     <div class="how-row">
       <div class="how-num">4</div>
