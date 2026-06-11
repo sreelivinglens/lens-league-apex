@@ -1,3 +1,6 @@
+[build]
+nixpacksPythonVersion = "3.11.9"
+
 [deploy]
 startCommand = "gunicorn app:app --workers 4 --timeout 300 --keep-alive 5"
 restartPolicyType = "ON_FAILURE"
