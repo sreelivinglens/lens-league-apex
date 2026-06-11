@@ -1,5 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Buy more images — {{ challenge.prompt_title }} — Lens League Apex{% endblock %}
+{% block title %}Add more credits — {{ challenge.prompt_title }} — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -45,14 +49,14 @@
         You can submit up to <strong style="color:var(--text-primary);">{{ ctx.max_total }} images total</strong> this week.
         You have used {{ ctx.submissions_used }} so far.
         You can buy up to <strong style="color:var(--text-primary);">{{ ctx.max_can_buy }} more</strong>
-        at Rs.49 each — choose carefully, this is your maximum for the week.
+        at ₹50 each — choose carefully, this is your maximum for the week.
       {% else %}
         You are on the <strong style="color:var(--text-primary);">free plan</strong>
         — your plan includes <strong style="color:var(--text-primary);">1 image</strong> per week.
         You can submit up to <strong style="color:var(--text-primary);">{{ ctx.max_total }} images total</strong> this week.
         You have used {{ ctx.submissions_used }} so far.
         You can buy up to <strong style="color:var(--text-primary);">{{ ctx.max_can_buy }} more</strong>
-        at Rs.49 each — choose carefully, this is your maximum for the week.
+        at ₹50 each — choose carefully, this is your maximum for the week.
       {% endif %}
     </div>
 
@@ -70,12 +74,12 @@
         </span>
       </div>
 
-      <div class="total-line" id="totalLine">1 image &times; Rs.49 = Rs.49</div>
+      <div class="total-line" id="totalLine">1 image &times; ₹50 = ₹50</div>
 
       <input type="hidden" name="quantity" id="qtyInput" value="1">
 
       <button type="submit" class="btn btn-solid" style="padding:14px 32px; font-size:15px;">
-        Pay Rs.<span id="btnAmount">49</span> ->
+        Pay ₹<span id="btnAmount">50</span> ->
       </button>
       <a href="{{ url_for('weekly_challenge') }}" class="btn" style="margin-left:10px;">Cancel</a>
     </form>
@@ -83,7 +87,7 @@
     {% else %}
     {# ── Step 2: Razorpay payment ── #}
     <div class="topup-label">Confirm payment</div>
-    <div class="total-line">{{ quantity }} image{{ 's' if quantity > 1 else '' }} &times; Rs.49 = Rs.{{ amount }}</div>
+    <div class="total-line">{{ quantity }} image{{ 's' if quantity > 1 else '' }} &times; ₹50 = ₹{{ amount }}</div>
 
     <form id="paymentForm" method="POST" action="{{ url_for('challenge_topup_confirm') }}">
       <input type="hidden" name="topup_id" value="{{ topup_id }}">
@@ -93,7 +97,7 @@
     </form>
 
     <button id="rzpBtn" class="btn btn-solid" style="padding:14px 32px; font-size:15px;">
-      Pay Rs.{{ amount }} with Razorpay ->
+      Pay ₹{{ amount }} with Razorpay ->
     </button>
     <a href="{{ url_for('challenge_topup') }}" class="btn" style="margin-left:10px;">Change quantity</a>
 
@@ -149,8 +153,8 @@ function changeQty(delta) {
   val = Math.max(1, Math.min(val, MAX_QTY));
   input.value = val;
   document.getElementById('qtyVal').textContent    = val;
-  document.getElementById('totalLine').textContent = val + ' image' + (val > 1 ? 's' : '') + ' x Rs.49 = Rs.' + (val * 49);
-  document.getElementById('btnAmount').textContent = val * 49;
+  document.getElementById('totalLine').textContent = val + ' image' + (val > 1 ? 's' : '') + ' x ₹50 = ₹' + (val * 50);
+  document.getElementById('btnAmount').textContent = val * 50;
 }
 </script>
 {% endblock %}

@@ -3,6 +3,10 @@
 
 {% block extra_head %}
 <meta name="description" content="A Body of Work is not your best photographs. It is a story stitched across 6–10 connected images linked by a theme, event, or point of view.">
+<meta property="og:title" content="Body of Work — Shutter League">
+<meta property="og:description" content="Not your best photographs. A story stitched across 6–10 connected images. One theme. One perspective.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

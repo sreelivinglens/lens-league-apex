@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Annual Excellence Award — ShutterLeague{% endblock %}
+{% block title %}Annual Excellence Award — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="The Annual Excellence Award — Shutter League's year-round photography excellence programme. Your best 6 scores in your strongest genre, ranked against every photographer on the platform.">
+<meta property="og:title" content="Annual Excellence Award — Shutter League">
+<meta property="og:description" content="Year-round photography excellence. Your top 6 scores, ranked against every photographer on the platform.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 
 {% block extra_css %}
 <style>

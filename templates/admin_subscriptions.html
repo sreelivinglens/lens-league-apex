@@ -1,5 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Subscriptions — Admin — Lens League Apex{% endblock %}
+{% block title %}Subscriptions — Admin — Shutter League{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -92,10 +96,7 @@
       <tbody>
         {% for u in subscribers %}
         {% set img_count = u.images | length %}
-        {% set price = 299 if (u.subscription_track == 'mobile' and u.subscription_plan == 'monthly')
-                  else 2499 if (u.subscription_track == 'mobile' and u.subscription_plan == 'annual')
-                  else 599 if (u.subscription_track == 'camera' and u.subscription_plan == 'monthly')
-                  else 4999 %}
+        {% set price = 2000 if u.subscription_plan == 'annual' else 200 %}
         <tr>
           <td>
             <div style="font-weight:600; color:var(--text-primary);">{{ u.full_name or u.username }}</div>

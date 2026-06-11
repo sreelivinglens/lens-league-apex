@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block title %}FAQ — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Frequently asked questions about Shutter League — scoring, subscriptions, programmes, RAW verification, peer rating, and more.">
+<meta property="og:title" content="FAQ — Shutter League">
+<meta property="og:description" content="Everything you need to know about Shutter League — scoring, subscriptions, and the Annual Excellence Award.">
+{% endblock %}
+
 {% block extra_css %}
 <style>
   .terms-wrap    { max-width: 760px; margin: 0 auto; }

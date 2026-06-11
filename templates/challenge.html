@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Weekly Assignment{% if challenge %} — {{ challenge.prompt_title }}{% endif %} — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Weekly Assignment — Shutter League. A new photography prompt every Monday. Submit your best image, get it scored by the Apex DDI Engine, and build your standing.">
+<meta property="og:title" content="Weekly Assignment — Shutter League">
+<meta property="og:description" content="A new photography prompt every Monday. Submit, score, improve.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
 {% block extra_css %}
 <style>
   .challenge-wrap   { max-width: 960px; margin: 0 auto; }
@@ -138,7 +146,7 @@
         Closes &nbsp;<strong>{{ challenge.closes_at.strftime('%a %d %b, %H:%M') }} UTC</strong>
       </div>
       <div class="ch-meta-item">
-        Participants Submissions &nbsp;<strong>{{ challenge.submission_count }}</strong>nbsp;<strong>{{ challenge.submission_count }}</strong>
+        Participants &nbsp;<strong>{{ challenge.submission_count }}</strong>
       </div>
       {% if challenge.is_open %}
       <div class="ch-meta-item" style="color:var(--green); font-weight:600;">● Open now</div>
@@ -184,7 +192,7 @@
         {% elif slots_used >= slot_limit and challenge.is_open %}
           {% if topup_ctx and topup_ctx.can_buy_more %}
             <a href="{{ url_for('challenge_topup') }}" class="btn btn-solid">
-              Add more feedback credits &mdash; Rs.49 each ->
+              Add more feedback credits &mdash; ₹50 each →
             </a>
           {% else %}
             <span class="btn" style="opacity:0.4; cursor:not-allowed;">All feedback credits used this week</span>
@@ -211,7 +219,7 @@
   <div class="user-subs-wrap">
     <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px;
                 color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">
-      Your weekly shoot submissions this week
+      Your images this week
     </div>
     {% for sub in user_subs %}
     <div class="user-sub-row">
@@ -225,7 +233,7 @@
       {% if challenge.is_open %}
       <form action="{{ url_for('challenge_withdraw', sub_id=sub.id) }}" method="POST" style="display:inline;">
         <button type="submit" class="user-sub-withdraw"
-                onclick="return confirm('Withdraw this submission?')">Withdraw</button>
+                onclick="return confirm('Withdraw this image?')">Withdraw</button>
       </form>
       {% endif %}
     </div>
@@ -237,7 +245,7 @@
   <div class="leaderboard-wrap">
     <div class="lb-header">
       <div class="lb-title">This week's Weekly Assignment submissions</div>
-      <div class="lb-note">Scores and rankings revealed on Monday</div>
+      <div class="lb-note">Scores revealed on Monday</div>
     </div>
 
     {% if top_subs %}
@@ -259,7 +267,7 @@
     <div style="padding:32px; text-align:center; background:var(--surface-2);
                 border:1px solid var(--border); border-radius:var(--radius-md);
                 color:var(--text-muted); font-size:16px;">
-      No submissions yet. Be the first.
+      No images yet. Be the first.
     </div>
     {% endif %}
   </div>
