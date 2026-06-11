@@ -128,13 +128,19 @@
     .sc-four-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
     .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
     .sc-hero-score { font-size: 52px !important; }
+    .sc-hero-img-wrap img { max-height: 380px !important; }
   }
 
   /* Mobile (600px) — everything single column */
   @media (max-width: 600px) {
+    /* Hero image — shorter on mobile so score band is visible above fold */
+    .sc-hero-img-wrap img { max-height: 260px !important; object-position: center top; }
+    /* Score band — stack vertically on mobile */
+    .sc-score-band { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; padding: 14px 18px !important; }
+    .sc-score-band > div:last-child { text-align: left !important; }
+    .sc-hero-score-num { font-size: 40px !important; }
     /* Hero */
     .sc-hero-inner { flex-direction: column !important; gap: 8px !important; }
-    .sc-hero-score-num { font-size: 48px !important; }
     /* What stood out — single column */
     .sc-verdict-grid { grid-template-columns: 1fr !important; }
     .sc-verdict-grid > div:last-child {
@@ -259,7 +265,7 @@
   {# ── HERO — full photograph, no text on top ──────────────────────── #}
   {# Image at full opacity so the photograph breathes.                 #}
   {# Score band sits below as a slim dark strip — never on the image.  #}
-  <div style="border-radius:14px 14px 0 0; overflow:hidden; background:#1a1a18; margin-bottom:0;">
+  <div style="border-radius:14px 14px 0 0; overflow:hidden; background:#1a1a18; margin-bottom:0;" class="sc-hero-img-wrap">
     {% if image.thumb_url %}
     <div style="position:relative; display:block;">
       <img src="{{ image.thumb_url }}"
@@ -276,7 +282,7 @@
   </div>
 
   {# ── SCORE BAND — slim bar below the photograph ───────────────────── #}
-  <div style="background:#1a1a18; border-radius:0 0 14px 14px; padding:18px 24px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div style="background:#1a1a18; border-radius:0 0 14px 14px; padding:18px 24px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;" class="sc-score-band">
     {# Left — name + tier + soul bonus #}
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0;">
       <span style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:#fff;" class="sc-hero-name">
