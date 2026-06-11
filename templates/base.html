@@ -112,6 +112,7 @@ nav {
   background: rgba(26, 24, 20, 0.94);
   border-bottom: 1px solid rgba(245,197,24,0.15);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   height: var(--nav-height);
   padding: 0 var(--page-pad);
   display: flex;
@@ -523,6 +524,7 @@ main {
   font-weight: 700;
   border-radius: 50%;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .status-badge {
   position: absolute;
@@ -536,6 +538,7 @@ main {
   text-transform: uppercase;
   border-radius: var(--radius-sm);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .status-badge.scored  { background: #000; border: 1px solid rgba(255,255,255,0.6); color: #fff; }
 .status-badge.pending { background: #000; border: 1px solid rgba(255,255,255,0.35); color: rgba(255,255,255,0.7); }
@@ -700,14 +703,14 @@ footer {
   flex-wrap: wrap;
   gap: 8px;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255,255,255,0.38);
 }
 @media (max-width: 768px) {
   .footer-top { height: auto; padding: 16px var(--page-pad) 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
   .footer-links { justify-content: flex-start; gap: 2px; }
-  .footer-links a { font-size: 13px; padding: 5px 8px; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 12px; }
+  .footer-links a { font-size: 14px; padding: 5px 8px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 14px; }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
@@ -717,7 +720,7 @@ footer {
 
 @media (max-width: 1060px) {
   .nav-links { gap: 0; }
-  .nav-links a { font-size: 12px; padding: 6px 5px; }
+  .nav-links a { font-size: 14px; padding: 6px 5px; }
 }
 
 @media (max-width: 900px) {
@@ -725,6 +728,9 @@ footer {
   .nav-toggle { display: flex; }
 
   main { padding: 24px var(--page-pad); }
+
+  section { padding: 56px var(--page-pad); }
+  h1, h2, h3 { text-shadow: none; }
 
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -1026,7 +1032,7 @@ img {
   <!-- Row 2: Legal identity (KYC compliance) -->
   <div class="footer-bottom">
     <span>&copy; 2026 Shutter League. All rights reserved. &nbsp;&middot;&nbsp; APEX DDI ENGINE &nbsp;&middot;&nbsp; Rated by Science. Not Opinion.</span>
-    <span style="font-size:11px; opacity:0.6;">Udyam Reg. No: UDYAM-KR-03-0697280 &nbsp;&middot;&nbsp; <a href="mailto:support@shutterleague.com" style="color:inherit;">support@shutterleague.com</a></span>
+    <span style="font-size:13px; opacity:0.6;">Udyam Reg. No: UDYAM-KR-03-0697280 &nbsp;&middot;&nbsp; <a href="mailto:support@shutterleague.com" style="color:inherit;">support@shutterleague.com</a></span>
   </div>
 </footer>
 
