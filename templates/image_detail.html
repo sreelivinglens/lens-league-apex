@@ -27,12 +27,21 @@
   .detail-header .page-header { margin-bottom: 0; flex: 1; min-width: 0; }
   .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; flex-shrink: 0; }
   @media (max-width: 520px) {
-    .detail-header { flex-direction: column; gap: 12px; }
+    .detail-header { flex-direction: column; gap: 10px; margin-bottom: 20px; }
     .detail-header .page-header { width: 100%; }
-    .detail-header .page-header h1 { font-size: 20px; line-height: 1.5; word-break: break-word; }
-    .detail-header .page-header p { font-size: 14px; margin-top: 4px; word-break: break-word; }
-    .detail-actions { flex-direction: row; width: 100%; }
-    .detail-actions .btn { flex: 1; text-align: center; font-size: 13px; padding: 10px 8px; }
+    .detail-header .page-header p { font-size: 13px; margin:0; word-break: break-word; }
+    /* Buttons: Back alone on first row, action buttons wrap below */
+    .detail-actions { flex-direction: row; width: 100%; flex-wrap: wrap; gap: 6px; }
+    .detail-actions .btn { font-size: 13px; padding: 10px 12px; white-space: nowrap; }
+    /* Back button stays small, others grow to fill */
+    .detail-actions a.btn:first-child { flex: 0 0 auto; }
+    .detail-actions .btn-solid { flex: 1 1 auto; }
+    .detail-actions .btn-danger { flex: 0 0 auto; }
+  }
+  /* iPad — header stays horizontal but compress label */
+  @media (max-width: 768px) and (min-width: 521px) {
+    .detail-header .page-header p { font-size: 13px; }
+    .detail-actions .btn { font-size: 13px; padding: 10px 12px; }
   }
 
   .detail-image-wrap {
@@ -186,12 +195,7 @@
   {# ── Header ─────────────────────────────────────────────────────── #}
   <div class="detail-header">
     <div class="page-header">
-      <h1>{{ image.asset_name or image.original_filename }}</h1>
-      <p>
-        {{ image.genre }}
-        {% if image.camera_track %}&nbsp;·&nbsp;{{ image.camera_track|title }} Users{% endif %}
-        {% if image.photographer_name %}&nbsp;·&nbsp;{{ image.photographer_name }}{% endif %}
-      </p>
+      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Shutter League Evaluation</p>
     </div>
     <div class="detail-actions">
       <a href="{{ url_for('dashboard') }}" class="btn">← Back</a>
@@ -443,60 +447,7 @@
   {% set _c3_body = _bgcheck or _next_row.val or '' %}
   {% set _c4_body = audit.byline_2_body or audit.byline_2 or '' %}
 
-  {# First-sentence extraction helper — split on '. ' and take first #}
-  {% macro first_sentence(text) %}{{ (text.split('. ')[0] + '.') if '. ' in text else text[:90] }}{% endmacro %}
 
-  {% if _c1_body %}{% set _c1_head = first_sentence(_c1_body) %}{% else %}
-    {# Card 1 fallback — the principle of the decisive choice #}
-    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c1_head = 'Brandt made the harder exposure choice every single time.' %}
-    {% elif image.genre == 'Street' %}{% set _c1_head = 'Cartier-Bresson said the decisive moment is a choice, not a catch.' %}
-    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c1_head = 'Salgado chose the frame that cost him something to make.' %}
-    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c1_head = 'Kenna stayed until the light was right, not until it was easy.' %}
-    {% elif image.genre in ('People', 'Wedding') %}{% set _c1_head = 'McCurry earned the trust before he raised the camera.' %}
-    {% elif image.genre == 'Fashion' %}{% set _c1_head = 'Newton understood that restraint is a creative decision.' %}
-    {% elif image.genre in ('Macro', 'Creative') %}{% set _c1_head = 'Weston found the form others walked past without seeing.' %}
-    {% elif image.genre == 'Drone' %}{% set _c1_head = 'The altitude is nothing. The angle is everything.' %}
-    {% else %}{% set _c1_head = 'Every master made this choice consciously.' %}{% endif %}
-  {% endif %}
-
-  {% if _c2_body %}{% set _c2_head = first_sentence(_c2_body) %}{% else %}
-    {# Card 2 fallback — the specific technical decision #}
-    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c2_head = 'Art Wolfe says sharpness is the by-product of patience, not speed.' %}
-    {% elif image.genre == 'Street' %}{% set _c2_head = 'Vivian Maier never explained her exposures. She just got them right.' %}
-    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c2_head = 'Nachtwey controlled the only thing available — where to stand.' %}
-    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c2_head = 'Adams pre-visualised the final print before he opened the shutter.' %}
-    {% elif image.genre in ('People', 'Wedding') %}{% set _c2_head = 'Karsh waited for the moment the mask came off.' %}
-    {% elif image.genre == 'Fashion' %}{% set _c2_head = 'Avedon controlled the white. Everything else followed.' %}
-    {% elif image.genre in ('Macro', 'Creative') %}{% set _c2_head = 'Ernst Haas said blur is not an accident — it is a language.' %}
-    {% elif image.genre == 'Drone' %}{% set _c2_head = 'The height gives you the geometry. The timing gives you the image.' %}
-    {% else %}{% set _c2_head = 'The decision was made before the shutter opened.' %}{% endif %}
-  {% endif %}
-
-  {% if _c3_body %}{% set _c3_head = first_sentence(_c3_body) %}{% else %}
-    {# Card 3 fallback — reading the background, the field, the frame behind #}
-    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c3_head = 'Nick Brandt scouted the background before the animal arrived.' %}
-    {% elif image.genre == 'Street' %}{% set _c3_head = 'Raghu Rai read the street before anything happened on it.' %}
-    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c3_head = 'Salgado knew the exit before he walked in.' %}
-    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c3_head = 'Ansel Adams checked the sky the night before the shot.' %}
-    {% elif image.genre in ('People', 'Wedding') %}{% set _c3_head = 'Leibovitz arrives early so she knows the room before it fills.' %}
-    {% elif image.genre == 'Fashion' %}{% set _c3_head = 'Penn built the set before the model was called.' %}
-    {% elif image.genre in ('Macro', 'Creative') %}{% set _c3_head = 'Edward Weston circled the subject before he placed the camera.' %}
-    {% elif image.genre == 'Drone' %}{% set _c3_head = 'Yann Arthus-Bertrand reads the land before he lifts off.' %}
-    {% else %}{% set _c3_head = 'The frame behind your subject is part of the photograph.' %}{% endif %}
-  {% endif %}
-
-  {% if _c4_body %}{% set _c4_head = first_sentence(_c4_body) %}{% else %}
-    {# Card 4 fallback — the next move, the next possibility #}
-    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c4_head = 'The next behaviour is already forming.' %}
-    {% elif image.genre == 'Street' %}{% set _c4_head = 'Maier shot the same corner four times before she had it.' %}
-    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c4_head = 'Nachtwey returned the next day. And the day after.' %}
-    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c4_head = 'The light will be different in an hour. Different in a season.' %}
-    {% elif image.genre in ('People', 'Wedding') %}{% set _c4_head = 'The next frame is the portrait without the occasion.' %}
-    {% elif image.genre == 'Fashion' %}{% set _c4_head = 'One element changed changes everything.' %}
-    {% elif image.genre in ('Macro', 'Creative') %}{% set _c4_head = 'The same subject in different light is a different image.' %}
-    {% elif image.genre == 'Drone' %}{% set _c4_head = 'The shadow version of this image exists at 4pm.' %}
-    {% else %}{% set _c4_head = 'The next frame is already there.' %}{% endif %}
-  {% endif %}
 
   <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-four-grid">
 
@@ -506,9 +457,16 @@
         <span style="font-size:16px; color:#185FA5;">📷</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c1_head }}</p>
+      
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ _c1_body }}
+        {% if _c1_body %}{{ _c1_body }}{% else %}
+          {% if image.genre in ('Wildlife', 'Nature') %}Brandt made the harder exposure choice every single time — and his images hold because of it. The principle is the same whatever you are photographing: the difficult decision is usually the right one.
+          {% elif image.genre == 'Street' %}Cartier-Bresson said the right moment is a choice, not a catch. You chose the exposure that held both extremes. That is the principle — know what you are protecting before you press.
+          {% elif image.genre in ('Documentary', 'Photojournalism') %}Salgado chose the frame that cost him something to make. The lesson is not about the specific image — it is about making the harder call every time you can see it.
+          {% elif image.genre in ('Landscape', 'Landscapes') %}Kenna stayed until the light was right, not until it was easy. The principle travels: the image you almost made is always better than the one you settled for.
+          {% elif image.genre in ('People', 'Wedding') %}McCurry earned the trust before he raised the camera. The technical decision followed naturally from that. Know what you are trying to hold before you expose for it.
+          {% else %}Every master made this choice consciously. Identify what you were protecting — and make that decision your default.{% endif %}
+        {% endif %}
       </p>
     </div>
 
@@ -518,9 +476,16 @@
         <span style="font-size:16px; color:#27500A;">▲</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c2_head }}</p>
+      
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ _c2_body }}
+        {% if _c2_body %}{{ _c2_body }}{% else %}
+          {% if image.genre in ('Wildlife', 'Nature') %}Art Wolfe says sharpness is the by-product of patience, not speed. The decision you made here — whatever it was — is the one that defines the image. Name it and own it.
+          {% elif image.genre == 'Street' %}Vivian Maier never explained her exposures. She just got them right. The decision you made in this frame is yours — understand it clearly enough to repeat it deliberately.
+          {% elif image.genre in ('Documentary', 'Photojournalism') %}Nachtwey controlled the only thing available — where to stand. Every other variable was chaos. Identify your controllable. It is the only thing that separates the image you wanted from the one you got.
+          {% elif image.genre in ('Landscape', 'Landscapes') %}Adams pre-visualised the final print before he opened the shutter. What you controlled here is exactly that — a decision made before the moment, not during it.
+          {% elif image.genre in ('People', 'Wedding') %}Karsh waited for the moment the mask came off. That is a decision, not an accident. Know what you are waiting for so you are ready when it arrives.
+          {% else %}The decision was made before the shutter opened. Understand it well enough to make it again.{% endif %}
+        {% endif %}
       </p>
     </div>
 
@@ -530,7 +495,7 @@
         <span style="font-size:16px; color:#72243E;">◎</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c3_head }}</p>
+      
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ _c3_body }}
       </p>
@@ -542,7 +507,7 @@
         <span style="font-size:16px; color:#854F0B;">💡</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c4_head }}</p>
+      
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ _c4_body }}
       </p>
