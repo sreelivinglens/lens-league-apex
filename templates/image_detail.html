@@ -320,10 +320,40 @@
     </div>
   </div>
 
+  {# ── PUBLIC STRIP — visible to all visitors ───────────────────── #}
+  {# what_stood_out shown publicly — ego line for sharing             #}
+  {# Everything else stays behind the owner/subscriber gate           #}
+  {% if not (current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin')) %}
+  {% set _public_audit = image.get_audit() %}
+  {% set _public_wso = _public_audit.what_stood_out if _public_audit and _public_audit.what_stood_out else (_public_audit.hard_truth if _public_audit and _public_audit.hard_truth else '') %}
+
+  {% if _public_wso %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <span style="font-size:16px;">★</span>
+      </div>
+      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
+    </div>
+    <p style="margin:0 0 20px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7;">{{ _public_wso }}</p>
+    <div style="border-top:1px solid var(--border); padding-top:18px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.7;">The full evaluation — mentor's advice, edit guide, where to shoot next — is available to the photographer.</p>
+      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px; padding:12px 20px; white-space:nowrap; flex-shrink:0;">See how it works &#8594;</a>
+    </div>
+  </div>
+  {% else %}
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; text-align:center;">
+    <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Apex DDI Engine</p>
+    <p style="margin:0 0 16px; font-size:18px; font-weight:700; color:var(--text-primary);">{{ "%.2f"|format(image.score) }} &#183; {{ image.tier }}</p>
+    <p style="margin:0 0 18px; font-size:16px; color:var(--text-secondary); line-height:1.7;">Rated by science. The photographer receives a full evaluation &#8212; mentor's advice, development trends, and where to shoot next.</p>
+    <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="font-size:15px; padding:12px 20px;">See how it works &#8594;</a>
+  </div>
+  {% endif %}
+  {% endif %}
+  {# ── END PUBLIC STRIP ──────────────────────────────────────────── #}
+
   {# ── Owner / admin gate — all scorecard detail below ──────────── #}
   {% if current_user.is_authenticated and (image.user_id == current_user.id or current_user.role == 'admin') %}
-
-  {# ── Scored As banner ─────────────────────────────────────────── #}
   {% if audit and audit.subgenre_overridden and audit.effective_subgenre %}
   <div style="margin-bottom:14px; padding:12px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);">Scored As</span>
