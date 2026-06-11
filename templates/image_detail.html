@@ -29,7 +29,7 @@
   @media (max-width: 520px) {
     .detail-header { flex-direction: column; gap: 12px; }
     .detail-header .page-header { width: 100%; }
-    .detail-header .page-header h1 { font-size: 20px; line-height: 1.25; word-break: break-word; }
+    .detail-header .page-header h1 { font-size: 20px; line-height: 1.5; word-break: break-word; }
     .detail-header .page-header p { font-size: 14px; margin-top: 4px; word-break: break-word; }
     .detail-actions { flex-direction: row; width: 100%; }
     .detail-actions .btn { flex: 1; text-align: center; font-size: 13px; padding: 10px 8px; }
@@ -363,7 +363,7 @@
         </div>
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
       </div>
-      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.25;">{{ _hero_headline }}</p>
+      <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7;">{{ _hero_headline }}</p>
       {# Option A fallback: transferable_advice → mentor_next #}
       {% set _advice = audit.transferable_advice if audit.transferable_advice else '' %}
       {% if not _advice %}
@@ -410,7 +410,7 @@
         <span style="font-size:16px; color:#185FA5;">📷</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">
         {%- if audit.transferable_advice -%}Trust the darkness.{%- elif _tech_row.val -%}{{ _tech_row.val[:50] }}…{%- else -%}Trust what you saw.{%- endif -%}
       </p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
@@ -424,7 +424,7 @@
         <span style="font-size:16px; color:#27500A;">▲</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">
         {%- if audit.byline_2_body or audit.byline_2 -%}
           {{ (audit.byline_2_body or audit.byline_2)[:60] }}…
         {%- else -%}Only yours held this.{%- endif -%}
@@ -440,7 +440,7 @@
         <span style="font-size:16px; color:#72243E;">◎</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">One second before you press.</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">One second before you press.</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ _bgcheck or _next_row.val or '' }}
       </p>
@@ -452,7 +452,7 @@
         <span style="font-size:16px; color:#854F0B;">💡</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">Don't touch the blacks.</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">Don't touch the blacks.</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ audit.edit_base or '' }}
       </p>
@@ -526,18 +526,18 @@
       <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase;">2025 stats</p>
       <div style="background:linear-gradient(135deg,#FDF3E3,#F0D9A8); border:0.5px solid rgba(186,117,23,0.3); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
         <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Best this year</p>
-        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '—' }}</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.7;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '—' }}</p>
         {% if stats and stats.best_genre %}<p style="margin:4px 0 0; font-size:13px; color:#4A3010;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
       </div>
       <div style="background:linear-gradient(135deg,#EAF5EE,#C8E8D4); border:0.5px solid rgba(39,80,10,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
         <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase;">This month</p>
-        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(image.score) }}</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.7;">{{ "%.2f"|format(image.score) }}</p>
         <p style="margin:4px 0 0; font-size:13px; color:#1E3A0A;">{{ stats.this_month_count or 1 }} photograph{{ 's' if (stats.this_month_count or 1) != 1 else '' }} evaluated</p>
       </div>
       {% if percentile and percentile.percentile %}
       <div style="background:linear-gradient(135deg,#EAF0FA,#C8D8F0); border:0.5px solid rgba(44,62,107,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
         <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Your standing</p>
-        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">Top {{ 100 - percentile.percentile|int }}%</p>
+        <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.7;">Top {{ 100 - percentile.percentile|int }}%</p>
         <p style="margin:4px 0 0; font-size:13px; color:#1A3A5C;">{{ image.genre }}</p>
       </div>
       {% endif %}
@@ -615,7 +615,7 @@
     <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension scores</a></p>
     <div class="ddi-grid">
       {% set dims = [
-        ('DoD',        image.dod_score,        'Depth of Difficulty',  'HOW DIFFICULT', 'IT WAS'),
+        ('dod',        image.dod_score,        'How difficult it was', 'HOW DIFFICULT', 'IT WAS'),
         ('Disruption', image.disruption_score,  'Visual Disruption',   'VISUAL',        'DISRUPTION'),
         ('DM',         image.dm_score,          'Decisive Moment',     'WHETHER THE',   'TIMING WAS RIGHT'),
         ('Wonder',     image.wonder_score,      'Wonder Factor',       'WHETHER IT MADE','YOU FEEL SOMETHING'),
@@ -698,7 +698,7 @@
   {% if image.score %}
   <div style="margin-bottom:28px; padding:24px 28px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
     <div>
-      <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.4; margin-bottom:4px;">Book Mentor Review</div>
+      <div style="font-size:16px; font-weight:600; color:var(--text-primary); line-height:1.7; margin-bottom:4px;">Book Mentor Review</div>
       <div style="font-size:14px; color:var(--text-muted); line-height:1.5;">Get your image reviewed additionally by our month's mentors</div>
     </div>
     <a href="{{ url_for('mentors') }}" class="btn btn-solid" style="white-space:nowrap; padding:12px 24px; font-size:15px;">Book Mentor Review →</a>
@@ -923,7 +923,7 @@
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
           <select name="module" style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:14px; background:#fff;">
             <option value="overall">Overall</option>
-            <option value="dod">DoD</option>
+            <option value="dod">How difficult it was</option>
             <option value="disruption">Disruption</option>
             <option value="dm">DM</option>
             <option value="wonder">Wonder</option>
