@@ -1980,17 +1980,65 @@
 </div>
 {% endif %}
 
-{# Active challenge banner #}
-{% if active_challenge and active_challenge.is_open %}
-<div style="background:rgba(245,197,24,0.12);border:1px solid var(--gold);border-radius:var(--radius-md);padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-  <div>
-    <div style="font-family:var(--font-mono);font-size:15px;letter-spacing:2px;color:var(--text-primary);text-transform:uppercase;margin-bottom:4px;">Weekly Challenge · {{ active_challenge.week_ref }}</div>
-    <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;">{{ active_challenge.prompt_title }}</div>
-    <div style="font-size:16px;color:var(--text-primary);margin-top:2px;">Closes {{ active_challenge.closes_at.strftime('%d %b, %H:%M UTC') }}</div>
+{# ── Weekly Challenge — heartbeat block ───────────────────────── #}
+{% if active_challenge %}
+<div style="border:2px solid var(--gold);border-radius:var(--radius-md);overflow:hidden;margin:14px 0;">
+
+  {# Header bar #}
+  <div style="background:var(--gold);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:3px;color:#1A1A18;text-transform:uppercase;">
+      Weekly Assignment · {{ active_challenge.week_ref }}
+    </div>
+    {% if active_challenge.is_open %}
+    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
+      ● OPEN NOW · closes {{ active_challenge.closes_at.strftime('%d %b') }}
+    </div>
+    {% else %}
+    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
+      ● CLOSED
+    </div>
+    {% endif %}
   </div>
-  <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:16px;min-height:44px;">Enter Challenge →</a>
+
+  {# Body #}
+  <div style="background:var(--surface-2);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;margin-bottom:6px;line-height:1.3;">{{ active_challenge.prompt_title }}</div>
+      <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);letter-spacing:0.5px;">
+        
+        {% if active_challenge.is_open %}
+        &nbsp;·&nbsp; Your feedback credits this week:
+        <strong style="color:var(--text-primary);">{{ slot_limit - (slots_used or 0) }} remaining</strong>
+        {% endif %}
+      </div>
+    </div>
+    {% if active_challenge.is_open %}
+      {% if current_user.is_subscribed %}
+        {% if (slots_used or 0) < (slot_limit or 3) %}
+        <a href="{{ url_for('challenge_submit') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;white-space:nowrap;">Shoot This Week →</a>
+        {% else %}
+        <a href="{{ url_for('weekly_challenge') }}" class="btn" style="font-size:15px;min-height:44px;white-space:nowrap;border-color:var(--gold);color:var(--gold);">View This Week →</a>
+        {% endif %}
+      {% else %}
+      <a href="{{ url_for('weekly_challenge') }}" class="btn btn-solid" style="font-size:15px;min-height:44px;white-space:nowrap;">See This Week →</a>
+      {% endif %}
+    {% else %}
+    <a href="{{ url_for('weekly_challenge') }}" class="btn" style="font-size:15px;min-height:44px;white-space:nowrap;">See Results →</a>
+    {% endif %}
+  </div>
+
+</div>
+{% else %}
+{# No active challenge — show placeholder to keep the space and build habit #}
+<div style="border:1px dashed var(--border);border-radius:var(--radius-md);padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface-2);">
+  <div>
+    <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Weekly Assignment</div>
+    <div style="font-size:16px;color:var(--text-secondary);">New shoot drops every Monday.</div>
+  </div>
+  <a href="{{ url_for('weekly_challenge') }}" class="btn" style="font-size:15px;min-height:44px;">View Challenge →</a>
 </div>
 {% endif %}
+{# ── End weekly challenge heartbeat ───────────────────────────── #}
 
 
 {# ══ Your Path to Standing card — Session 56 rev2 ══ #}
@@ -2212,7 +2260,7 @@
       <div class="rp-body">
         <p class="rp-label active">Subscribe to start</p>
         <p class="rp-desc active">Once subscribed, your first scored public image puts you on the League of Photographers. No waiting period.</p>
-        <a href="{{ url_for('pricing') }}" class="rp-cta">Subscribe — ₹200 / month →</a>
+        <a href="{{ url_for('pricing') }}" class="rp-cta">Subscribe — ₹99 / month →</a>
       </div>
     </div>
     <div class="rp-step">
@@ -2521,7 +2569,7 @@
   {# ── RIGHT: peer + mentor ── #}
   <div class="db-right-col" style="min-width:0;">
 
-    {# Peer rating #}
+    {# Peer rating — sherpa prompt #}
     {% if rating_widget %}
     <div class="db-panel">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
@@ -2529,27 +2577,53 @@
         <span class="db-panel-chevron">▼</span>
       </div>
       <div class="db-panel-body">
-      <div class="db-plbl gold">Peer Rating</div>
-      <div class="db-peer-stats">
-        <div><div class="db-peer-val">{{ rating_widget.credits }}</div><div class="db-peer-lbl">Credits</div></div>
-        <div><div class="db-peer-val">{{ rating_widget.lifetime_given }}</div><div class="db-peer-lbl">Given</div></div>
-        <div><div class="db-peer-val">{{ rating_widget.unlocks_pending or 0 }}</div><div class="db-peer-lbl">Unlock</div></div>
-      </div>
-      {% if rating_widget.credits > 0 %}
-      <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate Now →</a>
-      {% if rating_widget.unlocks_pending > 0 %}
-      <div style="font-size:15px;color:var(--text-primary);margin-top:8px;line-height:1.5;word-break:break-word;overflow-wrap:break-word;">
-        Rate {{ rating_widget.unlocks_pending }} image{{ 's' if rating_widget.unlocks_pending != 1 }} to unlock your pool slot.
-      </div>
-      {% endif %}
-      {% else %}
-      <div style="font-size:16px;color:var(--text-primary);line-height:1.5;">
-        No images ready to rate right now. Check back soon.
-      </div>
-      {% endif %}
+
+        {# Contextual sherpa message based on state #}
+        {% if rating_widget.credits >= 5 and rating_widget.unlocks_pending > 0 %}
+        {# Has enough credits to unlock — strongest prompt #}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);line-height:1.5;margin-bottom:8px;">
+          Your image can enter the peer pool.
+        </div>
+        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">
+          You have <strong style="color:var(--text-primary);">{{ rating_widget.credits }} credits</strong> — enough to unlock a peer rating slot for one of your images. Rate {{ rating_widget.unlocks_pending }} more to activate it.
+        </div>
+
+        {% elif rating_widget.credits > 0 %}
+        {# Has credits — nudge to build toward unlock #}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);line-height:1.5;margin-bottom:8px;">
+          {{ rating_widget.credits }} credit{{ 's' if rating_widget.credits != 1 }} earned.
+        </div>
+        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">
+          Every image you rate earns 1 credit. At 5 credits you unlock a peer rating slot for one of your own images — a second opinion alongside your DDI score.
+        </div>
+
+        {% else %}
+        {# No credits yet — explain the loop #}
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);line-height:1.5;margin-bottom:8px;">
+          Rate others. Get rated back.
+        </div>
+        <div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">
+          Each image you rate earns 1 credit. 5 credits unlocks a peer rating slot for one of your images — blind ratings from other photographers alongside your DDI score.
+        </div>
+        {% endif %}
+
+        {# Stats row #}
+        <div class="db-peer-stats" style="margin-bottom:14px;">
+          <div><div class="db-peer-val">{{ rating_widget.credits }}</div><div class="db-peer-lbl">Credits</div></div>
+          <div><div class="db-peer-val">{{ rating_widget.lifetime_given }}</div><div class="db-peer-lbl">Given</div></div>
+          <div><div class="db-peer-val">{{ rating_widget.unlocks_pending or 0 }}</div><div class="db-peer-lbl">To Unlock</div></div>
+        </div>
+
+        {% if rating_widget.credits > 0 %}
+        <a href="{{ url_for('rate') }}" class="btn btn-solid" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;">Rate an Image →</a>
+        {% else %}
+        <a href="{{ url_for('rate') }}" class="btn" style="width:100%;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center;border-color:var(--gold-dark);color:var(--gold);">Start Rating →</a>
+        {% endif %}
+
       </div>{# /db-panel-body #}
     </div>
     {% endif %}
+
 
     {# Mentor nudge #}
     <div class="db-panel" style="background:#2C3E6B;border-color:rgba(245,197,24,0.3);">
