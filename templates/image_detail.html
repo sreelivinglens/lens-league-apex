@@ -342,7 +342,14 @@
   {% set audit = image.get_audit() %}
   {% if audit and audit.rows %}
   <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
-    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;"><a href="/science" class="glink-inline" style="color:var(--text-primary); text-decoration-color:rgba(44,62,107,0.5);" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.5)'">DDI Analysis</a></div>
+    <div style="font-family:var(--font-mono); font-size:14px; font-weight:600; letter-spacing:1.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom:16px;"><a href="/science" class="glink-inline" style="color:var(--text-muted); text-decoration-color:rgba(44,62,107,0.5);" onmouseover="this.style.textDecorationColor='#2C3E6B'" onmouseout="this.style.textDecorationColor='rgba(44,62,107,0.5)'">Scorecard</a></div>
+
+    {# ── hard_truth — shown to all, always first ── #}
+    {% if audit.hard_truth %}
+    <div style="padding:16px 20px;background:var(--surface-3);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:20px;">
+      <div style="font-size:17px;color:var(--text-primary);line-height:1.7;">{{ audit.hard_truth }}</div>
+    </div>
+    {% endif %}
     {% set dim_links = {
       'DoD': '/science#dimensions', 'Depth of Difficulty': '/science#dimensions',
       'DM': '/science#dimensions', 'Decisive Moment': '/science#dimensions',
@@ -382,7 +389,7 @@
     {% endif %}
     {% if audit.byline_1 %}
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
-      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next Image</div>
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Next frame</div>
       <div style="font-size:15px;color:var(--text-primary);line-height:1.6;">{{ audit.byline_1 }}</div>
     </div>
     {% endif %}
@@ -410,9 +417,9 @@
     {% else %}
     {# Free tier CTA — unlock improvement directions #}
     <div style="margin-top:20px;padding:20px 24px;background:var(--surface-3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 var(--radius-md) var(--radius-md) 0;">
-      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Improvement Directions &amp; Edit Guide</div>
-      <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Subscribe to unlock what to shoot next, creative directions, and a full edit guide for this image.</div>
-      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px;font-size:15px;">Subscribe to unlock →</a>
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">What to do next</div>
+      <div style="font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Subscribe to see where this image could go — the next shot, the creative direction, and how to edit it.</div>
+      <a href="{{ url_for('pricing') }}" class="btn btn-solid" style="padding:11px 24px;font-size:15px;">Unlock →</a>
     </div>
     {% endif %}
   </div>
