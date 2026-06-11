@@ -89,6 +89,8 @@ class User(db.Model, UserMixin):
     reengagement_sent_at      = db.Column(db.DateTime, nullable=True)
     # Session 54 — lifetime upload counter (never decremented on delete)
     total_uploads_ever        = db.Column(db.Integer, default=0, nullable=False)
+    # Session 68 — upload credits balance (carry-forward model, replaces monthly hard reset)
+    upload_credits_balance    = db.Column(db.Integer, default=0, nullable=False)
 
     images = db.relationship('Image', backref='author', lazy=True)
 
