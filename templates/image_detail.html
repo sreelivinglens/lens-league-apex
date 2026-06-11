@@ -248,12 +248,7 @@
     {% endif %}
   {% endif %}
 
-  {# ── Image ───────────────────────────────────────────────────────── #}
-  {% if image.thumb_url %}
-  <div class="detail-image-wrap">
-    <img src="{{ image.thumb_url }}" alt="{{ image.asset_name or image.original_filename }}">
-  </div>
-  {% endif %}
+  {# ── Image shown in hero below ────────────────────────────────── #}
 
   {# ══════════════════════════════════════════════════════════════════ #}
   {# NEW SCORECARD LAYOUT — Sprint 3                                   #}
@@ -504,7 +499,7 @@
 
   {# ── HOW YOU'RE DEVELOPING + 2025 STATS ───────────────────────── #}
   {# Trend lines — only shown when user has 5+ photographs evaluated #}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-two-grid">
 
     {% if portfolio_data and portfolio_data.has_trends %}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
@@ -577,7 +572,7 @@
 
   {# ── EDIT GUIDE ────────────────────────────────────────────────── #}
   {% if audit and (audit.edit_base or audit.edit_creative) %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-two-grid">
     {% if audit.edit_base %}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
@@ -648,7 +643,7 @@
         ('dod',        image.dod_score,        'How difficult it was', 'HOW DIFFICULT', 'IT WAS'),
         ('Disruption', image.disruption_score,  'Visual Disruption',   'VISUAL',        'DISRUPTION'),
         ('DM',         image.dm_score,          'Decisive Moment',     'WHETHER THE',   'TIMING WAS RIGHT'),
-        ('Wonder',     image.wonder_score,      'Wonder Factor',       'WHETHER IT MADE','YOU FEEL SOMETHING'),
+        ('Wonder',     image.wonder_score,      'Wonder Factor',       'WHETHER IT MADE','ONE FEEL SOMETHING'),
         ('AQ',         image.aq_score,          'Aesthetic Quality',   'THE EMOTION',   'IT CREATES'),
       ] %}
       {% for lbl, val, title, line1, line2 in dims %}
@@ -688,6 +683,7 @@
   {% set _days = ((now - image.scored_at).days) if now else 0 %}
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
+      <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
       <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
       <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">
         {{ audit.days_since_language if audit and audit.days_since_language else 'Your camera is waiting.' }}
