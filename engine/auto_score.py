@@ -374,7 +374,10 @@ WRITING RULES FOR ALL TEXT FIELDS — NON-NEGOTIABLE:
   not to document your own gaps.
 - BANNED phrases: "the image demonstrates", "this photograph shows", "the composition
   features", "the subject is positioned", "the technique showcases", "the exposure
-  captures", "the scene reveals", "the frame contains".
+  captures", "the scene reveals", "the frame contains", "solid foundation",
+  "technically sound", "compositional awareness", "demonstrates", "showcases",
+  "areas to develop", "moving forward", "well-executed", "good use of",
+  "effectively captures", "nicely done", "great shot".
 
 SOUL BONUS IMAGES (soul_bonus = true OR score >= 7.5):
 - This image worked. The mentor job is to name exactly what made it work, then offer
