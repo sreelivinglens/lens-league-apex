@@ -2190,6 +2190,7 @@ def onboarding_interests():
 
 
 
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         # Judge already logged in -- send to jury dashboard
