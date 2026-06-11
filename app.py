@@ -370,6 +370,23 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion FLOAT DEFAULT 0.0",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS ai_suspicion_reason TEXT",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE",
+                """CREATE TABLE IF NOT EXISTS seasonal_calendar (
+                    id              SERIAL PRIMARY KEY,
+                    base_city       VARCHAR(80)  NOT NULL,
+                    genre           VARCHAR(40)  NOT NULL,
+                    location_name   VARCHAR(120) NOT NULL,
+                    state_country   VARCHAR(80)  NOT NULL,
+                    distance_hours  FLOAT        NOT NULL,
+                    month_start     INTEGER      NOT NULL,
+                    month_end       INTEGER      NOT NULL,
+                    subject         TEXT         NOT NULL,
+                    what_is_happening TEXT       NOT NULL,
+                    why_it_matters  TEXT         NOT NULL,
+                    best_light_time VARCHAR(80),
+                    access_notes    TEXT,
+                    created_at      TIMESTAMP    DEFAULT NOW()
+                )""",
+                "CREATE INDEX IF NOT EXISTS idx_seasonal_city_genre ON seasonal_calendar (base_city, genre, month_start, month_end)",
                 """CREATE TABLE IF NOT EXISTS scored_phash_cache (
                     id           SERIAL PRIMARY KEY,
                     user_id      INTEGER NOT NULL,
@@ -3936,6 +3953,49 @@ def upload():
                                 )
                         # ── END Hive check ─────────────────────────────────
 
+                        # ── Sprint 2 — seasonal + portfolio context ───────────────────────────
+                        try:
+                            from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
+                            _sc_primary_genre = get_primary_genre(_u) if _u else (_img.genre or '')
+                            _sc_user_city     = getattr(_u, 'city', '') or '' if _u else ''
+                            _sc_seasonal_ctx  = build_seasonal_context(
+                                db_session    = db.session,
+                                user_city     = _sc_user_city,
+                                primary_genre = _sc_primary_genre or _img.genre or '',
+                                current_month = datetime.utcnow().month,
+                            )
+                        except Exception as _sc_err:
+                            app.logger.warning(f'[auto_score] seasonal context error: {_sc_err}')
+                            _sc_seasonal_ctx  = ''
+                            _sc_primary_genre = _img.genre or ''
+                            _sc_user_city     = ''
+
+                        # Portfolio summary — only when 5+ evaluated photographs
+                        _sc_portfolio = None
+                        try:
+                            _sc_count = db.session.query(Image).filter(
+                                Image.user_id == _img.user_id,
+                                Image.status  == 'scored',
+                            ).count()
+                            if _sc_count >= 5:
+                                _sc_recent = db.session.query(
+                                    Image.aq_score, Image.dm_score, Image.dod_score
+                                ).filter(
+                                    Image.user_id == _img.user_id,
+                                    Image.status  == 'scored',
+                                    Image.genre   == _img.genre,
+                                ).order_by(Image.scored_at.desc()).limit(8).all()
+                                if _sc_recent and len(_sc_recent) >= 2:
+                                    _sc_recent = list(reversed(_sc_recent))
+                                    _sc_portfolio = {
+                                        'feeling':    [r.aq_score  for r in _sc_recent if r.aq_score  is not None],
+                                        'timing':     [r.dm_score  for r in _sc_recent if r.dm_score  is not None],
+                                        'difficulty': [r.dod_score for r in _sc_recent if r.dod_score is not None],
+                                    }
+                        except Exception as _sp_err:
+                            app.logger.warning(f'[auto_score] portfolio context error: {_sp_err}')
+                            _sc_portfolio = None
+
                         result = auto_score(
                             image_path=_img.thumb_path, genre=_img.genre,
                             sub_genre=_img.sub_genre,
@@ -3952,6 +4012,10 @@ def upload():
                                 },
                                 camera_track=_img.camera_track,
                             ) if _img.exif_make or _img.exif_model or _img.exif_focal_length_35mm else '',
+                            seasonal_context  = _sc_seasonal_ctx,
+                            portfolio_summary = _sc_portfolio,
+                            user_city         = _sc_user_city,
+                            primary_genre     = _sc_primary_genre,
                         )
 
                         ai_suspicion = float(result.get('ai_suspicion', 0.0))
@@ -4888,10 +4952,146 @@ def image_detail(image_id):
     except Exception as _ve:
         app.logger.warning(f'[image_detail] versions fetch: {_ve}')
 
+    # ── Sprint 3 — scorecard context ─────────────────────────────────────────
+    _portfolio_data = None
+    _stats          = None
+    _now            = datetime.utcnow()
+
+    if current_user.is_authenticated and img.user_id == current_user.id and img.status == 'scored':
+        try:
+            # ── Portfolio trend data (unlocks at 5+ photographs) ─────────────
+            _scored_count = db.session.query(Image).filter(
+                Image.user_id == current_user.id,
+                Image.status  == 'scored',
+            ).count()
+
+            if _scored_count >= 5:
+                # Pull last 8 same-genre photographs for trend lines
+                _recent = db.session.query(
+                    Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                ).filter(
+                    Image.user_id == current_user.id,
+                    Image.status  == 'scored',
+                    Image.genre   == img.genre,
+                ).order_by(Image.scored_at.desc()).limit(8).all()
+
+                if _recent and len(_recent) >= 2:
+                    _recent = list(reversed(_recent))  # oldest first
+
+                    def _spark(values, height=30):
+                        """Convert list of floats to SVG polyline points string."""
+                        if not values or len(values) < 2:
+                            return "", []
+                        mn, mx = min(values), max(values)
+                        rng = mx - mn if mx != mn else 1.0
+                        w_step = 300 / (len(values) - 1)
+                        pts = []
+                        for i, v in enumerate(values):
+                            x = round(i * w_step, 1)
+                            y = round(height - ((v - mn) / rng) * (height - 2) - 1, 1)
+                            pts.append({'x': x, 'y': y})
+                        polyline = ' '.join(f"{p['x']},{p['y']}" for p in pts)
+                        return polyline, pts
+
+                    def _trend_pill(values):
+                        """Return pill text, color, bg for a dimension."""
+                        if len(values) < 3:
+                            return None, None, None
+                        first = sum(values[:len(values)//2]) / (len(values)//2)
+                        second = sum(values[len(values)//2:]) / (len(values) - len(values)//2)
+                        diff = second - first
+                        if diff > 0.3:
+                            return '↑ Climbing — getting stronger', '#27500A', '#EAF5EE'
+                        if diff < -0.3:
+                            return '↓ Dipped recently', '#72243E', '#F5EAF0'
+                        return '— Steady — your next opportunity to grow', '#854F0B', '#FDF6E3'
+
+                    _feeling    = [r.aq_score  for r in _recent if r.aq_score  is not None]
+                    _timing     = [r.dm_score  for r in _recent if r.dm_score  is not None]
+                    _difficulty = [r.dod_score for r in _recent if r.dod_score is not None]
+
+                    _dims = []
+                    for _label, _vals, _color, _flat_color in [
+                        ('Whether it made you feel something', _feeling,    '#F5C518', '#BA7517'),
+                        ('Whether the timing was right',       _timing,     '#2C3E6B', '#2C3E6B'),
+                        ('How difficult it was',               _difficulty, '#BA7517', '#BA7517'),
+                    ]:
+                        if len(_vals) >= 2:
+                            _sp, _pts = _spark(_vals)
+                            _pill, _pcol, _pbg = _trend_pill(_vals)
+                            _is_flat = abs(max(_vals) - min(_vals)) < 0.5
+                            _dims.append({
+                                'label':      _label,
+                                'current':    _vals[-1],
+                                'values':     [round(v, 1) for v in _vals],
+                                'sparkline':  _sp,
+                                'points':     _pts,
+                                'color':      _flat_color if _is_flat else _color,
+                                'flat':       _is_flat,
+                                'pill':       _pill,
+                                'pill_color': _pcol,
+                                'pill_bg':    _pbg,
+                            })
+
+                    _portfolio_data = {
+                        'has_trends': bool(_dims),
+                        'count':      _scored_count,
+                        'dimensions': _dims,
+                    }
+                else:
+                    _portfolio_data = {'has_trends': False, 'count': _scored_count}
+            else:
+                _portfolio_data = {'has_trends': False, 'count': _scored_count}
+
+        except Exception as _pe:
+            app.logger.warning(f'[image_detail] portfolio_data: {_pe}')
+            _portfolio_data = {'has_trends': False, 'count': 0}
+
+        try:
+            # ── 2025 stats ────────────────────────────────────────────────────
+            _year_start = datetime(_now.year, 1, 1)
+            _month_start = datetime(_now.year, _now.month, 1)
+
+            _best_row = db.session.query(
+                Image.score, Image.asset_name, Image.genre
+            ).filter(
+                Image.user_id   == current_user.id,
+                Image.status    == 'scored',
+                Image.scored_at >= _year_start,
+                Image.score     != None,
+            ).order_by(Image.score.desc()).first()
+
+            _month_count = db.session.query(Image).filter(
+                Image.user_id   == current_user.id,
+                Image.status    == 'scored',
+                Image.scored_at >= _month_start,
+            ).count()
+
+            _stats = {
+                'best_this_year':  _best_row.score     if _best_row else None,
+                'best_title':      _best_row.asset_name if _best_row else None,
+                'best_genre':      _best_row.genre      if _best_row else None,
+                'this_month_count': _month_count,
+            }
+        except Exception as _se:
+            app.logger.warning(f'[image_detail] stats: {_se}')
+            _stats = {}
+
+    # ── Weekly challenge ──────────────────────────────────────────────────────
+    _challenge = None
+    try:
+        _challenge = _get_active_challenge()
+    except Exception:
+        pass
+
     return render_template('image_detail.html', image=img, archetypes=ARCHETYPES,
                            percentile=percentile_data,
                            image_versions=_versions,
-                           parent_image_id=_parent_img_id)
+                           parent_image_id=_parent_img_id,
+                           portfolio_data=_portfolio_data,
+                           stats=_stats,
+                           weekly_challenge=_challenge,
+                           now=_now)
 
 
 @app.route('/image/<int:image_id>/score', methods=['POST'])
@@ -5427,6 +5627,20 @@ def leaderboard():
 # ---------------------------------------------------------------------------
 # Admin routes
 # ---------------------------------------------------------------------------
+
+# ── Sprint 1 — Seed seasonal calendar (run once after deploy) ─────────────────
+@app.route('/admin/seed-seasonal', methods=['POST'])
+@login_required
+@admin_required
+def admin_seed_seasonal():
+    try:
+        from engine.seasonal_calendar import seed_seasonal_calendar
+        count = seed_seasonal_calendar(db.session)
+        flash(f'Seasonal calendar seeded — {count} rows', 'success')
+    except Exception as e:
+        flash(f'Seed error: {e}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/admin')
 @login_required
