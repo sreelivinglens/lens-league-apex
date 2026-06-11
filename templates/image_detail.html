@@ -256,62 +256,43 @@
   {% if image.status == 'scored' and image.score %}
   {% set audit = image.get_audit() %}
 
-  {# ── HERO — full bleed photo, score, name, tier ────────────────── #}
-  <div style="position:relative; border-radius:14px; overflow:hidden; margin-bottom:16px; background:#1a1a18; min-height:280px;">
-
-    {# Photo background — bleeds behind the overlay #}
+  {# ── HERO — full photograph, no text on top ──────────────────────── #}
+  {# Image at full opacity so the photograph breathes.                 #}
+  {# Score band sits below as a slim dark strip — never on the image.  #}
+  <div style="border-radius:14px 14px 0 0; overflow:hidden; background:#1a1a18; margin-bottom:0;">
     {% if image.thumb_url %}
-    <img src="{{ image.thumb_url }}"
-         alt="{{ image.asset_name or image.original_filename }}"
-         style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.45; display:block;">
+    <div style="position:relative; display:block;">
+      <img src="{{ image.thumb_url }}"
+           alt="{{ image.asset_name or image.original_filename }}"
+           style="width:100%; max-height:520px; object-fit:cover; display:block;">
+      {# Corner watermark — subtle, bottom-right, platform credit for shares/screenshots #}
+      <div style="position:absolute; bottom:14px; right:16px; background:rgba(26,26,18,0.52); border-radius:4px; padding:4px 10px; pointer-events:none;">
+        <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.50); text-transform:uppercase;">© shutterleague.com</span>
+      </div>
+    </div>
+    {% else %}
+    <div style="width:100%; height:360px; background:#2a2a28;"></div>
     {% endif %}
+  </div>
 
-    {# Gradient over image for text legibility #}
-    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(26,26,24,0.55) 0%, rgba(26,26,24,0.25) 40%, rgba(26,26,24,0.75) 100%);"></div>
-
-    {# Content overlay #}
-    <div style="position:relative; padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; min-height:280px;" class="sc-hero-outer">
-
-      {# Top row — label + score #}
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;" class="sc-hero-inner">
-        <div>
-          <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase;">
-            Your {{ image.genre }} Photography
-          </p>
-          <p style="margin:0; font-family:var(--font-mono); font-size:28px; font-weight:700; color:#fff; line-height:1; letter-spacing:-0.5px;">SCORECARD</p>
-        </div>
-        <div style="text-align:right;">
-          <p style="margin:0; font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Your score</p>
-          <p style="margin:0; font-family:var(--font-mono); font-size:64px; font-weight:700; color:#F5C518; line-height:1;" class="sc-hero-score-num">{{ "%.2f"|format(image.score) }}</p>
-          <p style="margin:2px 0 0; font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.45);">Out of 10</p>
-        </div>
-      </div>
-
-      {# Bottom row — name, tier, title, meta #}
-      <div style="margin-top:20px;">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
-          <span style="font-family:var(--font-mono); font-size:22px; font-weight:700; color:#fff;" class="sc-hero-name">
-            {{ image.photographer_name or current_user.full_name or current_user.username }}
-          </span>
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:#F5C518; color:#1a1a18; padding:4px 12px; border-radius:4px;">
-            {{ image.tier or 'Scored' }}
-          </span>
-          {% if image.soul_bonus %}
-          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#F5C518;">✦ SOUL BONUS</span>
-          {% endif %}
-        </div>
-        <p style="margin:0 0 4px; font-size:16px; font-style:italic; color:rgba(255,255,255,0.8);">{{ image.asset_name or image.original_filename }}</p>
-        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          {% if image.exif_date_taken %}
-          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.exif_date_taken }}</span>
-          {% elif image.created_at %}
-          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.created_at.strftime('%d %b %Y') }}</span>
-          {% endif %}
-          {% if image.location %}
-          <span style="font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.5);">{{ image.location }}</span>
-          {% endif %}
-        </div>
-      </div>
+  {# ── SCORE BAND — slim bar below the photograph ───────────────────── #}
+  <div style="background:#1a1a18; border-radius:0 0 14px 14px; padding:18px 24px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    {# Left — name + tier + soul bonus #}
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0;">
+      <span style="font-family:var(--font-mono); font-size:18px; font-weight:700; color:#fff;" class="sc-hero-name">
+        {{ image.photographer_name or current_user.full_name or current_user.username }}
+      </span>
+      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:#F5C518; color:#1a1a18; padding:3px 10px; border-radius:4px; flex-shrink:0;">
+        {{ image.tier or 'Scored' }}
+      </span>
+      {% if image.soul_bonus %}
+      <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#F5C518; flex-shrink:0;">✦ SOUL BONUS</span>
+      {% endif %}
+    </div>
+    {# Right — score #}
+    <div style="text-align:right; flex-shrink:0;">
+      <p style="margin:0; font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Score</p>
+      <p style="margin:0; font-family:var(--font-mono); font-size:52px; font-weight:700; color:#F5C518; line-height:1;" class="sc-hero-score-num">{{ "%.2f"|format(image.score) }}</p>
     </div>
   </div>
 
@@ -443,8 +424,16 @@
      Pool per genre: 4 masters, one per card, no repeats.
   #}
 
+  {# Card body deduplication — c1 and c2 must never show the same text #}
   {% set _c1_body = audit.transferable_advice or _tech_row.val or '' %}
-  {% set _c2_body = _tech_row.val or _mom_row.val or '' %}
+  {# Card 2: use mentor_technical (_tech_row) only if c1 didn't already take it #}
+  {% if audit.transferable_advice %}
+    {# New image — c1 has its own field, c2 can safely use _tech_row #}
+    {% set _c2_body = _tech_row.val or _mom_row.val or '' %}
+  {% else %}
+    {# Old image — c1 took _tech_row, so c2 steps to _mom_row to avoid repeat #}
+    {% set _c2_body = _mom_row.val or '' %}
+  {% endif %}
   {% set _c3_body = _bgcheck or _next_row.val or '' %}
   {% set _c4_body = audit.byline_2_body or audit.byline_2 or '' %}
 
@@ -755,9 +744,45 @@
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
       <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
       <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
-      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">
-        {{ audit.days_since_language if audit and audit.days_since_language else 'Your camera is waiting.' }}
-      </p>
+      {# 3-mode motivational nudge #}
+      {% if _days <= 3 %}
+        {# Fresh — eye is still sharp #}
+        <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">Your eye is still sharp from this. What did you see today?</p>
+      {% elif _days <= 14 %}
+        {# Mid-range — use engine line if available, else genre-specific nudge #}
+        {% if audit and audit.days_since_language %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ audit.days_since_language }}</p>
+        {% else %}
+          {% if image.genre in ('Wildlife', 'Nature') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The behaviour you were watching for doesn&#39;t wait for a convenient morning.</p>
+          {% elif image.genre == 'Street' %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The pre-dawn market light you needed is happening right now without you.</p>
+          {% elif image.genre in ('Documentary', 'Photojournalism') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The story doesn&#39;t pause while you decide whether to go back.</p>
+          {% elif image.genre in ('Landscape', 'Landscapes') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The light on that valley is different every morning. Most mornings it&#39;s extraordinary.</p>
+          {% elif image.genre in ('People', 'Wedding') %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The face that let you this close won&#39;t always be available.</p>
+          {% else %}
+            <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The eye you trained on this image needs a new frame to work on.</p>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        {# 15+ days — seasonal window urgency #}
+        {% if image.genre in ('Wildlife', 'Nature') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">The season that made this possible doesn&#39;t stay open. It&#39;s been {{ _days }} days.</p>
+        {% elif image.genre == 'Street' %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since this. The street has changed. So have you. Go find out how.</p>
+        {% elif image.genre in ('Documentary', 'Photojournalism') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The window on this story narrows every week you don&#39;t return.</p>
+        {% elif image.genre in ('Landscape', 'Landscapes') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The season that lit this valley is already shifting.</p>
+        {% elif image.genre in ('People', 'Wedding') %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days. The people who made this possible are still there. Are you?</p>
+        {% else %}
+          <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.75; font-style:italic;">{{ _days }} days since your last photograph was evaluated. The eye goes quiet when it isn&#39;t used.</p>
+        {% endif %}
+      {% endif %}
     </div>
     <div style="display:flex; flex-direction:column; gap:10px; justify-content:center;">
       {% if audit %}<p style="margin:0; font-size:15px; color:var(--text-secondary); font-style:italic;">This image belongs in the world. Put it there.</p>{% endif %}
