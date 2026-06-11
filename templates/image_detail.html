@@ -380,7 +380,8 @@
   {# Option A fallback: what_stood_out → hard_truth #}
   {% set _hero_headline = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
   {% if _hero_headline %}
-  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:22px;" class="sc-verdict-grid">
+  {% set _has_right_col = audit.mentor_technical or audit.mentor_moment %}
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:{{ '1fr 1fr' if _has_right_col else '1fr' }}; gap:22px;" class="sc-verdict-grid">
     <div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center;">
@@ -398,6 +399,7 @@
       <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ _advice }}</p>
       {% endif %}
     </div>
+    {% if _has_right_col %}
     <div style="border-left:1px solid var(--border); padding-left:22px; display:flex; align-items:center;">
       {% if audit.mentor_technical %}
       <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_technical }}"</p>
@@ -405,6 +407,7 @@
       <p style="margin:0; font-size:16px; color:var(--text-primary); line-height:1.9; font-style:italic;">"{{ audit.mentor_moment }}"</p>
       {% endif %}
     </div>
+    {% endif %}
   </div>
   {% endif %}
   {% endif %}
@@ -427,6 +430,79 @@
   {# Option A fallback: background_check → byline_1 #}
   {% set _bgcheck = audit.background_check if audit.background_check else audit.byline_1 %}
 
+  {# ── Extract first sentence from each card body for the headline ─────────── #}
+  {# New images: engine generates transferable_advice, background_check etc.   #}
+  {# Old images: falls back to audit.rows fields — no master refs in those     #}
+  {# Headline = first sentence of body (up to first period + space or 80 chars)#}
+  {# Fallbacks include master names so old images still feel intentional        #}
+
+  {# ── Card headline extraction ───────────────────────────────────────────────
+     Each headline = first sentence of the card body.
+     When body is empty (old images, Option A fallback), use a genre-aware master
+     reference. Masters rotate across all 4 cards — no card owns a master.
+     Pool per genre: 4 masters, one per card, no repeats.
+  #}
+
+  {% set _c1_body = audit.transferable_advice or _tech_row.val or '' %}
+  {% set _c2_body = _tech_row.val or _mom_row.val or '' %}
+  {% set _c3_body = _bgcheck or _next_row.val or '' %}
+  {% set _c4_body = audit.byline_2_body or audit.byline_2 or '' %}
+
+  {# First-sentence extraction helper — split on '. ' and take first #}
+  {% macro first_sentence(text) %}{{ (text.split('. ')[0] + '.') if '. ' in text else text[:90] }}{% endmacro %}
+
+  {% if _c1_body %}{% set _c1_head = first_sentence(_c1_body) %}{% else %}
+    {# Card 1 fallback — the principle of the decisive choice #}
+    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c1_head = 'Brandt made the harder exposure choice every single time.' %}
+    {% elif image.genre == 'Street' %}{% set _c1_head = 'Cartier-Bresson said the decisive moment is a choice, not a catch.' %}
+    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c1_head = 'Salgado chose the frame that cost him something to make.' %}
+    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c1_head = 'Kenna stayed until the light was right, not until it was easy.' %}
+    {% elif image.genre in ('People', 'Wedding') %}{% set _c1_head = 'McCurry earned the trust before he raised the camera.' %}
+    {% elif image.genre == 'Fashion' %}{% set _c1_head = 'Newton understood that restraint is a creative decision.' %}
+    {% elif image.genre in ('Macro', 'Creative') %}{% set _c1_head = 'Weston found the form others walked past without seeing.' %}
+    {% elif image.genre == 'Drone' %}{% set _c1_head = 'The altitude is nothing. The angle is everything.' %}
+    {% else %}{% set _c1_head = 'Every master made this choice consciously.' %}{% endif %}
+  {% endif %}
+
+  {% if _c2_body %}{% set _c2_head = first_sentence(_c2_body) %}{% else %}
+    {# Card 2 fallback — the specific technical decision #}
+    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c2_head = 'Art Wolfe says sharpness is the by-product of patience, not speed.' %}
+    {% elif image.genre == 'Street' %}{% set _c2_head = 'Vivian Maier never explained her exposures. She just got them right.' %}
+    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c2_head = 'Nachtwey controlled the only thing available — where to stand.' %}
+    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c2_head = 'Adams pre-visualised the final print before he opened the shutter.' %}
+    {% elif image.genre in ('People', 'Wedding') %}{% set _c2_head = 'Karsh waited for the moment the mask came off.' %}
+    {% elif image.genre == 'Fashion' %}{% set _c2_head = 'Avedon controlled the white. Everything else followed.' %}
+    {% elif image.genre in ('Macro', 'Creative') %}{% set _c2_head = 'Ernst Haas said blur is not an accident — it is a language.' %}
+    {% elif image.genre == 'Drone' %}{% set _c2_head = 'The height gives you the geometry. The timing gives you the image.' %}
+    {% else %}{% set _c2_head = 'The decision was made before the shutter opened.' %}{% endif %}
+  {% endif %}
+
+  {% if _c3_body %}{% set _c3_head = first_sentence(_c3_body) %}{% else %}
+    {# Card 3 fallback — reading the background, the field, the frame behind #}
+    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c3_head = 'Nick Brandt scouted the background before the animal arrived.' %}
+    {% elif image.genre == 'Street' %}{% set _c3_head = 'Raghu Rai read the street before anything happened on it.' %}
+    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c3_head = 'Salgado knew the exit before he walked in.' %}
+    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c3_head = 'Ansel Adams checked the sky the night before the shot.' %}
+    {% elif image.genre in ('People', 'Wedding') %}{% set _c3_head = 'Leibovitz arrives early so she knows the room before it fills.' %}
+    {% elif image.genre == 'Fashion' %}{% set _c3_head = 'Penn built the set before the model was called.' %}
+    {% elif image.genre in ('Macro', 'Creative') %}{% set _c3_head = 'Edward Weston circled the subject before he placed the camera.' %}
+    {% elif image.genre == 'Drone' %}{% set _c3_head = 'Yann Arthus-Bertrand reads the land before he lifts off.' %}
+    {% else %}{% set _c3_head = 'The frame behind your subject is part of the photograph.' %}{% endif %}
+  {% endif %}
+
+  {% if _c4_body %}{% set _c4_head = first_sentence(_c4_body) %}{% else %}
+    {# Card 4 fallback — the next move, the next possibility #}
+    {% if image.genre in ('Wildlife', 'Nature') %}{% set _c4_head = 'The next behaviour is already forming.' %}
+    {% elif image.genre == 'Street' %}{% set _c4_head = 'Maier shot the same corner four times before she had it.' %}
+    {% elif image.genre in ('Documentary', 'Photojournalism') %}{% set _c4_head = 'Nachtwey returned the next day. And the day after.' %}
+    {% elif image.genre in ('Landscape', 'Landscapes') %}{% set _c4_head = 'The light will be different in an hour. Different in a season.' %}
+    {% elif image.genre in ('People', 'Wedding') %}{% set _c4_head = 'The next frame is the portrait without the occasion.' %}
+    {% elif image.genre == 'Fashion' %}{% set _c4_head = 'One element changed changes everything.' %}
+    {% elif image.genre in ('Macro', 'Creative') %}{% set _c4_head = 'The same subject in different light is a different image.' %}
+    {% elif image.genre == 'Drone' %}{% set _c4_head = 'The shadow version of this image exists at 4pm.' %}
+    {% else %}{% set _c4_head = 'The next frame is already there.' %}{% endif %}
+  {% endif %}
+
   <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-four-grid">
 
     {# Card 1 — The photographer's advice #}
@@ -435,11 +511,9 @@
         <span style="font-size:16px; color:#185FA5;">📷</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">
-        {%- if audit.transferable_advice -%}Trust the darkness.{%- elif _tech_row.val -%}{{ _tech_row.val[:50] }}…{%- else -%}Trust what you saw.{%- endif -%}
-      </p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c1_head }}</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ audit.transferable_advice or _tech_row.val or '' }}
+        {{ _c1_body }}
       </p>
     </div>
 
@@ -449,37 +523,33 @@
         <span style="font-size:16px; color:#27500A;">▲</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">
-        {%- if audit.byline_2_body or audit.byline_2 -%}
-          {{ (audit.byline_2_body or audit.byline_2)[:60] }}…
-        {%- else -%}Only yours held this.{%- endif -%}
-      </p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c2_head }}</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ audit.byline_2_body or audit.byline_2 or _mom_row.val or '' }}
+        {{ _c2_body }}
       </p>
     </div>
 
-    {# Card 3 — What to watch next #}
+    {# Card 3 — What to watch next (Bresson habit) #}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
       <div style="width:34px; height:34px; border-radius:8px; background:#F5EAF0; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#72243E;">◎</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">One second before you press.</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c3_head }}</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ _bgcheck or _next_row.val or '' }}
+        {{ _c3_body }}
       </p>
     </div>
 
-    {# Card 4 — Keep this in mind #}
+    {# Card 4 — Keep this in mind (creative direction) #}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
       <div style="width:34px; height:34px; border-radius:8px; background:#FDF3E3; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#854F0B;">💡</span>
       </div>
       <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
-      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">Don't touch the blacks.</p>
+      <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.7; min-height:52px; display:flex; align-items:flex-start;">{{ _c4_head }}</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
-        {{ audit.edit_base or '' }}
+        {{ _c4_body }}
       </p>
     </div>
 
