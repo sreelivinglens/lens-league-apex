@@ -3,8 +3,18 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
-<meta property="og:title" content="Image — Shutter League">
-<meta property="og:description" content="Photography evaluation by the Apex DDI Engine. 5 dimensions. Honest feedback.">
+<meta property="og:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
+<meta property="og:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }} · Evaluated by the Apex DDI Engine.">
+{% if image.thumb_url %}
+<meta property="og:image" content="{{ image.thumb_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ image.asset_name or image.original_filename }} — Shutter League">
+<meta name="twitter:description" content="{{ image.tier }} · {{ '%.2f'|format(image.score) if image.score else '' }} · {{ image.genre }}">
+{% if image.thumb_url %}<meta name="twitter:image" content="{{ image.thumb_url }}">{% endif %}
+<link rel="canonical" href="{{ request.url }}">
 {% endblock %}
 {% block extra_css %}
 <style>
@@ -111,27 +121,48 @@
     .cta-download-row a { min-width: 0 !important; width: 100%; text-align: center; }
   }
 
-  /* Sprint 3 — new scorecard mobile */
+  /* Sprint 3 — new scorecard responsive */
+
+  /* iPad portrait (768px) — 4 cards → 2 cols, 3-col stats → 2 cols */
+  @media (max-width: 768px) {
+    .sc-four-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-hero-score { font-size: 52px !important; }
+  }
+
+  /* Mobile (600px) — everything single column */
   @media (max-width: 600px) {
-    /* Hero — score moves below name */
-    .sc-hero-top { flex-direction: column !important; }
-    .sc-hero-score { text-align: left !important; margin-top: 8px; }
-    .sc-hero-score p:first-child { display: none; }
+    /* Hero */
+    .sc-hero-inner { flex-direction: column !important; gap: 8px !important; }
+    .sc-hero-score-num { font-size: 48px !important; }
     /* What stood out — single column */
-    .sc-hero-card { grid-template-columns: 1fr !important; }
-    .sc-hero-card > div:last-child { border-left: none !important; border-top: 1px solid var(--border); padding-left: 0 !important; padding-top: 16px !important; }
+    .sc-verdict-grid { grid-template-columns: 1fr !important; }
+    .sc-verdict-grid > div:last-child {
+      border-left: none !important;
+      border-top: 1px solid var(--border);
+      padding-left: 0 !important;
+      padding-top: 16px !important;
+      margin-top: 8px;
+    }
     /* 4 story cards — single column */
-    .sc-four-col { grid-template-columns: 1fr !important; }
-    /* Stats + trends — single column */
-    .sc-two-col { grid-template-columns: 1fr !important; }
-    /* Edit guide — single column */
-    .sc-edit-col { grid-template-columns: 1fr !important; }
-    /* Days since + share — single column */
-    .sc-days-col { grid-template-columns: 1fr !important; }
-    /* Location cards — single column */
+    .sc-four-grid { grid-template-columns: 1fr !important; }
+    /* All 2-col grids → single column */
+    .sc-two-grid { grid-template-columns: 1fr !important; }
+    /* 3-col stats → single column */
+    .sc-three-grid { grid-template-columns: 1fr !important; }
+    /* Location detail grid */
     .sc-loc-grid { grid-template-columns: 1fr !important; }
-    /* DDI qualifier */
+    /* DDI dims → 3 cols on mobile */
     .ddi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    /* Buttons full width */
+    .sc-share-btn { width: 100% !important; }
+  }
+
+  /* Small mobile (480px) */
+  @media (max-width: 480px) {
+    .sc-hero-score-num { font-size: 40px !important; }
+    .sc-hero-name { font-size: 18px !important; }
+    .sc-four-grid { grid-template-columns: 1fr !important; }
   }
 
   #delete-modal {
@@ -244,19 +275,19 @@
     <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(26,26,24,0.55) 0%, rgba(26,26,24,0.25) 40%, rgba(26,26,24,0.75) 100%);"></div>
 
     {# Content overlay #}
-    <div style="position:relative; padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; min-height:280px;">
+    <div style="position:relative; padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; min-height:280px;" class="sc-hero-outer">
 
       {# Top row — label + score #}
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;" class="sc-hero-inner">
         <div>
-          <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase;">
+          <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase;">
             Your {{ image.genre }} Photography
           </p>
           <p style="margin:0; font-family:var(--font-mono); font-size:28px; font-weight:700; color:#fff; line-height:1; letter-spacing:-0.5px;">SCORECARD</p>
         </div>
         <div style="text-align:right;">
-          <p style="margin:0; font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Your score</p>
-          <p style="margin:0; font-family:var(--font-mono); font-size:64px; font-weight:700; color:#F5C518; line-height:1;">{{ "%.2f"|format(image.score) }}</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Your score</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:64px; font-weight:700; color:#F5C518; line-height:1;" class="sc-hero-score-num">{{ "%.2f"|format(image.score) }}</p>
           <p style="margin:2px 0 0; font-family:var(--font-mono); font-size:13px; color:rgba(255,255,255,0.45);">Out of 10</p>
         </div>
       </div>
@@ -264,14 +295,14 @@
       {# Bottom row — name, tier, title, meta #}
       <div style="margin-top:20px;">
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
-          <span style="font-family:var(--font-mono); font-size:22px; font-weight:700; color:#fff;">
+          <span style="font-family:var(--font-mono); font-size:22px; font-weight:700; color:#fff;" class="sc-hero-name">
             {{ image.photographer_name or current_user.full_name or current_user.username }}
           </span>
-          <span style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:#F5C518; color:#1a1a18; padding:4px 12px; border-radius:4px;">
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:#F5C518; color:#1a1a18; padding:4px 12px; border-radius:4px;">
             {{ image.tier or 'Scored' }}
           </span>
           {% if image.soul_bonus %}
-          <span style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#F5C518;">✦ SOUL BONUS</span>
+          <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#F5C518;">✦ SOUL BONUS</span>
           {% endif %}
         </div>
         <p style="margin:0 0 4px; font-size:16px; font-style:italic; color:rgba(255,255,255,0.8);">{{ image.asset_name or image.original_filename }}</p>
@@ -324,7 +355,7 @@
   {# Option A fallback: what_stood_out → hard_truth #}
   {% set _hero_headline = audit.what_stood_out if audit.what_stood_out else audit.hard_truth %}
   {% if _hero_headline %}
-  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:22px;">
+  <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; display:grid; grid-template-columns:1fr 1fr; gap:22px;" class="sc-verdict-grid">
     <div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="width:34px; height:34px; border-radius:8px; background:rgba(245,197,24,0.12); display:flex; align-items:center; justify-content:center;">
@@ -371,14 +402,14 @@
   {# Option A fallback: background_check → byline_1 #}
   {% set _bgcheck = audit.background_check if audit.background_check else audit.byline_1 %}
 
-  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;">
+  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-four-grid">
 
     {# Card 1 — The photographer's advice #}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
       <div style="width:34px; height:34px; border-radius:8px; background:#EAF0FA; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#185FA5;">📷</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">The photographer's advice</p>
       <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
         {%- if audit.transferable_advice -%}Trust the darkness.{%- elif _tech_row.val -%}{{ _tech_row.val[:50] }}…{%- else -%}Trust what you saw.{%- endif -%}
       </p>
@@ -392,7 +423,7 @@
       <div style="width:34px; height:34px; border-radius:8px; background:#EAF5EE; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#27500A;">▲</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What you controlled</p>
       <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">
         {%- if audit.byline_2_body or audit.byline_2 -%}
           {{ (audit.byline_2_body or audit.byline_2)[:60] }}…
@@ -408,7 +439,7 @@
       <div style="width:34px; height:34px; border-radius:8px; background:#F5EAF0; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#72243E;">◎</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#72243E; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">What to watch next</p>
       <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">One second before you press.</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ _bgcheck or _next_row.val or '' }}
@@ -420,7 +451,7 @@
       <div style="width:34px; height:34px; border-radius:8px; background:#FDF3E3; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
         <span style="font-size:16px; color:#854F0B;">💡</span>
       </div>
-      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
+      <p style="margin:0 0 10px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase; min-height:34px; display:flex; align-items:center;">Keep this in mind</p>
       <p style="margin:0 0 12px; font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.25; min-height:52px; display:flex; align-items:flex-start;">Don't touch the blacks.</p>
       <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.8; flex:1;">
         {{ audit.edit_base or '' }}
@@ -434,7 +465,7 @@
   {% if weekly_challenge %}
   <div style="background:#EAF5EE; border:0.5px solid rgba(39,80,10,0.2); border-radius:12px; padding:16px 20px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
     <div>
-      <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
+      <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#27500A; text-transform:uppercase;">This week's challenge</p>
       <p style="margin:0; font-size:18px; font-weight:700; color:var(--text-primary);">{{ weekly_challenge.title }}</p>
     </div>
     <a href="{{ url_for('challenge_detail', challenge_id=weekly_challenge.id) }}" class="btn btn-solid" style="white-space:nowrap; font-size:14px; padding:12px 20px;">Participate →</a>
@@ -442,8 +473,8 @@
   {% endif %}
 
   {# ── HOW YOU'RE DEVELOPING + 2025 STATS ───────────────────────── #}
-  {# Trend lines — only shown when user has 5+ scored images #}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+  {# Trend lines — only shown when user has 5+ photographs evaluated #}
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
 
     {% if portfolio_data and portfolio_data.has_trends %}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
@@ -472,7 +503,7 @@
         </svg>
         <div style="display:flex; justify-content:space-between; margin-top:4px;">
           {% for v in dim.values %}
-          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">{{ v }}</span>
+          <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">{{ v }}</span>
           {% endfor %}
         </div>
       </div>
@@ -491,21 +522,21 @@
     {% endif %}
 
     {# 2025 Stats — always shown #}
-    <div style="display:flex; flex-direction:column; gap:10px;">
+    <div style="display:flex; flex-direction:column; gap:10px;" class="sc-three-grid">
       <p style="margin:0 0 2px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase;">2025 stats</p>
       <div style="background:linear-gradient(135deg,#FDF3E3,#F0D9A8); border:0.5px solid rgba(186,117,23,0.3); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Best this year</p>
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Best this year</p>
         <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(stats.best_this_year) if stats and stats.best_this_year else '—' }}</p>
         {% if stats and stats.best_genre %}<p style="margin:4px 0 0; font-size:13px; color:#4A3010;">{{ stats.best_title or stats.best_genre }}</p>{% endif %}
       </div>
       <div style="background:linear-gradient(135deg,#EAF5EE,#C8E8D4); border:0.5px solid rgba(39,80,10,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase;">This month</p>
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#27500A; text-transform:uppercase;">This month</p>
         <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">{{ "%.2f"|format(image.score) }}</p>
         <p style="margin:4px 0 0; font-size:13px; color:#1E3A0A;">{{ stats.this_month_count or 1 }} photograph{{ 's' if (stats.this_month_count or 1) != 1 else '' }} evaluated</p>
       </div>
       {% if percentile and percentile.percentile %}
       <div style="background:linear-gradient(135deg,#EAF0FA,#C8D8F0); border:0.5px solid rgba(44,62,107,0.25); border-radius:12px; padding:16px 18px; text-align:center; flex:1;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Your standing</p>
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Your standing</p>
         <p style="margin:0; font-size:36px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary); line-height:1.1;">Top {{ 100 - percentile.percentile|int }}%</p>
         <p style="margin:4px 0 0; font-size:13px; color:#1A3A5C;">{{ image.genre }}</p>
       </div>
@@ -516,7 +547,7 @@
 
   {# ── EDIT GUIDE ────────────────────────────────────────────────── #}
   {% if audit and (audit.edit_base or audit.edit_creative) %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;"> sc-two-grid">
     {% if audit.edit_base %}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
@@ -524,8 +555,8 @@
           <span style="font-size:15px; color:#185FA5;">⚙</span>
         </div>
         <div>
-          <p style="margin:0; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Standard edit</p>
-          <p style="margin:0; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Balanced · Light editing</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#185FA5; text-transform:uppercase;">Standard edit</p>
+          <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Balanced · Light editing</p>
         </div>
       </div>
       <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_base }}</p>
@@ -538,8 +569,8 @@
           <span style="font-size:15px; color:#854F0B;">🎨</span>
         </div>
         <div>
-          <p style="margin:0; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Creative edit</p>
-          <p style="margin:0; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Artistic · Heavy editing</p>
+          <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1.5px; color:#854F0B; text-transform:uppercase;">Creative edit</p>
+          <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono);">Artistic · Heavy editing</p>
         </div>
       </div>
       <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ audit.edit_creative }}</p>
@@ -555,17 +586,17 @@
       <div style="width:34px; height:34px; border-radius:8px; background:rgba(126,200,160,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
         <span style="font-size:15px;">📍</span>
       </div>
-      <p style="margin:0; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
+      <p style="margin:0; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:3px; color:rgba(126,200,160,0.6); text-transform:uppercase;">What's happening near you — {{ image.genre }}</p>
     </div>
     <p style="margin:0 0 16px; font-size:18px; color:#fff; line-height:1.85; font-weight:700;">{{ audit.mentor_location_1 | truncate(120) }}</p>
     {% if audit.mentor_location_2 %}
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" class="sc-loc-grid">
       <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Now open</p>
         <p style="margin:0; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_1 }}</p>
       </div>
       <div style="background:rgba(255,255,255,0.07); border-radius:10px; padding:14px 16px;">
-        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Coming up</p>
+        <p style="margin:0 0 4px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:rgba(126,200,160,0.6); text-transform:uppercase;">Coming up</p>
         <p style="margin:0; font-size:15px; color:#fff; line-height:1.6;">{{ audit.mentor_location_2 }}</p>
       </div>
     </div>
@@ -581,7 +612,7 @@
   {# ── DDI DIMENSIONS ────────────────────────────────────────────── #}
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
-    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension scores</a></p>
+    <p style="margin:0 0 14px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;"><a href="/science#dimensions" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Dimension scores</a></p>
     <div class="ddi-grid">
       {% set dims = [
         ('DoD',        image.dod_score,        'Depth of Difficulty',  'HOW DIFFICULT', 'IT WAS'),
