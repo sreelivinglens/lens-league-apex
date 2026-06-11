@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Upload Edited Version — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
 /* sl_audit: pre-existing inapplicable — no hero section */
@@ -301,7 +304,7 @@
         <ul style="margin:8px 0 0;padding-left:20px;line-height:2;">
           <li>Your edited version scores independently — it does not replace the original.</li>
           <li>It starts <strong>private</strong>. You decide if and when to make it public.</li>
-          <li>The <strong>highest-scoring version</strong> automatically counts toward your leaderboard ranking.</li>
+          <li>The <strong>highest-scoring version</strong> automatically counts toward your programme standing.</li>
           <li>
             {% if version_num == 2 %}
               🎁 <strong>This first edit is free</strong> — no charge. From V3 onwards each edit costs <strong>{{ edit_pts_cost }} pts</strong> or 1 upload slot.
@@ -324,7 +327,7 @@
         <br><br>
         By uploading an edited version, you acknowledge that <strong>Shutter League does not guarantee score
         improvement</strong> and is not liable for outcomes on re-scored images. Your original score is
-        preserved and continues to count toward your rankings regardless of the edited version's result.
+        preserved and continues to count toward your standing regardless of the edited version's result.
       </div>
 
       <div style="margin-bottom:16px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);">
