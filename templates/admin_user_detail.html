@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}User — {{ user.full_name or user.username }} — Admin — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
 body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; margin: 0 !important; }

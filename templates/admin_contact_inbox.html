@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Contact Inbox — Admin{% endblock %}
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block content %}
 {% set unread = messages|selectattr('replied','equalto',false)|list|length %}
 <div style="max-width:900px;margin:40px auto;padding:0 20px;">

@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ image.asset_name or image.original_filename }} — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="Image — Shutter League">
+<meta property="og:description" content="Photography evaluation by the Apex DDI Engine. 5 dimensions. Honest feedback.">
+{% endblock %}
 {% block extra_css %}
 <style>
   .detail-wrap { max-width: 900px; margin: 0 auto; }
@@ -587,7 +592,7 @@
       {% endfor %}
     </div>
     <p style="font-size:13px;color:var(--text-secondary);margin:12px 0 0;line-height:1.5;">
-      The highest-scoring version counts toward your leaderboard ranking automatically.
+      The highest-scoring version counts toward your programme standing automatically.
       Use the visibility toggle to choose which version appears publicly.
     </p>
     {% set _scored_versions = image_versions | selectattr('score') | list %}
@@ -598,7 +603,7 @@
         <strong>This version scored lower than your original.</strong>
         The Apex DDI Engine evaluates each image independently — edit guidance is directional, not prescriptive.
         A lower score on an edited version does not mean the original advice was wrong; it reflects how the final
-        image performed on its own merits. Your original score stands and continues to count toward your rankings.
+        image performed on its own merits. Your original score stands and continues to count toward your standing.
         Shutter League assessments are independent evaluations and outcomes on edited versions are not guaranteed.
       </div>
       {% endif %}
@@ -681,7 +686,7 @@
   <div class="delete-modal-box">
     <h3 style="font-size:20px; font-weight:700; margin-bottom:8px;">Delete this image?</h3>
     <p style="font-size:15px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-      This will permanently remove the image, its scores, and all programme entries. This cannot be undone.
+      This will permanently remove the image, its scores, and all programme records. This cannot be undone.
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <button onclick="document.getElementById('delete-modal').classList.remove('open')" class="btn" style="flex:1; min-width:120px;">Cancel</button>

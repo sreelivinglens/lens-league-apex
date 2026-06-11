@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Contact Us — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Contact Shutter League. Billing questions, subscription issues, technical problems — we read every message.">
+<meta property="og:title" content="Contact Us — Shutter League">
+<meta property="og:description" content="Get in touch with Shutter League. We respond within 2 working days.">
+{% endblock %}
 {% block extra_css %}
 <style>
   /* ── v46 3-COLOUR RULE ── */
@@ -99,7 +104,7 @@
     <div class="contact-label">Send us a message</div>
     <div class="contact-title">Get in touch</div>
     <div class="contact-body">
-      Billing questions, subscription issues, technical problems, competition queries,
+      Billing questions, subscription issues, technical problems, programme queries,
       or anything else — fill in the form and we will get back to you.
     </div>
 
@@ -185,7 +190,7 @@
       <div style="border-left:3px solid #F5C518; padding-left:16px;">
         <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Brand sponsorship enquiry</div>
         <div style="font-size:16px; color:var(--text-primary); line-height:1.6;">
-          Tell us about your brand and the kind of challenge or competition you would like to sponsor. We will respond with our media pack.
+          Tell us about your brand and the kind of challenge or programme you would like to sponsor. We will respond with our media pack.
         </div>
       </div>
 
@@ -228,7 +233,7 @@
     <div class="faq-q">How do I delete my account?</div>
     <div class="faq-a">
       Use the form above — select "Account deletion request". We will confirm deletion within
-      5 working days. Note that submitted competition images may be retained
+      5 working days. Note that uploaded programme images may be retained
       for integrity record-keeping per our <a href="/terms">Terms &amp; Conditions</a>.
     </div>
   </div>

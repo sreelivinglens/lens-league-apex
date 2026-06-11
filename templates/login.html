@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Sign In — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Sign in to Shutter League. Upload a photograph and get your DDI score in 60 seconds.">
+<meta property="og:title" content="Sign In — Shutter League">
+<meta property="og:description" content="Sign in to Shutter League. Upload a photograph and get your DDI score in 60 seconds.">
+{% endblock %}
 {% block extra_css %}<style>
   /* ── v47 3-COLOUR RULE ── */
   :root {
@@ -118,7 +123,7 @@
         </div>
         <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
           <span style="width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0;"></span>
-          6 free scored images &nbsp;&#xB7;&nbsp; No credit card
+          3 free scored images &nbsp;&#xB7;&nbsp; No credit card
         </div>
         <div style="margin-top:6px; font-size:14px;">
           Don&#39;t have an account?

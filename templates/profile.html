@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}My Profile — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
   .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
@@ -395,11 +398,11 @@
     </p>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <a href="{{ url_for('subscribe', track='camera') }}" class="btn btn-solid" style="padding:12px 24px;">
-        📷 Camera — ₹599/mo
+        📷 Camera — ₹200/mo
       </a>
       <a href="{{ url_for('subscribe', track='mobile') }}" class="btn"
          style="padding:12px 24px; border-color:var(--gold-dark); color:var(--gold);">
-        📱 Mobile — ₹299/mo
+        📱 Mobile — ₹200/mo
       </a>
     </div>
   </div>

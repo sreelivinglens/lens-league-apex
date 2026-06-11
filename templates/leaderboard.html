@@ -2,6 +2,12 @@
 {% from "glossary_links.html" import glink %}
 {% block title %}Programme Standings — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta property="og:title" content="Programme Standings — Shutter League">
+<meta property="og:description" content="Photography programme standings. Camera League and Mobile League. Ranked by DDI score.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 {% block extra_css %}
 <style>
   .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }

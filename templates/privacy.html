@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Privacy Policy — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Shutter League Privacy Policy. We collect only what we need. We never sell your data. Your images remain yours.">
+<meta property="og:title" content="Privacy Policy — Shutter League">
+<meta property="og:description" content="Shutter League Privacy Policy. We never sell your data. Your images remain yours.">
+{% endblock %}
 {% block extra_css %}
 <style>
   /* ── v46 3-COLOUR RULE ── Black · White · Bright Gold ── */
@@ -68,7 +73,7 @@
     <li><strong>Images you upload</strong> — the photograph, title, genre, location, and subject notes you provide</li>
     <li><strong>EXIF metadata</strong> — extracted automatically from uploaded images. Used for league integrity verification only. Never shown publicly.</li>
     <li><strong>Payment information</strong> — processed entirely by our RBI-authorised payment gateway provider. We store only the subscription or order ID. <strong>We do not collect, store, or have access to your card number, CVV, UPI PIN, net banking credentials, or any other payment authentication data.</strong></li>
-    <li><strong>Usage data</strong> — pages visited, images scored, challenge submissions.</li>
+    <li><strong>Usage data</strong> — pages visited, images scored, challenge uploads.</li>
   </ul>
       </div>
     </details>
@@ -76,13 +81,13 @@
     <details class="sl-accordion">
       <summary class="sl-accordion-trigger">03 — How We Use Your Data <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
-      <p><strong>We never sell your data.</strong> {{ platform_name }} does not serve advertising in its core platform. However, programme sponsors — such as photography brands (e.g. Fujifilm) or equipment partners — may be featured within sponsored programmes. In those cases, only aggregate participation data (e.g. number of entries, programme themes) may be shared with the sponsor. No personal data, images, or individual scores are shared with sponsors without your explicit consent.</p>
+      <p><strong>We never sell your data.</strong> {{ platform_name }} does not serve advertising in its core platform. However, programme sponsors — such as photography brands (e.g. Fujifilm) or equipment partners — may be featured within sponsored programmes. In those cases, only aggregate participation data (e.g. number of participants, programme themes) may be shared with the sponsor. No personal data, images, or individual scores are shared with sponsors without your explicit consent.</p>
   <ul>
     <li>To score your images using the Apex DDI Engine</li>
-    <li>To display your portfolio and scores on your dashboard and the leaderboard</li>
+    <li>To display your portfolio and scores on your dashboard and programme standings</li>
     <li>To process subscription payments via our payment gateway provider</li>
     <li>To send transactional emails (score notifications, subscription confirmations) via Brevo</li>
-    <li>To detect and prevent AI-generated image submissions and other integrity violations</li>
+    <li>To detect and prevent AI-generated image uploads and other integrity violations</li>
     <li>To operate photography programmes, challenges, and POTY tracking</li>
     <li>To facilitate sponsored programmes where photography brands or equipment partners are involved, subject to the data sharing limits described above</li>
   </ul>
@@ -105,9 +110,9 @@
     </details>
     
     <details class="sl-accordion">
-      <summary class="sl-accordion-trigger">05 — Leaderboard &amp; Public Data <span class="sl-accordion-icon">▾</span></summary>
+      <summary class="sl-accordion-trigger">05 — Standings &amp; Public Data <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
-      <p>The following information is visible publicly on the leaderboard and image share pages:</p>
+      <p>The following information is visible publicly on programme standings and image share pages:</p>
   <ul>
     <li>Your username and display name</li>
     <li>Your city and state (if provided in your profile)</li>
@@ -122,7 +127,7 @@
       <summary class="sl-accordion-trigger">06 — Image Storage &amp; Retention <span class="sl-accordion-icon">▾</span></summary>
       <div class="sl-accordion-body">
       <p>Images you upload are stored permanently on Cloudflare R2 unless you delete them. Deleting an image from your dashboard removes it from the platform and from public display. Thumbnails and score cards are also deleted.</p>
-  <p>RAW files submitted for verification are stored for 90 days after the competition result is published, then deleted.</p>
+  <p>RAW files submitted for verification are stored for 90 days after the programme result is published, then deleted.</p>
       </div>
     </details>
     

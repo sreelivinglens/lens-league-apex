@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}User Management — Admin{% endblock %}
 
+{% block extra_head %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 {% block extra_css %}
 <style>
   .users-wrap { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--page-pad); }

@@ -2,6 +2,12 @@
 
 {% block title %}Annual Excellence Award — Standings {{ year }} — ShutterLeague{% endblock %}
 
+{% block extra_head %}
+<meta property="og:title" content="Annual Excellence Award Standings — Shutter League">
+<meta property="og:description" content="Annual Excellence Award programme standings. Your best 6 scores in your strongest genre.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 {% block extra_css %}
 <style>
 /* AEA Standings — inapplicable: hero dims, hero-fade, hero opacity, hero margin, justify, 2-col-grid */

@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Create Account — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta name="description" content="Create a Shutter League account. Get 3 free scored images with honest DDI feedback. No credit card required.">
+<meta property="og:title" content="Create Account — Shutter League">
+<meta property="og:description" content="Join Shutter League. 3 free scored images. Honest feedback across 5 dimensions. No credit card.">
+<meta property="og:image" content="{{ og_image | default('https://shutterleague.com/static/og-image.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 {% block extra_css %}<style>
   :root {
     --gold:           #F5C518 !important;
