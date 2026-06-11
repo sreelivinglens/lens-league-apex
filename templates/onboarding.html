@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Welcome — Shutter League{% endblock %}
 
-{% block extra_head %}
-<meta name="robots" content="noindex, nofollow">
-{% endblock %}
 {% block extra_css %}
 <style>
   .location-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -16,23 +13,25 @@
   <div style="width:100%; max-width:520px;">
 
     <div style="text-align:center; margin-bottom:36px;">
-      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">ONE LAST STEP</div>
-      <h1 style="font-size:clamp(22px,4vw,30px); font-weight:700; color:var(--text-primary); margin-bottom:8px;">
-        Hi, {{ current_user.full_name or current_user.username }} 👋
+      <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:4px; color:var(--gold); margin-bottom:12px;">SHUTTER LEAGUE</div>
+      <h1 style="font-size:clamp(22px,4vw,30px); font-weight:700; color:var(--text-primary); margin-bottom:12px;">
+        Welcome, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.
       </h1>
-      <p style="font-size:16px; color:var(--text-secondary); line-height:1.7;">
-        Tell us where you're based so we can place you on your city standings.<br>
-        Takes 10 seconds.
+      <p style="font-size:17px; color:var(--text-secondary); line-height:1.7; max-width:420px; margin:0 auto;">
+        Upload any photograph. In 60 seconds you'll know exactly how it scores — across 5 dimensions — and one specific thing to work on next.
+      </p>
+      <p style="font-size:15px; color:var(--text-muted); line-height:1.7; max-width:420px; margin:12px auto 0;">
+        First 3 images are free. Fill in a few details below and you're in.
       </p>
     </div>
 
     {% if referred_discount %}
     <div style="background:#1A2744; border-radius:8px; padding:16px 20px; margin-bottom:24px;">
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:6px;">🎉 You have a referral discount</div>
+      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#F5C518; margin-bottom:6px;">🎉 Referral discount applied</div>
       <div style="font-size:16px; color:rgba(255,255,255,0.90); line-height:1.6;">
-        Your first month is <strong style="color:#F5C518;">₹170 (first month — Founding Member rate)).
+        Your first month is <strong style="color:#F5C518;">₹170</strong> <span style="color:rgba(255,255,255,0.45); text-decoration:line-through;">₹200</span> — Camera or Mobile League.
       </div>
-      <div style="font-size:13px; color:rgba(255,255,255,0.50); margin-top:6px; line-height:1.5;">Complete setup below — your discount will be waiting on your dashboard.</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.50); margin-top:6px; line-height:1.5;">Complete setup below — your discount will be on your dashboard.</div>
     </div>
     {% endif %}
 
@@ -40,10 +39,10 @@
       <form method="POST" action="{{ url_for('onboarding') }}" onsubmit="return validatePhone()">
 
         <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
-          Your Location
+          Where are you based?
         </div>
-        <p style="font-size:15px; color:var(--text-muted); margin-bottom:18px; margin-top:-8px; line-height:1.6;">
-          Used for city standings — "Master · 📷 · Bengaluru". Helps brands find local photographers.
+        <p style="font-size:15px; color:var(--text-secondary); margin-bottom:18px; margin-top:-8px; line-height:1.6;">
+          Shows on your profile as "Master · 📷 · Bengaluru". We also use your city to tell you about photography events, shooting spots, and what other photographers near you are working on.
         </p>
 
         <div class="location-row" style="margin-bottom:24px;">
@@ -85,7 +84,7 @@
                  value="{{ request.form.get('phone', '') }}">
           <p id="phone-error" style="font-size:13px; color:var(--red); margin-top:6px; line-height:1.5; display:none;"></p>
           <p style="font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
-            India: 10 digits only (e.g. 9876543210). Used for account security and identity verification only. Never shared publicly.
+            India: 10 digits. Used only for account security — never shared, never shown publicly.
           </p>
         </div>
 
@@ -95,12 +94,12 @@
                     placeholder="House / flat no., street, area, pincode"
                     style="width:100%; resize:vertical;">{{ request.form.get('address', '') }}</textarea>
           <p style="font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
-            Required for award delivery and KYC. Not shown on your public profile.
+            If you win an award, we need somewhere to send it. Not shown on your profile.
           </p>
         </div>
 
         <div style="font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:14px;">
-          Member Agreement
+          Your Commitment
         </div>
 
         <div style="display:flex; align-items:flex-start; gap:12px; padding:16px;
@@ -109,13 +108,13 @@
           <input type="checkbox" id="agreed" name="agreed" value="1"
                  required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
           <label for="agreed" style="font-size:15px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
-            I confirm all images I submit are my original photographs — not AI-generated, not belonging to another photographer.
-            I accept the
+            Every image I upload is my own original photograph — not AI-generated, not taken by anyone else.
+            I've read the
             <button type="button" onclick="openAgreement()"
                     style="background:none; border:none; color:var(--gold); text-decoration:underline; cursor:pointer; font-size:15px; padding:0;">
               Member Agreement
             </button>
-            and understand that fraud results in permanent account deletion and forfeiture of all awards.
+            and I stand behind it.
           </label>
         </div>
 
@@ -125,14 +124,15 @@
           <input type="checkbox" id="terms" name="terms" value="1"
                  required style="width:18px; height:18px; min-width:18px; margin-top:2px; accent-color:var(--gold); flex-shrink:0;">
           <label for="terms" style="font-size:15px; color:var(--text-secondary); line-height:1.6; cursor:pointer;">
-            I have read and agree to the
+            I've read the
             <a href="https://shutterleague.com/terms" target="_blank"
-               style="color:var(--gold); text-decoration:underline;">Terms &amp; Conditions</a>.
+               style="color:var(--gold); text-decoration:underline;">Terms &amp; Conditions</a>
+            and I'm happy with them.
           </label>
         </div>
 
-        <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:15px; letter-spacing:2px;">
-          Go to my dashboard →
+        <button type="submit" class="btn btn-solid" style="width:100%; padding:14px; font-size:16px; letter-spacing:1px;">
+          Let's begin →
         </button>
 
       </form>
@@ -149,13 +149,13 @@
       <button onclick="closeAgreement()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
     </div>
     <div style="padding:20px 24px; overflow-y:auto; flex:1; font-size:16px; color:var(--text-secondary); line-height:1.7;">
-      <p style="margin-bottom:16px;">By registering, you agree to:</p>
+      <p style="margin-bottom:16px;">Shutter League is built on the integrity of original photography. By joining, you commit to:</p>
       <ol style="padding-left:20px; display:flex; flex-direction:column; gap:10px;">
-        <li>All images are your own original photographs — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
-        <li>You shoot in the correct league for your device — Camera League for DSLR/mirrorless/film, Mobile League for smartphones.</li>
-        <li>Any image may be selected for RAW verification at any time. You agree to provide the original RAW file within 7 days of any request.</li>
-        <li>Fraud = all images removed, account permanently deleted, all recognition forfeited.</li>
-        <li>You retain full copyright on all images. Shutter League gets a non-exclusive licence to display them on the platform.</li>
+        <li>Every image you upload is your own original photograph — not AI-generated, not composited using generative AI, not taken by another photographer.</li>
+        <li>You shoot in the correct league for your device — Camera League for DSLR, mirrorless, or film; Mobile League for smartphones.</li>
+        <li>You'll provide your original RAW file within 7 days if any image is selected for verification. This protects the integrity of the platform for everyone.</li>
+        <li>Fraud — including AI-generated images, stolen work, or false verification — results in permanent removal from the platform and forfeiture of all standing.</li>
+        <li>Your images remain yours. Shutter League gets a non-exclusive licence to display them on the platform — nothing more.</li>
       </ol>
     </div>
     <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
