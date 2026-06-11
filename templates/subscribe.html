@@ -62,14 +62,14 @@
     <a href="{{ url_for('subscribe', track=track) }}?plan=monthly"
        class="plan-opt {{ 'active' if plan == 'monthly' else '' }}">
       <div class="plan-opt-label">Monthly</div>
-      <div class="plan-opt-price">₹{{ '299' if track == 'mobile' else '599' }}</div>
+      <div class="plan-opt-price">₹200</div>
       <div class="plan-opt-save">&nbsp;</div>
     </a>
     <a href="{{ url_for('subscribe', track=track) }}?plan=annual"
        class="plan-opt {{ 'active' if plan == 'annual' else '' }}">
       <div class="plan-opt-label">Annual</div>
-      <div class="plan-opt-price">₹{{ '2,499' if track == 'mobile' else '4,999' }}</div>
-      <div class="plan-opt-save">Save 30%</div>
+      <div class="plan-opt-price">₹2,000</div>
+      <div class="plan-opt-save">2 months free</div>
     </a>
   </div>
   {% endif %}
@@ -86,6 +86,11 @@
         Billed monthly · renews automatically · cancel anytime
       {% endif %}
     </div>
+    {% if track in ('camera', 'mobile') and plan == 'monthly' %}
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:16px;">
+      Founding Member rate — locks in at ₹200 forever. New subscribers from 1 Jan 2027 pay ₹299.
+    </div>
+    {% endif %}
 
     <hr class="sub-divider">
 
@@ -104,7 +109,7 @@
     <div class="sub-feature"><span class="check">✓</span> AI prepares your brief before every session</div>
     <div class="sub-feature"><span class="check">✓</span> Competition strategy — what to enter and when</div>
     {% else %}
-    <div class="sub-feature"><span class="check">✓</span> Unlimited scored images per month</div>
+    <div class="sub-feature"><span class="check">✓</span> <strong>4 shoots per month</strong></div>
     <div class="sub-feature"><span class="check">✓</span> Full Apex DDI analysis — 5 scoring modules</div>
     <div class="sub-feature"><span class="check">✓</span> Weekly Assignment &amp; Annual Excellence Award — Photographer of the Year qualification</div>
     <div class="sub-feature"><span class="check">✓</span> Peer-to-peer blind rating system</div>
