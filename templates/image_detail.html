@@ -1021,9 +1021,28 @@
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       {% if image.status == 'scored' %}
-      <form method="POST" action="{{ url_for('admin_force_rescore', image_id=image.id) }}" style="display:inline;" onsubmit="return confirm('Rescore this image with the current engine? Current score: {{ '%.2f'|format(image.score) }} ({{ image.tier }}). This will overwrite the existing score and scorecard.');">
-        <button type="submit" class="btn" style="font-size: 14px;">↻ Force Rescore (current engine)</button>
-      </form>
+      <button type="button" class="btn" id="force-rescore-btn" style="font-size: 14px;"
+              data-image-id="{{ image.id }}"
+              data-rescore-score="{{ '%.2f'|format(image.score) }}"
+              data-rescore-tier="{{ image.tier }}"
+              onclick="startForceRescore(this)">
+        <span id="force-rescore-label">↻ Force Rescore (current engine)</span>
+      </button>
+      {% elif image.status == 'processing' %}
+      <button type="button" class="btn" style="font-size: 14px; opacity:0.6;" disabled>
+        <span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspin 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>
+        Rescoring… this can take up to a minute
+      </button>
+      <style>@keyframes llspin { to { transform: rotate(360deg); } }</style>
+      <script>
+        // Poll for completion if page loads with status=processing (e.g. after redirect)
+        (function poll(){
+          fetch("{{ url_for('score_status', image_id=image.id) }}")
+            .then(r => r.json())
+            .then(d => { if (d.status !== 'processing') { window.location.reload(); } else { setTimeout(poll, 2500); } })
+            .catch(() => setTimeout(poll, 4000));
+        })();
+      </script>
       {% endif %}
       {% if image.needs_review and not image.is_flagged %}
       <form method="POST" action="{{ url_for('admin_approve_review', image_id=image.id) }}" style="display:inline;">
@@ -1092,5 +1111,70 @@
     </div>
   </div>
 </div>
+
+<script>
+function startForceRescore(btn) {
+  const name  = btn.getAttribute('data-rescore-score') || '0.00';
+  const tier  = btn.getAttribute('data-rescore-tier')  || '';
+  const imgId = btn.getAttribute('data-image-id');
+  const msg = "Rescore this image with the current engine? Current: " + name +
+              " (" + tier + "). This overwrites the score AND scorecard. Uses API credits.";
+  if (!confirm(msg)) return;
+
+  const label = document.getElementById('force-rescore-label');
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  label.innerHTML = '<span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspin 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>Rescoring… this can take up to a minute';
+
+  // Inject keyframes if not already present
+  if (!document.getElementById('llspin-style')) {
+    const style = document.createElement('style');
+    style.id = 'llspin-style';
+    style.textContent = '@keyframes llspin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+
+  fetch("/admin/image/" + imgId + "/force-rescore", {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: '_xhr=1'
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === 'processing') {
+      pollRescoreStatus(imgId);
+    } else {
+      label.textContent = '↻ Force Rescore (current engine)';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      alert(d.message || 'Could not start rescore.');
+    }
+  })
+  .catch(() => {
+    label.textContent = '↻ Force Rescore (current engine)';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    alert('Network error — could not start rescore.');
+  });
+}
+
+function pollRescoreStatus(imgId) {
+  fetch("/score-status/" + imgId)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'processing') {
+        setTimeout(() => pollRescoreStatus(imgId), 2500);
+      } else {
+        // Done — reload to show updated score and scorecard
+        window.location.reload();
+      }
+    })
+    .catch(() => setTimeout(() => pollRescoreStatus(imgId), 4000));
+}
+</script>
 
 {% endblock %}
