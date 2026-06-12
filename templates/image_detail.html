@@ -763,10 +763,34 @@
   </div>
   {% endif %}
 
-  {# ── QUOTE ─────────────────────────────────────────────────────── #}
+  {# ── QUOTE — rotates per image, not the same one every time ────────── #}
+  {% set _master_quotes = [
+    ("To photograph is to hold one's breath when all faculties converge to capture fleeting reality.", "Henri Cartier-Bresson"),
+    ("Photography is an austere and blazing poetry of the real.", "Sebastiao Salgado"),
+    ("There are always two people in every picture: the photographer and the viewer.", "Ansel Adams"),
+    ("The camera is an instrument that teaches people how to see without a camera.", "Dorothea Lange"),
+    ("Photography is the only language that can be understood anywhere in the world.", "Bruno Barbey"),
+    ("It's not what you look at that matters, it's what you see.", "Henry David Thoreau"),
+    ("A photograph is a secret about a secret. The more it tells you, the less you know.", "Diane Arbus"),
+    ("The whole point of taking pictures is so that you don't have to explain things with words.", "Elliott Erwitt"),
+    ("Wherever there is light, one can photograph.", "Alfred Stieglitz"),
+    ("Photography takes an instant out of time, altering life by holding it still.", "Dorothea Lange"),
+    ("The light defines what I will and will not photograph.", "Vivian Maier"),
+    ("You don't take a photograph, you make it.", "Ansel Adams"),
+    ("If your pictures aren't good enough, you're not close enough.", "Robert Capa"),
+    ("Twelve significant photographs in any one year is a good crop.", "Ansel Adams"),
+    ("Photography is an art of observation. It has little to do with the things you see and everything to do with the way you see them.", "Elliott Erwitt"),
+    ("To me, photography is an art of observation, about finding something interesting in an ordinary place.", "Elliott Erwitt"),
+    ("Maximum sharpness is achieved not just through the lens, but through the eye.", "Eliot Porter"),
+    ("The best thing about a picture is that it never changes, even when the people in it do.", "Andy Warhol"),
+    ("A picture is the expression of an impression.", "Edward Steichen"),
+    ("Photography is a way of feeling, of touching, of loving.", "Aaron Siskind")
+  ] %}
+  {% set _quote_idx = (image.id or 0) % (_master_quotes|length) %}
+  {% set _quote_text, _quote_author = _master_quotes[_quote_idx] %}
   <div style="border-left:4px solid var(--gold); padding:16px 22px; margin-bottom:14px;">
-    <p style="margin:0 0 8px; font-size:17px; color:var(--text-primary); line-height:1.85; font-style:italic;">"To photograph is to hold one's breath when all faculties converge to capture fleeting reality."</p>
-    <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">— Henri Cartier-Bresson</p>
+    <p style="margin:0 0 8px; font-size:17px; color:var(--text-primary); line-height:1.85; font-style:italic;">"{{ _quote_text }}"</p>
+    <p style="margin:0; font-size:13px; color:var(--text-muted); font-family:var(--font-mono); letter-spacing:1px;">— {{ _quote_author }}</p>
   </div>
 
   {# ── DDI qualifier note ───────────────────────────────────────── #}
