@@ -2501,7 +2501,7 @@ Return this exact JSON:
   "scene_summary": "<2-3 sentences describing exactly what is happening in the image>",
   "captive_indicators": "<describe any evidence of captivity — cage, enclosure, zoo, tags — or null if none>",
   "is_captive": <true if any captive indicators present, else false>,
-  "species_id": "<precise common name of the primary subject species — e.g. 'Rock Pigeon', 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL RULES: (1) Return ONLY the species common name — never a behavioural description, never 'Mother with chicks', never 'Bird feeding young', never a scene description. If you see a pigeon with chicks, return 'Rock Pigeon'. If you see a heron hunting, return 'Grey Heron'. The behaviour is NOT the species name. (2) Only name a species if you can identify it with HIGH VISUAL CONFIDENCE. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, out of focus, or the birds/animals are small, distant, or soft-focus and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist. A wrong species identification is worse than returning Unknown. When in doubt, return Unknown. (3) SIMILAR-SPECIES PAIRS — extra care required: certain species pairs are frequently confused and require checking specific distinguishing features before committing to either name. Greater Flamingo vs Lesser Flamingo: check bill colour (Greater = pale pink with black tip; Lesser = deep red/maroon, almost entirely dark) and overall size/proportion relative to other birds in frame (Lesser is notably smaller and stockier). Indian Pond Heron vs Striated Heron: check overall coloration and habitat. Great Egret vs Intermediate Egret vs Little Egret: check bill colour, leg/foot colour, and neck-to-body ratio. If the distinguishing feature (bill colour, leg colour, size) is not clearly visible due to distance, angle, lighting, OR the subject being out of focus/soft, return 'Unknown' or the broader group name (e.g. 'Flamingo' rather than guessing Greater vs Lesser) rather than committing to a specific species that may be wrong. PRIMARY-SUBJECT SHARPNESS CHECK: before naming a species in a similar-species pair, check primary_subject_sharp — if the primary subject is NOT sharp (soft focus, motion blur, out of focus), the fine distinguishing features (bill colour, exact size/proportion) cannot be reliably assessed, and you MUST return 'Unknown' or the broader group name for that pair, even if the general silhouette/colour suggests one species over another.>",
+  "species_id": "<precise common name of the primary subject species — e.g. 'Rock Pigeon', 'Great Cormorant', 'Indian Kingfisher', 'Bengal Tiger'. CRITICAL RULES: (1) Return ONLY the species common name — never a behavioural description, never 'Mother with chicks', never 'Bird feeding young', never a scene description. If you see a pigeon with chicks, return 'Rock Pigeon'. If you see a heron hunting, return 'Grey Heron'. The behaviour is NOT the species name. (2) Only name a species if you can identify it with HIGH VISUAL CONFIDENCE. Return 'Unknown' if: (a) the image is high-key, monochrome, heavily processed, out of focus, or the birds/animals are small, distant, or soft-focus and features are not clearly readable; (b) multiple species could plausibly match the visual evidence; (c) the image is abstract or minimalist. A wrong species identification is worse than returning Unknown. When in doubt, return Unknown. (3) SIMILAR-SPECIES PAIRS — extra care required: certain species pairs are frequently confused and require checking specific distinguishing features before committing to either name. Greater Flamingo vs Lesser Flamingo: check bill colour (Greater = pale pink with black tip; Lesser = deep red/maroon, almost entirely dark) and overall size/proportion relative to other birds in frame (Lesser is notably smaller and stockier). Indian Pond Heron vs Striated Heron: check overall coloration and habitat. Great Egret vs Intermediate Egret vs Little Egret: check bill colour, leg/foot colour, and neck-to-body ratio. If the distinguishing feature (bill colour, leg colour, size) is not clearly visible due to distance, angle, lighting, OR the subject being out of focus/soft, return 'Unknown' or the broader group name (e.g. 'Flamingo' rather than guessing Greater vs Lesser) rather than committing to a specific species that may be wrong. PRIMARY-SUBJECT SHARPNESS CHECK: before naming a species in a similar-species pair, check primary_subject_sharp — if the primary subject is NOT sharp (soft focus, motion blur, out of focus), the fine distinguishing features (bill colour, exact size/proportion) cannot be reliably assessed, and you MUST return 'Unknown' or the broader group name for that pair, even if the general silhouette/colour suggests one species over another. NO QUALIFIERS IN THE VALUE: the value must be ONLY the bare name itself — 'Flamingo', 'Unknown', 'Greater Flamingo' — with NO parenthetical notes, NO explanations, NO trailing clauses like '(out of focus)' or '- uncertain' or ', soft focus'. Any reasoning about why a broader name or Unknown was chosen belongs in scene_summary, never in this field.>",
   "suggested_subgenre": "<most accurate sub-genre id from the lists above — e.g. 'creative_minimalist', 'wildlife_bird_behaviour', 'street_candid'. null if genre is Landscape/Nature/Wedding/Macro/Drone/Fashion and no clear sub-genre match.>",
   "suggested_subgenre_reason": "<one sentence: what specific visual evidence leads to this sub-genre. e.g. 'Single swan in 60% negative space with tonal relationship as primary compositional statement.'>"
 }
@@ -3623,8 +3623,11 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 def _species_display(species_id):
     """
     Convert a full vision species ID to a display-safe common family name.
-    Rules (Session 37 spec):
+    Rules (Session 37 spec, extended Session 74 for qualifier stripping):
       - Gate: return None if species_id is empty, generic, or uncertain
+      - Strip parenthetical qualifiers and trailing clauses before extracting
+        the family name, e.g. "Flamingo (out of focus)" → "Flamingo",
+        "Unknown - out of focus" → None (Unknown is still generic after stripping)
       - Display: strip leading adjectives to return family common name only
         e.g. "Great Cormorant" → "Cormorant"
              "Indian Kingfisher" → "Kingfisher"
@@ -3635,6 +3638,15 @@ def _species_display(species_id):
     if not species_id:
         return None
 
+    import re as _re
+
+    # Strip parenthetical qualifiers and trailing clauses after , ; – — -
+    # e.g. "Flamingo (out of focus)" -> "Flamingo"
+    #      "Unknown - out of focus" -> "Unknown"
+    #      "Lesser Flamingo (uncertain - out of focus)" -> "Lesser Flamingo"
+    cleaned = _re.sub(r'\s*\(.*?\)\s*', '', species_id).strip()
+    cleaned = _re.split(r'\s*[,;\u2013\u2014-]\s*', cleaned)[0].strip()
+
     # Gate: uncertain / generic terms — hide card entirely
     _generic = {
         'bird', 'birds', 'animal', 'animals', 'plant', 'plants',
@@ -3642,14 +3654,13 @@ def _species_display(species_id):
         'insect', 'fish', 'mammal', 'reptile', 'amphibian',
         'object', 'subject', 'wildlife', 'nature', 'null', 'none',
     }
-    _lower = species_id.strip().lower()
-    if _lower in _generic:
+    _lower = cleaned.lower()
+    if _lower in _generic or not cleaned:
         return None
     # Also gate on very short strings (< 4 chars) and anything with Latin format (Genus species)
-    import re as _re
-    if len(_lower) < 4:
+    if len(cleaned) < 4:
         return None
-    if _re.match(r'^[A-Z][a-z]+ [a-z]+$', species_id.strip()):
+    if _re.match(r'^[A-Z][a-z]+ [a-z]+$', cleaned):
         # Looks like a Latin binomial — do not show
         return None
 
@@ -3658,9 +3669,9 @@ def _species_display(species_id):
     # "Indian Kingfisher" → "Kingfisher"
     # "Bengal Tiger" → "Tiger"
     # "Flamingo" → "Flamingo" (already family name)
-    words = species_id.strip().split()
+    words = cleaned.split()
     # Find last meaningful capitalised word
-    family = words[-1] if words else species_id
+    family = words[-1] if words else cleaned
     # Handle possessives / trailing punctuation
     family = family.rstrip('.,;:)')
     return family if family else None
