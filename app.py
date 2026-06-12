@@ -3357,7 +3357,7 @@ def upload():
             _cache_row = db.session.execute(
                 db.text(
                     "SELECT score, tier, dod_score, disruption_score, dm_score, "
-                    "wonder_score, aq_score, archetype, soul_bonus "
+                    "wonder_score, aq_score, archetype, soul_bonus, original_image_id "
                     "FROM scored_phash_cache "
                     "WHERE user_id = :uid AND phash = :ph AND genre = :genre "
                     "ORDER BY scored_at DESC LIMIT 1"
@@ -3371,6 +3371,29 @@ def upload():
                     f'[upload] phash cache hit: user={current_user.id} '
                     f'phash={phash[:16]}… anchored_score={_anchored_score["score"]}'
                 )
+                # If the cached original has no audit_json, don't anchor —
+                # fall through to the engine so this upload gets a full
+                # scorecard (avoids the empty-scorecard bug on duplicate
+                # uploads of images scored before audit_json existed, or
+                # whose original was deleted without audit_json).
+                _orig_id = _anchored_score.get('original_image_id')
+                _has_audit = False
+                if _orig_id:
+                    try:
+                        _audit_check = db.session.execute(
+                            db.text("SELECT audit_json FROM images WHERE id = :iid"),
+                            {'iid': _orig_id}
+                        ).fetchone()
+                        if _audit_check and _audit_check[0]:
+                            _has_audit = True
+                    except Exception:
+                        pass
+                if not _has_audit:
+                    app.logger.info(
+                        f'[upload] cache hit but no audit_json on original '
+                        f'{_orig_id} — falling through to engine for image {phash[:16]}…'
+                    )
+                    _anchored_score = None
         except Exception as _cache_err:
             app.logger.warning(f'[upload] phash cache lookup failed (non-fatal): {_cache_err}')
 
@@ -3701,6 +3724,18 @@ def upload():
                 img.status           = 'scored'
                 img.scored_at        = datetime.utcnow()
                 img.scoring_flash    = f'Score anchored: {img.score} ({img.tier})'
+                # Copy audit_json from the original image so the scorecard
+                # (What stood out, 4 story cards, edit suggestions etc.) is
+                # populated — without this, anchored re-uploads show an
+                # empty scorecard (only score/tier/dimensions, no copy).
+                _orig_id = _anchored_score.get('original_image_id')
+                if _orig_id:
+                    try:
+                        _orig = Image.query.get(_orig_id)
+                        if _orig and _orig.audit_json:
+                            img.audit_json = _orig.audit_json
+                    except Exception as _ae:
+                        app.logger.warning(f'[upload] audit copy failed: {_ae}')
                 db.session.commit()
                 app.logger.info(
                     f'[upload] score anchored from cache: image={img.id} '
