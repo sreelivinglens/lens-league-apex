@@ -548,14 +548,18 @@
                       onclick="openRecalModal(this)">
                 ⚖ Recal
               </button>
-              <button type="button" class="act-btn" id="rescore-btn-{{ img.id }}"
-                      title="Force a full rescore through the current engine — overwrites score and scorecard"
+              {% endif %}
+              {% if img.status == 'scored' or img.status == 'error' %}
+              <button type="button" class="act-btn{{ '' if img.status == 'error' else '' }}" id="rescore-btn-{{ img.id }}"
+                      title="{{ 'Retry scoring through the current engine' if img.status == 'error' else 'Force a full rescore through the current engine — overwrites score and scorecard' }}"
+                      {% if img.status == 'error' %}style="border-color:var(--gold); color:var(--gold);"{% endif %}
                       data-image-id="{{ img.id }}"
                       data-rescore-name="{{ (img.asset_name or 'Untitled') | replace("'", '') }}"
                       data-rescore-score="{{ '%.2f'|format(img.score or 0) }}"
                       data-rescore-tier="{{ img.tier or '' }}"
+                      data-rescore-status="{{ img.status }}"
                       onclick="confirmAndRescore(this)">
-                ↻ Rescore
+                {{ '↻ Score Now' if img.status == 'error' else '↻ Rescore' }}
               </button>
               {% endif %}
             </div>
@@ -1387,12 +1391,18 @@ function confirmAndRescore(btn) {
      builds the confirm message in pure JS — avoids Jinja/JS quote escaping
      issues entirely. Fires the rescore as a background job (instant response,
      avoids long-request 503s), shows a spinner, and polls /score-status. */
-  const name  = btn.getAttribute('data-rescore-name')  || 'Untitled';
-  const score = btn.getAttribute('data-rescore-score') || '0.00';
-  const tier  = btn.getAttribute('data-rescore-tier')  || '';
-  const imgId = btn.getAttribute('data-image-id');
-  const msg = "Force rescore '" + name + "' with the current engine? Current: " +
-              score + " (" + tier + "). This overwrites the score AND scorecard text. Uses API credits.";
+  const name   = btn.getAttribute('data-rescore-name')  || 'Untitled';
+  const score  = btn.getAttribute('data-rescore-score') || '0.00';
+  const tier   = btn.getAttribute('data-rescore-tier')  || '';
+  const status = btn.getAttribute('data-rescore-status') || 'scored';
+  const imgId  = btn.getAttribute('data-image-id');
+  let msg;
+  if (status === 'error') {
+    msg = "Retry scoring '" + name + "' through the current engine? Uses API credits.";
+  } else {
+    msg = "Force rescore '" + name + "' with the current engine? Current: " +
+          score + " (" + tier + "). This overwrites the score AND scorecard text. Uses API credits.";
+  }
   if (!confirm(msg)) return;
 
   const originalHTML = btn.innerHTML;
