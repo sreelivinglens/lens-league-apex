@@ -66,7 +66,7 @@
   .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
 
   .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
-  @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+  /* Mobile override moved to Sprint 3 responsive block below — 2 cols */
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .ddi-lbl { font-family: var(--font-mono); font-size:13px; letter-spacing: 0.5px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; margin-top: 4px; }
@@ -167,8 +167,13 @@
     .sc-three-grid { grid-template-columns: 1fr !important; }
     /* Location detail grid */
     .sc-loc-grid { grid-template-columns: 1fr !important; }
-    /* DDI dims → 3 cols on mobile */
-    .ddi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    /* Days-since + Share/Download → single column on mobile */
+    .sc-days-share-grid { grid-template-columns: 1fr !important; }
+    /* DDI dims → 2 cols on mobile (5 items = 2+2+1, avoids 3-line label wrap vs 2-line neighbours) */
+    .ddi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px 12px !important; }
+    .ddi-dim { min-height: 76px; display: flex; flex-direction: column; justify-content: flex-start; }
+    .ddi-val { font-size: 26px !important; }
+    .ddi-lbl { font-size: 13px !important; line-height: 1.4 !important; }
     /* Buttons full width */
     .sc-share-btn { width: 100% !important; }
   }
@@ -711,7 +716,7 @@
   {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
   {% if image.scored_at %}
   {% set _days = ((now - image.scored_at).days) if now else 0 %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-days-share-grid">
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
       <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
       <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
@@ -1015,6 +1020,30 @@
   <div style="background:rgba(200,168,75,0.04); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      {% if image.status == 'scored' %}
+      <button type="button" class="btn" id="force-rescore-btn" style="font-size: 14px;"
+              data-image-id="{{ image.id }}"
+              data-rescore-score="{{ '%.2f'|format(image.score) }}"
+              data-rescore-tier="{{ image.tier }}"
+              onclick="startForceRescore(this)">
+        <span id="force-rescore-label">↻ Force Rescore (current engine)</span>
+      </button>
+      {% elif image.status == 'processing' %}
+      <button type="button" class="btn" style="font-size: 14px; opacity:0.6;" disabled>
+        <span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspin 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>
+        Rescoring… this can take up to a minute
+      </button>
+      <style>@keyframes llspin { to { transform: rotate(360deg); } }</style>
+      <script>
+        // Poll for completion if page loads with status=processing (e.g. after redirect)
+        (function poll(){
+          fetch("{{ url_for('score_status', image_id=image.id) }}")
+            .then(r => r.json())
+            .then(d => { if (d.status !== 'processing') { window.location.reload(); } else { setTimeout(poll, 2500); } })
+            .catch(() => setTimeout(poll, 4000));
+        })();
+      </script>
+      {% endif %}
       {% if image.needs_review and not image.is_flagged %}
       <form method="POST" action="{{ url_for('admin_approve_review', image_id=image.id) }}" style="display:inline;">
         <button type="submit" class="btn btn-solid" style="font-size: 14px;">✓ Approve for Public</button>
@@ -1082,5 +1111,70 @@
     </div>
   </div>
 </div>
+
+<script>
+function startForceRescore(btn) {
+  const name  = btn.getAttribute('data-rescore-score') || '0.00';
+  const tier  = btn.getAttribute('data-rescore-tier')  || '';
+  const imgId = btn.getAttribute('data-image-id');
+  const msg = "Rescore this image with the current engine? Current: " + name +
+              " (" + tier + "). This overwrites the score AND scorecard. Uses API credits.";
+  if (!confirm(msg)) return;
+
+  const label = document.getElementById('force-rescore-label');
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  label.innerHTML = '<span style="display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspin 0.7s linear infinite; margin-right:6px; vertical-align:-1px;"></span>Rescoring… this can take up to a minute';
+
+  // Inject keyframes if not already present
+  if (!document.getElementById('llspin-style')) {
+    const style = document.createElement('style');
+    style.id = 'llspin-style';
+    style.textContent = '@keyframes llspin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+
+  fetch("/admin/image/" + imgId + "/force-rescore", {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: '_xhr=1'
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === 'processing') {
+      pollRescoreStatus(imgId);
+    } else {
+      label.textContent = '↻ Force Rescore (current engine)';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      alert(d.message || 'Could not start rescore.');
+    }
+  })
+  .catch(() => {
+    label.textContent = '↻ Force Rescore (current engine)';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    alert('Network error — could not start rescore.');
+  });
+}
+
+function pollRescoreStatus(imgId) {
+  fetch("/score-status/" + imgId)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'processing') {
+        setTimeout(() => pollRescoreStatus(imgId), 2500);
+      } else {
+        // Done — reload to show updated score and scorecard
+        window.location.reload();
+      }
+    })
+    .catch(() => setTimeout(() => pollRescoreStatus(imgId), 4000));
+}
+</script>
 
 {% endblock %}

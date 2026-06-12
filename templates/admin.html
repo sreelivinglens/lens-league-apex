@@ -422,6 +422,7 @@
             <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
             <form id="raw-form-{{ img.id }}" method="POST" action="{{ url_for('admin_request_raw', image_id=img.id) }}" style="display:none;"></form>
             <form id="vis-form-{{ img.id }}" method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:none;"></form>
+            {# rescore-form removed — admin_force_rescore now called via fetch() XHR #}
             <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
             <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
@@ -546,6 +547,15 @@
                       data-tier="{{ img.tier or '' }}"
                       onclick="openRecalModal(this)">
                 ⚖ Recal
+              </button>
+              <button type="button" class="act-btn" id="rescore-btn-{{ img.id }}"
+                      title="Force a full rescore through the current engine — overwrites score and scorecard"
+                      data-image-id="{{ img.id }}"
+                      data-rescore-name="{{ (img.asset_name or 'Untitled') | replace("'", '') }}"
+                      data-rescore-score="{{ '%.2f'|format(img.score or 0) }}"
+                      data-rescore-tier="{{ img.tier or '' }}"
+                      onclick="confirmAndRescore(this)">
+                ↻ Rescore
               </button>
               {% endif %}
             </div>
@@ -1370,6 +1380,67 @@ function adminPost(formId, confirmMsg) {
     body: body.toString()
   }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
+}
+
+function confirmAndRescore(btn) {
+  /* Reads data-* attributes off the button (set server-side via Jinja) and
+     builds the confirm message in pure JS — avoids Jinja/JS quote escaping
+     issues entirely. Fires the rescore as a background job (instant response,
+     avoids long-request 503s), shows a spinner, and polls /score-status. */
+  const name  = btn.getAttribute('data-rescore-name')  || 'Untitled';
+  const score = btn.getAttribute('data-rescore-score') || '0.00';
+  const tier  = btn.getAttribute('data-rescore-tier')  || '';
+  const imgId = btn.getAttribute('data-image-id');
+  const msg = "Force rescore '" + name + "' with the current engine? Current: " +
+              score + " (" + tier + "). This overwrites the score AND scorecard text. Uses API credits.";
+  if (!confirm(msg)) return;
+
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  if (!document.getElementById('llspin-style')) {
+    const style = document.createElement('style');
+    style.id = 'llspin-style';
+    style.textContent = '@keyframes llspin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+  btn.innerHTML = '<span style="display:inline-block; width:11px; height:11px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:llspin 0.7s linear infinite; margin-right:5px; vertical-align:-1px;"></span>Rescoring…';
+
+  fetch("/admin/image/" + imgId + "/force-rescore", {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+    body: '_xhr=1'
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === 'processing') {
+      pollAdminRescoreStatus(imgId, btn, originalHTML);
+    } else {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      alert(d.message || 'Could not start rescore.');
+    }
+  })
+  .catch(() => {
+    btn.innerHTML = originalHTML;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    alert('Network error — could not start rescore.');
+  });
+}
+
+function pollAdminRescoreStatus(imgId, btn, originalHTML) {
+  fetch("/score-status/" + imgId)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'processing') {
+        setTimeout(() => pollAdminRescoreStatus(imgId, btn, originalHTML), 2500);
+      } else {
+        window.location.reload();
+      }
+    })
+    .catch(() => setTimeout(() => pollAdminRescoreStatus(imgId, btn, originalHTML), 4000));
 }
 
 function adminPostUrl(url, confirmMsg) {
