@@ -4611,6 +4611,39 @@ def _force_rescore_in_background(image_id, old_score, old_tier):
             img.scored_at        = datetime.utcnow()
             audit = build_audit_data(result, img)
             img.set_audit(audit)
+
+            # ── Re-evaluate review/RAW-verification flags against the new score ──
+            # needs_review can be set for two independent reasons: AI suspicion
+            # (>=0.4, stored separately and unaffected by rescore) or Grandmaster
+            # score (>=9.0, which a rescore may have changed). Only clear the
+            # Grandmaster-driven flags if the new score no longer qualifies AND
+            # AI suspicion isn't the (or an additional) reason.
+            _ai_susp = getattr(img, 'ai_suspicion', 0.0) or 0.0
+            _was_grandmaster_flag = (
+                img.needs_review and _ai_susp < 0.4 and
+                img.flagged_reason and 'RAW verification' in (img.flagged_reason or '')
+            )
+            if _was_grandmaster_flag and img.score < 9.0:
+                img.needs_review              = False
+                img.raw_verification_required = False
+                img.flagged_reason            = None
+                if not img.is_flagged:
+                    img.is_public = True
+                app.logger.info(
+                    f'[force_rescore] image={image_id} cleared Grandmaster RAW-verification '
+                    f'flag — new score {img.score:.2f} no longer qualifies'
+                )
+            elif img.score >= 9.0 and not img.needs_review and _ai_susp < 0.4:
+                # New score crossed INTO Grandmaster territory on rescore — flag it
+                img.needs_review              = True
+                img.raw_verification_required = True
+                img.is_public                 = False
+                img.flagged_reason            = f'Grandmaster score {img.score:.2f} requires RAW verification'
+                app.logger.info(
+                    f'[force_rescore] image={image_id} new score {img.score:.2f} '
+                    f'crossed into Grandmaster — flagged for RAW verification'
+                )
+
             db.session.commit()
 
             # Regenerate the scorecard card image (best effort — non-fatal)
