@@ -4,6 +4,12 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="Upload a Photograph — Shutter League">
+<meta property="og:description" content="Upload your photograph for evaluation by the Shutter League scoring engine.">
+{# TODO: verify this path resolves to an actual static asset — base.html may define a logo/og-image path to reuse instead #}
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
 {% endblock %}
 {% block extra_css %}
 <style>
@@ -52,7 +58,7 @@
   .carousel-msg {
     font-size: 18px;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.5;
     color: var(--text-primary);
   }
   .carousel-slide.slide-danger .carousel-msg { color: #ff6b6b; }
@@ -136,7 +142,7 @@
     font-size: 1.6rem; line-height: 1; flex-shrink: 0;
     font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
   }
-  .shot-on-option label .shot-text { line-height: 1.3; }
+  .shot-on-option label .shot-text { line-height: 1.5; }
   .shot-on-option label .shot-text small { display: block; font-size: 16px; color: var(--text-primary); font-weight: 400; margin-top: 2px; word-break: break-word; overflow-wrap: break-word; }
   .shot-on-option input[type="radio"]:checked + label { border-color: var(--gold); background: var(--gold-subtle); color: var(--text-primary); }
   .shot-on-option input[type="radio"]:checked + label .shot-text { color: #2C3E6B; }
@@ -148,7 +154,7 @@
     border: 1px solid var(--border); border-radius: var(--radius-md);
     display: flex; gap: 12px; align-items: flex-start;
   }
-  .legal-box input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; cursor: pointer; }
+  .legal-box input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold); /* checkbox accent, not text */ flex-shrink: 0; cursor: pointer; }
   .legal-box label { font-size: 16px; color: var(--text-primary); line-height: 1.6; cursor: pointer; }
   .legal-box label a { color: #2C3E6B; text-decoration: underline; }
   .legal-box.error-highlight { border-color: var(--red); background: var(--red-dim); }
@@ -156,7 +162,7 @@
   /* ══ SCORING OVERLAY ══ */
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(10,10,8,.97); backdrop-filter: blur(12px);
+    background: rgba(10,10,8,.97); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     flex-direction: column; align-items: center; justify-content: center; padding: 32px;
   }
   #scoringOverlay.active { display: flex; }
@@ -239,12 +245,23 @@
     align-items: center; justify-content: center;
   }
   .mini-clock-secs {
-    font-family: var(--font-mono); font-size: 18px; font-weight: 700;
-    color: #F5C518; line-height: 1;
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #F5C518; /* mono countdown digit — gold permitted */
+    line-height: 1;
   }
   .mini-clock-unit {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 1.5px;
     color:#FFFFFF; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* ── Responsive — iPad (≤768px): collapse camera/mobile track selector to 1 column ── */
+  @media (max-width: 768px) {
+    .shot-on-options { grid-template-columns: 1fr !important; }
+  }
+
+  /* ── Responsive — Mobile (≤600px) ── */
+  @media (max-width: 600px) {
+    .upload-wrap { padding: 0 16px 56px; }
+    .shot-on-options { grid-template-columns: 1fr !important; gap: 8px; }
   }
 </style>
 {% endblock %}
@@ -336,13 +353,13 @@
 
       <div id="sub-genre-toggle-row" style="display:none;margin-bottom:8px;">
         <a href="#" id="sub-genre-toggle-link"
-           style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.5px;color:var(--text-muted);text-decoration:none;opacity:0.65;"
+           style="font-family:var(--font-mono);font-size:13px;letter-spacing:0.5px;color:var(--text-muted);text-decoration:none;opacity:0.65;"
            onclick="toggleSubGenre(event)">
           ▸ Override engine detection
         </a>
       </div>
       <div class="form-group" id="sub-genre-row" style="display:none;">
-        <label for="sub_genre">Image type <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);font-weight:400;letter-spacing:0.5px;">override — engine detects automatically</span></label>
+        <label for="sub_genre">Image type <span style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);font-weight:400;letter-spacing:0.5px;">override — engine detects automatically</span></label>
         <select id="sub_genre" name="sub_genre">
           <option value="">— Auto-detect (recommended) —</option>
         </select>
@@ -379,8 +396,8 @@
       </div>
 
       <div class="form-group">
-        <label for="location">Location <span style="font-weight:400; color:var(--text-primary); text-transform:none;">(optional)</span></label>
-        <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180">
+        <label for="location">Current Location</label>
+        <input type="text" id="location" name="location" placeholder="e.g. Keoladeo National Park, Rajasthan" maxlength="180" value="{{ last_location|default('') }}" required>
       </div>
 
       <div class="form-group">
@@ -726,6 +743,15 @@
       return;
     }
 
+    const locationInput = document.getElementById('location');
+    if (!locationInput || !locationInput.value.trim()) {
+      locationInput.focus();
+      locationInput.style.borderColor = 'var(--red)';
+      locationInput.addEventListener('input', () => locationInput.style.borderColor = '', { once: true });
+      showError('Please enter your current location.');
+      return;
+    }
+
     if (!document.querySelector('input[name="camera_track"]:checked')) {
       trackHint.style.display = 'block';
       trackHint.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -895,10 +921,10 @@
       { from:4,  to:8,  p:'PROCESSING',  s:'Preparing for analysis…',             ss:'Extracting EXIF data and verifying authenticity.' },
       { from:8,  to:14, p:'INHALING',    s:'Inhaling the scene…',                 ss:'The engine is reading light, form and spatial depth.' },
       { from:14, to:20, p:'DEPTH',       s:'Mapping depth of difficulty…',        ss:'How hard was this image to capture?' },
-      { from:20, to:26, p:'MOMENT',      s:'Reading the decisive moment…',        ss:'Did you press the shutter at the right instant?' },
+      { from:20, to:26, p:'MOMENT',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
       { from:26, to:32, p:'DISRUPTION',  s:'Measuring visual disruption…',        ss:'Does this image stop you? Does it demand attention?' },
       { from:32, to:38, p:'WONDER',      s:'Calibrating wonder and emotion…',     ss:'What feeling does this image leave behind?' },
-      { from:38, to:44, p:'AESTHETIC',   s:'Evaluating aesthetic quality…',       ss:'Technique, light, colour, composition — all at once.' },
+      { from:38, to:44, p:'AESTHETIC',   s:'Evaluating the emotion it creates…',       ss:'Technique, light, colour, composition — all at once.' },
       { from:44, to:55, p:'RESEARCH',    s:'Cross-referencing species data…',     ss:'Checking range, rarity, and documentation for what is in frame.' },
       { from:55, to:70, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
       { from:70, to:90, p:'FINALISING',  s:'Finalising your scorecard…',          ss:'A little longer for image-rich frames — worth the wait.' },
