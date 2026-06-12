@@ -335,6 +335,7 @@ def audit_html(filepath):
     _is_detail_page = any(x in fname for x in [
         'image_detail', 'profile', 'scorecard', 'rating_card',
         'submission', 'result', 'entry_detail',
+        'upload.html', 'upload_edited', 'bulk_upload',
     ])
     _is_email = any(x in fname for x in ['email', 'mail', 'notification', 'trigger'])
 
