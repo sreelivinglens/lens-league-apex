@@ -1589,7 +1589,7 @@
   <script>
   (function(){
     var params=new URLSearchParams(window.location.search);
-    var sid=params.get('scoring'), vNum=params.get('v')||'';
+    var sid=params.get('scoring'), vNum=params.get('v')||'', isNew=params.get('new')==='1';
     if(!sid) return;
     var widget=document.getElementById('edit-scoring-widget');
     var msg=document.getElementById('edit-scoring-msg');
@@ -1600,12 +1600,12 @@
     var tierEl=document.getElementById('edit-scoring-tier');
     var linkEl=document.getElementById('edit-scoring-link');
     widget.style.display='block';
-    msg.textContent='Analysing'+(vNum?' V'+vNum:'your edited version')+'…';
+    msg.textContent = isNew ? 'Analysing your new upload…' : ('Analysing'+(vNum?' V'+vNum:'your edited version')+'…');
     var pct=5;
     var barInt=setInterval(function(){pct=Math.min(pct+(Math.random()*8),90);bar.style.width=pct+'%';},800);
-    var phases=['Inhaling the scene…','Mapping depth and difficulty…','Reading whether the timing was right…','Measuring wonder and disruption…','Calibrating the emotion it creates…','Building the verdict…'];
+    var phases=['Inhaling the scene…','Cross-referencing species data…','Mapping depth and difficulty…','Reading whether the timing was right…','Measuring wonder and disruption…','Calibrating the emotion it creates…','Building the verdict…'];
     var pi=0;
-    var phInt=setInterval(function(){if(pi<phases.length)sub.textContent=phases[pi++];},3500);
+    var phInt=setInterval(function(){if(pi<phases.length)sub.textContent=phases[pi++];},5000);
     var pollInt=setInterval(function(){
       fetch('/score-status/'+sid)
         .then(function(r){return r.json();})
@@ -1615,22 +1615,74 @@
           bar.style.width='100%';
           if(d.status==='ok'||d.status==='scored'||d.status==='needs_review'){
             msg.textContent='Scored ✓';
-            sub.textContent='Your edited version has been assessed.';
+            sub.textContent = isNew ? 'Your new upload has been assessed.' : 'Your edited version has been assessed.';
             scoreEl.textContent=d.score?parseFloat(d.score).toFixed(2):'—';
             tierEl.textContent=d.tier||'';
             linkEl.href='/image/'+sid;
             result.style.display='block';
             document.getElementById('edit-scoring-anim').style.animation='none';
             document.getElementById('edit-scoring-anim').textContent='✓';
-            // Fix 2: Clean URL before reload to prevent re-triggering widget
-            var cleanUrl=window.location.pathname;
-            setTimeout(function(){window.location.href=cleanUrl;},3000);
+            if (isNew) {
+              // New upload: reload to a clean URL with ?scored=<id> so the
+              // grid below shows the new card and a one-time toast can fire.
+              var reloadUrl=window.location.pathname+'?scored='+sid;
+              setTimeout(function(){window.location.href=reloadUrl;},2500);
+            } else {
+              // Fix 2: Clean URL before reload to prevent re-triggering widget
+              var cleanUrl=window.location.pathname;
+              setTimeout(function(){window.location.href=cleanUrl;},3000);
+            }
           } else if(d.status==='error'||d.status==='flagged'){
             msg.textContent=d.status==='flagged'?'⛔ Image flagged':'Scoring failed';
             sub.textContent=d.message||'Please check your dashboard.';
+            if (isNew) {
+              result.style.display='none';
+              var retryWrap=document.createElement('div');
+              retryWrap.style.marginTop='8px';
+              var retryLink=document.createElement('a');
+              retryLink.href='/image/'+sid;
+              retryLink.className='btn';
+              retryLink.style.display='inline-block';
+              retryLink.textContent='View image →';
+              retryWrap.appendChild(retryLink);
+              widget.appendChild(retryWrap);
+            }
           }
         }).catch(function(){});
     },2000);
+  })();
+
+  // ── New-upload completion toast ─────────────────────────────────────────
+  // After the scoring widget above completes for a new upload, it reloads
+  // to ?scored=<id> — show a brief confirmation toast and clean the URL.
+  (function(){
+    var params=new URLSearchParams(window.location.search);
+    var scoredId=params.get('scored');
+    if(!scoredId) return;
+    var toast=document.createElement('div');
+    toast.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;background:#1A2744;color:#fff;'
+      +'padding:14px 20px;border-radius:var(--radius-md);box-shadow:0 4px 16px rgba(0,0,0,0.2);'
+      +'font-size:15px;display:flex;align-items:center;gap:10px;max-width:320px;'
+      +'animation:dbToastIn 0.3s ease;';
+    toast.innerHTML='<span style="font-size:20px;">✓</span>'
+      +'<span>Your photo has been scored — scroll down to see it.</span>';
+    document.body.appendChild(toast);
+    if(!document.getElementById('db-toast-style')){
+      var st=document.createElement('style');
+      st.id='db-toast-style';
+      st.textContent='@keyframes dbToastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}'
+        +'@keyframes dbToastOut{from{opacity:1;}to{opacity:0;}}';
+      document.head.appendChild(st);
+    }
+    setTimeout(function(){
+      toast.style.animation='dbToastOut 0.3s ease forwards';
+      setTimeout(function(){ toast.remove(); },300);
+    },6000);
+    // Clean the URL so refresh/back doesn't re-show the toast
+    var cleanUrl=window.location.pathname;
+    if(window.history && window.history.replaceState){
+      window.history.replaceState({},'',cleanUrl);
+    }
   })();
   </script>
 
