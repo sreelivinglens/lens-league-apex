@@ -4467,6 +4467,136 @@ def score_status(image_id):
     })
 
 
+@app.route('/admin/image/<int:image_id>/force-rescore', methods=['POST'])
+@login_required
+@admin_required
+def admin_force_rescore(image_id):
+    """
+    Admin-only: force a full rescore of a SINGLE already-scored image using
+    the current auto_score() — including the famous event calibration gate,
+    mandatory master references, and seasonal/portfolio context.
+
+    Unlike retry_score (owner-only, only for status != 'scored') and
+    rescore-all (bulk, old signature), this targets one image regardless
+    of its current status, using the full Sprint 2 call signature.
+
+    Use case: an image was scored before a calibration/prompt fix and needs
+    to be re-evaluated under the corrected rules (e.g. Latmarr Holi /
+    famous-event calibration gate).
+    """
+    img = Image.query.get_or_404(image_id)
+
+    api_key = os.getenv('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        flash('Scoring service not available.', 'error')
+        return redirect(request.referrer or url_for('admin_dashboard'))
+
+    old_score = img.score
+    old_tier  = img.tier
+
+    try:
+        import tempfile, traceback
+        from engine.auto_score import auto_score, build_audit_data, build_exif_context
+        from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
+
+        thumb_path = img.thumb_path
+        temp_file  = None
+        if not thumb_path or not os.path.exists(thumb_path):
+            from storage import get_client, BUCKET
+            tf = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            get_client().download_fileobj(
+                BUCKET, 'thumbs/' + img.thumb_url.split('/thumbs/')[-1], tf
+            )
+            tf.close()
+            thumb_path = temp_file = tf.name
+
+        _exif_ctx = build_exif_context(
+            {'make': img.exif_make, 'model': img.exif_model,
+             'focal_length_35mm': img.exif_focal_length_35mm,
+             'lens': img.exif_lens, 'software': img.exif_software,
+             'has_gps': img.exif_has_gps},
+            camera_track=img.camera_track,
+        ) if (img.exif_make or img.exif_model or img.exif_focal_length_35mm) else ''
+
+        # Build seasonal + portfolio context for the image's owner
+        _owner = User.query.get(img.user_id)
+        _primary_genre = get_primary_genre(_owner) if _owner else (img.genre or '')
+        _user_city     = getattr(_owner, 'city', '') or '' if _owner else ''
+        _seasonal_ctx  = build_seasonal_context(
+            db_session    = db.session,
+            user_city     = _user_city,
+            primary_genre = _primary_genre or img.genre or '',
+            current_month = datetime.utcnow().month,
+        )
+
+        _portfolio_summary = None
+        if _owner:
+            _scored_count = Image.query.filter(
+                Image.user_id == _owner.id, Image.status == 'scored'
+            ).count()
+            if _scored_count >= 5:
+                _recent = db.session.query(
+                    Image.aq_score, Image.dm_score, Image.dod_score
+                ).filter(
+                    Image.user_id == _owner.id,
+                    Image.status  == 'scored',
+                    Image.genre   == img.genre,
+                ).order_by(Image.scored_at.desc()).limit(8).all()
+                if _recent:
+                    _recent = list(reversed(_recent))
+                    _portfolio_summary = {
+                        "feeling":    [r.aq_score  for r in _recent],
+                        "timing":     [r.dm_score  for r in _recent],
+                        "difficulty": [r.dod_score for r in _recent],
+                    }
+
+        result = auto_score(
+            image_path        = thumb_path,
+            genre             = img.genre,
+            sub_genre         = img.sub_genre,
+            title             = img.asset_name,
+            photographer      = img.photographer_name,
+            subject           = img.subject,
+            location          = img.location,
+            exif_context      = _exif_ctx,
+            seasonal_context  = _seasonal_ctx,
+            portfolio_summary = _portfolio_summary,
+            user_city         = _user_city,
+            primary_genre     = _primary_genre or img.genre or '',
+        )
+
+        img.dod_score        = float(result.get('dod', 0))
+        img.disruption_score = float(result.get('disruption', 0))
+        img.dm_score         = float(result.get('dm', 0))
+        img.wonder_score     = float(result.get('wonder', 0))
+        img.aq_score         = float(result.get('aq', 0))
+        img.score            = float(result.get('score', 0))
+        img.tier             = get_tier(float(result.get('score', 0)))
+        img.archetype        = result.get('archetype', img.archetype)
+        img.soul_bonus       = result.get('soul_bonus', img.soul_bonus)
+        img.scored_at        = datetime.utcnow()
+        audit = build_audit_data(result, img)
+        img.set_audit(audit)
+        db.session.commit()
+
+        if temp_file:
+            try: os.unlink(temp_file)
+            except: pass
+
+        flash(
+            f'Rescored "{img.asset_name}" — '
+            f'{old_score:.2f} ({old_tier}) -> {img.score:.2f} ({img.tier})',
+            'success'
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'[force_rescore] {traceback.format_exc()}')
+        flash(f'Rescore failed: {str(e)[:160]}', 'error')
+
+    return redirect(request.referrer or url_for('image_detail', image_id=image_id))
+
+
 @app.route('/image/<int:image_id>/retry-score', methods=['POST'])
 @login_required
 def retry_score(image_id):
