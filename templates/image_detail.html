@@ -159,8 +159,23 @@
       padding-top: 16px !important;
       margin-top: 8px;
     }
-    /* 4 story cards — single column */
-    .sc-four-grid { grid-template-columns: 1fr !important; }
+    /* 4 story cards — horizontal scroll row on mobile */
+    .sc-four-grid {
+      display: flex !important;
+      grid-template-columns: unset !important;
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      scroll-snap-type: x mandatory !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-bottom: 4px !important;
+      margin: 0 -16px 14px !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+    .sc-four-grid > div {
+      flex: 0 0 85% !important;
+      scroll-snap-align: start !important;
+    }
     /* All 2-col grids → single column */
     .sc-two-grid { grid-template-columns: 1fr !important; }
     /* 3-col stats → single column */
@@ -182,7 +197,6 @@
   @media (max-width: 480px) {
     .sc-hero-score-num { font-size: 40px !important; }
     .sc-hero-name { font-size: 18px !important; }
-    .sc-four-grid { grid-template-columns: 1fr !important; }
   }
 
   #delete-modal {
@@ -386,14 +400,6 @@
         <span style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:#854F0B; text-transform:uppercase;">What stood out</span>
       </div>
       <p style="margin:0 0 12px; font-size:20px; font-weight:700; color:var(--text-primary); line-height:1.7;">{{ _hero_headline }}</p>
-      {# Option A fallback: transferable_advice → mentor_next #}
-      {% set _advice = audit.transferable_advice if audit.transferable_advice else '' %}
-      {% if not _advice %}
-        {% for row in audit.rows %}{% if row[0] == 'Next' and row[1] %}{% set _advice = row[1] %}{% endif %}{% endfor %}
-      {% endif %}
-      {% if _advice %}
-      <p style="margin:0; font-size:16px; color:var(--text-secondary); line-height:1.85;">{{ _advice }}</p>
-      {% endif %}
     </div>
     {% if _has_right_col %}
     <div style="border-left:1px solid var(--border); padding-left:22px; display:flex; align-items:center;">
@@ -542,7 +548,7 @@
         <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
         <span style="margin-left:auto; font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">Score</span>
       </div>
-      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.count }} photographs evaluated</p>
+      <p style="margin:0 0 18px; font-size:13px; color:var(--text-muted); font-style:italic;">Last {{ portfolio_data.count }} photographs evaluated{% if not portfolio_data.same_genre %} (across all genres — not enough {{ image.genre }} photographs yet for a genre-specific trend){% endif %}</p>
 
       {% for dim in portfolio_data.dimensions %}
       <div style="margin-bottom:18px;">
@@ -571,12 +577,16 @@
     </div>
 
     {% else %}
-    {# Fewer than 5 images — show teaser #}
+    {# Fewer than 5 images, or not enough in this genre yet — show teaser #}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:12px;">
       <span style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); letter-spacing:1px; text-transform:uppercase;">How you're developing</span>
+      {% if portfolio_data and portfolio_data.count >= 5 %}
+      <p style="margin:0; font-size:15px; color:var(--text-muted); line-height:1.7;">Trend lines need at least 2 photographs in this genre ({{ image.genre }}) to compare. Upload more in this genre to see how your eye is developing here.</p>
+      {% else %}
       <p style="margin:0; font-size:15px; color:var(--text-muted); line-height:1.7;">Available after your 5th photograph. Your trend lines will show how your eye is improving across every dimension.</p>
       {% if portfolio_data %}
       <div style="font-family:var(--font-mono); font-size:24px; font-weight:700; color:var(--gold);">{{ portfolio_data.count }}/5</div>
+      {% endif %}
       {% endif %}
     </div>
     {% endif %}
