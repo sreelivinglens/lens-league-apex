@@ -4789,14 +4789,15 @@ def admin_force_rescore(image_id):
         flash('Scoring service not available.', 'error')
         return redirect(request.referrer or url_for('admin_dashboard'))
 
-    old_score = img.score
-    old_tier  = img.tier
+    old_score    = img.score
+    old_tier     = img.tier
+    old_status   = img.status
     img.status = 'processing'
     db.session.commit()
 
     threading.Thread(
         target=_force_rescore_in_background,
-        args=(image_id, old_score, old_tier),
+        args=(image_id, old_score, old_tier, old_status),
         daemon=True
     ).start()
 
@@ -4807,7 +4808,7 @@ def admin_force_rescore(image_id):
     return redirect(request.referrer or url_for('image_detail', image_id=image_id))
 
 
-def _force_rescore_in_background(image_id, old_score, old_tier):
+def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scored'):
     """
     Background worker for admin_force_rescore. Runs in its own thread —
     needs its own app context and db session usage matches existing
@@ -4997,14 +4998,18 @@ def _force_rescore_in_background(image_id, old_score, old_tier):
 
             app.logger.info(
                 f'[force_rescore] image={image_id} '
-                f'{old_score:.2f} ({old_tier}) -> {img.score:.2f} ({img.tier})'
+                f'{(old_score if old_score is not None else 0):.2f} ({old_tier or "—"}) -> {img.score:.2f} ({img.tier})'
             )
 
         except Exception as e:
             db.session.rollback()
             img2 = Image.query.get(image_id)
             if img2:
-                img2.status = 'scored'  # restore — don't leave stuck in 'processing'
+                # Restore to whatever status the image had before this rescore
+                # attempt — don't leave it stuck in 'processing', but don't
+                # claim 'scored' for an image that was never successfully
+                # scored (e.g. a retry of an 'error'-status image that failed again).
+                img2.status = old_status if old_status in ('scored', 'error') else 'scored'
                 db.session.commit()
             app.logger.error(f'[force_rescore_bg] {_tb.format_exc()}')
 
