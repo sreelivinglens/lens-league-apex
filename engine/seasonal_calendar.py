@@ -23,6 +23,7 @@ TABLE DESIGN:
 
 import json
 from datetime import datetime
+from sqlalchemy import text as _sql_text
 
 # ── Migration SQL ──────────────────────────────────────────────────────────────
 # Add to your existing migrations block in app.py's startup section.
@@ -276,7 +277,7 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
 
     try:
         rows = db_session.execute(
-            """
+            _sql_text("""
             SELECT location_name, state_country, distance_hours,
                    subject, what_is_happening, why_it_matters,
                    best_light_time, access_notes
@@ -287,7 +288,7 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
               AND month_end       >= :month
             ORDER BY distance_hours ASC
             LIMIT 2
-            """,
+            """),
             {"city": user_city, "genre": primary_genre, "month": current_month}
         ).fetchall()
     except Exception as e:
@@ -354,7 +355,7 @@ def seed_seasonal_calendar(db_session):
     Call once from admin or migration route.
     """
     existing = db_session.execute(
-        "SELECT COUNT(*) FROM seasonal_calendar"
+        _sql_text("SELECT COUNT(*) FROM seasonal_calendar")
     ).scalar()
 
     if existing > 0:
@@ -363,7 +364,7 @@ def seed_seasonal_calendar(db_session):
 
     for row in SEED_DATA:
         db_session.execute(
-            """
+            _sql_text("""
             INSERT INTO seasonal_calendar
                 (base_city, genre, location_name, state_country, distance_hours,
                  month_start, month_end, subject, what_is_happening,
@@ -372,7 +373,7 @@ def seed_seasonal_calendar(db_session):
                 (:base_city, :genre, :location_name, :state_country, :distance_hours,
                  :month_start, :month_end, :subject, :what_is_happening,
                  :why_it_matters, :best_light_time, :access_notes)
-            """,
+            """),
             row
         )
 
