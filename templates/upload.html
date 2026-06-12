@@ -465,6 +465,10 @@
     <div class="overlay-phase" id="overlayPhase">Uploading</div>
     <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
     <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
+    <div class="overlay-eta" id="overlayEta" style="font-size:14px; color:var(--text-muted); margin-top:10px; line-height:1.5;">
+      This usually takes about a minute. Feel free to head back to your dashboard —
+      we'll let you know the moment your score is ready.
+    </div>
   </div>
   <div class="mini-timer">
     <div class="mini-clock-wrap">
@@ -473,10 +477,13 @@
         <circle class="mini-ring-fill" id="clockRing" cx="36" cy="36" r="31"/>
       </svg>
       <div class="mini-clock-center">
-        <div class="mini-clock-secs" id="clockSecs">35</div>
+        <div class="mini-clock-secs" id="clockSecs">0</div>
         <div class="mini-clock-unit">sec</div>
       </div>
     </div>
+  </div>
+  <div id="backToDashboardWrap" style="display:none; margin-top:18px; text-align:center;">
+    <a href="#" id="backToDashboardLink" class="btn" style="display:inline-block;">← Back to Dashboard</a>
   </div>
 </div>
 {% endblock %}
@@ -831,6 +838,14 @@
         document.getElementById('overlayPhase').textContent    = 'ANALYSING';
         document.getElementById('overlayStatus').textContent   = 'Apex DDI Engine evaluating…';
         document.getElementById('overlaySubstatus').textContent = 'Scoring technique, composition, moment, and emotion…';
+        var etaEl = document.getElementById('overlayEta');
+        if (etaEl) etaEl.style.display = 'none';
+        var backWrap = document.getElementById('backToDashboardWrap');
+        var backLink = document.getElementById('backToDashboardLink');
+        if (backWrap && backLink) {
+          backLink.href = '/dashboard?scoring=' + resp.image_id + '&new=1';
+          backWrap.style.display = 'block';
+        }
         _startPolling(resp.image_id, resp.next || '');
         return;
       }
@@ -914,20 +929,20 @@
     const breath    = document.getElementById('breathLabel');
     // Ring fills over FILL_SECS then stays full. Clock counts up from 0
     // throughout — no countdown, no jump, continuous forward motion.
-    const FILL_SECS = 15, CIRC = 195;
+    const FILL_SECS = 65, CIRC = 195;
 
     const phases = [
       { from:0,  to:4,  p:'UPLOADING',   s:'Transferring your image…',            ss:'Sending to the engine securely.' },
       { from:4,  to:8,  p:'PROCESSING',  s:'Preparing for analysis…',             ss:'Extracting EXIF data and verifying authenticity.' },
-      { from:8,  to:14, p:'INHALING',    s:'Inhaling the scene…',                 ss:'The engine is reading light, form and spatial depth.' },
-      { from:14, to:20, p:'DEPTH',       s:'Mapping depth of difficulty…',        ss:'How hard was this image to capture?' },
-      { from:20, to:26, p:'MOMENT',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
-      { from:26, to:32, p:'DISRUPTION',  s:'Measuring visual disruption…',        ss:'Does this image stop you? Does it demand attention?' },
-      { from:32, to:38, p:'WONDER',      s:'Calibrating wonder and emotion…',     ss:'What feeling does this image leave behind?' },
-      { from:38, to:44, p:'AESTHETIC',   s:'Evaluating the emotion it creates…',       ss:'Technique, light, colour, composition — all at once.' },
-      { from:44, to:55, p:'RESEARCH',    s:'Cross-referencing species data…',     ss:'Checking range, rarity, and documentation for what is in frame.' },
-      { from:55, to:70, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
-      { from:70, to:90, p:'FINALISING',  s:'Finalising your scorecard…',          ss:'A little longer for image-rich frames — worth the wait.' },
+      { from:8,  to:20, p:'INHALING',    s:'Inhaling the scene…',                 ss:'The engine is reading every subject, light, and form in the frame.' },
+      { from:20, to:27, p:'RESEARCH',    s:'Cross-referencing species data…',     ss:'Checking range, rarity, and documentation for what is in frame.' },
+      { from:27, to:35, p:'DEPTH',       s:'Mapping depth of difficulty…',        ss:'How hard was this image to capture?' },
+      { from:35, to:43, p:'MOMENT',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
+      { from:43, to:51, p:'DISRUPTION',  s:'Measuring visual disruption…',        ss:'Does this image stop you? Does it demand attention?' },
+      { from:51, to:59, p:'WONDER',      s:'Calibrating wonder and emotion…',     ss:'What feeling does this image leave behind?' },
+      { from:59, to:67, p:'AESTHETIC',   s:'Evaluating the emotion it creates…',       ss:'Technique, light, colour, composition — all at once.' },
+      { from:67, to:80, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
+      { from:80, to:110,p:'FINALISING',  s:'Finalising your scorecard…',          ss:'A little longer for image-rich frames — worth the wait.' },
     ];
 
     overlay.classList.add('active');
