@@ -5659,6 +5659,61 @@ def admin_seed_seasonal():
     return redirect(url_for('admin_dashboard'))
 
 
+# ── Read-only check: user city + genre_interests (for seasonal context debugging) ──
+@app.route('/admin/check-user-location')
+@login_required
+@admin_required
+def admin_check_user_location():
+    users = User.query.filter(User.role != 'admin').order_by(User.username.asc()).all()
+
+    rows_html = ''
+    for u in users:
+        city = getattr(u, 'city', None) or '<em style="color:#999;">— not set —</em>'
+        country = getattr(u, 'country', None) or '—'
+        state = getattr(u, 'state', None) or '—'
+
+        genre_interests_raw = getattr(u, 'genre_interests', None)
+        if genre_interests_raw:
+            try:
+                genres = json.loads(genre_interests_raw)
+                genre_display = ', '.join(genres) if genres else '<em style="color:#999;">— empty list —</em>'
+            except Exception:
+                genre_display = f'<em style="color:#c00;">invalid JSON: {genre_interests_raw}</em>'
+        else:
+            genre_display = '<em style="color:#999;">— not set (NULL) —</em>'
+
+        onboarding_complete = getattr(u, 'onboarding_complete', None)
+        interests_complete = getattr(u, 'interests_complete', None)
+
+        rows_html += f'''
+        <tr>
+          <td style="padding:10px; border-bottom:1px solid #eee;"><strong>{u.username}</strong><br><span style="font-size:12px; color:#888;">{u.email}</span></td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">{city}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">{state} / {country}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee;">{genre_display}</td>
+          <td style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">onboarding: {onboarding_complete}<br>interests: {interests_complete}</td>
+        </tr>'''
+
+    return f'''
+    <html><body style="font-family:sans-serif; max-width:1000px; margin:40px auto;">
+      <h2>User Location &amp; Genre Check</h2>
+      <p style="color:#666;">Read-only. Used to debug seasonal_calendar matching — build_seasonal_context() requires both <code>city</code> (matched against <code>base_city</code>) and a primary genre (from <code>genre_interests[0]</code>, falling back to the uploaded image's genre).</p>
+      <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px;">
+        <thead>
+          <tr style="background:#f5f5f5; text-align:left;">
+            <th style="padding:10px;">User</th>
+            <th style="padding:10px;">City</th>
+            <th style="padding:10px;">State / Country</th>
+            <th style="padding:10px;">Genre Interests</th>
+            <th style="padding:10px;">Flags</th>
+          </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+      </table>
+    </body></html>
+    '''
+
+
 @app.route('/admin')
 @login_required
 @admin_required
