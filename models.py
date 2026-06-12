@@ -30,6 +30,15 @@ class User(db.Model, UserMixin):
     state             = db.Column(db.String(80),  nullable=True)
     city              = db.Column(db.String(80),  nullable=True)
 
+    # Item B — passive location-change detection (GPS EXIF vs declared city)
+    # last_gps_city/since: tracks how long uploads have shown a DIFFERENT city
+    # than `city` (reset to NULL whenever GPS city matches `city`).
+    # pending_location_update: set once last_gps_city_since is 14+ days old —
+    # surfaced as a banner prompting the user to confirm/update their city.
+    last_gps_city            = db.Column(db.String(80),  nullable=True)
+    last_gps_city_since      = db.Column(db.DateTime,    nullable=True)
+    pending_location_update  = db.Column(db.String(80),  nullable=True)
+
     # Self-declared camera/phone — brand data for sponsors
     # EXIF supersedes this for all rankings and leaderboard filters
     declared_camera   = db.Column(db.String(120), nullable=True)
@@ -197,6 +206,8 @@ class Image(db.Model):
     exif_shutter_raw       = db.Column(db.Float,       nullable=True)  # Shutter speed in seconds
     exif_software          = db.Column(db.String(180), nullable=True)  # Processing software
     exif_has_gps           = db.Column(db.Boolean,     nullable=True)  # GPS present (internal only, never displayed)
+    exif_gps_lat           = db.Column(db.Float,       nullable=True)  # GPS latitude, decimal degrees (internal only, never displayed)
+    exif_gps_lon           = db.Column(db.Float,       nullable=True)  # GPS longitude, decimal degrees (internal only, never displayed)
     exif_device_tier       = db.Column(db.String(40),  nullable=True)  # iphone_pro / android_ultra etc.
 
     dod_score           = db.Column(db.Float, nullable=True)
