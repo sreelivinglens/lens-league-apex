@@ -3956,6 +3956,7 @@ def upload():
                         # ── Sprint 2 — seasonal + portfolio context ───────────────────────────
                         try:
                             from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
+                            _u = User.query.get(_img.user_id)
                             _sc_primary_genre = get_primary_genre(_u) if _u else (_img.genre or '')
                             _sc_user_city     = getattr(_u, 'city', '') or '' if _u else ''
                             _sc_seasonal_ctx  = build_seasonal_context(
@@ -5210,6 +5211,17 @@ def image_detail(image_id):
                     Image.genre   == img.genre,
                 ).order_by(Image.scored_at.desc()).limit(8).all()
 
+                _same_genre = True
+                if not _recent or len(_recent) < 2:
+                    # Not enough same-genre data — fall back to all genres
+                    _recent = db.session.query(
+                        Image.aq_score, Image.dm_score, Image.dod_score, Image.score
+                    ).filter(
+                        Image.user_id == _owner_id,
+                        Image.status  == 'scored',
+                    ).order_by(Image.scored_at.desc()).limit(8).all()
+                    _same_genre = False
+
                 if _recent and len(_recent) >= 2:
                     _recent = list(reversed(_recent))  # oldest first
 
@@ -5272,6 +5284,7 @@ def image_detail(image_id):
                         'has_trends': bool(_dims),
                         'count':      _scored_count,
                         'dimensions': _dims,
+                        'same_genre': _same_genre,
                     }
                 else:
                     _portfolio_data = {'has_trends': False, 'count': _scored_count}
