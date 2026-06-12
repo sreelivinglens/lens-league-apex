@@ -1,3 +1,5 @@
+# SL-VERSION: 73.1 (Session 73 — fixed _u UnboundLocalError in seasonal
+#   context block, portfolio trend all-genre fallback)
 import os
 import uuid
 import json
