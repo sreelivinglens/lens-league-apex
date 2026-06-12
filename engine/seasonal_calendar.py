@@ -81,11 +81,53 @@ CREATE TABLE IF NOT EXISTS seasonal_calendar (
     why_it_matters  TEXT         NOT NULL,
     best_light_time VARCHAR(80),
     access_notes    TEXT,
+    date_start      DATE,
+    date_end        DATE,
     created_at      TIMESTAMP    DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_seasonal_city_genre
     ON seasonal_calendar (base_city, genre, month_start, month_end);
+"""
+
+# ── Item D — discovery_queue migration ──────────────────────────────────────
+# (city, genre) combos awaiting auto-discovery. priority=TRUE for
+# newly-detected/changed cities (item B feed) — processed before the general
+# weekly sweep.
+
+DISCOVERY_QUEUE_MIGRATION_SQL = """
+CREATE TABLE IF NOT EXISTS discovery_queue (
+    id           SERIAL PRIMARY KEY,
+    city         VARCHAR(80)  NOT NULL,
+    genre        VARCHAR(40)  NOT NULL,
+    priority     BOOLEAN      NOT NULL DEFAULT FALSE,
+    status       VARCHAR(20)  NOT NULL DEFAULT 'pending',
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    processed_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_discovery_queue_status
+    ON discovery_queue (status, priority, created_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_discovery_queue_pending_unique
+    ON discovery_queue (city, genre) WHERE status = 'pending';
+"""
+
+# ── Item C — seasonal_shown_log migration ───────────────────────────────────
+# Tracks which seasonal_calendar rows have been shown to which users, so
+# build_seasonal_context() can rotate through ALL matching locations instead
+# of always returning the same nearest-2 (LIMIT 2) every time.
+
+SHOWN_LOG_MIGRATION_SQL = """
+CREATE TABLE IF NOT EXISTS seasonal_shown_log (
+    id           SERIAL PRIMARY KEY,
+    user_id      INTEGER NOT NULL,
+    calendar_id  INTEGER NOT NULL,
+    shown_at     TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_seasonal_shown_user
+    ON seasonal_shown_log (user_id, shown_at);
 """
 
 # ── Seed data ──────────────────────────────────────────────────────────────────
@@ -293,24 +335,37 @@ SEED_DATA = [
 ]
 
 
-def build_seasonal_context(db_session, user_city: str, primary_genre: str, current_month: int) -> str:
+def build_seasonal_context(db_session, user_city: str, primary_genre: str, current_month: int,
+                            user_id: int | None = None) -> tuple[str, list[int]]:
     """
     Query seasonal_calendar for the user's city, primary genre, and current month.
-    Returns a formatted string to inject into the auto_score() prompt.
+    Returns (context_string, calendar_ids_used) — context_string is formatted
+    for injection into the auto_score() prompt; calendar_ids_used should be
+    passed to log_seasonal_shown() AFTER successful scoring (item C).
 
     Called in app.py before auto_score() on every image upload.
 
+    Rotation (item C): instead of always returning the same nearest 2 rows
+    (old LIMIT 2 behaviour — caused repeat advice like "black leopard at
+    Kabini" on every upload in the same window), this queries ALL matching
+    rows and prefers rows NOT shown to this user in the last 14 days. If
+    fewer than 2 unseen rows exist, falls back to the least-recently-shown
+    rows to fill the remainder.
+
     Args:
         db_session:     SQLAlchemy db.session
-        user_city:      user.city — e.g. "Bangalore"
+        user_city:      user.city — e.g. "Bangalore" (or GPS travel city)
         primary_genre:  user's primary genre interest — e.g. "Wildlife"
         current_month:  datetime.utcnow().month
+        user_id:        user.id — required for rotation; if None, falls back
+                         to the old nearest-2 behaviour (no rotation, no log)
 
     Returns:
-        Formatted string for injection into SCORE_PROMPT, or "" if no matches.
+        (formatted_string, calendar_ids) — formatted_string is "" if no
+        matches; calendar_ids is [] if no matches or user_id is None.
     """
     if not user_city or not primary_genre:
-        return ""
+        return "", []
 
     # Normalise city spelling (Bengaluru -> Bangalore, etc) before matching
     _normalized_city = normalize_city(user_city)
@@ -318,25 +373,67 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
     try:
         rows = db_session.execute(
             _sql_text("""
-            SELECT location_name, state_country, distance_hours,
+            SELECT id, location_name, state_country, distance_hours,
                    subject, what_is_happening, why_it_matters,
-                   best_light_time, access_notes
+                   best_light_time, access_notes, date_start, date_end
             FROM seasonal_calendar
             WHERE LOWER(base_city) = LOWER(:city)
               AND LOWER(genre)     = LOWER(:genre)
-              AND month_start     <= :month
-              AND month_end       >= :month
-            ORDER BY distance_hours ASC
-            LIMIT 2
+              AND (
+                    -- Recurring window (existing behaviour)
+                    (month_start <= :month AND month_end >= :month)
+                    OR
+                    -- Date-bound one-off event (item D) — not yet expired
+                    (date_start IS NOT NULL AND date_end IS NOT NULL
+                     AND date_end >= CURRENT_DATE)
+                  )
+            ORDER BY
+                -- Prefer date-bound (one-off, time-sensitive) events first,
+                -- then nearest by distance.
+                (date_start IS NOT NULL AND date_end IS NOT NULL) DESC,
+                distance_hours ASC
             """),
             {"city": _normalized_city, "genre": primary_genre, "month": current_month}
         ).fetchall()
     except Exception as e:
         print(f"[build_seasonal_context] DB error: {e}")
-        return ""
+        return "", []
 
     if not rows:
-        return ""
+        return "", []
+
+    if user_id is None:
+        # No rotation context available — old behaviour, nearest 2.
+        chosen = list(rows[:2])
+    else:
+        # ── Item C rotation ──────────────────────────────────────────────
+        try:
+            shown_rows = db_session.execute(
+                _sql_text("""
+                SELECT calendar_id, MAX(shown_at) AS last_shown
+                FROM seasonal_shown_log
+                WHERE user_id = :uid
+                  AND shown_at >= NOW() - INTERVAL '14 days'
+                GROUP BY calendar_id
+                """),
+                {"uid": user_id}
+            ).fetchall()
+            shown_recently = {r.calendar_id: r.last_shown for r in shown_rows}
+        except Exception as e:
+            print(f"[build_seasonal_context] shown_log read error: {e}")
+            shown_recently = {}
+
+        unseen = [r for r in rows if r.id not in shown_recently]
+        seen   = [r for r in rows if r.id in shown_recently]
+        # Among seen rows, prefer the ones shown longest ago (oldest first)
+        seen.sort(key=lambda r: shown_recently[r.id])
+
+        chosen = unseen[:2]
+        if len(chosen) < 2:
+            chosen += seen[:2 - len(chosen)]
+
+    if not chosen:
+        return "", []
 
     lines = [
         f"\nSEASONAL INTELLIGENCE — {primary_genre.upper()} NEAR {user_city.upper()}:",
@@ -345,12 +442,14 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
         "Write in the Sherpa voice — warm, specific, like a friend who knows the location.\n",
     ]
 
-    for i, row in enumerate(rows, 1):
+    for i, row in enumerate(chosen, 1):
         lines.append(f"Location {i}: {row.location_name} ({row.state_country})")
         lines.append(f"  Distance: {row.distance_hours} hours from {user_city}")
         lines.append(f"  Subject:  {row.subject}")
         lines.append(f"  Now:      {row.what_is_happening}")
         lines.append(f"  Why:      {row.why_it_matters}")
+        if getattr(row, 'date_start', None) and getattr(row, 'date_end', None):
+            lines.append(f"  Dates:    {row.date_start} to {row.date_end} — one-off event, mention urgency")
         if row.best_light_time:
             lines.append(f"  Light:    {row.best_light_time}")
         if row.access_notes:
@@ -363,7 +462,55 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
         f"Your growth opportunity (how difficult it was)\""
     )
 
-    return "\n".join(lines)
+    return "\n".join(lines), [row.id for row in chosen]
+
+
+def log_seasonal_shown(db_session, user_id: int, calendar_ids: list[int]):
+    """
+    Item C — record that these seasonal_calendar rows were shown to this
+    user. Call ONLY after scoring succeeds (not on failed/retried attempts —
+    a failed attempt shouldn't burn a rotation slot).
+
+    Safe to call with an empty calendar_ids list (no-op).
+    """
+    if not calendar_ids:
+        return
+    try:
+        for cid in calendar_ids:
+            db_session.execute(
+                _sql_text(
+                    "INSERT INTO seasonal_shown_log (user_id, calendar_id, shown_at) "
+                    "VALUES (:uid, :cid, NOW())"
+                ),
+                {"uid": user_id, "cid": cid}
+            )
+        db_session.commit()
+    except Exception as e:
+        print(f"[log_seasonal_shown] error: {e}")
+        db_session.rollback()
+
+
+def prune_seasonal_shown_log(db_session, days: int = 60):
+    """
+    Item C — delete seasonal_shown_log entries older than `days` (default 60).
+    Safe to run repeatedly (idempotent). Call from a daily/weekly cron job.
+
+    Returns the number of rows deleted, or -1 on error.
+    """
+    try:
+        result = db_session.execute(
+            _sql_text(
+                "DELETE FROM seasonal_shown_log "
+                "WHERE shown_at < NOW() - INTERVAL '1 day' * :days"
+            ),
+            {"days": days}
+        )
+        db_session.commit()
+        return result.rowcount
+    except Exception as e:
+        print(f"[prune_seasonal_shown_log] error: {e}")
+        db_session.rollback()
+        return -1
 
 
 def get_primary_genre(user) -> str:
@@ -420,3 +567,78 @@ def seed_seasonal_calendar(db_session):
     db_session.commit()
     print(f"[seed_seasonal_calendar] Seeded {len(SEED_DATA)} rows")
     return len(SEED_DATA)
+
+
+# ── Item D — date-bound event seed (proof-of-shape) ─────────────────────────
+# "Photo Today Expo, Bangalore" — currently running, ends Sunday 2026-06-14
+# per Session 73 handoff. Inserted independently of seed_seasonal_calendar()
+# (which only runs on an empty table) since this is time-sensitive and added
+# after the initial seed. Validates the date_start/date_end schema before the
+# discovery job (item D v1) writes its first auto-discovered row.
+
+DATE_BOUND_SEED_DATA = [
+    {
+        "base_city":       "Bangalore",
+        "genre":           "Street",
+        "location_name":   "Photo Today Expo",
+        "state_country":   "Bangalore, Karnataka, India",
+        "distance_hours":  0.0,
+        "month_start":     6,
+        "month_end":       6,
+        "subject":         "Photography exhibition — gear, prints, talks",
+        "what_is_happening": (
+            "Photo Today Expo is currently running in Bangalore, with "
+            "exhibitor booths, print displays, and photographer talks — "
+            "ending this Sunday."
+        ),
+        "why_it_matters": (
+            "A short window to see other photographers' work printed at "
+            "scale, talk to working professionals, and get a feel for how "
+            "your own images would look as prints. Worth an afternoon if "
+            "you're free before it closes."
+        ),
+        "best_light_time": None,
+        "access_notes":    "Check the expo's official page for venue, hours, and ticketing.",
+        "date_start":      "2026-06-12",
+        "date_end":        "2026-06-14",
+    },
+]
+
+
+def seed_date_bound_events(db_session):
+    """
+    Insert DATE_BOUND_SEED_DATA rows that don't already exist (matched by
+    location_name + date_end, so re-running is safe and won't duplicate).
+    Returns the number of rows inserted.
+    """
+    inserted = 0
+    for row in DATE_BOUND_SEED_DATA:
+        existing = db_session.execute(
+            _sql_text(
+                "SELECT COUNT(*) FROM seasonal_calendar "
+                "WHERE location_name = :location_name AND date_end = :date_end"
+            ),
+            {"location_name": row["location_name"], "date_end": row["date_end"]}
+        ).scalar()
+        if existing > 0:
+            continue
+        db_session.execute(
+            _sql_text("""
+            INSERT INTO seasonal_calendar
+                (base_city, genre, location_name, state_country, distance_hours,
+                 month_start, month_end, subject, what_is_happening,
+                 why_it_matters, best_light_time, access_notes,
+                 date_start, date_end)
+            VALUES
+                (:base_city, :genre, :location_name, :state_country, :distance_hours,
+                 :month_start, :month_end, :subject, :what_is_happening,
+                 :why_it_matters, :best_light_time, :access_notes,
+                 :date_start, :date_end)
+            """),
+            row
+        )
+        inserted += 1
+
+    db_session.commit()
+    print(f"[seed_date_bound_events] Inserted {inserted} date-bound row(s)")
+    return inserted
