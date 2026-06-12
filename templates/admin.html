@@ -422,6 +422,9 @@
             <form id="unflag-form-{{ img.id }}" method="POST" action="{{ url_for('admin_unflag_image', image_id=img.id) }}" style="display:none;"></form>
             <form id="raw-form-{{ img.id }}" method="POST" action="{{ url_for('admin_request_raw', image_id=img.id) }}" style="display:none;"></form>
             <form id="vis-form-{{ img.id }}" method="POST" action="{{ url_for('admin_toggle_visibility', image_id=img.id) }}" style="display:none;"></form>
+            {% if img.status == 'scored' %}
+            <form id="rescore-form-{{ img.id }}" method="POST" action="{{ url_for('admin_force_rescore', image_id=img.id) }}" style="display:none;"></form>
+            {% endif %}
             <form id="approve-form-{{ img.id }}" method="POST" action="{{ url_for('admin_approve_review', image_id=img.id) }}" style="display:none;"></form>
             <form id="reject-form-{{ img.id }}"  method="POST" action="{{ url_for('admin_reject_review', image_id=img.id) }}" style="display:none;">
               <input type="hidden" name="reason" value="RAW file not provided or did not match submitted image.">
@@ -546,6 +549,15 @@
                       data-tier="{{ img.tier or '' }}"
                       onclick="openRecalModal(this)">
                 ⚖ Recal
+              </button>
+              <button type="button" class="act-btn"
+                      title="Force a full rescore through the current engine — overwrites score and scorecard"
+                      data-rescore-form="rescore-form-{{ img.id }}"
+                      data-rescore-name="{{ (img.asset_name or 'Untitled') | replace("'", '') }}"
+                      data-rescore-score="{{ '%.2f'|format(img.score or 0) }}"
+                      data-rescore-tier="{{ img.tier or '' }}"
+                      onclick="confirmAndRescore(this)">
+                ↻ Rescore
               </button>
               {% endif %}
             </div>
@@ -1370,6 +1382,19 @@ function adminPost(formId, confirmMsg) {
     body: body.toString()
   }).then(r => { if (r.ok || r.redirected) { window.location.reload(); } else { alert('Action failed (' + r.status + ')'); } })
     .catch(e => alert('Network error: ' + e));
+}
+
+function confirmAndRescore(btn) {
+  /* Reads data-* attributes off the button (set server-side via Jinja) and
+     builds the confirm message in pure JS — avoids Jinja/JS quote escaping
+     issues entirely. */
+  const name  = btn.getAttribute('data-rescore-name')  || 'Untitled';
+  const score = btn.getAttribute('data-rescore-score') || '0.00';
+  const tier  = btn.getAttribute('data-rescore-tier')  || '';
+  const formId = btn.getAttribute('data-rescore-form');
+  const msg = "Force rescore '" + name + "' with the current engine? Current: " +
+              score + " (" + tier + "). This overwrites the score AND scorecard text. Uses API credits.";
+  adminPost(formId, msg);
 }
 
 function adminPostUrl(url, confirmMsg) {
