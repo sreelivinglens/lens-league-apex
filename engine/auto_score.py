@@ -1,4 +1,6 @@
 """
+# SL-VERSION: 73.1 (Session 73 — species disambiguation, JSON quote-escape +
+#   repair fallback, transferable_advice rewrite, master-reference rules)
 Apex DDI Auto-Scoring Engine
 Apex DDI Engine — AI scoring for uploaded images
 Returns structured JSON with all module scores, audit text, bylines, badges
