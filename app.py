@@ -1054,6 +1054,87 @@ with app.app_context():
             db.session.rollback()
             print(f'AEA columns migration warning: {_aea}')
 
+        try:
+            # Item B — passive location-change detection (GPS EXIF vs declared city)
+            db.session.execute(db.text(
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_gps_lat FLOAT"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_gps_lon FLOAT"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_gps_city VARCHAR(80)"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_gps_city_since TIMESTAMP"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_location_update VARCHAR(80)"
+            ))
+            db.session.commit()
+            print('Item B (GPS location) columns OK.')
+        except Exception as _gps_mig:
+            db.session.rollback()
+            print(f'Item B columns migration warning: {_gps_mig}')
+
+        try:
+            # Item C — seasonal calendar rotation log
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS seasonal_shown_log (
+                    id           SERIAL PRIMARY KEY,
+                    user_id      INTEGER NOT NULL,
+                    calendar_id  INTEGER NOT NULL,
+                    shown_at     TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            """))
+            db.session.execute(db.text(
+                "CREATE INDEX IF NOT EXISTS idx_seasonal_shown_user "
+                "ON seasonal_shown_log (user_id, shown_at)"
+            ))
+            db.session.commit()
+            print('Item C (seasonal_shown_log) table OK.')
+        except Exception as _ssl_mig:
+            db.session.rollback()
+            print(f'Item C table migration warning: {_ssl_mig}')
+
+        try:
+            # Item D — date-bound events (one-off exhibitions/expos, vs recurring
+            # month_start/month_end rows) on seasonal_calendar
+            db.session.execute(db.text(
+                "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS date_start DATE"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS date_end DATE"
+            ))
+            # Item D — discovery queue: (city, genre) combos awaiting auto-discovery.
+            # priority=TRUE for newly-detected/changed cities (item B feed) — these
+            # get processed before the general weekly sweep.
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS discovery_queue (
+                    id           SERIAL PRIMARY KEY,
+                    city         VARCHAR(80)  NOT NULL,
+                    genre        VARCHAR(40)  NOT NULL,
+                    priority     BOOLEAN      NOT NULL DEFAULT FALSE,
+                    status       VARCHAR(20)  NOT NULL DEFAULT 'pending',
+                    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+                    processed_at TIMESTAMP
+                )
+            """))
+            db.session.execute(db.text(
+                "CREATE INDEX IF NOT EXISTS idx_discovery_queue_status "
+                "ON discovery_queue (status, priority, created_at)"
+            ))
+            # Avoid duplicate pending entries for the same (city, genre)
+            db.session.execute(db.text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_discovery_queue_pending_unique "
+                "ON discovery_queue (city, genre) WHERE status = 'pending'"
+            ))
+            db.session.commit()
+            print('Item D (date-bound events + discovery_queue) schema OK.')
+        except Exception as _disc_mig:
+            db.session.rollback()
+            print(f'Item D schema migration warning: {_disc_mig}')
+
         print('Columns migrated OK.')
 
         # UAT plan backfill — all subscribed users get 'uat' plan (unlimited uploads).
@@ -1153,6 +1234,35 @@ def is_open_contest_active() -> bool:
 
 def is_bow_active() -> bool:
     return os.getenv('BOW_ACTIVE', '0') == '1'
+
+
+# ---------------------------------------------------------------------------
+# Item B — reverse-geocode GPS coordinates to a city name via Nominatim
+# (OpenStreetMap, free, no API key). Fails open (returns None) on any error
+# so a geocoding hiccup never blocks or slows down the upload.
+# ---------------------------------------------------------------------------
+
+def _reverse_geocode_city(lat: float, lon: float) -> str | None:
+    try:
+        import urllib.request as _geourl
+        import json as _geojson
+        url = (
+            "https://nominatim.openstreetmap.org/reverse"
+            f"?format=json&lat={lat}&lon={lon}&zoom=10&addressdetails=1"
+        )
+        req = _geourl.Request(url, headers={
+            # Nominatim usage policy requires a descriptive User-Agent.
+            'User-Agent': 'ShutterLeague/1.0 (support@shutterleague.com)'
+        })
+        with _geourl.urlopen(req, timeout=5) as resp:
+            data = _geojson.loads(resp.read().decode())
+        addr = data.get('address', {})
+        city = (addr.get('city') or addr.get('town') or addr.get('village')
+                or addr.get('county') or addr.get('state_district') or addr.get('state'))
+        return city.strip() if city else None
+    except Exception as _geo_err:
+        app.logger.warning(f'[upload] reverse geocode failed (non-fatal): {_geo_err}')
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -1607,6 +1717,46 @@ def backfill_residency_months():
 
 
 # ── End of Sprint 3 ───────────────────────────────────────────────────────────
+
+# ── Item C — seasonal_shown_log prune ─────────────────────────────────────────
+
+def run_seasonal_log_prune():
+    """
+    Runs daily via APScheduler. Deletes seasonal_shown_log entries older than
+    60 days — keeps the rotation-history table from growing unbounded.
+    """
+    with app.app_context():
+        try:
+            from engine.seasonal_calendar import prune_seasonal_shown_log
+            deleted = prune_seasonal_shown_log(db.session, days=60)
+            if deleted >= 0:
+                app.logger.info(f'[seasonal_log_prune] Deleted {deleted} entries older than 60 days.')
+            else:
+                app.logger.warning('[seasonal_log_prune] Prune failed — see prior log line.')
+        except Exception as e:
+            app.logger.error(f'[seasonal_log_prune] Error: {e}')
+
+
+# ── Item D — seasonal auto-discovery ──────────────────────────────────────────
+
+def run_seasonal_discovery_job():
+    """
+    Runs weekly via APScheduler. Refreshes discovery_queue with any newly
+    active (city, genre) combos lacking seasonal_calendar data, then
+    processes all priority items (item B — new/changed cities) plus a
+    bounded batch of general items (cost control).
+
+    batch_size is intentionally small while validating the pipeline —
+    raise as active-city count grows (see handoff item D notes).
+    """
+    with app.app_context():
+        try:
+            from engine.seasonal_discovery import run_seasonal_discovery
+            summary = run_seasonal_discovery(db.session, batch_size=5)
+            app.logger.info(f'[seasonal_discovery] Weekly run complete: {summary}')
+        except Exception as e:
+            app.logger.error(f'[seasonal_discovery] Weekly run error: {e}')
+
 
 # ── Re-engagement Emailer ─────────────────────────────────────────────────────
 
@@ -2755,6 +2905,53 @@ def dismiss_portfolio_banner():
     return ('', 204)
 
 
+@app.route('/location-update/confirm', methods=['POST'])
+@login_required
+def confirm_location_update():
+    """Item B — user confirmed their GPS-detected city is their new location."""
+    new_city = current_user.pending_location_update
+    if new_city:
+        current_user.city = new_city
+    current_user.pending_location_update = None
+    current_user.last_gps_city = None
+    current_user.last_gps_city_since = None
+    db.session.commit()
+
+    # Item D — if this new city has no seasonal data yet, queue it for
+    # priority discovery (processed before the next general weekly sweep)
+    # for each of the user's genre interests.
+    if new_city:
+        try:
+            from engine.seasonal_discovery import enqueue_priority_combo
+            from engine.seasonal_calendar import get_primary_genre
+            genres = []
+            try:
+                genres = json.loads(current_user.genre_interests or '[]')[:3]
+            except Exception:
+                pass
+            if not genres:
+                genres = [get_primary_genre(current_user) or 'Wildlife']
+            for _g in genres:
+                if _g:
+                    enqueue_priority_combo(db.session, new_city, _g)
+        except Exception as _disc_err:
+            app.logger.warning(f'[location-update] priority discovery enqueue failed: {_disc_err}')
+
+    flash(f'Location updated to {new_city}.' if new_city else 'Location updated.', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/location-update/dismiss', methods=['POST'])
+@login_required
+def dismiss_location_update():
+    """Item B — user dismissed the location-change prompt; keep current city,
+    but wait another 14 days before re-prompting for the same GPS city."""
+    current_user.pending_location_update = None
+    current_user.last_gps_city_since = datetime.utcnow()
+    db.session.commit()
+    return ('', 204)
+
+
 # ---------------------------------------------------------------------------
 # Profile  -  edit name/username + change password (combined page)
 # ---------------------------------------------------------------------------
@@ -3608,6 +3805,8 @@ def upload():
             exif_shutter_raw      = exif_data.get('shutter_raw')       or None,
             exif_software         = (exif_data.get('software', '') or '').replace('\x00', '') or None,
             exif_has_gps          = exif_data.get('has_gps')           or False,
+            exif_gps_lat          = exif_data.get('gps_lat'),
+            exif_gps_lon          = exif_data.get('gps_lon'),
             exif_device_tier      = _device_tier or None,
         )
         db.session.add(img)
@@ -3621,6 +3820,49 @@ def upload():
             )
         except Exception:
             pass
+
+        # ── Item A: update user.city from upload-time location (v74) ─────────
+        # Derive city as the first comma-separated segment of the submitted
+        # location, e.g. "Keoladeo National Park, Rajasthan" -> "Keoladeo
+        # National Park". Only updates if changed/non-empty — feeds
+        # build_seasonal_context() and downstream seasonal-discovery work.
+        _submitted_location = (img.location or '').strip()
+        if _submitted_location:
+            _derived_city = _submitted_location.split(',')[0].strip()
+            if _derived_city and _derived_city != (current_user.city or ''):
+                current_user.city = _derived_city
+
+        # ── Item B: GPS-based travel context + relocation detection (v74) ────
+        # If the photo's EXIF GPS resolves to a different city than the user's
+        # declared city, use the GPS city for THIS upload's seasonal context
+        # ("you're in Goa this weekend — here's what's worth shooting"),
+        # without touching user.city. Separately, track how long the GPS city
+        # has differed from user.city — if it's been 14+ consecutive days,
+        # flag pending_location_update so a banner can prompt the user to
+        # confirm a real move (avoids false positives from short trips).
+        _travel_city = None
+        _gps_lat, _gps_lon = exif_data.get('gps_lat'), exif_data.get('gps_lon')
+        if _gps_lat is not None and _gps_lon is not None:
+            _gps_city = _reverse_geocode_city(_gps_lat, _gps_lon)
+            if _gps_city:
+                if _gps_city != (current_user.city or ''):
+                    _travel_city = _gps_city  # this upload's seasonal context uses this
+
+                    if current_user.last_gps_city == _gps_city:
+                        # Same differing city as last time — check how long it's persisted.
+                        if (current_user.last_gps_city_since
+                                and (datetime.utcnow() - current_user.last_gps_city_since) >= timedelta(days=14)):
+                            current_user.pending_location_update = _gps_city
+                    else:
+                        # New differing city — restart the clock.
+                        current_user.last_gps_city = _gps_city
+                        current_user.last_gps_city_since = datetime.utcnow()
+                else:
+                    # GPS city matches declared city — clear any tracking/flag.
+                    current_user.last_gps_city = None
+                    current_user.last_gps_city_since = None
+                    current_user.pending_location_update = None
+
         db.session.commit()
 
         # ── Breastfeeding flag — hold pending DDI sub-genre resolution ───────────
@@ -3757,7 +3999,7 @@ def upload():
                 img.status = 'processing'
                 db.session.commit()
 
-            def _score_in_background(image_id, _uid):
+            def _score_in_background(image_id, _uid, _travel_city=None):
                 import traceback
                 from engine.auto_score import auto_score, build_audit_data, build_exif_context
                 from engine.compositor import build_card1
@@ -3995,16 +4237,21 @@ def upload():
                             from engine.seasonal_calendar import build_seasonal_context, get_primary_genre
                             _u = User.query.get(_img.user_id)
                             _sc_primary_genre = get_primary_genre(_u) if _u else (_img.genre or '')
-                            _sc_user_city     = getattr(_u, 'city', '') or '' if _u else ''
-                            _sc_seasonal_ctx  = build_seasonal_context(
+                            # Item B: if this upload's GPS resolved to a different city than the
+                            # user's declared city, use the GPS (travel) city for THIS image's
+                            # seasonal context only — does not affect user.city.
+                            _sc_user_city     = _travel_city or (getattr(_u, 'city', '') or '' if _u else '')
+                            _sc_seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
                                 db_session    = db.session,
                                 user_city     = _sc_user_city,
                                 primary_genre = _sc_primary_genre or _img.genre or '',
                                 current_month = datetime.utcnow().month,
+                                user_id       = _img.user_id,
                             )
                         except Exception as _sc_err:
                             app.logger.warning(f'[auto_score] seasonal context error: {_sc_err}')
                             _sc_seasonal_ctx  = ''
+                            _sc_calendar_ids  = []
                             _sc_primary_genre = _img.genre or ''
                             _sc_user_city     = ''
 
@@ -4236,6 +4483,15 @@ def upload():
                                 _img.set_audit(audit)
                                 db.session.commit()
 
+                                # Item C — log rotation entries only on successful scoring,
+                                # so a failed/retried attempt doesn't burn a rotation slot.
+                                try:
+                                    if _sc_calendar_ids:
+                                        from engine.seasonal_calendar import log_seasonal_shown
+                                        log_seasonal_shown(db.session, _img.user_id, _sc_calendar_ids)
+                                except Exception as _ssl_err:
+                                    app.logger.warning(f'[auto_score] seasonal_shown_log error: {_ssl_err}')
+
                             # ── Write to scored_phash_cache (v63) ──────────────────────────
                             # Anchors score to phash so delete+reupload returns same score.
                             # Only caches clean scores (ai_suspicion < 0.4, not flagged).
@@ -4402,7 +4658,7 @@ def upload():
                 # breastfeeding flagged (needs sub-genre check even on cache hit)
                 threading.Thread(
                     target=_score_in_background,
-                    args=(img.id, uid),
+                    args=(img.id, uid, _travel_city),
                     daemon=True
                 ).start()
 
@@ -4431,11 +4687,19 @@ def upload():
         return redirect(url_for('dashboard'))
 
     import json as _json
+    _last_image = Image.query.filter(
+        Image.user_id == current_user.id,
+        Image.location.isnot(None),
+        Image.location != ''
+    ).order_by(Image.created_at.desc()).first()
+    _last_location = (_last_image.location if _last_image else None) or current_user.city or ''
+
     return render_template('upload.html', genres=GENRE_IDS, genre_choices=GENRE_CHOICES,
                            subgenre_map=SUBGENRE_MAP,
                            subgenre_map_json=_json.dumps(
                                {k: list(v) for k, v in SUBGENRE_MAP.items()}
                            ),
+                           last_location=_last_location,
                            next_page=request.args.get('next', ''))
 
 
@@ -4582,11 +4846,12 @@ def _force_rescore_in_background(image_id, old_score, old_tier):
             _owner = User.query.get(img.user_id)
             _primary_genre = get_primary_genre(_owner) if _owner else (img.genre or '')
             _user_city     = getattr(_owner, 'city', '') or '' if _owner else ''
-            _seasonal_ctx  = build_seasonal_context(
+            _seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
                 db_session    = db.session,
                 user_city     = _user_city,
                 primary_genre = _primary_genre or img.genre or '',
                 current_month = datetime.utcnow().month,
+                user_id       = img.user_id,
             )
 
             _portfolio_summary = None
@@ -4701,6 +4966,14 @@ def _force_rescore_in_background(image_id, old_score, old_tier):
                     app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
             db.session.commit()
+
+            # Item C — log rotation entries only on successful (re)scoring.
+            try:
+                if _sc_calendar_ids:
+                    from engine.seasonal_calendar import log_seasonal_shown
+                    log_seasonal_shown(db.session, img.user_id, _sc_calendar_ids)
+            except Exception as _ssl_err:
+                app.logger.warning(f'[force_rescore] seasonal_shown_log error: {_ssl_err}')
 
             # Regenerate the scorecard card image (best effort — non-fatal)
             try:
@@ -5941,6 +6214,39 @@ def admin_seed_seasonal():
         flash(f'Seasonal calendar seeded — {count} rows', 'success')
     except Exception as e:
         flash(f'Seed error: {e}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/seed-date-bound-events', methods=['POST'])
+@login_required
+@admin_required
+def admin_seed_date_bound_events():
+    """Item D — insert proof-of-shape date-bound rows (e.g. Photo Today Expo)."""
+    try:
+        from engine.seasonal_calendar import seed_date_bound_events
+        count = seed_date_bound_events(db.session)
+        flash(f'Date-bound events seeded — {count} new row(s)', 'success')
+    except Exception as e:
+        flash(f'Seed error: {e}', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/run-seasonal-discovery', methods=['POST'])
+@login_required
+@admin_required
+def admin_run_seasonal_discovery():
+    """
+    Item D — manually trigger the seasonal auto-discovery batch (normally
+    runs weekly via cron). Useful for testing the end-to-end pipeline on a
+    single (city, genre) combo before waiting for the weekly run.
+    """
+    try:
+        from engine.seasonal_discovery import run_seasonal_discovery
+        batch_size = int(request.form.get('batch_size', 1))
+        summary = run_seasonal_discovery(db.session, batch_size=batch_size)
+        flash(f'Seasonal discovery run complete: {summary}', 'success')
+    except Exception as e:
+        flash(f'Discovery run error: {e}', 'error')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -17383,6 +17689,22 @@ if _sched_lock_held:
         trigger          = CronTrigger(minute=45, timezone='UTC'),
         id               = 'mentor_reminders',
         name             = 'Mentor review deadline reminders (24hr warning)',
+        replace_existing = True,
+    )
+    # Item C — seasonal_shown_log prune (>60 days) — daily 03:45 UTC
+    _scheduler.add_job(
+        func             = run_seasonal_log_prune,
+        trigger          = CronTrigger(hour=3, minute=45, timezone='UTC'),
+        id               = 'seasonal_log_prune',
+        name             = 'Prune seasonal_shown_log entries older than 60 days',
+        replace_existing = True,
+    )
+    # Item D — seasonal auto-discovery — weekly, Sunday 04:00 UTC
+    _scheduler.add_job(
+        func             = run_seasonal_discovery_job,
+        trigger          = CronTrigger(day_of_week='sun', hour=4, minute=0, timezone='UTC'),
+        id               = 'seasonal_discovery',
+        name             = 'Weekly seasonal calendar auto-discovery (item D)',
         replace_existing = True,
     )
     _scheduler.start()
