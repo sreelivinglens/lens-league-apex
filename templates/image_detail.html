@@ -1015,6 +1015,11 @@
   <div style="background:rgba(200,168,75,0.04); border:1px solid var(--gold-dark); border-radius:var(--radius-md); padding:24px 28px; margin-bottom:28px;">
     <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1.5px; color:var(--text-primary); text-transform:uppercase; margin-bottom:16px;">Admin Actions</div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      {% if image.status == 'scored' %}
+      <form method="POST" action="{{ url_for('admin_force_rescore', image_id=image.id) }}" style="display:inline;" onsubmit="return confirm('Rescore this image with the current engine? Current score: {{ \"%.2f\"|format(image.score) }} ({{ image.tier }}). This will overwrite the existing score and scorecard.');">
+        <button type="submit" class="btn" style="font-size: 14px;">↻ Force Rescore (current engine)</button>
+      </form>
+      {% endif %}
       {% if image.needs_review and not image.is_flagged %}
       <form method="POST" action="{{ url_for('admin_approve_review', image_id=image.id) }}" style="display:inline;">
         <button type="submit" class="btn btn-solid" style="font-size: 14px;">✓ Approve for Public</button>
