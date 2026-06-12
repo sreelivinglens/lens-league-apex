@@ -359,7 +359,7 @@ CALIBRATION NOTES:
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
 
-CRITICAL JSON FORMATTING RULE: All string values must be valid JSON strings. If you need to quote a phrase, a master photographer's words, or an exposure setting within any text field, use single quotes (') or curly quotes (' ' or " ") — NEVER use a literal straight double-quote character (") inside a string value, as this will break JSON parsing. For example, write 'this is what Adams called pre-visualisation' or 'Salgado made this same exposure choice' — not "this is what Adams called pre-visualisation". Double-check every string field for stray unescaped double quotes before responding.
+CRITICAL JSON FORMATTING RULE: All string values must be valid JSON strings. If you need to quote a phrase, a master photographer's words, or an exposure setting within any text field, use single quotes (') or curly quotes (' ' or " ") — NEVER use a literal straight double-quote character (") inside a string value, as this will break JSON parsing. For example, write 'this is what Adams called pre-visualisation' or 'Salgado made this same exposure choice' — not "this is what Adams called pre-visualisation". NEVER use a literal line break (newline) inside a string value — every text field must be written as a single continuous line with no actual line breaks, even for multi-sentence fields. If you need to separate sentences or ideas, use a space — never a newline. A string value containing a raw line break will break JSON parsing. Double-check every string field for stray unescaped double quotes AND literal line breaks before responding.
 """
 
 SCORE_PROMPT = """Analyse this photograph using the Apex DDI Engine.
@@ -2389,7 +2389,7 @@ Do NOT score, evaluate, or give feedback.
 Do NOT infer or assume — only describe what is clearly visible.
 If something is ambiguous or partially obscured, say so explicitly.
 Respond ONLY with a valid JSON object. No preamble, no markdown.
-CRITICAL JSON FORMATTING RULE: never use a literal straight double-quote character (") inside any string value — use single quotes (') instead. This will break JSON parsing otherwise.
+CRITICAL JSON FORMATTING RULE: never use a literal straight double-quote character (") inside any string value — use single quotes (') instead. Never use a literal line break inside any string value — write each field as a single continuous line. Both will break JSON parsing otherwise.
 """
 
 VISION_PROMPT = """Examine this photograph carefully. Scan the ENTIRE frame including:
@@ -3515,30 +3515,75 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     text = re.sub(r"```json|```", "", text).strip()
 
+    def _merge_multiline_strings(t):
+        """
+        Repair helper: the model occasionally emits a literal line break
+        inside a string value (e.g. a long transferable_advice field wraps
+        onto a new line), which Python's json module reports as
+        "Unterminated string" or "Invalid control character". Detect lines
+        that open a "key": "value but never close the string on that line,
+        and merge subsequent lines back in (joined by a space) until the
+        closing quote is found.
+        """
+        lines = t.split("\n")
+        out = []
+        i = 0
+        n = len(lines)
+        while i < n:
+            line = lines[i]
+            m = re.match(r'^(\s*"[^"]+"\s*:\s*)"(.*)$', line)
+            if m:
+                prefix, partial_value = m.groups()
+                if re.search(r'(?<!\\)"\s*,?\s*$', partial_value):
+                    out.append(line)
+                    i += 1
+                    continue
+                merged_value = partial_value
+                j = i + 1
+                while j < n:
+                    nxt = lines[j]
+                    merged_value += " " + nxt.strip()
+                    if re.search(r'(?<!\\)"\s*,?\s*$', nxt.strip()):
+                        break
+                    j += 1
+                out.append(prefix + '"' + merged_value)
+                i = j + 1
+                continue
+            out.append(line)
+            i += 1
+        return "\n".join(out)
+
+    def _repair_line(line):
+        """
+        Repair helper: escape any unescaped " characters INSIDE a
+        "key": "value" line's value (between the opening quote after the
+        colon and the closing quote+comma/brace at end of line) — common
+        failure mode when the model quotes a phrase with literal " marks.
+        """
+        m = re.match(r'^(\s*"[^"]+"\s*:\s*)"(.*)"(\s*,?\s*)$', line)
+        if not m:
+            return line
+        prefix, value, suffix = m.groups()
+        fixed_value = re.sub(r'(?<!\\)"', r'\\"', value)
+        return f'{prefix}"{fixed_value}"{suffix}'
+
     try:
         result = json.loads(text)
-    except json.JSONDecodeError as e:
-        # Common failure mode: the model used a literal " inside a string value
-        # (e.g. 'this is what Adams called "pre-visualisation"'), breaking JSON.
-        # Attempt a repair pass: for each line, if it's a "key": "value" line,
-        # escape any " characters that appear INSIDE the value (between the
-        # opening quote after the colon and the closing quote+comma/brace at
-        # end of line) but are not the delimiting quotes themselves.
-        def _repair_line(line):
-            m = re.match(r'^(\s*"[^"]+"\s*:\s*)"(.*)"(\s*,?\s*)$', line)
-            if not m:
-                return line
-            prefix, value, suffix = m.groups()
-            # Escape any unescaped " inside value
-            fixed_value = re.sub(r'(?<!\\)"', r'\\"', value)
-            return f'{prefix}"{fixed_value}"{suffix}'
-
-        repaired = "\n".join(_repair_line(l) for l in text.split("\n"))
+    except json.JSONDecodeError as e1:
+        # Repair pass 1 — merge literal-newline-split string values, then retry.
+        text_merged = _merge_multiline_strings(text)
         try:
-            result = json.loads(repaired)
-            print(f"[auto_score] JSON repaired after parse error: {e}")
+            result = json.loads(text_merged)
+            print(f"[auto_score] JSON repaired (multi-line string merged) after parse error: {e1}")
         except json.JSONDecodeError:
-            raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
+            # Repair pass 2 — escape embedded unescaped quotes line-by-line
+            # (operating on the merged text, so both fixes can combine).
+            repaired = "\n".join(_repair_line(l) for l in text_merged.split("\n"))
+            try:
+                result = json.loads(repaired)
+                print(f"[auto_score] JSON repaired (quotes escaped) after parse error: {e1}")
+            except json.JSONDecodeError:
+                raise ValueError(f"Failed to parse API response: {e1}\nResponse: {text[:500]}")
 
     # Attach routing metadata so build_audit_data and callers can access it
     result['_wikipedia_url']             = _research.get('wikipedia_url', '')
