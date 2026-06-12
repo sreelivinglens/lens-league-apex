@@ -3275,6 +3275,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     if not ANTHROPIC_API_KEY:
         raise ValueError("ANTHROPIC_API_KEY not set")
 
+    _t_total_start = _time.time()
     img_data, media_type = encode_image(image_path)
 
     # ── Call 1: Vision analysis — identify scene facts before scoring ──────────
@@ -3321,7 +3322,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
             _species_hint = ""
 
     _filename     = os.path.basename(image_path)
+    _t_vision_start = _time.time()
     vision        = vision_analyse(img_data, media_type, title, subject, species_hint=_species_hint, filename=_filename)
+    print(f"[auto_score][timing] vision_analyse: {_time.time() - _t_vision_start:.2f}s")
     scene_context = build_scene_context(vision, genre=genre)
 
     # ── Call 1.5: Species research — Wildlife/Nature only ─────────────────────
@@ -3348,7 +3351,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
                 print(f"[auto_score] species_id '{_species_id}' looks like a description — skipping species_research")
                 _species_id = ""
         if _species_id and _species_id.lower() not in ("unknown", "not specified", ""):
+            _t_research_start = _time.time()
             _research = species_research(_species_id)
+            print(f"[auto_score][timing] species_research: {_time.time() - _t_research_start:.2f}s")
             species_context = build_species_context(_research)
         else:
             print(f"[auto_score] Species research skipped — no species identified by vision")
@@ -3472,6 +3477,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     response  = None
     last_error = None
+    _t_score_start = _time.time()
     for attempt in range(5):
         try:
             response = httpx.post(
@@ -3503,6 +3509,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     if response is None:
         raise ValueError(f"All retry attempts failed. Last error: {last_error}")
+
+    print(f"[auto_score][timing] main scoring call: {_time.time() - _t_score_start:.2f}s")
 
     if response.status_code != 200:
         raise ValueError(f"API error {response.status_code}: {response.text}")
@@ -3606,6 +3614,8 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     result['_subgenre_overridden']       = (vision_subgenre and vision_subgenre != sub_genre and vision_subgenre in VALID_SUBGENRES)
     result['_vision_subgenre_reason']    = vision.get('suggested_subgenre_reason', '')
     result['_effective_genre']           = effective_genre_for_weights
+
+    print(f"[auto_score][timing] TOTAL auto_score: {_time.time() - _t_total_start:.2f}s")
 
     return result
 
