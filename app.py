@@ -5629,6 +5629,23 @@ def leaderboard():
 # ---------------------------------------------------------------------------
 
 # ── Sprint 1 — Seed seasonal calendar (run once after deploy) ─────────────────
+@app.route('/admin/seed-seasonal-page')
+@login_required
+@admin_required
+def admin_seed_seasonal_page():
+    return '''
+    <html><body style="font-family:sans-serif; max-width:500px; margin:60px auto; text-align:center;">
+      <h2>Seed Seasonal Calendar</h2>
+      <p>Click the button below to seed the seasonal calendar (8 Bangalore location rows). This is a one-time action — safe to run again, it will not duplicate rows.</p>
+      <form method="POST" action="/admin/seed-seasonal">
+        <button type="submit" style="font-size:18px; padding:14px 32px; background:#F5C518; border:none; border-radius:8px; cursor:pointer; font-weight:700;">
+          Seed Seasonal Calendar
+        </button>
+      </form>
+    </body></html>
+    '''
+
+
 @app.route('/admin/seed-seasonal', methods=['POST'])
 @login_required
 @admin_required
