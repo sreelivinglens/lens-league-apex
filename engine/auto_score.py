@@ -217,6 +217,58 @@ WF (Wonder Factor):
   For Drone: perspectives impossible from ground = high Wonder.
   For Creative: revealing the invisible + lingering resonance = high Wonder.
 
+  ══════════════════════════════════════════════════════════════════════════
+  FAMOUS EVENT CALIBRATION GATE — Documentary and Street, MANDATORY CHECK
+  ══════════════════════════════════════════════════════════════════════════
+  If this image was made at a widely-known, heavily-photographed cultural,
+  religious, or public event — Holi (including Lathmar Holi, Barsana/Nandgaon),
+  Kumbh Mela, Pushkar Camel Fair, Diwali, Durga Puja, Ganesh Chaturthi, Eid,
+  Carnival, major political rallies, or any festival where thousands of
+  photographers are present every year — you MUST apply this gate before
+  scoring DoD, Wonder, and AQ.
+
+  THE GATE QUESTION: "Does this image show something that could not have been
+  captured by anyone else standing in this location at this moment?"
+
+  If the answer is NO — the frame is a competent record of the event itself,
+  not a singular photographic decision — then:
+
+  - DoD: Being present at a famous event is ACCESS, not DoD. Do not award
+    DoD for the event's restricted/crowded/chaotic nature alone. DoD must
+    anchor to a SPECIFIC physical or technical achievement: did the
+    photographer position themselves somewhere physically dangerous or
+    genuinely inaccessible relative to the thousands of other photographers
+    present? If not, DoD for access alone caps at 6.0–6.5 regardless of how
+    significant the event is culturally.
+
+  - Cultural Wonder: A famous event's cultural significance is NOT the
+    photographer's achievement — it belongs to the event, not the image.
+    Cultural Wonder for a famous-event image caps at 6.5–7.0 UNLESS the
+    photographer captured a specific moment, gesture, or juxtaposition that
+    is genuinely unrepeatable even by someone standing beside them — in
+    which case score that specific find under Eye Wonder or Emotional
+    Wonder instead, on its own merits.
+
+  - AQ / Soul Bonus: The emotional charge of a festival (joy, chaos, colour)
+    is ambient — it exists whether or not this specific frame captures it
+    well. Soul Bonus must be earned by what THIS FRAME does with that
+    energy — sharpness, composition, a specific captured gesture — not by
+    the fact that the event itself is emotionally charged. If the central
+    subject is obscured, hazy, or visually competing with background noise,
+    Soul Bonus does not activate regardless of the event's energy.
+
+  If the answer is YES — the photographer made a decision, found a moment,
+  or achieved an access that genuinely separates this frame from the
+  thousands of others made at the same event that day — score normally and
+  name that specific decision explicitly in hard_truth and what_stood_out.
+
+  This gate exists because famous events inflate scores when the engine
+  reads the EVENT's significance instead of the IMAGE's. McCurry, Raghu Rai,
+  and thousands of working photographers have shot Lathmar Holi, Kumbh Mela,
+  and Pushkar. A wide-angle crowd frame — however vibrant — is not
+  automatically their equal. Score the photograph, not the festival.
+  ══════════════════════════════════════════════════════════════════════════
+
 AQ (Affective Quotient):
   The specific feeling the image creates in a viewer. NOT technical quality —
   technical quality lives in DoD.
@@ -486,7 +538,7 @@ Return this exact JSON structure:
   "edit_base":     "<BASE EDITS — post-processing only. INTEGRITY RULE: if score >= 8.0, DO NOT suggest edits that undo the tonal, contrast, or shadow choices that earned the score. For high-scoring images limit to: dust removal, minor colour cast correction, slight primary-subject sharpening. If bold choices (shadow retention, high contrast, dark register) are what scored, say so explicitly and tell the user not to change them. For score < 6.0: specific corrective adjustments — local exposure, dodging/burning, colour grading. Tool-specific. 1-2 sentences.>",
   "edit_creative": "<CREATIVE EDITS — artistic transformation. What processing would change the emotional register of this image — not just correct it? 1-2 sentences.>",
   "genre_suggestion": "<GENRE ROUTING INSIGHT. If the scoring pattern strongly suggests this image would score significantly higher in a different genre or sub-genre, populate this field. Otherwise null. Trigger conditions: (1) Wildlife filed, DoD < 5.0, AQ > 7.0, no behavioural act detected — suggest Creative Minimalist or Creative Graphic. (2) Wildlife or Nature filed, Disruption > 7.0, Wonder < 5.5 — suggest Creative. (3) Street filed, no human detected — suggest Documentary or Creative. (4) People filed, Wonder > 7.5, AQ < 6.5 — suggest Documentary. (5) Creative filed with sub-genre 'other' or 'fineart' or 'graphic', and the image has a single recognisable subject reduced to essential form with strong negative space — suggest Creative Minimalist. (6) Creative filed with sub-genre 'other' and AQ > 8.5 — the image has a specific emotional register that a named sub-genre would score more accurately — suggest the most appropriate Creative sub-genre. (7) Any genre where the image scores primarily on compositional form rather than the genre rubric criteria. Format: {{suggested_genre: string, suggested_subgenre: string, reason: string (one sentence, creative and specific — not clinical), score_note: string (e.g. current score vs estimated score under suggested genre)}}. Example: {{suggested_genre: 'Creative', suggested_subgenre: 'creative_minimalist', reason: 'The image scores on tonal relationship and geometric reduction — not on wildlife behaviour — and would be evaluated on its actual creative achievement under Creative Minimalist.', score_note: 'Current: 5.30 — estimated under Creative Minimalist: 8.0–8.5'}}>",
-  "what_stood_out": "<SCORECARD HERO LINE. One sentence. The bold, proud statement of what this image achieved. Written in the Sherpa voice — direct, specific, never generic. This is the headline the photographer reads first. For high-scoring images: name the specific creative decision that separated this image. NEVER start with 'This image' or 'The photograph'. KYC: no jargon, no banned words. Examples: 'You made the harder call.' / 'Only yours held the sky.' / 'You were there for one of those seconds that doesn't repeat.'>",
+  "what_stood_out": "<SCORECARD HERO LINE. One sentence. The bold, proud statement of what this image achieved. Written in the Sherpa voice — direct, specific, never generic. This is the headline the photographer reads first. For high-scoring images: name the specific creative decision that separated this image. NEVER start with 'This image' or 'The photograph'. KYC: no jargon, no banned words. Examples: 'You made the harder call.' / 'Only yours held the sky.' / 'You were there for one of those seconds that doesn't repeat.' FAMOUS EVENT GATE: If this image was made at a famous event AND the gate question answer was NO, this line must name the SPECIFIC frame-level decision the score reflects — not the event. Do not write a line that could apply to any photographer's frame from that event. If the gate answer was YES, name the specific find that separates this frame from the thousands of others.>",
   "transferable_advice": "<SCORECARD CARD 1 BODY. 2-3 sentences. The lesson this image teaches that applies to every future shoot — not just this location or subject. CRITICAL: NEVER say 'go back and reshoot' — the moment is gone. Teach the principle the photographer now owns. MANDATORY: You MUST name one master photographer from this pool — Brandt, Cartier-Bresson, Salgado, Kenna, McCurry, Newton, Weston, Art Wolfe, Vivian Maier, Nachtwey, Adams, Karsh, Avedon, Ernst Haas, Raghu Rai, Leibovitz, Penn, Edward Weston, Yann Arthus-Bertrand — and state how the principle connects to their practice. Do not use 'like' comparisons — state the connection directly: 'Salgado made this same exposure choice in the Serra Pelada mines.' / 'This is what Adams called pre-visualisation.' / 'Raghu Rai built his entire practice on exactly this access.' The master reference must feel earned, not decorative. Warm, specific, never generic. KYC: no jargon — write 'when the sky was doing something extraordinary' not 'backlit scene'. Write 'you exposed for the sky' not 'silhouette exposure'. Plain language throughout. If portfolio_context shows a trend in feeling/timing/difficulty, reference it naturally.>",
   "background_check": "<SCORECARD CARD 3 BODY. 2-3 sentences. The Bresson habit — 'reading the field': knowing what is behind your subject before the moment arrives. Name the specific element in THIS image that the habit would have resolved. Frame it as something the photographer almost had — not a failure. MANDATORY: Name the master whose practice this habit belongs to — for Street use Cartier-Bresson or Raghu Rai, for Wildlife use Brandt or Art Wolfe, for Documentary use Nachtwey or Salgado, for Landscape use Adams or Kenna, for People use Karsh or Leibovitz. Then state the habit as transferable: 'That one-second glance behind your subject lifts every photograph you make — Wildlife at the waterhole, Street in the market, a face in a crowd.' KYC: plain language only.>",
   "mentor_location_1": "<SCORECARD MENTOR LOCATION 1. Populated ONLY when seasonal_context is provided in the prompt. 3-4 sentences in the Sherpa voice — warm, specific, like a friend who knows the reserve. Include: the specific subject active NOW, why this window is special this season, why it connects directly to the photographer's growth opportunity. Specific enough that the photographer starts planning immediately. If no seasonal_context in prompt, return null.>",
