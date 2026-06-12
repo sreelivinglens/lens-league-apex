@@ -25,6 +25,43 @@ import json
 from datetime import datetime
 from sqlalchemy import text as _sql_text
 
+# ── City alias map ─────────────────────────────────────────────────────────
+# Users type city names inconsistently (Bengaluru vs Bangalore, Bombay vs
+# Mumbai, Calcutta vs Kolkata, etc). seasonal_calendar.base_city is seeded
+# with one canonical spelling per city. This map normalises common variants
+# to the seeded spelling at query time — no data migration needed, and it
+# self-heals for every existing and future user immediately.
+CITY_ALIASES = {
+    "bengaluru":  "Bangalore",
+    "bangalore":  "Bangalore",
+    "bombay":     "Mumbai",
+    "mumbai":     "Mumbai",
+    "calcutta":   "Kolkata",
+    "kolkata":    "Kolkata",
+    "madras":     "Chennai",
+    "chennai":    "Chennai",
+    "mysore":     "Mysuru",
+    "mysuru":     "Mysuru",
+    "gurgaon":    "Gurugram",
+    "gurugram":   "Gurugram",
+    "trivandrum": "Thiruvananthapuram",
+    "cochin":     "Kochi",
+    "kochi":      "Kochi",
+}
+
+
+def normalize_city(city: str) -> str:
+    """
+    Normalise a user-entered city name to the canonical spelling used in
+    seasonal_calendar.base_city. Falls back to the original (title-cased)
+    string if no alias is found — so new cities work as soon as seed rows
+    are added for them, no code change required.
+    """
+    if not city:
+        return ""
+    key = city.strip().lower()
+    return CITY_ALIASES.get(key, city.strip())
+
 # ── Migration SQL ──────────────────────────────────────────────────────────────
 # Add to your existing migrations block in app.py's startup section.
 # Pattern matches your existing ALTER TABLE / CREATE TABLE IF NOT EXISTS style.
@@ -275,6 +312,9 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
     if not user_city or not primary_genre:
         return ""
 
+    # Normalise city spelling (Bengaluru -> Bangalore, etc) before matching
+    _normalized_city = normalize_city(user_city)
+
     try:
         rows = db_session.execute(
             _sql_text("""
@@ -289,7 +329,7 @@ def build_seasonal_context(db_session, user_city: str, primary_genre: str, curre
             ORDER BY distance_hours ASC
             LIMIT 2
             """),
-            {"city": user_city, "genre": primary_genre, "month": current_month}
+            {"city": _normalized_city, "genre": primary_genre, "month": current_month}
         ).fetchall()
     except Exception as e:
         print(f"[build_seasonal_context] DB error: {e}")
