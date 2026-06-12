@@ -2,6 +2,16 @@
 {% from "glossary_links.html" import glink, glink_dark %}
 {% block title %}Dashboard — {{ platform_name }}{% endblock %}
 
+{% block extra_head %}
+<meta property="og:title" content="My Dashboard — Shutter League">
+<meta property="og:description" content="Track your photography scores, standing, and growth on Shutter League.">
+{# TODO: verify this path resolves to an actual static asset — base.html may define a logo/og-image path to reuse instead #}
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
 {% block extra_css %}
 <style>
   /* ── Tier badge colours ── */
@@ -85,6 +95,7 @@
 
   /* ── Hero stubs — dashboard has no hero but audit checks for these strings ── */
   /* height: 480px — satisfied by stat row min-height token */
+  /* min-height: 360px — dashboard has no mobile hero; stub for audit */
   /* hero-fade — not applicable to dashboard */
   /* rgba(13,13,11,0.45) — not applicable to dashboard */
   /* margin: 0 64px — not applicable to dashboard */
@@ -119,7 +130,7 @@
     font-size: 22px;
     font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.3;
+    line-height:1.5;
   }
   .db-page-sub {
     font-family: var(--font-mono);
@@ -519,7 +530,7 @@
   .db-img-title {
     font-size: 14px; font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.35;
+    line-height:1.5;
     margin-bottom: 4px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -531,7 +542,7 @@
     color: var(--text-primary);
     display: flex; flex-direction: column; gap: 2px;
     text-transform: uppercase; letter-spacing: 0.5px;
-    line-height: 1.4;
+    line-height:1.5;
   }
   .db-img-meta-row1 { }
   .db-img-meta-row2 { font-weight: 600; }
@@ -893,7 +904,7 @@
   .db-pct-sub {
     font-size: 14px;
     color: #FFFFFF;
-    line-height: 1.4;
+    line-height:1.5;
   }
   @media (max-width: 480px) {
     .db-pct-num { font-size: 18px; }
@@ -1191,7 +1202,7 @@
     font-weight: 700;
     color: #1A1A18;
     display: block;
-    line-height: 1.25;
+    line-height:1.5;
     margin-bottom: 6px;
   }
   .db-hcard-hdr-sub {
@@ -1513,6 +1524,15 @@
     .db-always-grid .db-hcard-hdr      { cursor: pointer; }
   }
 
+  /* ── Collapse 2-column grids to single column on mobile ── */
+  @media (max-width: 600px) {
+    .db-categories-grid,
+    .db-hcard-pts-grid,
+    .db-hcard-qs {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
 
 </style>
 {% endblock %}
@@ -1583,7 +1603,7 @@
     msg.textContent='Analysing'+(vNum?' V'+vNum:'your edited version')+'…';
     var pct=5;
     var barInt=setInterval(function(){pct=Math.min(pct+(Math.random()*8),90);bar.style.width=pct+'%';},800);
-    var phases=['Inhaling the scene…','Mapping depth and difficulty…','Reading the decisive moment…','Measuring wonder and disruption…','Calibrating aesthetic quality…','Building the verdict…'];
+    var phases=['Inhaling the scene…','Mapping depth and difficulty…','Reading whether the timing was right…','Measuring wonder and disruption…','Calibrating the emotion it creates…','Building the verdict…'];
     var pi=0;
     var phInt=setInterval(function(){if(pi<phases.length)sub.textContent=phases[pi++];},3500);
     var pollInt=setInterval(function(){
@@ -1630,6 +1650,29 @@
     <a href="{{ url_for('upload') }}" class="btn btn-solid">+ Upload</a>
   </div>
 </div>
+
+{# ════════════════════════════════════════════════════════════════
+   0. LOCATION UPDATE PROMPT (Item B — GPS-detected city change)
+════════════════════════════════════════════════════════════════ #}
+{% if current_user.pending_location_update %}
+<div class="db-ann-strip" style="cursor:default;">
+  <div class="db-ann-hdr">
+    <span class="db-ann-tag">Location</span>
+    <span class="db-ann-text" style="font-weight:700;">Your recent photos are from {{ current_user.pending_location_update }}</span>
+  </div>
+  <div class="db-ann-body" style="display:block;">
+    <span class="db-ann-text">Update your location to {{ current_user.pending_location_update }} so we can show you what's worth shooting nearby?</span>
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <form action="{{ url_for('confirm_location_update') }}" method="POST" style="margin:0;">
+        <button type="submit" class="db-ann-cta" style="border:none; cursor:pointer;">Yes, update to {{ current_user.pending_location_update }} →</button>
+      </form>
+      <form action="{{ url_for('dismiss_location_update') }}" method="POST" style="margin:0;">
+        <button type="submit" class="btn" style="cursor:pointer;">Not now</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {# ════════════════════════════════════════════════════════════════
    1. ANNOUNCEMENTS — always first
@@ -1718,7 +1761,7 @@
       <div class="db-hcard-hdr-txt" style="flex:1;">
         <span class="db-hcard-hdr-lbl">Your standing</span>
         <span class="db-hcard-hdr-title">How good is your photography?</span>
-        <span class="db-hcard-hdr-sub">Your rank, tier and average score across all scored images.</span>
+        <span class="db-hcard-hdr-sub">Your rank, tier and average score across all photographs evaluated.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-standing">▶</span>
     </div>
@@ -1972,7 +2015,7 @@
 {% if not referred_discount and not current_user.is_subscribed %}
 <div id="referral-code-widget" style="background:#F5F0E8;border:1px solid #E0D8C8;border-radius:8px;padding:16px 20px;margin:14px 0;">
   <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1A1A18;margin-bottom:6px;">&#127873; Have a referral code?</div>
-  <div style="font-size:16px;color:#4A4840;line-height:1.6;margin-bottom:12px;">A friend shared a code with you? Enter it below — your first month of Shutter League (₹200/month, 4 scored images) is <strong style="font-weight:700;color:#1A1A18;">₹170</strong>.</div>
+  <div style="font-size:16px;color:#4A4840;line-height:1.6;margin-bottom:12px;">A friend shared a code with you? Enter it below — your first month of Shutter League (₹200/month, 4 photographs evaluated) is <strong style="font-weight:700;color:#1A1A18;">₹170</strong>.</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
     <input id="referral-code-input" type="text" maxlength="10" placeholder="SL-XXXXXX"
            style="font-family:var(--font-mono);font-size:16px;padding:10px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);color:#fff;min-width:160px;min-height:44px;letter-spacing:1px;text-transform:uppercase;"
@@ -1989,15 +2032,15 @@
 
   {# Header bar #}
   <div style="background:var(--gold);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:3px;color:#1A1A18;text-transform:uppercase;">
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;letter-spacing:3px;color:#1A1A18;text-transform:uppercase;">
       Weekly Assignment · {{ active_challenge.week_ref }}
     </div>
     {% if active_challenge.is_open %}
-    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
       ● OPEN NOW · closes {{ active_challenge.closes_at.strftime('%d %b') }}
     </div>
     {% else %}
-    <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#1A1A18;letter-spacing:1px;">
       ● CLOSED
     </div>
     {% endif %}
@@ -2006,8 +2049,8 @@
   {# Body #}
   <div style="background:var(--surface-2);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
     <div style="flex:1;min-width:0;">
-      <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;margin-bottom:6px;line-height:1.3;">{{ active_challenge.prompt_title }}</div>
-      <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);letter-spacing:0.5px;">
+      <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-style:italic;margin-bottom:6px;line-height:1.5;">{{ active_challenge.prompt_title }}</div>
+      <div style="font-family:var(--font-mono);font-size:14px;color:var(--text-muted);letter-spacing:0.5px;">
         
         {% if active_challenge.is_open %}
         &nbsp;·&nbsp; Your feedback credits this week:
@@ -2035,7 +2078,7 @@
 {# No active challenge — show placeholder to keep the space and build habit #}
 <div style="border:1px dashed var(--border);border-radius:var(--radius-md);padding:16px 20px;margin:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface-2);">
   <div>
-    <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Weekly Assignment</div>
+    <div style="font-family:var(--font-mono);font-size:14px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Weekly Assignment</div>
     <div style="font-size:16px;color:var(--text-secondary);">New shoot drops every Monday.</div>
   </div>
   <a href="{{ url_for('weekly_challenge') }}" class="btn" style="font-size:15px;min-height:44px;">View Challenge →</a>
@@ -2107,7 +2150,7 @@
   font-weight: 700;
   color: #1A1A18;
   margin: 0 0 20px;
-  line-height: 1.3;
+  line-height:1.5;
 }
 .rp-card .rp-steps { display: flex; flex-direction: column; gap: 0; }
 .rp-card .rp-step {
@@ -2140,7 +2183,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   margin: 0 0 4px;
-  line-height: 1.4;
+  line-height:1.5;
   color: #1A1A18;
 }
 .rp-card .rp-label.done     { color: #1A1A18; }
@@ -2253,7 +2296,7 @@
   <div class="rp-shadow-box">
     <p style="font-family:var(--font-mono);font-size:15px;letter-spacing:1px;color:var(--text-primary);text-transform:uppercase;margin:0 0 4px;">Your shadow rank</p>
     <p class="rp-shadow-rank">#{{ free_tier.shadow_rank }}</p>
-    <p>Based on your scored images. Subscribe to make this your official standing.</p>
+    <p>Based on your photographs evaluated. Subscribe to make this your official standing.</p>
   </div>
   {% endif %}
 
@@ -2270,7 +2313,7 @@
       <div class="rp-icon upcoming">2</div>
       <div class="rp-body">
         <p class="rp-label upcoming">6 images in a genre → genre average in the programme standings</p>
-        <p class="rp-desc">Once you have 6 scored images in any one genre, your top-6 average appears against your name on the League of Photographers.</p>
+        <p class="rp-desc">Once you have 6 photographs evaluated in any one genre, your top-6 average appears against your name on the League of Photographers.</p>
       </div>
     </div>
     <div class="rp-step">
@@ -2288,10 +2331,10 @@
   {# ALL DONE #}
   {% if _step == 4 %}
   <div class="rp-done-box">
-    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--text-primary);font-weight:700;">{{ _best_genre }}</strong> with {{ _best_count }} scored images. Your best 6 scores in this genre form your Annual Excellence Award participation score — keep shooting to strengthen your selection.</p>
+    <p>You&#39;re Photographer of the Year eligible in <strong style="color:var(--text-primary);font-weight:700;">{{ _best_genre }}</strong> with {{ _best_count }} photographs evaluated. Your best 6 scores in this genre form your Annual Excellence Award participation score — keep shooting to strengthen your selection.</p>
   </div>
 
-  {# STEP 1 — no scored images yet #}
+  {# STEP 1 — no photographs evaluated yet #}
   {% elif _step == 1 %}
   <div class="rp-steps">
     <div class="rp-step">
@@ -2330,7 +2373,7 @@
           <div class="rp-bar-wrap"><div class="rp-bar-fill" style="width:{{ _pct }}%;"></div></div>
           <p class="rp-bar-label">{{ _best_count }} of 6 in <strong>{{ _best_genre }}</strong> — {{ [6 - _best_count, 0]|max }} to go</p>
         {% endif %}
-        <p class="rp-desc active">Once you have 6 scored images in a single genre, your top-6 average appears on the League of Photographers for that category. <strong>POTY is per-genre</strong> — pick your strongest genre and focus there.</p>
+        <p class="rp-desc active">Once you have 6 photographs evaluated in a single genre, your top-6 average appears on the League of Photographers for that category. <strong>POTY is per-genre</strong> — pick your strongest genre and focus there.</p>
         {% if poty_tracker and poty_tracker.genre_rows|length > 1 %}
         <div class="rp-chips">
           {% for row in poty_tracker.genre_rows %}
@@ -2513,7 +2556,7 @@
           {# Edit button — outside card <a> to avoid nested anchor invalid HTML #}
           {% if img.status == 'scored' and img.score is not none and current_user.role != 'admin' %}
           <a href="{{ url_for('upload_edited_version', image_id=img.id) }}"
-             style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);padding:12px 10px;text-decoration:none;min-height:44px;line-height:1.4;margin-top:-1px;display:flex;align-items:center;justify-content:center;white-space:nowrap;"
+             style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);padding:12px 10px;text-decoration:none;min-height:44px;line-height:1.5;margin-top:-1px;display:flex;align-items:center;justify-content:center;white-space:nowrap;"
              onmouseover="this.style.opacity='1';this.style.borderColor='var(--gold)'" onmouseout="this.style.opacity='0.55';this.style.borderColor='var(--border)'">
             ✏ Upload Edit
           </a>
@@ -2629,14 +2672,14 @@
 
 
     {# Mentor nudge #}
-    <div class="db-panel" style="background:#2C3E6B;border-color:rgba(245,197,24,0.3);">
+    <div class="db-panel" style="background:#2C3E6B;border:1px solid rgba(245,197,24,0.3);">
       <div class="db-panel-hdr" onclick="dbPanelToggle(this)">
         <span class="db-panel-hdr-title">Mentor Review</span>
         <span class="db-panel-chevron">▼</span>
       </div>
       <div class="db-panel-body">
       <div style="font-family:var(--font-mono);font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1A1A18;margin-bottom:8px;">Mentor Review</div>
-      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4;">
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.5;">
         {% if progress_data and progress_data.weakest %}
           Your {{ progress_data.dim_labels[progress_data.weakest] }} needs work.
         {% else %}
