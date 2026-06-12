@@ -3454,7 +3454,7 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
 
     payload = {
         "model":       MODEL,
-        "max_tokens":  1500,
+        "max_tokens":  2500,
         "temperature": 0.2,
         "system":      effective_system,
         "messages": [
@@ -3516,6 +3516,9 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
         raise ValueError(f"API error {response.status_code}: {response.text}")
 
     content = response.json()
+    _stop_reason = content.get("stop_reason")
+    if _stop_reason == "max_tokens":
+        print(f"[auto_score][WARNING] Response truncated by max_tokens limit (stop_reason=max_tokens). JSON will likely be incomplete and unrepairable.")
     text = ""
     for block in content.get("content", []):
         if block.get("type") == "text":
