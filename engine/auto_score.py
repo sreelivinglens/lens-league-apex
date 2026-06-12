@@ -356,6 +356,8 @@ CALIBRATION NOTES:
   named emotion simultaneously.
 
 Respond ONLY with a valid JSON object. No preamble, no markdown, no explanation outside the JSON.
+
+CRITICAL JSON FORMATTING RULE: All string values must be valid JSON strings. If you need to quote a phrase, a master photographer's words, or an exposure setting within any text field, use single quotes (') or curly quotes (' ' or " ") — NEVER use a literal straight double-quote character (") inside a string value, as this will break JSON parsing. For example, write 'this is what Adams called pre-visualisation' or 'Salgado made this same exposure choice' — not "this is what Adams called pre-visualisation". Double-check every string field for stray unescaped double quotes before responding.
 """
 
 SCORE_PROMPT = """Analyse this photograph using the Apex DDI Engine.
@@ -2385,6 +2387,7 @@ Do NOT score, evaluate, or give feedback.
 Do NOT infer or assume — only describe what is clearly visible.
 If something is ambiguous or partially obscured, say so explicitly.
 Respond ONLY with a valid JSON object. No preamble, no markdown.
+CRITICAL JSON FORMATTING RULE: never use a literal straight double-quote character (") inside any string value — use single quotes (') instead. This will break JSON parsing otherwise.
 """
 
 VISION_PROMPT = """Examine this photograph carefully. Scan the ENTIRE frame including:
@@ -3513,7 +3516,27 @@ def auto_score(image_path, genre, title, photographer, subject="", location="", 
     try:
         result = json.loads(text)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
+        # Common failure mode: the model used a literal " inside a string value
+        # (e.g. 'this is what Adams called "pre-visualisation"'), breaking JSON.
+        # Attempt a repair pass: for each line, if it's a "key": "value" line,
+        # escape any " characters that appear INSIDE the value (between the
+        # opening quote after the colon and the closing quote+comma/brace at
+        # end of line) but are not the delimiting quotes themselves.
+        def _repair_line(line):
+            m = re.match(r'^(\s*"[^"]+"\s*:\s*)"(.*)"(\s*,?\s*)$', line)
+            if not m:
+                return line
+            prefix, value, suffix = m.groups()
+            # Escape any unescaped " inside value
+            fixed_value = re.sub(r'(?<!\\)"', r'\\"', value)
+            return f'{prefix}"{fixed_value}"{suffix}'
+
+        repaired = "\n".join(_repair_line(l) for l in text.split("\n"))
+        try:
+            result = json.loads(repaired)
+            print(f"[auto_score] JSON repaired after parse error: {e}")
+        except json.JSONDecodeError:
+            raise ValueError(f"Failed to parse API response: {e}\nResponse: {text[:500]}")
 
     # Attach routing metadata so build_audit_data and callers can access it
     result['_wikipedia_url']             = _research.get('wikipedia_url', '')
