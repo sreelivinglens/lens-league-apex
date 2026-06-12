@@ -4308,24 +4308,13 @@ def upload():
                                             ), {'iid': _img.id, 'uid': _img.user_id, 'dl': _deadline})
                                         except Exception:
                                             pass
-                                        send_email(
-                                            to_addresses=[_u.email] if _u else [],
-                                            subject='[Shutter League] Grandmaster Score — RAW Verification Required',
-                                            html_body=(
-                                                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
-                                                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
-                                                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Grandmaster Score &#8212; RAW Verification Required</h2>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">Congratulations ' + _uname + ' &#8212; <strong>' + (_img.asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(_img.score) + '</strong> (' + (_img.tier or '') + ').</p>'
-                                                '<p style="font-size:16px;line-height:1.7;color:#111111;">To confirm your result, please submit your original RAW file within <strong>7 days</strong>. Your image is held from public view until verified.</p>'
-                                                '<div style="background:#fffbea;border:1px solid #F5C518;border-radius:6px;padding:14px 18px;margin:16px 0;">'
-                                                '<p style="margin:0 0 6px;font-size:12px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#8a6a00;">Why is this required?</p>'
-                                                '<p style="margin:0;font-size:15px;line-height:1.7;color:#4A3800;">All Grandmaster scores (9.00 and above) require RAW file verification. This is standard procedure to confirm the result is based on an original camera capture. It applies to every photographer equally. Exposure, colour, cropping, and other editing are fully permitted &#8212; we only verify that your submitted image originates from a real camera file.</p>'
-                                                '</div>'
-                                                '<a href="' + _submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
-                                                '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + _submit_url + '" style="color:#F5C518;">' + _submit_url + '</a></p>'
-                                                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
-                                                '</div>'
-                                            )
+                                        _send_grandmaster_raw_email(
+                                            user_email = _u.email if _u else '',
+                                            user_name  = _uname,
+                                            asset_name = _img.asset_name,
+                                            score      = _img.score,
+                                            tier       = _img.tier,
+                                            submit_url = _submit_url,
                                         )
                                         send_email(
                                             to_addresses=[ADMIN_EMAIL],
@@ -4643,6 +4632,35 @@ def _force_rescore_in_background(image_id, old_score, old_tier):
                     f'[force_rescore] image={image_id} new score {img.score:.2f} '
                     f'crossed into Grandmaster — flagged for RAW verification'
                 )
+                # Notify the photographer — same Sherpa email as the original
+                # scoring path, and create the raw_submissions deadline record
+                # so /raw/submit/weekly/<id> works the same way.
+                try:
+                    _owner = User.query.get(img.user_id)
+                    if _owner:
+                        _uname    = _owner.full_name or _owner.username
+                        _deadline = datetime.utcnow() + timedelta(days=7)
+                        _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
+                        _submit_url = f'{_site_url}/raw/submit/weekly/{img.id}'
+                        try:
+                            db.session.execute(db.text(
+                                "INSERT INTO raw_submissions "
+                                "(image_id, user_id, contest_ref, contest_type, deadline, analysis_status) "
+                                "VALUES (:iid, :uid, 'grandmaster', 'weekly', :dl, 'awaiting') "
+                                "ON CONFLICT (image_id, contest_ref, contest_type) DO UPDATE SET deadline=:dl"
+                            ), {'iid': img.id, 'uid': img.user_id, 'dl': _deadline})
+                        except Exception:
+                            pass
+                        _send_grandmaster_raw_email(
+                            user_email = _owner.email,
+                            user_name  = _uname,
+                            asset_name = img.asset_name,
+                            score      = img.score,
+                            tier       = img.tier,
+                            submit_url = _submit_url,
+                        )
+                except Exception as _gme:
+                    app.logger.error(f'[force_rescore grandmaster email] {_gme}')
 
             db.session.commit()
 
@@ -12704,6 +12722,40 @@ def raw_submit(contest_type, image_id):
 # JPEG Provenance Verification
 # Alternative to RAW for camera-direct JPEG shooters with intact EXIF
 # ---------------------------------------------------------------------------
+
+def _send_grandmaster_raw_email(user_email, user_name, asset_name, score, tier, submit_url):
+    """
+    Sherpa-voice email sent to a photographer whose image newly qualifies
+    for Grandmaster (score >= 9.0) and requires RAW verification.
+    Shared between the original auto-score path and the admin force-rescore
+    path (when a rescore pushes a score up into Grandmaster territory) —
+    both must send the identical photographer-facing notification.
+    """
+    try:
+        send_email(
+            to_addresses=[user_email] if user_email else [],
+            subject='Your score is held — and that\'s because it\'s exceptional',
+            html_body=(
+                '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px;background:#fffef9;color:#111111;">'
+                '<p style="font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#F5C518;margin-bottom:24px;">Shutter League</p>'
+                '<h2 style="font-size:22px;font-weight:700;color:#111111;margin-bottom:16px;">Your photograph scored ' + str(score) + '. That&#39;s rare.</h2>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Hi ' + user_name + ',</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;"><strong>' + (asset_name or 'Untitled') + '</strong> scored <strong style="color:#F5C518;">' + str(score) + '</strong> &#8212; <strong>' + (tier or '') + '</strong>. This is one of the strongest results we&#39;ve seen on Shutter League.</p>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Here&#39;s why your image is currently held from public view: at this level, we ask every photographer &#8212; without exception &#8212; to confirm the result with their original RAW file. It&#39;s not a question about your work. It&#39;s the standard we hold every Grandmaster score to, so that when <em>your</em> image carries that badge, it means something.</p>'
+                '<div style="background:#fffbea;border:1px solid #F5C518;border-radius:6px;padding:14px 18px;margin:16px 0;">'
+                '<p style="margin:0 0 6px;font-size:12px;font-family:Courier New,monospace;letter-spacing:1px;text-transform:uppercase;color:#8a6a00;">Why is this required?</p>'
+                '<p style="margin:0;font-size:15px;line-height:1.7;color:#4A3800;">All Grandmaster scores (9.00 and above) require RAW file verification. This is standard procedure to confirm the result is based on an original camera capture. It applies to every photographer equally. Exposure, colour, cropping, and other editing are fully permitted &#8212; we only verify that your submitted image originates from a real camera file.</p>'
+                '</div>'
+                '<p style="font-size:16px;line-height:1.7;color:#111111;">Submit within <strong>7 days</strong> and your image goes live with the Grandmaster tier intact.</p>'
+                '<a href="' + submit_url + '" style="display:inline-block;background:#F5C518;color:#000000;font-family:Courier New,monospace;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">Submit RAW File &#8594;</a>'
+                '<p style="font-size:14px;color:#111111;margin-top:8px;">Or visit: <a href="' + submit_url + '" style="color:#F5C518;">' + submit_url + '</a></p>'
+                '<p style="font-size:14px;color:#555555;margin-top:24px;">&#8212; Shutter League</p>'
+                '</div>'
+            )
+        )
+    except Exception as _e:
+        app.logger.error(f'[grandmaster_raw_email] {_e}')
+
 
 def check_jpeg_provenance_eligible(img):
     """
