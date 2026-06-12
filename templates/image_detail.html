@@ -133,9 +133,9 @@
 
   /* Sprint 3 — new scorecard responsive */
 
-  /* iPad portrait (768px) — 4 cards → 2 cols, 3-col stats → 2 cols */
+  /* iPad portrait (768px) and below — 4 cards stack vertically, one per row */
   @media (max-width: 768px) {
-    .sc-four-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    .sc-four-grid { grid-template-columns: 1fr !important; }
     .sc-three-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
     .sc-hero-score { font-size: 52px !important; }
     .sc-hero-img-wrap img { max-height: 380px !important; }
@@ -159,23 +159,6 @@
       padding-left: 0 !important;
       padding-top: 16px !important;
       margin-top: 8px;
-    }
-    /* 4 story cards — horizontal scroll row on mobile */
-    .sc-four-grid {
-      display: flex !important;
-      grid-template-columns: unset !important;
-      overflow-x: auto !important;
-      overflow-y: visible !important;
-      scroll-snap-type: x mandatory !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding-bottom: 4px !important;
-      margin: 0 -16px 14px !important;
-      padding-left: 16px !important;
-      padding-right: 16px !important;
-    }
-    .sc-four-grid > div {
-      flex: 0 0 85% !important;
-      scroll-snap-align: start !important;
     }
     /* All 2-col grids → single column */
     .sc-two-grid { grid-template-columns: 1fr !important; }
@@ -461,7 +444,7 @@
 
 
 
-  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px;" class="sc-four-grid">
+  <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:14px;" class="sc-four-grid">
 
     {# Card 1 — The photographer's advice #}
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column;">
