@@ -66,7 +66,7 @@
   .score-archetype { font-size: 16px; color: var(--text-secondary); font-style: italic; margin-bottom: 24px; }
 
   .ddi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 16px; }
-  @media (max-width: 600px) { .ddi-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+  /* Mobile override moved to Sprint 3 responsive block below — 2 cols */
   .ddi-dim { text-align: center; }
   .ddi-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
   .ddi-lbl { font-family: var(--font-mono); font-size:13px; letter-spacing: 0.5px; color: var(--text-muted); text-transform: uppercase; line-height: 1.5; margin-top: 4px; }
@@ -167,8 +167,13 @@
     .sc-three-grid { grid-template-columns: 1fr !important; }
     /* Location detail grid */
     .sc-loc-grid { grid-template-columns: 1fr !important; }
-    /* DDI dims → 3 cols on mobile */
-    .ddi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    /* Days-since + Share/Download → single column on mobile */
+    .sc-days-share-grid { grid-template-columns: 1fr !important; }
+    /* DDI dims → 2 cols on mobile (5 items = 2+2+1, avoids 3-line label wrap vs 2-line neighbours) */
+    .ddi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px 12px !important; }
+    .ddi-dim { min-height: 76px; display: flex; flex-direction: column; justify-content: flex-start; }
+    .ddi-val { font-size: 26px !important; }
+    .ddi-lbl { font-size: 13px !important; line-height: 1.4 !important; }
     /* Buttons full width */
     .sc-share-btn { width: 100% !important; }
   }
@@ -711,7 +716,7 @@
   {# ── DAYS SINCE + SHARE ────────────────────────────────────────── #}
   {% if image.scored_at %}
   {% set _days = ((now - image.scored_at).days) if now else 0 %}
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;" class="sc-days-share-grid">
     <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:20px 22px;">
       <p style="margin:0 0 6px; font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;">Days since this was evaluated</p>
       <p style="margin:0 0 4px; font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--text-primary);">{{ _days }} day{{ 's' if _days != 1 else '' }}</p>
