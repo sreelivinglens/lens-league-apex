@@ -5170,11 +5170,15 @@ def image_detail(image_id):
     _stats          = None
     _now            = datetime.utcnow()
 
-    if current_user.is_authenticated and img.user_id == current_user.id and img.status == 'scored':
+    if current_user.is_authenticated and img.status == 'scored' and (
+        img.user_id == current_user.id or current_user.role == 'admin'
+    ):
+        _owner_id = img.user_id  # use the image OWNER's id, not the viewer's —
+                                  # so admins see the same trend/stats the photographer sees
         try:
             # ── Portfolio trend data (unlocks at 5+ photographs) ─────────────
             _scored_count = db.session.query(Image).filter(
-                Image.user_id == current_user.id,
+                Image.user_id == _owner_id,
                 Image.status  == 'scored',
             ).count()
 
@@ -5183,7 +5187,7 @@ def image_detail(image_id):
                 _recent = db.session.query(
                     Image.aq_score, Image.dm_score, Image.dod_score, Image.score
                 ).filter(
-                    Image.user_id == current_user.id,
+                    Image.user_id == _owner_id,
                     Image.status  == 'scored',
                     Image.genre   == img.genre,
                 ).order_by(Image.scored_at.desc()).limit(8).all()
@@ -5268,14 +5272,14 @@ def image_detail(image_id):
             _best_row = db.session.query(
                 Image.score, Image.asset_name, Image.genre
             ).filter(
-                Image.user_id   == current_user.id,
+                Image.user_id   == _owner_id,
                 Image.status    == 'scored',
                 Image.scored_at >= _year_start,
                 Image.score     != None,
             ).order_by(Image.score.desc()).first()
 
             _month_count = db.session.query(Image).filter(
-                Image.user_id   == current_user.id,
+                Image.user_id   == _owner_id,
                 Image.status    == 'scored',
                 Image.scored_at >= _month_start,
             ).count()
