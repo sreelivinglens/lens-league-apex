@@ -101,6 +101,38 @@ def extract_exif(image_path):
     gps = exif_data.get(TAG_GPS_INFO, {})
     result['has_gps'] = bool(gps)
 
+    # ── GPS coordinates (decimal degrees) — Item B, location-change detection ──
+    # GPSInfo value is itself a small dict of GPS tag id -> value (DMS rationals).
+    if gps:
+        try:
+            gps_ifd = gps.get('value', {})
+            if isinstance(gps_ifd, dict):
+                def _dms_to_decimal(dms, ref):
+                    """Convert ((d_num,d_den),(m_num,m_den),(s_num,s_den)) + ref to decimal degrees."""
+                    def _r(v):
+                        return float(v[0]) / float(v[1]) if isinstance(v, tuple) else float(v)
+                    deg, minute, sec = (_r(dms[0]), _r(dms[1]), _r(dms[2]))
+                    decimal = deg + (minute / 60.0) + (sec / 3600.0)
+                    if ref in ('S', 'W'):
+                        decimal = -decimal
+                    return decimal
+
+                lat_dms = gps_ifd.get(2)   # GPSLatitude
+                lat_ref = gps_ifd.get(1)   # GPSLatitudeRef
+                lon_dms = gps_ifd.get(4)   # GPSLongitude
+                lon_ref = gps_ifd.get(3)   # GPSLongitudeRef
+
+                if lat_dms and lon_dms and lat_ref and lon_ref:
+                    if isinstance(lat_ref, bytes):
+                        lat_ref = lat_ref.decode('ascii', errors='ignore')
+                    if isinstance(lon_ref, bytes):
+                        lon_ref = lon_ref.decode('ascii', errors='ignore')
+                    result['gps_lat'] = round(_dms_to_decimal(lat_dms, lat_ref), 6)
+                    result['gps_lon'] = round(_dms_to_decimal(lon_dms, lon_ref), 6)
+        except Exception:
+            # Malformed/partial GPS IFD — has_gps stays True but no coordinates.
+            pass
+
     # ── Extended fields for device-aware DDI ──────────────────────────────────
     # Raw make/model stored separately for device tier detection
     result['make']  = str(make).strip()  if make  else ''
