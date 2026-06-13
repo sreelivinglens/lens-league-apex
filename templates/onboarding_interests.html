@@ -3,6 +3,11 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="One Last Thing — Shutter League">
+<meta property="og:description" content="Tell us what you shoot so we can tailor your photography advice.">
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
 {% endblock %}
 
 {% block extra_css %}
@@ -89,15 +94,51 @@
   }
   .oi-option.selected .oi-opt-num { display: block; }
 
-  /* Skip link */
-  .oi-skip {
-    margin-top: 20px; text-align: center;
-    font-size: 14px; color: var(--text-muted);
+  /* Why-we-ask callout */
+  .oi-why {
+    background: rgba(200,168,75,0.1);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px; margin-bottom: 20px;
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px; color: var(--text-secondary); line-height: 1.6;
   }
-  .oi-skip a {
-    color: var(--text-muted); text-decoration: underline; cursor: pointer;
+  .oi-why strong { color: var(--text-primary); }
+
+  /* Other-genre input */
+  .oi-other {
+    padding: 13px 16px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
   }
-  .oi-skip a:hover { color: var(--text-secondary); }
+  .oi-other.selected {
+    border-color: var(--gold);
+    border-style: solid;
+    background: rgba(200,168,75,0.1);
+  }
+  .oi-other input {
+    border: none; background: transparent; flex: 1;
+    font-size: 15px; color: var(--text-primary);
+    padding: 0; min-height: auto;
+  }
+  .oi-other input:focus { outline: none; }
+
+  /* Progress + continue */
+  .oi-count {
+    font-size: 13px; color: var(--text-muted);
+    text-align: center; margin: 8px 0 14px;
+  }
+  .oi-option.disabled {
+    opacity: 0.4; cursor: not-allowed;
+  }
+  .oi-continue {
+    width: 100%; padding: 14px; font-size: 16px;
+    min-height: 44px;
+  }
+  .oi-continue:disabled {
+    opacity: 0.4; cursor: not-allowed;
+  }
 
   /* Screen 4 — payoff */
   .oi-payoff {
@@ -119,10 +160,15 @@
     line-height: 1.7; margin-bottom: 28px;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 768px) {
     .oi-card { padding: 28px 20px; }
     .oi-options { grid-template-columns: 1fr; }
     .oi-heading { font-size: 20px; }
+  }
+
+  /* ── iPad 768px-1024px ── */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .oi-options { grid-template-columns: 1fr 1fr; }
   }
 </style>
 {% endblock %}
@@ -149,7 +195,13 @@
   <div id="screen-1">
     <div class="oi-label">Your eye</div>
     <div class="oi-heading">What do you shoot?</div>
-    <div class="oi-sub">Tap up to 3. Your first tap is your primary genre.</div>
+    <div class="oi-sub">Pick exactly 3. Your first tap is your primary genre.</div>
+
+    <div class="oi-why">
+      <span>📍</span>
+      <span>We use this to power <strong>"Near you"</strong> advice — local shoot ideas, seasonal opportunities, and tips tailored to what you actually shoot. Without it, that advice can't reach you.</span>
+    </div>
+
     <div class="oi-options" id="genre-options">
       {% for g in [
         'Wildlife', 'Street', 'Landscape', 'People',
@@ -161,7 +213,15 @@
       </div>
       {% endfor %}
     </div>
-    <div class="oi-skip"><a onclick="skipTo(2)">Skip for now</a></div>
+
+    <div class="oi-other" id="other-wrap">
+      <span>+</span>
+      <input type="text" id="other-input" placeholder="Don't see your genre? Type it here (e.g. Astrophotography)" maxlength="60" oninput="onOtherInput()">
+    </div>
+
+    <div class="oi-count" id="genre-count">0 of 3 selected</div>
+
+    <button type="button" class="btn btn-solid oi-continue" id="genre-continue" disabled onclick="showScreen(2)">Select 3 to continue</button>
   </div>
 
   {# ── SCREEN 2 — Frequency ── #}
@@ -180,7 +240,6 @@
       <div class="oi-option" data-freq="{{ f[0] }}" onclick="selectFreq(this)">{{ f[1] }}</div>
       {% endfor %}
     </div>
-    <div class="oi-skip"><a onclick="skipTo(3)">Skip for now</a></div>
   </div>
 
   {# ── SCREEN 3 — Motivation ── #}
@@ -199,14 +258,13 @@
       <div class="oi-option" data-motive="{{ m[0] }}" onclick="selectMotive(this)">{{ m[1] }}</div>
       {% endfor %}
     </div>
-    <div class="oi-skip"><a onclick="submitForm('skip')">Skip and go to dashboard</a></div>
   </div>
 
   {# ── SCREEN 4 — Payoff ── #}
   <div id="screen-4" style="display:none;">
     <div class="oi-payoff">
       <div class="oi-payoff-score">3</div>
-      <div class="oi-payoff-heading">Free scored images waiting for you.</div>
+      <div class="oi-payoff-heading">3 free photographs evaluated, waiting for you.</div>
       <div class="oi-payoff-body">
         Upload your first frame. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions, in 60 seconds.
       </div>
@@ -229,7 +287,8 @@
 {% block extra_js %}
 <script>
 // ── State ─────────────────────────────────────────────────────────────────
-var selectedGenres = [];   // ordered by tap sequence
+var selectedGenres = [];   // ordered by tap sequence; may include the 'other' value
+var otherValue     = '';   // current text in the 'Other' input (trimmed)
 var selectedFreq   = null;
 var selectedMotive = null;
 var currentScreen  = 1;
@@ -246,6 +305,7 @@ function updateDots(screen) {
 
 // ── Screen transitions ─────────────────────────────────────────────────────
 function showScreen(n) {
+  if (n === 2 && selectedGenres.length !== 3) return; // guard: must have exactly 3
   document.getElementById('screen-' + currentScreen).style.display = 'none';
   document.getElementById('screen-' + n).style.display = 'block';
   if (n <= 3) {
@@ -259,11 +319,6 @@ function showScreen(n) {
   window.scrollTo(0, 0);
 }
 
-function skipTo(n) {
-  if (n > 3) { submitForm('skip'); return; }
-  showScreen(n);
-}
-
 // ── Genre selection ────────────────────────────────────────────────────────
 function selectGenre(el) {
   var genre = el.getAttribute('data-genre');
@@ -274,19 +329,14 @@ function selectGenre(el) {
     selectedGenres.splice(idx, 1);
     el.classList.remove('selected');
     el.querySelector('.oi-opt-num').textContent = '';
-    // Re-number remaining selections
-    renumberGenres();
   } else {
-    if (selectedGenres.length >= 3) return; // max 3
+    if (selectedGenres.length >= 3) return; // exactly 3 max
     selectedGenres.push(genre);
     el.classList.add('selected');
     el.querySelector('.oi-opt-num').textContent = '#' + selectedGenres.length;
   }
-
-  // Auto-advance when 3 selected
-  if (selectedGenres.length === 3) {
-    setTimeout(function() { showScreen(2); }, 300);
-  }
+  renumberGenres();
+  refreshGenreUI();
 }
 
 function renumberGenres() {
@@ -301,6 +351,75 @@ function renumberGenres() {
       num.textContent = '';
     }
   });
+  // 'Other' may also occupy a slot — renumber it if present
+  if (otherValue && selectedGenres.indexOf(otherValue) > -1) {
+    // no numbered badge on the other input itself; count reflected via genre-count
+  }
+}
+
+// ── Other-genre input ───────────────────────────────────────────────────────
+function onOtherInput() {
+  var input = document.getElementById('other-input');
+  var wrap  = document.getElementById('other-wrap');
+  var val   = input.value.trim();
+
+  // Remove previous otherValue from selectedGenres if present
+  if (otherValue) {
+    var prevIdx = selectedGenres.indexOf(otherValue);
+    if (prevIdx > -1) selectedGenres.splice(prevIdx, 1);
+  }
+
+  if (val) {
+    if (selectedGenres.length < 3 || selectedGenres.indexOf(val) > -1) {
+      if (selectedGenres.indexOf(val) === -1) selectedGenres.push(val);
+      otherValue = val;
+      wrap.classList.add('selected');
+    } else {
+      // Already at 3 with a different value typed — revert input
+      input.value = otherValue;
+      refreshGenreUI();
+      return;
+    }
+  } else {
+    otherValue = '';
+    wrap.classList.remove('selected');
+  }
+
+  renumberGenres();
+  refreshGenreUI();
+}
+
+// ── Shared UI refresh: tile disabling + count + continue button ────────────
+function refreshGenreUI() {
+  var count = selectedGenres.length;
+  document.getElementById('genre-count').textContent = count + ' of 3 selected';
+
+  var atMax = count >= 3;
+  document.querySelectorAll('#genre-options .oi-option').forEach(function(opt) {
+    var g = opt.getAttribute('data-genre');
+    var isSelected = selectedGenres.indexOf(g) > -1;
+    if (atMax && !isSelected) {
+      opt.classList.add('disabled');
+    } else {
+      opt.classList.remove('disabled');
+    }
+  });
+
+  var otherInput = document.getElementById('other-input');
+  if (atMax && !otherValue) {
+    otherInput.disabled = true;
+  } else {
+    otherInput.disabled = false;
+  }
+
+  var btn = document.getElementById('genre-continue');
+  if (count === 3) {
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Select ' + (3 - count) + ' more';
+  }
 }
 
 // ── Frequency selection ────────────────────────────────────────────────────
@@ -324,16 +443,10 @@ function selectMotive(el) {
 }
 
 // ── Save and continue ─────────────────────────────────────────────────────
-function submitForm(mode) {
+function submitForm() {
   document.getElementById('f-genres').value = JSON.stringify(selectedGenres);
   document.getElementById('f-freq').value   = selectedFreq   || '';
   document.getElementById('f-motive').value = selectedMotive || '';
-
-  if (mode === 'skip') {
-    // Submit form but redirect to dashboard
-    document.getElementById('oi-form').submit();
-    return;
-  }
 
   // Show payoff screen first, then submit after 3s
   showScreen(4);
