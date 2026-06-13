@@ -1878,7 +1878,7 @@
     <div class="db-page-title">{{ current_user.full_name or current_user.username }}</div>
     <div class="db-page-sub">
       {%- if free_tier and free_tier.shadow_tier %}{{ free_tier.shadow_tier }}{% elif progress_data and progress_data.avg_tier %}{{ progress_data.avg_tier }}{% else %}Dashboard{% endif %}
-      {%- if free_tier and free_tier.shadow_rank %} · Rank #{{ free_tier.shadow_rank }}{% endif %}
+      {%- if free_tier and free_tier.shadow_rank %} · Standing #{{ free_tier.shadow_rank }}{% endif %}
     </div>
   </div>
   <div class="db-top-actions">
@@ -2000,7 +2000,7 @@
       <div class="db-hcard-hdr-txt" style="flex:1;">
         <span class="db-hcard-hdr-lbl">Your standing</span>
         <span class="db-hcard-hdr-title">How good is your photography?</span>
-        <span class="db-hcard-hdr-sub">Your rank, tier and average score across all photographs evaluated.</span>
+        <span class="db-hcard-hdr-sub">Your standing, tier and average score across all photographs evaluated.</span>
       </div>
       <span class="db-hcard-chev" id="db-hcard-chev-standing">▶</span>
     </div>
@@ -2214,13 +2214,13 @@
 {% if free_tier and free_tier.remaining == 0 and free_tier.shadow_rank %}
 <div style="background:#2C3E6B;border-radius:var(--radius-md);padding:28px 32px;margin:14px 0;text-align:center;">
   <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FFFFFF;margin-bottom:12px;">Your Initial Assessment is Complete</div>
-  <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Rank #{{ free_tier.shadow_rank }}</div>
+  <div style="font-size:38px;font-weight:700;color:#F5C518;line-height:1;margin-bottom:8px;">Standing #{{ free_tier.shadow_rank }}</div>
   <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">{{ free_tier.shadow_tier or 'Unranked' }} League</div>
   <div style="font-size:16px;color:#FFFFFF;margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
-    This is your current standing. Subscribe to lock in your rank, keep uploading, and build your Shutter League standing.
+    This is your current standing. Subscribe to lock in your standing, keep uploading, and build your Shutter League standing.
   </div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Rank →</a>
+    <a href="{{ url_for('pricing') }}" style="display:inline-block;background:#F5C518;color:#000;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;min-height:44px;">Subscribe &amp; Lock In Your Standing →</a>
     <a href="{{ url_for('leaderboard') }}" style="display:inline-block;background:transparent;color:#fff;font-family:var(--font-mono);font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:14px 28px;border-radius:4px;text-decoration:none;border:1px solid rgba(255,255,255,0.4);min-height:44px;">See Community →</a>
   </div>
 </div>
@@ -2533,7 +2533,7 @@
 
   {% if free_tier and free_tier.shadow_rank %}
   <div class="rp-shadow-box">
-    <p style="font-family:var(--font-mono);font-size:15px;letter-spacing:1px;color:var(--text-primary);text-transform:uppercase;margin:0 0 4px;">Your shadow rank</p>
+    <p style="font-family:var(--font-mono);font-size:15px;letter-spacing:1px;color:var(--text-primary);text-transform:uppercase;margin:0 0 4px;">Your shadow standing</p>
     <p class="rp-shadow-rank">#{{ free_tier.shadow_rank }}</p>
     <p>Based on your photographs evaluated. Subscribe to make this your official standing.</p>
   </div>
