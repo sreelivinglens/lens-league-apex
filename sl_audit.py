@@ -336,6 +336,7 @@ def audit_html(filepath):
         'image_detail', 'profile', 'scorecard', 'rating_card',
         'submission', 'result', 'entry_detail',
         'upload.html', 'upload_edited', 'bulk_upload',
+        'onboarding_interests',
     ])
     _is_email = any(x in fname for x in ['email', 'mail', 'notification', 'trigger'])
 
