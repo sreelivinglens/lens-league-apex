@@ -1625,6 +1625,8 @@
       citySel.style.display  = '';
       stateSel.name = 'state';
       citySel.name  = 'city';
+      stateSel.required = true;
+      citySel.required  = true;
       stateTxt.style.display = 'none';
       cityTxt.style.display  = 'none';
       stateTxt.removeAttribute('name');
@@ -1637,6 +1639,8 @@
       citySel.style.display  = 'none';
       stateSel.removeAttribute('name');
       citySel.removeAttribute('name');
+      stateSel.required = false;
+      citySel.required  = false;
       stateTxt.style.display = '';
       cityTxt.style.display  = '';
       stateTxt.name = 'state';
