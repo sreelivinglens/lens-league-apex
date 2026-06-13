@@ -336,7 +336,7 @@ def audit_html(filepath):
         'image_detail', 'profile', 'scorecard', 'rating_card',
         'submission', 'result', 'entry_detail',
         'upload.html', 'upload_edited', 'bulk_upload',
-        'onboarding_interests',
+        'onboarding_interests', 'onboarding.html',
     ])
     _is_email = any(x in fname for x in ['email', 'mail', 'notification', 'trigger'])
 
@@ -1524,6 +1524,18 @@ def _run_delivery_standard(content, filepath, fails):
 
     # ── 5. Google meta tags ───────────────────────────────────────────────────
     _section('DELIVERY STANDARD 5/5 — Google/social meta tags')
+    # base.html provides site-wide og:*/twitter:* defaults via Jinja blocks
+    # (og_title, og_description, og_image, twitter_title, twitter_description,
+    # twitter_image). Every page extending base.html inherits these even if
+    # it doesn't override them — so a literal <meta property="og:..."> tag
+    # is NOT required in this file. Only flag MISSING if the page neither
+    # has the literal tag NOR overrides the corresponding block NOR extends
+    # base.html (which would mean no inheritance at all).
+    _extends_base = 'extends "base.html"' in content or "extends 'base.html'" in content
+    _block_map = {
+        'og:title': 'og_title', 'og:description': 'og_description', 'og:image': 'og_image',
+        'twitter:image': 'twitter_image',
+    }
     meta_checks = [
         ('og:title',         'Open Graph title (required for sharing)'),
         ('og:description',   'Open Graph description'),
@@ -1535,8 +1547,16 @@ def _run_delivery_standard(content, filepath, fails):
     ]
     meta_fails = 0
     for tag, desc in meta_checks:
-        if tag in content:
+        _block = _block_map.get(tag)
+        _has_block_override = _block and ('{% block ' + _block in content)
+        if tag in content or _has_block_override:
             _ok(f'[meta] {desc}')
+        elif tag == 'twitter:card' and _extends_base:
+            # twitter:card is hardcoded (not a block) in base.html — inherited automatically
+            _ok(f'[meta] {desc} (inherited from base.html)')
+        elif tag in ('og:title', 'og:description', 'og:image', 'twitter:image') and _extends_base:
+            # Inherited from base.html's default og_title/og_description/og_image/twitter_image blocks
+            _ok(f'[meta] {desc} (inherited default from base.html)')
         else:
             # noindex and canonical — only fail if this looks like a scored-image template
             if tag in ('noindex', 'canonical') and 'image_detail' not in filepath.lower():
