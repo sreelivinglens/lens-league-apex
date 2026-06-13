@@ -1,6 +1,7 @@
 # SL-VERSION: 73.1 (Session 73 — fixed _u UnboundLocalError in seasonal
 #   context block, portfolio trend all-genre fallback)
 import os
+import re
 import uuid
 import json
 import threading
@@ -24,7 +25,7 @@ _IST_OFFSET = timedelta(hours=5, minutes=30)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
-                    RatingAssignment, PeerRating, PeerPoolEntry, GenreSuggestion,
+                    RatingAssignment, PeerRating, PeerPoolEntry, GenreSuggestion, LocationSuggestion,
                     WeeklyChallenge, WeeklySubmission,
                     BowSubmission, ContestPeriod, BrandContest, BrandEntry, ContestAnnouncement,
                     get_or_assign_next_image, submit_peer_rating)
@@ -35,7 +36,7 @@ from engine.scoring import (calculate_score, get_tier, GENRE_WEIGHTS, GENRE_IDS,
 from engine.processor import ingest_image, allowed_file
 import storage as r2
 from location_data import (
-    get_countries, INDIA_STATES_CITIES, WORLD_LOCATIONS,
+    get_countries, has_detailed_location_data, INDIA_STATES_CITIES, WORLD_LOCATIONS,
     CAMERA_BRANDS, PHONE_BRANDS
 )
 
@@ -50,6 +51,47 @@ def _dash_loc():
     for _country, _states in WORLD_LOCATIONS.items():
         _loc[_country] = _states
     return _loc
+
+
+# Allowed characters for free-text location fields (State/City for
+# countries without detailed location_data.py coverage): letters
+# (including accented Unicode), spaces, hyphens, apostrophes. Covers
+# "Novosibirsk", "São Paulo", "Saint-Étienne", "Hyderabad - HiTech City".
+_LOCATION_TEXT_RE = re.compile(r"^[^\W\d_](?:[^\W\d_ '\-]| |-|')*$", re.UNICODE)
+
+
+def _validate_location_text(value, max_len=60):
+    """Validate + normalise a free-text State/Province or City value.
+
+    Returns the normalised (trimmed, title-cased) string, or None if the
+    value is empty/invalid after stripping disallowed characters. Mirrors
+    the client-side filtering in the templates — server-side is the
+    authoritative check.
+    """
+    if not value:
+        return None
+    value = value.strip()
+    if not value or len(value) > max_len:
+        return None
+    if not _LOCATION_TEXT_RE.match(value):
+        return None
+    # Title-case for normalisation/dedup (e.g. "bengaluru" / "BENGALURU" -> "Bengaluru")
+    return value.title()
+
+
+def _log_location_suggestion(user_id, country, state, city):
+    """Log a free-text country/state/city entry for admin review (mirrors
+    GenreSuggestion). Purely informational — does not affect save/enqueue
+    behaviour. Failures are swallowed (non-critical)."""
+    try:
+        db.session.add(LocationSuggestion(
+            user_id=user_id,
+            suggested_country=(country or '')[:80] or None,
+            suggested_state=(state or '')[:80] or None,
+            suggested_city=(city or '')[:80] or None,
+        ))
+    except Exception as _lse:
+        app.logger.warning(f'[location_suggestion] {_lse}')
 
 
 # ---------------------------------------------------------------------------
@@ -622,6 +664,9 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_device_tier VARCHAR(40)",
                 # v75 — genre suggestions from onboarding 'Other' field
                 "CREATE TABLE IF NOT EXISTS genre_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_genre VARCHAR(60) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
+                # v76 — location suggestions from free-text country/state/city
+                # (countries without detailed location_data.py coverage)
+                "CREATE TABLE IF NOT EXISTS location_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_country VARCHAR(80), suggested_state VARCHAR(80), suggested_city VARCHAR(80), created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
             ]
             for sql in _migrations:
                 try:
@@ -2283,6 +2328,19 @@ def onboarding():
         if not country or not state or not city:
             flash('Please select your country, state/province, and city.', 'error')
             return redirect(url_for('onboarding'))
+
+        # For countries without detailed state/city data, State and City
+        # come from free-text inputs — validate + normalise, and log for
+        # admin review (mirrors GenreSuggestion's 'Other' genre pattern).
+        if not has_detailed_location_data(country):
+            _state_norm = _validate_location_text(state)
+            _city_norm  = _validate_location_text(city)
+            if not _state_norm or not _city_norm:
+                flash('Please enter a valid state/province and city (letters, spaces, hyphens, and apostrophes only).', 'error')
+                return redirect(url_for('onboarding'))
+            state, city = _state_norm, _city_norm
+            _log_location_suggestion(current_user.id, country, state, city)
+
         if not agreed:
             flash('Please accept the Member Agreement to continue.', 'error')
             return redirect(url_for('onboarding'))
@@ -2308,12 +2366,6 @@ def onboarding():
         # Go to interests flow before dashboard
         return redirect(url_for('onboarding_interests'))
 
-    _loc = {}
-    for _s, _c in INDIA_STATES_CITIES.items():
-        _loc.setdefault('India', {})[_s] = _c
-    for _country, _states in WORLD_LOCATIONS.items():
-        _loc[_country] = _states
-
     try:
         _ref_discount_ob = db.session.execute(
             db.text('SELECT referred_discount FROM users WHERE id = :uid'),
@@ -2323,7 +2375,7 @@ def onboarding():
         _ref_discount_ob = False
     return render_template('onboarding.html',
         countries          = get_countries(),
-        location_data_json = json.dumps(_loc),
+        location_data_json = json.dumps(_dash_loc()),
         referred_discount  = _ref_discount_ob,
     )
 
@@ -3165,6 +3217,18 @@ def profile():
             if not new_country or not new_state or not new_city:
                 flash('Please select a country, state/province, and city.', 'error')
                 return redirect(_redirect_to)
+
+            # For countries without detailed state/city data, State and City
+            # come from free-text inputs — validate + normalise, and log for
+            # admin review (mirrors GenreSuggestion's 'Other' genre pattern).
+            if not has_detailed_location_data(new_country):
+                _state_norm = _validate_location_text(new_state)
+                _city_norm  = _validate_location_text(new_city)
+                if not _state_norm or not _city_norm:
+                    flash('Please enter a valid state/province and city (letters, spaces, hyphens, and apostrophes only).', 'error')
+                    return redirect(_redirect_to)
+                new_state, new_city = _state_norm, _city_norm
+                _log_location_suggestion(current_user.id, new_country, new_state, new_city)
 
             old_city = current_user.city or ''
             current_user.country = new_country
