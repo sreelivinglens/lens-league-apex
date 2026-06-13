@@ -17,9 +17,18 @@
     line-height: 1.6;
   }
   .ref-cta-btn { padding: 14px 20px; min-height: 44px; line-height: 1.6; font-size: 16px; }
+  .ref-offer-grid { display: flex; flex-wrap: wrap; gap: 12px; }
   @media (max-width: 768px) {
-    .ref-landing-wrap { margin: 32px auto; padding: 0 16px 48px; }
+    .ref-landing-wrap { margin: 32px auto; padding: 56px 16px 48px; }
     .ref-landing-card { padding: 20px 18px; }
+    .ref-offer-grid { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 600px) {
+    .ref-offer-grid { flex-direction: column !important; }
+  }
+  /* iPad 769-1024px: card stays single-column, narrower max-width */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .ref-landing-wrap { max-width: 460px; }
   }
 </style>
 {% endblock %}
@@ -31,30 +40,22 @@
     <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:18px;">
       <div style="width:48px; height:48px; background:#1A2744; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:22px;">&#128247;</div>
       <div>
-        <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary); line-height:1.4; margin-bottom:4px;">{{ referrer_name }} invited you to Shutter League</div>
+        <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:var(--text-primary); line-height:1.5; margin-bottom:4px;">{{ referrer_name }} invited you to Shutter League</div>
         <div style="font-size:16px; color:var(--text-primary); line-height:1.5;">Get your photograph scored in 30 seconds</div>
       </div>
     </div>
 
     <div style="background:#1A2744; border-radius:6px; padding:16px 18px; margin-bottom:16px;">
-      <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:10px;">Special invite offer</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div style="background:rgba(255,255,255,0.07); border-radius:4px; padding:12px 14px;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:6px;">Mobile League</div>
-          <div style="display:flex; align-items:baseline; gap:8px;">
-            <span style="font-size:24px; font-weight:700; color:#F5C518;">&#8377;85</span>
-            <span style="font-size:14px; color:rgba(255,255,255,0.40); text-decoration:line-through;">&#8377;99</span>
-          </div>
-          <div style="font-size:14px; color:rgba(255,255,255,0.55); margin-top:4px;">first month</div>
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:10px;">Special invite offer</div>
+      <div class="ref-offer-grid">
+      <div style="background:rgba(255,255,255,0.07); border-radius:4px; padding:12px 14px;">
+        <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:6px;">Camera or Mobile League</div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <span style="font-size:24px; font-weight:700; color:#F5C518;">&#8377;180</span>
+          <span style="font-size:14px; color:rgba(255,255,255,0.40); text-decoration:line-through;">&#8377;200</span>
         </div>
-        <div style="background:rgba(255,255,255,0.07); border-radius:4px; padding:12px 14px;">
-          <div style="font-family:var(--font-mono); font-size:12px; font-weight:700; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:6px;">Camera League</div>
-          <div style="display:flex; align-items:baseline; gap:8px;">
-            <span style="font-size:24px; font-weight:700; color:#F5C518;">&#8377;169</span>
-            <span style="font-size:14px; color:rgba(255,255,255,0.40); text-decoration:line-through;">&#8377;199</span>
-          </div>
-          <div style="font-size:14px; color:rgba(255,255,255,0.55); margin-top:4px;">first month</div>
-        </div>
+        <div style="font-size:14px; color:rgba(255,255,255,0.55); margin-top:4px;">first month</div>
+      </div>
       </div>
       <div style="font-size:14px; color:rgba(255,255,255,0.40); margin-top:10px; line-height:1.6;">Only available via this invite link. Renews at standard price from month 2.</div>
     </div>
@@ -72,10 +73,10 @@
     </div>
 
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:18px;">
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:12px;">What is Shutter League?</div>
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:12px;">What is Shutter League?</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:8px;">&#10003;&nbsp; Upload a photograph. Get a DDI score in 30 seconds.</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:8px;">&#10003;&nbsp; See exactly which dimension is holding you back.</div>
-      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:8px;">&#10003;&nbsp; Build a verified world ranking for your photography.</div>
+      <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:8px;">&#10003;&nbsp; Build a verified standing for your photography.</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7;">&#10003;&nbsp; Honest feedback. Not likes.</div>
     </div>
 
