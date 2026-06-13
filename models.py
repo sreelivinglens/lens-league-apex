@@ -508,6 +508,24 @@ class GenreSuggestion(db.Model):
     user = db.relationship('User', backref=db.backref('genre_suggestions', lazy='dynamic'))
 
 
+class LocationSuggestion(db.Model):
+    """User-submitted free-text country/state/city from the Active Location
+    picker (used when the selected country has no detailed state/city data
+    — see location_data.has_detailed_location_data()). Logged for admin
+    review to spot gaps in location_data.py's coverage, mirroring
+    GenreSuggestion's pattern. Purely informational — does not gate any
+    enqueue or save behaviour."""
+    __tablename__ = 'location_suggestions'
+    id               = db.Column(db.Integer, primary_key=True)
+    user_id          = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    suggested_country = db.Column(db.String(80), nullable=True)
+    suggested_state   = db.Column(db.String(80), nullable=True)
+    suggested_city    = db.Column(db.String(80), nullable=True)
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed         = db.Column(db.Boolean, default=False)
+    user = db.relationship('User', backref=db.backref('location_suggestions', lazy='dynamic'))
+
+
 class WeeklyChallenge(db.Model):
     __tablename__ = 'weekly_challenges'
     id                = db.Column(db.Integer, primary_key=True)
