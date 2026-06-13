@@ -1574,10 +1574,19 @@
       <select id="al_state" name="state" required onchange="alStateChange()" style="font-size:16px;">
         <option value="">State / Province</option>
       </select>
+      <input type="text" id="al_state_text" maxlength="60"
+             placeholder="State / Province"
+             style="font-size:16px; display:none;">
       <select id="al_city" name="city" required style="font-size:16px;">
         <option value="">City</option>
       </select>
+      <input type="text" id="al_city_text" maxlength="60"
+             placeholder="City"
+             style="font-size:16px; display:none;">
     </div>
+    <p id="al-freetext-hint" style="display:none; font-size:14px; color:var(--text-muted); margin-top:-4px; margin-bottom:10px; line-height:1.5;">
+      We don't have a detailed list of states/cities for this country yet — please type your state/province and city above.
+    </p>
     <div style="display:flex; gap:8px;">
       <button type="submit" class="btn btn-solid" style="padding:8px 18px; font-size:14px;">Update</button>
       <button type="button" class="btn" style="padding:8px 18px; font-size:14px;" onclick="alHideEdit()">Cancel</button>
@@ -1594,11 +1603,63 @@
   var countrySel = document.getElementById('al_country');
   var stateSel   = document.getElementById('al_state');
   var citySel    = document.getElementById('al_city');
+  var stateTxt   = document.getElementById('al_state_text');
+  var cityTxt    = document.getElementById('al_city_text');
+  var hint       = document.getElementById('al-freetext-hint');
+
+  // Allowed characters for free-text State/Province and City — mirrors
+  // the server-side _validate_location_text() regex in app.py.
+  var LOCATION_TEXT_RE = /[^A-Za-z\u00C0-\u024F\u1E00-\u1EFF '\-]/g;
+  function filterLocationText(e) {
+    e.target.value = e.target.value.replace(LOCATION_TEXT_RE, '');
+  }
+  stateTxt.addEventListener('input', filterLocationText);
+  cityTxt.addEventListener('input', filterLocationText);
+
+  // Toggle State/City between cascading <select> (countries with detailed
+  // data) and free-text <input> (all other countries). Only the active
+  // element keeps its `name` attribute so just one of each pair submits.
+  function setLocationMode(hasDetailedData) {
+    if (hasDetailedData) {
+      stateSel.style.display = '';
+      citySel.style.display  = '';
+      stateSel.name = 'state';
+      citySel.name  = 'city';
+      stateTxt.style.display = 'none';
+      cityTxt.style.display  = 'none';
+      stateTxt.removeAttribute('name');
+      cityTxt.removeAttribute('name');
+      stateTxt.required = false;
+      cityTxt.required  = false;
+      hint.style.display = 'none';
+    } else {
+      stateSel.style.display = 'none';
+      citySel.style.display  = 'none';
+      stateSel.removeAttribute('name');
+      citySel.removeAttribute('name');
+      stateTxt.style.display = '';
+      cityTxt.style.display  = '';
+      stateTxt.name = 'state';
+      cityTxt.name  = 'city';
+      stateTxt.required = true;
+      cityTxt.required  = true;
+      hint.style.display = '';
+    }
+  }
 
   window.alCountryChange = function (preselectState) {
     var country = countrySel.value;
     stateSel.innerHTML = '<option value="">State / Province</option>';
     citySel.innerHTML  = '<option value="">City</option>';
+
+    if (!country || !LOCATION_DATA[country]) {
+      // No detailed state/city data — free-text fallback
+      setLocationMode(false);
+      if (!country) { stateTxt.value = ''; cityTxt.value = ''; }
+      return;
+    }
+
+    setLocationMode(true);
     var states = LOCATION_DATA[country] || {};
     Object.keys(states).sort().forEach(function (state) {
       var opt = document.createElement('option');
@@ -1643,7 +1704,15 @@
   function onlyPopulateOnce() {
     if (_populated) return;
     _populated = true;
-    alCountryChange(CURRENT_STATE);
+    if (CURRENT_COUNTRY && !LOCATION_DATA[CURRENT_COUNTRY]) {
+      // User's saved country has no detailed data — show free-text
+      // fields pre-filled with their current state/city.
+      setLocationMode(false);
+      stateTxt.value = CURRENT_STATE;
+      cityTxt.value  = CURRENT_CITY;
+    } else {
+      alCountryChange(CURRENT_STATE);
+    }
   }
 
   // Pre-populate immediately so the dropdowns are ready when edit mode opens
