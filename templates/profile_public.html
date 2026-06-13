@@ -138,13 +138,13 @@
   }
   .img-card {
     position: relative; border-radius: var(--radius-md); overflow: hidden;
-    background: var(--surface-3); border: 1px solid var(--border);
+    background: #1A1A18; border: 1px solid var(--border);
     aspect-ratio: 4/3; cursor: pointer;
     transition: border-color 0.2s, transform 0.2s;
   }
   .img-card:hover { border-color: var(--gold-dark); transform: translateY(-2px); }
   .img-card img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
+    width: 100%; height: 100%; object-fit: contain; display: block;
     transition: opacity 0.2s;
   }
   .img-card:hover img { opacity: 0.85; }
