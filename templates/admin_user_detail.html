@@ -184,6 +184,12 @@ body:has(.sl-aud) main { padding: 0 !important; max-width: none !important; marg
         <span class="sl-aud-val {% if not user.city %}missing{% endif %}">{{ user.city or '—' }}</span>
       </div>
       <div class="sl-aud-row">
+        <span class="sl-aud-key">Genre interests</span>
+        <span class="sl-aud-val {% if not genre_interests_display %}missing{% endif %}">
+          {{ genre_interests_display or 'Not set' }}
+        </span>
+      </div>
+      <div class="sl-aud-row">
         <span class="sl-aud-key">Joined</span>
         <span class="sl-aud-val">{{ user.created_at.strftime('%d %b %Y, %H:%M') if user.created_at else '—' }}</span>
       </div>
