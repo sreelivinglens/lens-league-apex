@@ -1565,16 +1565,16 @@
     <input type="hidden" name="action" value="update_location">
     <input type="hidden" name="next" value="dashboard">
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
-      <select id="al_country" name="country" required onchange="alCountryChange()">
+      <select id="al_country" name="country" required onchange="alCountryChange()" style="font-size:16px;">
         <option value="">Country</option>
         {% for c in countries %}
         <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
         {% endfor %}
       </select>
-      <select id="al_state" name="state" required onchange="alStateChange()">
+      <select id="al_state" name="state" required onchange="alStateChange()" style="font-size:16px;">
         <option value="">State / Province</option>
       </select>
-      <select id="al_city" name="city" required>
+      <select id="al_city" name="city" required style="font-size:16px;">
         <option value="">City</option>
       </select>
     </div>
