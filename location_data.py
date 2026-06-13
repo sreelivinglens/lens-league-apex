@@ -217,8 +217,28 @@ PHONE_BRANDS = {
 }
 
 def get_countries():
-    """Returns list of all countries for dropdown"""
-    return ["India"] + sorted([c for c in WORLD_LOCATIONS.keys() if c != "Other Country"]) + ["Other Country"]
+    """Returns the full list of countries for the Country dropdown/datalist.
+
+    Countries with detailed state/city data (INDIA_STATES_CITIES /
+    WORLD_LOCATIONS) appear first (India + the WORLD_LOCATIONS countries,
+    alphabetised), followed by all other ISO countries alphabetised.
+    "Other Country" is kept as a final catch-all for edge cases (disputed
+    territories, etc.) where free-text entry is the only option.
+    """
+    detailed = sorted(set(['India'] + [c for c in WORLD_LOCATIONS.keys() if c != 'Other Country']))
+    others = sorted(c for c in ALL_COUNTRIES if c not in detailed)
+    return detailed + others + ["Other Country"]
+
+
+def has_detailed_location_data(country):
+    """Returns True if `country` has a full state -> [cities] mapping in
+    INDIA_STATES_CITIES or WORLD_LOCATIONS (i.e. State/City can use the
+    cascading dropdown UI). Returns False for all other countries, where
+    the frontend should fall back to free-text State/City inputs."""
+    if country == 'India':
+        return True
+    return country in WORLD_LOCATIONS and country != 'Other Country'
+
 
 def get_states(country):
     """Returns states/provinces for a country"""
@@ -231,3 +251,47 @@ def get_cities(country, state):
     if country == "India":
         return INDIA_STATES_CITIES.get(state, ["Other"])
     return WORLD_LOCATIONS.get(country, {}).get(state, ["Other"])
+
+
+# Full ISO-3166 country list (common short names), used by get_countries()
+# for countries without detailed state/city data — State and City for these
+# fall back to free-text inputs (see has_detailed_location_data()).
+ALL_COUNTRIES = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola",
+    "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
+    "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus",
+    "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+    "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon",
+    "Canada", "Central African Republic", "Chad", "Chile", "China",
+    "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba",
+    "Cyprus", "Czech Republic", "Democratic Republic of the Congo",
+    "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador",
+    "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
+    "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
+    "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala",
+    "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary",
+    "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+    "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan",
+    "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia",
+    "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania",
+    "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali",
+    "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico",
+    "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco",
+    "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
+    "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea",
+    "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine",
+    "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
+    "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda",
+    "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+    "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia",
+    "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+    "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa",
+    "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname",
+    "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania",
+    "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago",
+    "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
+    "United Arab Emirates", "United Kingdom", "United States", "Uruguay",
+    "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+    "Yemen", "Zambia", "Zimbabwe",
+]
