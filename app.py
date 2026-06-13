@@ -24,7 +24,7 @@ _IST_OFFSET = timedelta(hours=5, minutes=30)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from models import (db, User, Image, CalibrationLog, ContestEntry, OpenContestEntry, ImageReport,
-                    RatingAssignment, PeerRating, PeerPoolEntry,
+                    RatingAssignment, PeerRating, PeerPoolEntry, GenreSuggestion,
                     WeeklyChallenge, WeeklySubmission,
                     BowSubmission, ContestPeriod, BrandContest, BrandEntry, ContestAnnouncement,
                     get_or_assign_next_image, submit_peer_rating)
@@ -609,6 +609,8 @@ with app.app_context():
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_software VARCHAR(180)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_has_gps BOOLEAN",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS exif_device_tier VARCHAR(40)",
+                # v75 — genre suggestions from onboarding 'Other' field
+                "CREATE TABLE IF NOT EXISTS genre_suggestions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, suggested_genre VARCHAR(60) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
             ]
             for sql in _migrations:
                 try:
@@ -2186,6 +2188,8 @@ def auth_google_callback():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
+        if not getattr(user, 'interests_complete', False):
+            return redirect(url_for('onboarding_interests'))
         # Redirect to stored next URL if available
         post_next = session.pop('post_login_next', None)
         if post_next:
@@ -2319,6 +2323,7 @@ def onboarding_interests():
     """
     Post-onboarding interest capture — genre, frequency, motivation.
     Fires once after the welcome/KYC onboarding screen.
+    Mandatory: exactly 3 genres required (predefined or custom 'Other' entries).
     Skipped if interests_complete is already True.
     """
     # Skip if already done or onboarding not yet complete
@@ -2328,20 +2333,37 @@ def onboarding_interests():
         post_next = session.pop('post_login_next', None)
         return redirect(post_next or url_for('dashboard'))
 
+    STANDARD_GENRES = ['Wildlife', 'Street', 'Landscape', 'People', 'Wedding',
+                       'Macro', 'Drone & Aerial', 'Creative']
+
     if request.method == 'POST':
         import json as _json
         genre_interests    = request.form.get('genre_interests', '').strip()
         shooting_frequency = request.form.get('shooting_frequency', '').strip()
         primary_motivation = request.form.get('primary_motivation', '').strip()
 
-        # Validate genre_interests is valid JSON array
+        # Validate genre_interests is a JSON array of exactly 3 non-empty strings
         try:
             _genres = _json.loads(genre_interests) if genre_interests else []
             if not isinstance(_genres, list):
                 _genres = []
-            genre_interests = _json.dumps(_genres[:3])  # max 3
+            _genres = [g.strip() for g in _genres if isinstance(g, str) and g.strip()][:3]
         except Exception:
-            genre_interests = '[]'
+            _genres = []
+
+        if len(_genres) != 3:
+            flash('Please select exactly 3 genres to continue.', 'error')
+            return redirect(url_for('onboarding_interests'))
+
+        # Log any custom ('Other') genres not in the standard list for admin review
+        for _g in _genres:
+            if _g not in STANDARD_GENRES:
+                try:
+                    db.session.add(GenreSuggestion(user_id=current_user.id, suggested_genre=_g[:60]))
+                except Exception as _gse:
+                    app.logger.warning(f'[genre_suggestion] {_gse}')
+
+        genre_interests = _json.dumps(_genres)
 
         current_user.genre_interests    = genre_interests
         current_user.shooting_frequency = shooting_frequency[:30] if shooting_frequency else None
@@ -2418,6 +2440,8 @@ def login():
         ).fetchone()
         if judge_check:
             return redirect(url_for('judge_dashboard'))
+        if getattr(user, 'onboarding_complete', False) and not getattr(user, 'interests_complete', False):
+            return redirect(url_for('onboarding_interests'))
         return redirect(url_for('dashboard'))
 
     return render_template('login.html')
