@@ -448,11 +448,22 @@ function submitForm() {
   document.getElementById('f-freq').value   = selectedFreq   || '';
   document.getElementById('f-motive').value = selectedMotive || '';
 
-  // Show payoff screen first, then submit after 3s
+  // Show the payoff screen immediately, and persist the answers in the
+  // background via fetch (no page navigation). This guarantees
+  // interests_complete is saved even if the user clicks "Upload Your First
+  // Frame" or "Go to dashboard instead" right away, without waiting.
   showScreen(4);
-  setTimeout(function() {
-    document.getElementById('oi-form').submit();
-  }, 4000);
+
+  var form = document.getElementById('oi-form');
+  var data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    redirect: 'manual'  // don't follow the server's redirect; we're already on screen 4
+  }).catch(function(err) {
+    console.error('onboarding-interests save failed:', err);
+  });
 }
 </script>
 {% endblock %}
