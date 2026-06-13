@@ -3,17 +3,24 @@ Item D — Seasonal Calendar Auto-Discovery Engine
 ==================================================
 
 Replaces manual per-city seed data (Chennai/Mumbai/Navi Mumbai/Paris etc.)
-with an engine-generated, worldwide-scalable pipeline:
+with an engine-generated, worldwide-scalable, self-refreshing pipeline:
 
   1. enqueue_missing_combos() — for every (city, genre) combo that an active
-     user actually has (city from user.city — populated via items A/B; genre
-     from user.genre_interests, up to 3 per user), check whether
-     seasonal_calendar already has rows for that combo. If not, add it to
-     discovery_queue.
+     user actually has (city from user.city — populated via items A/B, or
+     the Active Location toggle; genre from user.genre_interests, up to 3
+     per user), check seasonal_calendar:
+       - No rows yet           -> enqueue (general sweep).
+       - Newest row older than
+         refresh_after_days     -> enqueue for re-discovery, so newly
+         (default 30)              announced exhibitions/festivals get
+                                    picked up over time — a combo is never
+                                    "covered forever" after its first run.
+       - Fresh enough           -> skip.
 
   2. run_seasonal_discovery() — weekly cron entry point. Processes priority
-     queue items first (new/changed cities from item B), then a bounded
-     batch of general items (cost control). For each, calls discover_one().
+     queue items first (new/changed cities from item B / Active Location),
+     then a bounded batch of general items (cost control). For each, calls
+     discover_one().
 
   3. discover_one(city, genre) — the core unit:
        - web_search for recurring wildlife/nature seasons AND any one-off
@@ -22,11 +29,17 @@ with an engine-generated, worldwide-scalable pipeline:
        - LLM-extract the results into 1-2 seasonal_calendar rows (same shape
          as SEED_DATA in seasonal_calendar.py — including optional
          date_start/date_end for one-off events).
+       - Prune this combo's EXPIRED one-off events (date_end < today) before
+         inserting fresh discoveries — prevents unbounded accumulation of
+         stale dated rows across repeated refresh cycles. Recurring-season
+         rows (no dates) are left alone.
        - Insert the row(s), mark the discovery_queue item 'done' (or 'error').
 
 COST NOTE: each discover_one() call is 1 web_search + 1 LLM extraction call.
 run_seasonal_discovery()'s batch_size controls how many general items run per
 week — keep this small while validating, raise as active-city count grows.
+With the staleness refresh, every active (city, genre) combo will be
+re-checked roughly every `refresh_after_days`, spread across weekly batches.
 """
 
 import os
@@ -115,14 +128,24 @@ def get_active_city_genre_combos(db_session):
     return sorted(combos)
 
 
-def enqueue_missing_combos(db_session):
+def enqueue_missing_combos(db_session, refresh_after_days: int = 30):
     """
     For each active (city, genre) combo, check whether seasonal_calendar
-    already has at least one row. If not, insert a 'pending' row into
-    discovery_queue (priority=False — general sweep).
+    has data, AND whether that data is still fresh.
+
+    - No rows at all          -> enqueue (general sweep).
+    - Newest row older than
+      `refresh_after_days`     -> enqueue (general sweep) for re-discovery,
+                                   so new one-off exhibitions/festivals get
+                                   picked up over time rather than the combo
+                                   being "covered forever" after its first
+                                   discovery run.
+    - Newest row fresh enough -> skip.
 
     Safe to run repeatedly: the partial unique index on
-    discovery_queue(city, genre) WHERE status='pending' prevents duplicates.
+    discovery_queue(city, genre) WHERE status='pending' prevents duplicates,
+    and discover_one() prunes stale rows for the combo before inserting new
+    ones (see discover_one).
 
     Returns the number of new queue entries created.
     """
@@ -134,13 +157,15 @@ def enqueue_missing_combos(db_session):
     for city, genre in combos:
         normalized = normalize_city(city)
         try:
-            existing = db_session.execute(_sql_text(
-                "SELECT COUNT(*) FROM seasonal_calendar "
+            newest = db_session.execute(_sql_text(
+                "SELECT MAX(created_at) FROM seasonal_calendar "
                 "WHERE LOWER(base_city) = LOWER(:city) AND LOWER(genre) = LOWER(:genre)"
             ), {"city": normalized, "genre": genre}).scalar()
 
-            if existing > 0:
-                continue
+            if newest is not None:
+                age_days = (datetime.utcnow() - newest).days
+                if age_days < refresh_after_days:
+                    continue  # fresh enough — skip
 
             db_session.execute(_sql_text(
                 "INSERT INTO discovery_queue (city, genre, priority, status) "
@@ -154,7 +179,7 @@ def enqueue_missing_combos(db_session):
             continue
 
     db_session.commit()
-    print(f"[seasonal_discovery] Enqueued {enqueued} new (city, genre) combo(s)")
+    print(f"[seasonal_discovery] Enqueued {enqueued} (city, genre) combo(s) for discovery/refresh")
     return enqueued
 
 
@@ -287,6 +312,20 @@ def discover_one(db_session, city: str, genre: str):
         if not isinstance(items, list) or not items:
             print(f"[seasonal_discovery] No items extracted for ({normalized_city}, {genre})")
             return 0
+
+        # ── Step 2.5: prune expired one-off events for this combo ─────────
+        # Re-discovery runs would otherwise accumulate stale dated rows
+        # (e.g. last quarter's exhibition) forever. Recurring-season rows
+        # (date_start/date_end NULL) are left alone — they're evergreen.
+        try:
+            db_session.execute(_sql_text("""
+                DELETE FROM seasonal_calendar
+                WHERE LOWER(base_city) = LOWER(:city) AND LOWER(genre) = LOWER(:genre)
+                  AND date_start IS NOT NULL AND date_end IS NOT NULL
+                  AND date_end < CURRENT_DATE
+            """), {"city": normalized_city, "genre": genre})
+        except Exception as prune_err:
+            print(f"[seasonal_discovery] prune error for ({normalized_city}, {genre}): {prune_err}")
 
         # ── Step 3: insert rows ────────────────────────────────────────────
         inserted = 0
