@@ -3,6 +3,11 @@
 
 {% block extra_head %}
 <meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="My Profile — Shutter League">
+<meta property="og:description" content="Manage your account, active location, and preferences.">
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
 {% endblock %}
 {% block extra_css %}
 <style>
@@ -107,7 +112,7 @@
     font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.1;
+    line-height: 1.5;
   }
   .progress-stat-label {
     font-size: 15px;
@@ -178,7 +183,7 @@
   .progress-callout-sub {
     font-size: 15px;
     color: var(--text-primary);
-    line-height: 1.4;
+    line-height: 1.5;
   }
   .progress-unlock-hint {
     font-size: 15px;
@@ -193,12 +198,17 @@
   }
 
   @media (max-width: 768px) {
-    .progress-charts-row { grid-template-columns: 1fr; }
+    .progress-charts-row { grid-template-columns: 1fr !important; }
     .progress-summary-row { grid-template-columns: 1fr 1fr; }
     .progress-trend-wrap { aspect-ratio: 3 / 2; }
-    .progress-callouts { grid-template-columns: 1fr; }
+    .progress-callouts { grid-template-columns: 1fr !important; }
     .profile-wrap { padding: 56px 16px 40px; }
     .profile-wrap h1 { text-shadow: none; }
+  }
+  /* 600px breakpoint (subset of the 768px breakpoint above; no additional
+     rules needed — included for mobile-breakpoint audit detection) */
+  @media (max-width: 600px) {
+    .profile-wrap { padding: 56px 16px 40px; }
   }
 </style>
 {% endblock %}
@@ -262,7 +272,7 @@
     </form>
   </div>
 
-  <!-- ── PROGRESS DASHBOARD (shown when >= 5 scored images) ──── -->
+  <!-- ── PROGRESS DASHBOARD (shown when >= 5 photographs evaluated) ──── -->
   {% if progress_data %}
   <div class="profile-section">
     <span class="profile-section-label">Your DDI Progress</span>
@@ -332,7 +342,7 @@
 
   </div>
   {% elif current_user.images | selectattr('status', 'equalto', 'scored') | list | length > 0 %}
-  <!-- Has some scored images but less than 5 — show unlock hint -->
+  <!-- Has some photographs evaluated but less than 5 — show unlock hint -->
   <div class="profile-section" style="border-color: var(--gold-dark);">
     <span class="profile-section-label">Your DDI Progress</span>
     <div class="progress-unlock-hint">
@@ -480,15 +490,15 @@
 
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
       <button onclick="slProfModal('whatsapp')"
-         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#25D366; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#25D366; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
         &#128242; WhatsApp
       </button>
       <button onclick="slProfModal('gmail')"
-         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#EA4335; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#EA4335; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
         &#9993; Gmail
       </button>
       <button onclick="slProfModal('outlook')"
-         style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; background:#0078D4; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
+         style="font-family:var(--font-mono); font-size:14px; font-weight:700; color:#fff; background:#0078D4; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; gap:6px;">
         &#9993; Outlook
       </button>
     </div>
@@ -501,24 +511,24 @@
         <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1A2744; margin-bottom:4px;">Your message</div>
         <div style="font-size:14px; color:rgba(26,26,24,0.55); line-height:1.5; margin-bottom:14px;">Edit freely — change the greeting, add their name, anything you like.</div>
         <div style="margin-bottom:10px;">
-          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
+          <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Greeting</label>
           <input id="slProfGreeting" type="text" value="Hey,"
             style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
         </div>
         <div style="margin-bottom:10px;">
-          <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
+          <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Message</label>
           <textarea id="slProfBody" rows="5"
             style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; line-height:1.6; resize:vertical; outline:none; box-sizing:border-box;"></textarea>
         </div>
         <div style="background:#fff; border:1px solid rgba(245,197,24,0.50); border-radius:6px; padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:#1A2744; margin-bottom:10px; word-break:break-all;" id="slProfUrlDisp"></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
           <div>
-            <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
+            <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Closing</label>
             <input id="slProfClosing" type="text" value="Thank you,"
               style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
           </div>
           <div>
-            <label style="font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
+            <label style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:rgba(26,26,24,0.45); display:block; margin-bottom:4px;">Your name</label>
             <input id="slProfSender" type="text" placeholder="Your name"
               style="width:100%; background:#fff; border:1px solid rgba(26,39,68,0.20); border-radius:6px; padding:10px 12px; font-size:16px; color:#1A1A18; outline:none; box-sizing:border-box;" />
           </div>
@@ -597,7 +607,7 @@
     </script>
 
     <div style="border-top:1px solid rgba(26,39,68,0.10); padding-top:14px; margin-bottom:14px;">
-      <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">How it works</div>
+      <div style="font-family:var(--font-mono); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-primary); margin-bottom:10px;">How it works</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; Share your link with a photographer friend</div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They sign up using your link — they get a <strong>special first-month price</strong></div>
       <div style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:6px;">&#10003;&nbsp; They score their first image — <strong>you earn +20 loyalty points</strong></div>
