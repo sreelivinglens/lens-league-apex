@@ -1360,7 +1360,6 @@ SCORECARD_KYC_TERMS = [
     ('Unlocks after 5 scored', 'use "Available after your 5th photograph"'),
     ('backlit scene',       'use plain language — no jargon'),
     ('silhouette exposure', 'use plain language — no jargon'),
-    ('DoD',                 'use "how difficult it was" in user-facing copy'),
     ('Decisive Moment',     'use "whether the timing was right"'),
     ('Wonder Factor',       'use "whether it made you feel something"'),
     ('Aesthetic Quality',   'use "the emotion it creates"'),
