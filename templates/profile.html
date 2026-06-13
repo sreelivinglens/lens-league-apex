@@ -251,6 +251,9 @@
         <select id="loc_state" name="state" required onchange="onLocStateChange()">
           <option value="">Select state / province</option>
         </select>
+        <input type="text" id="loc_state_text" maxlength="60"
+               placeholder="State / Province"
+               style="width:100%; display:none;">
       </div>
 
       <div class="form-group" style="margin-bottom:0;">
@@ -258,7 +261,14 @@
         <select id="loc_city" name="city" required>
           <option value="">Select city</option>
         </select>
+        <input type="text" id="loc_city_text" maxlength="60"
+               placeholder="City"
+               style="width:100%; display:none;">
       </div>
+
+      <p id="loc-freetext-hint" style="display:none; font-size:13px; color:var(--text-muted); margin-top:8px; line-height:1.5;">
+        We don't have a detailed list of states/cities for this country yet — please type your state/province and city above.
+      </p>
 
       <button type="submit" class="btn btn-solid"
               style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
@@ -671,12 +681,64 @@
   var countrySel = document.getElementById('loc_country');
   var stateSel   = document.getElementById('loc_state');
   var citySel    = document.getElementById('loc_city');
+  var stateTxt   = document.getElementById('loc_state_text');
+  var cityTxt    = document.getElementById('loc_city_text');
+  var hint       = document.getElementById('loc-freetext-hint');
   if (!countrySel || !stateSel || !citySel) return;
+
+  // Allowed characters for free-text State/Province and City — mirrors
+  // the server-side _validate_location_text() regex in app.py.
+  var LOCATION_TEXT_RE = /[^A-Za-z\u00C0-\u024F\u1E00-\u1EFF '\-]/g;
+  function filterLocationText(e) {
+    e.target.value = e.target.value.replace(LOCATION_TEXT_RE, '');
+  }
+  stateTxt.addEventListener('input', filterLocationText);
+  cityTxt.addEventListener('input', filterLocationText);
+
+  // Toggle State/City between cascading <select> (countries with detailed
+  // data) and free-text <input> (all other countries). Only the active
+  // element keeps its `name` attribute so just one of each pair submits.
+  function setLocationMode(hasDetailedData) {
+    if (hasDetailedData) {
+      stateSel.style.display = '';
+      citySel.style.display  = '';
+      stateSel.name = 'state';
+      citySel.name  = 'city';
+      stateTxt.style.display = 'none';
+      cityTxt.style.display  = 'none';
+      stateTxt.removeAttribute('name');
+      cityTxt.removeAttribute('name');
+      stateTxt.required = false;
+      cityTxt.required  = false;
+      hint.style.display = 'none';
+    } else {
+      stateSel.style.display = 'none';
+      citySel.style.display  = 'none';
+      stateSel.removeAttribute('name');
+      citySel.removeAttribute('name');
+      stateTxt.style.display = '';
+      cityTxt.style.display  = '';
+      stateTxt.name = 'state';
+      cityTxt.name  = 'city';
+      stateTxt.required = true;
+      cityTxt.required  = true;
+      hint.style.display = '';
+    }
+  }
 
   window.onLocCountryChange = function (preselectState) {
     var country = countrySel.value;
     stateSel.innerHTML = '<option value="">Select state / province</option>';
     citySel.innerHTML  = '<option value="">Select city</option>';
+
+    if (!country || !LOCATION_DATA[country]) {
+      // No detailed state/city data — free-text fallback
+      setLocationMode(false);
+      if (!country) { stateTxt.value = ''; cityTxt.value = ''; }
+      return;
+    }
+
+    setLocationMode(true);
     var states = LOCATION_DATA[country] || {};
     Object.keys(states).sort().forEach(function (state) {
       var opt = document.createElement('option');
@@ -706,7 +768,15 @@
 
   // Pre-populate from the user's current location on page load
   if (CURRENT_COUNTRY) {
-    onLocCountryChange(CURRENT_STATE);
+    if (LOCATION_DATA[CURRENT_COUNTRY]) {
+      onLocCountryChange(CURRENT_STATE);
+    } else {
+      // User's saved country has no detailed data — show free-text
+      // fields pre-filled with their current state/city.
+      setLocationMode(false);
+      stateTxt.value = CURRENT_STATE;
+      cityTxt.value  = CURRENT_CITY;
+    }
   }
 })();
 </script>
