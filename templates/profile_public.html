@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 {% block title %}{{ user.full_name or user.username }} — Shutter League{% endblock %}
 
+{% block extra_head %}
+<meta property="og:title" content="{{ user.full_name or user.username }} — Shutter League">
+<meta property="og:description" content="{{ (user.full_name or user.username) }}'s photography profile on Shutter League — {{ total_images }} photograph{{ 's' if total_images != 1 else '' }} evaluated, top genre {{ genre_list[0] if genre_list else 'photography' }}.">
+{% if best_image and best_image.thumb_url %}
+<meta property="og:image" content="{{ best_image.thumb_url }}">
+<meta name="twitter:image" content="{{ best_image.thumb_url }}">
+{% else %}
+<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
+{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
 {% block extra_css %}
 <style>
   .tier-legend       { background:#000; color:#F5C518; border:2px solid #F5C518; }
@@ -61,7 +74,7 @@
   .profile-meta { flex: 1; min-width: 0; }
   .profile-name {
     font-size: clamp(20px, 3vw, 28px); font-weight: 700;
-    color: var(--text-primary); margin-bottom: 4px; line-height: 1.2;
+    color: var(--text-primary); margin-bottom: 4px; line-height: 1.5;
   }
   .profile-handle {
     font-family: var(--font-mono); font-size: 14px;
@@ -210,8 +223,23 @@
     .images-grid    { grid-template-columns: repeat(2, 1fr); }
     .best-score-card { flex-direction: column; text-align: center; }
   }
+  @media (max-width: 600px) {
+    .profile-wrap { padding: 56px var(--page-pad) 80px; }
+    .profile-stats { grid-template-columns: 1fr 1fr !important; }
+    .images-grid   { grid-template-columns: 1fr !important; }
+  }
   @media (max-width: 400px) {
-    .images-grid { grid-template-columns: 1fr; }
+    .images-grid { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 768px) {
+    .profile-stats { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── iPad 769px-1024px ── */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .profile-stats { grid-template-columns: repeat(2, 1fr); }
+    .images-grid   { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 {% endblock %}
@@ -329,8 +357,8 @@
   <div class="profile-cta">
     <p>Want your own ranked portfolio?<br>
     Upload your work and get a scientific score, a city rank, and a public profile.</p>
-    <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-right:10px;">Join Free →</a>
-    <a href="{{ url_for('leaderboard') }}" class="btn">View Community</a>
+    <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-right:10px; min-height:44px; display:inline-flex; align-items:center;">Join Free →</a>
+    <a href="{{ url_for('leaderboard') }}" class="btn" style="min-height:44px; display:inline-flex; align-items:center;">View Community</a>
   </div>
 
 </div>
