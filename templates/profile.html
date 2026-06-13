@@ -286,7 +286,7 @@
   <div class="profile-section" style="border-color: var(--gold-dark);">
     <span class="profile-section-label">Your DDI Progress</span>
     <div class="progress-unlock-hint">
-      📊 Your personal progress dashboard unlocks after <strong style="color:var(--text-primary);">5 scored images</strong>.
+      📊 Your personal progress dashboard unlocks after <strong style="color:var(--text-primary);">5 photographs evaluated</strong>.
       Score a few more images to reveal your dimension signature and score trend.
     </div>
   </div>
@@ -337,6 +337,56 @@
       <button type="submit" class="btn btn-solid"
               style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
         Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- ── ACTIVE LOCATION ───────────────────────────────────────── -->
+  <div class="profile-section">
+    <span class="profile-section-label">Active Location</span>
+    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
+      This powers <strong>"What's happening near you"</strong> — seasonal shoot ideas and local opportunities on your scorecards.
+      Travelling? Update this and your advice will follow you. Switch it back when you're home.
+    </p>
+
+    {% if current_user.city %}
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-primary);
+                background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
+                padding:10px 14px; margin-bottom:20px; display:inline-block;">
+      📍 Currently: <strong>{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</strong>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
+      <input type="hidden" name="action" value="update_location">
+
+      <div class="form-group">
+        <label for="loc_country">Country</label>
+        <select id="loc_country" name="country" required onchange="onLocCountryChange()">
+          <option value="">Select country</option>
+          {% for c in countries %}
+          <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="loc_state">State / Province</label>
+        <select id="loc_state" name="state" required onchange="onLocStateChange()">
+          <option value="">Select state / province</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label for="loc_city">City</label>
+        <select id="loc_city" name="city" required>
+          <option value="">Select city</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-solid"
+              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
+        Update Active Location
       </button>
     </form>
   </div>
@@ -579,7 +629,7 @@
 
   <div class="danger-zone">
     <span class="danger-zone-label">Cancel Subscription</span>
-    <p>Cancelling will revert your account to the free plan. Your scored images and history are kept.</p>
+    <p>Cancelling will revert your account to the free plan. Your photographs evaluated and history are kept.</p>
     <form method="POST" action="{{ url_for('cancel_subscription') }}"
           onsubmit="return confirm('Cancel your subscription? You will revert to the free plan.');">
       <button type="submit" class="btn btn-danger" style="padding:10px 24px;">
@@ -605,6 +655,56 @@
 {% if progress_data %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 {% endif %}
+<script>
+// ── Active Location — cascading country/state/city dropdowns ──────────────
+(function () {
+  var LOCATION_DATA = {{ location_data_json | safe }};
+  var CURRENT_COUNTRY = {{ (current_user.country or '') | tojson }};
+  var CURRENT_STATE   = {{ (current_user.state or '')   | tojson }};
+  var CURRENT_CITY    = {{ (current_user.city or '')    | tojson }};
+
+  var countrySel = document.getElementById('loc_country');
+  var stateSel   = document.getElementById('loc_state');
+  var citySel    = document.getElementById('loc_city');
+  if (!countrySel || !stateSel || !citySel) return;
+
+  window.onLocCountryChange = function (preselectState) {
+    var country = countrySel.value;
+    stateSel.innerHTML = '<option value="">Select state / province</option>';
+    citySel.innerHTML  = '<option value="">Select city</option>';
+    var states = LOCATION_DATA[country] || {};
+    Object.keys(states).sort().forEach(function (state) {
+      var opt = document.createElement('option');
+      opt.value = state;
+      opt.textContent = state;
+      if (state === preselectState) opt.selected = true;
+      stateSel.appendChild(opt);
+    });
+    if (preselectState && states[preselectState]) {
+      onLocStateChange(CURRENT_CITY);
+    }
+  };
+
+  window.onLocStateChange = function (preselectCity) {
+    var country = countrySel.value;
+    var state   = stateSel.value;
+    citySel.innerHTML = '<option value="">Select city</option>';
+    var cities = (LOCATION_DATA[country] || {})[state] || [];
+    cities.forEach(function (city) {
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      if (city === preselectCity) opt.selected = true;
+      citySel.appendChild(opt);
+    });
+  };
+
+  // Pre-populate from the user's current location on page load
+  if (CURRENT_COUNTRY) {
+    onLocCountryChange(CURRENT_STATE);
+  }
+})();
+</script>
 <script>
 function checkStrength(pw) {
   const bar = document.getElementById('pwBar'), label = document.getElementById('pwLabel');
