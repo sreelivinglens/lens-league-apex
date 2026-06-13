@@ -1540,6 +1540,114 @@
 {% block content %}
 <div class="db-wrap">
 
+{# ── Active Location widget — inline editable ───────────────────── #}
+<div id="activeLocationWidget" style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 18px; margin-bottom:16px;">
+  <div id="alLocDisplay" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:10px; font-size:15px; color:var(--text-primary);">
+      <span>📍</span>
+      {% if current_user.city %}
+        <span>Active location: <strong>{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</strong></span>
+      {% else %}
+        <span>Set your active location to get "near you" advice on your scorecards.</span>
+      {% endif %}
+    </div>
+    <button type="button" class="btn" style="padding:6px 16px; font-size:14px;" onclick="alShowEdit()">
+      {% if current_user.city %}Change{% else %}Set location →{% endif %}
+    </button>
+  </div>
+
+  <form id="alEditForm" method="POST" action="{{ url_for('profile') }}" style="display:none; margin-top:12px;">
+    <input type="hidden" name="action" value="update_location">
+    <input type="hidden" name="next" value="dashboard">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+      <select id="al_country" name="country" required onchange="alCountryChange()">
+        <option value="">Country</option>
+        {% for c in countries %}
+        <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <select id="al_state" name="state" required onchange="alStateChange()">
+        <option value="">State / Province</option>
+      </select>
+      <select id="al_city" name="city" required>
+        <option value="">City</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button type="submit" class="btn btn-solid" style="padding:8px 18px; font-size:14px;">Update</button>
+      <button type="button" class="btn" style="padding:8px 18px; font-size:14px;" onclick="alHideEdit()">Cancel</button>
+    </div>
+  </form>
+</div>
+<script>
+(function () {
+  var LOCATION_DATA = {{ location_data_json | safe }};
+  var CURRENT_COUNTRY = {{ (current_user.country or '') | tojson }};
+  var CURRENT_STATE   = {{ (current_user.state or '')   | tojson }};
+  var CURRENT_CITY    = {{ (current_user.city or '')    | tojson }};
+
+  var countrySel = document.getElementById('al_country');
+  var stateSel   = document.getElementById('al_state');
+  var citySel    = document.getElementById('al_city');
+
+  window.alCountryChange = function (preselectState) {
+    var country = countrySel.value;
+    stateSel.innerHTML = '<option value="">State / Province</option>';
+    citySel.innerHTML  = '<option value="">City</option>';
+    var states = LOCATION_DATA[country] || {};
+    Object.keys(states).sort().forEach(function (state) {
+      var opt = document.createElement('option');
+      opt.value = state;
+      opt.textContent = state;
+      if (state === preselectState) opt.selected = true;
+      stateSel.appendChild(opt);
+    });
+    if (preselectState && states[preselectState]) {
+      alStateChange(CURRENT_CITY);
+    }
+  };
+
+  window.alStateChange = function (preselectCity) {
+    var country = countrySel.value;
+    var state   = stateSel.value;
+    citySel.innerHTML = '<option value="">City</option>';
+    var cities = (LOCATION_DATA[country] || {})[state] || [];
+    cities.forEach(function (city) {
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      if (city === preselectCity) opt.selected = true;
+      citySel.appendChild(opt);
+    });
+  };
+
+  window.alShowEdit = function () {
+    document.getElementById('alLocDisplay').style.display = 'none';
+    document.getElementById('alEditForm').style.display = 'block';
+    if (CURRENT_COUNTRY && !stateSel.options.length > 1) {
+      onlyPopulateOnce();
+    }
+  };
+
+  window.alHideEdit = function () {
+    document.getElementById('alEditForm').style.display = 'none';
+    document.getElementById('alLocDisplay').style.display = 'flex';
+  };
+
+  var _populated = false;
+  function onlyPopulateOnce() {
+    if (_populated) return;
+    _populated = true;
+    alCountryChange(CURRENT_STATE);
+  }
+
+  // Pre-populate immediately so the dropdowns are ready when edit mode opens
+  if (CURRENT_COUNTRY) {
+    onlyPopulateOnce();
+  }
+})();
+</script>
+
 {# Bulk upload pending banner #}
 <div id="bulkPendingBanner" style="display:none; background:#F5F0E8; border:1px solid #E0D8C8; border-radius:var(--radius-md); padding:14px 20px; margin-bottom:16px; font-size:15px; font-family:var(--font-body,Georgia,serif); color:#1a1a18; align-items:center; gap:10px; line-height:1.5;">
   ⏳ <span id="bulkPendingMsg"></span>
