@@ -41,6 +41,17 @@ from location_data import (
 
 load_dotenv()
 
+def _dash_loc():
+    """Build the {country: {state: [cities...]}} structure used by
+    onboarding/profile/dashboard Active Location dropdowns."""
+    _loc = {}
+    for _s, _c in INDIA_STATES_CITIES.items():
+        _loc.setdefault('India', {})[_s] = _c
+    for _country, _states in WORLD_LOCATIONS.items():
+        _loc[_country] = _states
+    return _loc
+
+
 # ---------------------------------------------------------------------------
 # Email utility  -  Gmail SMTP
 # Env vars: MAIL_USERNAME, MAIL_PASSWORD
@@ -2906,7 +2917,9 @@ def dashboard():
                            upload_credits_balance=db.session.execute(
                                db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
                                {'uid': current_user.id}
-                           ).scalar() or 0)
+                           ).scalar() or 0,
+                           countries=get_countries(),
+                           location_data_json=json.dumps(_dash_loc()))
 
 
 # ---------------------------------------------------------------------------
@@ -3146,10 +3159,12 @@ def profile():
             new_country = request.form.get('country', '').strip()
             new_state   = request.form.get('state', '').strip()
             new_city    = request.form.get('city', '').strip()
+            _next       = request.form.get('next', '').strip()
+            _redirect_to = url_for('dashboard') if _next == 'dashboard' else url_for('profile')
 
             if not new_country or not new_state or not new_city:
                 flash('Please select a country, state/province, and city.', 'error')
-                return redirect(url_for('profile'))
+                return redirect(_redirect_to)
 
             old_city = current_user.city or ''
             current_user.country = new_country
@@ -3182,7 +3197,7 @@ def profile():
                     app.logger.warning(f'[update_location] priority discovery enqueue failed: {_disc_err}')
 
             flash(f'Active location updated to {new_city}.', 'success')
-            return redirect(url_for('profile'))
+            return redirect(_redirect_to)
 
         # -- Change password -----------------------------------------------
         elif action == 'change_password':
