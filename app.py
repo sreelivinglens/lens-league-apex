@@ -3983,16 +3983,28 @@ def upload():
         except Exception:
             pass
 
-        # ── Item A: update user.city from upload-time location (v74) ─────────
-        # Derive city as the first comma-separated segment of the submitted
-        # location, e.g. "Keoladeo National Park, Rajasthan" -> "Keoladeo
-        # National Park". Only updates if changed/non-empty — feeds
-        # build_seasonal_context() and downstream seasonal-discovery work.
-        _submitted_location = (img.location or '').strip()
-        if _submitted_location:
-            _derived_city = _submitted_location.split(',')[0].strip()
-            if _derived_city and _derived_city != (current_user.city or ''):
-                current_user.city = _derived_city
+        # ── Item A REMOVED (v76) — was: update user.city from upload-time
+        # location text (v74). Removed because it conflated "where was this
+        # photo taken" (img.location, a free-text per-upload form field) with
+        # "where does this user live" (current_user.city, the profile home
+        # base). It only updated `city` (never `state`/`country`), and a
+        # naive split(',')[0] often produced landmark/park names (e.g.
+        # "Sanjay Van" from "Sanjay Van, New Delhi") rather than real cities —
+        # silently corrupting profile location data (confirmed:
+        # r_mahesh_iyer ended up with city=Thrissur / state=Karnataka, a
+        # mismatched pair, after uploading a Thrissur Pooram photo from a
+        # Bengaluru/Karnataka home base). The upload form also prefills the
+        # location field from the user's last upload, making the corruption
+        # self-reinforcing across sessions.
+        #
+        # Item B below already covers "this upload was taken somewhere
+        # different from home" correctly and non-destructively: it derives
+        # _travel_city from EXIF GPS for THIS upload's seasonal context only,
+        # and only proposes updating current_user.city via
+        # pending_location_update after 14 consecutive days of GPS
+        # disagreement (user must confirm). current_user.city/state/country
+        # now only change via explicit profile edit (Active Location widget)
+        # or that confirmed-relocation flow.
 
         # ── Item B: GPS-based travel context + relocation detection (v74) ────
         # If the photo's EXIF GPS resolves to a different city than the user's
@@ -16517,7 +16529,7 @@ def send_welcome_email(user):
         '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
         '<tr><td>'
         '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Standing</p>'
+        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Rank</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
         'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
         'Photography has never had the equivalent for 200 years &#8212; until now.</p>'
