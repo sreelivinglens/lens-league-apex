@@ -25,6 +25,13 @@ class User(db.Model, UserMixin):
     onboarding_complete = db.Column(db.Boolean, default=False, nullable=False)
     full_name         = db.Column(db.String(120), nullable=True)
 
+    # Onboarding interests (v69) — genre picker + frequency/motivation,
+    # captured once after onboarding via /onboarding-interests.
+    genre_interests     = db.Column(db.Text,        nullable=True)   # JSON array of 3 genre strings
+    shooting_frequency  = db.Column(db.String(30),  nullable=True)
+    primary_motivation  = db.Column(db.String(40),  nullable=True)
+    interests_complete  = db.Column(db.Boolean, default=False, nullable=False)
+
     # Location — collected at registration, used for city rankings
     country           = db.Column(db.String(80),  nullable=True)
     state             = db.Column(db.String(80),  nullable=True)
