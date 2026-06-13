@@ -1408,8 +1408,8 @@ _TIER_JUMP_POINTS = {
 # ── Referral system helpers (Session 28) ──────────────────────────────────────
 
 REFERRAL_DISCOUNT_PRICES = {
-    'mobile': {'monthly': 80,  'annual': 800},
-    'camera': {'monthly': 169, 'annual': 1690},
+    'mobile': {'monthly': 180, 'annual': 1800},
+    'camera': {'monthly': 180, 'annual': 1800},
 }
 
 def _generate_referral_code():
@@ -1879,7 +1879,7 @@ def run_reengagement_emailer():
                         cta_text = 'Upload Your Next Image'
                     else:
                         subject  = f'Your {genre} photo scored {score:.2f} — keep building'
-                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your Official World Ranking.</p>'
+                        pts_line = f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">Subscribe to start earning points and build your standing.</p>'
                         cta_text = 'Continue on Shutter League'
 
                     html_body = f"""
@@ -3600,7 +3600,7 @@ def upload():
                     _limit_shown = FREE_IMAGE_LIMIT + _bonus
                     _msg = (f'You have used your {_limit_shown} free assessments. '
                             'Deleting images does not restore free slots — '
-                            'upgrade to Mobile (₹99/mo) or Camera (₹199/mo) to keep uploading.')
+                            'upgrade to Mobile or Camera League (₹200/mo) to keep uploading.')
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.form.get('_xhr') == '1':
                         return jsonify({'error': True, 'message': _msg}), 403
                     flash(_msg, 'warning')
@@ -10705,10 +10705,10 @@ def subscribe(track):
             'mentor':   'Human + AI Mentor',
         }
         track_descriptions = {
-            'camera':   '5 scored images/month · RAW eligible · Annual Excellence Award (POTY) · Programmes',
-            'mobile':   '8 scored images/month · Annual Excellence Award (POTY) · Programmes',
-            'learning': '12 scored images/month · AI mentor · Improvement paths',
-            'mentor':   '12 scored images/month · Weekly 1-on-1 · Human + AI',
+            'camera':   '4 photographs evaluated/month · RAW eligible · Annual Excellence Award (AEA) · Programmes',
+            'mobile':   '4 photographs evaluated/month · Annual Excellence Award (AEA) · Programmes',
+            'learning': '12 photographs evaluated/month · AI mentor · Improvement paths',
+            'mentor':   '12 photographs evaluated/month · Weekly 1-on-1 · Human + AI',
         }
         try:
             _ref_disc = db.session.execute(
@@ -17182,8 +17182,7 @@ def admin_subscription_broadcast():
             '<p style="font-size:16px;color:#1A1A18;margin:0 0 8px 0;line-height:1.7;">This platform is being built now, and the photographers who join early are the ones who shape it.</p>'
             '<div style="background:#F5F3EF;border-left:4px solid #F5C518;padding:16px 20px;margin:20px 0;">'
             '<p style="font-size:15px;color:#1A1A18;font-weight:700;margin:0 0 8px 0;">Subscription</p>'
-            '<p style="font-size:15px;color:#1A1A18;margin:0 0 4px 0;">Mobile Track &nbsp;&#8212;&nbsp; <strong>&#8377;99/month</strong> &nbsp;(8 scored images)</p>'
-            '<p style="font-size:15px;color:#1A1A18;margin:0;">Camera Track &nbsp;&#8212;&nbsp; <strong>&#8377;199/month</strong> &nbsp;(5 scored images + full suite)</p>'
+            '<p style="font-size:15px;color:#1A1A18;margin:0;">Camera or Mobile League &nbsp;&#8212;&nbsp; <strong>&#8377;200/month</strong> &nbsp;(4 photographs evaluated/month) &nbsp;&#8212;&nbsp; Founding Member rate, locks in forever</p>'
             '</div>'
             '<div style="background:#FFF8E1;border-left:4px solid #F5C518;padding:14px 20px;margin:0 0 20px 0;">'
             '<p style="font-size:14px;color:#1A1A18;margin:0;line-height:1.7;"><strong>Payment note:</strong> Shutter League currently accepts Indian payment methods — Indian debit card, credit card, UPI, or net banking. An Indian bank account or card is required to subscribe.</p>'
@@ -17200,14 +17199,13 @@ def admin_subscription_broadcast():
             'You have already seen your scores. Now take it further.\n\n'
             'A Shutter League subscription gives you scored images every month, your standing in the programme, '
             'and eligibility for the Annual Excellence Award.\n\n'
-            'Mobile Track: ₹99/month (8 scored images)\n'
-            'Camera Track: ₹199/month (5 images + full suite)\n\n'
+            'Camera or Mobile League: ₹200/month (4 photographs evaluated/month) — Founding Member rate, locks in forever\n\n'
             'Payment note: Indian debit card, credit card, UPI, or net banking required.\n\n'
             f'Subscribe: {_subscribe_url}\n\n'
             '-- Shutter League'
         )
         if not preview_only:
-            ok = send_email(u.email, 'Your Rank is Live. Your Story is Just Starting.', _html, _txt)
+            ok = send_email(u.email, 'Your Standing is Live. Your Story is Just Starting.', _html, _txt)
             if ok: sent += 1
             else:  failed += 1
         else:
