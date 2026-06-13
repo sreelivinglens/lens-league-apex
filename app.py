@@ -6410,6 +6410,123 @@ def admin_seed_date_bound_events():
     return redirect(url_for('admin_dashboard'))
 
 
+# ── Seasonal discovery — GET: status + trigger page ──────────────────────────
+@app.route('/admin/seasonal-discovery')
+@login_required
+@admin_required
+def admin_seasonal_discovery_page():
+    """
+    Admin page showing discovery_queue status, seasonal_calendar row counts,
+    and a form to manually trigger the discovery job.
+    """
+    # Discovery queue status
+    try:
+        queue_rows = db.session.execute(db.text(
+            "SELECT city, genre, status, priority, created_at, processed_at "
+            "FROM discovery_queue ORDER BY priority DESC, created_at ASC LIMIT 50"
+        )).fetchall()
+    except Exception:
+        queue_rows = []
+
+    # seasonal_calendar summary — rows per city
+    try:
+        cal_rows = db.session.execute(db.text(
+            "SELECT base_city, COUNT(*) as cnt FROM seasonal_calendar "
+            "GROUP BY base_city ORDER BY cnt DESC"
+        )).fetchall()
+    except Exception:
+        cal_rows = []
+
+    # pending count
+    try:
+        pending_count = db.session.execute(db.text(
+            "SELECT COUNT(*) FROM discovery_queue WHERE status = 'pending'"
+        )).scalar() or 0
+    except Exception:
+        pending_count = '?'
+
+    queue_html = ''
+    for r in queue_rows:
+        priority_badge = '<span style="background:#F5C518;color:#000;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700;">PRIORITY</span>' if r.priority else ''
+        status_color = {'pending': '#2C7BE5', 'done': '#27ae60', 'error': '#e74c3c'}.get(r.status, '#888')
+        queue_html += f'''
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #eee;">{r.city}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;">{r.genre}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;"><span style="color:{status_color};font-weight:600;">{r.status}</span> {priority_badge}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{str(r.created_at)[:16]}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{str(r.processed_at)[:16] if r.processed_at else '—'}</td>
+        </tr>'''
+
+    cal_html = ''
+    for r in cal_rows:
+        cal_html += f'<tr><td style="padding:8px;border-bottom:1px solid #eee;">{r.base_city}</td><td style="padding:8px;border-bottom:1px solid #eee;">{r.cnt} rows</td></tr>'
+
+    if not queue_html:
+        queue_html = '<tr><td colspan="5" style="padding:16px;color:#888;text-align:center;">Queue is empty</td></tr>'
+    if not cal_html:
+        cal_html = '<tr><td colspan="2" style="padding:16px;color:#888;text-align:center;">No rows in seasonal_calendar</td></tr>'
+
+    return f'''
+    <html><head><title>Seasonal Discovery — Admin</title></head>
+    <body style="font-family:sans-serif; max-width:960px; margin:40px auto; padding:0 20px;">
+      <h2 style="margin-bottom:4px;">Seasonal Discovery</h2>
+      <p style="color:#666; margin-top:0;">Manually trigger the discovery job or inspect the queue and calendar data.</p>
+      <p><a href="/admin" style="color:#2C7BE5;">← Back to Admin Dashboard</a></p>
+
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:14px 18px;margin-bottom:24px;">
+        <strong>How it works:</strong> When a user sets their Active Location, their (city, genre) combos are enqueued as priority items.
+        The weekly job (or this manual trigger) calls <code>run_seasonal_discovery()</code> which runs a live web search,
+        generates seasonal_calendar rows via the AI, and inserts them — so future scorecards show location-specific advisories.
+        <br><br>
+        <strong>⚠️ Requires Anthropic API credits.</strong> Runs will fail silently if the API balance is negative.
+      </div>
+
+      <h3>Trigger Discovery Job</h3>
+      <form method="POST" action="/admin/run-seasonal-discovery" style="margin-bottom:32px;">
+        <label style="font-size:14px;">Batch size (number of queue items to process):&nbsp;
+          <input type="number" name="batch_size" value="3" min="1" max="20"
+                 style="width:60px;padding:6px;border:1px solid #ccc;border-radius:4px;">
+        </label>
+        &nbsp;&nbsp;
+        <button type="submit"
+                style="background:#1A2744;color:#fff;border:none;padding:9px 20px;border-radius:4px;
+                       font-weight:700;cursor:pointer;font-size:14px;">
+          ▶ Run Now ({pending_count} pending)
+        </button>
+        <span style="font-size:13px;color:#888;margin-left:12px;">Redirects back here after run — check flash message for result.</span>
+      </form>
+
+      <h3>Discovery Queue <span style="font-size:14px;font-weight:400;color:#888;">({pending_count} pending)</span></h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:8px;">City</th>
+          <th style="padding:8px;">Genre</th>
+          <th style="padding:8px;">Status</th>
+          <th style="padding:8px;">Queued</th>
+          <th style="padding:8px;">Processed</th>
+        </tr></thead>
+        <tbody>{queue_html}</tbody>
+      </table>
+
+      <h3>Seasonal Calendar — Rows by City</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px;">
+        <thead><tr style="background:#f5f5f5;text-align:left;">
+          <th style="padding:8px;">Base City</th>
+          <th style="padding:8px;">Rows</th>
+        </tr></thead>
+        <tbody>{cal_html}</tbody>
+      </table>
+
+      <p style="font-size:13px;color:#888;">
+        Also useful: <a href="/admin/check-user-location" style="color:#2C7BE5;">/admin/check-user-location</a>
+        — shows each user's current city, state, genre interests, and onboarding flags.
+      </p>
+    </body></html>
+    '''
+
+
+# ── Seasonal discovery — POST: run the job ────────────────────────────────────
 @app.route('/admin/run-seasonal-discovery', methods=['POST'])
 @login_required
 @admin_required
@@ -6426,7 +6543,7 @@ def admin_run_seasonal_discovery():
         flash(f'Seasonal discovery run complete: {summary}', 'success')
     except Exception as e:
         flash(f'Discovery run error: {e}', 'error')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_seasonal_discovery_page'))
 
 
 # ── Read-only check: user city + genre_interests (for seasonal context debugging) ──
