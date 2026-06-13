@@ -6387,7 +6387,7 @@ def admin_dashboard():
         elif s['avg_score'] > 8.5:
             drift_alerts.append({'genre': genre_key, 'type': 'high', 'msg': f'Avg score {s["avg_score"]}  -  possible over-scoring'})
         if s['avg_dod'] < 3.0:
-            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg DoD {s["avg_dod"]}  -  engine may be under-valuing difficulty'})
+            drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg difficulty {s["avg_dod"]}  -  engine may be under-valuing difficulty'})
         if s['avg_aq'] < 4.0:
             drift_alerts.append({'genre': genre_key, 'type': 'low', 'msg': f'Avg AQ {s["avg_aq"]}  -  low emotional resonance scores across genre'})
 
