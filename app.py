@@ -2957,7 +2957,7 @@ def confirm_location_update():
     # Item D — if this new city has no seasonal data yet, queue it for
     # priority discovery (processed before the next general weekly sweep)
     # for each of the user's genre interests.
-    if new_city:
+    if new_city and new_city != 'Other':
         try:
             from engine.seasonal_discovery import enqueue_priority_combo
             from engine.seasonal_calendar import get_primary_genre
@@ -3179,7 +3179,7 @@ def profile():
             # Item D — if this city has no seasonal data yet, queue priority
             # discovery for the user's genre interests (same pattern as
             # confirm_location_update / Item B).
-            if new_city and new_city != old_city:
+            if new_city and new_city != old_city and new_city != 'Other':
                 try:
                     from engine.seasonal_discovery import enqueue_priority_combo
                     from engine.seasonal_calendar import get_primary_genre
@@ -3196,7 +3196,14 @@ def profile():
                 except Exception as _disc_err:
                     app.logger.warning(f'[update_location] priority discovery enqueue failed: {_disc_err}')
 
-            flash(f'Active location updated to {new_city}.', 'success')
+            if new_city == 'Other':
+                flash(
+                    f'Active location updated to {new_state}, {new_country}. '
+                    f"We don't have detailed local data for this area yet — "
+                    f"\"near you\" advice may be limited.", 'success'
+                )
+            else:
+                flash(f'Active location updated to {new_city}.', 'success')
             return redirect(_redirect_to)
 
         # -- Change password -----------------------------------------------
