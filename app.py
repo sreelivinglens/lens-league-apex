@@ -4431,26 +4431,27 @@ def upload():
                             if not _sc_seasonal_ctx and _sc_user_city and (_sc_primary_genre or _img.genre):
                                 _od_genre = _sc_primary_genre or _img.genre or ''
                                 try:
-                                    from engine.seasonal_discovery import run_seasonal_discovery, enqueue_priority_combo
-                                    # Ensure this combo is in the queue (may already be there)
-                                    enqueue_priority_combo(db.session, _sc_user_city, _od_genre)
-                                    # Run discovery for 1 item — since we just enqueued as
-                                    # priority, it should be first in line. Non-fatal if
-                                    # a different priority item processes instead.
-                                    _od_summary = run_seasonal_discovery(db.session, batch_size=1)
-                                    app.logger.info(f'[auto_score] on-demand discovery for ({_sc_user_city}, {_od_genre}): {_od_summary}')
-                                    # Retry build_seasonal_context now that rows may exist
-                                    _sc_seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
-                                        db_session    = db.session,
-                                        user_city     = _sc_user_city,
-                                        primary_genre = _od_genre,
-                                        current_month = datetime.utcnow().month,
-                                        user_id       = _img.user_id,
-                                    )
-                                    if _sc_seasonal_ctx:
-                                        app.logger.info(f'[auto_score] on-demand discovery succeeded — advisory ready for ({_sc_user_city}, {_od_genre})')
+                                    from engine.seasonal_discovery import discover_one, enqueue_priority_combo
+                                    # discover_one() is targeted — web search + LLM extract
+                                    # for exactly this (city, genre). Much cheaper than
+                                    # run_seasonal_discovery() which scans all users first.
+                                    _od_n = discover_one(db.session, _sc_user_city, _od_genre)
+                                    app.logger.info(f'[auto_score] on-demand discovery for ({_sc_user_city}, {_od_genre}): {_od_n} row(s) inserted')
+                                    if _od_n > 0:
+                                        # Retry build_seasonal_context now that rows exist
+                                        _sc_seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
+                                            db_session    = db.session,
+                                            user_city     = _sc_user_city,
+                                            primary_genre = _od_genre,
+                                            current_month = datetime.utcnow().month,
+                                            user_id       = _img.user_id,
+                                        )
+                                        if _sc_seasonal_ctx:
+                                            app.logger.info(f'[auto_score] on-demand discovery succeeded — advisory ready for ({_sc_user_city}, {_od_genre})')
                                     else:
-                                        app.logger.warning(f'[auto_score] on-demand discovery ran but still no advisory for ({_sc_user_city}, {_od_genre})')
+                                        app.logger.warning(f'[auto_score] on-demand discovery found nothing for ({_sc_user_city}, {_od_genre})')
+                                        # Mark as done in queue so we don't retry endlessly
+                                        enqueue_priority_combo(db.session, _sc_user_city, _od_genre)
                                 except Exception as _od_err:
                                     app.logger.warning(f'[auto_score] on-demand discovery failed for ({_sc_user_city}, {_od_genre}): {_od_err}')
                                     # Non-fatal — scoring proceeds without advisory
@@ -5061,22 +5062,23 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 user_id       = img.user_id,
             )
 
-            # On-demand discovery — same as upload path: if no rows exist
-            # for this city/genre, discover synchronously before scoring.
+            # On-demand discovery — same as upload path: call discover_one()
+            # directly for this specific city/genre (cheaper than
+            # run_seasonal_discovery which scans all users first).
             if not _seasonal_ctx and _user_city and (_primary_genre or img.genre):
                 _od_genre = _primary_genre or img.genre or ''
                 try:
-                    from engine.seasonal_discovery import run_seasonal_discovery, enqueue_priority_combo
-                    enqueue_priority_combo(db.session, _user_city, _od_genre)
-                    _od_summary = run_seasonal_discovery(db.session, batch_size=1)
-                    app.logger.info(f'[retry_score] on-demand discovery for ({_user_city}, {_od_genre}): {_od_summary}')
-                    _seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
-                        db_session    = db.session,
-                        user_city     = _user_city,
-                        primary_genre = _od_genre,
-                        current_month = datetime.utcnow().month,
-                        user_id       = img.user_id,
-                    )
+                    from engine.seasonal_discovery import discover_one
+                    _od_n = discover_one(db.session, _user_city, _od_genre)
+                    app.logger.info(f'[retry_score] on-demand discovery for ({_user_city}, {_od_genre}): {_od_n} row(s) inserted')
+                    if _od_n > 0:
+                        _seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
+                            db_session    = db.session,
+                            user_city     = _user_city,
+                            primary_genre = _od_genre,
+                            current_month = datetime.utcnow().month,
+                            user_id       = img.user_id,
+                        )
                 except Exception as _od_err:
                     app.logger.warning(f'[retry_score] on-demand discovery failed for ({_user_city}, {_od_genre}): {_od_err}')
 
