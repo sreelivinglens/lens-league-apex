@@ -489,6 +489,18 @@ class ImageReport(db.Model):
     reporter = db.relationship('User',  backref=db.backref('filed_reports', lazy='dynamic'))
 
 
+class GenreSuggestion(db.Model):
+    """User-submitted custom genre from onboarding-interests 'Other' field.
+    Reviewed by admin to identify gaps in the standard genre taxonomy."""
+    __tablename__ = 'genre_suggestions'
+    id              = db.Column(db.Integer, primary_key=True)
+    user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    suggested_genre = db.Column(db.String(60), nullable=False)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed        = db.Column(db.Boolean, default=False)
+    user = db.relationship('User', backref=db.backref('genre_suggestions', lazy='dynamic'))
+
+
 class WeeklyChallenge(db.Model):
     __tablename__ = 'weekly_challenges'
     id                = db.Column(db.Integer, primary_key=True)
