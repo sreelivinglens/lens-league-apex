@@ -3141,6 +3141,49 @@ def profile():
             flash('Profile updated successfully.', 'success')
             return redirect(url_for('profile'))
 
+        # -- Update active location (replaces Item B GPS travel detection) --
+        elif action == 'update_location':
+            new_country = request.form.get('country', '').strip()
+            new_state   = request.form.get('state', '').strip()
+            new_city    = request.form.get('city', '').strip()
+
+            if not new_country or not new_state or not new_city:
+                flash('Please select a country, state/province, and city.', 'error')
+                return redirect(url_for('profile'))
+
+            old_city = current_user.city or ''
+            current_user.country = new_country
+            current_user.state   = new_state
+            current_user.city    = new_city
+            # Clear any stale Item B GPS-drift state — Active Location is now authoritative
+            current_user.pending_location_update = None
+            current_user.last_gps_city = None
+            current_user.last_gps_city_since = None
+            db.session.commit()
+
+            # Item D — if this city has no seasonal data yet, queue priority
+            # discovery for the user's genre interests (same pattern as
+            # confirm_location_update / Item B).
+            if new_city and new_city != old_city:
+                try:
+                    from engine.seasonal_discovery import enqueue_priority_combo
+                    from engine.seasonal_calendar import get_primary_genre
+                    genres = []
+                    try:
+                        genres = json.loads(current_user.genre_interests or '[]')[:3]
+                    except Exception:
+                        pass
+                    if not genres:
+                        genres = [get_primary_genre(current_user) or 'Wildlife']
+                    for _g in genres:
+                        if _g:
+                            enqueue_priority_combo(db.session, new_city, _g)
+                except Exception as _disc_err:
+                    app.logger.warning(f'[update_location] priority discovery enqueue failed: {_disc_err}')
+
+            flash(f'Active location updated to {new_city}.', 'success')
+            return redirect(url_for('profile'))
+
         # -- Change password -----------------------------------------------
         elif action == 'change_password':
             current_pw = request.form.get('current_password', '')
@@ -3168,8 +3211,17 @@ def profile():
     _ref_stats = get_referral_stats(current_user)
     _site_url  = os.getenv('SITE_URL', 'https://shutterleague.com')
     _ref_url   = f'{_site_url}/ref/{_ref_code}' if _ref_code else None
+
+    # Location data for the Active Location dropdown (same structure as /onboarding)
+    _loc = {}
+    for _s, _c in INDIA_STATES_CITIES.items():
+        _loc.setdefault('India', {})[_s] = _c
+    for _country, _states in WORLD_LOCATIONS.items():
+        _loc[_country] = _states
+
     return render_template('profile.html', images_used=images_used, progress_data=progress_data,
-                           referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url)
+                           referral_code=_ref_code, referral_stats=_ref_stats, referral_url=_ref_url,
+                           countries=get_countries(), location_data_json=json.dumps(_loc))
 
 
 # ---------------------------------------------------------------------------
@@ -6865,11 +6917,22 @@ def admin_user_detail(user_id):
         ).fetchall()
     except Exception:
         mentor_sessions = []
+
+    # Parse genre_interests JSON for display (Item: Genre Interests admin row)
+    genre_interests_display = None
+    try:
+        _gi = json.loads(user.genre_interests or '[]')
+        if isinstance(_gi, list) and _gi:
+            genre_interests_display = ', '.join(_gi)
+    except Exception:
+        genre_interests_display = None
+
     return render_template('admin_user_detail.html',
         user            = user,
         image_count     = image_count,
         scored_count    = scored_count,
         mentor_sessions = mentor_sessions,
+        genre_interests_display = genre_interests_display,
     )
 
 
