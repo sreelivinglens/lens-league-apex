@@ -1555,6 +1555,11 @@
       {% if current_user.city %}Change{% else %}Set location →{% endif %}
     </button>
   </div>
+  {% if current_user.city %}
+  <div style="font-size:14px; color:var(--text-muted); margin-top:4px; padding-left:26px;">
+    We use this to show local shoot ideas and seasonal tips on your scorecards. Travelling? Update it and your advice follows you.
+  </div>
+  {% endif %}
 
   <form id="alEditForm" method="POST" action="{{ url_for('profile') }}" style="display:none; margin-top:12px;">
     <input type="hidden" name="action" value="update_location">
