@@ -212,6 +212,56 @@
     <p>Manage your account details and password</p>
   </div>
 
+  <!-- ── ACTIVE LOCATION ───────────────────────────────────────── -->
+  <div class="profile-section">
+    <span class="profile-section-label">Active Location</span>
+    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
+      This powers <strong>"What's happening near you"</strong> — seasonal shoot ideas and local opportunities on your scorecards.
+      Travelling? Update this and your advice will follow you. Switch it back when you're home.
+    </p>
+
+    {% if current_user.city %}
+    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-primary);
+                background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
+                padding:10px 14px; margin-bottom:20px; display:inline-block;">
+      📍 Currently: <strong>{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</strong>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
+      <input type="hidden" name="action" value="update_location">
+
+      <div class="form-group">
+        <label for="loc_country">Country</label>
+        <select id="loc_country" name="country" required onchange="onLocCountryChange()">
+          <option value="">Select country</option>
+          {% for c in countries %}
+          <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="loc_state">State / Province</label>
+        <select id="loc_state" name="state" required onchange="onLocStateChange()">
+          <option value="">Select state / province</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label for="loc_city">City</label>
+        <select id="loc_city" name="city" required>
+          <option value="">Select city</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-solid"
+              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
+        Update Active Location
+      </button>
+    </form>
+  </div>
+
   <!-- ── PROGRESS DASHBOARD (shown when >= 5 scored images) ──── -->
   {% if progress_data %}
   <div class="profile-section">
@@ -337,56 +387,6 @@
       <button type="submit" class="btn btn-solid"
               style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
         Save Changes
-      </button>
-    </form>
-  </div>
-
-  <!-- ── ACTIVE LOCATION ───────────────────────────────────────── -->
-  <div class="profile-section">
-    <span class="profile-section-label">Active Location</span>
-    <p style="font-size:16px; color:var(--text-primary); line-height:1.7; margin-bottom:20px;">
-      This powers <strong>"What's happening near you"</strong> — seasonal shoot ideas and local opportunities on your scorecards.
-      Travelling? Update this and your advice will follow you. Switch it back when you're home.
-    </p>
-
-    {% if current_user.city %}
-    <div style="font-family:var(--font-mono); font-size:14px; letter-spacing:1px; color:var(--text-primary);
-                background:var(--surface-3); border:1px solid var(--border); border-radius:var(--radius-sm);
-                padding:10px 14px; margin-bottom:20px; display:inline-block;">
-      📍 Currently: <strong>{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</strong>
-    </div>
-    {% endif %}
-
-    <form method="POST" action="{{ url_for('profile') }}" id="locationForm">
-      <input type="hidden" name="action" value="update_location">
-
-      <div class="form-group">
-        <label for="loc_country">Country</label>
-        <select id="loc_country" name="country" required onchange="onLocCountryChange()">
-          <option value="">Select country</option>
-          {% for c in countries %}
-          <option value="{{ c }}" {% if current_user.country == c %}selected{% endif %}>{{ c }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="loc_state">State / Province</label>
-        <select id="loc_state" name="state" required onchange="onLocStateChange()">
-          <option value="">Select state / province</option>
-        </select>
-      </div>
-
-      <div class="form-group" style="margin-bottom:0;">
-        <label for="loc_city">City</label>
-        <select id="loc_city" name="city" required>
-          <option value="">Select city</option>
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-solid"
-              style="width:100%; padding:14px; margin-top:24px; font-size:15px; letter-spacing:2px;">
-        Update Active Location
       </button>
     </form>
   </div>
