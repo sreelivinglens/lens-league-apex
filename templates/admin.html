@@ -825,7 +825,7 @@
         <table class="cal-table" style="width:100%; border-collapse:collapse;">
           <thead>
             <tr>
-              <th>Genre</th><th>Count</th><th>Avg Score</th><th>Avg DoD</th>
+              <th>Genre</th><th>Count</th><th>Avg Score</th><th>Avg Difficulty</th>
               <th>Avg Dis</th><th>Avg DM</th><th>Avg Wonder</th><th>Avg AQ</th>
             </tr>
           </thead>
@@ -882,7 +882,7 @@
         <div class="tool-row">
           <div>
             <div class="tool-label">Health Check</div>
-            <div class="tool-desc">Scan all scored images for missing audit data or broken cards</div>
+            <div class="tool-desc">Scan all photographs evaluated for missing audit data or broken cards</div>
           </div>
           <a href="{{ url_for("admin_health_check") }}" target="_blank" class="btn" style="padding:8px 16px; font-size:13px; border-color:var(--gold-dark); color:var(--gold); flex-shrink:0;">Run →</a>
         </div>
@@ -1279,7 +1279,7 @@
       <div class="danger-row">
         <div>
           <div class="danger-title">Rescore Images with Missing Data</div>
-          <div class="danger-desc">Re-runs scoring <strong>only</strong> on images where audit data is incomplete or missing — not a calibration tool. Does <strong>not</strong> touch already-scored images with complete data. Scores are permanent records of performance at the time of submission; use Force Rescore on individual images only when a specific error is identified (wrong genre, corrupted EXIF, false AI flag). Uses API credits and may take several minutes.</div>
+          <div class="danger-desc">Re-runs scoring <strong>only</strong> on images where audit data is incomplete or missing — not a calibration tool. Does <strong>not</strong> touch photographs already evaluated with complete data. Scores are permanent records of performance at the time of submission; use Force Rescore on individual images only when a specific error is identified (wrong genre, corrupted EXIF, false AI flag). Uses API credits and may take several minutes.</div>
         </div>
         <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl({{ url_for("admin_rescore_all") | tojson }}, 'Rescore images with missing data only? Uses API credits.')">Run Rescore</button>
       </div>
@@ -1287,9 +1287,9 @@
       <div class="danger-row">
         <div>
           <div class="danger-title">Refresh AI Suspicion Scores</div>
-          <div class="danger-desc">Re-runs AI detection only on all scored images. Does NOT change scores, tiers, or any other data. Run this after updating the detection prompt to backfill existing images. Images scoring &ge;0.7 are automatically moved to needs-review.</div>
+          <div class="danger-desc">Re-runs AI detection only on all photographs evaluated. Does NOT change scores, tiers, or any other data. Run this after updating the detection prompt to backfill existing images. Images scoring &ge;0.7 are automatically moved to needs-review.</div>
         </div>
-        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl({{ url_for("admin_refresh_ai_suspicion") | tojson }}, 'Refresh AI suspicion on all scored images? Uses API credits — one call per image.')">Refresh AI Detection</button>
+        <button type="button" class="btn btn-danger" style="padding:8px 18px; font-size:13px; white-space:nowrap;" onclick="adminPostUrl({{ url_for("admin_refresh_ai_suspicion") | tojson }}, 'Refresh AI suspicion on all photographs evaluated? Uses API credits — one call per image.')">Refresh AI Detection</button>
       </div>
 
       <div class="danger-row">
