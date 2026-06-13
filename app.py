@@ -16517,7 +16517,7 @@ def send_welcome_email(user):
         '<table cellpadding="0" cellspacing="0" style="width:100%;border-left:4px solid #F5C518;padding-left:16px;">'
         '<tr><td>'
         '<p style="margin:0 0 4px;font-family:Courier New,monospace;font-size:12px;font-weight:700;'
-        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Rank</p>'
+        'letter-spacing:3px;color:#1a1a18;text-transform:uppercase;">Your Standing</p>'
         '<p style="margin:0 0 12px;font-size:16px;color:#4A4840;line-height:1.75;">'
         'Cricket has the ICC rankings. Tennis has the ATP. Formula 1 has the Constructors&#39; Championship. '
         'Photography has never had the equivalent for 200 years &#8212; until now.</p>'
