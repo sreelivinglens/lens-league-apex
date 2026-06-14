@@ -60,17 +60,14 @@
 }
 .sl-sec.is-open .sl-sec-chev { transform: rotate(180deg); }
 .sl-sec-body {
-  display: none;
+  display: none !important;
   padding-bottom: 20px;
 }
-.sl-sec.is-open .sl-sec-body { display: block; }
+.sl-sec.is-open .sl-sec-body { display: block !important; }
 
-/* Desktop: all sections always open */
+/* Desktop: 2-col layout but sections remain collapsible */
 @media (min-width: 1025px) {
-  .sl-sec-body  { display: block !important; }
-  .sl-sec-chev  { display: none; }
-  .sl-sec-hdr   { cursor: default; }
-  .sl-sec-hdr:hover { opacity: 1; }
+  .sl-sec-hdr { padding: 18px 0; }
 }
 
 /* ═══ 1. STANDING ═══ */
@@ -232,8 +229,8 @@
 .sl-card-val { font-size: 14px; font-weight: 600; color: #8A6A20; }
 .sl-card-chev { color: var(--border-strong); font-size: 16px; transition: transform .2s; }
 .sl-card.is-open .sl-card-chev { transform: rotate(180deg); }
-.sl-card-body { display: none; padding: 0 16px 16px; font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-.sl-card.is-open .sl-card-body { display: block; }
+.sl-card-body { display: none !important; padding: 0 16px 16px; font-size: 16px; color: var(--text-primary); line-height: 1.7; }
+.sl-card.is-open .sl-card-body { display: block !important; }
 .sl-card-action { font-size: 14px; color: #1A2744; font-weight: 600; margin-top: 8px; display: inline-block; text-decoration: underline; text-underline-offset: 2px; }
 
 .sl-badge-g { font-size: 14px; padding: 3px 9px; border-radius: 20px; background: #E6F2E8; color: #27500A; font-weight: 600; }
@@ -369,8 +366,8 @@ h1, h2, h3 { text-shadow: none; }
 
 /* ── Desktop >1024px ── */
 @media (min-width: 1025px) {
-  .sl-card-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sl-img-grid   { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .sl-sec.is-open .sl-card-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sl-sec.is-open .sl-img-grid   { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
