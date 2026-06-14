@@ -414,8 +414,8 @@ h1, h2, h3 { text-shadow: none; }
 
   {# ══ 1. STANDING ══ #}
   {% if progress_data %}
-  <div class="sl-sec sl-sec-standing is-open" id="sl-sec-standing">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-standing')" aria-expanded="true" role="button" tabindex="0">
+  <div class="sl-sec sl-sec-standing" id="sl-sec-standing">
+    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-standing')" aria-expanded="false" role="button" tabindex="0">
       <div class="sl-standing-row">
         <svg width="52" height="52" viewBox="0 0 52 52" aria-label="Score {{ '%.2f'|format(progress_data.avg_score) }}">
           <circle cx="26" cy="26" r="20" fill="none" stroke="#F0E0B0" stroke-width="5"/>
@@ -527,8 +527,8 @@ h1, h2, h3 { text-shadow: none; }
   {% endif %}
 
   {# ══ 2. BRIEF ══ #}
-  <div class="sl-sec sl-sec-brief is-open" id="sl-sec-brief">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-brief')" aria-expanded="true" role="button" tabindex="0">
+  <div class="sl-sec sl-sec-brief" id="sl-sec-brief">
+    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-brief')" aria-expanded="false" role="button" tabindex="0">
       <div style="flex:1;min-width:0">
         {% set ns = namespace(greeting='Good morning') %}
         {% set ist_hour = (now().hour + 5) % 24 %}
@@ -557,25 +557,20 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-mentor-lbl">Your mentor recommends</div>
         <div class="sl-brief-cue-txt">
           {% if progress_data and progress_data.weakest and progress_data.weakest in progress_data.dim_labels %}
-            Your {{ progress_data.dim_labels[progress_data.weakest] }} is where the next growth lives. Pick up the camera when the light feels right — not for a perfect shot, but for a frame that tests that dimension.
+            {{ progress_data.dim_labels[progress_data.weakest] }} is where the next growth lives. Pick up the camera when the light feels right — not for a perfect shot, but for a frame that tests that dimension.
           {% else %}
             Pick up the camera when the light feels right. One frame is enough. The eye sharpens every time it looks.
           {% endif %}
         </div>
       </div>
-      <div style="margin-top:14px">
-        <a class="sl-brief-cta" href="{{ url_for('upload') }}">
-          <i class="ti ti-upload" style="font-size:15px" aria-hidden="true"></i>
-          Upload for evaluation
-        </a>
-      </div>
+
     </div>
   </div>
 
   {# ══ 3. WEEKLY ASSIGNMENT ══ #}
   {% if active_challenge %}
-  <div class="sl-sec sl-sec-weekly is-open" id="sl-sec-weekly">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-weekly')" aria-expanded="true" role="button" tabindex="0">
+  <div class="sl-sec sl-sec-weekly" id="sl-sec-weekly">
+    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-weekly')" aria-expanded="false" role="button" tabindex="0">
       <span style="font-size:16px;font-weight:600;color:var(--text-primary);flex:1">Weekly assignment</span>
       {% if active_challenge.is_open %}
       <span class="sl-weekly-open-badge">
@@ -716,7 +711,7 @@ h1, h2, h3 { text-shadow: none; }
   </div>
 
   {# ══ 6. YOUR PHOTOGRAPHS ══ #}
-  <div class="sl-sec sl-sec-photos is-open" id="sl-sec-photos">
+  <div class="sl-sec sl-sec-photos" id="sl-sec-photos">
     <div class="sl-sec-hdr" onclick="slToggle('sl-sec-photos')" aria-expanded="true" role="button" tabindex="0">
       <span style="font-size:16px;font-weight:600;color:var(--text-primary);flex:1">Your photographs</span>
       <a class="sl-upload-btn" href="{{ url_for('upload') }}">
