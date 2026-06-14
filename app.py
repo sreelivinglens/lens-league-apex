@@ -3077,12 +3077,31 @@ def _build_progress_data(user):
     trend = [{'label': f'#{i+1}', 'tier': img.tier or get_tier(img.score), 'score': img.score}
              for i, img in enumerate(trend_imgs)]
 
-    # Per-dimension trend — last 8 images, for dashboard sparkline charts
+    # Per-dimension trend + pill — last 8 images, for dashboard sparkline charts
+    # Pill logic: first-half vs second-half average (matches scorecard _trend_pill)
     dim_trend_imgs = scored[-8:]
     dim_trends = {}
+    dim_pills  = {}
+
+    def _dash_pill(vals):
+        clean = [v for v in vals if v is not None]
+        if len(clean) < 3:
+            return 'steady'
+        mid    = len(clean) // 2
+        first  = sum(clean[:mid]) / mid
+        second = sum(clean[mid:]) / (len(clean) - mid)
+        diff   = second - first
+        if diff > 0.3:
+            return 'up'
+        if diff < -0.3:
+            return 'down'
+        return 'steady'
+
     for d, field in dim_fields.items():
-        vals = [getattr(img, field) for img in dim_trend_imgs]
-        dim_trends[d] = [round(v, 1) if v is not None else None for v in vals]
+        raw  = [getattr(img, field) for img in dim_trend_imgs]
+        vals = [round(v, 1) if v is not None else None for v in raw]
+        dim_trends[d] = vals
+        dim_pills[d]  = _dash_pill(vals)
 
     strongest = max(avgs, key=avgs.get)
     weakest   = min(avgs, key=avgs.get)
@@ -3172,6 +3191,7 @@ def _build_progress_data(user):
         'dim_labels':     dim_labels,
         'trend':          trend,
         'dim_trends':     dim_trends,
+        'dim_pills':      dim_pills,
         'strongest':      strongest,
         'weakest':        weakest,
         'top_genre':      top_genre,
