@@ -644,23 +644,18 @@ body {
         {% if dim_key in progress_data.dim_trends and dim_key in progress_data.dim_avgs %}
         {% set vals = progress_data.dim_trends[dim_key] %}
         {% set current = vals[-1] %}
-        {% set prev    = vals[-2] if vals|length > 1 else none %}
         {% set dim_min = vals|select('number')|list|min if vals|select('number')|list else 0 %}
         {% set dim_max = vals|select('number')|list|max if vals|select('number')|list else 10 %}
         {% set range   = [dim_max - dim_min, 0.1]|max %}
 
-        {# Trend direction pill #}
-        {% if prev is not none %}
-          {% set diff = current - prev %}
-          {% if diff > 0.2 %}
-            {% set pill_class = 'up' %}{% set pill_text = '↑ Improving' %}
-          {% elif diff < -0.2 %}
-            {% set pill_class = 'down' %}{% set pill_text = '↓ Dipped recently' %}
-          {% else %}
-            {% set pill_class = 'steady' %}{% set pill_text = '— Steady — your next opportunity to grow' %}
-          {% endif %}
+        {# Trend direction pill — uses server-computed first/second-half comparison #}
+        {% set pill_class = progress_data.dim_pills[dim_key] if progress_data.dim_pills and dim_key in progress_data.dim_pills else 'steady' %}
+        {% if pill_class == 'up' %}
+          {% set pill_text = '↑ Climbing — getting stronger' %}
+        {% elif pill_class == 'down' %}
+          {% set pill_text = '↓ Dipped recently' %}
         {% else %}
-          {% set pill_class = 'steady' %}{% set pill_text = '— Steady' %}
+          {% set pill_text = '— Steady — your next opportunity to grow' %}
         {% endif %}
 
         <div class="sl-dim-trend">
@@ -721,13 +716,15 @@ body {
   <div class="sl-sec sl-sec-brief is-open" id="sl-sec-brief">
     <div class="sl-sec-hdr" onclick="slToggle('sl-sec-brief')" aria-expanded="true" role="button" tabindex="0">
       <div style="flex:1;min-width:0">
-        {# Time-aware greeting using IST (UTC+5:30) #}
+        {# Time-aware greeting using IST (UTC+5:30) — namespace avoids Jinja scoping issue #}
+        {% set ns = namespace(greeting='Good morning') %}
         {% set ist_hour = (now().hour + 5) % 24 %}
-        {% if ist_hour < 12 %}{% set greeting = 'Good morning' %}
-        {% elif ist_hour < 17 %}{% set greeting = 'Good afternoon' %}
-        {% elif ist_hour < 21 %}{% set greeting = 'Good evening' %}
-        {% else %}{% set greeting = 'Good night' %}{% endif %}
-        <div class="sl-brief-greeting">{{ greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}</div>
+        {% if ist_hour >= 21 %}{% set ns.greeting = 'Good night' %}
+        {% elif ist_hour >= 17 %}{% set ns.greeting = 'Good evening' %}
+        {% elif ist_hour >= 12 %}{% set ns.greeting = 'Good afternoon' %}
+        {% endif %}
+        {% set first_name = current_user.full_name.split()|first if current_user.full_name and current_user.full_name.strip() else current_user.username %}
+        <div class="sl-brief-greeting">{{ ns.greeting }}, {{ first_name }}</div>
         {% if current_user.city %}
         <div class="sl-brief-loc">
           <span class="sl-brief-loc-dot"></span>
