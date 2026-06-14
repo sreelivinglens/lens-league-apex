@@ -55,8 +55,15 @@
 .sl-sec-chev {
   transition: transform .22s ease;
   flex-shrink: 0;
-  color: var(--border-strong);
-  font-size: 18px;
+  color: #1A1A18;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(26,26,24,0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .sl-sec.is-open .sl-sec-chev { transform: rotate(180deg); }
 .sl-sec-body {
@@ -227,7 +234,7 @@
 .sl-card-lbl { font-size: 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; flex: 1; }
 .sl-card-r   { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .sl-card-val { font-size: 14px; font-weight: 600; color: #8A6A20; }
-.sl-card-chev { color: var(--border-strong); font-size: 16px; transition: transform .2s; }
+.sl-card-chev { color: #1A1A18; font-size: 16px; transition: transform .2s; width:28px; height:28px; border-radius:50%; background:rgba(26,26,24,0.07); display:inline-flex; align-items:center; justify-content:center; }
 .sl-card.is-open .sl-card-chev { transform: rotate(180deg); }
 .sl-card-body { display: none !important; padding: 0 16px 16px; font-size: 16px; color: var(--text-primary); line-height: 1.7; }
 .sl-card.is-open .sl-card-body { display: block !important; }
@@ -548,18 +555,34 @@ h1, h2, h3 { text-shadow: none; }
       <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
     </div>
     <div class="sl-sec-body">
-      {% if current_user.city %}
-      <div class="sl-brief-text">Your personalised brief for {{ current_user.city }} is being prepared — built from your scores, your city, and the photographers who faced the same challenges you have.</div>
-      {% else %}
-      <div class="sl-brief-text">Your personalised brief will appear here once your location is set.</div>
+      {# Time-aware light observation — Sherpa voice, uses time + city #}
+      {% set ns2 = namespace(light_obs='The light this time of day rewards patience.') %}
+      {% set h = (now().hour + 5) % 24 %}
+      {% if h >= 5 and h < 8 %}{% set ns2.light_obs = 'The light right now — golden, low, and forgiving — is the hardest to find and the easiest to waste.' %}
+      {% elif h >= 8 and h < 11 %}{% set ns2.light_obs = 'The morning light is still soft. Street subjects are awake but not yet performing.' %}
+      {% elif h >= 11 and h < 15 %}{% set ns2.light_obs = 'Midday light is harsh — but it makes shadows that no other time of day produces.' %}
+      {% elif h >= 15 and h < 18 %}{% set ns2.light_obs = 'The afternoon is shifting. The light is losing its edge. Good time to plan where you will be at dusk.' %}
+      {% elif h >= 18 and h < 20 %}{% set ns2.light_obs = 'The light right now — last hour before dark — does things to ordinary subjects that money cannot buy.' %}
+      {% else %}{% set ns2.light_obs = 'Tomorrow morning, before 8am, is worth setting your alarm for.' %}
       {% endif %}
+      {% if current_user.city %}
+      <div class="sl-brief-text">{{ ns2.light_obs }}{% if current_user.city %} {{ current_user.city }} has the material — the question is always whether the photographer is ready for it.{% endif %}</div>
+      {% else %}
+      <div class="sl-brief-text">{{ ns2.light_obs }} Set your location to get a brief built around where you are.</div>
+      {% endif %}
+
       <div class="sl-brief-cue">
         <div class="sl-mentor-lbl">Your mentor recommends</div>
         <div class="sl-brief-cue-txt">
           {% if progress_data and progress_data.weakest and progress_data.weakest in progress_data.dim_labels %}
-            {{ progress_data.dim_labels[progress_data.weakest] }} is where the next growth lives. Pick up the camera when the light feels right — not for a perfect shot, but for a frame that tests that dimension.
+            {% set weak = progress_data.dim_labels[progress_data.weakest] %}
+            {% if active_challenge and active_challenge.is_open %}
+              Your {{ weak }} score is the gap between where you are and where you want to be. This week's assignment — "{{ active_challenge.prompt_title }}" — is precisely the kind of frame that tests it. One photograph. That is all it takes to move the number.
+            {% else %}
+              Your {{ weak }} score is the gap between where you are and where you want to be. Pick one subject{% if current_user.city %} near {{ current_user.city }}{% endif %} that challenges that dimension specifically — not a general shoot, a targeted one.
+            {% endif %}
           {% else %}
-            Pick up the camera when the light feels right. One frame is enough. The eye sharpens every time it looks.
+            Pick up the camera this week. One frame that surprises you. The eye sharpens every time it looks.
           {% endif %}
         </div>
       </div>
