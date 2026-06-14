@@ -3077,6 +3077,13 @@ def _build_progress_data(user):
     trend = [{'label': f'#{i+1}', 'tier': img.tier or get_tier(img.score), 'score': img.score}
              for i, img in enumerate(trend_imgs)]
 
+    # Per-dimension trend — last 8 images, for dashboard sparkline charts
+    dim_trend_imgs = scored[-8:]
+    dim_trends = {}
+    for d, field in dim_fields.items():
+        vals = [getattr(img, field) for img in dim_trend_imgs]
+        dim_trends[d] = [round(v, 1) if v is not None else None for v in vals]
+
     strongest = max(avgs, key=avgs.get)
     weakest   = min(avgs, key=avgs.get)
 
@@ -3164,6 +3171,7 @@ def _build_progress_data(user):
         'dim_avgs':       avgs,
         'dim_labels':     dim_labels,
         'trend':          trend,
+        'dim_trends':     dim_trends,
         'strongest':      strongest,
         'weakest':        weakest,
         'top_genre':      top_genre,
