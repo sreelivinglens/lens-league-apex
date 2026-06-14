@@ -65,7 +65,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "tabler-icons" !important;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
 }
 .sl-sec.is-open .sl-sec-chev { background: #1A2744; color: #fff; border-color: #1A2744; }
 .sl-sec.is-open .sl-sec-chev { transform: rotate(180deg); }
@@ -450,7 +452,7 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-pct-lbl">{{ progress_data.league_label or 'Camera' }}</div>
       </div>
       {% endif %}
-      <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
 
@@ -464,7 +466,7 @@ h1, h2, h3 { text-shadow: none; }
         {% if images.items|length > 1 and images.items[1].score %}
           {% set delta = last.score - images.items[1].score %}
           <span class="sl-le-delta {{ 'down' if delta < 0 else '' }}">
-            <i class="ti ti-arrow-{{ 'up' if delta >= 0 else 'down' }}" style="font-size:14px" aria-hidden="true"></i>
+            <span aria-hidden="true">{{ "↑" if delta >= 0 else "↓" }}</span>
             {{ '%+.2f'|format(delta) }}
           </span>
         {% endif %}
@@ -557,7 +559,7 @@ h1, h2, h3 { text-shadow: none; }
         </div>
         {% endif %}
       </div>
-      <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
       {# Time-aware light observation — Sherpa voice, uses time + city #}
@@ -606,7 +608,7 @@ h1, h2, h3 { text-shadow: none; }
         Open · closes {{ active_challenge.closes_at.strftime('%-d %b') }}
       </span>
       {% endif %}
-      <i class="ti ti-chevron-down sl-sec-chev" style="margin-left:8px" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
       <div class="sl-weekly-inner">
@@ -651,7 +653,7 @@ h1, h2, h3 { text-shadow: none; }
   <div class="sl-sec sl-sec-location" id="sl-sec-location">
     <div class="sl-sec-hdr" onclick="slToggle('sl-sec-location')" aria-expanded="false" role="button" tabindex="0">
       <span class="sl-loc-title">Your {{ top_genre }} eye is ready for this<span class="sl-loc-genre-pill">{{ top_genre }}</span></span>
-      <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
       <div class="sl-loc-card">
@@ -668,7 +670,7 @@ h1, h2, h3 { text-shadow: none; }
   <div class="sl-sec sl-sec-cards" id="sl-sec-cards">
     <div class="sl-sec-hdr" onclick="slToggle('sl-sec-cards')" aria-expanded="false" role="button" tabindex="0">
       <span style="font-size:16px;font-weight:600;color:var(--text-primary)">Points, awards &amp; community</span>
-      <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
       {% if rating_widget %}
@@ -687,7 +689,7 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-card" id="sl-card-pts">
           <div class="sl-card-hdr" onclick="slCardToggle('sl-card-pts')">
             <span class="sl-card-lbl"><i class="ti ti-coin" style="font-size:17px;color:var(--border-strong)" aria-hidden="true"></i> Points</span>
-            <div class="sl-card-r"><span class="sl-card-val">{{ wallet_hud.balance|round(0)|int }} pts</span><i class="ti ti-chevron-down sl-card-chev" aria-hidden="true"></i></div>
+            <div class="sl-card-r"><span class="sl-card-val">{{ wallet_hud.balance|round(0)|int }} pts</span><span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
           </div>
           <div class="sl-card-body">{{ wallet_hud.balance|round(0)|int }} points available. Earn by rating photographs, uploading, and reaching your next tier.<a class="sl-card-action" href="{{ url_for('redeem') }}">Redeem now →</a></div>
         </div>
@@ -696,7 +698,7 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-card" id="sl-card-aea">
           <div class="sl-card-hdr" onclick="slCardToggle('sl-card-aea')">
             <span class="sl-card-lbl"><i class="ti ti-award" style="font-size:17px;color:var(--border-strong)" aria-hidden="true"></i> Annual Excellence Award</span>
-            <div class="sl-card-r">{% if not _pre_season %}<span class="sl-badge-a">{{ _months_active }} of 4</span>{% endif %}<i class="ti ti-chevron-down sl-card-chev" aria-hidden="true"></i></div>
+            <div class="sl-card-r">{% if not _pre_season %}<span class="sl-badge-a">{{ _months_active }} of 4</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
           </div>
           <div class="sl-card-body">
             {% if _pre_season %}The season opens on {{ _season_start_label }}. Photographers who evaluate at least once each month are considered for the year-end award.
@@ -711,7 +713,7 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-card" id="sl-card-genre">
           <div class="sl-card-hdr" onclick="slCardToggle('sl-card-genre')">
             <span class="sl-card-lbl"><i class="ti ti-chart-bar" style="font-size:17px;color:var(--border-strong)" aria-hidden="true"></i> Standing by genre</span>
-            <div class="sl-card-r">{% if poty_tracker.best_avg %}<span class="sl-card-val">{{ '%.2f'|format(poty_tracker.best_avg) }}</span>{% endif %}<i class="ti ti-chevron-down sl-card-chev" aria-hidden="true"></i></div>
+            <div class="sl-card-r">{% if poty_tracker.best_avg %}<span class="sl-card-val">{{ '%.2f'|format(poty_tracker.best_avg) }}</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
           </div>
           <div class="sl-card-body">
             {% for row in poty_tracker.genre_rows %}
@@ -729,7 +731,7 @@ h1, h2, h3 { text-shadow: none; }
         <div class="sl-card" id="sl-card-ref">
           <div class="sl-card-hdr" onclick="slCardToggle('sl-card-ref')">
             <span class="sl-card-lbl"><i class="ti ti-users" style="font-size:17px;color:var(--border-strong)" aria-hidden="true"></i> Refer a friend</span>
-            <div class="sl-card-r">{% if referral_stats and referral_stats.successful %}<span class="sl-badge-g">{{ referral_stats.successful }} joined</span>{% endif %}<i class="ti ti-chevron-down sl-card-chev" aria-hidden="true"></i></div>
+            <div class="sl-card-r">{% if referral_stats and referral_stats.successful %}<span class="sl-badge-g">{{ referral_stats.successful }} joined</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
           </div>
           <div class="sl-card-body">Invite friends, earn points. Share your code. You earn <strong>200 pts</strong> when they subscribe. They get a discount on their first month.<a class="sl-card-action" href="{{ url_for('referral_page') }}">Share my code →</a></div>
         </div>
@@ -743,7 +745,7 @@ h1, h2, h3 { text-shadow: none; }
   <div class="sl-sec sl-sec-portfolio" id="sl-sec-portfolio">
     <div class="sl-sec-hdr" onclick="slToggle('sl-sec-portfolio')" aria-expanded="false" role="button" tabindex="0">
       <span style="font-size:16px;font-weight:600;color:var(--text-primary)">Portfolio &amp; mentor review</span>
-      <i class="ti ti-chevron-down sl-sec-chev" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
 
@@ -816,7 +818,7 @@ h1, h2, h3 { text-shadow: none; }
         <i class="ti ti-upload" style="font-size:15px" aria-hidden="true"></i>
         Upload for evaluation
       </a>
-      <i class="ti ti-chevron-down sl-sec-chev" style="margin-left:10px" aria-hidden="true"></i>
+      <span class="sl-sec-chev" aria-hidden="true">▼</span></i>
     </div>
     <div class="sl-sec-body">
       <div class="sl-credits-txt">
