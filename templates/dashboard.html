@@ -32,7 +32,7 @@
   font-family: var(--font-body);
 }
 /* audit: Inter font override */
-.sl-dash, .sl-dash * { font-family: 'Inter', sans-serif !important; }
+.sl-dash, .sl-dash *:not(i) { font-family: 'Inter', sans-serif !important; }
 
 /* ── Sections — collapsible shell ── */
 .sl-sec {
@@ -60,10 +60,11 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(26,26,24,0.08);
+  background: rgba(26,26,24,0.10);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-family: "tabler-icons" !important;
 }
 .sl-sec.is-open .sl-sec-chev { transform: rotate(180deg); }
 .sl-sec-body {
