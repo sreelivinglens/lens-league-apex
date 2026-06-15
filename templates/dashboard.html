@@ -58,7 +58,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
    GREETING HEADER
 ══════════════════════════════════════════ */
 .sl-greeting {
-  padding: 24px 0 8px;
+  padding: 16px 0 6px;
 }
 
 .sl-greeting__name {
@@ -103,9 +103,9 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 /* Two-column layout: text left, image right */
 .sl-assignment__body {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: 1fr 120px;
   gap: 0;
-  min-height: 200px;
+  min-height: 180px;
 }
 
 .sl-assignment__left {
@@ -148,8 +148,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-assignment__meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 20px;
+  gap: 6px;
+  padding: 12px 16px;
 }
 
 .sl-meta-item {
@@ -187,11 +187,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 /* Shot count */
 .sl-assignment__shots {
-  padding: 0 20px 16px;
+  padding: 0 16px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 17px;
+  font-size: 16px;
   color: var(--sl-text-light);
 }
 
@@ -224,11 +224,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   border-radius: var(--r-card);
   border: 1px solid var(--sl-border);
   box-shadow: var(--sl-shadow);
-  padding: 20px;
+  padding: 14px 16px;
   margin-bottom: 16px;
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 16px;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
   align-items: center;
 }
 
@@ -242,24 +242,24 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-master__img {
-  width: 100px;
-  height: 80px;
+  width: 80px;
+  height: 64px;
   object-fit: cover;
   border-radius: var(--r-img);
 }
 
 .sl-master__name {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--sl-text);
   margin-bottom: 2px;
 }
 
 .sl-master__desc {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--sl-text-light);
-  margin-bottom: 10px;
-  line-height: 1.6;
+  margin-bottom: 8px;
+  line-height: 1.5;
 }
 
 .sl-btn-example {
@@ -291,7 +291,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   border-radius: var(--r-card);
   border: 1px solid var(--sl-border);
   box-shadow: var(--sl-shadow);
-  padding: 20px;
+  padding: 14px 8px;
   margin-bottom: 16px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -341,11 +341,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-yesterday__score-val {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--sl-text);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .sl-yesterday__stars {
@@ -386,8 +386,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   justify-content: space-between;
   background: var(--sl-yellow);
   border-radius: var(--r-card);
-  padding: 20px 24px;
-  margin-bottom: 24px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
   text-decoration: none;
   transition: background .2s;
   box-shadow: 0 8px 24px rgba(244,194,13,.25);
@@ -402,28 +402,34 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-upload-banner__icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(0,0,0,.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
 .sl-upload-banner__title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--sl-text);
-  display: block;
-  margin-bottom: 2px;
+  display: inline;
+}
+
+.sl-upload-banner__sep {
+  display: inline;
+  color: rgba(21,21,21,.45);
+  margin: 0 4px;
 }
 
 .sl-upload-banner__sub {
-  font-size: 15px;
+  font-size: 16px;
   color: rgba(21,21,21,.65);
+  display: inline;
 }
 
 .sl-upload-banner__arrow {
@@ -456,7 +462,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  padding: 14px 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -471,20 +477,20 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-sec__icon {
-  font-size: 22px;
-  width: 36px;
+  font-size: 20px;
+  width: 28px;
   text-align: center;
 }
 
 .sl-sec__title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--sl-text);
   display: block;
 }
 
 .sl-sec__sub {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--sl-text-light);
   display: block;
   margin-top: 1px;
@@ -501,7 +507,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 .sl-sec__body {
   display: none;
-  padding: 0 20px 20px;
+  padding: 0 16px 16px;
   border-top: 1px solid var(--sl-border);
 }
 
@@ -511,23 +517,23 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-standing-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .sl-standing-stat {
   text-align: center;
-  padding: 14px;
+  padding: 10px 8px;
   background: var(--sl-bg);
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .sl-standing-stat__val {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--sl-text);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .sl-standing-stat__label {
@@ -603,19 +609,19 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-points-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .sl-points-card {
   background: var(--sl-bg);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 10px 12px;
   text-align: center;
 }
 
 .sl-points-card__val {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--sl-text);
 }
@@ -623,7 +629,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-points-card__label {
   font-size: 13px;
   color: var(--sl-text-light);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .sl-btn-redeem {
@@ -698,13 +704,13 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-mentor-alert {
   background: var(--sl-card);
   border: 2px solid var(--sl-yellow);
-  border-radius: var(--r-card);
-  padding: 18px 20px;
-  margin-bottom: 16px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 .sl-mentor-alert__label {
   font-size: 13px;
@@ -737,13 +743,13 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 /* AEA banner */
 .sl-aea-banner {
   background: #13254B;
-  border-radius: var(--r-card);
-  padding: 16px 20px;
-  margin-bottom: 16px;
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 .sl-aea-banner__badge {
   background: var(--sl-yellow);
@@ -885,12 +891,12 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-loc-widget {
   background: var(--sl-card);
   border: 1px solid var(--sl-border);
-  border-radius: var(--r-card);
-  padding: 16px 20px;
+  border-radius: 16px;
+  padding: 12px 16px;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .sl-loc-widget__pin { font-size: 20px; flex-shrink: 0; }
 .sl-loc-widget__txt { flex: 1; font-size: 16px; color: var(--sl-text-light); line-height: 1.4; }
@@ -928,7 +934,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 @media (min-width: 768px) and (max-width: 1024px) {
   /* iPad: centred single column, larger type */
   .sl-today__inner { padding: 0 32px; }
-  .sl-assignment__title { font-size: 44px; }
+  .sl-assignment__title { font-size: 40px; }
   .sl-assignment__body { grid-template-columns: 1fr 160px; }
   .sl-dim-grid { grid-template-columns: 1fr 1fr; }
 }
@@ -936,7 +942,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 @media (min-width: 1025px) {
   /* Desktop */
   .sl-today__inner { padding: 0 24px; max-width: 520px; }
-  .sl-assignment__title { font-size: 48px; }
+  .sl-assignment__title { font-size: 44px; }
   .sl-assignment__body { grid-template-columns: 1fr 180px; }
 }
 
@@ -1200,12 +1206,19 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       {% endif %}
     </div>
     <div class="sl-yesterday__col">
-      <span class="sl-yesterday__label">Active days</span>
+      <span class="sl-yesterday__label">Season</span>
+      {% if _pre_season %}
+      <div class="sl-yesterday__streak-val" style="font-size:20px">
+        Sep
+      </div>
+      <div class="sl-yesterday__streak-sub">season opens</div>
+      {% else %}
       <div class="sl-yesterday__streak-val">
         <span style="color:#E74C3C">&#9679;</span>
         {{ _months_active or 0 }}
       </div>
       <div class="sl-yesterday__streak-sub">active month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
+      {% endif %}
     </div>
   </div>
   {% endif %}
@@ -1218,7 +1231,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div class="sl-upload-banner__icon">▲</div>
       <div>
         <span class="sl-upload-banner__title">Upload today's photographs</span>
-        <span class="sl-upload-banner__sub">Get evaluated and improve every day</span>
+        <span class="sl-upload-banner__sep">·</span>
+        <span class="sl-upload-banner__sub">Get evaluated and improve</span>
       </div>
     </div>
     <span class="sl-upload-banner__arrow">→</span>
@@ -1399,30 +1413,15 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
   </div>{# /sl-sections #}
 
-  {# ── Location widget (compact) ── #}
-  {% if location_data_json %}
-  {% set _loc_city = '' %}
-  {% set _loc_state = '' %}
-  {% if location_data_json and location_data_json != '{}' and location_data_json != 'null' %}
+  {# ── Location widget — uses current_user.city/state directly ── #}
+  {% if current_user.city %}
   <div class="sl-loc-widget">
     <span class="sl-loc-widget__pin">📍</span>
     <div class="sl-loc-widget__txt">
-      Shooting in <span class="sl-loc-widget__city" id="sl-loc-city-display">your current location</span>
+      Shooting in <span class="sl-loc-widget__city">{{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</span>
     </div>
     <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
   </div>
-  <script>
-  (function() {
-    try {
-      var _d = JSON.parse({{ location_data_json | tojson }});
-      var city = _d.city || '';
-      var state = _d.state || _d.country || '';
-      var el = document.getElementById('sl-loc-city-display');
-      if (el && city) el.textContent = city + (state ? ', ' + state : '');
-    } catch(e) {}
-  })();
-  </script>
-  {% endif %}
   {% endif %}
 
 </div>{# /sl-today__inner #}
