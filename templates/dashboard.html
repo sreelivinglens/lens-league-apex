@@ -1694,8 +1694,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           </div>
         </div>
         {# SVG sparkline from dim_trends data #}
-        {% set _vals = [] %}
-        {% for _v in _trend_vals %}{% if _v != none %}{% set _vals = _vals + [_v] %}{% endif %}{% endfor %}
+        {% set _ns = namespace(vals=[]) %}
+        {% for _v in _trend_vals %}{% if _v != none %}{% set _ns.vals = _ns.vals + [_v] %}{% endif %}{% endfor %}
+        {% set _vals = _ns.vals %}
         {% if _vals|length >= 2 %}
         <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
              aria-label="{{ _dim_labels.get(dim, dim) }} trend">
