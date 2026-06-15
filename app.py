@@ -2885,7 +2885,7 @@ def dashboard():
     if current_user.role != 'admin':
         try:
             _reviews = db.session.execute(db.text("""
-                SELECT ms.id, ms.review_text, ms.reviewed_at,
+                SELECT ms.id, ms.image_id, ms.review_text, ms.reviewed_at,
                        i.asset_name, i.thumb_url, i.genre,
                        mp.display_name AS mentor_name
                 FROM mentor_sessions ms
@@ -9367,6 +9367,39 @@ def robots_txt():
         "# strictly prohibited. See /terms for full legal restrictions.\n"
         "\n"
         "Sitemap: https://shutterleague.com/sitemap.xml\n"
+        "\n"
+        "# ── AI crawler blocks (Content Signals — EU DSM Directive 2019/790 Art. 4) ──\n"
+        "# search=yes · ai-train=no · ai-input=no\n"
+        "User-agent: *\n"
+        "Content-Signal: search=yes,ai-train=no,ai-input=no\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Amazonbot\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: Applebot-Extended\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: Bytespider\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: CCBot\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: ClaudeBot\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: CloudflareBrowserRenderingCrawler\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: Google-Extended\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: GPTBot\n"
+        "Disallow: /\n"
+        "\n"
+        "User-agent: meta-externalagent\n"
+        "Disallow: /\n"
     )
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
