@@ -60,7 +60,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-fade {
   position: absolute;
   inset: 0;
-  background: rgba(13,13,11,0.28);
+  background: rgba(13,13,11,0.08);
   z-index: 1;
   pointer-events: none;
 }
@@ -129,6 +129,41 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   text-shadow: 0 1px 8px rgba(0,0,0,0.98);
 }
 .sl-hero-micro svg { flex-shrink: 0; }
+
+/* Score badge — bottom left of hero photo, desktop */
+.sl-hero-score-badge {
+  position: absolute;
+  bottom: 20px;
+  left: clamp(16px, 4vw, 48px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sl-hero-score-badge__score {
+  font-size: 52px;
+  font-weight: 800;
+  color: #F5C518;
+  line-height: 1;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.90);
+}
+.sl-hero-score-badge__tier {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
+}
+.sl-hero-score-badge__by {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
+}
+/* Hide score badge on mobile — info shown in below-hero block */
+@media (max-width: 768px) {
+  .sl-hero-score-badge { display: none; }
+}
 
 /* Coaching overlay */
 .sl-coaching {
@@ -833,23 +868,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   }
   /* Gradient over photo bottom for headline readability */
   .sl-hero::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    top: 0;
-    height: 56.25vw; /* matches 16:9 */
-    background: linear-gradient(to top,
-      rgba(0,0,0,0.25) 0%,
-      rgba(0,0,0,0.05) 40%,
-      transparent 100%);
-    pointer-events: none;
-    z-index: 3;
+    display: none; /* no text on photo — no gradient needed */
   }
   /* Hero text: headline anchored bottom of photo */
   .sl-hero-fade {
     display: none; /* gradient ::after handles mobile readability */
   }
   .sl-hero-text {
+    display: none !important; /* moved to below-hero on mobile */
+  }
+  .sl-hero-text-orig {
     position: absolute;
     top: auto;
     bottom: 0;
@@ -867,12 +895,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     display: block;
   }
   .sl-hero-h1 {
-    font-size: 18px;
-    white-space: normal;
-    line-height: 1.5;
-    color: rgba(255,255,255,0.82);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.90) !important;
-    margin-bottom: 0;
+    display: none; /* headline moves to below-hero cream block on mobile */
   }
   /* Subhead + CTA + micro move BELOW the photo on cream */
   .sl-hero-sub {
@@ -1203,6 +1226,15 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   <div class="sl-hero-fade"></div>
 
+  {# Score + tier + name badge on hero photo — bottom left, desktop only #}
+  {% if hero and hero.score %}
+  <div class="sl-hero-score-badge">
+    <div class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</div>
+    <div class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</div>
+    <div class="sl-hero-score-badge__by">by {{ hero.photographer_name or "" }}</div>
+  </div>
+  {% endif %}
+
   <div class="sl-hero-text">
     <h1 class="sl-hero-h1">How good is<br>your photograph,<br>really?</h1>
       <p class="sl-hero-tagline">Honest photography feedback.<br>One improvement at a time.</p>
@@ -1229,7 +1261,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 {# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
 <div class="sl-hero-below">
-  <div class="sl-hero-below-sub">Honest photography feedback.<br>One improvement at a time.</div>
+  {% if hero and hero.score %}
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(26,26,24,0.10);">
+    <div style="font-size:36px;font-weight:800;color:#D9A900;line-height:1;">{{ "%.2f"|format(hero.score) }}</div>
+    <div>
+      <div style="font-size: 14px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#6B6B6B;">{{ hero.tier or "" }}</div>
+      <div style="font-size: 14px;color:#6B6B6B;">by {{ hero.photographer_name or "" }}</div>
+    </div>
+  </div>
+  {% endif %}
+  <h1 style="font-size:26px;font-weight:800;line-height:1.5;color:#1A1A18;margin:0 0 12px;">How good is<br>your photograph,<br>really?</h1>
+  <div class="sl-hero-below-sub">Honest photography feedback. One improvement at a time.</div>
   <div class="sl-hero-below-60" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;color:rgba(26,26,24,0.65);font-weight:500;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Upload a photograph. Score in 60 seconds. Free to start.
@@ -1501,7 +1543,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       <div class="sl-gitem-info">
         <span class="sl-gitem-score">{{ "%.2f"|format(img.score) }}</span>
         <span class="sl-gitem-title">{{ img.title or img.genre or 'Untitled' }}</span>
-        <span class="sl-gitem-by">by {{ img.author.username }}</span>
+        <span class="sl-gitem-by">by {{ img.photographer_name or "" }}</span>
       </div>
     </a>
     {% endif %}{% endfor %}
