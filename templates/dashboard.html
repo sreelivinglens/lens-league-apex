@@ -1149,9 +1149,17 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       Shoot several frames. Upload your best one.
     </div>
 
-    <a href="{{ url_for('mission') }}" class="sl-btn-mission">
-      Start Mission &nbsp;→
-    </a>
+    {# Two CTAs — mission is optional, direct upload always available #}
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:0 0 4px;">
+      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:0 0 0 var(--r-hero);">
+        Start Mission &nbsp;→
+      </a>
+      <a href="{{ url_for('upload') }}"
+         style="display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,.08);color:var(--sl-text);font-size:14px;font-weight:700;padding:0 16px;border-radius:0 0 var(--r-hero) 0;text-decoration:none;white-space:nowrap;"
+         title="Upload any photograph — no mission required">
+        ▲ Upload
+      </a>
+    </div>
   </div>
 
   {# ══════════════════════════════════════════
