@@ -1223,6 +1223,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
 <div class="sl-hero-below">
   <div class="sl-hero-below-sub">Honest photography feedback.<br>One improvement at a time.</div>
+  <div class="sl-hero-below-60" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;color:rgba(26,26,24,0.65);font-weight:500;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Upload a photograph. Score in 60 seconds. Free to start.
+  </div>
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
      class="sl-hero-below-btn">GET MY FIRST FEEDBACK</a>
   <div class="sl-hero-below-micro">
