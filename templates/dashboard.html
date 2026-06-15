@@ -1195,8 +1195,22 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {% set _title     = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[0] %}
   {% set _brief_why = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[1] %}
 
-  {# Unsplash placeholder — replace with API call once wired #}
-  {% set _img_url = 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80' %}
+  {# Assignment hero image — illustrates the specific mission brief, not just the dimension.
+     Each photo shows the TECHNIQUE the user is being asked to go practise.
+     dod  → Foreground Separation: layered scene, branch/shadow in foreground
+     dm   → The Moment Before: street scene, figure mid-action, anticipation
+     aq   → Light as Subject: window light shaft, strong shadow on wall
+     wonder → The Unfamiliar Angle: dramatic low-angle or overhead perspective
+     disruption → Break the Rule: off-centre subject, deliberate empty space
+  #}
+  {% set _img_map = {
+    'dod':        'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80',
+    'dm':         'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80',
+    'aq':         'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&q=80',
+    'wonder':     'https://images.unsplash.com/photo-1444080748397-f442aa105c8f?w=800&q=80',
+    'disruption': 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80'
+  } %}
+  {% set _img_url = _img_map.get(_focus_key, 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80') %}
 
   <div class="sl-assignment" id="sl-mission-card">
     <img src="{{ _img_url }}"
@@ -1269,13 +1283,13 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
      TODAY'S MASTER
   ══════════════════════════════════════════ #}
   {% set _master_map = {
-    'dod':        ('Fan Ho',              'Master of light, shadow and composition.',         'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80'),
-    'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',                'https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=200&q=80'),
-    'aq':         ('Ansel Adams',         'Made light itself the subject.',                   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80'),
-    'wonder':     ('Vivian Maier',        'Found extraordinary in the completely ordinary.',  'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80'),
-    'disruption': ('Daido Moriyama',      'Broke every rule of composition. On purpose.',    'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=200&q=80')
+    'dod':        ('Fan Ho',               'Master of light, shadow and geometric composition.',   'https://images.unsplash.com/photo-1536244636800-a3f74db0f3cf?w=200&q=80'),
+    'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',                     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80'),
+    'aq':         ('Ansel Adams',          'Made light itself the subject.',                       'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=80'),
+    'wonder':     ('Vivian Maier',         'Found the extraordinary in the completely ordinary.',  'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=80'),
+    'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',         'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=200&q=80')
   } %}
-  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80')) %}
+  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80')) %}
 
   <div class="sl-master">
     <img src="{{ _master[2] }}"
