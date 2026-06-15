@@ -3252,11 +3252,30 @@ def _build_progress_data(user):
             return 'down'
         return 'steady'
 
+    def _dash_spark(values, width=300, height=28):
+        """Pre-compute SVG polyline points string in Python — avoids Jinja2 loop scoping."""
+        clean = [v for v in values if v is not None]
+        if len(clean) < 2:
+            return '', []
+        mn, mx = min(clean), max(clean)
+        rng = mx - mn if mx != mn else 1.0
+        step = width / (len(clean) - 1)
+        pts = []
+        for i, v in enumerate(clean):
+            x = round(i * step, 1)
+            y = round(height - ((v - mn) / rng) * (height - 2) - 1, 1)
+            pts.append({'x': x, 'y': y})
+        polyline = ' '.join(f"{p['x']},{p['y']}" for p in pts)
+        return polyline, pts
+
+    dim_sparklines = {}  # pre-computed SVG points per dimension
     for d, field in dim_fields.items():
         raw  = [getattr(img, field) for img in dim_trend_imgs]
         vals = [round(v, 1) if v is not None else None for v in raw]
         dim_trends[d] = vals
         dim_pills[d]  = _dash_pill(vals)
+        polyline, pts = _dash_spark(vals)
+        dim_sparklines[d] = {'polyline': polyline, 'points': pts}
 
     strongest = max(avgs, key=avgs.get)
     weakest   = min(avgs, key=avgs.get)
@@ -3347,6 +3366,7 @@ def _build_progress_data(user):
         'trend':          trend,
         'dim_trends':     dim_trends,
         'dim_pills':      dim_pills,
+        'dim_sparklines': dim_sparklines,
         'strongest':      strongest,
         'weakest':        weakest,
         'top_genre':      top_genre,
