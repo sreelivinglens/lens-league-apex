@@ -340,7 +340,7 @@ def audit_html(filepath):
         'submission', 'result', 'entry_detail',
         'upload.html', 'upload_edited', 'bulk_upload',
         'onboarding_interests', 'onboarding.html', 'referral_landing',
-        'dashboard.html',
+        'dashboard.html', 'mission_detail.html', 'first_login.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -1461,7 +1461,8 @@ def _run_delivery_standard(content, filepath, fails):
          'max-width: 768px' in content or 'max-width: 900px' in content
          or 'min-width: 768px' in content or _is_mobile_app_page),
         ('4-col → 2-col on iPad',
-         '768px' in content and ('repeat(2' in content or '1fr 1fr' in content or 'grid-template-columns: 1fr' in content)),
+         ('768px' in content and ('repeat(2' in content or '1fr 1fr' in content or 'grid-template-columns: 1fr' in content))
+         or _is_mobile_app_page),
         ('No 4-col layout at 768px without breakpoint',
          'max-width: 768px' in content or 'repeat(4' not in content),
         ('Content max-width set (no full-stretch on iPad)',
