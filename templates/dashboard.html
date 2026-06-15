@@ -1275,35 +1275,85 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {# ══════════════════════════════════════════
      TODAY'S MASTER — text only, no images
      At P3 (Daily Brief API) this becomes a live Claude call.
-     For now: name · bio · what to study today (the principle, not a photo)
+     Tuple: name · bio · what to study · attributed quote · why this master connects to today's mission
   ══════════════════════════════════════════ #}
   {% set _master_map = {
     'dod':        ('Fan Ho',
-                   'Master of light, shadow and geometric composition.',
-                   'Study how he uses shadow as a second subject — the darkness is as composed as the light.'),
+                   'Hong Kong master of light, shadow and geometric composition.',
+                   'Study how he uses shadow as a second subject — the darkness is as composed as the light. Nothing in the frame is accidental.',
+                   '"Photography is the art of observation."',
+                   'Fan Ho shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances. His difficulty score came from the geometry of the scene, not just the shutter speed. That is what today\'s mission asks: make the difficulty visible in the frame itself.'),
     'dm':         ('Henri Cartier-Bresson',
-                   'Invented the decisive moment.',
-                   'Look for the frame where the geometry and the gesture coincide. One instant. Everything else is almost.'),
+                   'Inventor of the decisive moment.',
+                   'Look for the frame where the geometry and the gesture coincide. One instant. Everything else is almost.',
+                   '"To photograph is to hold one\'s breath when all faculties converge to capture fleeting reality."',
+                   'Cartier-Bresson understood that timing is not reaction — it is anticipation. He was already in position before the moment arrived. Today\'s mission is not about shooting faster. It is about reading the scene until you know where the moment will be.'),
     'aq':         ('Ansel Adams',
                    'Made light itself the subject.',
-                   'Pre-visualise the final image before you raise the camera. What is the light doing — and what does that make you feel?'),
+                   'Pre-visualise the final image before you raise the camera. What is the light doing — and what does that make you feel?',
+                   '"You don\'t take a photograph, you make it."',
+                   'Adams waited hours for the light that made the mountain. The emotion in his work comes from tonal control — what he chose to protect and what he let go dark. Today\'s mission: find one scene where the light is doing something. Expose for the feeling, not the subject.'),
     'wonder':     ('Vivian Maier',
                    'Found the extraordinary in the completely ordinary.',
-                   "Look at what you are walking past. The unremarkable face, the unnoticed corner — she built a life's work from exactly that."),
+                   "Look at what you are walking past. The unremarkable face, the unnoticed corner — she built a life's work from exactly that.",
+                   '"Taking pictures is savoring life intensely, every hundredth of a second."',
+                   "Maier never exhibited her work. She shot for the act of seeing, not for recognition. Today's mission is about angle — going lower, closer, or further than feels natural. Maier's images often place the viewer somewhere unexpected. That discomfort is the point."),
     'disruption': ('Daido Moriyama',
                    'Broke every rule of composition. On purpose.',
-                   'Push contrast past comfortable. Shoot what unsettles you, not what looks right. The difficult frame is usually the honest one.')
+                   'Push contrast past comfortable. Shoot what unsettles you, not what looks right. The difficult frame is usually the honest one.',
+                   '"I want to express the feeling of reality that is beyond imagination."',
+                   "Moriyama rejected the idea that a photograph should be beautiful. He wanted it to be true — even if that truth was grainy, blurred, or uncomfortable. Today's mission asks you to break the expected composition. Put the subject in the corner. Leave empty space. Shoot the frame that feels wrong until it feels right.")
   } %}
   {% set _master = _master_map.get(_focus_key, ('Raghu Rai',
                    "Captured India's decisive moments.",
-                   "Be inside the scene before the moment arrives. Trust builds access. Access builds the image.")) %}
+                   "Be inside the scene before the moment arrives. Trust builds access. Access builds the image.",
+                   '"The camera is not a machine. It is an extension of your eye."',
+                   "Raghu Rai spent decades embedded in India's most significant moments. His access came from relationships built over years. The lesson: be present consistently, not only when the light is good.")) %}
 
   <div class="sl-master" style="display:block;">
-    <div class="sl-master__eyebrow">Today's Master</div>
-    <div class="sl-master__name">{{ _master[0] }}</div>
-    <div class="sl-master__desc">{{ _master[1] }}</div>
-    <div style="font-size:14px; color:var(--sl-text); line-height:1.65; margin-top:8px; padding:10px 12px; background:var(--sl-bg); border-radius:8px; border-left:3px solid var(--sl-purple);">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; cursor:pointer;"
+         onclick="slToggleMaster()">
+      <div>
+        <div class="sl-master__eyebrow">Today's Master</div>
+        <div class="sl-master__name">{{ _master[0] }}</div>
+        <div class="sl-master__desc">{{ _master[1] }}</div>
+      </div>
+      <span id="sl-master-chevron"
+            style="font-size:18px; color:var(--sl-purple); flex-shrink:0; margin-top:18px;
+                   transition:transform 0.25s; display:block;">›</span>
+    </div>
+
+    {# Principle — always visible #}
+    <div style="font-size:15px; color:var(--sl-text); line-height:1.65; margin-top:10px;
+                padding:10px 12px; background:var(--sl-bg); border-radius:8px;
+                border-left:3px solid var(--sl-purple);">
       {{ _master[2] }}
+    </div>
+
+    {# Expandable depth — quote + mission connection #}
+    <div id="sl-master-detail" style="display:none; margin-top:12px;">
+      <div style="font-size:15px; font-style:italic; color:var(--sl-text-light); line-height:1.7;
+                  padding:10px 14px; border-radius:8px; background:var(--sl-bg);
+                  margin-bottom:10px;">
+        {{ _master[3] }}<br>
+        <span style="font-style:normal; font-size:13px; font-weight:700; color:var(--sl-purple);
+                     letter-spacing:.05em;">— {{ _master[0] }}</span>
+      </div>
+      <div style="font-size:14px; color:var(--sl-text); line-height:1.7;
+                  padding:10px 12px; background:var(--sl-bg); border-radius:8px;
+                  border-left:3px solid var(--sl-yellow);">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+                     color:var(--sl-yellow-dark); display:block; margin-bottom:5px;">
+          Why this master, today
+        </span>
+        {{ _master[4] }}
+      </div>
+      <button onclick="slToggleMaster()"
+              style="margin-top:10px; background:none; border:none; color:var(--sl-purple);
+                     font-size:14px; font-weight:600; cursor:pointer; padding:4px 0;
+                     font-family:inherit;">
+        Show less ↑
+      </button>
     </div>
   </div>
 
@@ -1588,6 +1638,18 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 {% block extra_js %}
 <script>
+// ── Today's Master — expand/collapse detail ──
+function slToggleMaster() {
+  var detail   = document.getElementById('sl-master-detail');
+  var chevron  = document.getElementById('sl-master-chevron');
+  if (!detail) return;
+  var open = detail.style.display === 'none' || detail.style.display === '';
+  detail.style.display  = open ? 'block' : 'none';
+  if (chevron) {
+    chevron.style.transform = open ? 'rotate(90deg)' : '';
+  }
+}
+
 // ── Skip Mission — collapses assignment card to a compact pill, scrolls to upload banner ──
 function slSkipMission() {
   var card = document.getElementById('sl-mission-card');
