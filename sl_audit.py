@@ -57,6 +57,35 @@ KYC_TERMS = [
       'raw_submissions', 'submission_count', 'submission_record',
       'resubmission', 'raw_submission', 'no ranked submissions']),
     ('No KYC: compete',     'competi',       ['url_for']),
+    ('No KYC: POTY (use Annual Excellence Award)',
+     'poty',
+     ['url_for', 'poty_entry', 'poty_entries', 'poty_used_year', 'poty_entry_images',
+      'poty_id', 'show_poty_banner', 'poty_banner', "endpoint == 'poty'",
+      "endpoint in ['poty'", 'poty_score', 'poty_season', 'poty_rank',
+      'poty_qualifying', 'poty_points', 'path_to_rank',
+      "path.includes('poty')", "includes('poty')", '.poty', '#poty',
+      'poty)', "'/poty'", '"/poty"']),
+    ('No KYC: DDI in user copy (use "your evaluation" or "score")',
+     'ddi',
+     ['url_for', 'apex ddi engine', 'apex_ddi', 'DDI Engine', 'ddi_engine',
+      'ddi_score', 'ddi score', 'Rated by Science', 'apex-ddi', '<!-- ddi',
+      '{# ddi', 'auto_score', 'APEX DDI', 'ddi-', '-ddi']),
+    ('No KYC: Genre in UX labels (use "Interests")',
+     ' genre',
+     ['url_for', 'image.genre', 'img.genre', 'genre_suggestion', 'genre_context',
+      'genre_tag', 'genre_interests', 'genre_weights', 'genre_label',
+      'genre_award', 'genre_score', 'effective_genre', 'primary_genre',
+      'genre_filter', 'genre_track', 'genre_tier', 'genre_avg',
+      'genre_pool', 'genre_eligible', 'genre_dim', 'genre_poty',
+      'genre_standing', 'genre_drift', 'get_effective_genre',
+      'score_genre', 'input.*genre', 'select.*genre',
+      'genre=', "genre='", 'genre_key', 'sub_genre', 'genre_map',
+      '# genre', '{# genre', 'genre_award', 'ann.genre',
+      'VALID_SUBGENRES', 'genre_context', 'per-genre', 'same_genre',
+      "not enough.*genre", "this genre", "in this genre",
+      "across all genres", "genre.*photographs",
+      "# ── Genre", "Genre Insight", "genre insight",
+      "Scored As", "scored as"]),
 ]
 
 # Gold colours — never on light/cream backgrounds as text
@@ -1381,6 +1410,10 @@ SCORECARD_KYC_TERMS = [
     ('THE ONE IMPROVEMENT', 'replace with story card'),
     ('AREAS TO DEVELOP',    'replace with constructive language'),
     ('DEPTH OF DETAIL',     'jargon — use plain language'),
+    ('POTY',                'use "Annual Excellence Award" — POTY is internal only'),
+    ('your DDI',            'use "your score" or "your evaluation" — DDI is internal'),
+    ('DDI score',           'use "your score" — DDI is internal jargon'),
+    ('your genre',          'use "your interests" — Genre is internal UX term'),
 ]
 
 
@@ -1403,6 +1436,8 @@ def _run_delivery_standard(content, filepath, fails):
     stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
     stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
     stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
+    # Strip <script> blocks — JS variable names / route strings are never user-facing copy
+    stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
     # Strip Python variable names and Jinja tuple literals to avoid false positives
     stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
     # Strip HTML option values (admin-only form fields)
