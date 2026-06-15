@@ -862,13 +862,15 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   font-size: 13px;
   font-weight: 500;
   letter-spacing: .04em;
-  min-width: 60px;
+  min-width: 48px;
   transition: color .2s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .sl-nav-item.active { color: var(--sl-yellow-dark); }
 .sl-nav-item:hover  { color: var(--sl-yellow-dark); }
+.sl-nav-logout { color: #BBBBBB; }
+.sl-nav-logout:hover { color: var(--red, #C0392B); }
 
 .sl-nav-item__icon {
   font-size: 22px;
@@ -1291,6 +1293,16 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   } %}
   {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80')) %}
 
+  {# Master example URLs — Wikipedia pages for each master photographer #}
+  {% set _master_url_map = {
+    'dod':        'https://en.wikipedia.org/wiki/Fan_Ho',
+    'dm':         'https://en.wikipedia.org/wiki/Henri_Cartier-Bresson',
+    'aq':         'https://en.wikipedia.org/wiki/Ansel_Adams',
+    'wonder':     'https://en.wikipedia.org/wiki/Vivian_Maier',
+    'disruption': 'https://en.wikipedia.org/wiki/Daido_Moriyama'
+  } %}
+  {% set _master_url = _master_url_map.get(_focus_key, 'https://en.wikipedia.org/wiki/Raghu_Rai') %}
+
   <div class="sl-master">
     <img src="{{ _master[2] }}"
          alt="{{ _master[0] }}"
@@ -1300,7 +1312,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div class="sl-master__eyebrow">Today's Master</div>
       <div class="sl-master__name">{{ _master[0] }}</div>
       <div class="sl-master__desc">{{ _master[1] }}</div>
-      <a href="{{ url_for('science') }}" class="sl-btn-example">View example →</a>
+      <a href="{{ _master_url }}" target="_blank" rel="noopener" class="sl-btn-example">View example →</a>
     </div>
   </div>
 
@@ -1559,7 +1571,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <span class="sl-nav-item__icon">⌂</span>
     <span>Home</span>
   </a>
-  <a href="{{ url_for('portfolio_public', username=current_user.username) if current_user.is_authenticated else url_for('dashboard') }}" class="sl-nav-item">
+  <a href="{{ url_for('portfolio_public', username=current_user.username) if (current_user.is_authenticated and current_user.username) else url_for('recent_work') }}" class="sl-nav-item">
     <span class="sl-nav-item__icon">⊞</span>
     <span>Gallery</span>
   </a>
@@ -1574,6 +1586,10 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   <a href="{{ url_for('profile') }}" class="sl-nav-item">
     <span class="sl-nav-item__icon">◉</span>
     <span>Profile</span>
+  </a>
+  <a href="{{ url_for('logout') }}" class="sl-nav-item sl-nav-logout" title="Log out" aria-label="Log out">
+    <span class="sl-nav-item__icon" style="font-size:19px;">⎋</span>
+    <span>Log out</span>
   </a>
 </nav>
 
