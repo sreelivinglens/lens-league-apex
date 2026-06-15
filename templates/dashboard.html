@@ -1693,30 +1693,24 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
             {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
           </div>
         </div>
-        {# SVG sparkline from dim_trends data #}
-        {% set _ns = namespace(vals=[]) %}
-        {% for _v in _trend_vals %}{% if _v != none %}{% set _ns.vals = _ns.vals + [_v] %}{% endif %}{% endfor %}
-        {% set _vals = _ns.vals %}
-        {% if _vals|length >= 2 %}
+        {# SVG sparkline — points pre-computed in Python (_dash_spark) — no Jinja2 loop scoping issues #}
+        {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
+        {% if _sp and _sp.polyline %}
         <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
              aria-label="{{ _dim_labels.get(dim, dim) }} trend">
           <rect x="0" y="0" width="300" height="28" fill="none"/>
-          {% set _min = _vals | min %}
-          {% set _max = _vals | max %}
-          {% set _rng = (_max - _min) if (_max - _min) > 0.001 else 1 %}
-          {% set _step = 300 / (_vals|length - 1) %}
           <polyline
             fill="none"
             stroke="{{ _dcolor }}"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            points="{% for v in _vals %}{{ (loop.index0 * _step)|round(1) }},{{ (27 - ((v - _min) / _rng) * 25)|round(1) }} {% endfor %}"
+            points="{{ _sp.polyline }}"
           />
-          {% set _lv = _vals[-1] %}
-          {% set _lx = ((_vals|length - 1) * _step)|round(1) %}
-          {% set _ly = (27 - ((_lv - _min) / _rng) * 25)|round(1) %}
-          <circle cx="{{ _lx }}" cy="{{ _ly }}" r="3" fill="{{ _dcolor }}"/>
+          {% if _sp.points %}
+          {% set _lp = _sp.points[-1] %}
+          <circle cx="{{ _lp.x }}" cy="{{ _lp.y }}" r="3" fill="{{ _dcolor }}"/>
+          {% endif %}
         </svg>
         {% else %}
         <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
