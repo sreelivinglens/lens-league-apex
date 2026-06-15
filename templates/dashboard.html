@@ -59,7 +59,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
    GREETING HEADER
 ══════════════════════════════════════════ */
 .sl-greeting {
-  padding: 12px 0 4px;
+  padding: 20px 0 4px;
 }
 
 .sl-greeting__name {
@@ -1013,7 +1013,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {% if mentor_reviews %}
     {% for review in mentor_reviews %}
     {% set _rid = 'sl-mentor-' ~ loop.index %}
-    <div style="background:var(--sl-card); border:2px solid var(--sl-yellow); border-radius:12px; margin-top:4px; margin-bottom:8px; overflow:hidden;">
+    <div style="background:var(--sl-card); border:2px solid var(--sl-yellow); border-radius:12px; margin-top:4px; margin-bottom:20px; overflow:hidden;">
       <button onclick="slToggleMentor('{{ _rid }}')"
               style="width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; font-family:inherit; text-align:left; min-height:44px;">
         <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
