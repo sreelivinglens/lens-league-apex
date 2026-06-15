@@ -129,20 +129,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-assignment__img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: var(--r-hero) var(--r-hero) 0 0;
-  display: block;
-  order: -1;
+  display: none; /* replaced by dimension colour band — Session 80 */
 }
 
 .sl-assignment__img-placeholder {
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
-  background: linear-gradient(160deg, #2C3E50 0%, #4a1942 100%);
-  border-radius: 0 var(--r-hero) 0 var(--r-img);
+  display: none;
 }
 
 /* Meta pills row */
@@ -1189,30 +1180,35 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {% set _title     = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[0] %}
   {% set _brief_why = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[1] %}
 
-  {# Assignment hero image — illustrates the specific mission brief, not just the dimension.
-     Each photo shows the TECHNIQUE the user is being asked to go practise.
-     dod  → Foreground Separation: layered scene, branch/shadow in foreground
-     dm   → The Moment Before: street scene, figure mid-action, anticipation
-     aq   → Light as Subject: window light shaft, strong shadow on wall
-     wonder → The Unfamiliar Angle: dramatic low-angle or overhead perspective
-     disruption → Break the Rule: off-centre subject, deliberate empty space
+  {# Dimension colour band — replaces image, zero external dependency.
+     Each dimension has a distinct colour identity.
+     At P3 (Daily Brief API) this becomes a generated visual brief.
   #}
-  {% set _img_map = {
-    'dod':        'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&q=80',
-    'dm':         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80',
-    'aq':         'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&q=80',
-    'wonder':     'https://images.unsplash.com/photo-1444080748397-f442aa105c8f?w=800&q=80',
-    'disruption': 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80'
+  {% set _dim_colour = {
+    'dod':        ('rgba(44,62,107,1)',   'rgba(26,38,74,1)',   '⬛',  '#E8D4A0'),
+    'dm':         ('rgba(42,74,52,1)',    'rgba(26,58,36,1)',   '◎',   '#A8D4B0'),
+    'aq':         ('rgba(107,62,26,1)',   'rgba(84,44,12,1)',   '☀',   '#F5C518'),
+    'wonder':     ('rgba(62,26,107,1)',   'rgba(44,12,84,1)',   '✦',   '#C8A0F0'),
+    'disruption': ('rgba(107,26,44,1)',   'rgba(84,12,26,1)',   '◈',   '#F0A0A8')
   } %}
-  {% set _img_url = _img_map.get(_focus_key, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80') %}
+  {% set _dc = _dim_colour.get(_focus_key, ('rgba(26,26,18,1)', 'rgba(10,10,8,1)', '◉', '#F5C518')) %}
 
   <div class="sl-assignment" id="sl-mission-card">
-    <img src="{{ _img_url }}"
-         alt="{{ _title }}"
-         class="sl-assignment__img"
-         onerror="this.style.display='none'">
+    {# Dimension colour header band — replaces image #}
+    <div style="background:linear-gradient(135deg, {{ _dc[0] }} 0%, {{ _dc[1] }} 100%);
+                border-radius:var(--r-hero) var(--r-hero) 0 0;
+                padding:24px 20px 20px; display:flex; align-items:flex-end; justify-content:space-between;
+                min-height:100px;">
+      <div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                    color:rgba(255,255,255,0.5); margin-bottom:6px;">Today's Assignment</div>
+        <div style="font-size:22px; font-weight:800; color:#fff; line-height:1.2;
+                    letter-spacing:-.01em;">{{ _title }}</div>
+      </div>
+      <div style="font-size:36px; opacity:0.25; line-height:1; flex-shrink:0; padding-left:12px;">{{ _dc[2] }}</div>
+    </div>
 
-    <div class="sl-assignment__eyebrow">Today's Assignment</div>
+    <div class="sl-assignment__eyebrow" style="display:none;">Today's Assignment</div>
 
     <div class="sl-assignment__body">
       <div class="sl-assignment__left">
