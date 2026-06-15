@@ -1438,7 +1438,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <span class="sl-nav-item__icon">☀</span>
     <span>Today</span>
   </a>
-  <a href="{{ url_for('portfolio', username=current_user.username) if current_user.is_authenticated else url_for('dashboard') }}" class="sl-nav-item">
+  <a href="{{ url_for('portfolio_public', username=current_user.username) if current_user.is_authenticated else url_for('dashboard') }}" class="sl-nav-item">
     <span class="sl-nav-item__icon">⊞</span>
     <span>Gallery</span>
   </a>
