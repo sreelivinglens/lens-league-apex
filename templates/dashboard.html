@@ -1689,17 +1689,15 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
           </div>
         </div>
         {# SVG sparkline from dim_trends data #}
-        {% if _trend_vals and _trend_vals|length >= 2 %}
-        {% set _vals = _trend_vals | reject('none') | list %}
+        {% set _vals = [] %}
+        {% for v in _trend_vals %}{% if v is not none and v is number %}{% set _vals = _vals + [v] %}{% endif %}{% endfor %}
         {% if _vals|length >= 2 %}
         <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
              aria-label="{{ _dim_labels.get(dim, dim) }} trend">
-          {# background track #}
           <rect x="0" y="0" width="300" height="28" fill="none"/>
-          {# compute polyline: min/max normalise the values #}
           {% set _min = _vals | min %}
           {% set _max = _vals | max %}
-          {% set _rng = (_max - _min) if (_max - _min) > 0 else 1 %}
+          {% set _rng = (_max - _min) if (_max - _min) > 0.001 else 1 %}
           {% set _step = 300 / (_vals|length - 1) %}
           <polyline
             fill="none"
@@ -1707,17 +1705,13 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            points="{% for v in _vals %}{% if v is not none %}{{ (loop.index0 * _step)|round(1) }},{{ (27 - ((v - _min) / _rng) * 25)|round(1) }} {% endif %}{% endfor %}"
+            points="{% for v in _vals %}{{ (loop.index0 * _step)|round(1) }},{{ (27 - ((v - _min) / _rng) * 25)|round(1) }} {% endfor %}"
           />
-          {# dot at last value #}
           {% set _lv = _vals[-1] %}
           {% set _lx = ((_vals|length - 1) * _step)|round(1) %}
           {% set _ly = (27 - ((_lv - _min) / _rng) * 25)|round(1) %}
           <circle cx="{{ _lx }}" cy="{{ _ly }}" r="3" fill="{{ _dcolor }}"/>
         </svg>
-        {% else %}
-        <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
-        {% endif %}
         {% else %}
         <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
         {% endif %}
