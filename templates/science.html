@@ -65,7 +65,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   left: clamp(16px, 4vw, 48px);
   }
 .sl-sci-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -79,7 +79,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   margin-bottom: 16px;
 }
 .sl-sci-ddi-expand {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: rgba(255,255,255,0.55);
   letter-spacing: 0.04em;
@@ -93,7 +93,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.08;
+  line-height: 1.5;
   letter-spacing: -0.03em;
   margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -120,7 +120,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   margin: 0 auto;
 }
 .sl-sci-sec-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -138,7 +138,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   font-weight: 600;
   letter-spacing: -0.03em;
   color: #1A1A18;
-  line-height: 1.15;
+  line-height: 1.5;
   margin-bottom: 18px;
 }
 .sl-sci-h2 em {
@@ -211,7 +211,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   margin-bottom: 16px;
 }
 .sl-sci-dim-num {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: rgba(26,26,24,0.40);
@@ -231,7 +231,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   text-align: justify;
 }
 .sl-sci-dim-detail {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: rgba(26,26,24,0.45);
   line-height: 1.6;
@@ -339,14 +339,14 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
 .sl-sci-not-x {
   font-size: 20px;
   font-weight: 300;
-  color: rgba(26,26,24,0.28);
+  color: #9A9890;
   line-height: 1;
 }
 .sl-sci-not-title {
   font-size: 15px;
   font-weight: 700;
   color: #1A1A18;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .sl-sci-not-body {
   font-size: 15px;
@@ -388,7 +388,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   font-weight: 600;
   color: #FFFFFF;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.5;
   margin-bottom: 14px;
 }
 .sl-sci-cta-h em {
@@ -456,7 +456,12 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
   }
 }
 
+@media (max-width: 600px) {
+  [class*="grid"], [class*="Grid"] { grid-template-columns: 1fr !important; }
+}
+
 @media (max-width: 768px) {
+  a[href], button { min-height: 44px; }
 
   /* HERO */
   .sl-sci-hero {
@@ -493,7 +498,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
     font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
-    line-height: 1.2;
+    line-height: 1.5;
     letter-spacing: -0.02em;
     margin-bottom: 0;
     text-shadow: none;
@@ -737,7 +742,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <p class="sl-sci-dim-num">3.</p>
-        <p class="sl-sci-dim-title">Decisive Moment</p>
+        <p class="sl-sci-dim-title">Timing</p>
         <p class="sl-sci-dim-body">Was the right moment captured?</p>
         <p class="sl-sci-dim-detail">Includes timing, anticipation, gesture, emotional peak, and fleeting interaction.</p>
       </div>
@@ -747,7 +752,7 @@ body:has(.sl-sci) main { padding: 0 !important; max-width: none !important; marg
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         <p class="sl-sci-dim-num">4.</p>
-        <p class="sl-sci-dim-title">Wonder Factor</p>
+        <p class="sl-sci-dim-title">Wonder</p>
         <p class="sl-sci-dim-body">What does this image make the viewer feel?</p>
         <p class="sl-sci-dim-detail">Eye Wonder (compositional find), Access Wonder (proximity and trust), Cultural Wonder (a world you cannot enter), Emotional Wonder (specific named feeling). Primary signal for Landscape and Nature.</p>
       </div>
