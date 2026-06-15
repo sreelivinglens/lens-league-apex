@@ -1,377 +1,959 @@
 {% extends "base.html" %}
-{% from "glossary_links.html" import glink, glink_dark %}
-{% block title %}Dashboard — {{ platform_name }}{% endblock %}
-
-{% block extra_head %}
-<meta property="og:title" content="My Dashboard — Shutter League">
-<meta property="og:description" content="Track your photography scores, standing, and growth on Shutter League.">
-<meta property="og:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="{{ url_for('static', filename='og-default.jpg', _external=True) }}">
-<meta name="robots" content="noindex, nofollow">
-{% endblock %}
+{% block title %}Today — {{ platform_name }}{% endblock %}
 
 {% block extra_css %}
 <style>
 /*
-  SHUTTER LEAGUE — DASHBOARD v9
-  Session 79 · 14 June 2026
-  Built with full knowledge of base.html:
-  - body: background #F7F5F2, font Inter 17px, color #1a1a18
-  - nav and footer rendered by base.html — we do not touch them
-  - <main> wraps {# block content #} — our .sl-dash sits inside main
-  - No dark theme to fight — base is light cream
-  Rule 9: No push without explicit founder approval.
+  ShutterLeague Dashboard — Today Screen
+  Design: Apple Fitness warmth · Sherpa voice · Zero scroll on mobile
+  Built: Session 79 · 14 June 2026
+  base.html renders: nav, footer, Inter font
 */
 
-/* ── Page container ── */
-.sl-dash {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 var(--page-pad) 80px;
-  font-family: var(--font-body);
+/* ── Design tokens (extend base.html vars) ── */
+:root {
+  --sl-yellow:       #F4C20D;
+  --sl-yellow-dark:  #D9A900;
+  --sl-bg:           #F8F7F3;
+  --sl-card:         #FFFFFF;
+  --sl-footer-bg:    #13254B;
+  --sl-text:         #151515;
+  --sl-text-light:   #6B6B6B;
+  --sl-border:       #E8E5DD;
+  --sl-success:      #28A745;
+  --sl-purple:       #6A3EF0;
+  --sl-shadow:       0 4px 20px rgba(0,0,0,.06);
+  --sl-shadow-lg:    0 10px 40px rgba(0,0,0,.08);
+  --r-card:          28px;
+  --r-hero:          32px;
+  --r-btn:           18px;
+  --r-img:           24px;
+  --r-fab:           50%;
 }
-/* audit: Inter font override */
-.sl-dash, .sl-dash *:not(i) { font-family: 'Inter', sans-serif !important; }
 
-/* ── Sections — collapsible shell ── */
-.sl-sec {
-  overflow: hidden;
-  border-bottom: 0.5px solid var(--border);
+/* ── Reset & base ── */
+input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari auto-zoom */
+*, *::before, *::after { box-sizing: border-box; }
+
+.sl-today {
+  background: var(--sl-bg);
+  font-family: Inter, sans-serif;
+  color: var(--sl-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* bottom-nav height clearance */
+  padding-bottom: 100px;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
-.sl-sec-hdr {
+
+/* ── Page container ── */
+.sl-today__inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ══════════════════════════════════════════
+   GREETING HEADER
+══════════════════════════════════════════ */
+.sl-greeting {
+  padding: 24px 0 8px;
+}
+
+.sl-greeting__name {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--sl-text);
+  text-shadow: none;
   display: flex;
-  -webkit-tap-highlight-color: transparent;
+  align-items: center;
+  gap: 8px;
+}
+
+.sl-greeting__sub {
+  font-size: 18px;
+  color: var(--sl-text-light);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ══════════════════════════════════════════
+   TODAY'S ASSIGNMENT HERO CARD
+══════════════════════════════════════════ */
+.sl-assignment {
+  background: #F8F4E9;
+  border-radius: var(--r-hero);
+  box-shadow: var(--sl-shadow-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.sl-assignment__eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sl-yellow-dark);
+  padding: 20px 20px 0;
+}
+
+/* Two-column layout: text left, image right */
+.sl-assignment__body {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 0;
+  min-height: 200px;
+}
+
+.sl-assignment__left {
+  padding: 12px 20px 0;
+}
+
+.sl-assignment__title {
+  font-size: 40px;
+  line-height: .95;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--sl-text);
+  margin-bottom: 12px;
+}
+
+.sl-assignment__why {
+  font-size: 17px;
+  line-height: 1.65;
+  color: #404040;
+  margin-bottom: 0;
+}
+
+.sl-assignment__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0 var(--r-hero) 0 var(--r-img);
+  min-height: 200px;
+}
+
+.sl-assignment__img-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: linear-gradient(160deg, #2C3E50 0%, #4a1942 100%);
+  border-radius: 0 var(--r-hero) 0 var(--r-img);
+}
+
+/* Meta pills row */
+.sl-assignment__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+}
+
+.sl-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  color: var(--sl-text);
+}
+
+.sl-meta-item__icon {
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sl-meta-item__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  display: block;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+.sl-meta-item__val {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sl-text);
+  line-height: 1.2;
+}
+
+/* Shot count */
+.sl-assignment__shots {
+  padding: 0 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  color: var(--sl-text-light);
+}
+
+/* Start Mission CTA */
+.sl-btn-mission {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 20px;
+  font-weight: 700;
+  height: 64px;
+  border: none;
+  border-radius: 0 0 var(--r-hero) var(--r-hero);
+  width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .2s;
+}
+
+.sl-btn-mission:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
+
+/* ══════════════════════════════════════════
+   TODAY'S MASTER CARD
+══════════════════════════════════════════ */
+.sl-master {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  box-shadow: var(--sl-shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.sl-master__eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sl-purple);
+  margin-bottom: 4px;
+}
+
+.sl-master__img {
+  width: 100px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--r-img);
+}
+
+.sl-master__name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sl-text);
+  margin-bottom: 2px;
+}
+
+.sl-master__desc {
+  font-size: 16px;
+  color: var(--sl-text-light);
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.sl-btn-example {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--sl-purple);
+  color: var(--sl-purple);
+  background: white;
+  border-radius: 12px;
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s, color .2s;
+}
+
+.sl-btn-example:hover {
+  background: var(--sl-purple);
+  color: white;
+}
+
+/* ══════════════════════════════════════════
+   YESTERDAY'S STATS ROW
+══════════════════════════════════════════ */
+.sl-yesterday {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  box-shadow: var(--sl-shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+
+.sl-yesterday__col {
+  text-align: center;
+  padding: 0 8px;
+}
+
+.sl-yesterday__col + .sl-yesterday__col {
+  border-left: 1px solid var(--sl-border);
+}
+
+.sl-yesterday__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.sl-yesterday__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sl-success);
+}
+
+.sl-yesterday__check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--sl-success);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sl-yesterday__score-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--sl-text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.sl-yesterday__stars {
+  color: var(--sl-yellow);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.sl-yesterday__trend {
+  font-size: 14px;
+  color: var(--sl-success);
+  font-weight: 600;
+}
+
+.sl-yesterday__streak-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--sl-text);
+  line-height: 1;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sl-yesterday__streak-sub {
+  font-size: 14px;
+  color: var(--sl-text-light);
+}
+
+/* ══════════════════════════════════════════
+   UPLOAD CTA BANNER
+══════════════════════════════════════════ */
+.sl-upload-banner {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 56px;
-  gap: 12px;
+  background: var(--sl-yellow);
+  border-radius: var(--r-card);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  text-decoration: none;
+  transition: background .2s;
+  box-shadow: 0 8px 24px rgba(244,194,13,.25);
 }
-.sl-sec-hdr:hover { opacity: .92; }
-.sl-sec-chev {
-  font-size: 16px;
-  color: var(--text-primary);
-  transition: transform 0.2s;
+
+.sl-upload-banner:hover { background: var(--sl-yellow-dark); }
+
+.sl-upload-banner__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sl-upload-banner__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
   flex-shrink: 0;
+}
+
+.sl-upload-banner__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--sl-text);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.sl-upload-banner__sub {
+  font-size: 15px;
+  color: rgba(21,21,21,.65);
+}
+
+.sl-upload-banner__arrow {
+  font-size: 22px;
+  color: var(--sl-text);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   COLLAPSIBLE SECONDARY SECTIONS
+   (Standing · Weekly · Location · Points)
+   Below the fold — available, not blocking
+══════════════════════════════════════════ */
+.sl-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.sl-sec {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  box-shadow: var(--sl-shadow);
+  overflow: hidden;
+}
+
+.sl-sec__hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-.sl-sec.is-open .sl-sec-chev { transform: rotate(180deg); }
-.sl-sec-body {
-  display: none !important;
-  padding-bottom: 20px;
-}
-.sl-sec.is-open .sl-sec-body { display: block !important; }
+.sl-sec__hdr:hover { opacity: .92; }
 
-/* Desktop: 2-col layout but sections remain collapsible */
-@media (min-width: 1025px) {
-  .sl-sec-hdr { padding: 18px 0; }
-}
-
-/* ═══ 1. STANDING ═══ */
-.sl-sec-standing { background: #FFFBF3; border-radius: var(--radius-md); margin-bottom: 8px; border: 0.5px solid #F0E8D8; }
-.sl-sec-standing .sl-sec-hdr { padding: 16px 18px; border-bottom: 0.5px solid #F0E8D8; }
-.sl-sec-standing .sl-sec-body { padding: 0 18px 18px; }
-
-.sl-standing-row { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-.sl-tier-name  { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.sl-tier-sub   { font-size: 14px; color: var(--text-disabled); margin-top: 2px; }
-.sl-tier-trend {
-  font-size: 14px; color: #27500A; margin-top: 4px;
-  display: inline-flex; align-items: center; gap: 4px;
-  background: #E6F2E8; padding: 3px 8px; border-radius: 20px;
-}
-.sl-pct-val { font-size: 15px; font-weight: 700; color: #1A2744; text-align: right; }
-.sl-pct-lbl { font-size: 14px; color: var(--text-disabled); text-align: right; margin-top: 2px; }
-
-.sl-last-eval {
-  display: flex; align-items: center; gap: 10px;
-  background: #FFF7E8; border: 0.5px solid #F0E0B0;
-  border-radius: var(--radius-md); padding: 12px 14px; margin: 14px 0 14px;
-}
-.sl-le-lbl   { font-size: 15px; color: var(--text-disabled); flex: 1; }
-.sl-le-val   { font-size: 22px; font-weight: 700; color: var(--text-primary); }
-.sl-le-tier  { font-size: 14px; color: #B89A45; margin-left: 4px; font-weight: 600; }
-.sl-le-delta {
-  font-size: 14px; color: #27500A;
-  display: inline-flex; align-items: center; gap: 3px; margin-left: 8px;
-  background: #E6F2E8; padding: 2px 8px; border-radius: 12px;
-}
-.sl-le-delta.down { color: #A32D2D; background: #FCE8E8; }
-
-.sl-dim-section-lbl { font-size: 14px; color: var(--text-disabled); font-style: italic; margin-bottom: 12px; }
-.sl-dim-hd  { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
-.sl-dim-name  { font-size: 15px; color: var(--text-primary); }
-.sl-dim-score { font-size: 26px; font-weight: 700; color: var(--text-primary); }
-.sl-dim-pill {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 14px; font-weight: 600; padding: 3px 9px;
-  border-radius: 4px; margin-bottom: 6px;
-}
-.sl-dim-pill.steady { background: #FFF3D0; color: #854F0B; }
-.sl-dim-pill.down   { background: #FCE8E8; color: #A32D2D; }
-.sl-dim-pill.up     { background: #E6F2E8; color: #27500A; }
-.sl-dim-score-row { display: flex; justify-content: space-between; margin-top: 5px; margin-bottom: 14px; }
-.sl-dim-val   { font-size: 14px; color: var(--text-disabled); }
-.sl-dim-divider { height: 0.5px; background: var(--border-subtle); margin-bottom: 14px; }
-
-.sl-tier-prog-hd  { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.sl-tier-prog-hd span { font-size: 14px; color: var(--text-disabled); }
-.sl-tier-bar-bg   { height: 5px; background: var(--border-subtle); border-radius: 3px; }
-.sl-tier-bar-fill { height: 5px; background: var(--gold-dark); border-radius: 3px; }
-
-/* ═══ 2. BRIEF ═══ */
-.sl-sec-brief { background: #F5FAF6; border-radius: var(--radius-md); margin-bottom: 8px; border: 0.5px solid #D8ECD8; }
-.sl-sec-brief .sl-sec-hdr { padding: 16px 18px; border-bottom: 0.5px solid #D8ECD8; }
-.sl-sec-brief .sl-sec-body { padding: 0 18px 18px; padding-top: 14px; }
-
-.sl-brief-greeting { font-size: 16px; color: var(--text-primary); font-weight: 600; }
-.sl-brief-loc { font-size: 14px; color: #6A9A6A; margin-top: 3px; display: flex; align-items: center; gap: 6px; }
-.sl-brief-loc-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF7A; display: inline-block; flex-shrink: 0; }
-.sl-brief-text { font-size: 16px; color: var(--text-primary); line-height: 1.75; margin-bottom: 14px; text-align: justify; }
-.sl-brief-cue {
-  padding: 14px 16px; background: var(--surface-1);
-  border-radius: var(--radius-md); border-left: 3px solid var(--gold-dark);
-  margin-bottom: 14px;
-}
-.sl-mentor-lbl { font-size: 14px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #B89A45; margin-bottom: 6px; }
-.sl-brief-cue-txt { font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-.sl-brief-cta {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 13px 22px; background: #1A2744; color: var(--gold);
-  font-size: 15px; font-weight: 700; border-radius: var(--radius-md);
-  min-height: 50px; min-width: 44px; text-decoration: none;
-}
-.sl-brief-cta:hover { opacity: .88; color: var(--gold); text-decoration: none; }
-
-/* ═══ 3. WEEKLY ASSIGNMENT ═══ */
-.sl-sec-weekly { background: #FFFDF5; border-radius: var(--radius-md); margin-bottom: 8px; border: 0.5px solid #F0E8C8; }
-.sl-sec-weekly .sl-sec-hdr { padding: 16px 18px; border-bottom: 0.5px solid #F0E8C8; }
-.sl-sec-weekly .sl-sec-body { padding: 0 18px 18px; padding-top: 14px; }
-
-.sl-weekly-open-badge {
-  font-size: 14px; font-weight: 700; color: #854F0B;
-  background: #FFF3D0; padding: 3px 10px; border-radius: 20px;
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
-}
-.sl-weekly-inner { background: var(--surface-1); border: 0.5px solid #F0E8C8; border-radius: var(--radius-md); overflow: hidden; }
-.sl-weekly-bar {
-  background: var(--gold-dark); padding: 10px 16px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.sl-weekly-bar-lbl { font-size: 14px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #1A1A18; }
-.sl-weekly-bar-ctx { font-size: 14px; font-weight: 600; color: #1A1A18; }
-.sl-weekly-body { padding: 16px; }
-.sl-weekly-prompt { font-size: 17px; font-weight: 600; color: var(--text-primary); font-style: italic; line-height: 1.5; margin-bottom: 12px; }
-.sl-weekly-why {
-  font-size: 14px; color: var(--text-primary); line-height: 1.7; margin-bottom: 14px;
-  padding: 12px 14px; background: #FFFBF3; border-radius: var(--radius-md);
-  border-left: 2px solid var(--gold-dark); text-align: justify;
-}
-.sl-weekly-prog-txt  { font-size: 14px; color: var(--text-primary); margin-bottom: 7px; }
-.sl-weekly-prog-bg   { height: 5px; background: var(--border-subtle); border-radius: 3px; margin-bottom: 14px; }
-.sl-weekly-prog-fill { height: 5px; background: var(--gold-dark); border-radius: 3px; }
-.sl-weekly-cta {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 13px 22px; background: var(--gold-dark); color: #111;
-  font-size: 15px; font-weight: 700; border-radius: var(--radius-md);
-  min-height: 50px; text-decoration: none;
-}
-.sl-weekly-cta:hover { opacity: .88; color: #111; text-decoration: none; }
-
-/* ═══ 4. LOCATION ADVISORY ═══ */
-.sl-sec-location { background: #F3F6FC; border-radius: var(--radius-md); margin-bottom: 8px; border: 0.5px solid #D0DCF0; }
-.sl-sec-location .sl-sec-hdr { padding: 16px 18px; border-bottom: 0.5px solid #D0DCF0; }
-.sl-sec-location .sl-sec-body { padding: 0 18px 18px; padding-top: 14px; }
-
-.sl-loc-title { font-size: 16px; font-weight: 600; color: #1A2744; flex: 1; }
-.sl-loc-genre-pill { font-size: 14px; background: #E6EDF8; color: #1A2744; padding: 2px 9px; border-radius: 20px; font-weight: 600; margin-left: 8px; }
-.sl-loc-card { background: #1A2744; border-radius: var(--radius-md); padding: 16px; }
-.sl-loc-opening { font-size: 17px; color: #fff; font-weight: 600; line-height: 1.6; margin-bottom: 12px; }
-.sl-loc-sublbl { font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 6px; }
-.sl-loc-sublbl.coming { padding-top: 12px; border-top: 0.5px solid rgba(255,255,255,.12); }
-.sl-loc-txt     { font-size: 15px; color: rgba(255,255,255,.88); line-height: 1.7; margin-bottom: 10px; }
-.sl-loc-coming-txt { font-size: 14px; color: rgba(255,255,255,.65); line-height: 1.6; }
-.sl-loc-ticker  { margin-top: 12px; padding: 10px 13px; background: rgba(245,197,24,.12); border-radius: var(--radius-md); font-size: 14px; color: var(--gold); font-style: italic; line-height: 1.5; }
-
-/* ═══ 5. CARDS ═══ */
-.sl-sec-cards { background: var(--bg); border-radius: var(--radius-md); margin-bottom: 8px; }
-.sl-sec-cards .sl-sec-hdr { padding: 16px 0; border-bottom: none; }
-.sl-sec-cards .sl-sec-body { padding-bottom: 0; }
-
-.sl-peer-cta {
-  background: #FFF9ED; border: 0.5px solid #F0E0B0; border-radius: var(--radius-md);
-  padding: 14px 16px; margin-bottom: 10px;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
-.sl-peer-txt { font-size: 16px; color: var(--text-primary); flex: 1; line-height: 1.7; }
-.sl-peer-txt small { display: block; font-size: 14px; color: var(--text-disabled); margin-top: 3px; }
-.sl-peer-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 12px 18px; background: var(--gold-dark); color: #111;
-  font-size: 15px; font-weight: 700; border-radius: var(--radius-md);
-  white-space: nowrap; min-height: 50px; flex-shrink: 0; text-decoration: none;
-}
-.sl-peer-btn:hover { opacity: .88; color: #111; text-decoration: none; }
-
-.sl-card-stack { display: flex; flex-direction: column; gap: 8px; }
-.sl-card { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-.sl-card-hdr {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; cursor: pointer; min-height: 56px;
-  -webkit-tap-highlight-color: transparent; gap: 10px;
-}
-.sl-card-hdr:hover { background: var(--surface-3); }
-.sl-card-lbl { font-size: 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; flex: 1; }
-.sl-card-r   { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.sl-card-val { font-size: 14px; font-weight: 600; color: #8A6A20; }
-.sl-card-chev { color: #1A1A18; font-size: 16px; transition: transform .2s; width:28px; height:28px; border-radius:50%; background:rgba(26,26,24,0.07); display:inline-flex; align-items:center; justify-content:center; }
-.sl-card.is-open .sl-card-chev { transform: rotate(180deg); }
-.sl-card-body { display: none !important; padding: 0 16px 16px; font-size: 16px; color: var(--text-primary); line-height: 1.7; }
-.sl-card.is-open .sl-card-body { display: block !important; }
-.sl-card-action { font-size: 14px; color: #1A2744; font-weight: 600; margin-top: 8px; display: inline-block; text-decoration: underline; text-underline-offset: 2px; }
-
-.sl-badge-g { font-size: 14px; padding: 3px 9px; border-radius: 20px; background: #E6F2E8; color: #27500A; font-weight: 600; }
-.sl-badge-a { font-size: 14px; padding: 3px 9px; border-radius: 20px; background: #FFF3D0; color: #854F0B; font-weight: 600; }
-.sl-genre-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid var(--border-subtle); font-size: 15px; color: var(--text-primary); }
-.sl-genre-row:last-child { border-bottom: none; }
-.sl-genre-score { font-weight: 600; color: #8A6A20; }
-
-.sl-sec-portfolio { margin-bottom: 8px; }
-.sl-sec-portfolio .sl-sec-hdr { border-bottom: 0.5px solid var(--border); }
-/* ═══ 6. PHOTOGRAPHS ═══ */
-.sl-sec-photos { margin-bottom: 8px; }
-.sl-sec-photos .sl-sec-hdr { border-bottom: 0.5px solid var(--border); }
-
-.sl-upload-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 11px 18px; background: #1A2744; color: var(--gold);
-  font-size: 14px; font-weight: 700; border-radius: var(--radius-md);
-  min-height: 48px; flex-shrink: 1; text-decoration: none; white-space: nowrap; max-width: 180px;
-}
-.sl-upload-btn:hover { opacity: .88; color: var(--gold); text-decoration: none; }
-.sl-credits-txt { font-size: 14px; color: var(--text-disabled); margin-bottom: 14px; }
-
-.sl-img-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+.sl-sec__hdr-left {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  margin-top: 4px;
-}
-.sl-img-card {
-  background: var(--surface-1); border: 0.5px solid var(--border);
-  border-radius: var(--radius-md); overflow: hidden; text-decoration: none; display: block;
-  transition: transform .18s ease, border-color .18s ease;
-}
-.sl-img-card:hover { transform: translateY(-2px); border-color: var(--gold-dark); text-decoration: none; }
-.sl-img-thumb { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--surface-4); }
-.sl-img-thumb-ph { width: 100%; aspect-ratio: 4/3; background: var(--surface-4); display: flex; align-items: center; justify-content: center; }
-.sl-img-meta { padding: 10px 12px; }
-.sl-img-name { font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-.sl-img-row  { display: flex; align-items: center; justify-content: space-between; }
-.sl-img-genre { font-size: 14px; color: var(--text-disabled); }
-.sl-img-score { font-size: 15px; font-weight: 700; color: #8A6A20; }
-.sl-img-tier  { font-size: 14px; color: var(--text-disabled); margin-top: 2px; }
-.sl-pill-eval { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; padding: 2px 8px; border-radius: 20px; background: #FFF3D0; color: #854F0B; margin-top: 4px; }
-
-/* Search */
-.sl-search-form { position: relative; display: flex; margin-bottom: 16px; }
-.sl-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-disabled); pointer-events: none; }
-.sl-search-input {
-  flex: 1; padding: 13px 16px 13px 42px; font-size: 16px;
-  background: var(--surface-1); border: 1px solid var(--border);
-  border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md);
-  color: var(--text-primary); outline: none; font-family: var(--font-body);
-  -webkit-appearance: none;
-}
-.sl-search-input:focus { border-color: var(--gold-dark); }
-.sl-search-input::placeholder { color: var(--text-disabled); }
-.sl-search-btn {
-  padding: 13px 18px; background: #1A2744; color: var(--gold);
-  font-size: 16px; font-weight: 700; border: none;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  cursor: pointer; min-height: 50px; min-width: 50px;
 }
 
-/* Pagination */
-.sl-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
-.sl-pagination a, .sl-pagination span {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 50px; min-height: 50px; padding: 10px 16px;
-  border-radius: var(--radius-md); font-size: 16px; font-weight: 600;
-  text-decoration: none; border: 1px solid var(--border);
-  background: var(--surface-1); color: var(--text-primary);
-}
-.sl-pagination a:hover   { background: var(--surface-3); text-decoration: none; }
-.sl-pagination .current  { background: #E6EDF8; border-color: #1A2744; color: #1A2744; }
-.sl-pagination .disabled { opacity: .35; pointer-events: none; }
-
-/* Flash / Alerts */
-.sl-flash { margin-bottom: 12px; }
-.sl-flash-msg { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 8px; font-size: 16px; line-height: 1.6; }
-.sl-flash-msg.success { background: var(--green-dim); border: 1px solid var(--green); }
-.sl-flash-msg.error   { background: var(--red-dim);   border: 1px solid var(--red); }
-.sl-flash-msg.info    { background: var(--gold-subtle); border: 1px solid var(--gold-dark); }
-
-.sl-alert { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 8px; font-size: 16px; line-height: 1.6; }
-.sl-alert.amber { background: var(--amber-dim); border: 1px solid var(--amber); }
-.sl-alert a { color: #1A2744; font-weight: 600; text-decoration: underline; }
-
-/* Empty state */
-.sl-empty { padding: 48px 0; text-align: center; }
-.sl-empty h3 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
-.sl-empty p  { font-size: 16px; color: var(--text-disabled); line-height: 1.7; margin-bottom: 24px; }
-
-/* ── Audit compliance tokens ── */
-h1, h2, h3 { text-shadow: none; }
-.sl-hero-stub { min-height: 480px; min-height: 360px; }
-/* audit: hero content margin 64px token */ .sl-dash-inner { margin: 0 64px; }
-.hero-fade    { display: none; }
-.sl-dash-hero { background-image: linear-gradient(rgba(13,13,11,0.45), transparent); }
-
-/* ── Mobile ≤600px ── */
-@media (max-width: 600px) {
-  .sl-dash { padding: 0 16px 60px; }
-  h1, h2, h3 { text-shadow: none; }
-  .sl-sec-standing .sl-sec-hdr,
-  .sl-sec-brief .sl-sec-hdr,
-  .sl-sec-weekly .sl-sec-hdr,
-  .sl-sec-location .sl-sec-hdr { padding: 14px 16px; }
-  .sl-sec-standing .sl-sec-body,
-  .sl-sec-brief .sl-sec-body,
-  .sl-sec-weekly .sl-sec-body,
-  .sl-sec-location .sl-sec-body { padding: 0 16px 16px; }
-  .sl-peer-cta    { flex-direction: column; align-items: flex-start; }
-  .sl-peer-btn    { width: 100%; justify-content: center; }
-  .sl-brief-cta   { width: 100%; justify-content: center; }
-  .sl-weekly-cta  { width: 100%; justify-content: center; }
-  .sl-img-grid    { grid-template-columns: 1fr; gap: 8px; }
-  .sl-card-stack  { grid-template-columns: 1fr !important; }
-  .sl-img-name    { font-size: 14px; }
-  .sl-img-name    { font-size: 14px; }
+.sl-sec__icon {
+  font-size: 22px;
+  width: 36px;
+  text-align: center;
 }
 
-@media (min-width: 380px) and (max-width: 600px) {
-  .sl-img-grid { grid-template-columns: 1fr 1fr !important; }
+.sl-sec__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--sl-text);
+  display: block;
 }
 
-/* ── iPad 601–1024px ── */
-@media (min-width: 601px) and (max-width: 1024px) {
-  .sl-img-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-  @media (max-width: 768px) {
-    .sl-img-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .sl-card-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  }
+.sl-sec__sub {
+  font-size: 15px;
+  color: var(--sl-text-light);
+  display: block;
+  margin-top: 1px;
 }
 
-/* ── Desktop >1024px ── */
+.sl-sec__chev {
+  font-size: 16px;
+  color: var(--sl-text-light);
+  transition: transform .25s;
+  flex-shrink: 0;
+}
+
+.sl-sec.is-open .sl-sec__chev { transform: rotate(180deg); }
+
+.sl-sec__body {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-sec.is-open .sl-sec__body { display: block; }
+
+/* Standing section body */
+.sl-standing-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.sl-standing-stat {
+  text-align: center;
+  padding: 14px;
+  background: var(--sl-bg);
+  border-radius: 16px;
+}
+
+.sl-standing-stat__val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sl-text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.sl-standing-stat__label {
+  font-size: 13px;
+  color: var(--sl-text-light);
+  font-weight: 500;
+}
+
+/* Dimension pills */
+.sl-dim-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sl-dim-pill {
+  background: var(--sl-bg);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sl-dim-pill__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sl-text);
+}
+
+.sl-dim-pill__score {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sl-text);
+}
+
+.sl-dim-pill__trend {
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.sl-dim-pill__trend.up    { color: var(--sl-success); }
+.sl-dim-pill__trend.down  { color: #E74C3C; }
+.sl-dim-pill__trend.steady{ color: var(--sl-text-light); }
+
+/* Progress bar */
+.sl-tier-bar {
+  margin-top: 16px;
+}
+.sl-tier-bar__label {
+  font-size: 14px;
+  color: var(--sl-text-light);
+  margin-bottom: 8px;
+  line-height: 1.5;
+  display: flex;
+  justify-content: space-between;
+}
+.sl-tier-bar__track {
+  height: 6px;
+  background: var(--sl-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.sl-tier-bar__fill {
+  height: 6px;
+  background: var(--sl-yellow);
+  border-radius: 3px;
+  transition: width .5s ease;
+}
+
+/* Points section */
+.sl-points-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.sl-points-card {
+  background: var(--sl-bg);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+}
+
+.sl-points-card__val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sl-text);
+}
+
+.sl-points-card__label {
+  font-size: 13px;
+  color: var(--sl-text-light);
+  margin-top: 2px;
+}
+
+.sl-btn-redeem {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  background: #13254B;
+  color: var(--sl-yellow);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--r-btn);
+  text-decoration: none;
+  transition: opacity .2s;
+}
+.sl-btn-redeem:hover { opacity: .88; color: var(--sl-yellow); }
+
+/* Peer rating CTA */
+.sl-peer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0EBFF;
+  border: 1px solid #D4C5FF;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  text-decoration: none;
+  transition: background .2s;
+}
+.sl-peer-cta:hover { background: #E8E0FF; }
+.sl-peer-cta__left { display: flex; align-items: center; gap: 10px; }
+.sl-peer-cta__txt { font-size: 16px; font-weight: 600; color: var(--sl-purple); }
+.sl-peer-cta__sub { font-size: 13px; color: #8B78CC; margin-top: 1px; }
+.sl-peer-cta__pts { font-size: 15px; font-weight: 700; color: var(--sl-purple); background: white; padding: 6px 12px; border-radius: 20px; }
+
+/* No images yet */
+.sl-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--sl-text-light);
+}
+.sl-empty__icon { font-size: 40px; margin-bottom: 12px; }
+.sl-empty__txt { font-size: 17px; line-height: 1.6; }
+
+/* Flash messages */
+.sl-flash { margin-bottom: 16px; }
+.sl-flash-msg {
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.sl-flash-msg.success { background: #EAF3DE; border: 1px solid #C0DD97; color: #27500A; }
+.sl-flash-msg.error   { background: #FDE8E8; border: 1px solid #F5AAAA; color: #7A1414; }
+.sl-flash-msg.info    { background: #EBF1F5; border: 1px solid #B0CCE0; color: #1A4A6B; }
+
+/* Alerts */
+.sl-alert {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.sl-alert.amber { background: #FFF8DC; border: 1px solid #F0E898; color: #7A5C00; }
+
+/* Mentor review alert */
+.sl-mentor-alert {
+  background: var(--sl-card);
+  border: 2px solid var(--sl-yellow);
+  border-radius: var(--r-card);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sl-mentor-alert__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sl-yellow-dark);
+  display: block;
+  margin-bottom: 4px;
+}
+.sl-mentor-alert__txt {
+  font-size: 16px;
+  color: var(--sl-text);
+  line-height: 1.4;
+}
+.sl-btn-read {
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.sl-btn-read:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
+
+/* AEA banner */
+.sl-aea-banner {
+  background: #13254B;
+  border-radius: var(--r-card);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sl-aea-banner__badge {
+  background: var(--sl-yellow);
+  color: #13254B;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.sl-aea-banner__txt {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+}
+.sl-aea-banner__sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.65);
+  margin-top: 2px;
+}
+
+/* Free tier nudge */
+.sl-free-nudge {
+  background: #F0EBFF;
+  border: 1px solid #D4C5FF;
+  border-radius: var(--r-card);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.sl-free-nudge__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--sl-text);
+  margin-bottom: 6px;
+}
+.sl-free-nudge__sub {
+  font-size: 16px;
+  color: var(--sl-text-light);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.sl-btn-subscribe {
+  display: block;
+  background: var(--sl-purple);
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--r-btn);
+  text-decoration: none;
+  transition: opacity .2s;
+}
+.sl-btn-subscribe:hover { opacity: .88; color: white; }
+
+/* ══════════════════════════════════════════
+   BOTTOM NAVIGATION
+   Fixed · 90px · across all pages via base.html
+   Note: base.html doesn't have this yet — added here for Today screen
+   Will be moved to base.html after founder approval
+══════════════════════════════════════════ */
+.sl-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: white;
+  border-top: 1px solid #ECECEC;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 999;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.sl-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: #AAAAAA;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  min-width: 60px;
+  transition: color .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sl-nav-item.active { color: var(--sl-yellow-dark); }
+.sl-nav-item:hover  { color: var(--sl-yellow-dark); }
+
+.sl-nav-item__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* Upload FAB — raised gold circle */
+.sl-nav-fab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: var(--sl-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sl-nav-fab__circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--sl-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 8px 24px rgba(244,194,13,.40);
+  margin-top: -20px;
+  transition: background .2s, transform .2s;
+}
+
+.sl-nav-fab:hover .sl-nav-fab__circle {
+  background: var(--sl-yellow-dark);
+  transform: scale(1.05);
+}
+
+/* ══════════════════════════════════════════
+   LOCATION WIDGET (inline update form)
+══════════════════════════════════════════ */
+.sl-loc-widget {
+  background: var(--sl-card);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--r-card);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sl-loc-widget__pin { font-size: 20px; flex-shrink: 0; }
+.sl-loc-widget__txt { flex: 1; font-size: 16px; color: var(--sl-text-light); line-height: 1.4; }
+.sl-loc-widget__city { font-weight: 700; color: var(--sl-text); }
+.sl-loc-widget__change {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sl-yellow-dark);
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1.5px solid var(--sl-yellow-dark);
+  padding: 10px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  transition: background .2s, color .2s;
+}
+.sl-loc-widget__change:hover { background: var(--sl-yellow); color: var(--sl-text); }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — single column mobile-first
+══════════════════════════════════════════ */
+/* Mobile first: all grids default to single column, expand at breakpoints */
+@media (max-width: 400px) {
+  .sl-assignment__title { font-size: 32px; }
+  .sl-assignment__body  { grid-template-columns: 1fr 110px; }
+  .sl-greeting__name    { font-size: 26px; }
+  .sl-yesterday         { grid-template-columns: 1fr; }
+  .sl-standing-row      { grid-template-columns: 1fr; }
+  .sl-points-row        { grid-template-columns: 1fr; }
+  .sl-dim-grid          { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* iPad: centred single column, larger type */
+  .sl-today__inner { padding: 0 32px; }
+  .sl-assignment__title { font-size: 44px; }
+  .sl-assignment__body { grid-template-columns: 1fr 160px; }
+  .sl-dim-grid { grid-template-columns: 1fr 1fr; }
+}
+
 @media (min-width: 1025px) {
-  .sl-sec.is-open .sl-card-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sl-sec.is-open .sl-img-grid   { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  /* Desktop */
+  .sl-today__inner { padding: 0 24px; max-width: 520px; }
+  .sl-assignment__title { font-size: 48px; }
+  .sl-assignment__body { grid-template-columns: 1fr 180px; }
+}
+
+
+/* ── Focus visible (keyboard navigation) ── */
+.sl-btn-mission:focus-visible,
+.sl-btn-example:focus-visible,
+.sl-upload-banner:focus-visible,
+.sl-btn-redeem:focus-visible,
+.sl-btn-subscribe:focus-visible,
+.sl-btn-read:focus-visible,
+.sl-nav-item:focus-visible,
+.sl-nav-fab:focus-visible,
+.sl-peer-cta:focus-visible,
+.sl-sec__hdr:focus-visible {
+  outline: 3px solid var(--sl-yellow);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -381,473 +963,521 @@ h1, h2, h3 { text-shadow: none; }
 {% endblock %}
 
 {% block content %}
-<div class="sl-dash">
+<div class="sl-today">
+<div class="sl-today__inner">
 
-  {# Flash messages #}
+  {# ── Flash messages ── #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="sl-flash">
-        {% for category, message in messages %}
-          <div class="sl-flash-msg {{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
+    <div class="sl-flash">
+      {% for category, message in messages %}
+      <div class="sl-flash-msg {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
   {% endwith %}
 
-  {# Alerts #}
+  {# ── System alerts (zone flags, RAW pending) ── #}
   {% if zone3_flagged or zone2_pending or raw_pending %}
     {% for img in zone3_flagged %}
-      <div class="sl-alert amber">
-        <span style="font-size:18px;color:var(--amber);flex-shrink:0;margin-top:2px" aria-hidden="true">⚠</span>
-        <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer versus DDI gap detected, referred for review. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
-      </div>
+    <div class="sl-alert amber">
+      <span style="font-size:18px;flex-shrink:0">⚠</span>
+      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer versus evaluation gap detected, referred for review. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
+    </div>
     {% endfor %}
     {% for img in zone2_pending %}
-      <div class="sl-alert amber">
-        <span style="font-size:18px;color:var(--amber);flex-shrink:0;margin-top:2px" aria-hidden="true">◎</span>
-        <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer review pending. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
-      </div>
+    <div class="sl-alert amber">
+      <span style="font-size:18px;flex-shrink:0">◎</span>
+      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — peer review pending. <a href="{{ url_for('image_detail', image_id=img.id) }}">View →</a></div>
+    </div>
     {% endfor %}
     {% for img in raw_pending %}
-      <div class="sl-alert amber">
-        <span style="font-size:18px;color:var(--amber);flex-shrink:0;margin-top:2px" aria-hidden="true">◻</span>
-        <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — RAW verification needed. <a href="{{ url_for('image_detail', image_id=img.id) }}">Upload RAW →</a></div>
-      </div>
+    <div class="sl-alert amber">
+      <span style="font-size:18px;flex-shrink:0">◻</span>
+      <div><strong>{{ img.asset_name or 'Untitled' }}</strong> — RAW verification needed. <a href="{{ url_for('image_detail', image_id=img.id) }}">Upload RAW →</a></div>
+    </div>
     {% endfor %}
   {% endif %}
 
-  {# ══ 1. STANDING ══ #}
-  {% if progress_data %}
-  <div class="sl-sec sl-sec-standing" id="sl-sec-standing">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-standing')" aria-expanded="false" role="button" tabindex="0">
-      <div class="sl-standing-row">
-        <svg width="52" height="52" viewBox="0 0 52 52" aria-label="Score {{ '%.2f'|format(progress_data.avg_score) }}">
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#F0E0B0" stroke-width="5"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#C8A84B" stroke-width="5"
-            stroke-dasharray="{{ [(progress_data.tier_pct or 0) * 1.257, 0]|max | round(1) }} {{ [125.7 - (progress_data.tier_pct or 0) * 1.257, 0]|max | round(1) }}"
-            stroke-dashoffset="31.4" stroke-linecap="round"/>
-          <text x="26" y="31" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a18" font-family="Inter,sans-serif">{{ '%.2f'|format(progress_data.avg_score) }}</text>
-        </svg>
-        <div>
-          <div class="sl-tier-name">{{ progress_data.avg_tier or 'Unranked' }}</div>
-          <div class="sl-tier-sub">avg {{ '%.2f'|format(progress_data.avg_score) }} · best {{ '%.2f'|format(stats.best_score) if stats.best_score else '—' }}</div>
-          {% if wallet_hud and wallet_hud.last_tier %}
-          <div class="sl-tier-trend"><span style="font-size:14px" aria-hidden="true">↑</span> improving</div>
-          {% endif %}
-        </div>
-      </div>
-      {% if progress_data.overall_pct %}
+  {# ── Mentor review ready alert ── #}
+  {% if mentor_reviews %}
+    {% for review in mentor_reviews %}
+    <div class="sl-mentor-alert">
       <div>
-        <div class="sl-pct-val">Top {{ progress_data.overall_pct }}%</div>
-        <div class="sl-pct-lbl">{{ progress_data.league_label or 'Camera' }}</div>
+        <span class="sl-mentor-alert__label">Expert review ready</span>
+        <span class="sl-mentor-alert__txt">
+          <strong>{{ review.mentor_name or 'Your mentor' }}</strong> reviewed
+          <strong>{{ review.asset_name or 'your photograph' }}</strong>
+          {% if review.snippet %} — {{ review.snippet }}{% endif %}
+        </span>
       </div>
-      {% endif %}
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
+      <a href="{{ url_for('image_detail', image_id=review.image_id) }}" class="sl-btn-read">Read →</a>
     </div>
-    <div class="sl-sec-body">
+    {% endfor %}
+  {% endif %}
 
-      {# Last evaluation #}
-      {% if images.items and images.items[0].score %}
-      {% set last = images.items[0] %}
-      <div class="sl-last-eval">
-        <span class="sl-le-lbl">Last evaluation</span>
-        <span class="sl-le-val">{{ '%.2f'|format(last.score) }}</span>
-        <span class="sl-le-tier">{{ last.tier or '' }}</span>
-        {% if images.items|length > 1 and images.items[1].score %}
-          {% set delta = last.score - images.items[1].score %}
-          <span class="sl-le-delta {{ 'down' if delta < 0 else '' }}">
-            <span aria-hidden="true">{{ "↑" if delta >= 0 else "↓" }}</span>
-            {{ '%+.2f'|format(delta) }}
+  {# ── AEA banner ── #}
+  {% if show_poty_banner %}
+  <div class="sl-aea-banner">
+    <span class="sl-aea-banner__badge">Award</span>
+    <div style="flex:1">
+      <div class="sl-aea-banner__txt">Annual Excellence Award 2026 is open</div>
+      <div class="sl-aea-banner__sub">
+        {% if _pre_season %}
+          Keep shooting — your standing builds continuously
+        {% else %}
+          Shoot at least once a month to stay eligible
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════
+     GREETING
+  ══════════════════════════════════════════ #}
+  {% set ns = namespace(greeting='Good morning', emoji='☀️') %}
+  {% set ist_hour = (now().hour + 5) % 24 if now is defined else 9 %}
+  {% if ist_hour >= 21 or ist_hour < 5 %}
+    {% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌙' %}
+  {% elif ist_hour >= 17 %}
+    {% set ns.greeting = 'Good evening' %}{% set ns.emoji = '🌆' %}
+  {% elif ist_hour >= 12 %}
+    {% set ns.greeting = 'Good afternoon' %}{% set ns.emoji = '☁️' %}
+  {% endif %}
+
+  <div class="sl-greeting">
+    <div class="sl-greeting__name">
+      {{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }} {{ ns.emoji }}
+    </div>
+    <div class="sl-greeting__sub">Here's your photography brief for today.</div>
+  </div>
+
+  {# ══════════════════════════════════════════
+     TODAY'S ASSIGNMENT HERO CARD
+     Powered by: weakest dimension from progress_data
+     Image: Unsplash (static placeholder until API wired)
+  ══════════════════════════════════════════ #}
+  {% set _weakest_map = {
+    'dod':        ('Technical',    'Depth and complexity in your frame'),
+    'dm':         ('Timing',       'Catching the decisive moment'),
+    'aq':         ('Visual Impact','The emotion your image creates'),
+    'wonder':     ('Wonder',       'The sense of discovery in your work'),
+    'disruption': ('Originality',  'Breaking the expected frame')
+  } %}
+  {% set _focus_key   = progress_data.weakest if progress_data else 'dm' %}
+  {% set _focus_label = _weakest_map.get(_focus_key, ('Timing', 'Catching the decisive moment'))[0] %}
+  {% set _focus_desc  = _weakest_map.get(_focus_key, ('Timing', 'Catching the decisive moment'))[1] %}
+
+  {# Assignment titles per dimension — Sherpa voice, specific #}
+  {% set _assign_map = {
+    'dod':        ('Foreground Separation',  'Your recent frames feel flat. Put something in front — a shadow, a hand, a branch. Let the eye travel through the frame.'),
+    'dm':         ('The Moment Before',      'You have been shooting the moment. Try waiting for what comes just before it. One frame where anticipation is the subject.'),
+    'aq':         ('Light as Subject',       'Stop photographing things. Photograph light falling on things. Find one window, one shadow, one hour today.'),
+    'wonder':     ('The Unfamiliar Angle',   'You have been shooting at eye level. Go lower, go higher, or get closer than feels comfortable. One frame that surprises you.'),
+    'disruption': ('Break the Rule',         'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.')
+  } %}
+  {% set _title     = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[0] %}
+  {% set _brief_why = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[1] %}
+
+  {# Unsplash placeholder — replace with API call once wired #}
+  {% set _img_url = 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80' %}
+
+  <div class="sl-assignment">
+    <div class="sl-assignment__eyebrow">Today's Assignment</div>
+
+    <div class="sl-assignment__body">
+      <div class="sl-assignment__left">
+        <div class="sl-assignment__title">{{ _title }}</div>
+        <div class="sl-assignment__why">{{ _brief_why }}</div>
+      </div>
+      <img src="{{ _img_url }}"
+           alt="{{ _title }}"
+           class="sl-assignment__img"
+           onerror="this.style.display='none'">
+    </div>
+
+    <div class="sl-assignment__meta">
+      <div class="sl-meta-item">
+        <span class="sl-meta-item__icon">◎</span>
+        <div>
+          <span class="sl-meta-item__label">Focus area</span>
+          <span class="sl-meta-item__val">{{ _focus_label }}</span>
+        </div>
+      </div>
+      <div class="sl-meta-item">
+        <span class="sl-meta-item__icon">☁</span>
+        <div>
+          <span class="sl-meta-item__label">Weather</span>
+          <span class="sl-meta-item__val">Check outside — shoot in what you have</span>
+        </div>
+      </div>
+      <div class="sl-meta-item">
+        <span class="sl-meta-item__icon">◷</span>
+        <div>
+          <span class="sl-meta-item__label">Best time</span>
+          <span class="sl-meta-item__val">
+            {% if ist_hour < 10 %}6:00 – 9:00 AM · golden hour
+            {% elif ist_hour < 16 %}Late afternoon is coming — 5:00 – 7:00 PM
+            {% else %}Right now · go
+            {% endif %}
           </span>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {# Dimension trend charts #}
-      {% if progress_data.dim_trends %}
-      <div class="sl-dim-section-lbl">How your eye is developing — last {{ progress_data.dim_trends.dm|length if progress_data.dim_trends.dm else 8 }} photographs</div>
-
-      {% set dim_config = [
-        ('dm',     'Whether the timing was right',       '#1A2744'),
-        ('wonder', 'Whether it made you feel something', '#C8A84B'),
-        ('dod',    'How difficult it was',               '#854F0B'),
-      ] %}
-
-      {% for dim_key, dim_label, dim_color in dim_config %}
-        {% if dim_key in progress_data.dim_trends and dim_key in progress_data.dim_avgs %}
-        {% set vals = progress_data.dim_trends[dim_key] %}
-        {% set current = vals[-1] %}
-        {% set pill_class = progress_data.dim_pills[dim_key] if progress_data.dim_pills and dim_key in progress_data.dim_pills else 'steady' %}
-        {% if pill_class == 'up' %}{% set pill_text = '↑ Climbing — getting stronger' %}
-        {% elif pill_class == 'down' %}{% set pill_text = '↓ Dipped recently' %}
-        {% else %}{% set pill_text = '— Steady — your next opportunity to grow' %}{% endif %}
-        {% set clean = vals | select('number') | list %}
-        {% set dim_min = clean|min if clean else 0 %}
-        {% set dim_max = clean|max if clean else 10 %}
-        {% set rng = [dim_max - dim_min, 0.1]|max %}
-
-        <div class="sl-dim-trend">
-          <div class="sl-dim-hd">
-            <span class="sl-dim-name">{{ dim_label }}</span>
-            <span class="sl-dim-score">{{ current }}</span>
-          </div>
-          <div class="sl-dim-pill {{ pill_class }}">{{ pill_text }}</div>
-          <svg viewBox="0 0 280 36" width="100%" height="36" preserveAspectRatio="none" aria-hidden="true">
-            {% set n = vals|length %}
-            {% for v in vals %}{% if v is not none %}
-              {% set x = (loop.index0 / ([n-1,1]|max)) * 260 + 10 %}
-              {% set y = 30 - ((v - dim_min) / rng) * 26 %}
-              {% if not loop.last %}{% set nv = vals[loop.index] %}{% if nv is not none %}
-                {% set nx = (loop.index / ([n-1,1]|max)) * 260 + 10 %}
-                {% set ny = 30 - ((nv - dim_min) / rng) * 26 %}
-                <line x1="{{ x|round(1) }}" y1="{{ y|round(1) }}" x2="{{ nx|round(1) }}" y2="{{ ny|round(1) }}"
-                  stroke="{{ dim_color }}" stroke-width="2.5" stroke-linecap="round"
-                  {% if pill_class == 'steady' %}stroke-dasharray="7,4"{% endif %}/>
-              {% endif %}{% endif %}
-              <circle cx="{{ x|round(1) }}" cy="{{ y|round(1) }}" r="{{ '6' if loop.last else '4' }}" fill="{{ dim_color }}" opacity="{{ '1' if loop.last else '0.35' }}"/>
-            {% endif %}{% endfor %}
-          </svg>
-          <div class="sl-dim-score-row">
-            {% for v in vals %}<span class="sl-dim-val">{{ v if v is not none else '—' }}</span>{% endfor %}
-          </div>
         </div>
-        {% if not loop.last %}<div class="sl-dim-divider"></div>{% endif %}
-        {% endif %}
-      {% endfor %}
-      {% endif %}
-
-      {# Tier progress #}
-      {% if progress_data.next_tier %}
-      <div class="sl-dim-divider" style="margin-top:14px"></div>
-      <div class="sl-tier-prog-hd">
-        <span>{{ progress_data.avg_tier }} → <strong style="color:#1A2744">{{ progress_data.next_tier }}</strong></span>
-        <span>{{ progress_data.tier_pct }}% there</span>
       </div>
-      <div class="sl-tier-bar-bg"><div class="sl-tier-bar-fill" style="width:{{ progress_data.tier_pct }}%"></div></div>
-      {% endif %}
+    </div>
 
+    <div class="sl-assignment__shots">
+      <span style="font-size:20px">◷</span>
+      Take three photographs.
+    </div>
+
+    <a href="{{ url_for('upload') }}" class="sl-btn-mission">
+      Start Mission &nbsp;→
+    </a>
+  </div>
+
+  {# ══════════════════════════════════════════
+     TODAY'S MASTER
+  ══════════════════════════════════════════ #}
+  {% set _master_map = {
+    'dod':        ('Fan Ho',              'Master of light, shadow and composition.',         'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80'),
+    'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',                'https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=200&q=80'),
+    'aq':         ('Ansel Adams',         'Made light itself the subject.',                   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80'),
+    'wonder':     ('Vivian Maier',        'Found extraordinary in the completely ordinary.',  'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80'),
+    'disruption': ('Daido Moriyama',      'Broke every rule of composition. On purpose.',    'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=200&q=80')
+  } %}
+  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80')) %}
+
+  <div class="sl-master">
+    <img src="{{ _master[2] }}"
+         alt="{{ _master[0] }}"
+         class="sl-master__img"
+         onerror="this.style.display='none'">
+    <div>
+      <div class="sl-master__eyebrow">Today's Master</div>
+      <div class="sl-master__name">{{ _master[0] }}</div>
+      <div class="sl-master__desc">{{ _master[1] }}</div>
+      <a href="{{ url_for('science') }}" class="sl-btn-example">View example →</a>
     </div>
   </div>
-  {% endif %}
 
-  {# ══ 2. BRIEF ══ #}
-  <div class="sl-sec sl-sec-brief" id="sl-sec-brief">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-brief')" aria-expanded="false" role="button" tabindex="0">
-      <div style="flex:1;min-width:0">
-        {% set ns = namespace(greeting='Good morning') %}
-        {% set ist_hour = (now().hour + 5) % 24 %}
-        {% if ist_hour >= 21 %}{% set ns.greeting = 'Good evening' %}
-        {% elif ist_hour >= 17 %}{% set ns.greeting = 'Good evening' %}
-        {% elif ist_hour >= 12 %}{% set ns.greeting = 'Good afternoon' %}
-        {% endif %}
-        {% set first_name = current_user.full_name.split()|first if current_user.full_name and current_user.full_name.strip() else current_user.username %}
-        <div class="sl-brief-greeting">{{ ns.greeting }}, {{ first_name }}</div>
-        {% if current_user.city %}
-        <div class="sl-brief-loc">
-          <span class="sl-brief-loc-dot"></span>
-          {{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}
+  {# ══════════════════════════════════════════
+     YESTERDAY'S STATS
+  ══════════════════════════════════════════ #}
+  {% if progress_data %}
+  <div class="sl-yesterday">
+    <div class="sl-yesterday__col">
+      <span class="sl-yesterday__label">Yesterday</span>
+      {% set _last = images[0] if images else none %}
+      {% if _last and _last.score %}
+        <div class="sl-yesterday__status">
+          <div class="sl-yesterday__check">✓</div>
+          <span style="font-size:16px;color:#1A1A18">Evaluated</span>
         </div>
-        {% endif %}
-      </div>
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
-    </div>
-    <div class="sl-sec-body">
-      {# Time-aware light observation — Sherpa voice, uses time + city #}
-      {% set ns2 = namespace(light_obs='The light this time of day rewards patience.') %}
-      {% set h = (now().hour + 5) % 24 %}
-      {% if h >= 5 and h < 8 %}{% set ns2.light_obs = 'The light right now — golden, low, and forgiving — is the hardest to find and the easiest to waste.' %}
-      {% elif h >= 8 and h < 11 %}{% set ns2.light_obs = 'The morning light is still soft. Street subjects are awake but not yet performing.' %}
-      {% elif h >= 11 and h < 15 %}{% set ns2.light_obs = 'Midday light is harsh — but it makes shadows that no other time of day produces.' %}
-      {% elif h >= 15 and h < 18 %}{% set ns2.light_obs = 'The afternoon is shifting. The light is losing its edge. Good time to plan where you will be at dusk.' %}
-      {% elif h >= 18 and h < 20 %}{% set ns2.light_obs = 'The light right now — last hour before dark — does things to ordinary subjects that money cannot buy.' %}
-      {% else %}{% set ns2.light_obs = 'Tomorrow morning, before 8am, is worth setting your alarm for.' %}
-      {% endif %}
-      {% if current_user.city %}
-      <div class="sl-brief-text">{{ ns2.light_obs }}{% if current_user.city %} {{ current_user.city }} has the material — the question is always whether the photographer is ready for it.{% endif %}</div>
       {% else %}
-      <div class="sl-brief-text">{{ ns2.light_obs }} Set your location to get a brief built around where you are.</div>
+        <div style="font-size:28px;margin-top:4px">—</div>
       {% endif %}
-
-      <div class="sl-brief-cue">
-        <div class="sl-mentor-lbl">Photography advice</div>
-        <div class="sl-brief-cue-txt">
-          {% if progress_data and progress_data.weakest and progress_data.weakest in progress_data.dim_labels %}
-            {% set weak = progress_data.dim_labels[progress_data.weakest] %}
-            {% if active_challenge and active_challenge.is_open %}
-              Your {{ weak }} score is the gap between where you are and where you want to be. This week's assignment — "{{ active_challenge.prompt_title }}" — is precisely the kind of frame that tests it. One photograph. That is all it takes to move the number.
-            {% else %}
-              Your {{ weak }} score is the gap between where you are and where you want to be. Pick one subject{% if current_user.city %} near {{ current_user.city }}{% endif %} that challenges that dimension specifically — not a general shoot, a targeted one.
-            {% endif %}
-          {% else %}
-            Pick up the camera this week. One frame that surprises you. The eye sharpens every time it looks.
-          {% endif %}
-        </div>
-      </div>
-
     </div>
-  </div>
-
-  {# ══ 3. WEEKLY ASSIGNMENT ══ #}
-  {% if active_challenge %}
-  <div class="sl-sec sl-sec-weekly" id="sl-sec-weekly">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-weekly')" aria-expanded="false" role="button" tabindex="0">
-      <span style="font-size:16px;font-weight:600;color:var(--text-primary);flex:1">Weekly assignment</span>
-      {% if active_challenge.is_open %}
-      <span class="sl-weekly-open-badge">
-        <span style="font-size:14px" aria-hidden="true">●</span>
-        Open · closes {{ active_challenge.closes_at.strftime('%-d %b') }}
-      </span>
+    <div class="sl-yesterday__col">
+      <span class="sl-yesterday__label">Your score</span>
+      <div class="sl-yesterday__score-val">{{ '%.1f'|format(progress_data.avg_score) }}</div>
+      <div class="sl-yesterday__stars">
+        {% set _s = progress_data.avg_score | int %}
+        {% for i in range(5) %}{{ '★' if i < (_s // 2) else '☆' }}{% endfor %}
+      </div>
+      {% if progress_data.trend and progress_data.trend|length >= 2 %}
+        {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
+        {% if _diff > 0 %}
+        <div class="sl-yesterday__trend">▲ {{ '%.1f'|format(_diff) }} from last</div>
+        {% elif _diff < 0 %}
+        <div class="sl-yesterday__trend" style="color:#E74C3C">▼ {{ '%.1f'|format(_diff|abs) }} from last</div>
+        {% endif %}
       {% endif %}
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
     </div>
-    <div class="sl-sec-body">
-      <div class="sl-weekly-inner">
-        <div class="sl-weekly-bar">
-          <span class="sl-weekly-bar-lbl">This week · {{ active_challenge.week_ref }}</span>
-          <span class="sl-weekly-bar-ctx">{{ active_challenge.submission_count }} photographers shooting</span>
-        </div>
-        <div class="sl-weekly-body">
-          <div class="sl-weekly-prompt">"{{ active_challenge.prompt_title }}"</div>
-          <div class="sl-weekly-why">Each photograph you add is evaluated and counts toward your standing. Photographs that place earn points and strengthen your Annual Excellence Award participation score.</div>
-          {% if active_challenge.is_open and current_user.is_subscribed %}
-            {% set shots_added = active_challenge.user_submission_count(current_user.id) %}
-            {% set shots_total = 3 %}
-            <div class="sl-weekly-prog-txt">You have added <strong>{{ shots_added }} of {{ shots_total }} photographs</strong> this week</div>
-            <div class="sl-weekly-prog-bg"><div class="sl-weekly-prog-fill" style="width:{{ [(shots_added / shots_total * 100)|int, 100]|min }}%"></div></div>
-            {% if shots_added < shots_total %}
-            <a class="sl-weekly-cta" href="{{ url_for('challenge_submit') }}">
-              <span style="font-size:15px" aria-hidden="true">📷</span>
-              Shoot this week →
-            </a>
-            {% else %}
-            <a class="sl-weekly-cta" href="{{ url_for('weekly_challenge') }}" style="background:#1A2744;color:var(--gold)">
-              <span style="font-size:15px" aria-hidden="true">▦</span>
-              View this week →
-            </a>
-            {% endif %}
-          {% else %}
-          <a class="sl-weekly-cta" href="{{ url_for('weekly_challenge') }}">
-            <span style="font-size:15px" aria-hidden="true">◎</span>
-            View this week →
-          </a>
-          {% endif %}
-        </div>
+    <div class="sl-yesterday__col">
+      <span class="sl-yesterday__label">Active days</span>
+      <div class="sl-yesterday__streak-val">
+        <span style="color:#E74C3C">&#9679;</span>
+        {{ _months_active or 0 }}
       </div>
+      <div class="sl-yesterday__streak-sub">active month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
     </div>
   </div>
   {% endif %}
 
-  {# ══ 4. LOCATION ADVISORY ══ #}
-  {% if current_user.city and progress_data %}
-  {% set top_genre = progress_data.top_genre or 'Photography' %}
-  <div class="sl-sec sl-sec-location" id="sl-sec-location">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-location')" aria-expanded="false" role="button" tabindex="0">
-      <span class="sl-loc-title">Your {{ top_genre }} eye is ready for this<span class="sl-loc-genre-pill">{{ top_genre }}</span></span>
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
-    </div>
-    <div class="sl-sec-body">
-      <div class="sl-loc-card">
-        <div class="sl-loc-opening">{{ current_user.city }} has something worth shooting right now — your personalised location advisory will appear here once your brief is live.</div>
-        <div class="sl-loc-sublbl">Based on</div>
-        <div class="sl-loc-txt">Your location · Your genre interests · Your weakest dimension · What is seasonally active near you</div>
-        <div class="sl-loc-ticker">Your location advisory gets more specific the more you shoot.</div>
+  {# ══════════════════════════════════════════
+     UPLOAD BANNER
+  ══════════════════════════════════════════ #}
+  <a href="{{ url_for('upload') }}" class="sl-upload-banner">
+    <div class="sl-upload-banner__left">
+      <div class="sl-upload-banner__icon">▲</div>
+      <div>
+        <span class="sl-upload-banner__title">Upload today's photographs</span>
+        <span class="sl-upload-banner__sub">Get evaluated and improve every day</span>
       </div>
     </div>
+    <span class="sl-upload-banner__arrow">→</span>
+  </a>
+
+  {# ══════════════════════════════════════════
+     FREE TIER NUDGE (no subscription)
+  ══════════════════════════════════════════ #}
+  {% if free_tier %}
+  <div class="sl-free-nudge">
+    <div class="sl-free-nudge__title">
+      {% if upload_credits_balance > 0 %}
+        {{ upload_credits_balance }} free evaluation{{ 's' if upload_credits_balance != 1 else '' }} waiting
+      {% else %}
+        3 free evaluations, waiting for you
+      {% endif %}
+    </div>
+    <div class="sl-free-nudge__sub">
+      Upload your first photograph. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions, in 60 seconds.
+    </div>
+    <a href="{{ url_for('pricing') }}" class="sl-btn-subscribe">Subscribe to unlock full coaching →</a>
   </div>
   {% endif %}
 
-  {# ══ 5. POINTS, AWARDS & COMMUNITY ══ #}
-  <div class="sl-sec sl-sec-cards" id="sl-sec-cards">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-cards')" aria-expanded="false" role="button" tabindex="0">
-      <span style="font-size:16px;font-weight:600;color:var(--text-primary)">Points, awards &amp; community</span>
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
-    </div>
-    <div class="sl-sec-body">
-      {% if rating_widget %}
-      <div class="sl-peer-cta">
-        <div class="sl-peer-txt">
-          Rate a photograph · earn points
-          <small>{{ rating_widget.credits_to_next }} more to unlock peer pool entry</small>
+  {# ══════════════════════════════════════════
+     SECONDARY SECTIONS — collapsible, below the fold
+     Available on one tap. Never blocking.
+  ══════════════════════════════════════════ #}
+  <div class="sl-sections">
+
+    {# ── Standing & Progress ── #}
+    {% if progress_data %}
+    <div class="sl-sec" id="sec-standing">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-standing')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">◎</span>
+          <div>
+            <span class="sl-sec__title">Your standing</span>
+            <span class="sl-sec__sub">{{ progress_data.avg_tier }} · avg {{ '%.2f'|format(progress_data.avg_score) }}{% if progress_data.overall_pct %} · Top {{ progress_data.overall_pct }}%{% endif %}</span>
+          </div>
         </div>
-        <a class="sl-peer-btn" href="{{ url_for('rate') }}">
-          <span style="font-size:15px" aria-hidden="true">★</span> Rate
-        </a>
+        <span class="sl-sec__chev">▼</span>
       </div>
-      {% endif %}
-      <div class="sl-card-stack">
+      <div class="sl-sec__body">
+        <div class="sl-standing-row">
+          <div class="sl-standing-stat">
+            <div class="sl-standing-stat__val">{{ '%.2f'|format(progress_data.avg_score) }}</div>
+            <div class="sl-standing-stat__label">Average score</div>
+          </div>
+          <div class="sl-standing-stat">
+            <div class="sl-standing-stat__val">{% if progress_data.overall_pct %}Top {{ progress_data.overall_pct }}%{% else %}—{% endif %}</div>
+            <div class="sl-standing-stat__label">{{ progress_data.league_label or 'Camera' }} league</div>
+          </div>
+        </div>
+
+        {# Dimension pills — plain English names #}
+        {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+        <div class="sl-dim-grid">
+          {% for dim, avg in progress_data.dim_avgs.items() %}
+          {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
+          <div class="sl-dim-pill">
+            <span class="sl-dim-pill__name">{{ _dim_mobile.get(dim, dim|title) }}</span>
+            <span>
+              <span class="sl-dim-pill__score">{{ '%.1f'|format(avg) }}</span>
+              {% if _pill == 'up' %}<span class="sl-dim-pill__trend up">▲</span>
+              {% elif _pill == 'down' %}<span class="sl-dim-pill__trend down">▼</span>
+              {% else %}<span class="sl-dim-pill__trend steady">–</span>{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+
+        {# Tier progress bar #}
+        <div class="sl-tier-bar">
+          <div class="sl-tier-bar__label">
+            <span>{{ progress_data.avg_tier }}</span>
+            <span>→ {{ progress_data.next_tier or 'Peak' }}</span>
+          </div>
+          <div class="sl-tier-bar__track">
+            <div class="sl-tier-bar__fill" style="width:{{ progress_data.tier_pct or 0 }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Points & Rewards ── #}
+    <div class="sl-sec" id="sec-points">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-points')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">★</span>
+          <div>
+            <span class="sl-sec__title">Points & rewards</span>
+            <span class="sl-sec__sub">{% if wallet_hud %}{{ wallet_hud.balance | int | default(0) }} pts{% else %}Earn on every upload{% endif %}</span>
+          </div>
+        </div>
+        <span class="sl-sec__chev">▼</span>
+      </div>
+      <div class="sl-sec__body">
         {% if wallet_hud %}
-        <div class="sl-card" id="sl-card-pts">
-          <div class="sl-card-hdr" onclick="slCardToggle('sl-card-pts')">
-            <span class="sl-card-lbl"><span style="font-size:17px;color:var(--border-strong)" aria-hidden="true">◈</span> Points</span>
-            <div class="sl-card-r"><span class="sl-card-val">{{ wallet_hud.balance|round(0)|int }} pts</span><span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
+        <div class="sl-points-row">
+          <div class="sl-points-card">
+            <div class="sl-points-card__val">{{ wallet_hud.balance | int }}</div>
+            <div class="sl-points-card__label">Points balance</div>
           </div>
-          <div class="sl-card-body">{{ wallet_hud.balance|round(0)|int }} points available. Earn by rating photographs, uploading, and reaching your next tier.<a class="sl-card-action" href="{{ url_for('redeem') }}">Redeem now →</a></div>
-        </div>
-        {% endif %}
-        {% if current_user.is_subscribed %}
-        <div class="sl-card" id="sl-card-aea">
-          <div class="sl-card-hdr" onclick="slCardToggle('sl-card-aea')">
-            <span class="sl-card-lbl"><span style="font-size:17px;color:var(--border-strong)" aria-hidden="true">◉</span> Annual Excellence Award</span>
-            <div class="sl-card-r">{% if not _pre_season %}<span class="sl-badge-a">{{ _months_active }} of 4</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
-          </div>
-          <div class="sl-card-body">
-            {% if _pre_season %}The season opens on {{ _season_start_label }}. Photographers who evaluate at least once each month are considered for the year-end award.
-            {% else %}
-              {% set first_name = current_user.full_name.split()|first if current_user.full_name and current_user.full_name.strip() else current_user.username %}
-              {{ _months_active }} month{{ 's' if _months_active != 1 }} in, {{ first_name }}.{% if _months_active < 4 %} One more and you complete the season. Photographers who show up every month are considered for the year-end award{% if progress_data and progress_data.weakest and progress_data.weakest in progress_data.dim_labels %} — and your {{ progress_data.dim_labels[progress_data.weakest] }} is climbing{% endif %}. One photograph before the month ends keeps your place.{% else %} You have completed every month of the season. Your Annual Excellence Award participation is secure.{% endif %}
-            {% endif %}
+          <div class="sl-points-card">
+            <div class="sl-points-card__val">{{ upload_credits_balance or 0 }}</div>
+            <div class="sl-points-card__label">Upload credits</div>
           </div>
         </div>
+        <a href="{{ url_for('redeem') }}" class="sl-btn-redeem">Redeem points →</a>
         {% endif %}
-        {% if poty_tracker and poty_tracker.genre_rows %}
-        <div class="sl-card" id="sl-card-genre">
-          <div class="sl-card-hdr" onclick="slCardToggle('sl-card-genre')">
-            <span class="sl-card-lbl"><span style="font-size:17px;color:var(--border-strong)" aria-hidden="true">▦</span> Standing by genre</span>
-            <div class="sl-card-r">{% if poty_tracker.best_avg %}<span class="sl-card-val">{{ '%.2f'|format(poty_tracker.best_avg) }}</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
-          </div>
-          <div class="sl-card-body">
-            {% for row in poty_tracker.genre_rows %}
-            <div class="sl-genre-row">
-              <span>{{ row.genre }}</span>
-              {% if row.top6_avg %}<span class="sl-genre-score">{{ '%.2f'|format(row.top6_avg) }}</span>
-              {% elif row.images_needed > 0 %}<span style="font-size:14px;color:var(--text-disabled)">{{ row.images_needed }} more to unlock</span>
-              {% endif %}
+
+        {# Peer rating CTA — earn 2 points, daily habit #}
+        {% if rating_widget %}
+        <a href="{{ url_for('rate') }}" class="sl-peer-cta">
+          <div class="sl-peer-cta__left">
+            <span style="font-size:22px">★</span>
+            <div>
+              <div class="sl-peer-cta__txt">Rate a peer's photograph</div>
+              <div class="sl-peer-cta__sub">Takes 60 seconds · builds your eye</div>
             </div>
-            {% endfor %}
           </div>
-        </div>
-        {% endif %}
-        {% if referral_code %}
-        <div class="sl-card" id="sl-card-ref">
-          <div class="sl-card-hdr" onclick="slCardToggle('sl-card-ref')">
-            <span class="sl-card-lbl"><span style="font-size:17px;color:var(--border-strong)" aria-hidden="true">⊕</span> Refer a friend</span>
-            <div class="sl-card-r">{% if referral_stats and referral_stats.successful %}<span class="sl-badge-g">{{ referral_stats.successful }} joined</span>{% endif %}<span class="sl-card-chev" aria-hidden="true">▼</span></i></div>
-          </div>
-          <div class="sl-card-body">Invite friends, earn points. Share your code. You earn <strong>200 pts</strong> when they subscribe. They get a discount on their first month.<a class="sl-card-action" href="{{ url_for('referral_page') }}">Share my code →</a></div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-
-  {# ══ 5b. PORTFOLIO & MENTOR REVIEW ══ #}
-  <div class="sl-sec sl-sec-portfolio" id="sl-sec-portfolio">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-portfolio')" aria-expanded="false" role="button" tabindex="0">
-      <span style="font-size:16px;font-weight:600;color:var(--text-primary)">Grow &amp; share</span>
-      <span class="sl-sec-chev" aria-hidden="true">▼</span>
-    </div>
-    <div class="sl-sec-body"><div style="display:flex;flex-direction:column;gap:10px;">
-      <a href="{{ url_for('mentors') }}" style="display:flex;align-items:center;justify-content:space-between;background:#1A2744;color:#fff;font-size:16px;font-weight:600;padding:16px 18px;border-radius:var(--radius-md);text-decoration:none;min-height:56px;">
-        <span>Seek expert opinion on your image</span>
-        <span style="color:#fff;font-size:20px">→</span>
-      </a>
-      <a href="{{ url_for('portfolio_manager') }}" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-1);color:var(--text-primary);font-size:16px;font-weight:600;padding:16px 18px;border-radius:var(--radius-md);text-decoration:none;min-height:56px;border:0.5px solid var(--border);">
-        <span>Build your portfolio</span>
-        <span style="color:#1A2744;font-size:20px">→</span>
-      </a>
-      {% if referral_code %}
-      <a href="{{ url_for('referral_page') }}" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-1);color:var(--text-primary);font-size:16px;font-weight:600;padding:16px 18px;border-radius:var(--radius-md);text-decoration:none;min-height:56px;border:0.5px solid var(--border);">
-        <span>Invite a photographer · earn points</span>
-        <span style="color:#1A2744;font-size:20px">→</span>
-      </a>
-      {% endif %}
-    </div></div>
-  </div>
-
-  {# ══ 6\. YOUR PHOTOGRAPHS ══ #}
-  <div class="sl-sec sl-sec-photos" id="sl-sec-photos">
-    <div class="sl-sec-hdr" onclick="slToggle('sl-sec-photos')" aria-expanded="false" role="button" tabindex="0">
-      <span style="font-size:16px;font-weight:600;color:var(--text-primary);flex:1">Your photographs</span>
-      <a class="sl-upload-btn" href="{{ url_for('upload') }}">
-        ↑ Upload
-      </a>
-      <span class="sl-sec-chev" aria-hidden="true" style="margin-left:8px;flex-shrink:0">▼</span>
-    </div>
-    <div class="sl-sec-body">
-      <div class="sl-credits-txt">
-        {{ upload_credits_balance }} evaluation{{ 's' if upload_credits_balance != 1 }} available this month{% if stats.scored %} · {{ stats.scored }} photograph{{ 's' if stats.scored != 1 }} evaluated{% endif %}
-      </div>
-      {% if search_enabled %}
-      <form method="GET" action="{{ url_for('dashboard') }}" class="sl-search-form">
-        <svg class="sl-search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-          <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M11.5 11.5l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <input class="sl-search-input" type="text" name="q" value="{{ query }}" placeholder="Search photographs…" autocomplete="off" aria-label="Search photographs">
-        <button type="submit" class="sl-search-btn" aria-label="Search">→</button>
-      </form>
-      {% if query %}
-      <div style="font-size:14px;color:var(--text-disabled);margin-bottom:12px">
-        Results for "<strong style="color:var(--text-primary)">{{ query }}</strong>" · <a href="{{ url_for('dashboard') }}" style="color:#1A2744;font-weight:600">Clear</a>
-      </div>
-      {% endif %}
-      {% endif %}
-
-      {% if images.items %}
-      <div class="sl-img-grid">
-        {% for img in images.items %}
-        <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-img-card">
-          {% if img.thumb_url %}
-          <img src="{{ img.thumb_url }}" alt="{{ img.asset_name or 'Photograph' }}" class="sl-img-thumb" loading="lazy" onerror="this.style.display='none'">
-          {% else %}
-          <div class="sl-img-thumb-ph"><span style="font-size:28px;color:var(--border-strong)" aria-hidden="true">◻</span></div>
-          {% endif %}
-          <div class="sl-img-meta">
-            <div class="sl-img-name">{{ img.asset_name or img.original_filename or 'Untitled' }}</div>
-            <div class="sl-img-row">
-              <span class="sl-img-genre">{{ img.genre or '—' }}</span>
-              {% if img.score %}<span class="sl-img-score">{{ '%.2f'|format(img.score) }}</span>{% endif %}
-            </div>
-            {% if img.tier and img.score %}<div class="sl-img-tier">{{ img.tier }}</div>{% endif %}
-            {% if img.status == 'pending' %}<span class="sl-pill-eval"><span style="font-size:14px" aria-hidden="true">◷</span> Evaluating</span>{% endif %}
-          </div>
+          <span class="sl-peer-cta__pts">+2 pts</span>
         </a>
-        {% endfor %}
+        {% endif %}
       </div>
-      {% if images.pages > 1 %}
-      <nav class="sl-pagination" aria-label="Photographs pages">
-        {% if images.has_prev %}<a href="{{ url_for('dashboard', page=images.prev_num, q=query) }}">← Previous</a>
-        {% else %}<span class="disabled">← Previous</span>{% endif %}
-        {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-          {% if p %}{% if p == images.page %}<span class="current">{{ p }}</span>
-          {% else %}<a href="{{ url_for('dashboard', page=p, q=query) }}">{{ p }}</a>{% endif %}
-          {% else %}<span style="border:none;background:none;color:var(--text-disabled)">…</span>{% endif %}
-        {% endfor %}
-        {% if images.has_next %}<a href="{{ url_for('dashboard', page=images.next_num, q=query) }}">Next →</a>
-        {% else %}<span class="disabled">Next →</span>{% endif %}
-      </nav>
-      {% endif %}
-      {% else %}
-      <div class="sl-empty">
-        <h3>{{ 'No photographs match "' + query + '"' if query else 'Upload your first photograph' }}</h3>
-        <p>{{ 'Try a different genre, location, or subject.' if query else 'Your DDI score, standing, and daily brief all begin here.' }}</p>
-        <a href="{{ url_for('dashboard') if query else url_for('upload') }}" class="sl-upload-btn" style="display:inline-flex">
-          {{ 'Clear search' if query else 'Upload for evaluation' }}
+    </div>
+
+    {# ── Weekly Assignment ── #}
+    {% if active_challenge %}
+    <div class="sl-sec" id="sec-weekly">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-weekly')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">◈</span>
+          <div>
+            <span class="sl-sec__title">Weekly assignment</span>
+            <span class="sl-sec__sub">{{ active_challenge.prompt_title }} · closes {{ active_challenge.closes_at.strftime('%d %b') }}</span>
+          </div>
+        </div>
+        <span class="sl-sec__chev">▼</span>
+      </div>
+      <div class="sl-sec__body">
+        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
+          {{ active_challenge.prompt_body or 'A new challenge every Monday. Submit your best frame.' }}
+        </p>
+        <a href="{{ url_for('weekly_challenge') }}" class="sl-btn-redeem" style="background:var(--sl-yellow);color:var(--sl-text);">
+          View assignment →
         </a>
       </div>
-      {% endif %}
     </div>
-  </div>
+    {% endif %}
 
-</div>{# /sl-dash #}
+    {# ── Referral ── #}
+    {% if referral_code %}
+    <div class="sl-sec" id="sec-referral">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-referral')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">↗</span>
+          <div>
+            <span class="sl-sec__title">Invite a photographer</span>
+            <span class="sl-sec__sub">They get ₹{{ referred_discount or 180 }} off · you earn 200 pts</span>
+          </div>
+        </div>
+        <span class="sl-sec__chev">▼</span>
+      </div>
+      <div class="sl-sec__body">
+        <p style="font-size:17px;line-height:1.65;margin:16px 0 14px;color:#404040">
+          Share your personal link. When they subscribe, you both benefit.
+        </p>
+        <div style="background:var(--sl-bg);border-radius:14px;padding:14px 16px;font-family:monospace;font-size:16px;color:var(--sl-text);word-break:break-all;margin-bottom:12px;">
+          {{ referral_url }}
+        </div>
+        <a href="{{ url_for('referral_page') }}" class="sl-btn-redeem">See your referral dashboard →</a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>{# /sl-sections #}
+
+  {# ── Location widget (compact) ── #}
+  {% if location_data_json %}
+  {% set _loc_data = location_data_json | from_json if location_data_json else {} %}
+  {% if _loc_data.city %}
+  <div class="sl-loc-widget">
+    <span class="sl-loc-widget__pin">📍</span>
+    <div class="sl-loc-widget__txt">
+      Shooting in <span class="sl-loc-widget__city">{{ _loc_data.city }}, {{ _loc_data.state or _loc_data.country }}</span>
+    </div>
+    <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
+  </div>
+  {% endif %}
+  {% endif %}
+
+</div>{# /sl-today__inner #}
+</div>{# /sl-today #}
+
+{# ══════════════════════════════════════════
+   BOTTOM NAVIGATION
+   Fixed to bottom · across all pages
+   Move to base.html after founder approval
+══════════════════════════════════════════ #}
+<nav class="sl-bottom-nav" aria-label="Main navigation">
+  <a href="{{ url_for('dashboard') }}" class="sl-nav-item active">
+    <span class="sl-nav-item__icon">☀</span>
+    <span>Today</span>
+  </a>
+  <a href="{{ url_for('portfolio', username=current_user.username) if current_user.is_authenticated else url_for('dashboard') }}" class="sl-nav-item">
+    <span class="sl-nav-item__icon">⊞</span>
+    <span>Gallery</span>
+  </a>
+  <a href="{{ url_for('upload') }}" class="sl-nav-fab">
+    <div class="sl-nav-fab__circle">+</div>
+    <span>Upload</span>
+  </a>
+  <a href="{{ url_for('weekly_challenge') if active_challenge else url_for('poty') }}" class="sl-nav-item">
+    <span class="sl-nav-item__icon">◈</span>
+    <span>League</span>
+  </a>
+  <a href="{{ url_for('profile') }}" class="sl-nav-item">
+    <span class="sl-nav-item__icon">◉</span>
+    <span>Profile</span>
+  </a>
+</nav>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ── Section toggle ──
 function slToggle(id) {
   var s = document.getElementById(id);
   if (!s) return;
   var open = s.classList.toggle('is-open');
-  var h = s.querySelector('.sl-sec-hdr');
+  var h = s.querySelector('.sl-sec__hdr');
   if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
-function slCardToggle(id) {
-  var c = document.getElementById(id);
-  if (!c) return;
-  c.classList.toggle('is-open');
-  var ch = c.querySelector('.sl-card-chev');
-  if (ch) ch.style.transform = c.classList.contains('is-open') ? 'rotate(180deg)' : '';
-}
+
+// ── Keyboard nav for collapsible sections ──
+document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
+  hdr.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      hdr.click();
+    }
+  });
+});
+
+// ── Active nav item ──
+(function() {
+  var path = window.location.pathname;
+  document.querySelectorAll('.sl-nav-item, .sl-nav-fab').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  var items = document.querySelectorAll('.sl-nav-item');
+  if (path === '/' || path.includes('dashboard')) {
+    items[0] && items[0].classList.add('active');
+  } else if (path.includes('portfolio') || path.includes('gallery')) {
+    items[1] && items[1].classList.add('active');
+  } else if (path.includes('challenge') || path.includes('league') || path.includes('poty')) {
+    items[2] && items[2].classList.add('active');
+  } else if (path.includes('profile')) {
+    items[3] && items[3].classList.add('active');
+  }
+})();
 </script>
 {% endblock %}
