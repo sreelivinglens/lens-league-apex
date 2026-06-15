@@ -148,59 +148,65 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   display: none;
 }
 
-/* ── Mobile hero banner — compact strip above assignment ── */
-.sl-mobile-hero-banner {
+/* ── Full-width dashboard hero banner — above content, both mobile + desktop ── */
+.sl-dash-hero-banner {
   position: relative;
   width: 100%;
-  height: 140px;
-  border-radius: var(--r-card);
+  height: 200px;
   overflow: hidden;
   background: #0D0D0B;
-  flex-shrink: 0;
 }
-.sl-mobile-hero-banner img {
+.sl-dash-hero-banner img {
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
 }
-.sl-mobile-hero-banner__overlay {
+.sl-dash-hero-banner__grad {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.10) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 60%, transparent 100%);
 }
-.sl-mobile-hero-banner__badge {
+.sl-dash-hero-banner__badge {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 10px 14px;
+  padding: 14px 20px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
 }
-.sl-mobile-hero-banner__score {
-  font-size: 26px;
+.sl-dash-hero-banner__score {
+  font-size: 32px;
   font-weight: 800;
   color: #F5C518;
   line-height: 1;
   display: block;
 }
-.sl-mobile-hero-banner__tier {
+.sl-dash-hero-banner__tier {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .09em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.65);
   display: block;
-  margin-top: 1px;
+  margin-top: 3px;
 }
-.sl-mobile-hero-banner__by {
+.sl-dash-hero-banner__by {
   font-size: 13px;
   color: rgba(255,255,255,0.55);
+  display: block;
+  margin-top: 2px;
+}
+.sl-dash-hero-banner__genre {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
   text-align: right;
 }
-/* Hide mobile banner on desktop (desktop has full hero) */
 @media (min-width: 1025px) {
-  .sl-mobile-hero-banner { display: none !important; }
+  .sl-dash-hero-banner { height: 260px; }
 }
 
 /* Meta pills row */
@@ -1191,6 +1197,28 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 {% block content %}
 <div class="sl-today">
+
+{# ── Full-width hero banner — above content grid, both mobile and desktop ── #}
+{# Only for returning users (not first-login). Hidden when no images in carousel. #}
+{% set _hero_img = carousel_images[0] if carousel_images else none %}
+{% if _hero_img and _hero_img.thumb_url and not (free_tier and stats.total == 0) %}
+<div class="sl-dash-hero-banner">
+  <img src="{{ _hero_img.thumb_url }}"
+       alt="{{ _hero_img.genre or 'Photography' }}"
+       loading="eager"
+       onerror="this.parentElement.style.display='none'">
+  <div class="sl-dash-hero-banner__grad"></div>
+  <div class="sl-dash-hero-banner__badge">
+    <div>
+      <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
+      <span class="sl-dash-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
+      <span class="sl-dash-hero-banner__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</span>
+    </div>
+    <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
+  </div>
+</div>
+{% endif %}
+
 <div class="sl-today__inner">
 <div class="sl-today__left">
 
@@ -1296,28 +1324,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
 
-  {# ── Hero image — shown on both mobile (compact banner) and desktop (full 16:9) ── #}
+  {# ── Desktop hero image — shown in left column on desktop only ── #}
   {% set _hero_img = carousel_images[0] if carousel_images else none %}
-
-  {# Mobile hero banner — compact strip, only for returning users with images #}
-  {% if _hero_img and _hero_img.thumb_url and not (free_tier and stats.total == 0) %}
-  <div class="sl-mobile-hero-banner">
-    <img src="{{ _hero_img.thumb_url }}"
-         alt="{{ _hero_img.genre or 'Photography' }}"
-         loading="lazy"
-         onerror="this.parentElement.style.display='none'">
-    <div class="sl-mobile-hero-banner__overlay"></div>
-    <div class="sl-mobile-hero-banner__badge">
-      <div>
-        <span class="sl-mobile-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
-        <span class="sl-mobile-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
-      </div>
-      <span class="sl-mobile-hero-banner__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</span>
-    </div>
-  </div>
-  {% endif %}
-
-  {# ── Desktop hero image — same image, full 16:9 in left column ── #}
   {% if _hero_img and _hero_img.thumb_url %}
   <div class="sl-desktop-hero" style="display:none;">
     <img src="{{ _hero_img.thumb_url }}"
@@ -1456,7 +1464,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     'dm':         ('rgba(42,74,52,1)',    'rgba(26,58,36,1)',   '◎',   '#A8D4B0'),
     'aq':         ('rgba(107,62,26,1)',   'rgba(84,44,12,1)',   '☀',   '#F5C518'),
     'wonder':     ('rgba(62,26,107,1)',   'rgba(44,12,84,1)',   '✦',   '#C8A0F0'),
-    'disruption': ('rgba(107,26,44,1)',   'rgba(84,12,26,1)',   '◈',   '#F0A0A8')
+    'disruption': ('rgba(19,37,75,1)',    'rgba(13,25,55,1)',   '◈',   '#A0B4F0')
   } %}
   {% set _dc = _dim_colour.get(_focus_key, ('rgba(26,26,18,1)', 'rgba(10,10,8,1)', '◉', '#F5C518')) %}
 
@@ -2019,6 +2027,54 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
           {{ referral_url }}
         </div>
         <a href="{{ url_for('referral_page') }}" class="sl-btn-redeem">See your referral dashboard →</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── My Photographs ── #}
+    {% if stats.total > 0 %}
+    <div class="sl-sec" id="sec-photos">
+      <div class="sl-sec__hdr" onclick="slToggle('sec-photos')" role="button" tabindex="0" aria-expanded="false">
+        <div class="sl-sec__hdr-left">
+          <span class="sl-sec__icon">⊞</span>
+          <div>
+            <span class="sl-sec__title">My photographs</span>
+            <span class="sl-sec__sub">{{ stats.total }} image{{ 's' if stats.total != 1 else '' }} · {{ stats.scored }} evaluated</span>
+          </div>
+        </div>
+        <span class="sl-sec__chev">▼</span>
+      </div>
+      <div class="sl-sec__body">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:12px;">
+          {% for img in images.items[:9] %}
+          {% if img.thumb_url %}
+          <a href="{{ url_for('image_detail', image_id=img.id) }}"
+             style="position:relative; aspect-ratio:1; overflow:hidden; border-radius:10px;
+                    display:block; background:#0D0D0B;">
+            <img src="{{ img.thumb_url }}"
+                 alt="{{ img.genre or 'Photo' }}"
+                 loading="lazy"
+                 onerror="this.style.display='none'"
+                 style="width:100%;height:100%;object-fit:cover;display:block;">
+            {% if img.score %}
+            <div style="position:absolute;bottom:0;left:0;right:0;
+                        background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%);
+                        padding:4px 6px;">
+              <span style="font-size:13px;font-weight:800;color:#F5C518;">{{ '%.1f'|format(img.score) }}</span>
+            </div>
+            {% endif %}
+          </a>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% if images.total > 9 %}
+        <a href="{{ url_for('dashboard') }}?page=2"
+           style="display:block; text-align:center; font-size:14px; font-weight:600;
+                  color:var(--sl-text); padding:10px; border:1px solid var(--sl-border);
+                  border-radius:10px; text-decoration:none; background:var(--sl-bg);">
+          View all {{ images.total }} photographs →
+        </a>
+        {% endif %}
       </div>
     </div>
     {% endif %}
