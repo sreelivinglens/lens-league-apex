@@ -1012,9 +1012,10 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
           {% if _snippet %} — {{ _snippet[:80] }}{% if _snippet|length > 80 %}…{% endif %}{% endif %}
         </span>
       </div>
-      {% set _mid = review.get('id') %}
-      {% if _mid %}
-      <a href="{{ url_for('mentors') }}" class="sl-btn-read">Read →</a>
+      {% if review.get('image_id') %}
+      <a href="{{ url_for('image_detail', image_id=review.get('image_id')) }}" class="sl-btn-read">Read →</a>
+      {% else %}
+      <a href="{{ url_for('mentors') }}" class="sl-btn-read">View →</a>
       {% endif %}
     </div>
     {% endfor %}
