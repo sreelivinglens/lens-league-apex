@@ -94,22 +94,22 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-assignment__eyebrow {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .12em;
+  letter-spacing: .10em;
   text-transform: uppercase;
   color: var(--sl-yellow-dark);
-  padding: 20px 20px 0;
+  padding: 12px 14px 0;
 }
 
 /* Two-column layout: text left, image right */
 .sl-assignment__body {
   display: grid;
-  grid-template-columns: 1fr 120px;
+  grid-template-columns: 1fr 100px;
   gap: 0;
-  min-height: 180px;
+  min-height: 170px;
 }
 
 .sl-assignment__left {
-  padding: 12px 20px 0;
+  padding: 10px 14px 0;
 }
 
 .sl-assignment__title {
@@ -122,8 +122,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 .sl-assignment__why {
-  font-size: 17px;
-  line-height: 1.65;
+  font-size: 15px;
+  line-height: 1.55;
   color: #404040;
   margin-bottom: 0;
 }
@@ -133,7 +133,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   height: 100%;
   object-fit: cover;
   border-radius: 0 var(--r-hero) 0 var(--r-img);
-  min-height: 200px;
+  min-height: 170px;
 }
 
 .sl-assignment__img-placeholder {
@@ -398,7 +398,9 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-upload-banner__left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 
 .sl-upload-banner__icon {
@@ -413,23 +415,25 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   flex-shrink: 0;
 }
 
-.sl-upload-banner__title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--sl-text);
-  display: inline;
+.sl-upload-banner__text {
+  min-width: 0;
 }
 
-.sl-upload-banner__sep {
-  display: inline;
-  color: rgba(21,21,21,.45);
-  margin: 0 4px;
+.sl-upload-banner__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sl-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .sl-upload-banner__sub {
-  font-size: 16px;
-  color: rgba(21,21,21,.65);
-  display: inline;
+  font-size: 13px;
+  color: rgba(21,21,21,.60);
+  display: block;
+  white-space: nowrap;
 }
 
 .sl-upload-banner__arrow {
@@ -1015,7 +1019,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
           <strong>{{ review.get('mentor_name') or 'Your mentor' }}</strong> reviewed
           <strong>{{ review.get('asset_name') or 'your photograph' }}</strong>
           {% set _snippet = review.get('review_text', '') %}
-          {% if _snippet %} — {{ _snippet[:80] }}{% if _snippet|length > 80 %}…{% endif %}{% endif %}
+          {% if _snippet %} — {{ _snippet[:55] }}{% if _snippet|length > 55 %}…{% endif %}{% endif %}
         </span>
       </div>
       {% if review.get('image_id') %}
@@ -1111,29 +1115,18 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-assignment__meta">
       <div class="sl-meta-item">
         <span class="sl-meta-item__icon">◎</span>
-        <div>
-          <span class="sl-meta-item__label">Focus area</span>
-          <span class="sl-meta-item__val">{{ _focus_label }}</span>
-        </div>
+        <span class="sl-meta-item__label">Focus</span>
+        <span class="sl-meta-item__val">{{ _focus_label }}</span>
       </div>
       <div class="sl-meta-item">
         <span class="sl-meta-item__icon">☁</span>
-        <div>
-          <span class="sl-meta-item__label">Weather</span>
-          <span class="sl-meta-item__val">Check outside — shoot in what you have</span>
-        </div>
+        <span class="sl-meta-item__label">Weather</span>
+        <span class="sl-meta-item__val">Shoot in what you have</span>
       </div>
       <div class="sl-meta-item">
         <span class="sl-meta-item__icon">◷</span>
-        <div>
-          <span class="sl-meta-item__label">Best time</span>
-          <span class="sl-meta-item__val">
-            {% if ist_hour < 10 %}6:00 – 9:00 AM · golden hour
-            {% elif ist_hour < 16 %}Late afternoon is coming — 5:00 – 7:00 PM
-            {% else %}Right now · go
-            {% endif %}
-          </span>
-        </div>
+        <span class="sl-meta-item__label">Best time</span>
+        <span class="sl-meta-item__val">{% if ist_hour < 10 %}6:00 – 9:00 AM{% elif ist_hour < 16 %}5:00 – 7:00 PM{% else %}Now{% endif %}</span>
       </div>
     </div>
 
@@ -1183,10 +1176,10 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       {% if _last and _last.score %}
         <div class="sl-yesterday__status">
           <div class="sl-yesterday__check">✓</div>
-          <span style="font-size:16px;color:#1A1A18">Evaluated</span>
+          <span style="font-size:14px;color:#1A1A18;font-weight:600">Evaluated</span>
         </div>
       {% else %}
-        <div style="font-size:28px;margin-top:4px">—</div>
+        <div style="font-size:13px;color:var(--sl-text-light);margin-top:6px">No upload</div>
       {% endif %}
     </div>
     <div class="sl-yesterday__col">
@@ -1229,10 +1222,9 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   <a href="{{ url_for('upload') }}" class="sl-upload-banner">
     <div class="sl-upload-banner__left">
       <div class="sl-upload-banner__icon">▲</div>
-      <div>
+      <div class="sl-upload-banner__text">
         <span class="sl-upload-banner__title">Upload today's photographs</span>
-        <span class="sl-upload-banner__sep">·</span>
-        <span class="sl-upload-banner__sub">Get evaluated and improve</span>
+        <span class="sl-upload-banner__sub">Get evaluated and improve every day</span>
       </div>
     </div>
     <span class="sl-upload-banner__arrow">→</span>
