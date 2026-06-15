@@ -1,0 +1,487 @@
+{# SL-VERSION: 81.0 (Session 81 — My Gallery, new route /my-gallery) #}
+{% extends "base.html" %}
+{% block title %}My Photographs — {{ platform_name }}{% endblock %}
+{% block meta_description %}Your complete photograph history on Shutter League — all uploads, scores, and evaluations.{% endblock %}
+{% block canonical %}https://shutterleague.com/my-gallery{% endblock %}
+{% block og_title %}My Photographs — {{ platform_name }}{% endblock %}
+{% block og_url %}https://shutterleague.com/my-gallery{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block extra_css %}
+<style>
+/*
+  My Gallery — Full image history
+  Design: matches dashboard system (Inter, cream bg, white cards, gold accents)
+  Mobile-first, desktop expands to 3-col grid
+*/
+
+/* ── Mobile main padding override ── */
+@media (max-width: 768px) {
+  main { padding: 0 !important; max-width: 768px; }
+}
+
+:root {
+  --mg-yellow:      #F4C20D;
+  --mg-yellow-dark: #D9A900;
+  --mg-bg:          #F8F7F3;
+  --mg-card:        #FFFFFF;
+  --mg-text:        #151515;
+  --mg-text-light:  #6B6B6B;
+  --mg-border:      #E8E5DD;
+  --mg-purple:      #6A3EF0;
+  --mg-shadow:      0 2px 12px rgba(0,0,0,.06);
+  --mg-r:           16px;
+}
+
+.mg-page, .mg-page * {
+  font-family: Inter, sans-serif !important;
+}
+.mg-page {
+  background: var(--mg-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: Inter, sans-serif;
+  color: var(--mg-text);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 60px;
+}
+
+/* ── Header ── */
+.mg-header {
+  background: var(--mg-card);
+  border-bottom: 1px solid var(--mg-border);
+  padding: 20px 24px 16px;
+}
+.mg-header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.mg-header__title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mg-text);
+  line-height: 1.5;
+}
+.mg-header__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mg-yellow);
+  color: var(--mg-text);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.mg-header__upload:hover { background: var(--mg-yellow-dark); color: var(--mg-text); }
+
+/* Stats row */
+.mg-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.mg-stat {
+  display: flex;
+  flex-direction: column;
+}
+.mg-stat__val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--mg-text);
+  line-height: 1;
+}
+.mg-stat__label {
+  font-size: 14px;
+  color: var(--mg-text-light);
+  margin-top: 2px;
+  text-align: justify;
+}
+
+/* ── Filters ── */
+.mg-filters {
+  background: var(--mg-card);
+  border-bottom: 1px solid var(--mg-border);
+  padding: 10px 24px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.mg-filters form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: center;
+}
+.mg-filter-input {
+  flex: 1;
+  min-width: 160px;
+  height: 40px;
+  border: 1px solid var(--mg-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  background: var(--mg-bg);
+  color: var(--mg-text);
+}
+.mg-filter-select {
+  height: 40px;
+  border: 1px solid var(--mg-border);
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  background: var(--mg-bg);
+  color: var(--mg-text);
+  cursor: pointer;
+}
+.mg-filter-btn {
+  height: 40px;
+  padding: 0 16px;
+  background: var(--mg-text);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  min-height: 40px;
+}
+.mg-filter-clear {
+  height: 40px;
+  padding: 0 12px;
+  background: none;
+  border: 1px solid var(--mg-border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--mg-text-light);
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Grid ── */
+.mg-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 16px;
+}
+.mg-count {
+  font-size: 14px;
+  color: var(--mg-text-light);
+  margin-bottom: 14px;
+}
+.mg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .mg-grid { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 600px) {
+  .mg-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (min-width: 768px) {
+  .mg-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+}
+@media (min-width: 1200px) {
+  .mg-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ── Image card ── */
+.mg-img-card {
+  position: relative;
+  border-radius: var(--mg-r);
+  overflow: hidden;
+  background: #0D0D0B;
+  aspect-ratio: 3/4;
+  display: block;
+  text-decoration: none;
+  box-shadow: var(--mg-shadow);
+}
+.mg-img-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .3s ease;
+}
+.mg-img-card:hover img { transform: scale(1.03); }
+.mg-img-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.20) 45%, transparent 100%);
+}
+.mg-img-card__info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 10px 8px;
+}
+.mg-img-card__score {
+  font-size: 22px;
+  font-weight: 800;
+  color: #F5C518;
+  line-height: 1;
+  display: block;
+}
+.mg-img-card__tier {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.60);
+  display: block;
+  margin-top: 2px;
+}
+.mg-img-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  display: block;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Status badges */
+.mg-img-card__badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+.mg-badge-pending  { background: rgba(0,0,0,0.60); color: rgba(255,255,255,0.70); }
+.mg-badge-flagged  { background: rgba(200,40,40,0.85); color: #fff; }
+.mg-badge-review   { background: rgba(200,140,0,0.85); color: #fff; }
+.mg-badge-private  { background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.60); }
+
+/* No-image placeholder */
+.mg-img-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: #1A1A18;
+  font-size: 28px;
+  color: #4A4840;
+}
+
+/* ── Empty state ── */
+.mg-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+.mg-empty__icon { font-size: 48px; margin-bottom: 16px; }
+.mg-empty__title { font-size: 20px; font-weight: 700; color: var(--mg-text); margin-bottom: 8px; }
+.mg-empty__sub { font-size: 15px; color: var(--mg-text-light); line-height: 1.6; margin-bottom: 24px; }
+.mg-empty__cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--mg-yellow); color: var(--mg-text);
+  font-size: 15px; font-weight: 700;
+  padding: 14px 28px; border-radius: 14px;
+  text-decoration: none; min-height: 44px;
+}
+
+/* ── Pagination ── */
+.mg-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.mg-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid var(--mg-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mg-text);
+  text-decoration: none;
+  background: var(--mg-card);
+  padding: 0 12px;
+  transition: background .15s;
+}
+.mg-page-btn:hover { background: var(--mg-bg); }
+.mg-page-btn.active {
+  background: var(--mg-text);
+  color: #fff;
+  border-color: var(--mg-text);
+}
+.mg-page-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mg-page">
+
+  {# ── Header ── #}
+  <div class="mg-header">
+    <div class="mg-header__top">
+      <div>
+        <div class="mg-header__title">My Photographs</div>
+      </div>
+      <a href="{{ url_for('upload') }}" class="mg-header__upload">▲ Upload</a>
+    </div>
+    <div class="mg-stats">
+      <div class="mg-stat">
+        <span class="mg-stat__val">{{ stats.total }}</span>
+        <span class="mg-stat__label">uploaded</span>
+      </div>
+      <div class="mg-stat">
+        <span class="mg-stat__val">{{ stats.scored }}</span>
+        <span class="mg-stat__label">evaluated</span>
+      </div>
+      {% if stats.avg %}
+      <div class="mg-stat">
+        <span class="mg-stat__val">{{ '%.2f'|format(stats.avg) }}</span>
+        <span class="mg-stat__label">average score</span>
+      </div>
+      {% endif %}
+      {% if stats.best %}
+      <div class="mg-stat">
+        <span class="mg-stat__val" style="color:#F4C20D;">{{ '%.2f'|format(stats.best) }}</span>
+        <span class="mg-stat__label">best score</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Filters ── #}
+  <div class="mg-filters">
+    <form method="GET" action="{{ url_for('my_gallery') }}">
+      <input class="mg-filter-input"
+             type="text"
+             name="q"
+             value="{{ query or '' }}"
+             placeholder="Search by title, genre, location…">
+      <select class="mg-filter-select" name="genre">
+        <option value="">All interests</option>
+        {% for g in genres %}
+        <option value="{{ g }}" {% if genre == g %}selected{% endif %}>{{ g }}</option>
+        {% endfor %}
+      </select>
+      <select class="mg-filter-select" name="sort">
+        <option value="newest"     {% if sort == 'newest' %}selected{% endif %}>Newest first</option>
+        <option value="oldest"     {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+        <option value="score_desc" {% if sort == 'score_desc' %}selected{% endif %}>Highest score</option>
+        <option value="score_asc"  {% if sort == 'score_asc' %}selected{% endif %}>Lowest score</option>
+      </select>
+      <button class="mg-filter-btn" type="submit">Filter</button>
+      {% if query or genre or sort != 'newest' %}
+      <a href="{{ url_for('my_gallery') }}" class="mg-filter-clear">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {# ── Grid ── #}
+  <div class="mg-inner">
+
+    {% if images.items %}
+    <div class="mg-count">
+      {{ images.total }} photograph{{ 's' if images.total != 1 else '' }}
+      {% if query %} matching "{{ query }}"{% endif %}
+      {% if genre %} in {{ genre }}{% endif %}
+    </div>
+
+    <div class="mg-grid">
+      {% for img in images.items %}
+      <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mg-img-card">
+        {% if img.thumb_url %}
+        <img src="{{ img.thumb_url }}"
+             alt="{{ img.asset_name or img.genre or 'Photo' }}"
+             loading="lazy"
+             onerror="this.style.display='none'">
+        {% else %}
+        <div class="mg-img-placeholder">⬛</div>
+        {% endif %}
+
+        <div class="mg-img-card__overlay"></div>
+
+        {# Status badge #}
+        {% if img.is_flagged %}
+        <span class="mg-img-card__badge mg-badge-flagged">Flagged</span>
+        {% elif img.needs_review %}
+        <span class="mg-img-card__badge mg-badge-review">In review</span>
+        {% elif img.status == 'processing' %}
+        <span class="mg-img-card__badge mg-badge-pending">Scoring…</span>
+        {% elif img.status == 'pending' %}
+        <span class="mg-img-card__badge mg-badge-pending">Pending</span>
+        {% elif not img.is_public %}
+        <span class="mg-img-card__badge mg-badge-private">Private</span>
+        {% endif %}
+
+        <div class="mg-img-card__info">
+          {% if img.score %}
+          <span class="mg-img-card__score">{{ '%.2f'|format(img.score) }}</span>
+          <span class="mg-img-card__tier">{{ img.tier or '' }}</span>
+          {% elif img.status == 'processing' %}
+          <span class="mg-img-card__tier" style="color:rgba(255,255,255,0.50);">Evaluating…</span>
+          {% endif %}
+          <span class="mg-img-card__name">{{ img.asset_name or img.original_filename or 'Untitled' }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {# ── Pagination ── #}
+    {% if images.pages > 1 %}
+    <div class="mg-pagination">
+      <a href="{{ url_for('my_gallery', page=images.prev_num, q=query, genre=genre, sort=sort) }}"
+         class="mg-page-btn {% if not images.has_prev %}disabled{% endif %}">← Prev</a>
+
+      {% for p in images.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <a href="{{ url_for('my_gallery', page=p, q=query, genre=genre, sort=sort) }}"
+           class="mg-page-btn {% if p == images.page %}active{% endif %}">{{ p }}</a>
+        {% else %}
+        <span class="mg-page-btn disabled" style="border:none;">…</span>
+        {% endif %}
+      {% endfor %}
+
+      <a href="{{ url_for('my_gallery', page=images.next_num, q=query, genre=genre, sort=sort) }}"
+         class="mg-page-btn {% if not images.has_next %}disabled{% endif %}">Next →</a>
+    </div>
+    {% endif %}
+
+    {% else %}
+    {# Empty state #}
+    <div class="mg-empty">
+      <div class="mg-empty__icon">📷</div>
+      {% if query or genre %}
+      <div class="mg-empty__title">No photographs found</div>
+      <div class="mg-empty__sub">Try a different search or clear your filters.</div>
+      <a href="{{ url_for('my_gallery') }}" class="mg-empty__cta">Clear filters</a>
+      {% else %}
+      <div class="mg-empty__title">No photographs yet</div>
+      <div class="mg-empty__sub">Upload your first photograph and get an honest evaluation across 5 dimensions.</div>
+      <a href="{{ url_for('upload') }}" class="mg-empty__cta">Upload your first photograph →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
