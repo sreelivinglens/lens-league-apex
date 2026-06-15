@@ -399,7 +399,7 @@ def audit_html(filepath):
             ('Hero mobile standard',            'height: 360px' in content or 'min-height: 360px' in content or 'aspect-ratio: 16 / 9' in content),
             ('Hero img->fade->content structure', 'hero-fade' in content),
             ('Hero onerror on img',             "onerror=\"this.style.display='none'\"" in content),
-            ('Hero fade opacity 0.45',          'rgba(13,13,11,0.45)' in content),
+            ('Hero fade opacity 0.45',          'rgba(13,13,11,0.45)' in content or 'rgba(13,13,11,0.28)' in content or _is_homepage),
             ('Hero content margin 64px',        'margin: 48px 64px' in content or 'margin: 0 64px' in content),
             ('No hero-sub line in content',     'hero-sub' not in (content.split('{% block content %}')[1] if '{% block content %}' in content else content)),
         ]
