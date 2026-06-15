@@ -1695,6 +1695,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         </div>
         {# SVG sparkline — points pre-computed in Python (_dash_spark) — no Jinja2 loop scoping issues #}
         {% set _sp = progress_data.dim_sparklines.get(dim, {}) if progress_data.dim_sparklines is defined else {} %}
+        {% set _raw = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
         {% if _sp and _sp.polyline %}
         <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
              aria-label="{{ _dim_labels.get(dim, dim) }} trend">
@@ -1708,10 +1709,19 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
             points="{{ _sp.polyline }}"
           />
           {% if _sp.points %}
-          {% set _lp = _sp.points[-1] %}
-          <circle cx="{{ _lp.x }}" cy="{{ _lp.y }}" r="3" fill="{{ _dcolor }}"/>
+          {% for _pt in _sp.points %}
+          <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
+          {% endfor %}
           {% endif %}
         </svg>
+        {# Score values x-axis — matches scorecard style #}
+        {% if _raw %}
+        <div style="display:flex; justify-content:space-between; margin-top:3px;">
+          {% for _v in _raw %}{% if _v != none %}
+          <span style="font-size:13px; color:var(--sl-text-light); font-family:monospace;">{{ '%.1f'|format(_v) }}</span>
+          {% endif %}{% endfor %}
+        </div>
+        {% endif %}
         {% else %}
         <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
         {% endif %}
