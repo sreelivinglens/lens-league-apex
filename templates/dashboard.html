@@ -1877,6 +1877,21 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   </div>
   {% endif %}
 
+  {# ── My photographs CTA (desktop right col) ── #}
+  <a href="{{ url_for('my_gallery') }}"
+     style="display:flex; align-items:center; justify-content:space-between;
+            background:var(--sl-card); border:1px solid var(--sl-border);
+            border-radius:var(--r-card); padding:14px 16px;
+            text-decoration:none; gap:10px;">
+    <div>
+      <div style="font-size:15px; font-weight:700; color:var(--sl-text);">My photographs</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
+        {{ stats.total }} uploaded · {{ stats.scored }} evaluated
+      </div>
+    </div>
+    <span style="font-size:18px; color:var(--sl-yellow-dark); font-weight:700;">→</span>
+  </a>
+
 </div>{# /sl-today__right #}
 
 </div>{# /sl-today__inner — desktop grid ends here #}
@@ -2106,7 +2121,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <span class="sl-nav-item__icon">⌂</span>
     <span>Home</span>
   </a>
-  <a href="{{ url_for('portfolio_public', username=current_user.username) if (current_user.is_authenticated and current_user.username) else url_for('recent_work') }}" class="sl-nav-item">
+  <a href="{{ url_for('my_gallery') }}" class="sl-nav-item">
     <span class="sl-nav-item__icon">⊞</span>
     <span>Gallery</span>
   </a>
