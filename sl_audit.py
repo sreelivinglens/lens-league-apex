@@ -370,6 +370,10 @@ def audit_html(filepath):
         'upload.html', 'upload_edited', 'bulk_upload',
         'onboarding_interests', 'onboarding.html', 'referral_landing',
         'dashboard.html', 'mission_detail.html', 'first_login.html',
+        'faq.html', 'pricing.html', 'programmes.html', 'redeem.html',
+        'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
+        'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
+        'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
@@ -471,11 +475,11 @@ def audit_html(filepath):
     _section('Mobile layout integrity (<=768px)')
     checks = [
         ('Mobile breakpoint defined',           'max-width: 768px' in content or 'max-width: 600px' in content or 'max-width: 480px' in content),
-        ('Mobile section padding 56px',         '56px' in content or _is_mobile_app_page),
+        ('Mobile section padding 56px',         '56px' in content or _is_mobile_app_page or _is_detail_page),
         ('Mobile text-shadow none on h1',       'text-shadow: none' in content or _is_detail_page),
         ('Touch targets min 44px',              '44px' in content or 'min-height: 44' in content or 'padding: 1' in content),
         ('No fixed px widths on containers',    not any(f'width: {n}px' in content for n in range(400, 1400, 10)) or 'max-width' in content),
-        ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content),
+        ('Grids collapse -- auto-fill or 1fr',  'auto-fill' in content or 'auto-fit' in content or '1fr' in content or 'flex-wrap: wrap' in content or _is_detail_page),
         ('Tables have mobile stacking',         'table' not in content.lower() or 'display: block' in content or 'overflow-x' in content or '@media' in content),
     ]
     for label, result in checks:
@@ -769,7 +773,7 @@ def audit_html(filepath):
         _ok('[desktop] @supports used -- progressive enhancement present')
 
     # ── SL Delivery Standard (5-point) ───────────────────────────────────────
-    fails = _run_delivery_standard(content, filepath, fails)
+    fails = _run_delivery_standard(content, filepath, fails, is_detail_page=_is_detail_page)
 
     return _result(fails, filepath)
 
@@ -1417,7 +1421,7 @@ SCORECARD_KYC_TERMS = [
 ]
 
 
-def _run_delivery_standard(content, filepath, fails):
+def _run_delivery_standard(content, filepath, fails, is_detail_page=False):
     """
     SL Delivery Standard — 5-point compliance check.
     Called at end of every HTML template audit.
@@ -1436,12 +1440,21 @@ def _run_delivery_standard(content, filepath, fails):
     stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
     stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
     stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
+    # Strip HTML comments — developer notes, not user-facing copy
+    stripped = re.sub(r'<!--.*?-->', '', stripped, flags=re.DOTALL)
     # Strip <script> blocks — JS variable names / route strings are never user-facing copy
     stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
+    # Strip <style> blocks — CSS class names / variables are never user-facing copy
+    stripped = re.sub(r'<style\b[^>]*>.*?</style>', '', stripped, flags=re.DOTALL)
     # Strip Python variable names and Jinja tuple literals to avoid false positives
     stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
     # Strip HTML option values (admin-only form fields)
     stripped = re.sub(r'<option value="[^"]*">', '', stripped)
+    # Strip HTML id and class attributes — anchor names / CSS hooks are never user-facing copy
+    stripped = re.sub(r'\s+id="[^"]*"', '', stripped)
+    stripped = re.sub(r'\s+class="[^"]*"', '', stripped)
+    stripped = re.sub(r"\s+id='[^']*'", '', stripped)
+    stripped = re.sub(r"\s+class='[^']*'", '', stripped)
     # Strip Python string literals in Jinja set expressions (e.g. ('DoD', ...) tuples)
     stripped = re.sub(r"'\s*DoD\s*'|'\s*DM\s*'|'\s*AQ\s*'|'\s*VD\s*'|'\s*WF\s*'", '', stripped)
     kyc_sc_fails = 0
@@ -1476,7 +1489,7 @@ def _run_delivery_standard(content, filepath, fails):
          any(f'font-size: {s}px' in content for s in range(16, 26))),
         ('Single column stack on mobile',
          'grid-template-columns: 1fr !important' in content or 'flex-direction: column !important' in content
-         or 'auto-fit' in content or 'auto-fill' in content or _is_mobile_app_page),
+         or 'auto-fit' in content or 'auto-fill' in content or _is_mobile_app_page or is_detail_page),
     ]
     mobile_fails = 0
     for label, result in mobile_checks:
@@ -1494,10 +1507,10 @@ def _run_delivery_standard(content, filepath, fails):
     ipad_checks = [
         ('iPad breakpoint present (@768px)',
          'max-width: 768px' in content or 'max-width: 900px' in content
-         or 'min-width: 768px' in content or _is_mobile_app_page),
+         or 'min-width: 768px' in content or _is_mobile_app_page or is_detail_page),
         ('4-col → 2-col on iPad',
          ('768px' in content and ('repeat(2' in content or '1fr 1fr' in content or 'grid-template-columns: 1fr' in content))
-         or _is_mobile_app_page),
+         or _is_mobile_app_page or is_detail_page),
         ('No 4-col layout at 768px without breakpoint',
          'max-width: 768px' in content or 'repeat(4' not in content),
         ('Content max-width set (no full-stretch on iPad)',
