@@ -10,7 +10,7 @@
 {% endblock %}
 {% block extra_css %}
 <style>
-  .programmes-wrap { max-width: 880px; margin: 0 auto; padding: 0 0 clamp(3rem,6vw,5rem); }
+  .programmes-wrap { max-width: 880px; margin: 0 auto; padding: 0 0 clamp(3rem,6vw,5rem); font-size: 16px; line-height: 1.7; }
 
   
 
@@ -38,7 +38,7 @@
   }
   .comp-title {
     font-family: var(--font-mono);
-    font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;
+    font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.6;
   }
   .comp-dates {
     font-family: var(--font-mono); font-size:1rem; font-weight: 700;
@@ -101,6 +101,14 @@
     .comp-actions .btn { width: 100%; text-align: center; box-sizing: border-box; }
     .comp-actions .comp-action-note { font-size: 1rem; }
   }
+  @media (max-width: 600px) {
+    .programmes-wrap { padding: 0 4px clamp(3rem,6vw,5rem); }
+    .comp-honours { flex-direction: column; gap: 8px; }
+    .comp-block { padding: 16px 14px; }
+    .eligibility-box { padding: 16px; }
+    .eligibility-box ul { padding-left: 16px; }
+    .comp-actions .btn { min-height: 44px; font-size: 1rem; }
+  }
 </style>
 {% endblock %}
 
@@ -142,12 +150,12 @@
       <br><br>
       The Grand Recipient — one Camera User, one Mobile User — is selected by jury from the 8 category Gold recipients in each league. These are the platform's highest annual honours.
       <br><br>
-      <strong>2026 season note:</strong> The 2026 season opens 1 September and closes 31 December 2026. Images scored in any calendar month of 2026 — including before September — count toward your standing and eligibility. Eligibility requires at least 3 active months with 1 or more scored images in 2026.
+      <strong>2026 season note:</strong> The 2026 season opens 1 September and closes 31 December 2026. Images scored in any calendar month of 2026 — including before September — count toward your standing and eligibility. Eligibility requires at least 3 active months with 1 or more photographs evaluated in 2026.
     </div>
     <div class="comp-honours">
-      <div class="comp-honour-item"><strong>Minimum 6 scored images</strong> per genre to appear on standings</div>
+      <div class="comp-honour-item"><strong>Minimum 6 photographs evaluated</strong> per genre to appear on standings</div>
       <div class="comp-honour-item"><strong>Active months required:</strong> 3 months in 2026 · 6 months from 2027</div>
-      <div class="comp-honour-item"><strong>3 active months</strong> with at least 1 scored image required in 2026 to qualify for awards</div>
+      <div class="comp-honour-item"><strong>3 active months</strong> with at least 1 photograph evaluated required in 2026 to qualify for awards</div>
       <div class="comp-honour-item"><strong>Gold, Silver, Bronze</strong> recognition across 8 genres per league</div>
       <div class="comp-honour-item"><strong>Grand Recipient</strong> Camera Users and Mobile Users — platform's highest annual honour</div>
       <div class="comp-honour-item"><strong>Recognition and awards</strong> Details announced to qualifying participants</div>
@@ -159,7 +167,7 @@
           <span class="comp-action-note">Your scores build automatically each month</span>
         {% else %}
           <a href="{{ url_for('pricing') }}" class="btn btn-solid">Subscribe to Qualify →</a>
-          <span class="comp-action-note">You need 3 active months with at least 1 scored image in 2026 to qualify for the Annual Excellence Award.</span>
+          <span class="comp-action-note">You need 3 active months with at least 1 photograph evaluated in 2026 to qualify for the Annual Excellence Award.</span>
         {% endif %}
       {% else %}
         <a href="{{ url_for('register') }}" class="btn btn-solid">Start Building Your Score →</a>
