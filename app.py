@@ -2560,6 +2560,81 @@ def forgot_password():
     return render_template('forgot_password.html', step=1)
 
 
+@app.route('/mission')
+@login_required
+def mission():
+    """Mission Details — Screen 2 of the assignment sequence.
+    Shows the full brief, tips, Master reference, and 'I'm ready' CTA.
+    """
+    progress_data = _build_progress_data(current_user)
+    active_challenge = _get_active_challenge()
+
+    # Dimension → plain English mapping for focus label
+    _dim_mobile = {
+        'dod': 'Technical', 'dm': 'Timing', 'aq': 'Visual Impact',
+        'wonder': 'Wonder', 'disruption': 'Originality'
+    }
+
+    # Build a simple assignment object from progress_data
+    _focus_key = progress_data.get('weakest', 'dm') if progress_data else 'dm'
+    _assign_map = {
+        'dod':        ('Foreground Separation', 'Your recent frames feel flat. Put something in front — a shadow, a hand, a branch. Let the eye travel through the frame.', ['Look for layers in your scene', 'Use silhouettes and shadows', 'Keep the subject clear', 'Use natural frames'], '5:00 – 7:00 PM'),
+        'dm':         ('The Moment Before',     'You have been shooting the moment. Try waiting for what comes just before it. One frame where anticipation is the subject.',   ['Wait longer than feels comfortable', 'Watch the scene before you shoot', 'One frame — make it count', 'Stay with the scene after the obvious shot'], '6:00 – 9:00 AM'),
+        'aq':         ('Light as Subject',      'Stop photographing things. Photograph light falling on things. Find one window, one shadow, one hour today.',                  ['Find a single strong light source', 'Look for where light meets shadow', 'Shoot the same spot at different times', 'Less is more — one subject, one light'], '6:00 – 8:00 AM'),
+        'wonder':     ('The Unfamiliar Angle',  'You have been shooting at eye level. Go lower, go higher, or get closer than feels comfortable. One frame that surprises you.',  ['Get your camera below knee height', 'Or above your head — shoot blind', 'Get uncomfortably close', 'Look for reflections and shadows'], 'Any time'),
+        'disruption': ('Break the Rule',        'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.',    ['Put your subject off-centre deliberately', 'Leave more empty space than feels right', 'Shoot through something — a window, a doorway', 'The uncomfortable frame is usually the interesting one'], '5:00 – 7:00 PM'),
+    }
+
+    _assign = _assign_map.get(_focus_key, _assign_map['dm'])
+
+    class _Assignment:
+        title       = _assign[0]
+        description = _assign[1]
+        tips        = _assign[2]
+        best_time   = _assign[3]
+        weather     = 'Any light works'
+        focus_label = _dim_mobile.get(_focus_key, 'Timing')
+        dimension   = _focus_key
+        image_url   = 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80'
+
+    return render_template('mission_detail.html',
+                           assignment=_Assignment(),
+                           progress_data=progress_data,
+                           active_challenge=active_challenge)
+
+
+# ---------------------------------------------------------------------------
+# FIRST LOGIN — shown to new users before their first upload
+# ---------------------------------------------------------------------------
+
+@app.route('/welcome')
+@login_required
+def first_login_welcome():
+    """Welcome screen for first-time users — shown instead of dashboard
+    when user has no images and onboarding is complete.
+    """
+    # If user already has images, send them to dashboard
+    image_count = Image.query.filter_by(user_id=current_user.id).count()
+    if image_count > 0:
+        return redirect(url_for('dashboard'))
+
+    upload_credits = db.session.execute(
+        db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
+        {'uid': current_user.id}
+    ).scalar() or 3
+
+    # Check if referred
+    _ref = db.session.execute(
+        db.text('SELECT referred_by FROM users WHERE id = :uid'),
+        {'uid': current_user.id}
+    ).scalar()
+
+    return render_template('first_login.html',
+                           upload_credits_balance=upload_credits,
+                           referral_applied=bool(_ref),
+                           referred_price=180)
+
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -2885,7 +2960,7 @@ def dashboard():
     if current_user.role != 'admin':
         try:
             _reviews = db.session.execute(db.text("""
-                SELECT ms.id, ms.image_id, ms.review_text, ms.reviewed_at,
+                SELECT ms.id, ms.review_text, ms.reviewed_at,
                        i.asset_name, i.thumb_url, i.genre,
                        mp.display_name AS mentor_name
                 FROM mentor_sessions ms
@@ -9354,52 +9429,10 @@ def robots_txt():
         "Disallow: /rate\n"
         "Disallow: /raw\n"
         "Disallow: /judge\n"
-        "Disallow: /score-status/\n"
-        "Disallow: /force-rescore\n"
-        "Disallow: /retry-score\n"
-        "Disallow: /image/score-single\n"
-        "Disallow: /redeem\n"
-        "Disallow: /onboarding\n"
-        "Disallow: /ref/\n"
         "Crawl-delay: 10\n"
         "\n"
         "# Automated scraping, bulk harvesting, and data extraction are\n"
         "# strictly prohibited. See /terms for full legal restrictions.\n"
-        "\n"
-        "Sitemap: https://shutterleague.com/sitemap.xml\n"
-        "\n"
-        "# ── AI crawler blocks (Content Signals — EU DSM Directive 2019/790 Art. 4) ──\n"
-        "# search=yes · ai-train=no · ai-input=no\n"
-        "User-agent: *\n"
-        "Content-Signal: search=yes,ai-train=no,ai-input=no\n"
-        "Allow: /\n"
-        "\n"
-        "User-agent: Amazonbot\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: Applebot-Extended\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: Bytespider\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: CCBot\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: ClaudeBot\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: CloudflareBrowserRenderingCrawler\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: Google-Extended\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: GPTBot\n"
-        "Disallow: /\n"
-        "\n"
-        "User-agent: meta-externalagent\n"
-        "Disallow: /\n"
     )
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
