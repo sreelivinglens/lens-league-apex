@@ -23,6 +23,14 @@
   .redeem-table { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
   .redeem-row { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; padding: 16px 20px; gap: 16px; border-bottom: 1px solid var(--border-subtle); }
   .redeem-row:last-child { border-bottom: none; }
+  @media (max-width: 600px) {
+    .redeem-wrap { padding: 0 4px; }
+    .redeem-balance { flex-direction: column; padding: 18px 16px; }
+    .redeem-balance-pts { font-size: 40px; }
+    .redeem-balance-note { text-align: left; width: 100%; }
+    .redeem-row { grid-template-columns: 70px 1fr; }
+    .redeem-row-status { grid-column: 2; margin-top: 6px; }
+  }
   @media (max-width: 520px) {
     .redeem-row { grid-template-columns: 70px 1fr; }
     .redeem-row-status { grid-column: 2; margin-top: 6px; }
