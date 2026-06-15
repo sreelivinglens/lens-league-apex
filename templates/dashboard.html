@@ -1284,24 +1284,33 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {# ══════════════════════════════════════════
      TODAY'S MASTER
   ══════════════════════════════════════════ #}
+  {# Master map — name · description · representative style image · example work URL
+     Images: Unsplash photos that reflect each master's visual language
+     URLs: Google image search for each master's photography — shows actual work
+  #}
   {% set _master_map = {
-    'dod':        ('Fan Ho',               'Master of light, shadow and geometric composition.',   'https://images.unsplash.com/photo-1536244636800-a3f74db0f3cf?w=200&q=80'),
-    'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',                     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80'),
-    'aq':         ('Ansel Adams',          'Made light itself the subject.',                       'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=80'),
-    'wonder':     ('Vivian Maier',         'Found the extraordinary in the completely ordinary.',  'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=200&q=80'),
-    'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',         'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=200&q=80')
+    'dod':        ('Fan Ho',               'Master of light, shadow and geometric composition.',
+                   'https://images.unsplash.com/photo-1536244636800-a3f74db0f3cf?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Fan+Ho+photography'),
+    'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',
+                   'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Henri+Cartier-Bresson+photography'),
+    'aq':         ('Ansel Adams',          'Made light itself the subject.',
+                   'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Ansel+Adams+photography'),
+    'wonder':     ('Vivian Maier',         'Found the extraordinary in the completely ordinary.',
+                   'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Vivian+Maier+photography'),
+    'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',
+                   'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Daido+Moriyama+photography')
   } %}
-  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80')) %}
+  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.',
+                   'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80',
+                   'https://www.google.com/search?tbm=isch&q=Raghu+Rai+photography')) %}
 
-  {# Master example URLs — Wikipedia pages for each master photographer #}
-  {% set _master_url_map = {
-    'dod':        'https://en.wikipedia.org/wiki/Fan_Ho',
-    'dm':         'https://en.wikipedia.org/wiki/Henri_Cartier-Bresson',
-    'aq':         'https://en.wikipedia.org/wiki/Ansel_Adams',
-    'wonder':     'https://en.wikipedia.org/wiki/Vivian_Maier',
-    'disruption': 'https://en.wikipedia.org/wiki/Daido_Moriyama'
-  } %}
-  {% set _master_url = _master_url_map.get(_focus_key, 'https://en.wikipedia.org/wiki/Raghu_Rai') %}
+  {# Master example URL — index 3 of the tuple #}
+  {% set _master_url = _master[3] %}
 
   <div class="sl-master">
     <img src="{{ _master[2] }}"
