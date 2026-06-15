@@ -1080,11 +1080,97 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-greeting__name">
       {{ ns.greeting }}, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }} {{ ns.emoji }}
     </div>
-    <div class="sl-greeting__sub">Here's your photography brief for today.</div>
+    <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
 
   {# ══════════════════════════════════════════
-     TODAY'S ASSIGNMENT HERO CARD
+     FIRST-LOGIN EXPERIENCE
+     Gate: free_tier user with zero uploads
+     Tone: warm, specific, no jargon, no urgency
+     Goal: get them to upload their first photograph
+  ══════════════════════════════════════════ #}
+  {% if free_tier and stats.total == 0 %}
+
+  {# Hero promise card #}
+  <div style="background:var(--sl-card); border-radius:var(--r-hero); padding:24px 20px 20px; margin-bottom:12px; border:1px solid var(--sl-border);">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-yellow-dark); margin-bottom:10px;">Your first evaluation</div>
+    <div style="font-size:22px; font-weight:800; color:var(--sl-text); line-height:1.25; margin-bottom:10px;">
+      Find out where your photography actually stands.
+    </div>
+    <div style="font-size:15px; color:var(--sl-text-light); line-height:1.65; margin-bottom:18px;">
+      Upload any photograph you have taken — on any camera. The Apex engine will evaluate it across five dimensions and tell you exactly what is working and what to work on next.
+    </div>
+    {# 3 free evaluations indicator #}
+    <div style="display:flex; gap:8px; margin-bottom:20px;">
+      {% for i in range(3) %}
+      <div style="flex:1; height:6px; border-radius:3px; background:var(--sl-yellow); opacity:{{ 1.0 if i < (upload_credits_balance or 3) else 0.18 }};"></div>
+      {% endfor %}
+    </div>
+    <div style="font-size:13px; color:var(--sl-text-light); margin-bottom:20px;">
+      {{ upload_credits_balance or 3 }} free evaluation{{ 's' if (upload_credits_balance or 3) != 1 else '' }} available · no subscription needed to start
+    </div>
+    <a href="{{ url_for('upload') }}"
+       style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--sl-yellow); color:var(--sl-text); font-size:17px; font-weight:800; padding:16px 24px; border-radius:var(--r-btn); text-decoration:none; width:100%; box-sizing:border-box;">
+      Upload your first photograph &nbsp;→
+    </a>
+  </div>
+
+  {# What the score shows — three-step explainer #}
+  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:20px; margin-bottom:12px; border:1px solid var(--sl-border);">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:14px;">What you get back</div>
+    {% for icon, heading, body in [
+        ('📐', 'A score across 5 dimensions', 'Technical difficulty, timing, visual surprise, emotional impact, and the feeling your image creates. Each scored separately.'),
+        ('🎯', 'Your strongest dimension', 'Where your eye is already working. The engine reads your photograph honestly — not to be kind, to be useful.'),
+        ('📍', 'One specific thing to work on next', 'Not a list. One direction. The single change most likely to lift your next photograph.')
+      ] %}
+    <div style="display:flex; gap:12px; align-items:flex-start; {% if not loop.last %}margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--sl-border);{% endif %}">
+      <div style="font-size:24px; flex-shrink:0; line-height:1;">{{ icon }}</div>
+      <div>
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text); margin-bottom:3px;">{{ heading }}</div>
+        <div style="font-size:14px; color:var(--sl-text-light); line-height:1.55;">{{ body }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Social proof — one real score example #}
+  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:18px 20px; margin-bottom:12px; border:1px solid var(--sl-border); display:flex; align-items:center; gap:16px;">
+    <div style="flex-shrink:0; text-align:center;">
+      <div style="font-size:32px; font-weight:800; color:var(--sl-yellow-dark); line-height:1;">8.32</div>
+      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-text-light); margin-top:2px;">Master</div>
+    </div>
+    <div style="flex:1; min-width:0;">
+      <div style="font-size:14px; font-weight:700; color:var(--sl-text); margin-bottom:3px;">A.R — Berlin</div>
+      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.5;">"I think the idea and the site is really really nice. It has a lot of potential."</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; opacity:0.7;">Grandmaster on his 3rd upload · found ShutterLeague via ChatGPT</div>
+    </div>
+  </div>
+
+  {# What kind of photographs? — reassurance block #}
+  <div style="background:var(--sl-card); border-radius:var(--r-card); padding:18px 20px; margin-bottom:12px; border:1px solid var(--sl-border);">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-text-light); margin-bottom:12px;">Any photograph works</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      {% for item in ['Wildlife', 'Street', 'Landscape', 'Portrait', 'Macro', 'Documentary', 'Wedding', 'Creative'] %}
+      <div style="font-size:14px; color:var(--sl-text); padding:8px 10px; background:var(--sl-bg); border-radius:8px; text-align:center; font-weight:500;">{{ item }}</div>
+      {% endfor %}
+    </div>
+    <div style="font-size:13px; color:var(--sl-text-light); margin-top:12px; line-height:1.55;">
+      iPhone or DSLR. Beginner or advanced. The engine scores what it sees — not the equipment or the story behind the shot.
+    </div>
+  </div>
+
+  {# Final CTA #}
+  <a href="{{ url_for('upload') }}"
+     style="display:flex; align-items:center; justify-content:space-between; background:var(--sl-yellow); color:var(--sl-text); font-size:16px; font-weight:800; padding:16px 20px; border-radius:var(--r-btn); text-decoration:none; margin-bottom:12px;">
+    <span>Upload your first photograph</span>
+    <span style="font-size:20px;">→</span>
+  </a>
+
+  {% else %}
+  {# ══════════════════════════════════════════
+     RETURNING USER — full dashboard
+     (everything below is second login onwards)
+  ══════════════════════════════════════════ #}
      Powered by: weakest dimension from progress_data
      Image: Unsplash (static placeholder until API wired)
   ══════════════════════════════════════════ #}
@@ -1174,7 +1260,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <span style="font-size:16px;">📷</span>
       <div>
         <div style="font-size:13px; font-weight:700; color:var(--sl-text); letter-spacing:.02em;">Today's mission is waiting</div>
-        <div style="font-size:12px; color:var(--sl-text-light); margin-top:1px;">{{ _title }} · tap to expand</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">{{ _title }} · tap to expand</div>
       </div>
     </div>
     <span style="font-size:18px; color:var(--sl-yellow-dark); font-weight:700;">›</span>
@@ -1444,6 +1530,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
   </div>
   {% endif %}
+
+  {% endif %}{# /first-login else — end returning-user block #}
 
 </div>{# /sl-today__inner #}
 </div>{# /sl-today #}
