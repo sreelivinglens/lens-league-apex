@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% block title %}Welcome — {{ platform_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/*
+  First Login — Welcome screen for new users
+  Shows: what SL is, what to do first, 3 free evaluations waiting
+  Design: same Apple Fitness warmth as dashboard
+  Built: Session 79 · 15 June 2026
+*/
+
+@media (max-width: 768px) {
+  main { padding: 0 !important; }
+}
+
+:root {
+  --sl-yellow:      #F4C20D;
+  --sl-yellow-dark: #D9A900;
+  --sl-card:        #FFFFFF;
+  --sl-bg:          #F8F7F3;
+  --sl-text:        #151515;
+  --sl-text-light:  #6B6B6B;
+  --sl-border:      #E8E5DD;
+  --sl-success:     #28A745;
+  --sl-purple:      #6A3EF0;
+  --sl-shadow:      0 4px 20px rgba(0,0,0,.06);
+  --sl-shadow-lg:   0 10px 40px rgba(0,0,0,.10);
+  --r-card:         28px;
+  --r-btn:          18px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.fl-page {
+  background: var(--sl-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: Inter, sans-serif;
+  color: var(--sl-text);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 40px;
+}
+
+.fl-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+/* ── Welcome hero ── */
+.fl-hero {
+  background: #1A1A18;
+  padding: 28px 20px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.fl-hero__logo {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--sl-yellow);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.fl-hero__name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.fl-hero__sub {
+  font-size: 16px;
+  color: rgba(255,255,255,.60);
+  line-height: 1.5;
+}
+
+/* ── Free evaluations card ── */
+.fl-free-card {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  box-shadow: var(--sl-shadow-lg);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.fl-free-number {
+  font-size: 64px;
+  font-weight: 800;
+  color: var(--sl-yellow-dark);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.fl-free-label {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--sl-text);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.fl-free-sub {
+  font-size: 15px;
+  color: var(--sl-text-light);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.fl-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 18px;
+  font-weight: 800;
+  height: 60px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--r-btn);
+  width: 100%;
+  text-decoration: none;
+  transition: background .2s;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.fl-btn-primary:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
+
+.fl-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--sl-text-light);
+  margin-top: 4px;
+}
+
+/* ── How it works — 3 steps ── */
+.fl-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.fl-step {
+  background: var(--sl-card);
+  border-radius: 20px;
+  border: 1px solid var(--sl-border);
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.fl-step__num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--sl-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sl-text);
+  flex-shrink: 0;
+}
+
+.fl-step__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sl-text);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.fl-step__sub {
+  font-size: 14px;
+  color: var(--sl-text-light);
+  line-height: 1.5;
+}
+
+/* ── What you get card ── */
+.fl-gets {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.fl-gets__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.fl-get-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--sl-border);
+  font-size: 15px;
+  color: var(--sl-text);
+  line-height: 1.5;
+}
+
+.fl-get-item:last-child { border-bottom: none; }
+
+.fl-get-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Referral applied banner ── */
+.fl-referral {
+  background: #FFF8DC;
+  border: 1px solid var(--sl-yellow);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fl-referral__badge {
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fl-referral__txt {
+  font-size: 14px;
+  color: var(--sl-text);
+  line-height: 1.4;
+}
+
+.fl-referral__txt strong { color: #B8820A; }
+
+/* ── Bottom CTA ── */
+.fl-bottom-cta {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+
+.fl-bottom-cta a {
+  font-size: 15px;
+  color: var(--sl-text-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Focus ── */
+.fl-btn-primary:focus-visible { outline: 3px solid var(--sl-yellow); outline-offset: 2px; }
+
+@media (min-width: 768px) {
+  .fl-hero { padding: 40px 32px 32px; }
+  .fl-hero__name { font-size: 32px; }
+  .fl-inner { padding: 0 24px; }
+}
+
+@media (max-width: 400px) {
+  .fl-steps { gap: 8px; }
+  .fl-step { grid-template-columns: 36px 1fr; }
+  .md-meta { gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fl-page">
+
+  {# ── Welcome hero ── #}
+  <div class="fl-hero">
+    <span class="fl-hero__logo">SHUTTER LEAGUE</span>
+    <div class="fl-hero__name">
+      Welcome, {{ current_user.full_name.split()[0] if current_user.full_name else current_user.username }}.
+    </div>
+    <div class="fl-hero__sub">Honest feedback. Real improvement.</div>
+  </div>
+
+  <div class="fl-inner">
+
+    {# ── Referral discount if applied ── #}
+    {% if referral_applied %}
+    <div class="fl-referral">
+      <div class="fl-referral__badge">Offer</div>
+      <div class="fl-referral__txt">
+        First month <strong>₹{{ referred_price or 180 }}</strong> instead of ₹200 — referral applied
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Free evaluations card ── #}
+    <div class="fl-free-card">
+      <div class="fl-free-number">{{ upload_credits_balance or 3 }}</div>
+      <span class="fl-free-label">
+        free photograph{{ 's' if (upload_credits_balance or 3) != 1 else '' }} to evaluate
+      </span>
+      <div class="fl-free-sub">
+        Upload your first frame. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions.
+      </div>
+
+      <a href="{{ url_for('upload') }}" class="fl-btn-primary">
+        Upload your first photograph →
+      </a>
+
+      <div class="fl-timer">
+        <span style="font-size:16px">◷</span>
+        Score in 60 seconds
+      </div>
+    </div>
+
+    {# ── 3 steps ── #}
+    <div class="fl-steps">
+      <div class="fl-step">
+        <div class="fl-step__num">1</div>
+        <div>
+          <span class="fl-step__title">Upload a photograph</span>
+          <span class="fl-step__sub">Any photograph you've taken. Any camera. Any subject.</span>
+        </div>
+      </div>
+      <div class="fl-step">
+        <div class="fl-step__num">2</div>
+        <div>
+          <span class="fl-step__title">Get your score in 60 seconds</span>
+          <span class="fl-step__sub">5 dimensions. Depth, timing, aesthetics, wonder, originality. Honest, not polite.</span>
+        </div>
+      </div>
+      <div class="fl-step">
+        <div class="fl-step__num">3</div>
+        <div>
+          <span class="fl-step__title">See your daily assignment</span>
+          <span class="fl-step__sub">Every morning, a personalised brief based on your scores and your city. Your photography coach, daily.</span>
+        </div>
+      </div>
+    </div>
+
+    {# ── What you get ── #}
+    <div class="fl-gets">
+      <span class="fl-gets__title">What Shutter League gives you</span>
+      <div class="fl-get-item">
+        <span class="fl-get-icon">◎</span>
+        <span>A score that tells you the truth — not what you want to hear</span>
+      </div>
+      <div class="fl-get-item">
+        <span class="fl-get-icon">☀</span>
+        <span>A daily assignment matched to your weakness and your city</span>
+      </div>
+      <div class="fl-get-item">
+        <span class="fl-get-icon">◈</span>
+        <span>A standing among photographers in your city and worldwide</span>
+      </div>
+      <div class="fl-get-item">
+        <span class="fl-get-icon">★</span>
+        <span>Access to mentors who have seen your full evaluation</span>
+      </div>
+      <div class="fl-get-item">
+        <span class="fl-get-icon">◷</span>
+        <span>Eligibility for the Annual Excellence Award — if you shoot consistently</span>
+      </div>
+    </div>
+
+    {# ── Secondary CTA ── #}
+    <div class="fl-bottom-cta">
+      <a href="{{ url_for('dashboard') }}">Go to dashboard instead</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
