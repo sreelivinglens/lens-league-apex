@@ -8603,9 +8603,9 @@ def admin_mentors():
                            profiles=profiles,
                            members=members,
                            tier_options=[
-                               ('legend', 'Legend Mentor', 100, 1000),
-                               ('expert', 'Expert Mentor', 75, 750),
-                               ('senior', 'Senior Mentor', 50, 500),
+                               ('legend',      'Legend Mentor',      200, 2000),
+                               ('grandmaster', 'Grandmaster Mentor', 150, 1500),
+                               ('master',      'Master Mentor',      100, 1000),
                            ])
 
 
@@ -8618,9 +8618,9 @@ def admin_mentor_create():
     display_name = (request.form.get('display_name') or '').strip()
 
     tier_map = {
-        'legend': ('Legend Mentor', 100, 1000),
-        'expert': ('Expert Mentor', 75,  750),
-        'senior': ('Senior Mentor', 50,  500),
+        'legend':      ('Legend Mentor',      200, 2000),
+        'grandmaster': ('Grandmaster Mentor', 150, 1500),
+        'master':      ('Master Mentor',      100, 1000),
     }
     tier_label, price, points_cost = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
 
@@ -8734,9 +8734,9 @@ def admin_mentor_edit(slug):
     youtube_url   = (request.form.get('youtube_url') or '').strip() or None
 
     tier_map = {
-        'legend': ('Legend Mentor', 100, 1000),
-        'expert': ('Expert Mentor', 75,  750),
-        'senior': ('Senior Mentor', 50,  500),
+        'legend':      ('Legend Mentor',      200, 2000),
+        'grandmaster': ('Grandmaster Mentor', 150, 1500),
+        'master':      ('Master Mentor',      100, 1000),
     }
     tier_label, default_price, default_points = tier_map.get(tier_class, ('Senior Mentor', 50, 500))
     if price is None:
@@ -9873,8 +9873,8 @@ MENTORS = {
         'name':        'Ashok Kochhar',
         'tier_label':  'Legend Mentor',
         'tier_class':  'legend',
-        'price':       100,
-        'points_cost': 1000,
+        'price':       200,
+        'points_cost': 2000,
         'photo':       'img/mentor_ashok.jpg',
         'genres':      'Conceptual · Fashion · Street · Nature',
         'bio':         'Three decades of craft across genres. Ex Canon India representative. Images that stir emotion and demand a second look.',
@@ -9882,10 +9882,10 @@ MENTORS = {
     'gopal': {
         'slug':        'gopal',
         'name':        'Gopal MS',
-        'tier_label':  'Expert Mentor',
-        'tier_class':  'expert',
-        'price':       75,
-        'points_cost': 750,
+        'tier_label':  'Grandmaster Mentor',
+        'tier_class':  'grandmaster',
+        'price':       150,
+        'points_cost': 1500,
         'photo':       'img/Gopal MS.jpeg',
         'genres':      'Street · Documentary · Urban',
         'bio':         "Mumbai's quiet observer. Advertising eye meets street instinct. Creator of Mumbai Paused.",
@@ -9893,10 +9893,10 @@ MENTORS = {
     'sreekumar': {
         'slug':        'sreekumar',
         'name':        'Sreekumar Krishnan',
-        'tier_label':  'Senior Mentor',
-        'tier_class':  'senior',
-        'price':       50,
-        'points_cost': 500,
+        'tier_label':  'Master Mentor',
+        'tier_class':  'master',
+        'price':       100,
+        'points_cost': 1000,
         'photo':       'img/Sreekumar.png',
         'genres':      'Wildlife · Street · Portrait · Mobile',
         'bio':         'International award-winning photographer & filmmaker. IPPA Gold 2019. Sanctuary Asia & National Geographic featured.',
