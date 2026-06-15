@@ -1,4 +1,4 @@
-{# SL-VERSION: 80.0 (Session 80 — bottom nav home icon, mission Skip collapse, upload banner copy) #}
+{# SL-VERSION: 81.0 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends) #}
 {% extends "base.html" %}
 {% block title %}Today — {{ platform_name }}{% endblock %}
 
@@ -54,6 +54,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   margin: 0 auto;
   padding: 8px 8px 0;
 }
+.sl-today__left  { display: contents; } /* passthrough on mobile */
+.sl-today__right { display: none; }     /* hidden on mobile */
+.sl-desktop-hero { display: none; }     /* hidden on mobile */
+.sl-desktop-right-section { display: none; } /* hidden on mobile */
+.sl-desktop-section-label { display: none; } /* hidden on mobile */
 
 /* ══════════════════════════════════════════
    GREETING HEADER
@@ -946,9 +951,151 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 
 @media (min-width: 1025px) {
-  /* Desktop */
-  .sl-today__inner { padding: 0 20px; max-width: 520px; }
+  /* Desktop — 2-column layout */
+  .sl-today { padding-bottom: 0; }
+  .sl-today__inner {
+    max-width: 1200px;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0 28px;
+    align-items: start;
+  }
+  /* Left column — greeting + hero + assignment + master */
+  .sl-today__left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 0 40px;
+  }
+  /* Right column — standing + points + AEA */
+  .sl-today__right {
+    border-left: 1px solid var(--sl-border);
+    padding: 24px 0 40px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: calc(100vh - 64px);
+  }
+  /* Hero image on desktop */
+  .sl-desktop-hero {
+    display: block;
+    position: relative;
+    border-radius: var(--r-hero);
+    overflow: hidden;
+    background: #0D0D0B;
+    aspect-ratio: 16/9;
+    max-height: 320px;
+  }
+  /* Show hero only on desktop */
+  .sl-desktop-hero { display: block !important; }
+  .sl-desktop-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  .sl-desktop-hero__badge {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+    padding: 28px 20px 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .sl-desktop-hero__score {
+    font-size: 48px;
+    font-weight: 800;
+    color: #F5C518;
+    line-height: 1;
+  }
+  .sl-desktop-hero__tier {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.70);
+    margin-top: 4px;
+  }
+  .sl-desktop-hero__by {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+  }
+  .sl-desktop-hero__genre {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    text-align: right;
+  }
+  /* Assignment title larger on desktop */
   .sl-assignment__title { font-size: 44px; }
+  /* Sections always expanded on desktop right column — no collapse needed */
+  .sl-desktop-right-section {
+    background: var(--sl-card);
+    border-radius: var(--r-card);
+    border: 1px solid var(--sl-border);
+    padding: 16px 18px;
+  }
+  .sl-desktop-section-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--sl-text-light);
+    margin-bottom: 12px;
+    display: block;
+  }
+  /* Sparkline container */
+  .sl-sparkline-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .sl-sparkline-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .sl-sparkline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sl-sparkline-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sl-text);
+  }
+  .sl-sparkline-val {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--sl-text);
+  }
+  .sl-sparkline-pill {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 8px;
+  }
+  .sl-sparkline-pill.up   { background:#EAF3DE; color:#27500A; }
+  .sl-sparkline-pill.down { background:#FCEBEB; color:#A32D2D; }
+  .sl-sparkline-pill.st   { background:#F1EFE8; color:#5F5E5A; }
+  .sl-sparkline-svg {
+    width: 100%;
+    height: 28px;
+    display: block;
+  }
+  /* Hide mobile collapsible sections on desktop — content shown in right col */
+  .sl-mobile-sections { display: none; }
+  /* Hide mobile bottom nav on desktop */
+  .sl-bottom-nav { display: none !important; }
+  /* Desktop right column visible */
+  .sl-today__right { display: flex; }
 }
 
 
@@ -976,6 +1123,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 {% block content %}
 <div class="sl-today">
 <div class="sl-today__inner">
+<div class="sl-today__left">
 
   {# ── Flash messages ── #}
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -1078,6 +1226,26 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     </div>
     <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
+
+  {# ── Desktop hero image — highest-scoring public photo with score + tier + photographer name ── #}
+  {# Hidden on mobile (display:none in default CSS, block only at min-width:1025px) #}
+  {% set _hero_img = carousel_images[0] if carousel_images else none %}
+  {% if _hero_img and _hero_img.thumb_url %}
+  <div class="sl-desktop-hero" style="display:none;">
+    <img src="{{ _hero_img.thumb_url }}"
+         alt="{{ _hero_img.genre or 'Photography' }}"
+         loading="lazy"
+         onerror="this.parentElement.style.display='none'">
+    <div class="sl-desktop-hero__badge">
+      <div>
+        <div class="sl-desktop-hero__score">{{ '%.2f'|format(_hero_img.score) }}</div>
+        <div class="sl-desktop-hero__tier">{{ _hero_img.tier or '' }}</div>
+        <div class="sl-desktop-hero__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</div>
+      </div>
+      <div class="sl-desktop-hero__genre">{{ _hero_img.genre or '' }}</div>
+    </div>
+  </div>
+  {% endif %}
 
   {# ══════════════════════════════════════════
      FIRST-LOGIN EXPERIENCE
@@ -1353,7 +1521,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div style="font-size:14px; color:var(--sl-text); line-height:1.7;
                   padding:10px 12px; background:var(--sl-bg); border-radius:8px;
                   border-left:3px solid var(--sl-yellow);">
-        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+        <span style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
                      color:var(--sl-yellow-dark); display:block; margin-bottom:5px;">
           Why this master, today
         </span>
@@ -1445,7 +1613,179 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
      SECONDARY SECTIONS — collapsible, below the fold
      Available on one tap. Never blocking.
   ══════════════════════════════════════════ #}
-  <div class="sl-sections">
+
+</div>{# /sl-today__left #}
+<div class="sl-today__right">
+
+  {# ── Desktop right column: standing (always expanded) + points + AEA ── #}
+  {# On mobile this div has no styling — content is hidden, left col has collapsible sections #}
+
+  {% if progress_data %}
+  <div class="sl-desktop-right-section">
+    <span class="sl-desktop-section-label">Your standing</span>
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:12px;">
+      <div>
+        <div style="font-size:32px; font-weight:800; color:var(--sl-text); line-height:1;">{{ '%.2f'|format(progress_data.avg_score) }}</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px;">{{ progress_data.count }} photographs evaluated</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                    color:var(--sl-purple); background:#EEEDFE; padding:4px 10px; border-radius:10px;
+                    margin-bottom:4px; display:inline-block;">{{ progress_data.avg_tier }}</div>
+        {% if progress_data.overall_pct %}
+        <div style="font-size:13px; color:var(--sl-text-light);">Top {{ progress_data.overall_pct }}%</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Sparklines — one per dimension, from dim_trends data #}
+    {% set _dim_labels = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+    {% set _dim_colours = {'dod':'#2C3E6B','dm':'#2A4A34','aq':'#6B3E1A','wonder':'#3E1A6B','disruption':'#6B1A2C'} %}
+    <div class="sl-sparkline-row">
+    {% for dim, avg in progress_data.dim_avgs.items() %}
+      {% set _pill = progress_data.dim_pills.get(dim, 'steady') if progress_data.dim_pills is defined else 'steady' %}
+      {% set _trend_vals = progress_data.dim_trends.get(dim, []) if progress_data.dim_trends is defined else [] %}
+      {% set _dcolor = _dim_colours.get(dim, '#2C3E6B') %}
+      <div class="sl-sparkline-item">
+        <div class="sl-sparkline-header">
+          <span class="sl-sparkline-label">{{ _dim_labels.get(dim, dim|title) }}</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="sl-sparkline-val">{{ '%.1f'|format(avg) }}</span>
+            {% if _pill == 'up' %}<span class="sl-sparkline-pill up">↑ climbing</span>
+            {% elif _pill == 'down' %}<span class="sl-sparkline-pill down">↓ dipped</span>
+            {% else %}<span class="sl-sparkline-pill st">— steady</span>{% endif %}
+          </div>
+        </div>
+        {# SVG sparkline from dim_trends data #}
+        {% if _trend_vals and _trend_vals|length >= 2 %}
+        {% set _vals = _trend_vals | reject('none') | list %}
+        {% if _vals|length >= 2 %}
+        <svg class="sl-sparkline-svg" viewBox="0 0 300 28" preserveAspectRatio="none"
+             aria-label="{{ _dim_labels.get(dim, dim) }} trend">
+          {# background track #}
+          <rect x="0" y="0" width="300" height="28" fill="none"/>
+          {# compute polyline: min/max normalise the values #}
+          {% set _min = _vals | min %}
+          {% set _max = _vals | max %}
+          {% set _rng = (_max - _min) if (_max - _min) > 0 else 1 %}
+          {% set _step = 300 / (_vals|length - 1) %}
+          <polyline
+            fill="none"
+            stroke="{{ _dcolor }}"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            points="{% for v in _vals %}{% if v is not none %}{{ (loop.index0 * _step)|round(1) }},{{ (27 - ((v - _min) / _rng) * 25)|round(1) }} {% endif %}{% endfor %}"
+          />
+          {# dot at last value #}
+          {% set _lv = _vals[-1] %}
+          {% set _lx = ((_vals|length - 1) * _step)|round(1) %}
+          {% set _ly = (27 - ((_lv - _min) / _rng) * 25)|round(1) %}
+          <circle cx="{{ _lx }}" cy="{{ _ly }}" r="3" fill="{{ _dcolor }}"/>
+        </svg>
+        {% else %}
+        <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
+        {% endif %}
+        {% else %}
+        <div style="height:28px; background:var(--sl-bg); border-radius:4px;"></div>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+
+    {# Tier bar #}
+    <div style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--sl-text-light); margin-bottom:4px;">
+        <span>{{ progress_data.avg_tier }}</span>
+        <span>→ {{ progress_data.next_tier or 'Peak' }}</span>
+      </div>
+      <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden;">
+        <div style="height:100%; width:{{ progress_data.tier_pct or 0 }}%; background:var(--sl-purple); border-radius:3px;"></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Points (desktop right col) ── #}
+  {% if wallet_hud %}
+  <div class="sl-desktop-right-section">
+    <span class="sl-desktop-section-label">Points & rewards</span>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <div>
+        <div style="font-size:26px; font-weight:800; color:var(--sl-text); line-height:1;">{{ wallet_hud.balance | int }}</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">points balance</div>
+      </div>
+      <a href="{{ url_for('redeem') }}"
+         style="background:var(--sl-bg); border:1px solid var(--sl-border); border-radius:10px;
+                font-size:13px; font-weight:700; color:var(--sl-text); padding:8px 14px;
+                text-decoration:none;">Redeem →</a>
+    </div>
+    {% if upload_credits_balance is defined %}
+    <div style="font-size:13px; color:var(--sl-text-light); border-top:1px solid var(--sl-border); padding-top:8px;">
+      {{ upload_credits_balance or 0 }} upload credit{{ 's' if (upload_credits_balance or 0) != 1 else '' }} remaining
+    </div>
+    {% endif %}
+    {% if rating_widget %}
+    <a href="{{ url_for('rate') }}"
+       style="display:flex; align-items:center; justify-content:space-between;
+              background:var(--sl-purple); border-radius:12px; padding:10px 14px;
+              text-decoration:none; margin-top:10px;">
+      <div>
+        <div style="font-size:13px; font-weight:700; color:#fff;">Rate a photograph</div>
+        <div style="font-size:13px; color:rgba(255,255,255,0.65);">60 seconds · builds your eye</div>
+      </div>
+      <span style="font-size:14px; font-weight:800; color:#F4C20D;">+2 pts</span>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# ── AEA tracker (desktop right col) ── #}
+  {% if poty_tracker and poty_tracker.genre_rows %}
+  {% set _best_genre = poty_tracker.genre_rows[0] %}
+  <div class="sl-desktop-right-section">
+    <span class="sl-desktop-section-label">Annual Excellence Award</span>
+    {% if _best_genre.top6_avg %}
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+      <div>
+        <div style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ _best_genre.genre }}</div>
+        <div style="font-size:13px; color:var(--sl-text-light);">{{ _best_genre.count }} photographs · best 6 avg</div>
+      </div>
+      <div style="font-size:22px; font-weight:800; color:var(--sl-text);">{{ '%.2f'|format(_best_genre.top6_avg) }}</div>
+    </div>
+    <div style="height:5px; background:var(--sl-border); border-radius:3px; overflow:hidden; margin-bottom:6px;">
+      <div style="height:100%; width:{{ _best_genre.bar_pct }}%; background:var(--sl-yellow); border-radius:3px;"></div>
+    </div>
+    {% else %}
+    <div style="font-size:13px; color:var(--sl-text-light); line-height:1.6;">
+      Keep shooting. Your standing builds automatically as scores accumulate.
+    </div>
+    {% endif %}
+    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px;">
+      {% if _pre_season %}Season opens September 2026{% else %}{{ _months_active or 0 }} active month{{ 's' if (_months_active or 0) != 1 else '' }} this season{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Location advisory (desktop right col) ── #}
+  {% if current_user.city %}
+  <div class="sl-desktop-right-section" style="border-left:3px solid var(--sl-yellow);">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                color:var(--sl-yellow-dark); margin-bottom:4px;">Shooting near you</div>
+    <div style="font-size:14px; font-weight:700; color:var(--sl-text);">
+      {{ current_user.city }}{% if current_user.state %}, {{ current_user.state }}{% endif %}
+    </div>
+    <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.6;">
+      Your daily brief is tuned to your location. Upload a photograph to get local seasonal context on your next scorecard.
+    </div>
+  </div>
+  {% endif %}
+
+</div>{# /sl-today__right #}
+
+</div>{# /sl-today__inner — desktop grid ends here #}
+
+<div class="sl-sections sl-mobile-sections">
 
     {# ── Standing & Progress ── #}
     {% if progress_data %}
@@ -1610,7 +1950,6 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
   {% endif %}{# /first-login else — end returning-user block #}
 
-</div>{# /sl-today__inner #}
 </div>{# /sl-today #}
 
 {# ══════════════════════════════════════════
