@@ -406,7 +406,7 @@
   </div>
 
   {# ── CTAs ── #}
-  <a href="{{ url_for('upload') }}" class="md-btn-primary">
+  <a href="{{ url_for('upload') }}?mission_dimension={{ assignment.dimension }}&mission_title={{ assignment.title | urlencode }}" class="md-btn-primary">
     I'm ready. Let's go →
   </a>
   <a href="{{ url_for('dashboard') }}" class="md-btn-secondary">
