@@ -225,6 +225,24 @@
     </a>
   </div>
 
+  <!-- ── IDENTITY ─────────────────────────────────────────────── -->
+  <div style="background:var(--surface-2,#F5F3EF); border:1px solid var(--border,rgba(0,0,0,0.10));
+              border-radius:var(--radius-md,8px); padding:16px 20px; margin-bottom:24px;
+              display:flex; flex-direction:column; gap:6px;">
+    <div style="font-size:18px; font-weight:700; color:var(--text-primary,#1A1A18);">
+      {{ current_user.full_name or current_user.username }}
+    </div>
+    <div style="font-family:var(--font-mono,'Courier New',monospace); font-size:14px;
+                color:var(--text-secondary,rgba(26,26,24,0.55)); letter-spacing:0.02em;">
+      {{ current_user.email }}
+    </div>
+    {% if current_user.username and current_user.full_name %}
+    <div style="font-size:14px; color:var(--text-muted,rgba(26,26,24,0.40));">
+      @{{ current_user.username }}
+    </div>
+    {% endif %}
+  </div>
+
   <!-- ── ACTIVE LOCATION ───────────────────────────────────────── -->
   <div class="profile-section">
     <span class="profile-section-label">Active Location</span>
