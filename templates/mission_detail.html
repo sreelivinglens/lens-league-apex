@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.title }} — {{ platform_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/*
+  Mission Details — Screen 2 of assignment sequence
+  Design: same Apple Fitness warmth as dashboard
+  Built: Session 79 · 15 June 2026
+*/
+
+/* ── Override base main padding for mobile-first layout ── */
+@media (max-width: 768px) {
+  main { padding: 0 !important; }
+}
+
+:root {
+  --sl-yellow:      #F4C20D;
+  --sl-yellow-dark: #D9A900;
+  --sl-card:        #FFFFFF;
+  --sl-bg:          #F8F7F3;
+  --sl-text:        #151515;
+  --sl-text-light:  #6B6B6B;
+  --sl-border:      #E8E5DD;
+  --sl-success:     #28A745;
+  --sl-purple:      #6A3EF0;
+  --sl-shadow:      0 4px 20px rgba(0,0,0,.06);
+  --sl-shadow-lg:   0 10px 40px rgba(0,0,0,.10);
+  --r-card:         28px;
+  --r-btn:          18px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.md-page {
+  background: var(--sl-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: Inter, sans-serif;
+  color: var(--sl-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.md-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 12px 32px;
+}
+
+/* ── Back nav ── */
+.md-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sl-text-light);
+  text-decoration: none;
+  margin-bottom: 16px;
+  -webkit-tap-highlight-color: transparent;
+}
+.md-back:hover { color: var(--sl-text); }
+
+/* ── Hero image ── */
+.md-hero-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--r-card);
+  display: block;
+  margin-bottom: 16px;
+  box-shadow: var(--sl-shadow-lg);
+}
+
+/* ── Assignment header ── */
+.md-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--sl-yellow-dark);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.md-title {
+  font-size: 28px;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: var(--sl-text);
+  margin-bottom: 12px;
+}
+
+.md-brief {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #404040;
+  margin-bottom: 20px;
+  text-align: justify;
+}
+
+/* ── Meta grid ── */
+.md-meta {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.md-meta-item {
+  display: grid;
+  grid-template-columns: 22px 72px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.md-meta-icon {
+  font-size: 16px;
+  text-align: center;
+  color: var(--sl-text-light);
+}
+
+.md-meta-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+}
+
+.md-meta-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sl-text);
+}
+
+/* ── Tips section ── */
+.md-tips {
+  background: var(--sl-card);
+  border-radius: var(--r-card);
+  border: 1px solid var(--sl-border);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.md-tips-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.md-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--sl-text);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.md-tip:last-child { border-bottom: none; }
+
+.md-tip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sl-yellow);
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+/* ── Master reference ── */
+.md-master {
+  background: #F0EBFF;
+  border: 1px solid #D4C5FF;
+  border-radius: var(--r-card);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.md-master-img {
+  width: 64px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.md-master-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sl-purple);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.md-master-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sl-text);
+  margin-bottom: 2px;
+}
+
+.md-master-quote {
+  font-size: 13px;
+  color: #6B5B9E;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ── Shot count ── */
+.md-shot-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--sl-text-light);
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+/* ── CTAs ── */
+.md-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--sl-yellow);
+  color: var(--sl-text);
+  font-size: 18px;
+  font-weight: 800;
+  height: 60px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--r-btn);
+  width: 100%;
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: background .2s;
+  cursor: pointer;
+}
+
+.md-btn-primary:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
+
+.md-btn-secondary {
+  display: block;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sl-text-light);
+  text-decoration: none;
+  padding: 12px;
+  transition: color .2s;
+}
+
+.md-btn-secondary:hover { color: var(--sl-text); }
+
+/* ── Focus / accessibility ── */
+.md-btn-primary:focus-visible,
+.md-btn-secondary:focus-visible,
+.md-back:focus-visible {
+  outline: 3px solid var(--sl-yellow);
+  outline-offset: 2px;
+}
+
+/* ── Responsive ── */
+@media (min-width: 768px) {
+  .md-inner { padding: 24px 24px 48px; }
+  .md-title  { font-size: 32px; }
+  .md-hero-img { height: 240px; }
+}
+
+@media (max-width: 400px) {
+  .fl-steps { gap: 8px; }
+  .fl-step { grid-template-columns: 36px 1fr; }
+  .md-meta { gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="md-page">
+<div class="md-inner">
+
+  {# ── Back button ── #}
+  <a href="{{ url_for('dashboard') }}" class="md-back">
+    ← Today
+  </a>
+
+  {# ── Hero image — Unsplash placeholder until API wired ── #}
+  {% set _img_url = assignment.image_url if assignment is defined and assignment.image_url else 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80' %}
+  <img src="{{ _img_url }}"
+       alt="{{ assignment.title if assignment is defined else 'Today\'s Assignment' }}"
+       class="md-hero-img"
+       onerror="this.style.display='none'">
+
+  {# ── Assignment header ── #}
+  <span class="md-eyebrow">Today's Assignment</span>
+  <h1 class="md-title">{{ assignment.title if assignment is defined else 'Break the Rule' }}</h1>
+  <p class="md-brief">{{ assignment.description if assignment is defined else 'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.' }}</p>
+
+  {# ── Meta — Best Time · Weather · Location · Focus ── #}
+  <div class="md-meta">
+    <div class="md-meta-item">
+      <span class="md-meta-icon">◷</span>
+      <span class="md-meta-label">Best time</span>
+      <span class="md-meta-val">{{ assignment.best_time if assignment is defined else '5:00 – 7:00 PM' }}</span>
+    </div>
+    <div class="md-meta-item">
+      <span class="md-meta-icon">☁</span>
+      <span class="md-meta-label">Weather</span>
+      <span class="md-meta-val">{{ assignment.weather if assignment is defined else 'Any light works' }}</span>
+    </div>
+    <div class="md-meta-item">
+      <span class="md-meta-icon">📍</span>
+      <span class="md-meta-label">Location</span>
+      <span class="md-meta-val">{{ current_user.city or 'Anywhere' }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</span>
+    </div>
+    <div class="md-meta-item">
+      <span class="md-meta-icon">◎</span>
+      <span class="md-meta-label">Focus</span>
+      <span class="md-meta-val">{{ assignment.focus_label if assignment is defined else 'Originality' }}</span>
+    </div>
+  </div>
+
+  {# ── Tips for today ── #}
+  <div class="md-tips">
+    <span class="md-tips-title">Tips for today</span>
+    {% if assignment is defined and assignment.tips %}
+      {% for tip in assignment.tips %}
+      <div class="md-tip">
+        <div class="md-tip-dot"></div>
+        <span>{{ tip }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="md-tip">
+      <div class="md-tip-dot"></div>
+      <span>Look for an unexpected angle — resist the obvious shot</span>
+    </div>
+    <div class="md-tip">
+      <div class="md-tip-dot"></div>
+      <span>Shoot at least 10 frames before picking your best 3</span>
+    </div>
+    <div class="md-tip">
+      <div class="md-tip-dot"></div>
+      <span>The uncomfortable frame is usually the interesting one</span>
+    </div>
+    <div class="md-tip">
+      <div class="md-tip-dot"></div>
+      <span>Stay with the scene — the best light comes after you think it's over</span>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Master reference ── #}
+  {% set _master_map = {
+    'dod':        ('Fan Ho',               'Master of light, shadow and composition.',        'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80', '"Light is not just illumination. It is revelation."'),
+    'dm':         ('Henri Cartier-Bresson','Invented the decisive moment.',                   'https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=200&q=80', '"Photography is not like painting — there is a creative fraction of a second."'),
+    'aq':         ('Ansel Adams',          'Made light itself the subject.',                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80', '"You do not take a photograph. You make it."'),
+    'wonder':     ('Vivian Maier',         'Found the extraordinary in the ordinary.',        'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80', '"The camera is an instrument that teaches people how to see without a camera."'),
+    'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',    'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=200&q=80', '"I photograph not what I see but what I feel."')
+  } %}
+  {% set _focus_key = assignment.dimension if assignment is defined else 'disruption' %}
+  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80', '"Photography is truth."')) %}
+
+  <div class="md-master">
+    <img src="{{ _master[2] }}" alt="{{ _master[0] }}" class="md-master-img" onerror="this.style.display='none'">
+    <div>
+      <span class="md-master-label">Today's Master</span>
+      <div class="md-master-name">{{ _master[0] }}</div>
+      <div class="md-master-quote">{{ _master[3] }}</div>
+    </div>
+  </div>
+
+  {# ── Shot count ── #}
+  <div class="md-shot-count">
+    <span style="font-size:18px">◷</span>
+    Take three photographs. Upload your best.
+  </div>
+
+  {# ── CTAs ── #}
+  <a href="{{ url_for('upload') }}" class="md-btn-primary">
+    I'm ready. Let's go →
+  </a>
+  <a href="{{ url_for('dashboard') }}" class="md-btn-secondary">
+    Remind me later
+  </a>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// No JS needed for this page — purely static display
+// The assignment data will be injected by app.py via the /mission route
+</script>
+{% endblock %}
