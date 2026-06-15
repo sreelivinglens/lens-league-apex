@@ -347,6 +347,7 @@ def audit_html(filepath):
     _is_mobile_app_page = any(x in fname for x in [
         'dashboard.html', 'onboarding.html', 'onboarding_interests',
         'referral_landing', 'redeem.html',
+        'mission_detail.html', 'first_login.html',
     ])
     _is_email = any(x in fname for x in ['email', 'mail', 'notification', 'trigger'])
 
@@ -1393,6 +1394,7 @@ def _run_delivery_standard(content, filepath, fails):
     _is_mobile_app_page = any(x in fname.lower() for x in [
         'dashboard.html', 'onboarding.html', 'onboarding_interests',
         'referral_landing', 'redeem.html',
+        'mission_detail.html', 'first_login.html',
     ])
 
     # ── 1. KYC — scorecard-specific terms ────────────────────────────────────
