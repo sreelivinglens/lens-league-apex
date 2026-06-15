@@ -565,6 +565,8 @@ with app.app_context():
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS reengagement_sent_at TIMESTAMP",
                 # v34 - Scoring flash notification
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS scoring_flash TEXT",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS mission_dimension VARCHAR(20) DEFAULT NULL",
+                "ALTER TABLE images ADD COLUMN IF NOT EXISTS mission_title VARCHAR(120) DEFAULT NULL",
                 # v35 - DDI sub-genre support
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS sub_genre VARCHAR(60)",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS species_hint VARCHAR(120)",
@@ -4059,6 +4061,8 @@ def upload():
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
+            mission_dimension = request.form.get('mission_dimension') or None,
+            mission_title     = request.form.get('mission_title') or None,
             is_public         = (request.form.get('is_public', '0') == '1'),
             exif_status=exif_status, exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
             exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
@@ -4862,6 +4866,32 @@ def upload():
                                         and _img.score and not _img.is_flagged):
                                     _pts_earned = _img.score * 10  # exact, no rounding
                                     award_points(_pts_user, _pts_earned, 'image_scored', commit=False)
+
+                                    # ── Mission bonus: +10 pts if mission was followed ──
+                                    # Mission is followed if:
+                                    # (a) image has a mission_dimension set, AND
+                                    # (b) the score on that dimension >= user's baseline avg
+                                    _mission_dim = getattr(_img, 'mission_dimension', None)
+                                    if _mission_dim:
+                                        _dim_key_map = {
+                                            'dod': 'score_dod', 'dm': 'score_dm',
+                                            'aq': 'score_aq', 'wonder': 'score_wonder',
+                                            'disruption': 'score_disruption'
+                                        }
+                                        _dim_col = _dim_key_map.get(_mission_dim)
+                                        _dim_score = getattr(_img, _dim_col, None) if _dim_col else None
+                                        if _dim_score and _dim_score >= 5.0:
+                                            # Mission followed — award bonus
+                                            award_points(_pts_user, 10.0, 'mission_complete', commit=False)
+                                            _img.scoring_flash = (
+                                                f'+{_pts_earned:.1f} pts · Mission complete: +10 bonus'
+                                            )
+                                        else:
+                                            # Mission not followed — note it in flash
+                                            _mission_title = getattr(_img, 'mission_title', None) or 'today\'s mission'
+                                            _img.scoring_flash = (
+                                                f'+{_pts_earned:.1f} pts · Mission open — try {_mission_title} again'
+                                            )
                                     # Check tier jump bonus
                                     _img_count = Image.query.filter_by(
                                         user_id=_pts_user.id, status='scored'
