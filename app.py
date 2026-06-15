@@ -598,10 +598,6 @@ with app.app_context():
                 # Counts every upload ever — never decremented on delete.
                 # Enforces free tier limit even if user deletes images.
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS total_uploads_ever INTEGER DEFAULT 0",
-                # v81 — upload credits (free-tier slot bank, distinct from total_uploads_ever)
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS upload_credits_balance INTEGER DEFAULT 3",
-                # v81 — referral FK (who referred this user, for first_login_welcome)
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS parent_image_id INTEGER REFERENCES images(id) ON DELETE SET NULL",
                 "ALTER TABLE images ADD COLUMN IF NOT EXISTS version_number INTEGER DEFAULT 1",
                 """CREATE TABLE IF NOT EXISTS referral_codes (
@@ -3025,7 +3021,22 @@ def dashboard():
         _season_start_label = '1 September 2026'
         _pre_season         = True
 
+    # Hero carousel for dashboard banner — random high-scoring public image per visit
+    # Same query as index.html carousel but random order so it changes on every refresh
+    try:
+        _dash_carousel = (Image.query
+                          .filter(Image.status=='scored', Image.score!=None,
+                                  Image.is_public==True, Image.is_flagged==False,
+                                  Image.tier.in_(['Legend','Grandmaster','Master']),
+                                  Image.score>=8.5,
+                                  Image.thumb_url!=None)
+                          .order_by(db.func.random())
+                          .limit(1).first())
+    except Exception:
+        _dash_carousel = None
+
     return render_template('dashboard.html', images=images, stats=stats,
+                           carousel_images=[_dash_carousel] if _dash_carousel else [],
                            query=query, search_enabled=(total_images >= 20),
                            rating_widget=rating_widget, free_tier=free_tier,
                            poty_tracker=poty_tracker,
@@ -3053,6 +3064,69 @@ def dashboard():
                            ).scalar() or 0,
                            countries=get_countries(),
                            location_data_json=json.dumps(_dash_loc()))
+
+
+# ---------------------------------------------------------------------------
+# My Gallery — user's full image history with search/filter
+# ---------------------------------------------------------------------------
+
+@app.route('/my-gallery')
+@login_required
+def my_gallery():
+    """User's complete image history — all uploads, with scores, edit/delete access."""
+    page    = request.args.get('page', 1, type=int)
+    query   = request.args.get('q', '').strip()
+    genre   = request.args.get('genre', '').strip()
+    sort    = request.args.get('sort', 'newest').strip()
+
+    images_q = Image.query.filter_by(user_id=current_user.id)
+
+    if query:
+        images_q = images_q.filter(
+            db.or_(
+                Image.asset_name.ilike(f'%{query}%'),
+                Image.genre.ilike(f'%{query}%'),
+                Image.subject.ilike(f'%{query}%'),
+                Image.location.ilike(f'%{query}%'),
+            )
+        )
+    if genre:
+        images_q = images_q.filter(Image.genre.ilike(f'%{genre}%'))
+
+    if sort == 'score_desc':
+        images_q = images_q.filter(Image.score != None).order_by(Image.score.desc())
+    elif sort == 'score_asc':
+        images_q = images_q.filter(Image.score != None).order_by(Image.score.asc())
+    elif sort == 'oldest':
+        images_q = images_q.order_by(Image.created_at.asc())
+    else:  # newest
+        images_q = images_q.order_by(Image.created_at.desc())
+
+    images = images_q.paginate(page=page, per_page=24, error_out=False)
+
+    total = Image.query.filter_by(user_id=current_user.id).count()
+    scored = Image.query.filter_by(user_id=current_user.id, status='scored').count()
+    best = db.session.query(db.func.max(Image.score)).filter(
+        Image.user_id == current_user.id, Image.score != None
+    ).scalar() or 0
+    avg = db.session.query(db.func.avg(Image.score)).filter(
+        Image.user_id == current_user.id, Image.score != None
+    ).scalar() or 0
+
+    # Distinct genres for filter dropdown
+    genre_rows = db.session.query(Image.genre).filter(
+        Image.user_id == current_user.id,
+        Image.genre != None
+    ).distinct().all()
+    genres = sorted([r[0] for r in genre_rows if r[0]])
+
+    stats = {
+        'total': total, 'scored': scored,
+        'best': round(best, 2), 'avg': round(avg, 2),
+    }
+    return render_template('my_gallery.html',
+                           images=images, stats=stats, genres=genres,
+                           query=query, genre=genre, sort=sort)
 
 
 # ---------------------------------------------------------------------------
@@ -4567,17 +4641,6 @@ def upload():
                                         app.logger.warning(f'[auto_score] on-demand discovery found nothing for ({_sc_user_city}, {_od_genre})')
                                         # Mark as done in queue so we don't retry endlessly
                                         enqueue_priority_combo(db.session, _sc_user_city, _od_genre)
-                                        # City enforcement: set a flash so the user knows
-                                        # local advisory is coming — avoids confusion
-                                        try:
-                                            _img.scoring_flash = (
-                                                f'We are building your local calendar for {_sc_user_city} — '
-                                                f'upload one more photograph and your scorecard will include '
-                                                f'what\'s worth shooting near you.'
-                                            )
-                                            db.session.commit()
-                                        except Exception:
-                                            pass
                                 except Exception as _od_err:
                                     app.logger.warning(f'[auto_score] on-demand discovery failed for ({_sc_user_city}, {_od_genre}): {_od_err}')
                                     # Non-fatal — scoring proceeds without advisory
@@ -4874,83 +4937,6 @@ def upload():
                                 )
                             # ── END scored_phash_cache write ───────────────────────────────
 
-                            # ── Genre drift detection (P6) ─────────────────────────────────
-                            # After 5 scored images in a genre not already in genre_interests,
-                            # notify the user to add it (max 4 interests total).
-                            # Non-fatal — scoring outcome is never affected.
-                            try:
-                                _drift_user = User.query.get(_img.user_id)
-                                if _drift_user and _img.genre and not _img.is_flagged:
-                                    import json as _dj
-                                    _current_interests = []
-                                    try:
-                                        _current_interests = _dj.loads(
-                                            _drift_user.genre_interests or '[]'
-                                        )
-                                    except Exception:
-                                        pass
-                                    # Only check if genre not already in interests and
-                                    # user has room (< 4 interests)
-                                    _norm_img_genre = normalise_genre(_img.genre)
-                                    _norm_interests = [normalise_genre(g) for g in _current_interests]
-                                    if (_norm_img_genre not in _norm_interests
-                                            and len(_current_interests) < 4):
-                                        # Count scored images in this genre for this user
-                                        _genre_count = db.session.execute(db.text(
-                                            "SELECT COUNT(*) FROM images "
-                                            "WHERE user_id = :uid AND status = 'scored' "
-                                            "AND genre = :g AND is_flagged = FALSE"
-                                        ), {'uid': _img.user_id, 'g': _img.genre}).scalar() or 0
-                                        if _genre_count == 5:
-                                            # Exactly 5 — fire the nudge once
-                                            _site_url = os.getenv('SITE_URL', 'https://shutterleague.com')
-                                            _drift_name = _drift_user.full_name or _drift_user.username or 'Photographer'
-                                            send_email(
-                                                to_addresses=[_drift_user.email],
-                                                subject=f'Your {_img.genre} eye is developing',
-                                                html_body=(
-                                                    '<div style="font-family:Georgia,serif;max-width:520px;'
-                                                    'margin:0 auto;padding:32px 24px;background:#FDFCF8;">'
-                                                    '<div style="font-family:monospace;font-size:12px;'
-                                                    'letter-spacing:3px;color:#C8A84B;text-transform:uppercase;'
-                                                    'margin-bottom:20px;">Shutter League</div>'
-                                                    f'<h2 style="font-size:22px;font-weight:700;color:#1A1A18;'
-                                                    f'margin:0 0 16px;">You\'ve been shooting {_img.genre}.</h2>'
-                                                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">'
-                                                    f'Hi {_drift_name},</p>'
-                                                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">'
-                                                    f'You\'ve had {_genre_count} photographs evaluated in '
-                                                    f'<strong>{_img.genre}</strong> — more than any of your '
-                                                    f'listed interests. Your eye seems to be going somewhere new.</p>'
-                                                    f'<p style="font-size:16px;line-height:1.7;color:#4A4840;">'
-                                                    f'Add it to your interests and your daily assignments will '
-                                                    f'start reflecting what you\'re actually shooting.</p>'
-                                                    f'<a href="{_site_url}/profile" '
-                                                    f'style="display:inline-block;background:#1A1A18;color:#F5C518;'
-                                                    f'font-family:Courier New,monospace;font-size:14px;font-weight:700;'
-                                                    f'letter-spacing:2px;text-transform:uppercase;padding:14px 28px;'
-                                                    f'text-decoration:none;border-radius:4px;margin:20px 0 8px 0;">'
-                                                    f'Add {_img.genre} to your interests &#8594;</a>'
-                                                    f'<p style="font-size:13px;color:#8a8070;line-height:1.6;'
-                                                    f'margin-top:24px;">&#8212; Shutter League</p>'
-                                                    '</div>'
-                                                ),
-                                                text_body=(
-                                                    f'Hi {_drift_name},\n\n'
-                                                    f'You\'ve had {_genre_count} photographs evaluated in '
-                                                    f'{_img.genre} — your eye seems to be going somewhere new.\n\n'
-                                                    f'Add it to your interests: {_site_url}/profile\n\n'
-                                                    '-- Shutter League'
-                                                )
-                                            )
-                                            app.logger.info(
-                                                f'[genre_drift] user={_img.user_id} '
-                                                f'genre={_img.genre} count={_genre_count} — nudge sent'
-                                            )
-                            except Exception as _drift_err:
-                                app.logger.warning(f'[genre_drift] non-fatal: {_drift_err}')
-                            # ── END genre drift detection ───────────────────────────────────
-
                             # Sprint 2 — award points for scored image (subscribers only)
                             try:
                                 _pts_user = User.query.get(_img.user_id)
@@ -5086,32 +5072,6 @@ def upload():
                             if _img and _img.status == 'processing':
                                 _img.status = 'error'
                                 db.session.commit()
-                            # Notify admin — silent scoring failures are invisible otherwise
-                            try:
-                                _fail_user = User.query.get(_img.user_id) if _img else None
-                                send_email(
-                                    to_addresses=[ADMIN_NOTIFY_EMAIL],
-                                    subject=f'[Admin] Scoring failed — image {image_id}',
-                                    html_body=(
-                                        '<div style="font-family:Courier New,monospace;max-width:560px;'
-                                        'margin:0 auto;padding:32px;">'
-                                        '<p style="color:#E74C3C;font-weight:700;">BACKGROUND SCORING FAILURE</p>'
-                                        f'<p>Image ID: {image_id}<br>'
-                                        f'User: {(_fail_user.email if _fail_user else "unknown")}<br>'
-                                        f'Asset: {(_img.asset_name if _img else "unknown")}<br>'
-                                        f'Genre: {(_img.genre if _img else "unknown")}</p>'
-                                        f'<pre style="font-size:12px;color:#666;white-space:pre-wrap;">'
-                                        f'{traceback.format_exc()[-800:]}</pre>'
-                                        '</div>'
-                                    ),
-                                    text_body=(
-                                        f'Scoring failed.\nImage: {image_id}\n'
-                                        f'User: {(_fail_user.email if _fail_user else "unknown")}\n'
-                                        f'{traceback.format_exc()[-400:]}'
-                                    )
-                                )
-                            except Exception as _alert_err:
-                                app.logger.error(f'[scoring_fail_alert] {_alert_err}')
                         except Exception:
                             pass
 
