@@ -88,7 +88,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   box-shadow: var(--sl-shadow-lg);
   overflow: hidden;
   margin-bottom: 16px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .sl-assignment__eyebrow {
@@ -102,38 +103,37 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 /* Two-column layout: text left, image right */
 .sl-assignment__body {
-  display: grid;
-  grid-template-columns: 1fr 100px;
-  gap: 0;
-  min-height: 170px;
+  display: block;
 }
 
 .sl-assignment__left {
-  padding: 10px 14px 0;
+  padding: 12px 16px 10px;
 }
 
 .sl-assignment__title {
-  font-size: 40px;
-  line-height: .95;
+  font-size: 26px;
+  line-height: 1.05;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--sl-text);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .sl-assignment__why {
   font-size: 15px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: #404040;
   margin-bottom: 0;
+  text-align: justify;
 }
 
 .sl-assignment__img {
   width: 100%;
-  height: 100%;
+  height: 160px;
   object-fit: cover;
-  border-radius: 0 var(--r-hero) 0 var(--r-img);
-  min-height: 170px;
+  border-radius: var(--r-hero) var(--r-hero) 0 0;
+  display: block;
+  order: -1;
 }
 
 .sl-assignment__img-placeholder {
@@ -291,14 +291,28 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   border-radius: var(--r-card);
   border: 1px solid var(--sl-border);
   box-shadow: var(--sl-shadow);
-  padding: 14px 8px;
+  padding: 12px 16px;
   margin-bottom: 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.sl-yesterday__top-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sl-text-light);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.sl-yesterday__row {
+  display: flex;
+  align-items: center;
   gap: 0;
 }
 
 .sl-yesterday__col {
+  flex: 1;
   text-align: center;
   padding: 0 8px;
 }
@@ -310,10 +324,10 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 .sl-yesterday__label {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--sl-text-light);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: block;
 }
 
@@ -423,17 +437,15 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   font-size: 16px;
   font-weight: 700;
   color: var(--sl-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: block;
+  line-height: 1.3;
 }
 
 .sl-upload-banner__sub {
   font-size: 13px;
   color: rgba(21,21,21,.60);
   display: block;
-  white-space: nowrap;
+  line-height: 1.3;
 }
 
 .sl-upload-banner__arrow {
@@ -926,10 +938,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 ══════════════════════════════════════════ */
 /* Mobile first: all grids default to single column, expand at breakpoints */
 @media (max-width: 400px) {
-  .sl-assignment__title { font-size: 32px; }
-  .sl-assignment__body  { grid-template-columns: 1fr 110px; }
+  .sl-assignment__title { font-size: 28px; }
   .sl-greeting__name    { font-size: 26px; }
-  .sl-yesterday         { grid-template-columns: 1fr; }
   .sl-standing-row      { grid-template-columns: 1fr; }
   .sl-points-row        { grid-template-columns: 1fr; }
   .sl-dim-grid          { grid-template-columns: 1fr; }
@@ -938,8 +948,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 @media (min-width: 768px) and (max-width: 1024px) {
   /* iPad: centred single column, larger type */
   .sl-today__inner { padding: 0 32px; }
-  .sl-assignment__title { font-size: 40px; }
-  .sl-assignment__body { grid-template-columns: 1fr 160px; }
+  .sl-assignment__title { font-size: 30px; }
   .sl-dim-grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -947,7 +956,6 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   /* Desktop */
   .sl-today__inner { padding: 0 24px; max-width: 520px; }
   .sl-assignment__title { font-size: 44px; }
-  .sl-assignment__body { grid-template-columns: 1fr 180px; }
 }
 
 
@@ -1099,6 +1107,11 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {% set _img_url = 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80' %}
 
   <div class="sl-assignment">
+    <img src="{{ _img_url }}"
+         alt="{{ _title }}"
+         class="sl-assignment__img"
+         onerror="this.style.display='none'">
+
     <div class="sl-assignment__eyebrow">Today's Assignment</div>
 
     <div class="sl-assignment__body">
@@ -1106,10 +1119,6 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
         <div class="sl-assignment__title">{{ _title }}</div>
         <div class="sl-assignment__why">{{ _brief_why }}</div>
       </div>
-      <img src="{{ _img_url }}"
-           alt="{{ _title }}"
-           class="sl-assignment__img"
-           onerror="this.style.display='none'">
     </div>
 
     <div class="sl-assignment__meta">
@@ -1170,48 +1179,49 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   ══════════════════════════════════════════ #}
   {% if progress_data %}
   <div class="sl-yesterday">
-    <div class="sl-yesterday__col">
-      <span class="sl-yesterday__label">Yesterday</span>
-      {% set _last = images[0] if images else none %}
-      {% if _last and _last.score %}
-        <div class="sl-yesterday__status">
-          <div class="sl-yesterday__check">✓</div>
-          <span style="font-size:14px;color:#1A1A18;font-weight:600">Evaluated</span>
-        </div>
-      {% else %}
-        <div style="font-size:13px;color:var(--sl-text-light);margin-top:6px">No upload</div>
-      {% endif %}
-    </div>
-    <div class="sl-yesterday__col">
-      <span class="sl-yesterday__label">Your score</span>
-      <div class="sl-yesterday__score-val">{{ '%.1f'|format(progress_data.avg_score) }}</div>
-      <div class="sl-yesterday__stars">
-        {% set _s = progress_data.avg_score | int %}
-        {% for i in range(5) %}{{ '★' if i < (_s // 2) else '☆' }}{% endfor %}
-      </div>
-      {% if progress_data.trend and progress_data.trend|length >= 2 %}
-        {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
-        {% if _diff > 0 %}
-        <div class="sl-yesterday__trend">▲ {{ '%.1f'|format(_diff) }} from last</div>
-        {% elif _diff < 0 %}
-        <div class="sl-yesterday__trend" style="color:#E74C3C">▼ {{ '%.1f'|format(_diff|abs) }} from last</div>
+    <span class="sl-yesterday__top-label">Yesterday</span>
+    <div class="sl-yesterday__row">
+      <div class="sl-yesterday__col">
+        <span class="sl-yesterday__label">Status</span>
+        {% set _last = images[0] if images else none %}
+        {% if _last and _last.score %}
+          <div class="sl-yesterday__status">
+            <div class="sl-yesterday__check">✓</div>
+          </div>
+          <div style="font-size:13px;color:var(--sl-success);font-weight:600;margin-top:2px">Evaluated</div>
+        {% else %}
+          <div style="font-size:13px;color:var(--sl-text-light);margin-top:4px">—</div>
         {% endif %}
-      {% endif %}
-    </div>
-    <div class="sl-yesterday__col">
-      <span class="sl-yesterday__label">Season</span>
-      {% if _pre_season %}
-      <div class="sl-yesterday__streak-val" style="font-size:20px">
-        Sep
       </div>
-      <div class="sl-yesterday__streak-sub">season opens</div>
-      {% else %}
-      <div class="sl-yesterday__streak-val">
-        <span style="color:#E74C3C">&#9679;</span>
-        {{ _months_active or 0 }}
+      <div class="sl-yesterday__col">
+        <span class="sl-yesterday__label">Score</span>
+        <div class="sl-yesterday__score-val">{{ '%.1f'|format(progress_data.avg_score) }}</div>
+        <div class="sl-yesterday__stars">
+          {% set _s = progress_data.avg_score | int %}
+          {% for i in range(5) %}{{ '★' if i < (_s // 2) else '☆' }}{% endfor %}
+        </div>
+        {% if progress_data.trend and progress_data.trend|length >= 2 %}
+          {% set _diff = progress_data.trend[-1].score - progress_data.trend[-2].score %}
+          {% if _diff > 0 %}
+          <div class="sl-yesterday__trend">▲ {{ '%.1f'|format(_diff) }}</div>
+          {% elif _diff < 0 %}
+          <div class="sl-yesterday__trend" style="color:#E74C3C">▼ {{ '%.1f'|format(_diff|abs) }}</div>
+          {% endif %}
+        {% endif %}
       </div>
-      <div class="sl-yesterday__streak-sub">active month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
-      {% endif %}
+      <div class="sl-yesterday__col">
+        <span class="sl-yesterday__label">Season</span>
+        {% if _pre_season %}
+        <div class="sl-yesterday__streak-val" style="font-size:20px">Sep</div>
+        <div class="sl-yesterday__streak-sub">opens</div>
+        {% else %}
+        <div class="sl-yesterday__streak-val">
+          <span style="color:#E74C3C">&#9679;</span>
+          {{ _months_active or 0 }}
+        </div>
+        <div class="sl-yesterday__streak-sub">month{{ 's' if (_months_active or 0) != 1 else '' }}</div>
+        {% endif %}
+      </div>
     </div>
   </div>
   {% endif %}
@@ -1223,8 +1233,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-upload-banner__left">
       <div class="sl-upload-banner__icon">▲</div>
       <div class="sl-upload-banner__text">
-        <span class="sl-upload-banner__title">Upload today's photographs</span>
-        <span class="sl-upload-banner__sub">Get evaluated and improve every day</span>
+        <span class="sl-upload-banner__title">Upload today's images</span>
+        <span class="sl-upload-banner__sub">Score in 60 seconds</span>
       </div>
     </div>
     <span class="sl-upload-banner__arrow">→</span>
