@@ -1009,24 +1009,34 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     {% endfor %}
   {% endif %}
 
-  {# ── Mentor review ready alert ── #}
+  {# ── Mentor review ready alert — collapsed pill, tap to expand ── #}
   {% if mentor_reviews %}
     {% for review in mentor_reviews %}
-    <div class="sl-mentor-alert">
-      <div>
-        <span class="sl-mentor-alert__label">Expert review ready</span>
-        <span class="sl-mentor-alert__txt">
-          <strong>{{ review.get('mentor_name') or 'Your mentor' }}</strong> reviewed
-          <strong>{{ review.get('asset_name') or 'your photograph' }}</strong>
+    {% set _rid = 'sl-mentor-' ~ loop.index %}
+    <div style="background:var(--sl-card); border:2px solid var(--sl-yellow); border-radius:12px; margin-top:4px; margin-bottom:8px; overflow:hidden;">
+      <button onclick="slToggleMentor('{{ _rid }}')"
+              style="width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; font-family:inherit; text-align:left; min-height:44px;">
+        <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
+          <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--sl-yellow-dark); white-space:nowrap; flex-shrink:0;">Expert review</span>
+          <span style="font-size:14px; color:var(--sl-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>{{ review.get('asset_name') or 'your photograph' }}</strong></span>
+        </div>
+        <span id="{{ _rid }}-chevron" style="font-size:16px; color:var(--sl-yellow-dark); flex-shrink:0; transition:transform 0.25s;">&#x203A;</span>
+      </button>
+      <div id="{{ _rid }}" style="display:none; padding:0 14px 14px; border-top:1px solid var(--sl-border);">
+        <div style="font-size:15px; color:var(--sl-text); line-height:1.6; padding-top:10px;">
+          <strong>{{ review.get('mentor_name') or 'Your mentor' }}</strong> reviewed <strong>{{ review.get('asset_name') or 'your photograph' }}</strong>
           {% set _snippet = review.get('review_text', '') %}
-          {% if _snippet %} — {{ _snippet[:55] }}{% if _snippet|length > 55 %}…{% endif %}{% endif %}
-        </span>
+          {% if _snippet %} &#x2014; {{ _snippet[:120] }}{% if _snippet|length > 120 %}&#x2026;{% endif %}{% endif %}
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+          {% if review.get('image_id') %}
+          <a href="{{ url_for('image_detail', image_id=review.get('image_id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">Read full review &#x2192;</a>
+          {% else %}
+          <a href="{{ url_for('mentors') }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">View &#x2192;</a>
+          {% endif %}
+          <button onclick="slToggleMentor('{{ _rid }}')" style="background:none; border:none; cursor:pointer; color:var(--sl-text-light); font-size:14px; font-family:inherit; padding:9px 0; min-height:44px;">Close &#x2191;</button>
+        </div>
       </div>
-      {% if review.get('image_id') %}
-      <a href="{{ url_for('image_detail', image_id=review.get('image_id')) }}" class="sl-btn-read">Read →</a>
-      {% else %}
-      <a href="{{ url_for('mentors') }}" class="sl-btn-read">View →</a>
-      {% endif %}
     </div>
     {% endfor %}
   {% endif %}
@@ -1638,6 +1648,16 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 {% block extra_js %}
 <script>
+// ── Mentor review alert — expand/collapse ──
+function slToggleMentor(id) {
+  var detail  = document.getElementById(id);
+  var chevron = document.getElementById(id + '-chevron');
+  if (!detail) return;
+  var open = detail.style.display === 'none' || detail.style.display === '';
+  detail.style.display = open ? 'block' : 'none';
+  if (chevron) chevron.style.transform = open ? 'rotate(90deg)' : '';
+}
+
 // ── Today's Master — expand/collapse detail ──
 function slToggleMaster() {
   var detail   = document.getElementById('sl-master-detail');
