@@ -1,6 +1,6 @@
 {# SL-VERSION: 81.1 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
 {% extends "base.html" %}
-{% block title %}Today — {{ platform_name }}{% endblock %}
+{% block title %}Dashboard — {{ platform_name }}{% endblock %}
 {% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
 {% block canonical %}https://shutterleague.com/dashboard{% endblock %}
 {% block og_title %}Shutter League — Your Dashboard{% endblock %}
@@ -1032,11 +1032,14 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     gap: 0 28px;
     align-items: start;
   }
-  /* Ensure banner never becomes a grid item */
+  /* Hero banner: full viewport width on desktop, break out of grid */
   .sl-dash-hero-banner {
     display: block !important;
-    grid-column: unset !important;
-    width: 100% !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    height: 380px !important;
+    aspect-ratio: unset !important;
   }
   /* Left column — greeting + hero + assignment + master */
   .sl-today__left {
@@ -1807,19 +1810,19 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   </div>
   {% endif %}
 
-  {# ── My photographs CTA (desktop right col) ── #}
+  {# ── My Gallery CTA (desktop right col) ── #}
   <a href="{{ url_for('my_gallery') }}"
      style="display:flex; align-items:center; justify-content:space-between;
-            background:var(--sl-card); border:1px solid var(--sl-border);
+            background:#1A2744; border:1px solid #1A2744;
             border-radius:var(--r-card); padding:14px 16px;
             text-decoration:none; gap:10px;">
     <div>
-      <div style="font-size:15px; font-weight:700; color:var(--sl-text);">My photographs</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
+      <div style="font-size:15px; font-weight:700; color:#FFFFFF;">My Gallery</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.60); margin-top:2px;">
         {{ stats.total }} uploaded · {{ stats.scored }} evaluated
       </div>
     </div>
-    <span style="font-size:18px; color:var(--sl-yellow-dark); font-weight:700;">→</span>
+    <span style="font-size:18px; color:#F5C518; font-weight:700;">→</span>
   </a>
 
 </div>{# /sl-today__right #}
@@ -1983,7 +1986,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
         <div class="sl-sec__hdr-left">
           <span class="sl-sec__icon">⊞</span>
           <div>
-            <span class="sl-sec__title">My photographs</span>
+            <span class="sl-sec__title">My Gallery</span>
             <span class="sl-sec__sub">{{ stats.total }} image{{ 's' if stats.total != 1 else '' }} · {{ stats.scored }} evaluated</span>
           </div>
         </div>
