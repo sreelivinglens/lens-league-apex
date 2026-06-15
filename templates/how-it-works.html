@@ -86,7 +86,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   font-size: 26px;
   font-weight: 700;
   color: #FFFFFF;
-  line-height: 1.08;
+  line-height: 1.5;
   letter-spacing: -0.03em;
   margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -134,7 +134,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   font-weight: 600;
   letter-spacing: -0.03em;
   color: #1A1A18;
-  line-height: 1.15;
+  line-height: 1.5;
   margin-bottom: 18px;
 }
 .sl-hiw-body {
@@ -374,6 +374,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   top: 20px;
   left: 20px;
   background: rgba(13,13,11,0.82);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   padding: 10px 16px;
   display: flex;
@@ -439,12 +440,15 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
   .sl-hiw-feature-grid { grid-template-columns: 1fr; }
   .sl-hiw-feature-img { min-height: 220px; aspect-ratio: 16 / 9; }
   .sl-hiw-diff-grid { grid-template-columns: 1fr 1fr; }
+  .sl-hiw-steps { grid-template-columns: 1fr !important; }
+  .sl-hiw-dims { grid-template-columns: 1fr !important; }
   .sl-hiw-diff-col { padding: 24px 18px; border-right: none; border-bottom: 1px solid rgba(26,26,24,0.10); }
   .sl-hiw-diff-col:nth-child(odd) { border-right: 1px solid rgba(26,26,24,0.10); }
   .sl-hiw-steps { gap: 16px; }
 }
 
 @media (max-width: 768px) {
+  a[href], button { min-height: 44px; }
 
   /* HERO — mobile: 16:9 image on top, #2C3E6B text block below */
   .sl-hiw-hero {
@@ -482,7 +486,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     font-size: 26px;
     font-weight: 700;
     color: #FFFFFF;
-    line-height: 1.2;
+    line-height: 1.5;
     letter-spacing: -0.02em;
     margin-bottom: 0;
     text-shadow: none;
@@ -586,10 +590,10 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     font-size: 20px;
   }
   .sl-hiw-score-tier {
-    font-size: 12px;
+    font-size: 14px;
   }
   .sl-hiw-soul {
-    font-size: 12px;
+    font-size: 14px;
   }
   /* On mobile: improvement panel comes out of absolute position and sits below image */
   .sl-hiw-improvement {
@@ -598,7 +602,7 @@ body:has(.sl-hiw) main { padding: 0 !important; max-width: none !important; marg
     padding: 20px 20px 24px;
   }
   .sl-hiw-imp-label {
-    font-size: 13px;
+    font-size: 14px;
   }
   .sl-hiw-imp-text {
     font-size: 16px;
