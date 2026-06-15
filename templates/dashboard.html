@@ -1212,7 +1212,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div>
       <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
       <span class="sl-dash-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
-      <span class="sl-dash-hero-banner__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</span>
+      <span class="sl-dash-hero-banner__by">by {{ _hero_img.photographer_name or '' }}</span>
     </div>
     <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
   </div>
@@ -1336,7 +1336,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div>
         <div class="sl-desktop-hero__score">{{ '%.2f'|format(_hero_img.score) }}</div>
         <div class="sl-desktop-hero__tier">{{ _hero_img.tier or '' }}</div>
-        <div class="sl-desktop-hero__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</div>
+        <div class="sl-desktop-hero__by">by {{ _hero_img.photographer_name or '' }}</div>
       </div>
       <div class="sl-desktop-hero__genre">{{ _hero_img.genre or '' }}</div>
     </div>
