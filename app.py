@@ -9354,10 +9354,19 @@ def robots_txt():
         "Disallow: /rate\n"
         "Disallow: /raw\n"
         "Disallow: /judge\n"
+        "Disallow: /score-status/\n"
+        "Disallow: /force-rescore\n"
+        "Disallow: /retry-score\n"
+        "Disallow: /image/score-single\n"
+        "Disallow: /redeem\n"
+        "Disallow: /onboarding\n"
+        "Disallow: /ref/\n"
         "Crawl-delay: 10\n"
         "\n"
         "# Automated scraping, bulk harvesting, and data extraction are\n"
         "# strictly prohibited. See /terms for full legal restrictions.\n"
+        "\n"
+        "Sitemap: https://shutterleague.com/sitemap.xml\n"
     )
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
