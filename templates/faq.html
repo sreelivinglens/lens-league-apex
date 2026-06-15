@@ -9,7 +9,7 @@
 
 {% block extra_css %}
 <style>
-  .terms-wrap    { max-width: 760px; margin: 0 auto; }
+  .terms-wrap    { max-width: 760px; margin: 0 auto; font-size: 16px; }
   .faq-section   { margin-bottom: 40px; }
   .faq-section h2 {
     font-size: 18px; font-weight: 700; color: var(--text-primary);
@@ -22,7 +22,7 @@
   .faq-item      { margin-bottom: 24px; }
   .faq-q         { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
   .faq-a         { font-size: 16px; color: var(--text-secondary); line-height: 1.8; }
-  .faq-a a       { color: var(--text-primary); font-weight:600; text-decoration:underline; }
+  .faq-a a       { color: var(--text-primary); font-weight:600; text-decoration:underline; min-height: 44px; display: inline-block; padding: 2px 0; }
   .faq-a strong  { color: var(--text-primary); }
   .terms-highlight {
     background: var(--surface-3); border: 1px solid var(--border);
@@ -32,6 +32,16 @@
     font-size: 16px; color: var(--text-secondary); line-height: 1.7;
   }
   .terms-highlight strong { color: var(--text-primary); font-weight:700; }
+  @media (max-width: 600px) {
+    .terms-wrap { padding: 0 4px; }
+    .faq-q { font-size: 16px; }
+    .faq-a { font-size: 16px; line-height: 1.75; }
+    .faq-section h2 { font-size: 17px; }
+    .btn { min-height: 44px; width: 100%; text-align: center; box-sizing: border-box; display: block; }
+  }
+  @media (max-width: 768px) {
+    .terms-wrap { padding: 0 8px; }
+  }
 </style>
 {% endblock %}
 
@@ -47,19 +57,19 @@
       <div class="sl-accordion-body">
       <div class="faq-item">
       <div class="faq-q">What is Shutter League?</div>
-      <div class="faq-a">Shutter League is a photography scoring and skill assessment platform. Every image you upload is scored by the Apex DDI Engine — a scientific, AI-powered system that evaluates your photography across 5 dimensions. No human judges, no bias, consistent feedback every time.</div>
+      <div class="faq-a">Shutter League is a photography scoring and skill assessment platform. Every image you upload is scored by the Apex Engine — a scientific, AI-powered system that evaluates your photography across 5 dimensions. No human judges, no bias, consistent feedback every time.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">What is the DDI score?</div>
-      <div class="faq-a">DDI stands for Dimensional Diagnostic Index. It's a composite score from 0–10 based on five dimensions: Depth of Detail, Wonder, Disruption, Depth of Mood, and Aesthetic Quality. Each dimension is weighted differently per genre.</div>
+      <div class="faq-q">How does the score work?</div>
+      <div class="faq-a">The score is built from five dimensions. It's a composite score from 0–10 based on five dimensions: Depth of Difficulty, Wonder, Disruption, whether the timing was right, and the emotion it creates. Each dimension is weighted differently per genre.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">How many free images do I get?</div>
-      <div class="faq-a"><strong>3 free scored images</strong> — no credit card required. After that, subscribe to Camera League or Mobile League to continue uploading and improving.</div>
+      <div class="faq-a"><strong>3 free photographs evaluated</strong> — no credit card required. After that, subscribe to Camera League or Mobile League to continue uploading and improving.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to use a camera? Can I use my phone?</div>
-      <div class="faq-a">Both are welcome. Camera and Mobile photographers participate in separate leagues with their own galleries, Annual Excellence Award tracks, and recognition programmes — same DDI engine, no gear bias.</div>
+      <div class="faq-a">Both are welcome. Camera and Mobile photographers participate in separate leagues with their own galleries, Annual Excellence Award tracks, and recognition programmes — same score engine, no gear bias.</div>
     </div>
         </div>
     </details>
@@ -73,11 +83,11 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I rescore an image?</div>
-      <div class="faq-a">No. Each image is scored once. This protects the integrity of the gallery and programme results. If you upload a better version of an image, it is treated as a new upload and uses one of your monthly scored image credits.</div>
+      <div class="faq-a">No. Each image is scored once. This protects the integrity of the gallery and programme results. If you upload a better version of an image, it is treated as a new upload and uses one of your monthly photograph evaluated credits.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Why did my image score lower than I expected?</div>
-      <div class="faq-a">The DDI Engine scores against genre-specific criteria. The score breakdown on your image detail page shows exactly which dimensions scored lower and includes an Apex Byline — a specific improvement recommendation. Use that as your guide.</div>
+      <div class="faq-a">The scoring engine scores against genre-specific criteria. The score breakdown on your image detail page shows exactly which dimensions scored lower and includes an Apex Byline — a specific improvement recommendation. Use that as your guide.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What are the score tiers?</div>
@@ -101,7 +111,7 @@
       <div class="faq-item">
       <div class="faq-q">What plans are available?</div>
       <div class="faq-a">
-        <strong>Free</strong> — 3 lifetime scored images, full DDI analysis, shareable rating card.<br>
+        <strong>Free</strong> — 3 lifetime photographs evaluated, full evaluation across 5 dimensions, shareable rating card.<br>
         <strong>Camera League</strong> — ₹200/month or ₹2,000/year. 4 shoots per month, full programme access, peer rating, Annual Excellence Award eligibility. Founding Member rate — locks in forever (new subscribers from 1 January 2027 pay ₹299).<br>
         <strong>Mobile League</strong> — ₹200/month or ₹2,000/year. 4 shoots per month. Same features as Camera, dedicated Mobile league. Same founding member rate.
       </div>
@@ -116,7 +126,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I switch from Mobile League to Camera League?</div>
-      <div class="faq-a">Yes — cancel your current subscription and subscribe to the other league. Your scored images, scores, and history are retained.</div>
+      <div class="faq-a">Yes — cancel your current subscription and subscribe to the other league. Your photographs evaluated, scores, and history are retained.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What is the refund policy?</div>
@@ -134,11 +144,11 @@
       <div class="sl-accordion-body">
       <div class="faq-item">
       <div class="faq-q">How do monthly programmes work?</div>
-      <div class="faq-a">Every scored image automatically enters the monthly programme for its genre and league. No separate action needed. Recipients are determined by DDI score at the end of each month.</div>
+      <div class="faq-a">Every photograph evaluated automatically enters the monthly programme for its genre and league. No separate action needed. Recipients are determined by your score at the end of each month.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What is the Annual Excellence Award?</div>
-      <div class="faq-a">The Annual Excellence Award (AEA) is Shutter League's year-round photography excellence programme. Your AEA score is the average of your top-6 DDI scores in your strongest genre — you participate in one genre track, the one where your scores are highest. A wildlife-only photographer qualifies on wildlife alone. In 2026 you need at least 3 active months with 1 or more scored images, and a minimum of 6 scored images in your qualifying genre. From 2027: 6 active months and 6 scored images in your qualifying genre. Camera League and Mobile League participate in separate tracks. Recognition and awards announced to qualifying participants.</div>
+      <div class="faq-a">The Annual Excellence Award (AEA) is Shutter League's year-round photography excellence programme. Your AEA score is the average of your top-6 your scores in your strongest genre — you participate in one genre track, the one where your scores are highest. A wildlife-only photographer qualifies on wildlife alone. In 2026 you need at least 3 active months with 1 or more photographs evaluated, and a minimum of 6 photographs evaluated in your qualifying genre. From 2027: 6 active months and 6 photographs evaluated in your qualifying genre. Camera League and Mobile League participate in separate tracks. Recognition and awards announced to qualifying participants.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">What is the Open Programme?</div>
@@ -205,11 +215,11 @@
       <div class="sl-accordion-body">
       <div class="faq-item">
       <div class="faq-q">What is peer rating?</div>
-      <div class="faq-a">Subscribers can rate other photographers' images anonymously. Rating others earns credits, which can be used to enter your own images into the peer rating pool. Peer ratings are shown alongside your DDI score but do not change it.</div>
+      <div class="faq-a">Subscribers can rate other photographers' images anonymously. Rating others earns credits, which can be used to enter your own images into the peer rating pool. Peer ratings are shown alongside your your score but do not change it.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Can peer ratings affect my DDI score?</div>
-      <div class="faq-a">No. Your DDI score is set by the Apex DDI Engine and is protected. If peer ratings diverge significantly from your DDI score, a jury review is triggered automatically. Your DDI score is never reduced by peer ratings.</div>
+      <div class="faq-q">Can peer ratings affect my your score?</div>
+      <div class="faq-a">No. Your your score is set by the Apex Engine and is protected. If peer ratings diverge significantly from your your score, a jury review is triggered automatically. Your your score is never reduced by peer ratings.</div>
     </div>
         </div>
     </details>
