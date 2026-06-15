@@ -1006,12 +1006,16 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div>
         <span class="sl-mentor-alert__label">Expert review ready</span>
         <span class="sl-mentor-alert__txt">
-          <strong>{{ review.mentor_name or 'Your mentor' }}</strong> reviewed
-          <strong>{{ review.asset_name or 'your photograph' }}</strong>
-          {% if review.snippet %} — {{ review.snippet }}{% endif %}
+          <strong>{{ review.get('mentor_name') or 'Your mentor' }}</strong> reviewed
+          <strong>{{ review.get('asset_name') or 'your photograph' }}</strong>
+          {% set _snippet = review.get('review_text', '') %}
+          {% if _snippet %} — {{ _snippet[:80] }}{% if _snippet|length > 80 %}…{% endif %}{% endif %}
         </span>
       </div>
-      <a href="{{ url_for('image_detail', image_id=review.image_id) }}" class="sl-btn-read">Read →</a>
+      {% set _mid = review.get('id') %}
+      {% if _mid %}
+      <a href="{{ url_for('mentors') }}" class="sl-btn-read">Read →</a>
+      {% endif %}
     </div>
     {% endfor %}
   {% endif %}
