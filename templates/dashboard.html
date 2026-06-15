@@ -1401,15 +1401,27 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
   {# ── Location widget (compact) ── #}
   {% if location_data_json %}
-  {% set _loc_data = location_data_json | from_json if location_data_json else {} %}
-  {% if _loc_data.city %}
+  {% set _loc_city = '' %}
+  {% set _loc_state = '' %}
+  {% if location_data_json and location_data_json != '{}' and location_data_json != 'null' %}
   <div class="sl-loc-widget">
     <span class="sl-loc-widget__pin">📍</span>
     <div class="sl-loc-widget__txt">
-      Shooting in <span class="sl-loc-widget__city">{{ _loc_data.city }}, {{ _loc_data.state or _loc_data.country }}</span>
+      Shooting in <span class="sl-loc-widget__city" id="sl-loc-city-display">your current location</span>
     </div>
     <a href="{{ url_for('profile') }}" class="sl-loc-widget__change">Change</a>
   </div>
+  <script>
+  (function() {
+    try {
+      var _d = JSON.parse({{ location_data_json | tojson }});
+      var city = _d.city || '';
+      var state = _d.state || _d.country || '';
+      var el = document.getElementById('sl-loc-city-display');
+      if (el && city) el.textContent = city + (state ? ', ' + state : '');
+    } catch(e) {}
+  })();
+  </script>
   {% endif %}
   {% endif %}
 
