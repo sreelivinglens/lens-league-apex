@@ -62,7 +62,6 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 }
 .sl-today__left  { display: contents; } /* passthrough on mobile */
 .sl-today__right { display: none; }     /* hidden on mobile */
-.sl-desktop-hero { display: none; }     /* hidden on mobile */
 .sl-desktop-right-section { display: none; } /* hidden on mobile */
 .sl-desktop-section-label { display: none; } /* hidden on mobile */
 
@@ -1048,60 +1047,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     gap: 16px;
     min-height: calc(100vh - 64px);
   }
-  /* Hero image on desktop */
-  .sl-desktop-hero {
-    display: block;
-    position: relative;
-    border-radius: var(--r-hero);
-    overflow: hidden;
-    background: #0D0D0B;
-    aspect-ratio: 16/9;
-    max-height: 320px;
-  }
-  /* Show hero only on desktop */
-  .sl-desktop-hero { display: block !important; }
-  .sl-desktop-hero img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-  }
-  .sl-desktop-hero__badge {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-    padding: 28px 20px 16px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .sl-desktop-hero__score {
-    font-size: 48px;
-    font-weight: 800;
-    color: #F5C518;
-    line-height: 1;
-  }
-  .sl-desktop-hero__tier {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.70);
-    margin-top: 4px;
-  }
-  .sl-desktop-hero__by {
-    font-size: 13px;
-    color: rgba(255,255,255,0.55);
-    margin-top: 2px;
-  }
-  .sl-desktop-hero__genre {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .10em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-    text-align: right;
-  }
+  /* sl-desktop-hero removed — replaced by full-width sl-dash-hero-banner */
   /* Assignment title larger on desktop */
   .sl-assignment__title { font-size: 44px; }
   /* Sections always expanded on desktop right column — no collapse needed */
@@ -1324,24 +1270,7 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
 
-  {# ── Desktop hero image — shown in left column on desktop only ── #}
-  {% set _hero_img = carousel_images[0] if carousel_images else none %}
-  {% if _hero_img and _hero_img.thumb_url %}
-  <div class="sl-desktop-hero" style="display:none;">
-    <img src="{{ _hero_img.thumb_url }}"
-         alt="{{ _hero_img.genre or 'Photography' }}"
-         loading="lazy"
-         onerror="this.parentElement.style.display='none'">
-    <div class="sl-desktop-hero__badge">
-      <div>
-        <div class="sl-desktop-hero__score">{{ '%.2f'|format(_hero_img.score) }}</div>
-        <div class="sl-desktop-hero__tier">{{ _hero_img.tier or '' }}</div>
-        <div class="sl-desktop-hero__by">by {{ _hero_img.photographer_name or '' }}</div>
-      </div>
-      <div class="sl-desktop-hero__genre">{{ _hero_img.genre or '' }}</div>
-    </div>
-  </div>
-  {% endif %}
+{# Desktop hero removed — full-width sl-dash-hero-banner above grid replaces it #}
 
   {# ══════════════════════════════════════════
      FIRST-LOGIN EXPERIENCE
