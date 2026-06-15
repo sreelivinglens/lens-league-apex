@@ -1,6 +1,12 @@
-{# SL-VERSION: 81.0 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends) #}
+{# SL-VERSION: 81.1 (Session 81 — desktop 2-col layout, hero image + score badge, sparkline trends, meta fixes, mobile hero banner) #}
 {% extends "base.html" %}
 {% block title %}Today — {{ platform_name }}{% endblock %}
+{% block meta_description %}Your personalised photography brief, daily assignment, and standing on Shutter League.{% endblock %}
+{% block canonical %}https://shutterleague.com/dashboard{% endblock %}
+{% block og_title %}Shutter League — Your Dashboard{% endblock %}
+{% block og_description %}Your personalised photography coaching brief, daily assignment, and standing.{% endblock %}
+{% block og_url %}https://shutterleague.com/dashboard{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -110,8 +116,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 /* Two-column layout: text left, image right */
 .sl-assignment__body {
+  padding: 0;
 }
-
 
 .sl-assignment__left {
   padding: 12px 16px 10px;
@@ -140,6 +146,61 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 .sl-assignment__img-placeholder {
   display: none;
+}
+
+/* ── Mobile hero banner — compact strip above assignment ── */
+.sl-mobile-hero-banner {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: #0D0D0B;
+  flex-shrink: 0;
+}
+.sl-mobile-hero-banner img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sl-mobile-hero-banner__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.10) 60%, transparent 100%);
+}
+.sl-mobile-hero-banner__badge {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.sl-mobile-hero-banner__score {
+  font-size: 26px;
+  font-weight: 800;
+  color: #F5C518;
+  line-height: 1;
+  display: block;
+}
+.sl-mobile-hero-banner__tier {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  display: block;
+  margin-top: 1px;
+}
+.sl-mobile-hero-banner__by {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  text-align: right;
+}
+/* Hide mobile banner on desktop (desktop has full hero) */
+@media (min-width: 1025px) {
+  .sl-mobile-hero-banner { display: none !important; }
 }
 
 /* Meta pills row */
@@ -453,7 +514,8 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
    (Standing · Weekly · Location · Points)
    Below the fold — available, not blocking
 ══════════════════════════════════════════ */
-.sl-sections {
+.sl-sections,
+.sl-mobile-sections {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -902,6 +964,9 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 /* ══════════════════════════════════════════
    LOCATION WIDGET (inline update form)
 ══════════════════════════════════════════ */
+@media (min-width: 1025px) {
+  .sl-loc-widget { display: none !important; }
+}
 .sl-loc-widget {
   background: var(--sl-card);
   border: 1px solid var(--sl-border);
@@ -1094,8 +1159,12 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   .sl-mobile-sections { display: none; }
   /* Hide mobile bottom nav on desktop */
   .sl-bottom-nav { display: none !important; }
-  /* Desktop right column visible */
+  /* Desktop right column visible — override mobile display:none on children */
   .sl-today__right { display: flex; }
+  .sl-desktop-right-section { display: block !important; }
+  .sl-desktop-section-label { display: block !important; }
+  /* Remove mobile max-width constraint on inner */
+  .sl-today__inner { max-width: 1200px !important; }
 }
 
 
@@ -1227,9 +1296,28 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
     <div class="sl-greeting__sub">{% if free_tier and stats.total == 0 %}Welcome to Shutter League.{% else %}Here's your photography brief for today.{% endif %}</div>
   </div>
 
-  {# ── Desktop hero image — highest-scoring public photo with score + tier + photographer name ── #}
-  {# Hidden on mobile (display:none in default CSS, block only at min-width:1025px) #}
+  {# ── Hero image — shown on both mobile (compact banner) and desktop (full 16:9) ── #}
   {% set _hero_img = carousel_images[0] if carousel_images else none %}
+
+  {# Mobile hero banner — compact strip, only for returning users with images #}
+  {% if _hero_img and _hero_img.thumb_url and not (free_tier and stats.total == 0) %}
+  <div class="sl-mobile-hero-banner">
+    <img src="{{ _hero_img.thumb_url }}"
+         alt="{{ _hero_img.genre or 'Photography' }}"
+         loading="lazy"
+         onerror="this.parentElement.style.display='none'">
+    <div class="sl-mobile-hero-banner__overlay"></div>
+    <div class="sl-mobile-hero-banner__badge">
+      <div>
+        <span class="sl-mobile-hero-banner__score">{{ '%.2f'|format(_hero_img.score) }}</span>
+        <span class="sl-mobile-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
+      </div>
+      <span class="sl-mobile-hero-banner__by">by {{ _hero_img.author.username if _hero_img.author else (_hero_img.photographer_name or '') }}</span>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Desktop hero image — same image, full 16:9 in left column ── #}
   {% if _hero_img and _hero_img.thumb_url %}
   <div class="sl-desktop-hero" style="display:none;">
     <img src="{{ _hero_img.thumb_url }}"
