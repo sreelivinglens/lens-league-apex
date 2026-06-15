@@ -663,6 +663,41 @@
   </div>
   {% endif %}
 
+  {# ── MISSION CONTEXT — shown if image was uploaded against a mission ── #}
+  {% if image.mission_dimension %}
+  {% set _dim_mobile = {'dod':'Technical','dm':'Timing','aq':'Visual Impact','wonder':'Wonder','disruption':'Originality'} %}
+  {% set _dim_score_map = {'dod':image.dod_score,'dm':image.dm_score,'aq':image.aq_score,'wonder':image.wonder_score,'disruption':image.disruption_score} %}
+  {% set _mission_score = _dim_score_map.get(image.mission_dimension) %}
+  {% set _mission_label = _dim_mobile.get(image.mission_dimension, image.mission_dimension) %}
+  {% if _mission_score and _mission_score >= 5.0 %}
+  <div style="background:#EAF3DE;border:1.5px solid #5A9E3A;border-radius:14px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;">
+    <span style="font-size:22px;flex-shrink:0">✓</span>
+    <div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2D6B1A;margin-bottom:4px">Mission complete</div>
+      <div style="font-size:16px;color:#1A1A18;line-height:1.5">
+        Today's mission: <strong>{{ image.mission_title or 'Today\'s Assignment' }}</strong><br>
+        Your {{ _mission_label }} scored <strong>{{ _mission_score }}</strong> — mission followed. <strong>+10 bonus points awarded.</strong>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="background:#FFF8DC;border:1.5px solid #F4C20D;border-radius:14px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;">
+    <span style="font-size:22px;flex-shrink:0">◷</span>
+    <div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#B8820A;margin-bottom:4px">Mission open</div>
+      <div style="font-size:16px;color:#1A1A18;line-height:1.5">
+        Today's mission: <strong>{{ image.mission_title or 'Today\'s Assignment' }}</strong><br>
+        {% if _mission_score %}
+        Your {{ _mission_label }} scored {{ _mission_score }} this time. Keep working on it — the mission stays open.
+        {% else %}
+        This photograph wasn't evaluated against the mission dimension. Upload a frame focused on <strong>{{ _mission_label }}</strong> to complete the mission.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
   {# ── DDI DIMENSIONS ────────────────────────────────────────────── #}
   {% if image.dod_score or image.disruption_score or image.dm_score or image.wonder_score or image.aq_score %}
   <div style="background:var(--surface-1); border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:14px;">
