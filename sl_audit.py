@@ -374,7 +374,7 @@ def audit_html(filepath):
         'science.html', 'how_it_works.html', 'learning.html', 'bow_info.html',
         'contest_rules.html', 'terms.html', 'privacy.html', 'refund.html',
         'leaderboard.html', 'poty.html', 'mentors.html', 'recent_work.html',
-        'base.html',
+        'my_gallery.html', 'base.html',
     ])
     # Mobile-first card-based pages: hero checks, Inter !important, justify,
     # 56px padding, and display-type line-heights are all false positives.
