@@ -2,6 +2,10 @@
 {% block title %}{{ image.asset_name }} · {{ image.tier }} · Shutter League{% endblock %}
 
 {% block extra_head %}
+<!-- noindex: share pages are for social sharing, not search indexing -->
+<meta name="robots" content="noindex, nofollow">
+<!-- canonical: point to the image detail page as the authoritative URL -->
+<link rel="canonical" href="{{ request.host_url }}image/{{ image.id }}">
 <!-- Open Graph -->
 <meta property="og:title"       content="{{ image.asset_name }} · {{ image.tier }} · Shutter League">
 <meta property="og:description" content="Rated by the Apex DDI Engine · {{ image.genre }} · {{ image.archetype }}">
