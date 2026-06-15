@@ -1284,33 +1284,37 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
   {# ══════════════════════════════════════════
      TODAY'S MASTER
   ══════════════════════════════════════════ #}
-  {# Master map — name · description · representative style image · example work URL
-     Images: Unsplash photos that reflect each master's visual language
-     URLs: Google image search for each master's photography — shows actual work
+  {# Master map — name · description · thumbnail · example image URL · example caption
+     Thumbnail: small Unsplash photo representing the master's visual style
+     Example: larger Unsplash photo showing the technique they're known for
+     Caption: what to look for in the example
   #}
   {% set _master_map = {
     'dod':        ('Fan Ho',               'Master of light, shadow and geometric composition.',
-                   'https://images.unsplash.com/photo-1536244636800-a3f74db0f3cf?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Fan+Ho+photography'),
+                   'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=200&q=80',
+                   'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=800&q=85',
+                   'Fan Ho: The subject is lit. The geometry is deliberate. Every shadow earns its place.'),
     'dm':         ('Henri Cartier-Bresson','Inventor of the decisive moment.',
-                   'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Henri+Cartier-Bresson+photography'),
+                   'https://images.unsplash.com/photo-1473177104440-ffee2f376098?w=200&q=80',
+                   'https://images.unsplash.com/photo-1473177104440-ffee2f376098?w=800&q=85',
+                   'Cartier-Bresson: The geometry and the gesture peak at the same instant. One frame, no crop.'),
     'aq':         ('Ansel Adams',          'Made light itself the subject.',
                    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Ansel+Adams+photography'),
+                   'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=85',
+                   'Adams: Light at its most precise hour. The mountain is secondary. The light is everything.'),
     'wonder':     ('Vivian Maier',         'Found the extraordinary in the completely ordinary.',
                    'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Vivian+Maier+photography'),
+                   'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=85',
+                   'Maier: She looked at what others walked past. The ordinary frame — seen differently.'),
     'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',
-                   'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Daido+Moriyama+photography')
+                   'https://images.unsplash.com/photo-1540350394557-8d14678e7f91?w=200&q=80',
+                   'https://images.unsplash.com/photo-1540350394557-8d14678e7f91?w=800&q=85',
+                   'Moriyama: Grain, blur, and contrast pushed to the limit. The discomfort is the point.')
   } %}
   {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.',
                    'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80',
-                   'https://www.google.com/search?tbm=isch&q=Raghu+Rai+photography')) %}
-
-  {# Master example URL — index 3 of the tuple #}
-  {% set _master_url = _master[3] %}
+                   'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=85',
+                   'Raghu Rai: Presence, timing, and trust. He was always already inside the moment.')) %}
 
   <div class="sl-master">
     <img src="{{ _master[2] }}"
@@ -1321,7 +1325,26 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
       <div class="sl-master__eyebrow">Today's Master</div>
       <div class="sl-master__name">{{ _master[0] }}</div>
       <div class="sl-master__desc">{{ _master[1] }}</div>
-      <a href="{{ _master_url }}" target="_blank" rel="noopener" class="sl-btn-example">View example →</a>
+      <button onclick="slShowMasterExample('{{ _master[3] }}', '{{ _master[4] }}', '{{ _master[0] }}')"
+              class="sl-btn-example">View example →</button>
+    </div>
+  </div>
+
+  {# Master example modal — shown inline, no external navigation #}
+  <div id="sl-master-modal"
+       style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1100;
+              flex-direction:column; align-items:center; justify-content:center; padding:20px;"
+       onclick="slCloseMasterExample()">
+    <div style="max-width:420px; width:100%;" onclick="event.stopPropagation()">
+      <button onclick="slCloseMasterExample()"
+              style="background:none; border:none; color:white; font-size:28px; cursor:pointer;
+                     float:right; line-height:1; padding:0 0 12px 12px; opacity:0.7;">✕</button>
+      <div style="clear:both;"></div>
+      <img id="sl-master-modal-img" src="" alt=""
+           style="width:100%; border-radius:12px; display:block; max-height:65vh; object-fit:cover;">
+      <p id="sl-master-modal-caption"
+         style="color:rgba(255,255,255,0.85); font-size:14px; line-height:1.65;
+                margin:14px 0 0; font-style:italic; text-align:center;"></p>
     </div>
   </div>
 
@@ -1606,6 +1629,28 @@ input, select, textarea { font-size: 16px !important; } /* prevent iOS Safari au
 
 {% block extra_js %}
 <script>
+// ── Master example modal ──
+function slShowMasterExample(imgUrl, caption, name) {
+  var modal = document.getElementById('sl-master-modal');
+  var img   = document.getElementById('sl-master-modal-img');
+  var cap   = document.getElementById('sl-master-modal-caption');
+  if (!modal) return;
+  img.src = imgUrl;
+  img.alt = name;
+  cap.textContent = caption;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function slCloseMasterExample() {
+  var modal = document.getElementById('sl-master-modal');
+  if (modal) { modal.style.display = 'none'; }
+  document.body.style.overflow = '';
+}
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') slCloseMasterExample();
+});
+
 // ── Skip Mission — collapses assignment card to a compact pill, scrolls to upload banner ──
 function slSkipMission() {
   var card = document.getElementById('sl-mission-card');
