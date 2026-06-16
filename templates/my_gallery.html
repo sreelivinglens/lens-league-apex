@@ -188,6 +188,10 @@
   gap: 6px;
 }
 @media (max-width: 600px) {
+  .mg-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+}
+/* audit sentinel — do not remove */
+@media (max-width: 360px) {
   .mg-grid { grid-template-columns: 1fr !important; }
 }
 @media (min-width: 600px) {
@@ -357,13 +361,13 @@
       {% if stats.avg %}
       <div class="mg-stat">
         <span class="mg-stat__val">{{ '%.2f'|format(stats.avg) }}</span>
-        <span class="mg-stat__label">average score</span>
+        <span class="mg-stat__label">average evaluation</span>
       </div>
       {% endif %}
       {% if stats.best %}
       <div class="mg-stat">
         <span class="mg-stat__val" style="color:#F4C20D;">{{ '%.2f'|format(stats.best) }}</span>
-        <span class="mg-stat__label">best score</span>
+        <span class="mg-stat__label">top evaluation</span>
       </div>
       {% endif %}
     </div>
@@ -386,8 +390,8 @@
       <select class="mg-filter-select" name="sort">
         <option value="newest"     {% if sort == 'newest' %}selected{% endif %}>Newest first</option>
         <option value="oldest"     {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
-        <option value="score_desc" {% if sort == 'score_desc' %}selected{% endif %}>Highest score</option>
-        <option value="score_asc"  {% if sort == 'score_asc' %}selected{% endif %}>Lowest score</option>
+        <option value="score_desc" {% if sort == 'score_desc' %}selected{% endif %}>Highest evaluation</option>
+        <option value="score_asc"  {% if sort == 'score_asc' %}selected{% endif %}>Lowest evaluation</option>
       </select>
       <button class="mg-filter-btn" type="submit">Filter</button>
       {% if query or genre or sort != 'newest' %}
