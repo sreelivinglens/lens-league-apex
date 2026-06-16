@@ -142,7 +142,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   gap: 2px;
 }
 .sl-hero-score-badge__score {
-  font-size: 52px;
+  font-size: 26px;
   font-weight: 800;
   color: #F5C518;
   line-height: 1;
@@ -163,13 +163,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 /* Score badge on mobile — embedded on photo bottom left */
 @media (max-width: 768px) {
+  .sl-hero {
+    margin-top: 8px;
+  }
   .sl-hero-score-badge {
     display: flex;
     bottom: 16px;
     left: 16px;
   }
   .sl-hero-score-badge__score {
-    font-size: 38px;
+    font-size: 22px;
   }
 }
 
