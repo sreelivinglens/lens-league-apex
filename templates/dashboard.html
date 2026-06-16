@@ -57,7 +57,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   min-height: 100dvh;
 }
 @media (max-width: 768px) {
-  .sl-today { padding-top: 8px; }
+  .sl-today { padding-top: 0; }
+  .sl-dash-hero-banner { margin-top: 8px; }
 }
 
 /* ── Page container ── */
@@ -1154,9 +1155,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         </div>
         <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
           {% if review.get('image_id') %}
-          <a href="{{ url_for('image_detail', image_id=review.get('image_id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">Read full review &#x2192;</a>
+          <a href="{{ url_for('dismiss_review', session_id=review.get('id'), image_id=review.get('image_id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">Read full review &#x2192;</a>
           {% else %}
-          <a href="{{ url_for('mentors') }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">View &#x2192;</a>
+          <a href="{{ url_for('dismiss_review', session_id=review.get('id')) }}" style="background:var(--sl-yellow); color:var(--sl-text); font-size:14px; font-weight:700; padding:9px 18px; border-radius:10px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center;">View &#x2192;</a>
           {% endif %}
           <button onclick="slToggleMentor('{{ _rid }}')" style="background:none; border:none; cursor:pointer; color:var(--sl-text-light); font-size:14px; font-family:inherit; padding:9px 0; min-height:44px;">Close &#x2191;</button>
         </div>
