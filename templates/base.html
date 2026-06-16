@@ -94,11 +94,14 @@ body {
   font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.6;
+  min-height: 100dvh;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
@@ -109,8 +112,9 @@ table { max-width: none; }
 
 /* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
 .sl-bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
   height: 68px;
   background: #1A1A18;
   border-top: 1px solid rgba(245,197,24,0.20);
@@ -156,8 +160,8 @@ table { max-width: none; }
 }
 .sl-bottom-more-menu {
   display: none;
-  position: fixed;
-  bottom: 76px;
+  position: absolute;
+  bottom: 100%;
   right: 8px;
   background: #1A1A18;
   border: 1px solid rgba(245,197,24,0.25);
@@ -217,12 +221,9 @@ table { max-width: none; }
   background: #D9A900;
   transform: scale(1.05);
 }
-/* Add padding so page content clears the tab bar */
-body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
-  body { padding-bottom: 0; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
@@ -520,6 +521,8 @@ nav {
 
 /* ── Main Layout ─────────────────────────────────────────────────────────── */
 main {
+  flex: 1;
+  width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 40px var(--page-pad);
@@ -1136,32 +1139,24 @@ img {
   {% block content %}{% endblock %}
 </main>
 
-{# ── Mobile bottom tab bar — placed after main so position:fixed works on iOS Safari ── #}
+{# ── Mobile bottom tab bar — placed after main so sticky bottom works ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
       <span class="sl-nav-item__icon">⌂</span>
-      <span>Home</span>
+      <span>Today</span>
     </a>
     <a href="{{ url_for('my_gallery') }}" class="sl-nav-item {% if request.endpoint == 'my_gallery' %}active{% endif %}">
       <span class="sl-nav-item__icon">⊞</span>
-      <span>Gallery</span>
+      <span>My Gallery</span>
     </a>
     <a href="{{ url_for('upload') }}" class="sl-nav-fab">
       <div class="sl-nav-fab__circle">+</div>
       <span>Upload</span>
     </a>
-    <a href="{{ url_for('leaderboard') }}" class="sl-nav-item {% if request.endpoint in ['leaderboard','weekly_challenge','poty'] %}active{% endif %}">
+    <a href="{{ url_for('recent_work') }}" class="sl-nav-item {% if request.endpoint == 'recent_work' %}active{% endif %}">
       <span class="sl-nav-item__icon">◈</span>
-      <span>League</span>
-    </a>
-    <a href="{{ url_for('profile') }}" class="sl-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
-      <span class="sl-nav-item__icon">◉</span>
-      <span>Profile</span>
-    </a>
-    <a href="{{ url_for('logout') }}" class="sl-nav-item" style="color:rgba(255,80,60,0.70);" aria-label="Log out">
-      <span class="sl-nav-item__icon" style="font-size:20px;">⎋</span>
-      <span>Log out</span>
+      <span>Recent</span>
     </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
       <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
@@ -1169,19 +1164,20 @@ img {
         <span>More</span>
       </button>
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <a href="{{ url_for('dashboard') }}" onclick="closeBottomMore()">Home</a>
+        <a href="{{ url_for('dashboard') }}" onclick="closeBottomMore()">Today</a>
         <a href="{{ url_for('my_gallery') }}" onclick="closeBottomMore()">My Gallery</a>
-        <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+        <a href="{{ url_for('upload') }}" onclick="closeBottomMore()">Upload</a>
         <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
         <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
         <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
         <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
-        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
         <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
+        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
+        <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
         <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
         <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
         <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
         <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
         <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
       </div>
@@ -1191,17 +1187,17 @@ img {
       <span class="sl-nav-item__icon">⌂</span>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('how_it_works') }}" class="sl-nav-item {% if request.endpoint == 'how_it_works' %}active{% endif %}">
-      <span class="sl-nav-item__icon">◻</span>
-      <span>How It Works</span>
+    <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
+      <span class="sl-nav-item__icon">◆</span>
+      <span>Mentors</span>
     </a>
     <a href="{{ url_for('login') }}?next={{ url_for('upload') }}" class="sl-nav-fab">
       <div class="sl-nav-fab__circle">+</div>
       <span>Upload</span>
     </a>
-    <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
-      <span class="sl-nav-item__icon">◆</span>
-      <span>Mentors</span>
+    <a href="{{ url_for('recent_work') }}" class="sl-nav-item {% if request.endpoint == 'recent_work' %}active{% endif %}">
+      <span class="sl-nav-item__icon">◈</span>
+      <span>Recent</span>
     </a>
     <a href="{{ url_for('login') }}" class="sl-nav-item {% if request.endpoint == 'login' %}active{% endif %}">
       <span class="sl-nav-item__icon">◉</span>
@@ -1216,14 +1212,12 @@ img {
         <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
         <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
         <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
         <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
         <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
         <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
-        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
         <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
         <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-        <a href="{{ url_for('login') }}" onclick="closeBottomMore()">Log In</a>
+        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
         <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
       </div>
     </div>
