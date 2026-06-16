@@ -133,11 +133,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-hero-micro svg { flex-shrink: 0; }
 
-/* Score badge — bottom left of hero photo */
+/* Score badge — bottom right on desktop, bottom left on mobile */
 .sl-hero-score-badge {
   position: absolute;
   bottom: 20px;
-  left: clamp(16px, 4vw, 48px);
+  right: clamp(16px, 4vw, 48px);
   z-index: 5;
   display: flex;
   flex-direction: row;
