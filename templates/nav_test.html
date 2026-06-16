@@ -2,135 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nav Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+<title>Nav Test — ShutterLeague</title>
 <style>
-/* THE FIX: no overflow-x:hidden on html or body */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  font-family: -apple-system, 'Inter', sans-serif;
-  background: #F8F7F3;
-  min-height: 100vh;
-  padding-bottom: 80px;
-}
-
-/* Page content — just a tall block to prove scrolling works */
-.page-content {
-  padding: 24px 20px;
-}
-.page-content h1 {
-  font-size: 24px;
-  font-weight: 800;
-  color: #151515;
-  margin-bottom: 8px;
-}
-.page-content p {
-  font-size: 16px;
-  color: #6B6B6B;
-  line-height: 1.6;
-  margin-bottom: 16px;
-}
-.test-block {
-  background: #fff;
-  border: 1px solid #E8E5DD;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 12px;
-  font-size: 15px;
-  color: #151515;
-}
-
-/* THE NAV — position:fixed bottom:0 */
-.sl-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 68px;
-  background: #1A1A18;
-  border-top: 2px solid #F4C20D;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  z-index: 9999;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.sl-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  color: rgba(255,255,255,0.4);
-  font-size: 11px;
-  font-weight: 500;
-  min-width: 60px;
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.sl-tab.active { color: #F4C20D; }
-.sl-tab-icon { font-size: 22px; line-height: 1; }
-.sl-fab-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  color: rgba(255,255,255,0.5);
-  font-size: 11px;
-  font-weight: 700;
-}
-.sl-fab {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #F4C20D;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  font-weight: 700;
-  color: #1A1A18;
-  margin-top: -18px;
-  box-shadow: 0 -2px 20px rgba(244,194,13,0.6);
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,sans-serif;background:#F8F7F3;min-height:200vh;padding-bottom:90px}
+h1{font-size:22px;font-weight:800;color:#151515;padding:24px 20px 8px}
+p{font-size:15px;color:#6B6B6B;padding:0 20px 16px;line-height:1.6}
+.block{background:#fff;border:1px solid #E8E5DD;border-radius:12px;margin:0 16px 10px;padding:16px;font-size:14px;color:#151515}
+.success{background:#F4C20D;color:#1A1A18;font-weight:800}
+nav{position:fixed;bottom:0;left:0;right:0;height:68px;background:#1A1A18;border-top:3px solid #F4C20D;display:flex;align-items:center;justify-content:space-around;z-index:9999}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.45);font-size:11px;text-decoration:none;min-width:60px}
+.tab.on{color:#F4C20D}
+.icon{font-size:22px;line-height:1}
+.fab-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);font-size:11px}
+.fab{width:46px;height:46px;border-radius:50%;background:#F4C20D;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1A1A18;font-weight:800;margin-top:-14px}
 </style>
 </head>
 <body>
+<h1>Nav position test</h1>
+<p>The dark bar with the gold top border should be FIXED to the BOTTOM of your screen. Scroll down — it should stay at the bottom throughout.</p>
+<div class="block">Scroll down ↓</div>
+<div class="block">Keep scrolling ↓</div>
+<div class="block">Almost there ↓</div>
+<div class="block">Nearly ↓</div>
+<div class="block">Last block ↓</div>
+<div class="block success">✓ Nav should STILL be at the bottom of your screen right now.</div>
 
-<div class="page-content">
-  <h1>Nav Position Test</h1>
-  <p>If the fix works, the dark gold-bordered nav bar is pinned to the BOTTOM of your screen. Scroll down to confirm it stays fixed.</p>
-
-  <div class="test-block">Block 1 — scroll down</div>
-  <div class="test-block">Block 2 — nav should stay at bottom</div>
-  <div class="test-block">Block 3 — not moving</div>
-  <div class="test-block">Block 4 — still at bottom</div>
-  <div class="test-block">Block 5 — nav is fixed</div>
-  <div class="test-block">Block 6 — bottom of page</div>
-  <div class="test-block" style="background:#F4C20D;color:#1A1A18;font-weight:700;">
-    ✓ If nav is at bottom on your screen — the fix works. Deploy to base.html.
-  </div>
-</div>
-
-<!-- NAV AT BOTTOM -->
-<nav class="sl-bottom-nav">
-  <a href="#" class="sl-tab active">
-    <span class="sl-tab-icon">⌂</span>
-    <span>Today</span>
-  </a>
-  <div class="sl-fab-wrap">
-    <div class="sl-fab">+</div>
-    <span>Upload</span>
-  </div>
-  <a href="#" class="sl-tab">
-    <span class="sl-tab-icon">⊞</span>
-    <span>My Work</span>
-  </a>
-  <a href="#" class="sl-tab">
-    <span class="sl-tab-icon">☰</span>
-    <span>More</span>
-  </a>
+<nav>
+  <a href="#" class="tab on"><span class="icon">⌂</span><span>Today</span></a>
+  <div class="fab-wrap"><div class="fab">+</div><span>Upload</span></div>
+  <a href="#" class="tab"><span class="icon">⊞</span><span>My Work</span></a>
+  <a href="#" class="tab"><span class="icon">☰</span><span>More</span></a>
 </nav>
-
 </body>
 </html>
