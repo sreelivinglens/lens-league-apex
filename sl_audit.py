@@ -1443,6 +1443,16 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False):
         'mission_detail.html', 'first_login.html',
     ])
 
+    # ── 0. CSS BRACE BALANCE — catches unclosed media queries / rules ─────────
+    import re as _re
+    _style_blocks = _re.findall(r'<style[^>]*>(.*?)</style>', content, _re.DOTALL)
+    for _i, _css in enumerate(_style_blocks):
+        _opens  = _css.count('{')
+        _closes = _css.count('}')
+        if _opens != _closes:
+            _fail(f'CSS brace mismatch in <style> block {_i+1}: {_opens} open vs {_closes} close — unclosed media query or rule will break all CSS below it')
+            fails += 1
+
     # ── 1. KYC — scorecard-specific terms ────────────────────────────────────
     _section('DELIVERY STANDARD 1/5 — KYC compliance (scorecard copy)')
     # Strip Jinja comments and logic before checking
