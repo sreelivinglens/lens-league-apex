@@ -156,18 +156,18 @@ table { max-width: none; }
 }
 .sl-bottom-more-menu {
   display: none;
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
+  position: fixed;
+  bottom: 76px;
+  right: 8px;
   background: #1A1A18;
-  border: 1px solid rgba(245,197,24,0.20);
-  border-radius: 12px;
-  padding: 6px;
-  min-width: 210px;
-  max-height: 60dvh;
+  border: 1px solid rgba(245,197,24,0.25);
+  border-radius: 14px;
+  padding: 8px;
+  min-width: 220px;
+  max-height: 65dvh;
   overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 -4px 32px rgba(0,0,0,0.60);
+  z-index: 1999;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.70);
   -webkit-overflow-scrolling: touch;
 }
 .sl-bottom-more-menu.open { display: block; }
@@ -209,8 +209,8 @@ table { max-width: none; }
   font-size: 24px;
   font-weight: 700;
   color: #1A1A18;
-  box-shadow: 0 4px 16px rgba(244,194,13,.45);
-  margin-top: -16px;
+  box-shadow: 0 -2px 16px rgba(244,194,13,.50);
+  margin-top: -10px;
   transition: background .2s, transform .2s;
 }
 .sl-bottom-nav .sl-nav-fab:hover .sl-nav-fab__circle {
@@ -1158,6 +1158,10 @@ img {
     <a href="{{ url_for('profile') }}" class="sl-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
       <span class="sl-nav-item__icon">◉</span>
       <span>Profile</span>
+    </a>
+    <a href="{{ url_for('logout') }}" class="sl-nav-item" style="color:rgba(255,80,60,0.70);" aria-label="Log out">
+      <span class="sl-nav-item__icon" style="font-size:20px;">⎋</span>
+      <span>Log out</span>
     </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
       <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
