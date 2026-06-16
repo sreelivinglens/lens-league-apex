@@ -1166,6 +1166,9 @@ with app.app_context():
             db.session.execute(db.text(
                 "ALTER TABLE seasonal_calendar ADD COLUMN IF NOT EXISTS date_end DATE"
             ))
+            db.session.execute(db.text(
+                "ALTER TABLE mentor_sessions ADD COLUMN IF NOT EXISTS dashboard_dismissed BOOLEAN DEFAULT FALSE"
+            ))
             # Item D — discovery queue: (city, genre) combos awaiting auto-discovery.
             # priority=TRUE for newly-detected/changed cities (item B feed) — these
             # get processed before the general weekly sweep.
@@ -3012,6 +3015,7 @@ def dashboard():
                 JOIN mentor_profiles mp ON mp.slug = ms.mentor_slug
                 WHERE ms.user_id = :uid
                   AND ms.status  = 'reviewed'
+                  AND ms.dashboard_dismissed IS NOT TRUE
                 ORDER BY ms.reviewed_at DESC
                 LIMIT 5
             """), {'uid': current_user.id}).fetchall()
@@ -8899,6 +8903,28 @@ def mentor_required(f):
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated
+
+
+@app.route('/dismiss-review/<int:session_id>')
+@login_required
+def dismiss_review(session_id):
+    """Mark a mentor review alert as dismissed on the dashboard.
+    Called when user clicks 'Read full review' — clears the alert on return.
+    """
+    try:
+        db.session.execute(db.text("""
+            UPDATE mentor_sessions
+            SET dashboard_dismissed = TRUE
+            WHERE id = :sid AND user_id = :uid
+        """), {'sid': session_id, 'uid': current_user.id})
+        db.session.commit()
+    except Exception as _e:
+        app.logger.warning(f'[dismiss_review] {_e}')
+        db.session.rollback()
+    image_id = request.args.get('image_id', type=int)
+    if image_id:
+        return redirect(url_for('image_detail', image_id=image_id))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/mentor/dashboard')
