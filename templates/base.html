@@ -147,6 +147,28 @@ table { max-width: none; }
   font-family: inherit;
 }
 .sl-bottom-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
+/* Logo tab — replaces Home on logged-out nav */
+.sl-nav-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.sl-nav-logo__text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
 /* More dropdown menu — pops UP from the tab bar */
 .sl-nav-more-wrap {
   position: relative;
@@ -1198,9 +1220,8 @@ img {
       </div>
     </div>
   {% else %}
-    <a href="{{ url_for('index') }}" class="sl-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
-      <span class="sl-nav-item__icon">⌂</span>
-      <span>Home</span>
+    <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
+      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
     </a>
     <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
       <span class="sl-nav-item__icon">◆</span>
@@ -1363,6 +1384,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var parent = img.parentElement;
     if (parent && parent.tagName === 'A') {
       parent.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+    }
+    // Walk up to find ancestor <a> (handles nested structures like gallery cards)
+    var ancestor = img.closest('a');
+    if (ancestor && ancestor !== parent) {
+      ancestor.addEventListener('contextmenu', function(e) {
         e.preventDefault();
         return false;
       });
