@@ -161,10 +161,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
-/* Score badge hidden on mobile — score shown in sl-hero-below cream block instead */
+/* Score badge on mobile — embedded on photo bottom left */
 @media (max-width: 768px) {
   .sl-hero-score-badge {
-    display: none;
+    display: flex;
+    bottom: 16px;
+    left: 16px;
   }
   .sl-hero-score-badge__score {
     font-size: 38px;
@@ -868,9 +870,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     display: block;
+    background: #0D0D0B;
   }
   /* Gradient on bottom of photo for score badge readability */
   .sl-hero::after {
@@ -1277,15 +1280,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 {# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
 <div class="sl-hero-below">
-  {% if hero and hero.score %}
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(26,26,24,0.10);">
-    <div style="font-size:36px;font-weight:800;color:#D9A900;line-height:1;">{{ "%.2f"|format(hero.score) }}</div>
-    <div>
-      <div style="font-size: 14px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:#6B6B6B;">{{ hero.tier or "" }}</div>
-      <div style="font-size: 14px;color:#6B6B6B;">by {{ hero.photographer_name or "" }}</div>
-    </div>
-  </div>
-  {% endif %}
   <h1 style="font-size:26px;font-weight:800;line-height:1.5;color:#1A1A18;margin:0 0 12px;">How good is<br>your photograph,<br>really?</h1>
   <div class="sl-hero-below-sub">Honest photography feedback. One improvement at a time.</div>
   <div class="sl-hero-below-60" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;color:rgba(26,26,24,0.65);font-weight:500;">
