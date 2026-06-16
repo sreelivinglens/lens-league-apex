@@ -2586,6 +2586,7 @@ def mission():
         'wonder':     ('The Unfamiliar Angle',  'You have been shooting at eye level. Go lower, go higher, or get closer than feels comfortable. One frame that surprises you.',  ['Get your camera below knee height', 'Or above your head — shoot blind', 'Get uncomfortably close', 'Look for reflections and shadows'], 'Any time'),
         'disruption': ('Break the Rule',        'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.',    ['Put your subject off-centre deliberately', 'Leave more empty space than feels right', 'Shoot through something — a window, a doorway', 'The uncomfortable frame is usually the interesting one'], '5:00 – 7:00 PM'),
     }
+    _assign = _assign_map.get(_focus_key, _assign_map['dm'])
 
     _master_map = {
         'dod':        ('Fan Ho',         'Hong Kong master of light, shadow and geometric composition.',
