@@ -102,6 +102,11 @@ body {
 }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
+/* ── Suppress iOS Safari long-press context menu on image links sitewide ── */
+a img, a:has(img), a:has([class*="photo"]), a:has([class*="card"]) {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
 
 /* ── Global mobile safety ───────────────────────────────────────────────── */
 * { max-width: 100%; }
@@ -180,14 +185,16 @@ table { max-width: none; }
   display: none;
   position: fixed;
   top: 68px;
-  left: 0;
   right: 0;
   width: auto;
+  min-width: 200px;
+  max-width: 80vw;
   min-height: calc(100dvh - 68px);
   background: #1A1A18;
+  border-left: 1px solid rgba(245,197,24,0.15);
   border-bottom: 1px solid rgba(245,197,24,0.25);
   z-index: 1999;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.70);
+  box-shadow: -4px 0 32px rgba(0,0,0,0.60);
 }
 .sl-bottom-more-menu.open { display: flex; flex-direction: column; }
 .sl-bottom-more-menu__list {
@@ -216,7 +223,7 @@ table { max-width: none; }
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
-  padding: 11px 16px;
+  padding: 11px 24px 11px 16px;
   border-radius: 8px;
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
