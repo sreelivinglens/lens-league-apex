@@ -162,14 +162,30 @@ table { max-width: none; }
   width: 100vw;
   background: #1A1A18;
   border-bottom: 1px solid rgba(245,197,24,0.25);
-  padding: 8px 0;
-  max-height: 65dvh;
-  overflow-y: auto;
   z-index: 1999;
   box-shadow: 0 8px 40px rgba(0,0,0,0.70);
+}
+.sl-bottom-more-menu.open { display: flex; flex-direction: column; }
+.sl-bottom-more-menu__list {
+  overflow-y: auto;
+  max-height: 55dvh;
+  padding: 8px 0;
+  position: relative;
   -webkit-overflow-scrolling: touch;
 }
-.sl-bottom-more-menu.open { display: block; }
+.sl-bottom-more-menu__fade {
+  position: sticky;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, #1A1A18);
+  pointer-events: none;
+  margin-top: -48px;
+}
+.sl-bottom-more-menu__pinned {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 4px 0;
+  flex-shrink: 0;
+}
 .sl-bottom-more-menu a {
   display: block;
   color: rgba(255,255,255,0.80);
@@ -1160,18 +1176,23 @@ img {
         <span>More</span>
       </button>
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
-        <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
-        <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
-        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
-        <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
-        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
-        <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
+        <div class="sl-bottom-more-menu__list">
+          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
+          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
+          <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
+          <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
+          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
+          <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+          <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
+          <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
+          <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
+          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
+          <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
+          <div class="sl-bottom-more-menu__fade"></div>
+        </div>
+        <div class="sl-bottom-more-menu__pinned">
+          <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
+        </div>
       </div>
     </div>
   {% else %}
@@ -1201,16 +1222,21 @@ img {
         <span>More</span>
       </button>
       <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-        <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
-        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
-        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
-        <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
+        <div class="sl-bottom-more-menu__list">
+          <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
+          <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
+          <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
+          <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
+          <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
+          <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
+          <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
+          <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
+          <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
+          <div class="sl-bottom-more-menu__fade"></div>
+        </div>
+        <div class="sl-bottom-more-menu__pinned">
+          <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
+        </div>
       </div>
     </div>
   {% endif %}
