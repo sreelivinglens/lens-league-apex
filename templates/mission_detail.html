@@ -291,6 +291,26 @@
   .md-hero-img { height: 240px; }
 }
 
+.md-col-left, .md-col-right { display: contents; }
+
+@media (min-width: 1025px) {
+  .md-col-left  { display: block; position: sticky; top: 80px; }
+  .md-col-right { display: block; }
+  .md-inner {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    gap: 0 48px;
+    align-items: start;
+    padding: 32px 48px 64px;
+  }
+  .md-back {
+    grid-column: 1 / -1;
+    margin-bottom: 24px;
+  }
+  .md-hero-img { height: 320px; }
+}
+
 @media (max-width: 400px) {
   .fl-steps { gap: 8px; }
   .fl-step { grid-template-columns: 36px 1fr; }
@@ -307,10 +327,13 @@
 <div class="md-page">
 <div class="md-inner">
 
-  {# ── Back button ── #}
+  {# ── Back button — full width on desktop ── #}
   <a href="{{ url_for('dashboard') }}" class="md-back">
     ← Today
   </a>
+
+  {# ── Left column: benchmark image ── #}
+  <div class="md-col-left">
 
   {# ── Hero image — best public platform image in today's dimension ── #}
   {% if benchmark and benchmark.thumb_url %}
@@ -329,6 +352,11 @@
     A reference photograph in today's focus — {{ assignment.focus_label }}. Study the composition.
   </p>
   {% endif %}
+
+  </div>{# end md-col-left #}
+
+  {# ── Right column: assignment details ── #}
+  <div class="md-col-right">
 
   {# ── Assignment header ── #}
   <span class="md-eyebrow">Today's Assignment</span>
@@ -438,6 +466,8 @@
   <a href="{{ url_for('dashboard') }}" class="md-btn-secondary">
     Remind me later
   </a>
+
+  </div>{# end md-col-right #}
 
 </div>
 </div>
