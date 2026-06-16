@@ -32,6 +32,7 @@
 body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width: 768px) {
   body:has(.sl-home) { padding-top: 0 !important; }
+  .sl-home { padding-top: 8px; }
 }
 
 /* ━━ INTER OVERRIDE — all homepage elements ━━ */
@@ -40,31 +41,30 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   HERO
+   HERO — same pattern as Today dashboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .sl-hero {
   position: relative;
   width: 100%;
-  height: 480px;
-  max-height: 480px;
+  height: auto;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #0D0D0B;
-  display: flex;
-  align-items: flex-end;
+}
+@media (min-width: 1025px) {
+  .sl-hero { aspect-ratio: unset; height: 480px; }
 }
 .sl-hero-img {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+  display: block;
 }
 .sl-hero-fade {
   position: absolute;
   inset: 0;
-  background: rgba(13,13,11,0.08);
-  z-index: 1;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 60%, transparent 100%);
   pointer-events: none;
 }
 .sl-hero-text {
@@ -867,75 +867,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   a[href], button { min-height: 44px; }
   [class*="sl-"] { grid-template-columns: 1fr !important; }
 
-  /* ── Hero — Option B: 16:9 photo, headline at bottom, rest on cream ── */
-  .sl-hero {
-    height: auto;
-    max-height: none;
-    flex-direction: column;
-    align-items: stretch;
-    background: transparent;
-    margin-top: 8px;
-    overflow: visible;
-  }
-  .sl-hero-img {
-    position: static;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-  }
-  /* Gradient on bottom of photo for score badge readability */
-  .sl-hero::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    bottom: 0;
-    height: 45%;
-    background: linear-gradient(to top,
-      rgba(0,0,0,0.72) 0%,
-      rgba(0,0,0,0.28) 50%,
-      transparent 100%);
-    pointer-events: none;
-    z-index: 3;
-  }
-  /* Hero text: headline anchored bottom of photo */
-  .sl-hero-fade {
-    display: none; /* gradient ::after handles mobile readability */
-  }
   .sl-hero-text {
-    display: none !important; /* moved to below-hero on mobile */
+    display: none !important;
   }
-  .sl-hero-text-orig {
-    position: absolute;
-    top: auto;
-    bottom: 0;
-    left: 20px;
-    right: 20px;
-    width: auto;
-    min-height: unset;
-    max-width: 100%;
-    z-index: 5;
-    padding: 0 0 16px 0;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    margin: 0;
-    display: block;
-  }
-  .sl-hero-h1 {
-    display: none; /* headline moves to below-hero cream block on mobile */
-  }
-  /* Subhead + CTA + micro move BELOW the photo on cream */
-  .sl-hero-sub {
-    display: none; /* hidden inside hero, shown in below-hero block */
-  }
-  .sl-hero-tagline {
-    display: none; /* hidden inside hero, shown in below-hero block */
-  }
+  .sl-hero-sub { display: none; }
+  .sl-hero-tagline { display: none; }
   .sl-hero-btn { display: none; }
   .sl-hero-micro { display: none; }
+  .sl-hero-h1 { display: none; }
 
   /* Below-hero cream block */
   .sl-hero-below {
