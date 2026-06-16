@@ -2587,7 +2587,47 @@ def mission():
         'disruption': ('Break the Rule',        'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.',    ['Put your subject off-centre deliberately', 'Leave more empty space than feels right', 'Shoot through something — a window, a doorway', 'The uncomfortable frame is usually the interesting one'], '5:00 – 7:00 PM'),
     }
 
-    _assign = _assign_map.get(_focus_key, _assign_map['dm'])
+    _master_map = {
+        'dod':        ('Fan Ho',         'Hong Kong master of light, shadow and geometric composition.',
+                       'Study how he uses shadow as a second subject — the darkness is as composed as the light.',
+                       '"Photography is the art of observation."'),
+        'dm':         ('Henri Cartier-Bresson', 'Inventor of the decisive moment.',
+                       'Look for the frame where the geometry and the gesture coincide. One instant. Everything else is almost.',
+                       '"To photograph is to hold one\'s breath when all faculties converge to capture fleeting reality."'),
+        'aq':         ('Ansel Adams',    'Made light itself the subject.',
+                       'Pre-visualise the final image before you raise the camera. What is the light doing — and what does that make you feel?',
+                       '"You don\'t take a photograph, you make it."'),
+        'wonder':     ('Vivian Maier',   'Found the extraordinary in the completely ordinary.',
+                       'Look at what you are walking past. The unremarkable face, the unnoticed corner.',
+                       '"Taking pictures is savoring life intensely, every hundredth of a second."'),
+        'disruption': ('Daido Moriyama', 'Broke every rule of composition. On purpose.',
+                       'Push contrast past comfortable. Shoot what unsettles you, not what looks right.',
+                       '"I want to express the feeling of reality that is beyond imagination."'),
+    }
+    _master = _master_map.get(_focus_key, _master_map['dm'])
+
+    # Best public platform image in this dimension — the standard to aim for
+    _benchmark = None
+    try:
+        _benchmark = (Image.query
+                      .filter_by(status='scored', is_public=True, is_flagged=False)
+                      .filter(Image.mission_dimension == _focus_key,
+                              Image.score >= 8.5,
+                              Image.user_id != current_user.id,
+                              Image.thumb_url != None)
+                      .order_by(Image.score.desc())
+                      .first())
+        if not _benchmark:
+            # Fallback — best public image overall if none tagged to this dimension yet
+            _benchmark = (Image.query
+                          .filter_by(status='scored', is_public=True, is_flagged=False)
+                          .filter(Image.score >= 8.5,
+                                  Image.user_id != current_user.id,
+                                  Image.thumb_url != None)
+                          .order_by(Image.score.desc())
+                          .first())
+    except Exception:
+        pass
 
     class _Assignment:
         title       = _assign[0]
@@ -2597,10 +2637,11 @@ def mission():
         weather     = 'Any light works'
         focus_label = _dim_mobile.get(_focus_key, 'Timing')
         dimension   = _focus_key
-        image_url   = 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80'
 
     return render_template('mission_detail.html',
                            assignment=_Assignment(),
+                           master=_master,
+                           benchmark=_benchmark,
                            progress_data=progress_data,
                            active_challenge=active_challenge)
 
@@ -2962,7 +3003,7 @@ def dashboard():
     if current_user.role != 'admin':
         try:
             _reviews = db.session.execute(db.text("""
-                SELECT ms.id, ms.review_text, ms.reviewed_at,
+                SELECT ms.id, ms.image_id, ms.review_text, ms.reviewed_at,
                        i.asset_name, i.thumb_url, i.genre,
                        mp.display_name AS mentor_name
                 FROM mentor_sessions ms
