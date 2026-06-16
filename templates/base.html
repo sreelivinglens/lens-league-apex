@@ -141,6 +141,13 @@ table { max-width: none; }
 .sl-bottom-nav .sl-nav-item:hover  { color: #D9A900; }
 .sl-bottom-nav .sl-nav-logout { color: #BBBBBB; }
 .sl-bottom-nav .sl-nav-logout:hover { color: #C0392B; }
+.sl-bottom-nav .sl-nav-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
 .sl-bottom-nav .sl-nav-item__icon { font-size: 20px; line-height: 1; }
 /* Upload FAB */
 .sl-bottom-nav .sl-nav-fab {
@@ -820,8 +827,10 @@ footer {
 
   /* Bottom tab bar replaces top nav on mobile */
   nav:not(.sl-bottom-nav) { display: none !important; }
-  .nav-mobile { display: none !important; }
   .nav-mobile-login { display: none !important; }
+  /* Keep the mobile drawer — opened by ☰ in bottom tab bar */
+  .nav-mobile { display: none; }
+  .nav-mobile.open { display: flex !important; }
   
 }
 
@@ -1115,6 +1124,10 @@ img {
       <span class="sl-nav-item__icon" style="font-size:19px;">⎋</span>
       <span>Log out</span>
     </a>
+    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleNav()" aria-label="More">
+      <span class="sl-nav-item__icon">☰</span>
+      <span>More</span>
+    </button>
   {% else %}
     {# Logged-out: Home · How It Works · Upload (→ login) · Mentors · Log In #}
     <a href="{{ url_for('index') }}" class="sl-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
@@ -1137,6 +1150,10 @@ img {
       <span class="sl-nav-item__icon">◉</span>
       <span>Log In</span>
     </a>
+    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleNav()" aria-label="More">
+      <span class="sl-nav-item__icon">☰</span>
+      <span>More</span>
+    </button>
   {% endif %}
 </nav>
 
