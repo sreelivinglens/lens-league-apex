@@ -205,52 +205,60 @@
   position: relative;
   border-radius: var(--mg-r);
   overflow: hidden;
-  background: #0D0D0B;
-  aspect-ratio: 16/9;
-  display: block;
+  background: var(--mg-card);
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   box-shadow: var(--mg-shadow);
 }
-.mg-img-card img {
+.mg-img-card__photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: #0D0D0B;
+  flex-shrink: 0;
+}
+.mg-img-card__photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   transition: transform .3s ease;
 }
-.mg-img-card:hover img { transform: scale(1.03); }
+.mg-img-card:hover .mg-img-card__photo img { transform: scale(1.03); }
 .mg-img-card__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.20) 45%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 60%);
+  pointer-events: none;
 }
 .mg-img-card__info {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 10px 10px 8px;
+  padding: 8px 10px 10px;
+  background: var(--mg-card);
 }
 .mg-img-card__score {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
-  color: #F5C518;
+  color: #D9A900;
   line-height: 1;
-  display: block;
+  display: inline;
 }
 .mg-img-card__tier {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.60);
-  display: block;
-  margin-top: 2px;
+  color: var(--mg-text-light);
+  display: inline;
+  margin-left: 5px;
 }
 .mg-img-card__name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.85);
+  color: var(--mg-text);
   display: block;
-  margin-top: 3px;
+  margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -409,36 +417,37 @@
     <div class="mg-grid">
       {% for img in images.items %}
       <a href="{{ url_for('image_detail', image_id=img.id) }}" class="mg-img-card">
-        {% if img.thumb_url %}
-        <img src="{{ img.thumb_url }}"
-             alt="{{ img.asset_name or img.genre or 'Photo' }}"
-             loading="lazy"
-             onerror="this.style.display='none'">
-        {% else %}
-        <div class="mg-img-placeholder">⬛</div>
-        {% endif %}
+        <div class="mg-img-card__photo">
+          {% if img.thumb_url %}
+          <img src="{{ img.thumb_url }}"
+               alt="{{ img.asset_name or img.genre or 'Photo' }}"
+               loading="lazy"
+               onerror="this.style.display='none'">
+          {% else %}
+          <div class="mg-img-placeholder">⬛</div>
+          {% endif %}
 
-        <div class="mg-img-card__overlay"></div>
+          <div class="mg-img-card__overlay"></div>
 
-        {# Status badge #}
-        {% if img.is_flagged %}
-        <span class="mg-img-card__badge mg-badge-flagged">Flagged</span>
-        {% elif img.needs_review %}
-        <span class="mg-img-card__badge mg-badge-review">In review</span>
-        {% elif img.status == 'processing' %}
-        <span class="mg-img-card__badge mg-badge-pending">Scoring…</span>
-        {% elif img.status == 'pending' %}
-        <span class="mg-img-card__badge mg-badge-pending">Pending</span>
-        {% elif not img.is_public %}
-        <span class="mg-img-card__badge mg-badge-private">Private</span>
-        {% endif %}
+          {# Status badge #}
+          {% if img.is_flagged %}
+          <span class="mg-img-card__badge mg-badge-flagged">Flagged</span>
+          {% elif img.needs_review %}
+          <span class="mg-img-card__badge mg-badge-review">In review</span>
+          {% elif img.status == 'processing' %}
+          <span class="mg-img-card__badge mg-badge-pending">Scoring…</span>
+          {% elif img.status == 'pending' %}
+          <span class="mg-img-card__badge mg-badge-pending">Pending</span>
+          {% elif not img.is_public %}
+          <span class="mg-img-card__badge mg-badge-private">Private</span>
+          {% endif %}
+        </div>
 
         <div class="mg-img-card__info">
           {% if img.score %}
-          <span class="mg-img-card__score">{{ '%.2f'|format(img.score) }}</span>
-          <span class="mg-img-card__tier">{{ img.tier or '' }}</span>
+          <span class="mg-img-card__score">{{ '%.2f'|format(img.score) }}</span><span class="mg-img-card__tier">{{ img.tier or '' }}</span>
           {% elif img.status == 'processing' %}
-          <span class="mg-img-card__tier" style="color:rgba(255,255,255,0.50);">Evaluating…</span>
+          <span class="mg-img-card__tier" style="color:var(--mg-text-light);">Evaluating…</span>
           {% endif %}
           <span class="mg-img-card__name">{{ img.asset_name or img.original_filename or 'Untitled' }}</span>
         </div>
