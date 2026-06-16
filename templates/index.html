@@ -161,12 +161,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
-/* Score badge shown on mobile — overlaid on photo bottom */
+/* Score badge hidden on mobile — score shown in sl-hero-below cream block instead */
 @media (max-width: 768px) {
   .sl-hero-score-badge {
-    display: flex;
-    bottom: 16px;
-    left: 16px;
+    display: none;
   }
   .sl-hero-score-badge__score {
     font-size: 38px;
