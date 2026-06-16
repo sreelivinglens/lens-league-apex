@@ -111,9 +111,9 @@ table { max-width: none; }
 .sl-bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: 64px;
-  background: #FFFFFF;
-  border-top: 1px solid #ECECEC;
+  height: 68px;
+  background: #1A1A18;
+  border-top: 1px solid rgba(245,197,24,0.20);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -127,20 +127,18 @@ table { max-width: none; }
   align-items: center;
   gap: 3px;
   text-decoration: none;
-  color: #AAAAAA;
+  color: rgba(255,255,255,0.40);
   font-size: 13px;
   font-weight: 500;
-  letter-spacing: .03em;
-  min-width: 48px;
+  letter-spacing: .02em;
+  min-width: 44px;
   min-height: 44px;
   justify-content: center;
   transition: color .2s;
   -webkit-tap-highlight-color: transparent;
 }
-.sl-bottom-nav .sl-nav-item.active { color: #D9A900; }
-.sl-bottom-nav .sl-nav-item:hover  { color: #D9A900; }
-.sl-bottom-nav .sl-nav-logout { color: #BBBBBB; }
-.sl-bottom-nav .sl-nav-logout:hover { color: #C0392B; }
+.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
+.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
 .sl-bottom-nav .sl-nav-more-btn {
   background: none;
   border: none;
@@ -148,7 +146,44 @@ table { max-width: none; }
   padding: 0;
   font-family: inherit;
 }
-.sl-bottom-nav .sl-nav-item__icon { font-size: 20px; line-height: 1; }
+.sl-bottom-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
+/* More dropdown menu — pops UP from the tab bar */
+.sl-nav-more-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sl-bottom-more-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #1A1A18;
+  border: 1px solid rgba(245,197,24,0.20);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 210px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.60);
+  -webkit-overflow-scrolling: touch;
+}
+.sl-bottom-more-menu.open { display: block; }
+.sl-bottom-more-menu a {
+  display: block;
+  color: rgba(255,255,255,0.80);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 11px 16px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.sl-bottom-more-menu a:hover,
+.sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 /* Upload FAB */
 .sl-bottom-nav .sl-nav-fab {
   display: flex;
@@ -156,25 +191,26 @@ table { max-width: none; }
   align-items: center;
   gap: 3px;
   text-decoration: none;
-  color: #151515;
+  color: rgba(255,255,255,0.60);
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .03em;
+  letter-spacing: .02em;
   min-height: 44px;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
 .sl-bottom-nav .sl-nav-fab__circle {
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: #F4C20D;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(244,194,13,.40);
-  margin-top: -14px;
+  color: #1A1A18;
+  box-shadow: 0 4px 16px rgba(244,194,13,.45);
+  margin-top: -16px;
   transition: background .2s, transform .2s;
 }
 .sl-bottom-nav .sl-nav-fab:hover .sl-nav-fab__circle {
@@ -182,7 +218,7 @@ table { max-width: none; }
   transform: scale(1.05);
 }
 /* Add padding so page content clears the tab bar */
-body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
@@ -1096,10 +1132,13 @@ img {
   {% endif %}
 {% endwith %}
 
-{# ── Mobile bottom tab bar ── #}
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+{# ── Mobile bottom tab bar — placed after main so position:fixed works on iOS Safari ── #}
 <nav class="sl-bottom-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
-    {# Logged-in: Home · Gallery · Upload FAB · League · Profile · Log out #}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
       <span class="sl-nav-item__icon">⌂</span>
       <span>Home</span>
@@ -1120,16 +1159,30 @@ img {
       <span class="sl-nav-item__icon">◉</span>
       <span>Profile</span>
     </a>
-    <a href="{{ url_for('logout') }}" class="sl-nav-item sl-nav-logout" aria-label="Log out">
-      <span class="sl-nav-item__icon" style="font-size:19px;">⎋</span>
-      <span>Log out</span>
-    </a>
-    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleNav()" aria-label="More">
-      <span class="sl-nav-item__icon">☰</span>
-      <span>More</span>
-    </button>
+    <div class="sl-nav-more-wrap" id="slNavMoreWrap">
+      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
+        <span class="sl-nav-item__icon">☰</span>
+        <span>More</span>
+      </button>
+      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
+        <a href="{{ url_for('dashboard') }}" onclick="closeBottomMore()">Home</a>
+        <a href="{{ url_for('my_gallery') }}" onclick="closeBottomMore()">My Gallery</a>
+        <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
+        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
+        <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
+        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
+        <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
+        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
+        <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
+        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
+        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
+        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
+        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
+        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
+        <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
+      </div>
+    </div>
   {% else %}
-    {# Logged-out: Home · How It Works · Upload (→ login) · Mentors · Log In #}
     <a href="{{ url_for('index') }}" class="sl-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
       <span class="sl-nav-item__icon">⌂</span>
       <span>Home</span>
@@ -1150,16 +1203,28 @@ img {
       <span class="sl-nav-item__icon">◉</span>
       <span>Log In</span>
     </a>
-    <button class="sl-nav-item sl-nav-more-btn" onclick="toggleNav()" aria-label="More">
-      <span class="sl-nav-item__icon">☰</span>
-      <span>More</span>
-    </button>
+    <div class="sl-nav-more-wrap" id="slNavMoreWrap">
+      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
+        <span class="sl-nav-item__icon">☰</span>
+        <span>More</span>
+      </button>
+      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
+        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
+        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
+        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
+        <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
+        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
+        <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
+        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
+        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
+        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
+        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
+        <a href="{{ url_for('login') }}" onclick="closeBottomMore()">Log In</a>
+        <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
+      </div>
+    </div>
   {% endif %}
 </nav>
-
-<main>
-  {% block content %}{% endblock %}
-</main>
 
 <footer>
   <!-- Row 1: Brand left · Links right — mirrors nav -->
@@ -1196,10 +1261,32 @@ function toggleNavMore() {
   var nm = document.getElementById('navMore');
   if (nm) nm.classList.toggle('open');
 }
+function toggleNavMoreLoggedOut() {
+  var nm = document.getElementById('navMoreLoggedOut');
+  if (nm) nm.classList.toggle('open');
+}
+function toggleBottomMore(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('slBottomMoreMenu');
+  if (menu) menu.classList.toggle('open');
+}
+function closeBottomMore() {
+  var menu = document.getElementById('slBottomMoreMenu');
+  if (menu) menu.classList.remove('open');
+}
 document.addEventListener('click', function(e) {
   var nm = document.getElementById('navMore');
   if (nm && nm.classList.contains('open') && !nm.contains(e.target)) {
     nm.classList.remove('open');
+  }
+  var nmlo = document.getElementById('navMoreLoggedOut');
+  if (nmlo && nmlo.classList.contains('open') && !nmlo.contains(e.target)) {
+    nmlo.classList.remove('open');
+  }
+  var bm = document.getElementById('slBottomMoreMenu');
+  var wrap = document.getElementById('slNavMoreWrap');
+  if (bm && bm.classList.contains('open') && wrap && !wrap.contains(e.target)) {
+    bm.classList.remove('open');
   }
   var nav = document.getElementById('navMobile');
   var toggle = document.querySelector('.nav-toggle');
