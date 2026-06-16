@@ -94,14 +94,11 @@ body {
   font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.6;
-  min-height: 100dvh;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
 }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
@@ -110,11 +107,10 @@ a { color: inherit; }
 * { max-width: 100%; }
 table { max-width: none; }
 
-/* ── Bottom tab bar (mobile only) ──────────────────────────────────────── */
-.sl-bottom-nav {
-  flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
+/* ── Mobile top tab nav ──────────────────────────────────────── */
+.sl-mobile-tab-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
   height: 68px;
   background: #1A1A18;
   border-top: 1px solid rgba(245,197,24,0.20);
@@ -125,7 +121,7 @@ table { max-width: none; }
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow: visible;
 }
-.sl-bottom-nav .sl-nav-item {
+.sl-mobile-tab-nav .sl-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -141,16 +137,16 @@ table { max-width: none; }
   transition: color .2s;
   -webkit-tap-highlight-color: transparent;
 }
-.sl-bottom-nav .sl-nav-item.active { color: #F4C20D; }
-.sl-bottom-nav .sl-nav-item:hover  { color: #F4C20D; }
-.sl-bottom-nav .sl-nav-more-btn {
+.sl-mobile-tab-nav .sl-nav-item.active { color: #F4C20D; }
+.sl-mobile-tab-nav .sl-nav-item:hover  { color: #F4C20D; }
+.sl-mobile-tab-nav .sl-nav-more-btn {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   font-family: inherit;
 }
-.sl-bottom-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
+.sl-mobile-tab-nav .sl-nav-item__icon { font-size: 22px; line-height: 1; }
 /* More dropdown menu — pops UP from the tab bar */
 .sl-nav-more-wrap {
   position: relative;
@@ -158,38 +154,36 @@ table { max-width: none; }
   flex-direction: column;
   align-items: center;
 }
-.sl-bottom-more-menu {
+.sl-top-more-menu {
   display: none;
   position: absolute;
-  bottom: 100%;
-  right: 8px;
+  top: 100%;
+  right: 0;
+  left: 0;
   background: #1A1A18;
-  border: 1px solid rgba(245,197,24,0.25);
-  border-radius: 14px;
-  padding: 8px;
-  min-width: 220px;
+  border-bottom: 1px solid rgba(245,197,24,0.25);
+  padding: 8px 0;
   max-height: 65dvh;
   overflow-y: auto;
   z-index: 1999;
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.70);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.70);
   -webkit-overflow-scrolling: touch;
 }
-.sl-bottom-more-menu.open { display: block; }
-.sl-bottom-more-menu a {
+.sl-top-more-menu.open { display: block; }
+.sl-top-more-menu a {
   display: block;
   color: rgba(255,255,255,0.80);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
-  padding: 11px 16px;
-  border-radius: 8px;
+  padding: 11px 20px;
   transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
-.sl-bottom-more-menu a:hover,
-.sl-bottom-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
+.sl-top-more-menu a:hover,
+.sl-top-more-menu a:active { background: rgba(255,255,255,0.09); color: #FFFFFF; }
 /* Upload FAB */
-.sl-bottom-nav .sl-nav-fab {
+.sl-mobile-tab-nav .sl-nav-fab {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -203,7 +197,7 @@ table { max-width: none; }
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
-.sl-bottom-nav .sl-nav-fab__circle {
+.sl-mobile-tab-nav .sl-nav-fab__circle {
   width: 46px; height: 46px;
   border-radius: 50%;
   background: #F4C20D;
@@ -217,13 +211,16 @@ table { max-width: none; }
   margin-top: -10px;
   transition: background .2s, transform .2s;
 }
-.sl-bottom-nav .sl-nav-fab:hover .sl-nav-fab__circle {
+.sl-mobile-tab-nav .sl-nav-fab:hover .sl-nav-fab__circle {
   background: #D9A900;
   transform: scale(1.05);
 }
+/* Add padding so page content clears the tab bar */
+body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
-  .sl-bottom-nav { display: none !important; }
+  .sl-mobile-tab-nav { display: none !important; }
+  body { padding-bottom: 0; }
 }
 
 /* ── Navigation ─────────────────────────────────────────────────────────── */
@@ -521,8 +518,6 @@ nav {
 
 /* ── Main Layout ─────────────────────────────────────────────────────────── */
 main {
-  flex: 1;
-  width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 40px var(--page-pad);
@@ -864,10 +859,10 @@ footer {
 
   .btn { padding: 10px 18px; font-size: 16px; }
 
-  /* Bottom tab bar replaces top nav on mobile */
-  .sl-top-nav { display: none !important; }
+  /* Mobile top tab nav — replaces desktop nav on mobile */
+  .sl-mobile-tab-nav { display: none !important; }
   .nav-mobile-login { display: none !important; }
-  /* Mobile drawer — triggered by ☰ in bottom tab bar, slides from top */
+  /* Mobile drawer — triggered by ☰ in top tab nav, slides from top */
   .nav-mobile { display: none; top: 0 !important; max-height: calc(100dvh - 64px) !important; z-index: 997 !important; padding-bottom: 80px !important; }
   .nav-mobile.open { display: flex !important; }
   
@@ -1139,8 +1134,8 @@ img {
   {% block content %}{% endblock %}
 </main>
 
-{# ── Mobile bottom tab bar — placed after main so sticky bottom works ── #}
-<nav class="sl-bottom-nav" aria-label="Main navigation">
+{# ── Mobile tab nav — top of page on mobile ── #}
+<nav class="sl-mobile-tab-nav" aria-label="Main navigation">
   {% if current_user.is_authenticated %}
     <a href="{{ url_for('dashboard') }}" class="sl-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
       <span class="sl-nav-item__icon">⌂</span>
@@ -1159,27 +1154,23 @@ img {
       <span>Recent</span>
     </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
-      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
+      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleTopMore(event)" aria-label="More">
         <span class="sl-nav-item__icon">☰</span>
         <span>More</span>
       </button>
-      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <a href="{{ url_for('dashboard') }}" onclick="closeBottomMore()">Today</a>
-        <a href="{{ url_for('my_gallery') }}" onclick="closeBottomMore()">My Gallery</a>
-        <a href="{{ url_for('upload') }}" onclick="closeBottomMore()">Upload</a>
-        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-        <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
-        <a href="{{ url_for('contests') }}" onclick="closeBottomMore()">Programmes</a>
-        <a href="{{ url_for('mentors') }}" onclick="closeBottomMore()">Mentors</a>
-        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
-        <a href="{{ url_for('profile') }}" onclick="closeBottomMore()">Profile</a>
-        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
-        <a href="{{ url_for('logout') }}" onclick="closeBottomMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
+      <div class="sl-top-more-menu" id="slTopMoreMenu">
+        <a href="{{ url_for('weekly_challenge') }}" onclick="closeTopMore()">Weekly Assignment</a>
+        <a href="{{ url_for('leaderboard') }}" onclick="closeTopMore()">Programme Standings</a>
+        <a href="{{ url_for('contests') }}" onclick="closeTopMore()">Programmes</a>
+        <a href="{{ url_for('mentors') }}" onclick="closeTopMore()">Mentors</a>
+        <a href="{{ url_for('poty') }}" onclick="closeTopMore()">Excellence Award</a>
+        <a href="{{ url_for('profile') }}" onclick="closeTopMore()">Profile</a>
+        <a href="{{ url_for('pricing') }}" onclick="closeTopMore()">Pricing</a>
+        <a href="{{ url_for('science') }}" onclick="closeTopMore()">Science</a>
+        <a href="{{ url_for('how_it_works') }}" onclick="closeTopMore()">How It Works</a>
+        <a href="{{ url_for('learning') }}" onclick="closeTopMore()">Learn</a>
+        <a href="{{ url_for('bow_info') }}" onclick="closeTopMore()">Body of Work</a>
+        <a href="{{ url_for('logout') }}" onclick="closeTopMore()" style="color:rgba(255,100,80,0.9);">Log out</a>
       </div>
     </div>
   {% else %}
@@ -1204,21 +1195,21 @@ img {
       <span>Log In</span>
     </a>
     <div class="sl-nav-more-wrap" id="slNavMoreWrap">
-      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleBottomMore(event)" aria-label="More">
+      <button class="sl-nav-item sl-nav-more-btn" onclick="toggleTopMore(event)" aria-label="More">
         <span class="sl-nav-item__icon">☰</span>
         <span>More</span>
       </button>
-      <div class="sl-bottom-more-menu" id="slBottomMoreMenu">
-        <a href="{{ url_for('how_it_works') }}" onclick="closeBottomMore()">How It Works</a>
-        <a href="{{ url_for('science') }}" onclick="closeBottomMore()">Science</a>
-        <a href="{{ url_for('learning') }}" onclick="closeBottomMore()">Learn</a>
-        <a href="{{ url_for('weekly_challenge') }}" onclick="closeBottomMore()">Weekly Assignment</a>
-        <a href="{{ url_for('recent_work') }}" onclick="closeBottomMore()">Recent Work</a>
-        <a href="{{ url_for('leaderboard') }}" onclick="closeBottomMore()">Programme Standings</a>
-        <a href="{{ url_for('poty') }}" onclick="closeBottomMore()">Excellence Award</a>
-        <a href="{{ url_for('pricing') }}" onclick="closeBottomMore()">Pricing</a>
-        <a href="{{ url_for('bow_info') }}" onclick="closeBottomMore()">Body of Work</a>
-        <a href="{{ url_for('register') }}" onclick="closeBottomMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
+      <div class="sl-top-more-menu" id="slTopMoreMenu">
+        <a href="{{ url_for('how_it_works') }}" onclick="closeTopMore()">How It Works</a>
+        <a href="{{ url_for('science') }}" onclick="closeTopMore()">Science</a>
+        <a href="{{ url_for('learning') }}" onclick="closeTopMore()">Learn</a>
+        <a href="{{ url_for('weekly_challenge') }}" onclick="closeTopMore()">Weekly Assignment</a>
+        <a href="{{ url_for('recent_work') }}" onclick="closeTopMore()">Recent Work</a>
+        <a href="{{ url_for('leaderboard') }}" onclick="closeTopMore()">Programme Standings</a>
+        <a href="{{ url_for('poty') }}" onclick="closeTopMore()">Excellence Award</a>
+        <a href="{{ url_for('pricing') }}" onclick="closeTopMore()">Pricing</a>
+        <a href="{{ url_for('bow_info') }}" onclick="closeTopMore()">Body of Work</a>
+        <a href="{{ url_for('register') }}" onclick="closeTopMore()" style="color:#F4C20D;font-weight:700;">Get My First Evaluation</a>
       </div>
     </div>
   {% endif %}
@@ -1263,13 +1254,13 @@ function toggleNavMoreLoggedOut() {
   var nm = document.getElementById('navMoreLoggedOut');
   if (nm) nm.classList.toggle('open');
 }
-function toggleBottomMore(e) {
+function toggleTopMore(e) {
   e.stopPropagation();
-  var menu = document.getElementById('slBottomMoreMenu');
+  var menu = document.getElementById('slTopMoreMenu');
   if (menu) menu.classList.toggle('open');
 }
-function closeBottomMore() {
-  var menu = document.getElementById('slBottomMoreMenu');
+function closeTopMore() {
+  var menu = document.getElementById('slTopMoreMenu');
   if (menu) menu.classList.remove('open');
 }
 document.addEventListener('click', function(e) {
@@ -1281,7 +1272,7 @@ document.addEventListener('click', function(e) {
   if (nmlo && nmlo.classList.contains('open') && !nmlo.contains(e.target)) {
     nmlo.classList.remove('open');
   }
-  var bm = document.getElementById('slBottomMoreMenu');
+  var bm = document.getElementById('slTopMoreMenu');
   var wrap = document.getElementById('slNavMoreWrap');
   if (bm && bm.classList.contains('open') && wrap && !wrap.contains(e.target)) {
     bm.classList.remove('open');
