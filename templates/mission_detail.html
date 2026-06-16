@@ -321,13 +321,12 @@
          onerror="this.style.display='none'">
     <div style="position:absolute; bottom:12px; left:12px; right:12px;
                 background:rgba(0,0,0,0.55); border-radius:10px;
-                padding:6px 10px; display:flex; align-items:center; justify-content:space-between;">
-      <span style="font-size:15px; font-weight:800; color:#F4C20D;">{{ '%.2f'|format(benchmark.score) }}</span>
+                padding:6px 10px; display:flex; align-items:center; justify-content:flex-end;">
       <span style="font-size:13px; color:rgba(255,255,255,0.80);">{{ benchmark.tier or '' }} · {{ benchmark.photographer_name or '' }}</span>
     </div>
   </div>
   <p style="font-size:13px; color:var(--sl-text-light); margin-bottom:16px; padding:0 4px;">
-    The standard to aim for today — {{ assignment.focus_label }} at {{ '%.2f'|format(benchmark.score) }} on ShutterLeague.
+    A reference photograph in today's focus — {{ assignment.focus_label }}. Study the composition.
   </p>
   {% endif %}
 
