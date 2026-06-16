@@ -890,86 +890,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 .sl-btn-subscribe:hover { opacity: .88; color: white; }
 
 /* ══════════════════════════════════════════
-   BOTTOM NAVIGATION
-   Fixed · 90px · across all pages via base.html
-   Note: base.html doesn't have this yet — added here for Today screen
-   Will be moved to base.html after founder approval
-══════════════════════════════════════════ */
-.sl-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 90px;
-  background: white;
-  border-top: 1px solid #ECECEC;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 999;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  overflow: visible;
-}
-
-.sl-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-decoration: none;
-  color: #AAAAAA;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: .04em;
-  min-width: 48px;
-  transition: color .2s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sl-nav-item.active { color: var(--sl-yellow-dark); }
-.sl-nav-item:hover  { color: var(--sl-yellow-dark); }
-.sl-nav-logout { color: #BBBBBB; }
-.sl-nav-logout:hover { color: var(--red, #C0392B); }
-
-.sl-nav-item__icon {
-  font-size: 22px;
-  line-height: 1;
-}
-
-/* Upload FAB — raised gold circle */
-.sl-nav-fab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-decoration: none;
-  color: var(--sl-text);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sl-nav-fab__circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--sl-yellow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  box-shadow: 0 4px 16px rgba(244,194,13,.40);
-  margin-top: -12px;
-  transition: background .2s, transform .2s;
-}
-
-.sl-nav-fab:hover .sl-nav-fab__circle {
-  background: var(--sl-yellow-dark);
-  transform: scale(1.05);
-}
-
-/* ══════════════════════════════════════════
    LOCATION WIDGET (inline update form)
 ══════════════════════════════════════════ */
 @media (min-width: 1025px) {
@@ -1122,7 +1042,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   /* Hide mobile collapsible sections on desktop — content shown in right col */
   .sl-mobile-sections { display: none; }
   /* Hide mobile bottom nav on desktop */
-  .sl-bottom-nav { display: none !important; }
+  /* bottom nav hidden on desktop — handled by base.html */
   /* Desktop right column visible — override mobile display:none on children */
   .sl-today__right { display: flex; }
   .sl-desktop-right-section { display: block !important; }
@@ -2054,38 +1974,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
 </div>{# /sl-today #}
 
-{# ══════════════════════════════════════════
-   BOTTOM NAVIGATION
-   Fixed to bottom · across all pages
-   Move to base.html after founder approval
-══════════════════════════════════════════ #}
-<nav class="sl-bottom-nav" aria-label="Main navigation">
-  <a href="{{ url_for('dashboard') }}" class="sl-nav-item active">
-    <span class="sl-nav-item__icon">⌂</span>
-    <span>Home</span>
-  </a>
-  <a href="{{ url_for('my_gallery') }}" class="sl-nav-item">
-    <span class="sl-nav-item__icon">⊞</span>
-    <span>Gallery</span>
-  </a>
-  <a href="{{ url_for('upload') }}" class="sl-nav-fab">
-    <div class="sl-nav-fab__circle">+</div>
-    <span>Upload</span>
-  </a>
-  <a href="{{ url_for('weekly_challenge') if active_challenge else url_for('poty') }}" class="sl-nav-item">
-    <span class="sl-nav-item__icon">◈</span>
-    <span>League</span>
-  </a>
-  <a href="{{ url_for('profile') }}" class="sl-nav-item">
-    <span class="sl-nav-item__icon">◉</span>
-    <span>Profile</span>
-  </a>
-  <a href="{{ url_for('logout') }}" class="sl-nav-item sl-nav-logout" title="Log out" aria-label="Log out">
-    <span class="sl-nav-item__icon" style="font-size:19px;">⎋</span>
-    <span>Log out</span>
-  </a>
-</nav>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -2178,22 +2066,5 @@ document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
   });
 });
 
-// ── Active nav item ──
-(function() {
-  var path = window.location.pathname;
-  document.querySelectorAll('.sl-nav-item, .sl-nav-fab').forEach(function(el) {
-    el.classList.remove('active');
-  });
-  var items = document.querySelectorAll('.sl-nav-item');
-  if (path === '/' || path.includes('dashboard')) {
-    items[0] && items[0].classList.add('active');
-  } else if (path.includes('portfolio') || path.includes('gallery')) {
-    items[1] && items[1].classList.add('active');
-  } else if (path.includes('challenge') || path.includes('league') || path.includes('poty')) {
-    items[2] && items[2].classList.add('active');
-  } else if (path.includes('profile')) {
-    items[3] && items[3].classList.add('active');
-  }
-})();
 </script>
 {% endblock %}
