@@ -32,7 +32,6 @@
 body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width: 768px) {
   body:has(.sl-home) { padding-top: 0 !important; }
-  .sl-home { padding-top: 8px; }
 }
 
 /* ━━ INTER OVERRIDE — all homepage elements ━━ */
@@ -134,15 +133,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-hero-micro svg { flex-shrink: 0; }
 
-/* Score badge — bottom left of hero photo, desktop */
+/* Score badge — bottom left of hero photo */
 .sl-hero-score-badge {
   position: absolute;
   bottom: 20px;
   left: clamp(16px, 4vw, 48px);
   z-index: 5;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0;
+  flex-wrap: nowrap;
 }
 .sl-hero-score-badge__score {
   font-size: 26px;
@@ -151,10 +152,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   line-height: 1;
   text-shadow: 0 2px 12px rgba(0,0,0,0.90);
 }
+.sl-hero-score-badge__sep {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
+  padding: 0 2px;
+}
 .sl-hero-score-badge__tier {
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: .12em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.75);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
@@ -867,6 +874,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     flex-direction: column;
     align-items: stretch;
     background: transparent;
+    margin-top: 8px;
+    overflow: visible;
   }
   .sl-hero-img {
     position: static;
@@ -1247,12 +1256,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
   <div class="sl-hero-fade"></div>
 
-  {# Score + tier + name badge on hero photo — bottom left, desktop only #}
+  {# Score + tier + name badge on hero photo — bottom left #}
   {% if hero and hero.score %}
   <div class="sl-hero-score-badge">
-    <div class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</div>
-    <div class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</div>
-    <div class="sl-hero-score-badge__by">by {{ hero.photographer_name or "" }}</div>
+    <span class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__by">{{ hero.photographer_name or "" }}</span>
   </div>
   {% endif %}
 
