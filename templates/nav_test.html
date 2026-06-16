@@ -3,17 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-<title>Nav Test — ShutterLeague</title>
+<title>Nav Test</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,sans-serif;background:#F8F7F3;min-height:200vh;padding-bottom:90px}
-h1{font-size:22px;font-weight:800;color:#151515;padding:24px 20px 8px}
-p{font-size:15px;color:#6B6B6B;padding:0 20px 16px;line-height:1.6}
-.block{background:#fff;border:1px solid #E8E5DD;border-radius:12px;margin:0 16px 10px;padding:16px;font-size:14px;color:#151515}
-.success{background:#F4C20D;color:#1A1A18;font-weight:800}
-nav{position:fixed;bottom:0;left:0;right:0;height:68px;background:#1A1A18;border-top:3px solid #F4C20D;display:flex;align-items:center;justify-content:space-around;z-index:9999}
-.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.45);font-size:11px;text-decoration:none;min-width:60px}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,sans-serif;
+  background:#F8F7F3;
+  display:flex;
+  flex-direction:column;
+  min-height:100dvh;
+  min-height:100vh;
+}
+.page-content{
+  flex:1;
+  overflow-y:auto;
+  padding:24px 20px;
+  -webkit-overflow-scrolling:touch;
+}
+h1{font-size:22px;font-weight:800;color:#151515;margin-bottom:8px}
+p{font-size:15px;color:#6B6B6B;line-height:1.6;margin-bottom:16px}
+.block{background:#fff;border:1px solid #E8E5DD;border-radius:12px;padding:16px;margin-bottom:10px;font-size:14px;color:#151515}
+.win{background:#F4C20D;color:#1A1A18;font-weight:800;font-size:15px}
+nav{
+  flex-shrink:0;
+  height:68px;
+  background:#1A1A18;
+  border-top:3px solid #F4C20D;
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.4);font-size:11px;text-decoration:none;min-width:60px}
 .tab.on{color:#F4C20D}
 .icon{font-size:22px;line-height:1}
 .fab-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,0.5);font-size:11px}
@@ -21,15 +43,16 @@ nav{position:fixed;bottom:0;left:0;right:0;height:68px;background:#1A1A18;border
 </style>
 </head>
 <body>
-<h1>Nav position test</h1>
-<p>The dark bar with the gold top border should be FIXED to the BOTTOM of your screen. Scroll down — it should stay at the bottom throughout.</p>
-<div class="block">Scroll down ↓</div>
-<div class="block">Keep scrolling ↓</div>
-<div class="block">Almost there ↓</div>
-<div class="block">Nearly ↓</div>
-<div class="block">Last block ↓</div>
-<div class="block success">✓ Nav should STILL be at the bottom of your screen right now.</div>
-
+<div class="page-content">
+  <h1>Nav test — flex body</h1>
+  <p>The dark gold-bordered nav should be at the BOTTOM of the screen. Scroll — content moves, nav stays at bottom.</p>
+  <div class="block">Block 1 — scroll down ↓</div>
+  <div class="block">Block 2 ↓</div>
+  <div class="block">Block 3 ↓</div>
+  <div class="block">Block 4 ↓</div>
+  <div class="block">Block 5 ↓</div>
+  <div class="block win">If nav is at BOTTOM right now — this approach works. Build it.</div>
+</div>
 <nav>
   <a href="#" class="tab on"><span class="icon">⌂</span><span>Today</span></a>
   <div class="fab-wrap"><div class="fab">+</div><span>Upload</span></div>
