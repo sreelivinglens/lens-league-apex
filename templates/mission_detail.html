@@ -187,10 +187,9 @@
   border-radius: var(--r-card);
   padding: 14px 16px;
   margin-bottom: 20px;
-  display: grid;
-  grid-template-columns: 64px 1fr;
+  display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .md-master-img {
@@ -313,12 +312,24 @@
     ← Today
   </a>
 
-  {# ── Hero image — Unsplash placeholder until API wired ── #}
-  {% set _img_url = assignment.image_url if assignment is defined and assignment.image_url else 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80' %}
-  <img src="{{ _img_url }}"
-       alt="{{ assignment.title if assignment is defined else 'Today\'s Assignment' }}"
-       class="md-hero-img"
-       onerror="this.style.display='none'">
+  {# ── Hero image — best public platform image in today's dimension ── #}
+  {% if benchmark and benchmark.thumb_url %}
+  <div style="position:relative; margin-bottom:6px;">
+    <img src="{{ benchmark.thumb_url }}"
+         alt="{{ benchmark.asset_name or 'Reference photograph' }}"
+         class="md-hero-img"
+         onerror="this.style.display='none'">
+    <div style="position:absolute; bottom:12px; left:12px; right:12px;
+                background:rgba(0,0,0,0.55); border-radius:10px;
+                padding:6px 10px; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-size:15px; font-weight:800; color:#F4C20D;">{{ '%.2f'|format(benchmark.score) }}</span>
+      <span style="font-size:13px; color:rgba(255,255,255,0.80);">{{ benchmark.tier or '' }} · {{ benchmark.photographer_name or '' }}</span>
+    </div>
+  </div>
+  <p style="font-size:13px; color:var(--sl-text-light); margin-bottom:16px; padding:0 4px;">
+    The standard to aim for today — {{ assignment.focus_label }} at {{ '%.2f'|format(benchmark.score) }} on ShutterLeague.
+  </p>
+  {% endif %}
 
   {# ── Assignment header ── #}
   <span class="md-eyebrow">Today's Assignment</span>
@@ -379,25 +390,41 @@
     {% endif %}
   </div>
 
-  {# ── Master reference ── #}
-  {% set _master_map = {
-    'dod':        ('Fan Ho',               'Master of light, shadow and composition.',        'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80', '"Light is not just illumination. It is revelation."'),
-    'dm':         ('Henri Cartier-Bresson','Invented the decisive moment.',                   'https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=200&q=80', '"Photography is not like painting — there is a creative fraction of a second."'),
-    'aq':         ('Ansel Adams',          'Made light itself the subject.',                  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=80', '"You do not take a photograph. You make it."'),
-    'wonder':     ('Vivian Maier',         'Found the extraordinary in the ordinary.',        'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=200&q=80', '"The camera is an instrument that teaches people how to see without a camera."'),
-    'disruption': ('Daido Moriyama',       'Broke every rule of composition. On purpose.',    'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=200&q=80', '"I photograph not what I see but what I feel."')
-  } %}
-  {% set _focus_key = assignment.dimension if assignment is defined else 'disruption' %}
-  {% set _master = _master_map.get(_focus_key, ('Raghu Rai', 'Captured India\'s decisive moments.', 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=200&q=80', '"Photography is truth."')) %}
-
+  {# ── Master reference — text only, no image (rights) ── #}
+  {% if master %}
   <div class="md-master">
-    <img src="{{ _master[2] }}" alt="{{ _master[0] }}" class="md-master-img" onerror="this.style.display='none'">
+    <div style="width:48px; height:48px; border-radius:12px; background:var(--sl-purple);
+                display:flex; align-items:center; justify-content:center;
+                font-size:22px; flex-shrink:0;">◆</div>
     <div>
       <span class="md-master-label">Today's Master</span>
-      <div class="md-master-name">{{ _master[0] }}</div>
-      <div class="md-master-quote">{{ _master[3] }}</div>
+      <div class="md-master-name">{{ master[0] }}</div>
+      <div class="md-master-quote">{{ master[3] }}</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.5;">{{ master[2] }}</div>
     </div>
   </div>
+  {% else %}
+  {% set _focus_key = assignment.dimension if assignment is defined else 'disruption' %}
+  {% set _master_map = {
+    'dod':        ('Fan Ho',                'Study how he uses shadow as a second subject.',          '"Photography is the art of observation."'),
+    'dm':         ('Henri Cartier-Bresson', 'Look for the frame where geometry and gesture coincide.', '"To photograph is to hold one\'s breath."'),
+    'aq':         ('Ansel Adams',           'Pre-visualise the final image before you raise the camera.', '"You don\'t take a photograph, you make it."'),
+    'wonder':     ('Vivian Maier',          'Look at what you are walking past.',                     '"Taking pictures is savoring life intensely."'),
+    'disruption': ('Daido Moriyama',        'Push contrast past comfortable. Shoot what unsettles you.', '"I want to express the feeling of reality."')
+  } %}
+  {% set _m = _master_map.get(_focus_key, _master_map['dm']) %}
+  <div class="md-master">
+    <div style="width:48px; height:48px; border-radius:12px; background:var(--sl-purple);
+                display:flex; align-items:center; justify-content:center;
+                font-size:22px; flex-shrink:0;">◆</div>
+    <div>
+      <span class="md-master-label">Today's Master</span>
+      <div class="md-master-name">{{ _m[0] }}</div>
+      <div class="md-master-quote">{{ _m[2] }}</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.5;">{{ _m[1] }}</div>
+    </div>
+  </div>
+  {% endif %}
 
   {# ── Shot count ── #}
   <div class="md-shot-count">
