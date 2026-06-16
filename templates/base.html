@@ -817,6 +817,11 @@ footer {
   .page-header h1 { font-size: 22px; }
 
   .btn { padding: 10px 18px; font-size: 16px; }
+
+  /* Bottom tab bar replaces top nav on mobile */
+  nav:not(.sl-bottom-nav) { display: none !important; }
+  .nav-mobile { display: none !important; }
+  .nav-mobile-login { display: none !important; }
   
 }
 
@@ -1006,7 +1011,7 @@ img {
       <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
       <a href="{{ url_for('login') }}">Log In</a>
-      <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Get My First Score</a>
+      <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Get My First Evaluation</a>
     {% endif %}
   </div>
 
@@ -1014,7 +1019,7 @@ img {
   {% if not current_user.is_authenticated %}
   <div class="nav-mobile-login">
     <a href="{{ url_for('login') }}" class="nav-ml-login">LOG IN</a>
-    <a href="{{ url_for('register') }}" class="nav-ml-join">GET MY FIRST SCORE</a>
+    <a href="{{ url_for('register') }}" class="nav-ml-join">GET MY FIRST EVALUATION</a>
   </div>
   {% endif %}
 
@@ -1065,7 +1070,7 @@ img {
     <a href="{{ url_for('poty') }}" onclick="toggleNav()">Annual Excellence Award</a>
     <a href="{{ url_for('pricing') }}" onclick="toggleNav()">Pricing</a>
     <a href="{{ url_for('login') }}" onclick="toggleNav()">Log In</a>
-    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Score</a>
+    <a href="{{ url_for('register') }}" onclick="toggleNav()" style="color:#0D0D0B; background:#F5C518; padding:8px 14px; font-weight:700;">Get My First Evaluation</a>
   {% endif %}
 </div>
 <!-- Flash messages -->
