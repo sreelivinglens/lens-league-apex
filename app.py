@@ -4201,7 +4201,7 @@ def _advance_curriculum(user_id, principle_id, dim):
             db.text('SELECT curriculum_state FROM users WHERE id = :uid'),
             {'uid': user_id}
         ).scalar()
-        state = _json.loads(raw) if raw else {}
+        state = raw if isinstance(raw, dict) else (_json.loads(raw) if raw else {})
         for _d in _DIM_KEYS:
             if _d not in state:
                 state[_d] = {'depth': 1, 'taught': []}
