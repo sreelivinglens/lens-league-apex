@@ -1082,11 +1082,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 {# Only for returning users (not first-login). Hidden when no images in carousel. #}
 {% set _hero_img = carousel_images[0] if carousel_images else none %}
 {% if _hero_img and _hero_img.thumb_url and not (free_tier and stats.total == 0) %}
+<a href="{{ url_for('image_detail', image_id=_hero_img.id) }}"
+   style="display:block; text-decoration:none; position:relative;" aria-label="Explore this photograph">
 <div class="sl-dash-hero-banner">
   <img src="{{ _hero_img.thumb_url }}"
        alt="{{ _hero_img.genre or 'Photography' }}"
        loading="eager"
-       onerror="this.parentElement.style.display='none'">
+       onerror="this.parentElement.parentElement.style.display='none'">
   <div class="sl-dash-hero-banner__grad"></div>
   <div class="sl-dash-hero-banner__badge">
     <div>
@@ -1094,9 +1096,15 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <span class="sl-dash-hero-banner__tier">{{ _hero_img.tier or '' }}</span>
       <span class="sl-dash-hero-banner__by">by {{ _hero_img.photographer_name or '' }}</span>
     </div>
-    <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+      <span class="sl-dash-hero-banner__genre">{{ _hero_img.genre or '' }}</span>
+      <span style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+                   color:rgba(255,255,255,.55); background:rgba(0,0,0,.3); padding:3px 8px;
+                   border-radius:6px;">Explore →</span>
+    </div>
   </div>
 </div>
+</a>
 {% endif %}
 
 <div class="sl-today__inner">
@@ -2148,14 +2156,88 @@ function slExpandMission() {
   }
 }
 
-// ── Section toggle ──
+// ── Section toggle — with localStorage state ──
+var _SL_STORE_KEY = 'sl_sec_state';
+
+function slLoadSections() {
+  var stored = {};
+  try { stored = JSON.parse(localStorage.getItem(_SL_STORE_KEY) || '{}'); } catch(e) {}
+  return stored;
+}
+
+function slSaveSections(state) {
+  try { localStorage.setItem(_SL_STORE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
 function slToggle(id) {
   var s = document.getElementById(id);
   if (!s) return;
   var open = s.classList.toggle('is-open');
   var h = s.querySelector('.sl-sec__hdr');
   if (h) h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  // Save state
+  var state = slLoadSections();
+  state[id] = open;
+  slSaveSections(state);
 }
+
+function slRestoreSections() {
+  var state = slLoadSections();
+  var isFirstVisit = Object.keys(state).length === 0;
+  var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
+  secIds.forEach(function(id) {
+    var s = document.getElementById(id);
+    if (!s) return;
+    var h = s.querySelector('.sl-sec__hdr');
+    // First visit — open standing, close the rest
+    var shouldOpen = isFirstVisit ? (id === 'sec-standing') : (state[id] === true);
+    if (shouldOpen) {
+      s.classList.add('is-open');
+      if (h) h.setAttribute('aria-expanded', 'true');
+    } else {
+      s.classList.remove('is-open');
+      if (h) h.setAttribute('aria-expanded', 'false');
+    }
+  });
+  // Save first-visit defaults
+  if (isFirstVisit) {
+    var defaults = {};
+    secIds.forEach(function(id) { defaults[id] = (id === 'sec-standing'); });
+    slSaveSections(defaults);
+  }
+}
+
+function slCollapseAll() {
+  var secIds = ['sec-standing', 'sec-points', 'sec-weekly', 'sec-referral', 'sec-photos', 'sec-aea', 'sec-location'];
+  secIds.forEach(function(id) {
+    var s = document.getElementById(id);
+    if (!s) return;
+    s.classList.remove('is-open');
+    var h = s.querySelector('.sl-sec__hdr');
+    if (h) h.setAttribute('aria-expanded', 'false');
+  });
+}
+
+// ── Auto-collapse on scroll past upload banner ──
+(function() {
+  var banner = document.getElementById('sl-upload-banner');
+  if (!banner || !window.IntersectionObserver) return;
+  var _hasScrolledPast = false;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting && !_hasScrolledPast) {
+        // Banner scrolled out of view — user is in data zone, collapse all
+        _hasScrolledPast = true;
+        slCollapseAll();
+      } else if (entry.isIntersecting) {
+        // Banner back in view — restore saved state
+        _hasScrolledPast = false;
+        slRestoreSections();
+      }
+    });
+  }, { threshold: 0 });
+  obs.observe(banner);
+})();
 
 // ── Keyboard nav for collapsible sections ──
 document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
@@ -2166,6 +2248,9 @@ document.querySelectorAll('.sl-sec__hdr').forEach(function(hdr) {
     }
   });
 });
+
+// ── Restore on page load ──
+slRestoreSections();
 
 </script>
 {% endblock %}
