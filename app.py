@@ -4123,7 +4123,7 @@ def _get_curriculum_lesson(user, progress_data):
         pass
 
     try:
-        state = _json.loads(raw_state) if raw_state else {}
+        state = raw_state if isinstance(raw_state, dict) else (_json.loads(raw_state) if raw_state else {})
     except Exception:
         state = {}
 
