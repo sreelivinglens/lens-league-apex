@@ -1198,6 +1198,20 @@ with app.app_context():
             db.session.rollback()
             print(f'Item D schema migration warning: {_disc_mig}')
 
+        try:
+            # Photo School — mission genre override + curriculum progress tracker
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS mission_genre VARCHAR(20) DEFAULT NULL"
+            ))
+            db.session.execute(db.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS curriculum_state JSON DEFAULT NULL"
+            ))
+            db.session.commit()
+            print('Photo School columns OK.')
+        except Exception as _ps_mig:
+            db.session.rollback()
+            print(f'Photo School columns migration warning: {_ps_mig}')
+
         print('Columns migrated OK.')
 
         # UAT plan backfill — all subscribed users get 'uat' plan (unlimited uploads).
@@ -3005,6 +3019,23 @@ def dashboard():
     # DDI Progress (same data as profile page)
     progress_data = _build_progress_data(current_user)
 
+    # ── Photo School — curriculum lesson + weather ────────────────────────
+    _lesson = None
+    _weather = {'state': 'green', 'condition': '', 'message': None, 'window': None,
+                'temp_c': None, 'humidity': None}
+    if current_user.role != 'admin':
+        try:
+            _lesson = _get_curriculum_lesson(current_user, progress_data)
+        except Exception as _le:
+            app.logger.warning(f'[curriculum_lesson] {_le}')
+        try:
+            _wx_city = getattr(current_user, 'city', '') or ''
+            if _wx_city:
+                _weather = _get_weather(_wx_city)
+        except Exception as _we:
+            app.logger.warning(f'[weather] {_we}')
+    # ── End Photo School ──────────────────────────────────────────────────
+
     # Mentor reviews — for notif strip
     mentor_reviews = []
     if current_user.role != 'admin':
@@ -3112,7 +3143,9 @@ def dashboard():
                                {'uid': current_user.id}
                            ).scalar() or 0,
                            countries=get_countries(),
-                           location_data_json=json.dumps(_dash_loc()))
+                           location_data_json=json.dumps(_dash_loc()),
+                           lesson=_lesson,
+                           weather=_weather)
 
 
 # ---------------------------------------------------------------------------
@@ -3428,6 +3461,690 @@ def _build_progress_data(user):
         'prev_tier':      _prev_tier,
         'next_tier':      _next_tier,
     }
+
+
+# ---------------------------------------------------------------------------
+# Photo School — weather + curriculum helpers
+# ---------------------------------------------------------------------------
+
+# Curriculum: 15 principles × 5 dimensions × 3 depth levels
+# Each entry: (principle_id, dimension, depth, title, principle,
+#              commons_file, commons_caption, master, master_quote,
+#              assignments dict keyed by genre)
+_CURRICULUM = [
+    # ── DoD ──────────────────────────────────────────────────────────────
+    {
+        'id': 'D1.1', 'dim': 'dod', 'depth': 1,
+        'title': 'The Cost of the Decision',
+        'principle': 'Difficulty is not complexity. It is the cost of the decision.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': None, 'master_quote': None,
+        'assignments': {
+            'Wildlife':     'Name the one thing that made this shot hard to get. If you cannot name it, get closer.',
+            'Street':       'Find the frame that required you to step into the scene, not observe it from outside.',
+            'Nature':       'Shoot in a condition you would normally avoid — rain, wind, flat noon light.',
+            'Landscape':    'Get somewhere before the light arrives. The difficulty is the journey.',
+            'People':       'Ask someone you do not know if you can photograph them. The ask is the difficulty.',
+            'Documentary':  'Get inside the frame rather than recording it from a safe distance.',
+            'Macro':        'Shoot at your maximum magnification in available light. No tripod.',
+            'Creative':     'Choose a technique you have not mastered. The lack of control is the point.',
+            'Drone':        'Fly in a condition you would normally cancel for. Wind teaches more than calm.',
+            'Wedding':      'Shoot the ceremony without flash. The restriction is the difficulty.',
+            'Fashion':      'Take the shoot outside. Remove the controlled environment entirely.',
+        },
+        'indoor_assignment': 'Find the hardest shot you can make at home — low light, moving subject, no extra gear.',
+    },
+    {
+        'id': 'D1.2', 'dim': 'dod', 'depth': 2,
+        'title': 'The Harder Position',
+        'principle': 'The harder position always exists. Most photographers do not take it.',
+        'commons_file': 'File:Ansel_Adams_-_National_Archives_111-SC-558045.jpg',
+        'commons_caption': 'Ansel Adams at work, 1942 · US National Archives · Public domain',
+        'master': 'Ansel Adams', 'master_quote': 'Twelve significant photographs in any one year is a good crop.',
+        'assignments': {
+            'Wildlife':     'Move until the animal knows you are there. Then hold.',
+            'Street':       'Step into the scene you are photographing.',
+            'Nature':       'Find the position you did not take last time because it was uncomfortable. Take it.',
+            'Landscape':    'Shoot from a position that required physical effort to reach.',
+            'People':       'Move twice as close as feels comfortable.',
+            'Documentary':  'Stand where the story is happening, not where it can be safely observed.',
+            'Macro':        'Shoot from underneath, behind, or through the subject.',
+            'Creative':     'Build a setup with one element you cannot fully predict.',
+            'Drone':        'Fly lower than you normally would. Proximity is the difficulty.',
+            'Wedding':      'Get between the couple and the crowd. Not behind the crowd.',
+            'Fashion':      'Choose a location with no shelter, no comfort, no control.',
+        },
+        'indoor_assignment': 'Find the hardest angle in your room. Go lower, closer, or into the light.',
+    },
+    {
+        'id': 'D1.3', 'dim': 'dod', 'depth': 3,
+        'title': 'When the Cost Disappears, Raise It',
+        'principle': 'When the cost disappears, raise it deliberately.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Michael Kenna', 'master_quote': 'I wait for the light to speak to me.',
+        'assignments': {
+            'Wildlife':     'Shoot wildlife with a 50mm or shorter. Proximity is now the entire challenge.',
+            'Street':       'Tape over the LCD. Shoot blind for one hour. Trust your reading of the scene.',
+            'Nature':       'One frame only per subject. No review, no reshoot.',
+            'Landscape':    'No tripod. One location. Three hours. Stay until the light surprises you.',
+            'People':       'Available light only. No reflector. No assistant.',
+            'Documentary':  'No wide angle. Everything at 50mm or longer. Force yourself into proximity.',
+            'Macro':        'Handheld. Moving subject. Maximum magnification.',
+            'Creative':     'Shoot one technique for one full hour. Only the last ten frames count.',
+            'Drone':        'Manual mode only. No automated flight path.',
+            'Wedding':      'Document the day entirely as an observer. No directing, no posing.',
+            'Fashion':      'One light source only — whatever exists in the location.',
+        },
+        'indoor_assignment': 'Impose one real constraint: shoot everything today with your phone only.',
+    },
+    # ── Disruption ───────────────────────────────────────────────────────
+    {
+        'id': 'V1.1', 'dim': 'disruption', 'depth': 1,
+        'title': 'Every Subject Has a Default Photograph',
+        'principle': 'Every subject has a default photograph. Yours should not be it.',
+        'commons_file': 'File:Lange-MigrantMother02.jpg',
+        'commons_caption': 'Migrant Mother · Dorothea Lange · 1936 · Public domain',
+        'master': 'Dorothea Lange', 'master_quote': 'The camera is an instrument that teaches people how to see without a camera.',
+        'assignments': {
+            'Wildlife':     'Find the frame where the background is as interesting as the subject.',
+            'Street':       'Photograph the street with no people in it. Make it about what they left behind.',
+            'Nature':       'Shoot through something — grass, water, another plant. Let the obstruction become the frame.',
+            'Landscape':    'Shoot the same location at flat noon light. Find what golden hour was hiding.',
+            'People':       'Shoot the back of someone\'s head. Make the viewer want to see the face.',
+            'Documentary':  'Find the one person the event has not reached yet. That is your frame.',
+            'Macro':        'Find the macro subject no one shoots — the underside, the decay, the ordinary up close.',
+            'Creative':     'Use your technique on a subject it was never intended for.',
+            'Drone':        'Fly low. Side angle. Let the horizon back in.',
+            'Wedding':      'Photograph the guests watching the couple. Their faces contain the entire story.',
+            'Fashion':      'Shoot the fashion against something that fights it — texture, chaos, weather.',
+        },
+        'indoor_assignment': 'Photograph an ordinary household object from every angle except the obvious one.',
+    },
+    {
+        'id': 'V1.2', 'dim': 'disruption', 'depth': 2,
+        'title': 'Disruption That Serves the Subject',
+        'principle': 'Disruption that serves the subject scores. Disruption for its own sake does not.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Ernst Haas', 'master_quote': 'The camera doesn\'t make a bit of difference. All of them can record what you are seeing.',
+        'assignments': {
+            'Wildlife':     'Use a slow shutter on a moving subject deliberately. The blur must say something.',
+            'Street':       'Find the angle where the subject becomes secondary to what surrounds them.',
+            'Nature':       'Apply a technique that removes the subject\'s detail entirely. What remains?',
+            'Landscape':    'Make an exposure decision that a camera in auto mode would refuse.',
+            'People':       'Remove the face from the portrait. Make the body the entire statement.',
+            'Documentary':  'Photograph the detail that stands for the event, not the event itself.',
+            'Macro':        'Defocus deliberately at maximum magnification. Shoot the abstraction.',
+            'Creative':     'Shoot until one frame is unrecognisable as its source.',
+            'Drone':        'Fly at 10 metres. The disruption is proximity, not altitude.',
+            'Wedding':      'Photograph the five seconds after the peak moment. Not during it.',
+            'Fashion':      'Put the fashion in weather. Rain, wind, mud. The disruption is context.',
+        },
+        'indoor_assignment': 'Make two frames of the same object — one conventional, one that shows something the first cannot.',
+    },
+    {
+        'id': 'V1.3', 'dim': 'disruption', 'depth': 3,
+        'title': 'The Most Disruptive Images Look Inevitable',
+        'principle': 'The most disruptive images look inevitable in retrospect.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Daido Moriyama', 'master_quote': 'I want to express the feeling of reality that is beyond imagination.',
+        'assignments': {
+            'Wildlife':     'Review your last ten frames. Find the one that broke a rule and was stronger for it.',
+            'Street':       'Spend thirty minutes finding the angle that feels inevitable, not just different.',
+            'Nature':       'Ask of each frame: does this disruption reveal or merely decorate?',
+            'Landscape':    'Process one image to match the emotional memory of being there, not the visual record.',
+            'People':       'Make a portrait where the face is partially hidden. What does the viewer feel?',
+            'Documentary':  'Find the detail that makes the viewer understand the whole story without seeing it.',
+            'Macro':        'Make a macro image that the viewer cannot immediately identify. Then reveal the source.',
+            'Creative':     'Show your work to someone unfamiliar. If they ask "how?" the technique is visible. If they ask "where?" — you are there.',
+            'Drone':        'Make one aerial frame a viewer would not immediately identify as drone.',
+            'Wedding':      'Find one frame from the day that works as a standalone image with no context.',
+            'Fashion':      'Make a fashion frame where the garment occupies less than 30% of the visual interest.',
+        },
+        'indoor_assignment': 'Find the frame in your home that looks inevitable — the only way this corner could be photographed.',
+    },
+    # ── DM ───────────────────────────────────────────────────────────────
+    {
+        'id': 'M1.1', 'dim': 'dm', 'depth': 1,
+        'title': 'Action and Geometry',
+        'principle': 'The decisive moment is not the action. It is when the action and the geometry coincide.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Henri Cartier-Bresson', 'master_quote': 'To photograph is to hold one\'s breath when all faculties converge to capture fleeting reality.',
+        'assignments': {
+            'Wildlife':     'Identify the geometry before the animal moves. Position yourself inside it. Wait.',
+            'Street':       'Find a background worth waiting for. Stand in front of it until someone walks through it correctly.',
+            'Nature':       'Identify your timing window. Then identify your geometric window. Wait for both simultaneously.',
+            'Landscape':    'Find a landscape with a moving element — cloud, tide, mist. Wait for it to land in the right position.',
+            'People':       'Set your light first. Then wait for the expression to arrive into it.',
+            'Documentary':  'Photograph the reaction, not the action. The decisive moment in documentary is often the response.',
+            'Macro':        'Shoot only when the subject\'s eye is within your depth of field plane. Every other frame is a miss.',
+            'Creative':     'Identify the single variable you cannot control. Wait for it to land correctly.',
+            'Drone':        'Find an aerial scene with a moving element. Wait for it to enter the pattern.',
+            'Wedding':      'Identify your light and background first. Then wait for the emotional peak to arrive.',
+            'Fashion':      'Shoot movement. Find the one frame where the cloth and the body are simultaneously right.',
+        },
+        'indoor_assignment': 'Find a moving subject at home — person, pet, light shifting. Build the frame before the movement arrives.',
+    },
+    {
+        'id': 'M1.2', 'dim': 'dm', 'depth': 2,
+        'title': 'Anticipation Is Not Waiting',
+        'principle': 'Anticipation is not waiting. It is reading the scene until you know where the moment will be.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Raghu Rai', 'master_quote': 'The camera is not a machine. It is an extension of your eye.',
+        'assignments': {
+            'Wildlife':     'Watch for ten minutes before shooting. Identify the behaviour pattern. Predict the next peak.',
+            'Street':       'Spend five minutes in one spot without shooting. Read where the moment will happen. Then photograph it.',
+            'Nature':       'Identify the element you cannot control. Read its rhythm. Time your frame to its cycle.',
+            'Landscape':    'Arrive before the light. Identify where the light will land. Be in position when it does.',
+            'People':       'Talk to your subject before photographing them. Learn their rhythm.',
+            'Documentary':  'Read the event\'s structure. Identify what comes next. Be in position before it arrives.',
+            'Macro':        'Time your subject\'s rhythm for five minutes before shooting.',
+            'Creative':     'Test one frame. Read what the technique is doing. Adjust for the next with that knowledge.',
+            'Drone':        'Before flying, identify every moving element and predict where it will be in sixty seconds.',
+            'Wedding':      'Identify who in the crowd is about to feel something. Be ready.',
+            'Fashion':      'Shoot between takes, not during them. The authentic moment arrives when the model forgets the camera.',
+        },
+        'indoor_assignment': 'Watch someone at home for five minutes without photographing. Predict their next gesture. Photograph it.',
+    },
+    {
+        'id': 'M1.3', 'dim': 'dm', 'depth': 3,
+        'title': 'The Threshold Moment',
+        'principle': 'Sometimes the decisive moment is the one just before the action — when anticipation itself is visible.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Henri Cartier-Bresson', 'master_quote': 'Your first 10,000 photographs are your worst.',
+        'assignments': {
+            'Wildlife':     'Make one frame before the action. The viewer should feel the action is inevitable.',
+            'Street':       'Shoot one frame early — before the gesture resolves, before the person is fully in the light.',
+            'Nature':       'Find a subject at the moment just before its transformation.',
+            'Landscape':    'Make the frame at the moment of maximum anticipation, not maximum resolution.',
+            'People':       'Photograph the moment just before your subject does the thing you came to photograph.',
+            'Documentary':  'Find the moment of maximum tension before release.',
+            'Macro':        'Shoot the approach, not the arrival.',
+            'Creative':     'Start exposing earlier than you normally would. The beginning of the technique is often more interesting.',
+            'Drone':        'Anticipate the frame one beat early. The approach is the tension.',
+            'Wedding':      'Find the five seconds before each peak moment. Photograph them instead of the peak.',
+            'Fashion':      'Shoot the moment the model is still becoming the image, not after they have arrived.',
+        },
+        'indoor_assignment': 'Photograph someone at home in the moment before they do something — sitting down, opening a book, looking up.',
+    },
+    # ── Wonder ───────────────────────────────────────────────────────────
+    {
+        'id': 'W1.1', 'dim': 'wonder', 'depth': 1,
+        'title': 'The Subject Is Not Rare. The Seeing Is.',
+        'principle': 'The subject is not rare. The seeing is.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Vivian Maier', 'master_quote': 'Taking pictures is savoring life intensely, every hundredth of a second.',
+        'assignments': {
+            'Wildlife':     'Photograph a species you consider ordinary. Make the frame that proves it is not.',
+            'Street':       'Walk slowly. Stop every time something almost catches your eye. Look at what almost caught it.',
+            'Nature':       'Find a plant or natural object you walk past regularly. Make the frame that reveals what is actually there.',
+            'Landscape':    'Shoot the landscape with a telephoto. Find the fragment that holds the whole.',
+            'People':       'Photograph someone doing something ordinary. Find the instant of involuntary truth.',
+            'Documentary':  'Find the single object in the scene that, photographed alone, makes the viewer understand everything.',
+            'Macro':        'Choose the most ordinary subject you can find. Photograph it at maximum magnification.',
+            'Creative':     'Apply your technique to something completely mundane. Does it reveal something, or only decorate?',
+            'Drone':        'Fly over a location you know from the ground. Find what the ground perspective has always hidden.',
+            'Wedding':      'Stop photographing the scheduled moments. Photograph only what happens between them.',
+            'Fashion':      'Put the camera down during the planned shoot. Pick it up only when something unplanned happens.',
+        },
+        'indoor_assignment': 'Walk your home slowly. Find one thing you have never photographed. Make the frame that reveals it.',
+    },
+    {
+        'id': 'W1.2', 'dim': 'wonder', 'depth': 2,
+        'title': 'Access Is Earned Before the Camera Is Raised',
+        'principle': 'Access wonder is earned before the camera is raised.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Sebastião Salgado', 'master_quote': 'Photography is not for me an end in itself, but it is a medium for me to tell a story.',
+        'assignments': {
+            'Wildlife':     'Return to a location three times before photographing. See what becomes available on the third visit.',
+            'Street':       'Return to one street location every day for a week. Photograph only what the repeated presence earns.',
+            'Nature':       'Go somewhere that requires effort to reach. The access is the difficulty and the wonder.',
+            'Landscape':    'Find a landscape location not on any photography website. The unknown location is the access.',
+            'People':       'Ask someone if you can photograph them over several sessions, not just once.',
+            'Documentary':  'Find a story that requires an introduction to access. Get the introduction before raising the camera.',
+            'Macro':        'Find a macro subject that requires permission or relationship to photograph.',
+            'Creative':     'Build something for the photograph. The construction is the access.',
+            'Drone':        'Fly somewhere that requires permission. The bureaucratic difficulty is part of the work.',
+            'Wedding':      'If photographing someone you just met, spend an hour with them before the session begins.',
+            'Fashion':      'Find a fashion location that requires negotiation. The negotiation is part of the creative work.',
+        },
+        'indoor_assignment': 'Photograph a family member or housemate doing something private — reading, cooking, thinking. Ask first.',
+    },
+    {
+        'id': 'W1.3', 'dim': 'wonder', 'depth': 3,
+        'title': 'Emotional Wonder Cannot Be Planned',
+        'principle': 'Emotional wonder cannot be planned — but it can be prepared for.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Sebastião Salgado', 'master_quote': 'I hope that the person who visits my exhibitions, who buys my book, feels what I felt.',
+        'assignments': {
+            'Wildlife':     'Stay with one subject long enough that its behaviour becomes predictable. Wait for the moment that breaks the pattern.',
+            'Street':       'Spend two hours in one location. Photograph only in the second hour.',
+            'Nature':       'Visit one natural location in different seasons. Find the season where it produces the emotion you want.',
+            'Landscape':    'Before shooting, name the emotion you want the image to produce. Every decision serves that feeling.',
+            'People':       'Photograph for longer than feels necessary. The emotional truth arrives after the subject has exhausted their performance.',
+            'Documentary':  'Find the one person whose face contains the entire emotional weight of the event.',
+            'Macro':        'Name the emotion your macro subject produces before you shoot.',
+            'Creative':     'Show your work to someone unfamiliar with photography. Ask what they feel, not what they think.',
+            'Drone':        'Find the altitude where human scale disappears and pattern takes over.',
+            'Wedding':      'Find the emotion this particular wedding contains that no other wedding has. Photograph that.',
+            'Fashion':      'Strip back until the fashion disappears and the person remains.',
+        },
+        'indoor_assignment': 'Photograph one person at home for thirty minutes without directing them. Wait for the moment of unguarded truth.',
+    },
+    # ── AQ ───────────────────────────────────────────────────────────────
+    {
+        'id': 'A1.1', 'dim': 'aq', 'depth': 1,
+        'title': 'Name What the Image Makes the Viewer Feel',
+        'principle': '"Powerful" is not an emotion. Name what the image makes the viewer feel.',
+        'commons_file': 'File:Lange-MigrantMother02.jpg',
+        'commons_caption': 'Migrant Mother · Dorothea Lange · 1936 · The emotion is exhausted dignity. Public domain',
+        'master': 'Dorothea Lange', 'master_quote': 'A camera is a tool for learning how to see without a camera.',
+        'assignments': {
+            'Wildlife':     'Before shooting, choose one word: awe, fragility, power, strangeness. Make only frames that deliver that feeling.',
+            'Street':       'Walk looking for one of these: loneliness, defiance, dignity, connection. Do not raise the camera until you see it.',
+            'Nature':       'Find a natural subject and name the emotion it produces. Find the frame that maximises that specific feeling.',
+            'Landscape':    'Stand in the landscape before shooting. Name the emotion. Make the frame that delivers it.',
+            'People':       'Identify the emotion of your subject before you raise the camera. Expose for that feeling.',
+            'Documentary':  'Name the emotion the story produces. Find the frame that makes it undeniable.',
+            'Macro':        'Choose the emotion your macro subject produces. Find the angle that delivers it most precisely.',
+            'Creative':     'Name the feeling before applying the technique. The technique serves the feeling.',
+            'Drone':        'Find the altitude where the emotion you want becomes available.',
+            'Wedding':      'Identify the specific emotional register of this couple. Every frame serves that register.',
+            'Fashion':      'Name the emotional register the garment demands. Direct toward that feeling, not conventional beauty.',
+        },
+        'indoor_assignment': 'Photograph one room in your home. Name the emotion before you shoot. Make three frames that deliver it.',
+    },
+    {
+        'id': 'A1.2', 'dim': 'aq', 'depth': 2,
+        'title': 'Light Is the Instrument of Emotion',
+        'principle': 'Light is the instrument of emotion — not the subject.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': 'Yousuf Karsh', 'master_quote': 'Look and think before opening the shutter. The heart and mind are the true lens of the camera.',
+        'assignments': {
+            'Wildlife':     'Photograph the same animal in two different light conditions. Compare the emotional register of each.',
+            'Street':       'Find a scene where the light is already doing the work. Stand in it. Wait for the subject to arrive.',
+            'Nature':       'Shoot one natural subject at three different times of day. Which light produces the emotion you want?',
+            'Landscape':    'Remove all post-processing from one landscape image. What emotion does the original light produce?',
+            'People':       'Photograph one subject in three different light positions. Name the emotion each produces.',
+            'Documentary':  'Do not modify the light. Use the light the scene already has. Its quality is the story.',
+            'Macro':        'Shoot one macro subject with light from three different directions.',
+            'Creative':     'Make the same technique image in two different light conditions. The light determines which one has a feeling.',
+            'Drone':        'Fly the same location at different times of day. The light changes what the place is emotionally.',
+            'Wedding':      'Shoot one sequence entirely by available light. No flash. Compare the emotional register.',
+            'Fashion':      'Change only the light — not the location, not the model. Hard vs soft light changes the register entirely.',
+        },
+        'indoor_assignment': 'Photograph the same corner of your home in morning light and evening light. Name the different emotions.',
+    },
+    {
+        'id': 'A1.3', 'dim': 'aq', 'depth': 3,
+        'title': 'The Unexpected Emotion',
+        'principle': 'The image that makes the viewer feel something they did not expect to feel is the one they remember.',
+        'commons_file': None,
+        'commons_caption': None,
+        'master': None, 'master_quote': None,
+        'assignments': {
+            'Wildlife':     'Find the emotion your genre never shows — tenderness in a predator, loneliness in power.',
+            'Street':       'Find the emotional contradiction the street contains. Photograph the thing that feels wrong for the genre.',
+            'Nature':       'Find the emotion in a natural subject that the genre never names.',
+            'Landscape':    'Find the emotion the landscape produces that a landscape photograph is not supposed to produce.',
+            'People':       'Find the emotional contradiction your subject contains. Photograph the one the genre does not usually show.',
+            'Documentary':  'Find the moment of unexpected emotional register — hope inside despair, dignity inside hardship.',
+            'Macro':        'Find the macro subject that produces an emotion its scale should not produce.',
+            'Creative':     'Make a technique image that produces a specific named emotion in a viewer who does not know the technique.',
+            'Drone':        'Find the drone frame where a human element produces an unexpected emotion against the abstract scale.',
+            'Wedding':      'Find the one moment where the emotional register is the opposite of what the event is supposed to feel.',
+            'Fashion':      'Strip the fashion image of everything that makes it fashion. What emotion does the person produce?',
+        },
+        'indoor_assignment': 'Photograph your home in a way that produces the emotion it is not supposed to produce — warmth as unease, comfort as loneliness.',
+    },
+]
+
+# Index for fast lookup by ID
+_CURRICULUM_BY_ID = {p['id']: p for p in _CURRICULUM}
+
+# Dimension order and default progression
+_DIM_KEYS      = ['dod', 'disruption', 'dm', 'wonder', 'aq']
+_DIM_LABELS    = {'dod': 'Depth of Difficulty', 'disruption': 'Disruption',
+                  'dm': 'Decisive Moment', 'wonder': 'Wonder Factor', 'aq': 'Affective Quotient'}
+_DIM_SHORT     = {'dod': 'Difficulty', 'disruption': 'Disruption',
+                  'dm': 'Timing', 'wonder': 'Wonder', 'aq': 'Emotion'}
+
+# Valid mission genres matching platform genres
+_VALID_MISSION_GENRES = [
+    'Wildlife', 'Street', 'Nature', 'Landscape', 'People',
+    'Documentary', 'Macro', 'Creative', 'Drone', 'Wedding', 'Fashion',
+]
+
+
+def _get_weather(city):
+    """
+    Fetch current weather for a city via Open-Meteo (free, no key).
+    Returns dict with: temp_c, humidity, precip_prob, wind_kph,
+                       weather_code, condition, state ('green'|'amber'|'red'),
+                       message, window
+    Falls back to neutral green if fetch fails — never crashes dashboard.
+    """
+    import urllib.request as _ur
+    import json as _json
+
+    _NEUTRAL = {
+        'temp_c': None, 'humidity': None, 'precip_prob': None,
+        'wind_kph': None, 'weather_code': None,
+        'condition': 'Weather unavailable',
+        'state': 'green',
+        'message': None,
+        'window': None,
+    }
+
+    if not city:
+        return _NEUTRAL
+
+    try:
+        # Step 1 — geocode city to lat/lon
+        geo_url = (
+            'https://geocoding-api.open-meteo.com/v1/search'
+            f'?name={urllib.parse.quote(city)}&count=1&language=en&format=json'
+        )
+        import urllib.parse
+        with _ur.urlopen(geo_url, timeout=4) as _r:
+            _geo = _json.loads(_r.read())
+        if not _geo.get('results'):
+            return _NEUTRAL
+        lat = _geo['results'][0]['latitude']
+        lon = _geo['results'][0]['longitude']
+
+        # Step 2 — current weather
+        wx_url = (
+            f'https://api.open-meteo.com/v1/forecast'
+            f'?latitude={lat}&longitude={lon}'
+            f'&current=temperature_2m,relative_humidity_2m,'
+            f'precipitation_probability,wind_speed_10m,weather_code'
+            f'&wind_speed_unit=kmh&timezone=auto'
+        )
+        with _ur.urlopen(wx_url, timeout=4) as _r:
+            _wx = _json.loads(_r.read())
+
+        cur       = _wx.get('current', {})
+        temp_c    = cur.get('temperature_2m')
+        humidity  = cur.get('relative_humidity_2m')
+        precip    = cur.get('precipitation_probability', 0) or 0
+        wind_kph  = cur.get('wind_speed_10m', 0) or 0
+        wcode     = cur.get('weather_code', 0) or 0
+
+        # Weather code groups (WMO standard)
+        # 0-1: clear, 2-3: partly cloudy, 45-48: fog
+        # 51-67: drizzle/rain, 71-77: snow, 80-82: showers
+        # 95-99: thunderstorm, hail
+        _is_storm    = wcode in (95, 96, 99)
+        _is_hail     = wcode in (96, 99)
+        _is_snow_hvy = wcode in (73, 75, 77)
+        _is_snow_lt  = wcode in (71, 72)
+        _is_rain     = wcode in (51,53,55,61,63,65,66,67,80,81,82)
+        _is_fog      = wcode in (45, 48)
+
+        # Heat index (simplified Steadman approximation)
+        heat_index = temp_c
+        if temp_c is not None and humidity is not None and temp_c >= 27:
+            heat_index = (
+                -8.784695 + 1.61139411 * temp_c
+                + 2.3385489 * humidity
+                - 0.14611605 * temp_c * humidity
+                - 0.012308094 * temp_c ** 2
+                - 0.016424828 * humidity ** 2
+                + 0.002211732 * temp_c ** 2 * humidity
+                + 0.00072546 * temp_c * humidity ** 2
+                - 0.000003582 * temp_c ** 2 * humidity ** 2
+            )
+
+        # Determine state
+        if _is_storm or _is_hail:
+            state   = 'red'
+            condition = 'Thunderstorm'
+            message = f'{city} · Thunderstorm warning. Do not go out today. Your outdoor mission waits for tomorrow.'
+            window  = None
+        elif _is_snow_hvy:
+            state   = 'red'
+            condition = 'Heavy snow'
+            message = f'{city} · Heavy snow. Outdoor mission paused — or embrace it if you are equipped.'
+            window  = None
+        elif _is_rain and precip >= 70:
+            state   = 'red'
+            condition = f'Rain · {precip}% chance'
+            message = f'{city} · Heavy rain likely today. Outdoor mission best saved for tomorrow.'
+            window  = None
+        elif heat_index is not None and heat_index >= 42:
+            state   = 'red'
+            condition = f'{round(temp_c)}°C · Humidity {humidity}%'
+            message = f'{city} · Feels like {round(heat_index)}°C with humidity. Do not shoot outdoors — dangerous conditions.'
+            window  = None
+        elif heat_index is not None and heat_index >= 35:
+            state   = 'amber'
+            condition = f'{round(temp_c)}°C · Humidity {humidity}%'
+            message = f'{city} · Feels like {round(heat_index)}°C. Go before 9am or after 5pm. Take water.'
+            window  = 'Early morning only'
+        elif wind_kph >= 50:
+            state   = 'amber'
+            condition = f'Wind {round(wind_kph)} km/h'
+            message = f'{city} · Strong winds today — difficult for drone and macro. Other genres: exercise caution.'
+            window  = 'Sheltered locations only'
+        elif _is_rain and precip >= 40:
+            state   = 'amber'
+            condition = f'Rain likely · {precip}%'
+            message = f'{city} · Rain likely. Check your window — go early or plan for indoor alternatives.'
+            window  = 'Check timing'
+        elif _is_snow_lt:
+            state   = 'green'
+            condition = 'Light snow'
+            message = f'{city} · Light snow — a rare opportunity for landscape and street photographers. Dress warm.'
+            window  = 'Now'
+        elif _is_fog:
+            state   = 'green'
+            condition = 'Fog'
+            message = f'{city} · Fog this morning — ideal for atmospheric landscape and street work. Go now, it lifts by mid-morning.'
+            window  = 'Now — lifts by mid-morning'
+        else:
+            state   = 'green'
+            _temp_str = f'{round(temp_c)}°C' if temp_c is not None else ''
+            condition = f'{_temp_str} · Clear' if _temp_str else 'Clear'
+            message = None
+            window  = None
+
+        return {
+            'temp_c':       round(temp_c) if temp_c is not None else None,
+            'humidity':     humidity,
+            'precip_prob':  precip,
+            'wind_kph':     round(wind_kph),
+            'weather_code': wcode,
+            'condition':    condition,
+            'state':        state,
+            'message':      message,
+            'window':       window,
+        }
+
+    except Exception as _wx_err:
+        app.logger.warning(f'[weather] {city}: {_wx_err}')
+        return _NEUTRAL
+
+
+def _get_curriculum_lesson(user, progress_data):
+    """
+    Select today's Photo School lesson for this user.
+
+    Logic:
+    1. Identify weakest dimension from progress_data (or 'dm' default)
+    2. Get active mission genre: user.mission_genre or primary genre
+    3. Read curriculum_state from user record
+    4. Find first untaught principle at current depth for weakest dimension
+    5. If all taught at current depth — advance depth, start again
+    6. Alternate master days
+
+    Returns dict with all fields needed by dashboard template, or None if
+    user has no progress data yet (< 5 images).
+    """
+    import json as _json
+
+    # Resolve weakest dimension
+    weakest = 'dm'
+    if progress_data:
+        weakest = progress_data.get('weakest', 'dm')
+
+    # Resolve mission genre
+    mission_genre = getattr(user, 'mission_genre', None)
+    if not mission_genre or mission_genre not in _VALID_MISSION_GENRES:
+        # Fall back to primary genre from genre_interests
+        try:
+            from engine.seasonal_calendar import get_primary_genre as _gpg
+            mission_genre = _gpg(user) or 'Wildlife'
+        except Exception:
+            mission_genre = 'Wildlife'
+    if mission_genre not in _VALID_MISSION_GENRES:
+        mission_genre = 'Wildlife'
+
+    # Load curriculum state
+    raw_state = None
+    try:
+        raw_state = db.session.execute(
+            db.text('SELECT curriculum_state FROM users WHERE id = :uid'),
+            {'uid': user.id}
+        ).scalar()
+    except Exception:
+        pass
+
+    try:
+        state = _json.loads(raw_state) if raw_state else {}
+    except Exception:
+        state = {}
+
+    # Ensure all dims exist in state
+    for _d in _DIM_KEYS:
+        if _d not in state:
+            state[_d] = {'depth': 1, 'taught': []}
+
+    if 'last_had_master' not in state:
+        state['last_had_master'] = False
+
+    # Find the right principle for weakest dim
+    dim_state  = state[weakest]
+    cur_depth  = dim_state.get('depth', 1)
+    taught     = set(dim_state.get('taught', []))
+
+    # Get principles for this dim at current depth
+    candidates = [p for p in _CURRICULUM
+                  if p['dim'] == weakest and p['depth'] == cur_depth]
+
+    # Find first untaught
+    lesson = None
+    for p in candidates:
+        if p['id'] not in taught:
+            lesson = p
+            break
+
+    # All taught at this depth — advance
+    if lesson is None:
+        cur_depth = cur_depth + 1 if cur_depth < 3 else 1
+        state[weakest]['depth'] = cur_depth
+        state[weakest]['taught'] = []
+        candidates = [p for p in _CURRICULUM
+                      if p['dim'] == weakest and p['depth'] == cur_depth]
+        lesson = candidates[0] if candidates else None
+
+    if lesson is None:
+        return None
+
+    # Alternate master days
+    show_master = (not state['last_had_master']) and bool(lesson.get('master'))
+
+    # Get genre-specific assignment
+    assignment = lesson['assignments'].get(mission_genre,
+                 lesson['assignments'].get('Wildlife', ''))
+
+    return {
+        'principle_id':     lesson['id'],
+        'dim':              weakest,
+        'dim_label':        _DIM_LABELS.get(weakest, weakest),
+        'dim_short':        _DIM_SHORT.get(weakest, weakest),
+        'depth':            lesson['depth'],
+        'title':            lesson['title'],
+        'principle':        lesson['principle'],
+        'assignment':       assignment,
+        'indoor_assignment': lesson.get('indoor_assignment', ''),
+        'commons_file':     lesson.get('commons_file'),
+        'commons_caption':  lesson.get('commons_caption'),
+        'show_master':      show_master,
+        'master':           lesson.get('master') if show_master else None,
+        'master_quote':     lesson.get('master_quote') if show_master else None,
+        'mission_genre':    mission_genre,
+    }
+
+
+def _advance_curriculum(user_id, principle_id, dim):
+    """
+    Mark a principle as taught after a mission-linked upload.
+    Called from the upload route when mission_dimension is set.
+    Safe — swallows all errors.
+    """
+    import json as _json
+    try:
+        raw = db.session.execute(
+            db.text('SELECT curriculum_state FROM users WHERE id = :uid'),
+            {'uid': user_id}
+        ).scalar()
+        state = _json.loads(raw) if raw else {}
+        for _d in _DIM_KEYS:
+            if _d not in state:
+                state[_d] = {'depth': 1, 'taught': []}
+        if 'last_had_master' not in state:
+            state['last_had_master'] = False
+
+        if dim in state:
+            taught = state[dim].get('taught', [])
+            if principle_id not in taught:
+                taught.append(principle_id)
+            state[dim]['taught'] = taught
+
+        # Toggle master flag
+        state['last_had_master'] = not state.get('last_had_master', False)
+
+        db.session.execute(
+            db.text('UPDATE users SET curriculum_state = :s WHERE id = :uid'),
+            {'s': _json.dumps(state), 'uid': user_id}
+        )
+        db.session.commit()
+    except Exception as _ce:
+        app.logger.warning(f'[curriculum_advance] {_ce}')
+        db.session.rollback()
+
+
+@app.route('/mission-genre', methods=['POST'])
+@login_required
+def set_mission_genre():
+    """
+    Set or clear the user's mission genre override.
+    POST body: genre=Wildlife (or 'engine' to clear)
+    """
+    genre = request.form.get('genre', '').strip()
+    if genre == 'engine' or genre not in _VALID_MISSION_GENRES:
+        genre = None
+    try:
+        db.session.execute(
+            db.text('UPDATE users SET mission_genre = :g WHERE id = :uid'),
+            {'g': genre, 'uid': current_user.id}
+        )
+        db.session.commit()
+    except Exception as _mg_e:
+        db.session.rollback()
+        app.logger.warning(f'[mission_genre] {_mg_e}')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/profile', methods=['GET', 'POST'])
