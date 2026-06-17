@@ -123,7 +123,7 @@ table { max-width: none; }
   justify-content: space-around;
   align-items: center;
   z-index: 998;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow: visible;
 }
 .sl-bottom-nav .sl-nav-item {
@@ -263,7 +263,7 @@ table { max-width: none; }
   transform: scale(1.05);
 }
 /* Add padding so page content clears the tab bar */
-body { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
+body { padding-top: calc(68px + env(safe-area-inset-bottom, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
@@ -1227,7 +1227,7 @@ img {
     </div>
   {% else %}
     <a href="{{ url_for('index') }}" class="sl-nav-logo" aria-label="Shutter League home">
-      <span class="sl-nav-logo__text">SHUTTER LEAGUE</span>
+      <span class="sl-nav-logo__text">SHUTTER<br>LEAGUE</span>
     </a>
     <a href="{{ url_for('mentors') }}" class="sl-nav-item {% if request.endpoint == 'mentors' %}active{% endif %}">
       <span class="sl-nav-item__icon">◆</span>
