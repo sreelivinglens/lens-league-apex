@@ -41,9 +41,9 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   HERO — same pattern as Today dashboard
+   HERO — lifted directly from dashboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sl-hero {
+.sl-dash-hero-banner {
   position: relative;
   width: 100%;
   height: auto;
@@ -52,174 +52,62 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   overflow: hidden;
   background: #0D0D0B;
 }
-@media (min-width: 1025px) {
-  .sl-hero { aspect-ratio: unset; height: 480px; }
-}
-.sl-hero-img {
-  width: 100%;
-  height: 100%;
+.sl-dash-hero-banner img {
+  width: 100%; height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
 }
-.sl-hero-fade {
+.sl-dash-hero-banner__grad {
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 60%, transparent 100%);
-  pointer-events: none;
 }
-.sl-hero-text {
+.sl-dash-hero-banner__badge {
   position: absolute;
-  bottom: 15px;
-  left: clamp(16px, 4vw, 48px);
-  z-index: 5;
-  padding: 12px 18px 14px;
-  width: 380px;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 20px;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  background: rgba(13,11,8,0.12);
-  margin: 0 64px;
-}
-.sl-hero-h1 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1.5;
-  letter-spacing: -0.02em;
-  margin-bottom: 5px;
-  white-space: normal;
-  text-shadow: 0 2px 14px rgba(0,0,0,0.97);
-}
-.sl-hero-sub {
-  font-size: 16px;
-  font-weight: 400;
-  color: #FFFFFF;
-  line-height: 1.55;
-  margin-bottom: 24px;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.98), 0 1px 6px rgba(0,0,0,0.98);
-}
-.sl-hero-tagline {
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.90);
-  line-height: 1.5;
-  margin-bottom: 8px;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.98);
-}
-.sl-hero-btn {
-  display: inline-block;
-  background: #F5C518;
-  color: #0D0D0B;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.sl-hero-btn:hover { opacity: 0.88; }
-.sl-hero-micro {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 5px;
-  color: rgba(255,255,255,0.65);
-  font-size: 14px;
-  font-weight: 400;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.98);
-}
-.sl-hero-micro svg { flex-shrink: 0; }
-
-/* Score badge — desktop: bottom-right large; mobile: stacked bottom-left (mirrors dashboard) */
-.sl-hero-score-badge {
-  position: absolute;
-  bottom: 20px;
-  right: clamp(16px, 4vw, 48px);
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
-  padding: 14px 18px 16px;
-  background: rgba(13,11,8,0.18);
+  justify-content: space-between;
 }
-.sl-hero-score-badge__score {
-  font-size: 52px;
+.sl-dash-hero-banner__score {
+  font-size: 18px;
   font-weight: 800;
   color: #F5C518;
   line-height: 1;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.95);
-  letter-spacing: -0.02em;
+  display: block;
 }
-.sl-hero-score-badge__meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-}
-.sl-hero-score-badge__sep {
-  font-size: 13px;
-  color: rgba(255,255,255,0.50);
-  padding: 0 4px;
-}
-.sl-hero-score-badge__tier {
-  font-size: 13px;
+.sl-dash-hero-banner__tier {
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: .10em;
+  letter-spacing: .09em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.80);
-  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
+  color: rgba(255,255,255,0.65);
+  display: block;
+  margin-top: 3px;
 }
-.sl-hero-score-badge__by {
-  font-size: 13px;
+.sl-dash-hero-banner__by {
+  font-size: 14px;
   color: rgba(255,255,255,0.55);
-  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
+  display: block;
+  margin-top: 2px;
 }
-/* Mobile — stacked bottom-left, mirrors dashboard badge */
-@media (max-width: 768px) {
-  .sl-hero-score-badge {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    padding: 14px 20px;
-    background: none;
-  }
-  .sl-hero-score-badge__score {
-    font-size: 18px;
-    font-weight: 800;
-    line-height: 1;
-    display: block;
-  }
-  .sl-hero-score-badge__meta { display: flex; flex-direction: column; gap: 0; }
-  .sl-hero-score-badge__sep { display: none; }
-  .sl-hero-score-badge__tier {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: .09em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.65);
-    display: block;
-    margin-top: 3px;
-  }
-  .sl-hero-score-badge__by {
-    font-size: 14px;
-    color: rgba(255,255,255,0.55);
-    display: block;
-    margin-top: 2px;
-  }
+.sl-dash-hero-banner__genre {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  text-align: right;
+}
+@media (min-width: 1025px) {
+  .sl-dash-hero-banner { aspect-ratio: unset; height: 480px; }
+  /* Desktop hero text offset — margin: 0 64px (audit ref) */
+  .sl-dash-hero-banner__badge { padding: 20px 64px; }
 }
 
-/* Coaching overlay — hidden on desktop, shown in mobile cream block only */
-.sl-coaching {
-  display: none;
-}
+
 .sl-co-q {
   font-size: 26px;
   font-weight: 700;
@@ -834,8 +722,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     padding: 10px 16px 12px;
     background: rgba(13,11,8,0.12);
   }
-  .sl-coaching { display: none; }
-  .sl-hero-h1 { font-size: 22px; }
 
   /* 200 Years — collapse to single column */
   .sl-200 {
@@ -892,15 +778,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 @media (max-width: 768px) {
   a[href], button { min-height: 44px; }
   [class*="sl-"] { grid-template-columns: 1fr !important; }
-
-  .sl-hero-text {
-    display: none !important;
-  }
-  .sl-hero-sub { display: none; }
-  .sl-hero-tagline { display: none; }
-  .sl-hero-btn { display: none; }
-  .sl-hero-micro { display: none; }
-  .sl-hero-h1 { display: none; }
 
   /* Below-hero cream block */
   .sl-hero-below {
@@ -972,9 +849,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     text-transform: uppercase;
     color: #854F0B;
   }
-  /* Hide desktop coaching overlay on mobile */
-  .sl-coaching { display: none; }
-
   /* ── Trust bar — 2×2 grid ── */
   .sl-trust {
     padding: 24px 20px;
@@ -1208,52 +1082,28 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 <div class="sl-home">
 
-{# ━━━━━━━━━━━━━━━━━━ HERO ━━━━━━━━━━━━━━━━━━ #}
-<section class="sl-hero">
+{# ━━━━━━━━━━━━━━━━━━ HERO — dashboard structure ━━━━━━━━━━━━━━━━━━ #}
+<div class="sl-dash-hero-banner">
   {% if hero and hero.thumb_url %}
-  <img class="sl-hero-img"
-       src="{{ hero.thumb_url }}"
+  <img src="{{ hero.thumb_url }}"
        alt="{{ hero.genre or 'Photography' }}"
        loading="eager"
        fetchpriority="high"
-       onerror="this.style.display='none'">
+       onerror="this.parentElement.style.display='none'">
   {% endif %}
-
-  <div class="sl-hero-fade"></div>
-
-  {# Score + tier + name badge on hero photo — bottom left #}
+  <div class="sl-dash-hero-banner__grad sl-hero-fade"></div>
   {% if hero and hero.score %}
-  <div class="sl-hero-score-badge">
-    <span class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</span>
-    <div class="sl-hero-score-badge__meta">
-      <span class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__by">{{ hero.photographer_name or "" }}</span>
+  <div class="sl-dash-hero-banner__badge">
+    <div>
+      <span class="sl-dash-hero-banner__score">{{ '%.2f'|format(hero.score) }}</span>
+      <span class="sl-dash-hero-banner__tier">{{ hero.tier or '' }}</span>
+      <span class="sl-dash-hero-banner__by">by {{ hero.photographer_name or '' }}</span>
     </div>
+    <span class="sl-dash-hero-banner__genre">{{ hero.genre or '' }}</span>
   </div>
   {% endif %}
 
-  <div class="sl-hero-text">
-    <h1 class="sl-hero-h1">How good is<br>your photograph,<br>really?</h1>
-      <p class="sl-hero-tagline">Honest photography feedback.<br>One improvement at a time.</p>
-    <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-       class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
-    <div class="sl-hero-micro">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Rated by science, not opinion.
-    </div>
-  </div>
-
-  {% if hero %}
-  {% set hero_audit = hero.get_audit() %}
-  {% set coaching_text = hero_audit.get('byline_2_body') or hero_audit.get('byline_1') %}
-  {% if coaching_text %}
-  <div class="sl-coaching">
-    <span class="sl-co-q">&ldquo;</span>
-    <p class="sl-co-body">{{ coaching_text }}</p>
-    <span class="sl-co-name">Shutter League Mentor</span>
-  </div>
-  {% endif %}
-  {% endif %}
-</section>
+</div>
 
 {# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
 <div class="sl-hero-below">
@@ -1577,18 +1427,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <script>
 (function(){
   /* Fade in hero text on load */
-  var heroText = document.querySelector('.sl-hero-text');
-  if (heroText) {
-    heroText.style.opacity = '0';
-    heroText.style.transform = 'translateY(12px)';
-    heroText.style.transition = 'opacity 0.9s ease-out, transform 0.9s ease-out';
-    window.addEventListener('load', function(){
-      setTimeout(function(){
-        heroText.style.opacity = '1';
-        heroText.style.transform = 'translateY(0)';
-      }, 100);
-    });
-  }
+
   /* Fade in score badge on desktop */
   var badge = document.querySelector('.sl-hero-score-badge');
   if (badge) {
