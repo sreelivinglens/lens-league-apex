@@ -163,7 +163,7 @@
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
     background: rgba(10,10,8,.97); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    flex-direction: column; align-items: center; justify-content: flex-start;
+    flex-direction: column; align-items: center; justify-content: space-between;
     padding: 32px 32px 40px;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
     /* Safari iOS address bar fix — dvh accounts for dynamic toolbar height */
@@ -190,6 +190,19 @@
     display: flex; align-items: center; justify-content: center;
     /* colour transitions smoothly between JS-applied VIBGYOR values */
     transition: border-color 1.2s ease, box-shadow 1.2s ease, background 1.2s ease;
+  }
+  /* ── Mobile overlay — compress vertical rhythm so Skip button is always visible ── */
+  @media (max-height: 750px), (max-width: 430px) {
+    #scoringOverlay { padding: 20px 24px 24px; }
+    .overlay-engine-tag { margin-bottom: 20px; font-size: 13px; }
+    .breath-ring-hero { width: 100px; height: 100px; }
+    .breath-hero { gap: 10px; margin-bottom: 16px; }
+    .breath-word { font-size: 18px; }
+    .breath-counts { font-size: 13px; }
+    .breath-tagline { font-size: 15px; }
+    .overlay-copy { margin-bottom: 16px; gap: 4px; }
+    .overlay-status { font-size: 15px; }
+    .overlay-substatus { font-size: 14px; }
   }
   @keyframes breatheHero {
     /* border-color and box-shadow removed — owned by JS so VIBGYOR colours apply cleanly */
