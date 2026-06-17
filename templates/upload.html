@@ -163,7 +163,9 @@
   #scoringOverlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
     background: rgba(10,10,8,.97); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-    flex-direction: column; align-items: center; justify-content: center; padding: 32px;
+    flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 32px 32px 40px;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
   #scoringOverlay.active { display: flex; }
   .overlay-engine-tag {
@@ -213,6 +215,7 @@
   .breath-counts {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 3px;
     color: var(--gold); text-transform: uppercase;
+    white-space: nowrap;
   }
   .breath-tagline { font-size: 17px; color:#FFFFFF; font-style: italic; }
   .overlay-copy {
@@ -458,7 +461,7 @@
 
 <!-- SCORING OVERLAY -->
 <div id="scoringOverlay">
-  <div class="overlay-engine-tag">Apex DDI Engine · Analysing</div>
+  <div class="overlay-engine-tag">Shutter League · Analysing</div>
   <div class="breath-hero">
     <div class="breath-ring-hero"><div class="breath-inner-dot"></div></div>
     <div class="breath-word" id="breathLabel">Inhale</div>
@@ -845,8 +848,8 @@
       if (resp && resp.status === 'processing' && resp.image_id) {
         // Phase 1 complete — image received. Now poll for score.
         document.getElementById('overlayPhase').textContent    = 'ANALYSING';
-        document.getElementById('overlayStatus').textContent   = 'Apex DDI Engine evaluating…';
-        document.getElementById('overlaySubstatus').textContent = 'Scoring technique, composition, moment, and emotion…';
+        document.getElementById('overlayStatus').textContent   = 'Shutter League engine evaluating…';
+        document.getElementById('overlaySubstatus').textContent = 'Evaluating technique, composition, timing, and emotion…';
         var etaEl = document.getElementById('overlayEta');
         if (etaEl) etaEl.style.display = 'none';
         var backWrap = document.getElementById('backToDashboardWrap');
@@ -943,13 +946,13 @@
     const phases = [
       { from:0,  to:4,  p:'UPLOADING',   s:'Transferring your image…',            ss:'Sending to the engine securely.' },
       { from:4,  to:8,  p:'PROCESSING',  s:'Preparing for analysis…',             ss:'Extracting EXIF data and verifying authenticity.' },
-      { from:8,  to:20, p:'INHALING',    s:'Inhaling the scene…',                 ss:'The engine is reading every subject, light, and form in the frame.' },
+      { from:8,  to:20, p:'READING',     s:'Reading the scene…',                  ss:'The engine is examining every subject, light, and form in the frame.' },
       { from:20, to:27, p:'RESEARCH',    s:'Cross-referencing species data…',     ss:'Checking range, rarity, and documentation for what is in frame.' },
-      { from:27, to:35, p:'DEPTH',       s:'Mapping depth of difficulty…',        ss:'How hard was this image to capture?' },
-      { from:35, to:43, p:'MOMENT',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
-      { from:43, to:51, p:'DISRUPTION',  s:'Measuring visual disruption…',        ss:'Does this image stop you? Does it demand attention?' },
-      { from:51, to:59, p:'WONDER',      s:'Calibrating wonder and emotion…',     ss:'What feeling does this image leave behind?' },
-      { from:59, to:67, p:'AESTHETIC',   s:'Evaluating the emotion it creates…',       ss:'Technique, light, colour, composition — all at once.' },
+      { from:27, to:35, p:'DIFFICULTY',  s:'Mapping difficulty…',                 ss:'How hard was this image to capture?' },
+      { from:35, to:43, p:'TIMING',      s:'Reading whether the timing was right…',        ss:'Did you press the shutter at the right instant?' },
+      { from:43, to:51, p:'IMPACT',      s:'Measuring visual impact…',            ss:'Does this image stop you? Does it demand attention?' },
+      { from:51, to:59, p:'EMOTION',     s:'Calibrating emotion…',               ss:'What feeling does this image leave behind?' },
+      { from:59, to:67, p:'AESTHETIC',   s:'Evaluating technique and composition…',    ss:'Light, colour, form — all at once.' },
       { from:67, to:80, p:'VERDICT',     s:'Building the verdict…',               ss:'Weighing every dimension. Almost there.' },
       { from:80, to:110,p:'FINALISING',  s:'Finalising your scorecard…',          ss:'A little longer for image-rich frames — worth the wait.' },
     ];
