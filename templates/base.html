@@ -123,7 +123,7 @@ table { max-width: none; }
   justify-content: space-around;
   align-items: center;
   z-index: 998;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: env(safe-area-inset-top, 0px);
   overflow: visible;
 }
 .sl-bottom-nav .sl-nav-item {
@@ -263,7 +263,7 @@ table { max-width: none; }
   transform: scale(1.05);
 }
 /* Add padding so page content clears the tab bar */
-body { padding-top: calc(68px + env(safe-area-inset-bottom, 0px)); }
+body { padding-top: calc(68px + env(safe-area-inset-top, 0px)); }
 /* Hide on desktop */
 @media (min-width: 769px) {
   .sl-bottom-nav { display: none !important; }
@@ -1095,18 +1095,11 @@ img {
       <a href="{{ url_for('science') }}" class="{% if request.endpoint == 'science' %}nav-active{% endif %}">Science</a>
       <a href="{{ url_for('learning') }}" class="{% if request.endpoint == 'learning' %}nav-active{% endif %}">Learning</a>
       <a href="/mentors" class="{% if request.endpoint == 'mentors' %}nav-active{% endif %}">Mentors</a>
+      <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}">Weekly Assignment</a>
+      <a href="{{ url_for('recent_work') }}" class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
+      <a href="{{ url_for('leaderboard') }}" class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Standings</a>
+      <a href="{{ url_for('poty') }}" class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
       <a href="{{ url_for('pricing') }}" class="{% if request.endpoint == 'pricing' %}nav-active{% endif %}">Pricing</a>
-      <div class="nav-more" id="navMoreLoggedOut">
-        <button class="nav-more-btn {% if request.endpoint in ['weekly_challenge','recent_work','leaderboard','poty'] %}nav-more-active{% endif %}" onclick="toggleNavMoreLoggedOut()" aria-haspopup="true" aria-label="More navigation">
-          More <span class="nav-more-chevron">&#9660;</span>
-        </button>
-        <div class="nav-more-menu">
-          <a href="{{ url_for('weekly_challenge') }}" class="{% if request.endpoint == 'weekly_challenge' %}nav-active{% endif %}">Weekly Assignment</a>
-          <a href="{{ url_for('recent_work') }}"      class="{% if request.endpoint == 'recent_work' %}nav-active{% endif %}">Recent Work</a>
-          <a href="{{ url_for('leaderboard') }}"      class="{% if request.endpoint == 'leaderboard' %}nav-active{% endif %}">Programme Standings</a>
-          <a href="{{ url_for('poty') }}"             class="{% if request.endpoint == 'poty' %}nav-active{% endif %}">Excellence Award</a>
-        </div>
-      </div>
       <a href="{{ url_for('login') }}">Log In</a>
       <a href="{{ url_for('register') }}" class="btn btn-solid" style="margin-left:8px;">Get My First Evaluation</a>
     {% endif %}
