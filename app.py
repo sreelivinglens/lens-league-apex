@@ -4067,8 +4067,15 @@ def _get_curriculum_lesson(user, progress_data):
     if progress_data:
         weakest = progress_data.get('weakest', 'dm')
 
-    # Resolve mission genre
-    mission_genre = getattr(user, 'mission_genre', None)
+    # Resolve mission genre — read via raw SQL (migration-only column, not in ORM model)
+    mission_genre = None
+    try:
+        mission_genre = db.session.execute(
+            db.text('SELECT mission_genre FROM users WHERE id = :uid'),
+            {'uid': user.id}
+        ).scalar()
+    except Exception:
+        pass
     if not mission_genre or mission_genre not in _VALID_MISSION_GENRES:
         # Fall back to primary genre from genre_interests
         try:
