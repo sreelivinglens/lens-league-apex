@@ -1498,8 +1498,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {# ── Today action block — dark, full-width, unmissable ── #}
     {% if weather and weather.state != 'red' %}
     <div style="background:#1A1A18; padding:14px 16px; margin-top:0;">
+      {% if mission_due %}
+      <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+                  color:rgba(244,194,13,.7); margin-bottom:5px;">Mission due — continue</div>
+      {% else %}
       <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                   color:rgba(244,194,13,.7); margin-bottom:5px;">Your assignment today</div>
+      {% endif %}
       <div style="font-size:16px; font-weight:700; color:#FFFFFF; line-height:1.55;">
         {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
       </div>
@@ -1512,6 +1517,19 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div style="background:var(--sl-border); color:var(--sl-text-light);
                   font-size:15px; font-weight:700; padding:14px 16px; border-radius:var(--r-btn);
                   text-align:center;">Outdoor mission paused · resumes tomorrow</div>
+    </div>
+    {% elif mission_due %}
+    <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
+      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
+        Continue →
+      </a>
+      <a href="{{ url_for('upload') }}" 
+         style="background:rgba(0,0,0,.06); color:var(--sl-text-light); font-size:13px;
+                font-weight:600; padding:14px 14px; border-radius:var(--r-btn); border:none;
+                cursor:pointer; white-space:nowrap; font-family:inherit; text-decoration:none;
+                display:flex; align-items:center;">
+        Upload any photograph ↗
+      </a>
     </div>
     {% else %}
     <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
@@ -1746,6 +1764,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           <circle cx="{{ _pt.x }}" cy="{{ _pt.y }}" r="{{ '3.5' if loop.last else '2.5' }}" fill="{{ _dcolor }}" opacity="{{ '1' if loop.last else '0.4' }}"/>
           {% endfor %}
           {% endif %}
+          {# Mission upload dots — gold filled circle overlay on mission positions #}
+          {% set _mission_idxs = progress_data.dim_mission_indices.get(dim, []) if progress_data.dim_mission_indices is defined else [] %}
+          {% for _mi in _mission_idxs %}
+          {% if _sp.points and _mi < (_sp.points | length) %}
+          <circle cx="{{ _sp.points[_mi].x }}" cy="{{ _sp.points[_mi].y }}" r="5" fill="#C8A84B" opacity="0.9"/>
+          {% endif %}
+          {% endfor %}
         </svg>
         {# Score values x-axis — matches scorecard style #}
         {% if _raw %}
