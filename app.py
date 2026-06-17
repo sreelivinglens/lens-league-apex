@@ -5118,12 +5118,25 @@ def upload():
 
         # ── Curriculum advance — mark principle taught after mission upload ──────
         # Safe: _advance_curriculum swallows all errors internally.
-        # curriculum_principle_id arrives as a URL param forwarded via hidden field
-        # in upload.html (set from ?curriculum_principle_id= on the /upload link).
-        _curriculum_pid = request.form.get('curriculum_principle_id') or None
-        _curriculum_dim = request.form.get('mission_dimension') or None
+        # curriculum_principle_id may arrive via:
+        #   (a) hidden form field (populated by JS from URL param) -> request.form
+        #   (b) URL query param on XHR POST URL -> request.args (Flask splits these)
+        # Check both so either path works.
+        _curriculum_pid = (request.form.get('curriculum_principle_id')
+                           or request.args.get('curriculum_principle_id') or None)
+        _curriculum_dim = (request.form.get('mission_dimension')
+                           or request.args.get('mission_dimension') or None)
         if _curriculum_pid and _curriculum_dim:
+            app.logger.info(
+                f'[curriculum_advance] firing: user={current_user.id} '
+                f'principle={_curriculum_pid!r} dim={_curriculum_dim!r}'
+            )
             _advance_curriculum(current_user.id, _curriculum_pid, _curriculum_dim)
+        else:
+            app.logger.info(
+                f'[curriculum_advance] skipped: pid={_curriculum_pid!r} '
+                f'dim={_curriculum_dim!r} -- not a mission upload'
+            )
 
         # ── Breastfeeding flag — hold pending DDI sub-genre resolution ───────────
         # Admin email is NOT sent here. Sub-genre detection happens async in the scoring
