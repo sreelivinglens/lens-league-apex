@@ -1933,12 +1933,15 @@ def index():
                                  Image.thumb_url!=None)
                          .order_by(Image.scored_at.desc())
                          .limit(12).all())
-        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.0, random per visit
+        # Hero carousel — Master/Grandmaster/Legend only, score >= 8.5, random per visit
+        # Exclude portrait-heavy genres so hero image renders as landscape in 4/3 container
+        _portrait_genres = ['People', 'Fashion', 'Wedding', 'Portrait', 'Creative']
         carousel_images = (Image.query
                            .filter(Image.status=='scored', Image.score!=None,
                                    Image.is_public==True, Image.is_flagged==False,
                                    Image.tier.in_(['Legend','Grandmaster','Master']),
-                                   Image.score>=8.5)
+                                   Image.score>=8.5,
+                                   ~Image.genre.in_(_portrait_genres))
                            .order_by(db.func.random())
                            .limit(12).all())
         active_challenge = _get_active_challenge()
