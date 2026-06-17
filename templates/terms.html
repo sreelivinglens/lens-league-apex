@@ -3,37 +3,43 @@
 
 {% block extra_css %}
 <style>
-  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
+  .policy-wrap { max-width:820px; margin:0 auto; padding:48px 24px 80px; font-size: 16px; line-height: 1.75; }
   .policy-hero { margin-bottom:48px; }
   .policy-hero h1 { font-size:36px; font-weight:800; color:var(--text-primary); margin-bottom:12px; }
-  .policy-hero p  { font-size:18px; color:var(--text-muted); line-height:1.6; }
+  .policy-hero p  { font-size:18px; color:var(--text-muted); line-height: 1.6; }
   .policy-section { margin-bottom:40px; }
   .policy-section h2 { font-size:22px; font-weight:700; color:#2C3E6B; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
-  .policy-section p  { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:14px; }
-  .policy-section ul { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section p  { font-size: 16px; color:var(--text-primary); line-height: 1.75; margin-bottom:14px; }
+  .policy-section ul { font-size: 16px; color:var(--text-primary); line-height: 1.75; padding-left:20px; margin-bottom:14px; }
   .policy-section ul li { margin-bottom:8px; }
-  .policy-section ol { font-size:16px; color:var(--text-primary); line-height:1.75; padding-left:20px; margin-bottom:14px; }
+  .policy-section ol { font-size: 16px; color:var(--text-primary); line-height: 1.75; padding-left:20px; margin-bottom:14px; }
   .policy-section ol li { margin-bottom:8px; }
   /* Warning box — used for prohibited content and liability sections */
   .policy-alert { background:#FFF8EC; border:1px solid #E8C84A; border-left:4px solid #F5C518; border-radius:8px; padding:18px 22px; margin-bottom:22px; }
-  .policy-alert p { margin-bottom:8px; font-size:16px; color:var(--text-primary); line-height:1.75; }
+  .policy-alert p { margin-bottom:8px; font-size: 16px; color:var(--text-primary); line-height: 1.75; }
   .policy-alert p:last-child { margin-bottom:0; }
   .policy-alert strong { color:#1A1A18; }
   /* Liability box — slate */
   .policy-slate { background:#1A2744; border-radius:8px; padding:22px 26px; margin-bottom:22px; }
-  .policy-slate p { font-size:16px; color:rgba(255,255,255,0.78); line-height:1.75; margin-bottom:12px; }
+  .policy-slate p { font-size: 16px; color:rgba(255,255,255,0.78); line-height: 1.75; margin-bottom:12px; }
   .policy-slate p:last-child { margin-bottom:0; }
   .policy-slate strong { color:#FFFFFF; }
-  .policy-slate .slate-label { font-size:12px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#F5C518; margin-bottom:10px; display:block; }
+  .policy-slate .slate-label { font-size:13px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#F5C518; margin-bottom:10px; display:block; }
   /* Consent callout */
   .policy-consent { background:#F0F4FA; border:1px solid #C5D3E8; border-radius:8px; padding:18px 22px; margin-bottom:22px; }
-  .policy-consent p { font-size:16px; color:var(--text-primary); line-height:1.75; margin-bottom:8px; }
+  .policy-consent p { font-size: 16px; color:var(--text-primary); line-height: 1.75; margin-bottom:8px; }
   .policy-consent p:last-child { margin-bottom:0; }
   .policy-consent strong { color:#2C3E6B; }
   .policy-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
-  .policy-links a { font-size:16px; color:#2C3E6B; text-decoration:none; }
+  .policy-links a { font-size: 16px; color:#2C3E6B; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; cursor:pointer; }
   .policy-links a:hover { text-decoration:underline; }
-  @media (max-width:600px) {
+  @media (max-width: 768px) {
+    .policy-wrap { padding:32px 16px 60px; font-size: 16px; line-height: 1.75; }
+    .policy-section p, .policy-section ul, .policy-section ol { font-size: 16px; line-height: 1.75; }
+    .policy-alert p, .policy-slate p, .policy-consent p { font-size: 16px; line-height: 1.75; }
+    .policy-links a { min-height:44px; font-size: 16px; }
+  }
+  @media (max-width: 600px) {
     .policy-hero h1 { font-size:28px; }
     .policy-alert, .policy-slate, .policy-consent { padding:14px 16px; }
   }
@@ -60,7 +66,7 @@
   <div class="policy-section">
     <h2>2. Platform Description</h2>
     <p>Shutter League is a digital photography skill assessment platform. All services provided are digital in nature and include AI-powered image scoring, feedback, progress tracking, and access to structured photography programmes. No physical goods are sold or shipped.</p>
-    <p>The Platform uses the Apex DDI Engine to evaluate photographs across five dimensions: Depth of Difficulty, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores reflect technical execution, compositional achievement, decisive moment, the feeling the image creates in the viewer, and the specific emotion it produces. Scores are generated programmatically and are not expressions of personal opinion.</p>
+    <p>The Platform uses the Apex DDI Engine to evaluate photographs across five dimensions: how difficult the image was to make, how far it departs from the conventional treatment of its subject, whether the timing was right, whether it made you feel something, and the specific emotion it produces. Scores reflect technical execution, compositional achievement, timing, the feeling the image creates in the viewer, and the specific emotion it produces. Scores are generated programmatically and are not expressions of personal opinion.</p>
   </div>
 
   <!-- ── 2A. PLATFORM CLASSIFICATION — KYC ────────────────────── -->
@@ -111,7 +117,7 @@
     <h2>4. Model Consent and Release — Programme Submissions</h2>
 
     <div class="policy-consent">
-      <p><strong>Where an image submitted to any Shutter League programme — including the Photographer of the Year (POTY), Body of Work (BOW), Weekly Assignment, Juried Programmes, or Brand Programmes — contains an identifiable person, the uploader is solely responsible for having obtained the written consent of that person (or their legal guardian if a minor) prior to participation.</strong></p>
+      <p><strong>Where an image submitted to any Shutter League programme — including the Annual Excellence Award, Body of Work (BOW), Weekly Assignment, Juried Programmes, or Brand Programmes — contains an identifiable person, the uploader is solely responsible for having obtained the written consent of that person (or their legal guardian if a minor) prior to participation.</strong></p>
     </div>
 
     <p>By submitting any image containing an identifiable person to any Shutter League programme, you represent and warrant that:</p>
@@ -125,7 +131,7 @@
 
     <p>Shutter League does not require you to submit model release documents at the time of upload but reserves the right to request proof of model consent for any image at any time, including after publication. Failure to produce such documentation within 7 days of a request will result in removal of the image from all programmes and, where applicable, disqualification from programme standings.</p>
 
-    <p>Images uploaded for personal DDI scoring only (outside of any programme participation) are not subject to mandatory model consent requirements but must still comply with all other provisions of these Terms, including the Prohibited Content policy in Section 3.</p>
+    <p>Images uploaded for independent evaluation only (outside of any programme participation) are not subject to mandatory model consent requirements but must still comply with all other provisions of these Terms, including the Prohibited Content policy in Section 3.</p>
   </div>
 
   <!-- ── 5. PLATFORM LIABILITY ──────────────────────────────────── -->
@@ -173,9 +179,9 @@
   <!-- ── 8. PROGRAMME ELIGIBILITY AND CONDUCT ──────────────────── -->
   <div class="policy-section">
     <h2>8. Programme Eligibility and Conduct</h2>
-    <p>Participation in Shutter League programmes — including POTY, BOW, Weekly Assignment, and Juried Programmes — is subject to eligibility requirements published on the relevant programme pages. Shutter League reserves the right to modify programme rules, eligibility criteria, and timelines at any time.</p>
-    <p>Programme evaluations are conducted by human jury panels for all formal annual programmes. AI scoring (DDI) is used for initial assessment and weekly practice uploads. Where jury evaluation applies, it is disclosed explicitly on the programme page.</p>
-    <p>Shutter League programmes are assessment and learning programmes. They are not games of chance. Outcomes are determined by the quality of photographic work as assessed by trained human jury members or the DDI engine, not by random selection.</p>
+    <p>Participation in Shutter League programmes — including the Annual Excellence Award, BOW, Weekly Assignment, and Juried Programmes — is subject to eligibility requirements published on the relevant programme pages. Shutter League reserves the right to modify programme rules, eligibility criteria, and timelines at any time.</p>
+    <p>Programme evaluations are conducted by human jury panels for all formal annual programmes. AI scoring is used for initial assessment and weekly practice uploads. Where jury evaluation applies, it is disclosed explicitly on the programme page.</p>
+    <p>Shutter League programmes are assessment and learning programmes. They are not games of chance. Outcomes are determined by the quality of photographic work as assessed by trained human jury members or the evaluation engine, not by random selection.</p>
     <p>Any attempt to manipulate scores, submit images not taken by the entrant, submit altered images contrary to programme rules, or otherwise subvert programme integrity will result in immediate disqualification and account suspension.</p>
   </div>
 
