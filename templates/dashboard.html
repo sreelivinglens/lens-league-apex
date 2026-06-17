@@ -1307,7 +1307,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
 
   {# ── Snoozed state — show collapsed pill, full card hidden ── #}
-  {% if session.get('mission_snoozed') %}
+  {% set _snoozed_today = session.get('mission_snoozed') == now().date().isoformat() %}
+  {% if _snoozed_today %}
   <div id="sl-mission-pill"
        style="display:flex; align-items:center; justify-content:space-between; gap:10px;
               background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
