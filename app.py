@@ -3092,6 +3092,7 @@ def dashboard():
     _lesson = None
     _weather = {'state': 'green', 'condition': '', 'message': None, 'window': None,
                 'temp_c': None, 'humidity': None}
+    _mission_due = False
     if current_user.role != 'admin':
         try:
             _lesson = _get_curriculum_lesson(current_user, progress_data)
@@ -3103,6 +3104,20 @@ def dashboard():
                 _weather = _get_weather(_wx_city)
         except Exception as _we:
             app.logger.warning(f'[weather] {_we}')
+        # Mission due — open mission upload within last 7 days still pending/processing
+        try:
+            _due_cutoff = datetime.utcnow() - timedelta(days=7)
+            _due_img = (Image.query
+                        .filter_by(user_id=current_user.id)
+                        .filter(Image.mission_dimension.isnot(None),
+                                Image.created_at >= _due_cutoff,
+                                Image.status.in_(['pending', 'processing']))
+                        .order_by(Image.created_at.desc())
+                        .first())
+            if _due_img:
+                _mission_due = True
+        except Exception as _mde:
+            app.logger.warning(f'[mission_due] {_mde}')
     # ── End Photo School ──────────────────────────────────────────────────
 
     # Mentor reviews — for notif strip
@@ -3214,7 +3229,8 @@ def dashboard():
                            countries=get_countries(),
                            location_data_json=json.dumps(_dash_loc()),
                            lesson=_lesson,
-                           weather=_weather)
+                           weather=_weather,
+                           mission_due=_mission_due)
 
 
 # ---------------------------------------------------------------------------
@@ -3428,6 +3444,15 @@ def _build_progress_data(user):
         polyline, pts = _dash_spark(vals)
         dim_sparklines[d] = {'polyline': polyline, 'points': pts}
 
+    # Mission upload indices per dimension — which positions in the last-8 window
+    # were mission uploads. Used by dashboard sparklines to render gold dot overlay.
+    dim_mission_indices = {}
+    for d in dim_fields:
+        dim_mission_indices[d] = [
+            i for i, img in enumerate(dim_trend_imgs)
+            if getattr(img, 'mission_dimension', None) == d
+        ]
+
     strongest = max(avgs, key=avgs.get)
     weakest   = min(avgs, key=avgs.get)
 
@@ -3517,7 +3542,8 @@ def _build_progress_data(user):
         'trend':          trend,
         'dim_trends':     dim_trends,
         'dim_pills':      dim_pills,
-        'dim_sparklines': dim_sparklines,
+        'dim_sparklines':      dim_sparklines,
+        'dim_mission_indices': dim_mission_indices,
         'strongest':      strongest,
         'weakest':        weakest,
         'top_genre':      top_genre,
@@ -5089,6 +5115,15 @@ def upload():
                     current_user.pending_location_update = None
 
         db.session.commit()
+
+        # ── Curriculum advance — mark principle taught after mission upload ──────
+        # Safe: _advance_curriculum swallows all errors internally.
+        # curriculum_principle_id arrives as a URL param forwarded via hidden field
+        # in upload.html (set from ?curriculum_principle_id= on the /upload link).
+        _curriculum_pid = request.form.get('curriculum_principle_id') or None
+        _curriculum_dim = request.form.get('mission_dimension') or None
+        if _curriculum_pid and _curriculum_dim:
+            _advance_curriculum(current_user.id, _curriculum_pid, _curriculum_dim)
 
         # ── Breastfeeding flag — hold pending DDI sub-genre resolution ───────────
         # Admin email is NOT sent here. Sub-genre detection happens async in the scoring
