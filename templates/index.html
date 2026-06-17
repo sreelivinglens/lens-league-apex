@@ -47,7 +47,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   position: relative;
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4/3;
   min-height: 360px;
   overflow: hidden;
   background: #0D0D0B;
@@ -134,8 +134,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-hero-micro svg { flex-shrink: 0; }
 
-/* Score badge — bottom right on desktop, above coaching overlay; bottom left on mobile */
-/* Score badge — desktop: bottom-right, large, two-line */
+/* Score badge — desktop: bottom-right large; mobile: stacked bottom-left (mirrors dashboard) */
 .sl-hero-score-badge {
   position: absolute;
   bottom: 20px;
@@ -179,20 +178,42 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
-/* Mobile — compact single-line, bottom left */
+/* Mobile — stacked bottom-left, mirrors dashboard badge */
 @media (max-width: 768px) {
   .sl-hero-score-badge {
-    bottom: 16px;
-    left: 16px;
-    right: auto;
-    flex-direction: row;
-    align-items: baseline;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0;
-    padding: 0;
+    padding: 14px 20px;
     background: none;
   }
-  .sl-hero-score-badge__score { font-size: 22px; }
-  .sl-hero-score-badge__meta { display: contents; }
+  .sl-hero-score-badge__score {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    display: block;
+  }
+  .sl-hero-score-badge__meta { display: flex; flex-direction: column; gap: 0; }
+  .sl-hero-score-badge__sep { display: none; }
+  .sl-hero-score-badge__tier {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    display: block;
+    margin-top: 3px;
+  }
+  .sl-hero-score-badge__by {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    display: block;
+    margin-top: 2px;
+  }
 }
 
 /* Coaching overlay — hidden on desktop, shown in mobile cream block only */
