@@ -304,6 +304,7 @@
       {# ── Mission tracking — passed from /mission page ── #}
       <input type="hidden" name="mission_dimension" id="mission_dimension_field" value="">
       <input type="hidden" name="mission_title" id="mission_title_field" value="">
+      <input type="hidden" name="curriculum_principle_id" id="curriculum_principle_id_field" value="">
 
       <div class="drop-zone" id="dropZone">
         <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png">
@@ -1051,10 +1052,13 @@
   var params = new URLSearchParams(window.location.search);
   var dim   = params.get('mission_dimension') || '';
   var title = params.get('mission_title') || '';
+  var pid   = params.get('curriculum_principle_id') || '';
   var dField = document.getElementById('mission_dimension_field');
   var tField = document.getElementById('mission_title_field');
+  var pField = document.getElementById('curriculum_principle_id_field');
   if (dField && dim)   dField.value = dim;
   if (tField && title) tField.value = title;
+  if (pField && pid)   pField.value = pid;
 
   // If coming from mission, show a contextual banner
   if (dim) {
@@ -1064,7 +1068,7 @@
     };
     var banner = document.createElement('div');
     banner.style.cssText = 'background:#FFF8DC;border:1px solid #F4C20D;border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:15px;color:#1A1A18;display:flex;align-items:center;gap:10px;';
-    banner.innerHTML = '<span style="font-size:18px">◷</span><span>Mission: <strong>' + (title || dim) + '</strong> · Focus on <strong>' + (dimLabels[dim] || dim) + '</strong> · +10 bonus pts if mission complete</span>';
+    banner.innerHTML = '<span style="font-size:18px">◷</span><span>Today\'s assignment: <strong>' + (title || dim) + '</strong> · Focus on <strong>' + (dimLabels[dim] || dim) + '</strong></span>';
     var form = document.getElementById('uploadForm');
     if (form) form.parentNode.insertBefore(banner, form);
   }
