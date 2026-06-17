@@ -1121,6 +1121,68 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
   {% endwith %}
 
+  {# ── Scoring status banner — shown when arriving from upload via Skip to Dashboard ── #}
+  <div id="sl-scoring-banner" style="display:none; background:#1A1A18; border-left:3px solid #F4C20D;
+       border-radius:12px; padding:14px 18px; margin-bottom:14px;
+       display:none; align-items:center; gap:12px;">
+    <span style="font-size:20px; flex-shrink:0" id="sl-scoring-icon">⏳</span>
+    <div style="flex:1; min-width:0;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+                  color:rgba(244,194,13,.8); margin-bottom:3px;" id="sl-scoring-label">Evaluating your photograph</div>
+      <div style="font-size:15px; color:#FFFFFF; line-height:1.5;" id="sl-scoring-msg">
+        The engine is working — this usually takes about a minute.
+      </div>
+    </div>
+    <button onclick="document.getElementById('sl-scoring-banner').style.display='none';
+                     try{sessionStorage.removeItem('sl_pending_score');}catch(e){}"
+            style="background:none; border:none; color:rgba(255,255,255,.4); font-size:20px;
+                   cursor:pointer; flex-shrink:0; padding:4px; line-height:1;">×</button>
+  </div>
+  <script>
+  (function() {
+    var params  = new URLSearchParams(window.location.search);
+    var imageId = params.get('scoring');
+    if (!imageId) {
+      try { imageId = sessionStorage.getItem('sl_pending_score'); } catch(e) {}
+    }
+    if (!imageId) return;
+
+    var banner  = document.getElementById('sl-scoring-banner');
+    var icon    = document.getElementById('sl-scoring-icon');
+    var label   = document.getElementById('sl-scoring-label');
+    var msg     = document.getElementById('sl-scoring-msg');
+    if (!banner) return;
+
+    banner.style.display = 'flex';
+
+    function checkScore() {
+      fetch('/score-status/' + imageId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.status === 'processing' || data.status === 'pending') {
+            setTimeout(checkScore, 8000);
+          } else if (data.status === 'scored' || data.redirect) {
+            icon.textContent  = '✓';
+            icon.style.color  = '#5A9E3A';
+            label.textContent = 'Evaluation complete';
+            label.style.color = 'rgba(90,158,58,.9)';
+            banner.style.borderLeftColor = '#5A9E3A';
+            msg.innerHTML = 'Your photograph has been evaluated. <a href="/dashboard#gallery" style="color:#F4C20D; font-weight:700;">See your evaluation in My Gallery →</a>';
+            try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+          } else {
+            // error or flagged
+            icon.textContent  = '⚠';
+            label.textContent = 'Evaluation update';
+            msg.innerHTML = 'Your photograph has been received. <a href="/dashboard/my-gallery" style="color:#F4C20D;">Check My Gallery →</a>';
+            try { sessionStorage.removeItem('sl_pending_score'); } catch(e) {}
+          }
+        })
+        .catch(function() { setTimeout(checkScore, 12000); });
+    }
+    checkScore();
+  })();
+  </script>
+
   {# ── System alerts (zone flags, RAW pending) ── #}
   {% if zone3_flagged or zone2_pending or raw_pending %}
     {% for img in zone3_flagged %}
