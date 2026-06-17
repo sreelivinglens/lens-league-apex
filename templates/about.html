@@ -525,6 +525,14 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
     gap: 40px;
   }
 
+  /* INFO TABLE — mobile: fixed layout so value column has room */
+  .sl-ab-info-table { table-layout: fixed; width: 100%; }
+  .sl-ab-info-table td:first-child { width: 108px; }
+  .sl-ab-info-table td:last-child { width: calc(100% - 108px); word-break: break-word; }
+  .sl-ab-ik { min-width: 0; gap: 6px; padding-right: 8px; }
+  .sl-ab-ilab { font-size: 13px; letter-spacing: 0.05em; white-space: normal; line-height: 1.3; }
+  .sl-ab-ival { font-size: 14px; }
+
   /* OFFER — 2-col on mobile */
   .sl-ab-offer-grid { grid-template-columns: 1fr 1fr; }
 
@@ -676,7 +684,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
           <p>Likes from family. Encouragement from friends. Polite silence from strangers. And if you are lucky, a club judge who says &#39;lovely bokeh&#39; before moving on to the next image without explaining what was actually wrong.</p>
           <p>Nobody tells you the truth about your photography. Not because people do not care. Because photography is personal. Criticism of the image feels like criticism of the person. And so the honest feedback never comes. Photographers stay stuck. They improve slowly, invisibly, with no way to measure how far they have come or how far they have to go.</p>
           <p><strong>Shutter League was built to fix that.</strong></p>
-          <p>We are a photography skill assessment platform. Every photograph uploaded to Shutter League is evaluated across five dimensions — Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient — by an AI engine trained on photographic principles. The score is specific, the feedback is actionable, and unlike a club judge, the engine has no ego, no favourites, and no social relationship to protect.</p>
+          <p>We are a photography skill assessment platform. Every photograph uploaded to Shutter League is evaluated across five dimensions — technical detail, visual impact, timing, wonder, and emotional response — by an AI engine trained on photographic principles. The evaluation is specific, the feedback is actionable, and unlike a club judge, the engine has no ego, no favourites, and no social relationship to protect.</p>
           <p><em>For the first time in 200 years of photography, photographers have a rating.</em></p>
           <p>We are based in Bengaluru, India. Built by photographers, for photographers. Every serious photographer deserves an honest answer to the question they have always wanted to ask: <em>how good is my work, really?</em></p>
         </div>
@@ -699,7 +707,7 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </div>
         <p class="sl-ab-offer-title">AI-Powered Image Scoring (DDI)</p>
-        <p class="sl-ab-offer-desc">Every uploaded photograph is scored across five dimensions: Depth of Detail, Visual Disruption, Decisive Moment, Wonder Factor, and Affective Quotient. Scores are on a 0–10 scale per dimension.</p>
+        <p class="sl-ab-offer-desc">Every uploaded photograph is evaluated across five dimensions: technical detail, visual impact, timing, wonder, and emotional response. Evaluations are on a 0–10 scale per dimension.</p>
       </div>
 
       <div class="sl-ab-offer-card">
@@ -730,8 +738,8 @@ body:has(.sl-about) main { padding: 0 !important; max-width: none !important; ma
         <div class="sl-ab-offer-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
         </div>
-        <p class="sl-ab-offer-title">Photographer of the Year (POTY)</p>
-        <p class="sl-ab-offer-desc">A year-long scoring programme tracking each member&#39;s top-6 scores per genre. Results evaluated by a human jury at year end. Eligibility requires a Camera or Mobile subscription.</p>
+        <p class="sl-ab-offer-title">Annual Excellence Award</p>
+        <p class="sl-ab-offer-desc">A year-long scoring programme tracking each member&#39;s top-6 evaluations per genre. Results reviewed by a human jury at year end. Eligibility requires a Camera or Mobile subscription.</p>
       </div>
 
       <div class="sl-ab-offer-card">
