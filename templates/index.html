@@ -134,65 +134,69 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 .sl-hero-micro svg { flex-shrink: 0; }
 
 /* Score badge — bottom right on desktop, above coaching overlay; bottom left on mobile */
+/* Score badge — desktop: bottom-right, large, two-line */
 .sl-hero-score-badge {
   position: absolute;
-  bottom: 155px;
+  bottom: 20px;
   right: clamp(16px, 4vw, 48px);
   z-index: 5;
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 0;
-  flex-wrap: nowrap;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 14px 18px 16px;
+  background: rgba(13,11,8,0.18);
 }
 .sl-hero-score-badge__score {
-  font-size: 26px;
+  font-size: 52px;
   font-weight: 800;
   color: #F5C518;
   line-height: 1;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.90);
+  text-shadow: 0 2px 16px rgba(0,0,0,0.95);
+  letter-spacing: -0.02em;
+}
+.sl-hero-score-badge__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 .sl-hero-score-badge__sep {
-  font-size: 14px;
-  color: rgba(255,255,255,0.45);
-  text-shadow: 0 1px 6px rgba(0,0,0,0.90);
-  padding: 0 2px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.50);
+  padding: 0 4px;
 }
 .sl-hero-score-badge__tier {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .10em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255,255,255,0.80);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
 .sl-hero-score-badge__by {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
-/* Score badge on mobile — bottom left on photo */
+/* Mobile — compact single-line, bottom left */
 @media (max-width: 768px) {
   .sl-hero-score-badge {
-    display: flex;
     bottom: 16px;
     left: 16px;
     right: auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0;
+    padding: 0;
+    background: none;
   }
-  .sl-hero-score-badge__score {
-    font-size: 22px;
-  }
+  .sl-hero-score-badge__score { font-size: 22px; }
+  .sl-hero-score-badge__meta { display: contents; }
 }
 
-/* Coaching overlay */
+/* Coaching overlay — hidden on desktop, shown in mobile cream block only */
 .sl-coaching {
-  position: absolute;
-  bottom: 15px;
-  right: 10px;
-  width: 220px;
-  background: rgba(13,11,8,0.12);
-  padding: 12px 18px 14px;
-  z-index: 5;
+  display: none;
 }
 .sl-co-q {
   font-size: 26px;
@@ -808,9 +812,8 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     padding: 10px 16px 12px;
     background: rgba(13,11,8,0.12);
   }
-  .sl-coaching { bottom: 15px; right: 10px; top: auto; transform: none; width: 200px; background: rgba(13,11,8,0.12); }
+  .sl-coaching { display: none; }
   .sl-hero-h1 { font-size: 28px; }
-  .sl-coaching { right: 24px; width: 210px; }
 
   /* 200 Years — collapse to single column */
   .sl-200 {
@@ -1199,7 +1202,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   {# Score + tier + name badge on hero photo — bottom left #}
   {% if hero and hero.score %}
   <div class="sl-hero-score-badge">
-    <span class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__by">{{ hero.photographer_name or "" }}</span>
+    <span class="sl-hero-score-badge__score">{{ "%.2f"|format(hero.score) }}</span>
+    <div class="sl-hero-score-badge__meta">
+      <span class="sl-hero-score-badge__tier">{{ hero.tier or "" }}</span><span class="sl-hero-score-badge__sep"> · </span><span class="sl-hero-score-badge__by">{{ hero.photographer_name or "" }}</span>
+    </div>
   </div>
   {% endif %}
 
@@ -1561,16 +1567,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       }, 100);
     });
   }
-  /* Fade in coaching overlay */
-  var coaching = document.querySelector('.sl-coaching');
-  if (coaching) {
-    coaching.style.opacity = '0';
-    coaching.style.transform = 'translateY(12px)';
-    coaching.style.transition = 'opacity 0.9s ease-out 0.4s, transform 0.9s ease-out 0.4s';
+  /* Fade in score badge on desktop */
+  var badge = document.querySelector('.sl-hero-score-badge');
+  if (badge) {
+    badge.style.opacity = '0';
+    badge.style.transform = 'translateY(8px)';
+    badge.style.transition = 'opacity 0.9s ease-out 0.4s, transform 0.9s ease-out 0.4s';
     window.addEventListener('load', function(){
       setTimeout(function(){
-        coaching.style.opacity = '1';
-        coaching.style.transform = 'translateY(0)';
+        badge.style.opacity = '1';
+        badge.style.transform = 'translateY(0)';
       }, 100);
     });
   }
