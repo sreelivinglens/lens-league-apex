@@ -166,6 +166,9 @@
     flex-direction: column; align-items: center; justify-content: flex-start;
     padding: 32px 32px 40px;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
+    /* Safari iOS address bar fix — dvh accounts for dynamic toolbar height */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
   #scoringOverlay.active { display: flex; }
   .overlay-engine-tag {
@@ -490,12 +493,12 @@
       </div>
     </div>
   </div>
-  <div id="backToDashboardWrap" style="display:none; margin-top:18px; text-align:center;">
-    <a href="#" id="backToDashboardLink"
+  <div id="backToDashboardWrap" style="display:block; margin-top:18px; text-align:center;">
+    <a href="/dashboard" id="backToDashboardLink"
        style="display:inline-block; padding:10px 20px; border:1px solid var(--gold); border-radius:var(--radius-sm);
               color:var(--gold); font-family:var(--font-mono); font-size:13px; font-weight:600;
               letter-spacing:1px; text-transform:uppercase; text-decoration:none; background:rgba(245,197,24,0.08);">
-      ← Back to Dashboard
+      Skip to Dashboard →
     </a>
   </div>
 </div>
