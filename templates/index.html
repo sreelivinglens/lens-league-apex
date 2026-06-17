@@ -133,10 +133,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 }
 .sl-hero-micro svg { flex-shrink: 0; }
 
-/* Score badge — bottom right on desktop, bottom left on mobile */
+/* Score badge — bottom right on desktop, above coaching overlay; bottom left on mobile */
 .sl-hero-score-badge {
   position: absolute;
-  bottom: 20px;
+  bottom: 155px;
   right: clamp(16px, 4vw, 48px);
   z-index: 5;
   display: flex;
@@ -171,12 +171,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   color: rgba(255,255,255,0.55);
   text-shadow: 0 1px 6px rgba(0,0,0,0.90);
 }
-/* Score badge on mobile — embedded on photo bottom left */
+/* Score badge on mobile — bottom left on photo */
 @media (max-width: 768px) {
   .sl-hero-score-badge {
     display: flex;
     bottom: 16px;
     left: 16px;
+    right: auto;
   }
   .sl-hero-score-badge__score {
     font-size: 22px;
