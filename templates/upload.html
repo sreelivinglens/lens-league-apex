@@ -231,7 +231,7 @@
   .breath-counts {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 3px;
     color: var(--gold); text-transform: uppercase;
-    white-space: nowrap;
+    text-align: center; white-space: normal;
   }
   .breath-tagline { font-size: 17px; color:#FFFFFF; font-style: italic; }
   .overlay-copy {
@@ -489,9 +489,15 @@
     <div class="overlay-phase" id="overlayPhase">Uploading</div>
     <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
     <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
-    <div class="overlay-eta" id="overlayEta" style="font-size:14px; color:var(--text-muted); margin-top:10px; line-height:1.5;">
-      This usually takes about a minute. Feel free to head back to your dashboard —
-      we'll let you know the moment your score is ready.
+    <div class="overlay-eta" id="overlayEta" style="display:none; width:100%; max-width:280px; margin-top:12px;">
+      <div style="font-size:14px; color:rgba(255,255,255,.6); text-align:center; line-height:1.5; margin-bottom:10px;">
+        This usually takes about a minute.<br>Feel free to skip — we'll have your score waiting.
+      </div>
+      <div style="background:rgba(255,255,255,.1); border-radius:4px; height:4px; width:100%; overflow:hidden;">
+        <div id="overlayProgressBar"
+             style="height:100%; width:0%; background:#F4C20D; border-radius:4px;
+                    transition:width 1s linear;"></div>
+      </div>
     </div>
   </div>
   <div class="mini-timer">
@@ -867,13 +873,21 @@
         document.getElementById('overlayPhase').textContent    = 'ANALYSING';
         document.getElementById('overlayStatus').textContent   = 'Shutter League engine evaluating…';
         document.getElementById('overlaySubstatus').textContent = 'Evaluating technique, composition, timing, and emotion…';
+        // Show progress bar
         var etaEl = document.getElementById('overlayEta');
-        if (etaEl) etaEl.style.display = 'none';
+        if (etaEl) etaEl.style.display = 'block';
+        // Animate progress bar: 0→88% over 55s, leaves room for completion jump
+        var _pBar = document.getElementById('overlayProgressBar');
+        if (_pBar) {
+          setTimeout(function() { _pBar.style.width = '88%'; _pBar.style.transition = 'width 55s linear'; }, 100);
+        }
         var backWrap = document.getElementById('backToDashboardWrap');
         var backLink = document.getElementById('backToDashboardLink');
         if (backWrap && backLink) {
           backLink.href = '/dashboard?scoring=' + resp.image_id + '&new=1';
           backWrap.style.display = 'block';
+          // Store pending image so dashboard can show scoring status on arrival
+          try { sessionStorage.setItem('sl_pending_score', resp.image_id); } catch(e) {}
         }
         _startPolling(resp.image_id, resp.next || '');
         return;
@@ -908,9 +922,11 @@
 
         if (r.status === 'ok') {
           notifyComplete();
+          var _pBar = document.getElementById('overlayProgressBar');
+          if (_pBar) { _pBar.style.transition = 'width .4s ease'; _pBar.style.width = '100%'; }
           document.getElementById('overlayPhase').textContent    = 'COMPLETE';
           document.getElementById('overlayStatus').textContent   = r.score
-            ? 'Scored! LL-Score: ' + parseFloat(r.score).toFixed(2) + ' \u2014 ' + r.tier
+            ? parseFloat(r.score).toFixed(2) + ' \u2014 ' + r.tier
             : 'Image uploaded!';
           document.getElementById('overlaySubstatus').textContent = 'Loading your score card\u2026';
           document.getElementById('breathLabel').textContent      = '\uD83D\uDE4F';
