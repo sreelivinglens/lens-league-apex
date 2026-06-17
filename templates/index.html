@@ -1082,13 +1082,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div class="sl-home">
 
 {# ━━━━━━━━━━━━━━━━━━ HERO — dashboard structure ━━━━━━━━━━━━━━━━━━ #}
+{% if hero and hero.id %}
+<a href="{{ url_for('image_detail', image_id=hero.id) }}"
+   style="display:block; text-decoration:none; position:relative;" aria-label="Explore this photograph">
+{% endif %}
 <div class="sl-dash-hero-banner">
   {% if hero and hero.thumb_url %}
   <img src="{{ hero.thumb_url }}"
        alt="{{ hero.genre or 'Photography' }}"
        loading="eager"
        fetchpriority="high"
-       onerror="this.parentElement.style.display='none'">
+       onerror="this.parentElement.parentElement.style.display='none'">
   {% endif %}
   <div class="sl-dash-hero-banner__grad sl-hero-fade"></div>
   {% if hero and hero.score %}
@@ -1098,11 +1102,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       <span class="sl-dash-hero-banner__tier">{{ hero.tier or '' }}</span>
       <span class="sl-dash-hero-banner__by">by {{ hero.photographer_name or '' }}</span>
     </div>
-    <span class="sl-dash-hero-banner__genre">{{ hero.genre or '' }}</span>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+      <span class="sl-dash-hero-banner__genre">{{ hero.genre or '' }}</span>
+      {% if hero.id %}
+      <span style="font-size:14px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+                   color:rgba(255,255,255,.55); background:rgba(0,0,0,.3); padding:3px 8px;
+                   border-radius:6px;">Explore →</span>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
 
 </div>
+{% if hero and hero.id %}
+</a>
+{% endif %}
 
 {# ━━ MOBILE ONLY: below-hero cream block (Option B layout) ━━ #}
 <div class="sl-hero-below">
