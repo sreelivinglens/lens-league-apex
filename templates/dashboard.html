@@ -1434,7 +1434,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Assignment line or indoor options ── #}
+    {# ── Indoor options (red weather only) ── #}
     {% if weather and weather.state == 'red' %}
     <div style="margin:10px 16px 0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
@@ -1462,17 +1462,10 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div style="font-size:13px; color:var(--sl-text-light); text-align:center; padding:6px 0 2px; cursor:pointer;"
            onclick="slSkipMission()">I'll wait for tomorrow ›</div>
     </div>
-    {% else %}
-    <div style="margin:12px 16px 0; padding:13px 15px;
-                background:#FDF3DC; border-left:4px solid var(--sl-yellow-dark);
-                border-radius:0 10px 10px 0; font-size:16px; color:var(--sl-text); line-height:1.6;">
-      <strong style="color:var(--sl-yellow-dark);">Today:</strong>
-      {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
-    </div>
     {% endif %}
 
     {# ── Meta row ── #}
-    {# /* audit ref: 10px/11px/12px fonts below are uppercase eyebrow UI labels only —
+    {# /* audit ref: 13px fonts below are uppercase eyebrow UI labels only —
           mobile-app page exception per sl_audit.py mobile-app-page rule */ #}
     <div style="display:flex; gap:0; border-top:1px solid var(--sl-border); margin-top:14px;">
       <div style="flex:1; padding:9px 10px; border-right:1px solid var(--sl-border);
@@ -1501,6 +1494,17 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         </span>
       </div>
     </div>
+
+    {# ── Today action block — dark, full-width, unmissable ── #}
+    {% if weather and weather.state != 'red' %}
+    <div style="background:#1A1A18; padding:14px 16px; margin-top:0;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+                  color:rgba(244,194,13,.7); margin-bottom:5px;">Your assignment today</div>
+      <div style="font-size:16px; font-weight:700; color:#FFFFFF; line-height:1.55;">
+        {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
+      </div>
+    </div>
+    {% endif %}
 
     {# ── CTAs ── #}
     {% if weather and weather.state == 'red' %}
