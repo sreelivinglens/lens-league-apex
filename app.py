@@ -2730,9 +2730,9 @@ def mission():
 @login_required
 def mission_snooze():
     """User tapped 'Remind me later' on mission page.
-    Sets a session flag so dashboard shows collapsed pill state.
+    Sets a session flag with today's date — clears automatically next day.
     """
-    session['mission_snoozed'] = True
+    session['mission_snoozed'] = date.today().isoformat()
     return redirect(url_for('dashboard'))
 
 
