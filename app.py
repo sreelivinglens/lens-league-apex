@@ -2586,48 +2586,105 @@ def forgot_password():
 @login_required
 def mission():
     """Mission Details — Screen 2 of the assignment sequence.
-    Shows the full brief, tips, Master reference, and 'I'm ready' CTA.
+    Powered by Photo School curriculum — same lesson as dashboard card.
     """
-    progress_data = _build_progress_data(current_user)
+    progress_data    = _build_progress_data(current_user)
     active_challenge = _get_active_challenge()
 
-    # Dimension → plain English mapping for focus label
+    # ── Get today's curriculum lesson (same as dashboard) ────────────────
+    lesson = None
+    try:
+        lesson = _get_curriculum_lesson(current_user, progress_data)
+    except Exception as _le:
+        app.logger.warning(f'[mission curriculum] {_le}')
+
+    # ── Weather (same as dashboard) ──────────────────────────────────────
+    _weather = {'state': 'green', 'condition': 'Any light works',
+                'message': None, 'window': None}
+    try:
+        _wx_city = getattr(current_user, 'city', '') or ''
+        if _wx_city:
+            _weather = _get_weather(_wx_city)
+    except Exception as _we:
+        app.logger.warning(f'[mission weather] {_we}')
+
+    # ── Build assignment object from lesson ──────────────────────────────
     _dim_mobile = {
         'dod': 'Technical', 'dm': 'Timing', 'aq': 'Visual Impact',
         'wonder': 'Wonder', 'disruption': 'Originality'
     }
-
-    # Build a simple assignment object from progress_data
-    _focus_key = progress_data.get('weakest', 'dm') if progress_data else 'dm'
-    _assign_map = {
-        'dod':        ('Foreground Separation', 'Your recent frames feel flat. Put something in front — a shadow, a hand, a branch. Let the eye travel through the frame.', ['Look for layers in your scene', 'Use silhouettes and shadows', 'Keep the subject clear', 'Use natural frames'], '5:00 – 7:00 PM'),
-        'dm':         ('The Moment Before',     'You have been shooting the moment. Try waiting for what comes just before it. One frame where anticipation is the subject.',   ['Wait longer than feels comfortable', 'Watch the scene before you shoot', 'One frame — make it count', 'Stay with the scene after the obvious shot'], '6:00 – 9:00 AM'),
-        'aq':         ('Light as Subject',      'Stop photographing things. Photograph light falling on things. Find one window, one shadow, one hour today.',                  ['Find a single strong light source', 'Look for where light meets shadow', 'Shoot the same spot at different times', 'Less is more — one subject, one light'], '6:00 – 8:00 AM'),
-        'wonder':     ('The Unfamiliar Angle',  'You have been shooting at eye level. Go lower, go higher, or get closer than feels comfortable. One frame that surprises you.',  ['Get your camera below knee height', 'Or above your head — shoot blind', 'Get uncomfortably close', 'Look for reflections and shadows'], 'Any time'),
-        'disruption': ('Break the Rule',        'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.',    ['Put your subject off-centre deliberately', 'Leave more empty space than feels right', 'Shoot through something — a window, a doorway', 'The uncomfortable frame is usually the interesting one'], '5:00 – 7:00 PM'),
+    _best_time_map = {
+        'dod': '6:00 – 9:00 AM', 'dm': '6:00 – 9:00 AM',
+        'aq':  '6:00 – 8:00 AM', 'wonder': 'Any time',
+        'disruption': '5:00 – 7:00 PM'
     }
-    _assign = _assign_map.get(_focus_key, _assign_map['dm'])
 
-    _master_map = {
-        'dod':        ('Fan Ho',         'Hong Kong master of light, shadow and geometric composition.',
-                       'Study how he uses shadow as a second subject — the darkness is as composed as the light.',
-                       '"Photography is the art of observation."'),
-        'dm':         ('Henri Cartier-Bresson', 'Inventor of the decisive moment.',
-                       'Look for the frame where the geometry and the gesture coincide. One instant. Everything else is almost.',
-                       '"To photograph is to hold one\'s breath when all faculties converge to capture fleeting reality."'),
-        'aq':         ('Ansel Adams',    'Made light itself the subject.',
-                       'Pre-visualise the final image before you raise the camera. What is the light doing — and what does that make you feel?',
-                       '"You don\'t take a photograph, you make it."'),
-        'wonder':     ('Vivian Maier',   'Found the extraordinary in the completely ordinary.',
-                       'Look at what you are walking past. The unremarkable face, the unnoticed corner.',
-                       '"Taking pictures is savoring life intensely, every hundredth of a second."'),
-        'disruption': ('Daido Moriyama', 'Broke every rule of composition. On purpose.',
-                       'Push contrast past comfortable. Shoot what unsettles you, not what looks right.',
-                       '"I want to express the feeling of reality that is beyond imagination."'),
+    # Tips per dimension — 4 specific tips aligned to curriculum principle
+    _tips_map = {
+        'dod': [
+            'Name the one thing that made this shot hard before you raise the camera',
+            'Find the position you would normally avoid — that is the one to take',
+            'Physical difficulty shows in the image — get closer, lower, or earlier',
+            'The harder the shot, the more the frame earns its score',
+        ],
+        'dm': [
+            'Build the frame before the moment arrives — position first, wait second',
+            'Read the scene for five minutes without shooting',
+            'The geometry and the gesture must both be right simultaneously',
+            'Stay with the scene — the decisive moment is rarely the first one',
+        ],
+        'aq': [
+            'Name the emotion before you raise the camera — then expose for it',
+            'Light determines the feeling before the subject does',
+            'Find one strong light source and let it do the work',
+            'The specific emotion is more powerful than a general sense of mood',
+        ],
+        'wonder': [
+            'Walk slowly — the subject is not rare, the seeing is',
+            'Photograph what everyone else walks past',
+            'Go lower, higher, or closer than feels natural',
+            'The unremarkable corner is often the interesting one',
+        ],
+        'disruption': [
+            'Every subject has a default photograph — refuse it',
+            'Put your subject off-centre deliberately',
+            'Leave more empty space than feels right',
+            'The uncomfortable frame is usually the interesting one',
+        ],
     }
-    _master = _master_map.get(_focus_key, _master_map['dm'])
 
-    # Best public platform image in this dimension — the standard to aim for
+    if lesson:
+        _focus_key  = lesson['dim']
+        _title      = lesson['title']
+        _desc       = lesson['principle']
+        _assignment = lesson['assignment']
+        _tips       = _tips_map.get(_focus_key, _tips_map['dm'])
+        _best_time  = _best_time_map.get(_focus_key, '6:00 – 9:00 AM')
+        _weather_str = _weather.get('condition') or 'Any light works'
+        _focus_label = _dim_mobile.get(_focus_key, 'Timing')
+
+        # Master — only on master days
+        _master = None
+        if lesson.get('show_master') and lesson.get('master'):
+            _master = (
+                lesson['master'],
+                '',  # bio slot — not used in mission_detail
+                lesson.get('master_quote', ''),
+                lesson.get('master_quote', ''),
+            )
+    else:
+        # Fallback — no progress data yet
+        _focus_key   = progress_data.get('weakest', 'dm') if progress_data else 'dm'
+        _title       = 'Today\'s Assignment'
+        _desc        = 'One frame. Make it count.'
+        _assignment  = 'Find one subject. Build the frame before the moment arrives.'
+        _tips        = _tips_map.get(_focus_key, _tips_map['dm'])
+        _best_time   = _best_time_map.get(_focus_key, '6:00 – 9:00 AM')
+        _weather_str = _weather.get('condition') or 'Any light works'
+        _focus_label = _dim_mobile.get(_focus_key, 'Timing')
+        _master      = None
+
+    # ── Benchmark image ──────────────────────────────────────────────────
     _benchmark = None
     try:
         _benchmark = (Image.query
@@ -2639,7 +2696,6 @@ def mission():
                       .order_by(Image.score.desc())
                       .first())
         if not _benchmark:
-            # Fallback — best public image overall if none tagged to this dimension yet
             _benchmark = (Image.query
                           .filter_by(status='scored', is_public=True, is_flagged=False)
                           .filter(Image.score >= 8.5,
@@ -2651,20 +2707,33 @@ def mission():
         pass
 
     class _Assignment:
-        title       = _assign[0]
-        description = _assign[1]
-        tips        = _assign[2]
-        best_time   = _assign[3]
-        weather     = 'Any light works'
-        focus_label = _dim_mobile.get(_focus_key, 'Timing')
-        dimension   = _focus_key
+        title        = _title
+        description  = _desc
+        assignment   = _assignment
+        tips         = _tips
+        best_time    = _best_time
+        weather      = _weather_str
+        focus_label  = _focus_label
+        dimension    = _focus_key
+        principle_id = lesson['principle_id'] if lesson else None
 
     return render_template('mission_detail.html',
                            assignment=_Assignment(),
                            master=_master,
                            benchmark=_benchmark,
                            progress_data=progress_data,
-                           active_challenge=active_challenge)
+                           active_challenge=active_challenge,
+                           weather=_weather)
+
+
+@app.route('/mission-snooze')
+@login_required
+def mission_snooze():
+    """User tapped 'Remind me later' on mission page.
+    Sets a session flag so dashboard shows collapsed pill state.
+    """
+    session['mission_snoozed'] = True
+    return redirect(url_for('dashboard'))
 
 
 # ---------------------------------------------------------------------------
