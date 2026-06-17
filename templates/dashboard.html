@@ -1339,7 +1339,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div>
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                     color:rgba(21,21,21,.45); margin-bottom:5px;">
-          Today's lesson · {{ lesson.dim_label if lesson else 'Decisive Moment' }}
+          Today's lesson · {{ lesson.dim_label if lesson else 'Timing' }}
           {% if lesson %} · Depth {{ lesson.depth }} of 3{% endif %}
         </div>
         <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
@@ -1367,11 +1367,18 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {# ── Master context — warm, no purple, explains who they are ── #}
     {% if lesson and lesson.show_master and lesson.master %}
     {% set _master_context_map = {
-      'dod':        'Shot in technically demanding conditions most photographers would never attempt.',
-      'dm':         'Defined the decisive moment — the instant geometry and gesture coincide in one frame.',
-      'aq':         'Proved that light itself is the subject — not the mountain, not the person.',
-      'wonder':     'Photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',
-      'disruption': 'Broke every compositional rule deliberately — not accidentally.'
+      'Fan Ho':                'Shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances.',
+      'Ansel Adams':           'Proved that light itself is the subject — not the mountain, not the valley.',
+      'Henri Cartier-Bresson': 'Defined the art of timing — the instant geometry and gesture coincide in one frame.',
+      'Raghu Rai':             'Built his practice on being inside the scene before the moment arrived.',
+      'Vivian Maier':          'Photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',
+      'Sebastião Salgado':     'Spent years earning access to worlds most photographers never reach.',
+      'Dorothea Lange':        'Found the one face in the crowd that contained the entire truth of the moment.',
+      'Daido Moriyama':        'Broke every compositional rule deliberately — not accidentally.',
+      'Ernst Haas':            'Used colour and motion as purposeful disruption — not technique for its own sake.',
+      'Yousuf Karsh':          'Proved that light determines the emotion before the subject does.',
+      'Michael Kenna':         'Self-imposed constraint as lifelong practice — the restriction is the engine of new work.',
+      'William Eggleston':     'Made the mundane produce emotions it was not supposed to produce.'
     } %}
     <div style="margin:12px 16px 0; padding:12px 14px;
                 background:rgba(244,194,13,.08); border-left:3px solid var(--sl-yellow-dark);
@@ -1380,7 +1387,7 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
                   color:var(--sl-yellow-dark); margin-bottom:5px;">Today's Master</div>
       <div style="font-size:16px; font-weight:800; color:var(--sl-text); margin-bottom:3px;">{{ lesson.master }}</div>
       <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
-        {{ _master_context_map.get(lesson.dim, 'One of the defining photographers in this discipline.') }}
+        {{ _master_context_map.get(lesson.master, 'One of the defining photographers in this discipline.') }}
       </div>
       {% if lesson.master_quote %}
       <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;">
