@@ -1340,7 +1340,6 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
         <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
                     color:rgba(21,21,21,.45); margin-bottom:5px;">
           Today's lesson · {{ lesson.dim_label if lesson else 'Timing' }}
-          {% if lesson %} · Depth {{ lesson.depth }} of 3{% endif %}
         </div>
         <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
@@ -1348,13 +1347,13 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">{{ _dc[2] }}</div>
     </div>
 
-    {# ── Depth + genre pill ── #}
+    {# ── Genre pill ── #}
     {% if lesson %}
     <div style="display:inline-flex; align-items:center;
                 font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
                 padding:3px 9px; border-radius:5px; margin:12px 16px 0; align-self:flex-start;
                 background:rgba(21,21,21,.06); color:var(--sl-text-light);">
-      {{ lesson.mission_genre }} · Depth {{ lesson.depth }} of 3{% if lesson.show_master %} · Master day{% endif %}
+      {{ lesson.mission_genre }}{% if lesson.show_master %} · Master day{% endif %}
     </div>
     {% endif %}
 
@@ -1456,9 +1455,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
            onclick="slSkipMission()">I'll wait for tomorrow ›</div>
     </div>
     {% else %}
-    <div style="margin:12px 16px 0; padding:11px 13px;
-                background:rgba(244,194,13,.10); border-left:3px solid var(--sl-yellow-dark);
-                border-radius:0 8px 8px 0; font-size:15px; color:var(--sl-text); line-height:1.6;">
+    <div style="margin:12px 16px 0; padding:13px 15px;
+                background:#FDF3DC; border-left:4px solid var(--sl-yellow-dark);
+                border-radius:0 10px 10px 0; font-size:16px; color:var(--sl-text); line-height:1.6;">
       <strong style="color:var(--sl-yellow-dark);">Today:</strong>
       {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
     </div>
