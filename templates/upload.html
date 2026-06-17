@@ -489,16 +489,7 @@
     <div class="overlay-phase" id="overlayPhase">Uploading</div>
     <div class="overlay-status" id="overlayStatus">Transferring your image…</div>
     <div class="overlay-substatus" id="overlaySubstatus">Keep this tab open</div>
-    <div class="overlay-eta" id="overlayEta" style="display:none; width:100%; max-width:280px; margin-top:12px;">
-      <div style="font-size:14px; color:rgba(255,255,255,.6); text-align:center; line-height:1.5; margin-bottom:10px;">
-        This usually takes about a minute.<br>Feel free to skip — we'll have your score waiting.
-      </div>
-      <div style="background:rgba(255,255,255,.1); border-radius:4px; height:4px; width:100%; overflow:hidden;">
-        <div id="overlayProgressBar"
-             style="height:100%; width:0%; background:#F4C20D; border-radius:4px;
-                    transition:width 1s linear;"></div>
-      </div>
-    </div>
+    <div class="overlay-eta" id="overlayEta" style="display:none;"></div>
   </div>
   <div class="mini-timer">
     <div class="mini-clock-wrap">
@@ -873,14 +864,9 @@
         document.getElementById('overlayPhase').textContent    = 'ANALYSING';
         document.getElementById('overlayStatus').textContent   = 'Shutter League engine evaluating…';
         document.getElementById('overlaySubstatus').textContent = 'Evaluating technique, composition, timing, and emotion…';
-        // Show progress bar
+        // Show ETA div (kept as empty placeholder for future use)
         var etaEl = document.getElementById('overlayEta');
-        if (etaEl) etaEl.style.display = 'block';
-        // Animate progress bar: 0→88% over 55s, leaves room for completion jump
-        var _pBar = document.getElementById('overlayProgressBar');
-        if (_pBar) {
-          setTimeout(function() { _pBar.style.width = '88%'; _pBar.style.transition = 'width 55s linear'; }, 100);
-        }
+        if (etaEl) etaEl.style.display = 'none';
         var backWrap = document.getElementById('backToDashboardWrap');
         var backLink = document.getElementById('backToDashboardLink');
         if (backWrap && backLink) {
@@ -922,8 +908,6 @@
 
         if (r.status === 'ok') {
           notifyComplete();
-          var _pBar = document.getElementById('overlayProgressBar');
-          if (_pBar) { _pBar.style.transition = 'width .4s ease'; _pBar.style.width = '100%'; }
           document.getElementById('overlayPhase').textContent    = 'COMPLETE';
           document.getElementById('overlayStatus').textContent   = r.score
             ? parseFloat(r.score).toFixed(2) + ' \u2014 ' + r.tier
