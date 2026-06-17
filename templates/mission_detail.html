@@ -360,8 +360,23 @@
 
   {# ── Assignment header ── #}
   <span class="md-eyebrow">Today's Assignment</span>
-  <h1 class="md-title">{{ assignment.title if assignment is defined else 'Break the Rule' }}</h1>
-  <p class="md-brief">{{ assignment.description if assignment is defined else 'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.' }}</p>
+  <h1 class="md-title">{{ assignment.title if assignment is defined else 'Today\'s Assignment' }}</h1>
+
+  {# ── Principle — the one thing to carry today ── #}
+  <p style="font-size:17px; font-weight:700; color:var(--sl-text); line-height:1.5;
+            margin-bottom:10px; letter-spacing:-.01em;">
+    {{ assignment.description if assignment is defined else 'One frame. Make it count.' }}
+  </p>
+
+  {# ── Today's specific assignment ── #}
+  <div style="background:rgba(244,194,13,.10); border-left:3px solid var(--sl-yellow-dark);
+              border-radius:0 10px 10px 0; padding:11px 14px; margin-bottom:20px;">
+    <span style="font-size:13px; font-weight:700; color:var(--sl-yellow-dark);
+                 letter-spacing:.06em; text-transform:uppercase;">Today</span>
+    <p style="font-size:16px; color:var(--sl-text); line-height:1.65; margin:4px 0 0;">
+      {{ assignment.assignment if assignment is defined else assignment.description }}
+    </p>
+  </div>
 
   {# ── Meta — Best Time · Weather · Location · Focus ── #}
   <div class="md-meta">
@@ -417,38 +432,56 @@
     {% endif %}
   </div>
 
-  {# ── Master reference — text only, no image (rights) ── #}
+  {# ── Master reference — warm cream, context-first, no purple ── #}
   {% if master %}
-  <div class="md-master">
-    <div style="width:48px; height:48px; border-radius:12px; background:var(--sl-purple);
-                display:flex; align-items:center; justify-content:center;
-                font-size:22px; flex-shrink:0;">◆</div>
-    <div>
-      <span class="md-master-label">Today's Master</span>
-      <div class="md-master-name">{{ master[0] }}</div>
-      <div class="md-master-quote">{{ master[3] }}</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.5;">{{ master[2] }}</div>
+  <div style="background:var(--sl-cream, #F8F4E9); border:1px solid var(--sl-border);
+              border-left:3px solid var(--sl-yellow-dark);
+              border-radius:0 var(--r-card) var(--r-card) 0;
+              padding:14px 16px; margin-bottom:20px;">
+    <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                 color:var(--sl-yellow-dark); display:block; margin-bottom:8px;">Today's Master</span>
+    <div style="font-size:17px; font-weight:800; color:var(--sl-text); margin-bottom:4px;">{{ master[0] }}</div>
+    <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
+      {# Context sentence so user knows who this is and why they're here today #}
+      {% if assignment.dimension == 'disruption' %}One of the most influential photographers of the 20th century — known for breaking every compositional rule deliberately, not accidentally.
+      {% elif assignment.dimension == 'dm' %}The photographer who defined timing in photography — the instant when geometry and gesture align perfectly in one frame.
+      {% elif assignment.dimension == 'dod' %}A master of technically demanding photography — his images were made in conditions most photographers would never attempt.
+      {% elif assignment.dimension == 'wonder' %}Shot for decades without showing her work to anyone — the most powerful argument that seeing is its own reward.
+      {% elif assignment.dimension == 'aq' %}The photographer who proved that light itself — not the subject — is what creates emotion in an image.
+      {% else %}One of the defining photographers in this discipline — study their work before you shoot today.{% endif %}
     </div>
+    {% if master[2] %}
+    <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;
+                padding:10px 12px; background:rgba(244,194,13,.08); border-radius:8px;">
+      {{ master[2] }}
+      <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
+                   display:block; margin-top:5px; letter-spacing:.04em;">— {{ master[0] }}</span>
+    </div>
+    {% endif %}
   </div>
   {% else %}
   {% set _focus_key = assignment.dimension if assignment is defined else 'disruption' %}
-  {% set _master_map = {
-    'dod':        ('Fan Ho',                'Study how he uses shadow as a second subject.',          '"Photography is the art of observation."'),
-    'dm':         ('Henri Cartier-Bresson', 'Look for the frame where geometry and gesture coincide.', '"To photograph is to hold one\'s breath."'),
-    'aq':         ('Ansel Adams',           'Pre-visualise the final image before you raise the camera.', '"You don\'t take a photograph, you make it."'),
-    'wonder':     ('Vivian Maier',          'Look at what you are walking past.',                     '"Taking pictures is savoring life intensely."'),
-    'disruption': ('Daido Moriyama',        'Push contrast past comfortable. Shoot what unsettles you.', '"I want to express the feeling of reality."')
+  {% set _master_context = {
+    'dod':        ('Fan Ho',                'Shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances. His difficulty came from the geometry of the scene.',          '"Photography is the art of observation."'),
+    'dm':         ('Henri Cartier-Bresson', 'Defined the art of timing in photography — the instant when geometry and gesture coincide in a single frame. He was already in position before the moment arrived.',         '"To photograph is to hold one\'s breath when all faculties converge."'),
+    'aq':         ('Ansel Adams',           'Proved that light itself is the subject — not the mountain, not the valley. He waited hours for the light that made the image feel the way it did.',       '"You don\'t take a photograph, you make it."'),
+    'wonder':     ('Vivian Maier',          'Shot for decades without showing her work to anyone. She photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',       '"Taking pictures is savoring life intensely, every hundredth of a second."'),
+    'disruption': ('Daido Moriyama',        'Broke every rule of composition deliberately. He wanted the image to be true — even if that truth was grainy, blurred, or uncomfortable.',                 '"I want to express the feeling of reality that is beyond imagination."')
   } %}
-  {% set _m = _master_map.get(_focus_key, _master_map['dm']) %}
-  <div class="md-master">
-    <div style="width:48px; height:48px; border-radius:12px; background:var(--sl-purple);
-                display:flex; align-items:center; justify-content:center;
-                font-size:22px; flex-shrink:0;">◆</div>
-    <div>
-      <span class="md-master-label">Today's Master</span>
-      <div class="md-master-name">{{ _m[0] }}</div>
-      <div class="md-master-quote">{{ _m[2] }}</div>
-      <div style="font-size:13px; color:var(--sl-text-light); margin-top:4px; line-height:1.5;">{{ _m[1] }}</div>
+  {% set _m = _master_context.get(_focus_key, _master_context['dm']) %}
+  <div style="background:var(--sl-cream, #F8F4E9); border:1px solid var(--sl-border);
+              border-left:3px solid var(--sl-yellow-dark);
+              border-radius:0 var(--r-card) var(--r-card) 0;
+              padding:14px 16px; margin-bottom:20px;">
+    <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                 color:var(--sl-yellow-dark); display:block; margin-bottom:8px;">Today's Master</span>
+    <div style="font-size:17px; font-weight:800; color:var(--sl-text); margin-bottom:4px;">{{ _m[0] }}</div>
+    <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">{{ _m[1] }}</div>
+    <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;
+                padding:10px 12px; background:rgba(244,194,13,.08); border-radius:8px;">
+      {{ _m[2] }}
+      <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
+                   display:block; margin-top:5px; letter-spacing:.04em;">— {{ _m[0] }}</span>
     </div>
   </div>
   {% endif %}
@@ -460,10 +493,10 @@
   </div>
 
   {# ── CTAs ── #}
-  <a href="{{ url_for('upload') }}?mission_dimension={{ assignment.dimension }}&mission_title={{ assignment.title | urlencode }}" class="md-btn-primary">
+  <a href="{{ url_for('upload') }}?mission_dimension={{ assignment.dimension }}{% if assignment.principle_id %}&curriculum_principle_id={{ assignment.principle_id }}{% endif %}&mission_title={{ assignment.title | urlencode }}" class="md-btn-primary">
     I'm ready. Let's go →
   </a>
-  <a href="{{ url_for('dashboard') }}" class="md-btn-secondary">
+  <a href="{{ url_for('mission_snooze') }}" class="md-btn-secondary">
     Remind me later
   </a>
 
