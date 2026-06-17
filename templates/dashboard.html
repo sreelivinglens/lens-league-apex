@@ -1290,107 +1290,228 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {% else %}
   {# ══════════════════════════════════════════
-     RETURNING USER — full dashboard
-     (everything below is second login onwards)
-     Assignment card powered by: weakest dimension from progress_data
-     Image: Unsplash (static placeholder until API wired)
+     RETURNING USER — Photo School mission card
+     lesson + weather injected from app.py
   ══════════════════════════════════════════ #}
-  {% set _weakest_map = {
-    'dod':        ('Technical',    'Depth and complexity in your frame'),
-    'dm':         ('Timing',       'Catching the decisive moment'),
-    'aq':         ('Visual Impact','The emotion your image creates'),
-    'wonder':     ('Wonder',       'The sense of discovery in your work'),
-    'disruption': ('Originality',  'Breaking the expected frame')
-  } %}
-  {% set _focus_key   = progress_data.weakest if progress_data else 'dm' %}
-  {% set _focus_label = _weakest_map.get(_focus_key, ('Timing', 'Catching the decisive moment'))[0] %}
-  {% set _focus_desc  = _weakest_map.get(_focus_key, ('Timing', 'Catching the decisive moment'))[1] %}
 
-  {# Assignment titles per dimension — Sherpa voice, specific #}
-  {% set _assign_map = {
-    'dod':        ('Foreground Separation',  'Your recent frames feel flat. Put something in front — a shadow, a hand, a branch. Let the eye travel through the frame.'),
-    'dm':         ('The Moment Before',      'You have been shooting the moment. Try waiting for what comes just before it. One frame where anticipation is the subject.'),
-    'aq':         ('Light as Subject',       'Stop photographing things. Photograph light falling on things. Find one window, one shadow, one hour today.'),
-    'wonder':     ('The Unfamiliar Angle',   'You have been shooting at eye level. Go lower, go higher, or get closer than feels comfortable. One frame that surprises you.'),
-    'disruption': ('Break the Rule',         'Every frame this week followed the expected composition. Today: put your subject in the corner. Leave empty space. Disrupt.')
+  {# ── Dimension colour map — light/muted palette ── #}
+  {% set _dim_band = {
+    'dod':        ('linear-gradient(135deg,#C4CEDC,#A8B8CC)', '#98A8BC', '⬛'),
+    'dm':         ('linear-gradient(135deg,#C8D8C0,#A8C0A0)', '#9AB092', '◎'),
+    'aq':         ('linear-gradient(135deg,#E8D8B0,#D8C490)', '#C8B480', '☀'),
+    'wonder':     ('linear-gradient(135deg,#D8D0F8,#C0B4F0)', '#B0A0E8', '✦'),
+    'disruption': ('linear-gradient(135deg,#C4CEDC,#A8B8CC)', '#98A8BC', '◈')
   } %}
-  {% set _title     = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[0] %}
-  {% set _brief_why = _assign_map.get(_focus_key, ('Today\'s Assignment', 'One frame. That is all it takes.'))[1] %}
-
-  {# Dimension colour band — replaces image, zero external dependency.
-     Each dimension has a distinct colour identity.
-     At P3 (Daily Brief API) this becomes a generated visual brief.
-  #}
-  {% set _dim_colour = {
-    'dod':        ('rgba(44,62,107,1)',   'rgba(26,38,74,1)',   '⬛',  '#E8D4A0'),
-    'dm':         ('rgba(42,74,52,1)',    'rgba(26,58,36,1)',   '◎',   '#A8D4B0'),
-    'aq':         ('rgba(107,62,26,1)',   'rgba(84,44,12,1)',   '☀',   '#F5C518'),
-    'wonder':     ('rgba(62,26,107,1)',   'rgba(44,12,84,1)',   '✦',   '#C8A0F0'),
-    'disruption': ('rgba(19,37,75,1)',    'rgba(13,25,55,1)',   '◈',   '#A0B4F0')
-  } %}
-  {% set _dc = _dim_colour.get(_focus_key, ('rgba(26,26,18,1)', 'rgba(10,10,8,1)', '◉', '#F5C518')) %}
+  {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
+               ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
 
   <div class="sl-assignment" id="sl-mission-card">
-    {# Dimension colour header band — replaces image #}
-    <div style="background:linear-gradient(135deg, {{ _dc[0] }} 0%, {{ _dc[1] }} 100%);
+
+    {# ── Band header ── #}
+    {% if lesson and lesson.show_master %}
+    {# Master day band — purple #}
+    <div style="background:linear-gradient(135deg,#D8D0F8,#C0B4F0);
+                border-bottom:1px solid #B0A0E8;
                 border-radius:var(--r-hero) var(--r-hero) 0 0;
-                padding:24px 20px 20px; display:flex; align-items:flex-end; justify-content:space-between;
-                min-height:100px;">
+                padding:20px 18px 16px; display:flex; align-items:flex-end; justify-content:space-between;
+                min-height:88px;">
       <div>
-        <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
-                    color:rgba(255,255,255,0.5); margin-bottom:6px;">Today's Assignment</div>
-        <div style="font-size:22px; font-weight:800; color:#fff; line-height:1.2;
-                    letter-spacing:-.01em;">{{ _title }}</div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+                    color:rgba(21,21,21,.45); margin-bottom:5px;">Today's master · {{ lesson.dim_label }}</div>
+        <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.15;
+                    letter-spacing:-.02em;">{{ lesson.master }}</div>
       </div>
-      <div style="font-size:36px; opacity:0.25; line-height:1; flex-shrink:0; padding-left:12px;">{{ _dc[2] }}</div>
+      <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">◉</div>
+    </div>
+    {% else %}
+    {# Principle day band ── dimension colour #}
+    <div style="background:{{ _dc[0] }};
+                border-bottom:1px solid {{ _dc[1] }};
+                border-radius:var(--r-hero) var(--r-hero) 0 0;
+                padding:20px 18px 16px; display:flex; align-items:flex-end; justify-content:space-between;
+                min-height:88px;">
+      <div>
+        <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+                    color:rgba(21,21,21,.45); margin-bottom:5px;">
+          Today's lesson · {{ lesson.dim_label if lesson else 'Decisive Moment' }}
+          {% if lesson %} · Depth {{ lesson.depth }} of 3{% endif %}
+        </div>
+        <div style="font-size:17px; font-weight:800; color:#151515; line-height:1.2;
+                    letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
+      </div>
+      <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">{{ _dc[2] }}</div>
+    </div>
+    {% endif %}
+
+    {# ── Depth pill ── #}
+    {% if lesson %}
+    <div style="display:inline-flex; align-items:center;
+                font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                padding:3px 9px; border-radius:5px; margin:12px 16px 0; align-self:flex-start;
+                {% if lesson.show_master %}background:rgba(106,62,240,.08); color:var(--sl-purple);
+                {% else %}background:rgba(21,21,21,.06); color:var(--sl-text-light);{% endif %}">
+      {{ lesson.mission_genre }} · Depth {{ lesson.depth }} of 3{% if lesson.show_master %} · Master day{% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Principle — the hero line ── #}
+    <div style="margin:10px 16px 0; font-size:15px; font-weight:800; color:var(--sl-text);
+                line-height:1.4; letter-spacing:-.01em;">
+      {{ lesson.principle if lesson else 'One frame. That is all it takes.' }}
     </div>
 
-    <div class="sl-assignment__eyebrow" style="display:none;">Today's Assignment</div>
+    {# ── Wikimedia Commons reference image (principle days only) ── #}
+    {% if lesson and lesson.commons_file and not lesson.show_master %}
+    <div style="margin:12px 16px 0; border-radius:12px; overflow:hidden; height:82px;
+                background:#D8CFC0; display:flex; align-items:flex-end; position:relative;
+                border:1px solid var(--sl-border);">
+      <div style="position:absolute; inset:0;
+                  background:linear-gradient(135deg,#B8B0A0,#988878);
+                  display:flex; align-items:center; justify-content:center;
+                  font-size:26px; opacity:.15;">📷</div>
+      <div style="position:absolute; inset:0;
+                  background:linear-gradient(to top,rgba(21,21,21,.55) 0%,transparent 55%);"></div>
+      <div style="position:relative; z-index:1; padding:7px 10px;
+                  font-size:13px; color:rgba(255,255,255,.75); line-height:1.4;">
+        <strong style="color:#fff;">{{ lesson.commons_caption }}</strong>
+      </div>
+    </div>
+    {% endif %}
 
-    <div class="sl-assignment__body">
-      <div class="sl-assignment__left">
-        <div class="sl-assignment__title" style="display:none;">{{ _title }}</div>
-        <div class="sl-assignment__why">{{ _brief_why }}</div>
+    {# ── Master quote (master days only) ── #}
+    {% if lesson and lesson.show_master and lesson.master_quote %}
+    <div style="margin:12px 16px 0; padding:11px 13px;
+                border-left:3px solid var(--sl-purple); background:rgba(106,62,240,.06);
+                border-radius:0 8px 8px 0;
+                font-size:13px; font-style:italic; color:var(--sl-text); line-height:1.65;">
+      {{ lesson.master_quote }}
+      <span style="font-size:13px; font-style:normal; font-weight:700; color:var(--sl-purple);
+                   margin-top:5px; display:block; letter-spacing:.04em;">— {{ lesson.master }}</span>
+    </div>
+    {% endif %}
+
+    {# ── Weather banner ── #}
+    {% if weather and weather.message %}
+    <div style="margin:10px 16px 0; padding:10px 12px; border-radius:8px;
+                font-size:13px; line-height:1.55;
+                {% if weather.state == 'red' %}background:#F8EDEB; border:1px solid #D8B0A8; color:#5A2820;
+                {% elif weather.state == 'amber' %}background:#FDF3DC; border:1px solid #E8C870; color:#5A3808;
+                {% else %}background:#EDF5E4; border:1px solid #C0D8A0; color:#2A5010;{% endif %}">
+      {{ weather.message }}
+    </div>
+    {% endif %}
+
+    {# ── Assignment line ── #}
+    {% if weather and weather.state == 'red' %}
+    {# Red weather — indoor options #}
+    <div style="margin:10px 16px 0;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+                  color:var(--sl-text-light); margin-bottom:7px;">Shoot indoors instead?</div>
+      <a href="{{ url_for('mission') }}?indoor=portraits"
+         style="display:flex; align-items:center; gap:10px; padding:10px 12px;
+                background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
+                margin-bottom:6px; text-decoration:none; color:var(--sl-text);">
+        <span style="font-size:18px; flex-shrink:0;">🪟</span>
+        <div>
+          <div style="font-size:13px; font-weight:700;">Home portraits</div>
+          <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Window light · People · same lesson indoors</div>
+        </div>
+      </a>
+      <a href="{{ url_for('mission') }}?indoor=stilllife"
+         style="display:flex; align-items:center; gap:10px; padding:10px 12px;
+                background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
+                margin-bottom:4px; text-decoration:none; color:var(--sl-text);">
+        <span style="font-size:18px; flex-shrink:0;">🔬</span>
+        <div>
+          <div style="font-size:13px; font-weight:700;">Still life · experimental</div>
+          <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Macro at home · texture · no rules</div>
+        </div>
+      </a>
+      <div style="font-size:13px; color:var(--sl-text-light); text-align:center; padding:6px 0 2px; cursor:pointer;"
+           onclick="slSkipMission()">I'll wait for tomorrow ›</div>
+    </div>
+    {% else %}
+    {# Normal assignment ── #}
+    <div style="margin:10px 16px 0; padding:10px 12px;
+                background:rgba(244,194,13,.10); border-left:3px solid var(--sl-yellow-dark);
+                border-radius:0 8px 8px 0; font-size:13px; color:var(--sl-text); line-height:1.55;">
+      <strong style="color:var(--sl-yellow-dark);">Today:</strong>
+      {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
+    </div>
+    {% endif %}
+
+    {# ── Meta row ── #}
+    {# /* audit ref: 10px/11px/12px fonts below are uppercase eyebrow UI labels only —
+          mobile-app page exception per sl_audit.py mobile-app-page rule */ #}
+    <div style="display:flex; gap:0; border-top:1px solid var(--sl-border); margin-top:14px;">
+      <div style="flex:1; padding:9px 10px; border-right:1px solid var(--sl-border);
+                  display:flex; flex-direction:column; gap:2px;">
+        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Focus</span>
+        <span style="font-size:13px; font-weight:700; color:var(--sl-text);">{{ lesson.dim_short if lesson else 'Timing' }}</span>
+      </div>
+      <div style="flex:1; padding:9px 10px; border-right:1px solid var(--sl-border);
+                  display:flex; flex-direction:column; gap:2px;">
+        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Weather</span>
+        <span style="font-size:13px; font-weight:700;
+                     {% if weather.state == 'red' %}color:#A03020;
+                     {% elif weather.state == 'amber' %}color:#B8750A;
+                     {% else %}color:#2A6010;{% endif %}">
+          {{ weather.condition if weather.condition else 'Any light works' }}
+        </span>
+      </div>
+      <div style="flex:1; padding:9px 10px; display:flex; flex-direction:column; gap:2px;">
+        <span style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; color:var(--sl-text-light);">Best time</span>
+        <span style="font-size:13px; font-weight:700; color:var(--sl-text);">
+          {% if weather and weather.state == 'red' %}Tomorrow
+          {% elif weather and weather.window %}{{ weather.window }}
+          {% elif ist_hour < 10 %}6 – 9 AM
+          {% elif ist_hour < 16 %}5 – 7 PM
+          {% else %}Now{% endif %}
+        </span>
       </div>
     </div>
 
-    <div class="sl-assignment__meta">
-      <div class="sl-meta-item">
-        <span class="sl-meta-item__icon">◎</span>
-        <span class="sl-meta-item__label">Focus</span>
-        <span class="sl-meta-item__val">{{ _focus_label }}</span>
-      </div>
-      <div class="sl-meta-item">
-        <span class="sl-meta-item__icon">☁</span>
-        <span class="sl-meta-item__label">Weather</span>
-        <span class="sl-meta-item__val">Any light works</span>
-      </div>
-      <div class="sl-meta-item">
-        <span class="sl-meta-item__icon">◷</span>
-        <span class="sl-meta-item__label">Best time</span>
-        <span class="sl-meta-item__val">{% if ist_hour < 10 %}6:00 – 9:00 AM{% elif ist_hour < 16 %}5:00 – 7:00 PM{% else %}Now{% endif %}</span>
-      </div>
+    {# ── CTAs ── #}
+    {% if weather and weather.state == 'red' %}
+    <div style="padding:12px 16px 14px;">
+      <div style="background:var(--sl-border); color:var(--sl-text-light);
+                  font-size:15px; font-weight:700; padding:14px 16px; border-radius:var(--r-btn);
+                  text-align:center;">Outdoor mission paused · resumes tomorrow</div>
     </div>
-
-    <div class="sl-assignment__shots">
-      <span style="font-size:20px">◷</span>
-      Shoot several frames. Upload your best one.
-    </div>
-
-    {# Two CTAs — mission is optional · Skip collapses this card, standalone upload is below #}
-    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:0 0 4px;">
-      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:0 0 0 var(--r-hero);">
-        Start Mission &nbsp;→
+    {% else %}
+    <div style="display:grid; grid-template-columns:1fr auto; gap:6px; padding:12px 16px 14px;">
+      <a href="{{ url_for('mission') }}" class="sl-btn-mission" style="border-radius:var(--r-btn); height:auto; padding:14px 16px;">
+        Start Mission →
       </a>
       <button onclick="slSkipMission()"
-         style="display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.06);color:var(--sl-text-light);font-size:13px;font-weight:600;padding:0 16px;border-radius:0 0 var(--r-hero) 0;border:none;cursor:pointer;white-space:nowrap;font-family:inherit;"
-         title="Skip the mission — upload any photograph below">
-        Skip &nbsp;›
+              style="background:rgba(0,0,0,.06); color:var(--sl-text-light); font-size:13px;
+                     font-weight:600; padding:14px 14px; border-radius:var(--r-btn); border:none;
+                     cursor:pointer; white-space:nowrap; font-family:inherit;">
+        Skip ›
+      </button>
+    </div>
+    {% endif %}
+
+    {# ── Genre switch footer ── #}
+    <div style="border-top:1px solid var(--sl-border); padding:10px 16px;
+                display:flex; align-items:center; justify-content:space-between; gap:8px;
+                background:rgba(21,21,21,.02); border-radius:0 0 var(--r-hero) var(--r-hero);">
+      <div style="font-size:13px; color:var(--sl-text-light); line-height:1.4; flex:1;">
+        Your missions are currently in
+        <strong style="color:var(--sl-text); font-weight:600;">{{ lesson.mission_genre if lesson else 'Wildlife' }}</strong>.
+      </div>
+      <button onclick="document.getElementById('sl-genre-picker').style.display='block';
+                       this.closest('.sl-assignment').style.display='none';"
+              style="font-size:13px; font-weight:700; color:var(--sl-purple);
+                     background:rgba(106,62,240,.08); border:1px solid rgba(106,62,240,.18);
+                     border-radius:8px; padding:5px 11px; cursor:pointer; white-space:nowrap; flex-shrink:0;
+                     font-family:inherit;">
+        Switch genre →
       </button>
     </div>
   </div>
 
-  {# ── Mission pill — shown when user skips, hidden by default ── #}
+  {# ── Mission pill — shown when user skips ── #}
   <div id="sl-mission-pill"
        style="display:none; align-items:center; justify-content:space-between; gap:10px;
               background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
@@ -1399,98 +1520,54 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     <div style="display:flex; align-items:center; gap:8px;">
       <span style="font-size:16px;">📷</span>
       <div>
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text); letter-spacing:.02em;">Today's mission is waiting</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">{{ _title }} · tap to expand</div>
+        <div style="font-size:13px; font-weight:700; color:var(--sl-text); letter-spacing:.02em;">Today's lesson is waiting</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">
+          {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
+        </div>
       </div>
     </div>
     <span style="font-size:18px; color:var(--sl-yellow-dark); font-weight:700;">›</span>
   </div>
 
-  {# ══════════════════════════════════════════
-     TODAY'S MASTER
-  ══════════════════════════════════════════ #}
-  {# ══════════════════════════════════════════
-     TODAY'S MASTER — text only, no images
-     At P3 (Daily Brief API) this becomes a live Claude call.
-     Tuple: name · bio · what to study · attributed quote · why this master connects to today's mission
-  ══════════════════════════════════════════ #}
-  {% set _master_map = {
-    'dod':        ('Fan Ho',
-                   'Hong Kong master of light, shadow and geometric composition.',
-                   'Study how he uses shadow as a second subject — the darkness is as composed as the light. Nothing in the frame is accidental.',
-                   '"Photography is the art of observation."',
-                   'Fan Ho shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances. His difficulty score came from the geometry of the scene, not just the shutter speed. That is what today\'s mission asks: make the difficulty visible in the frame itself.'),
-    'dm':         ('Henri Cartier-Bresson',
-                   'Inventor of the decisive moment.',
-                   'Look for the frame where the geometry and the gesture coincide. One instant. Everything else is almost.',
-                   '"To photograph is to hold one\'s breath when all faculties converge to capture fleeting reality."',
-                   'Cartier-Bresson understood that timing is not reaction — it is anticipation. He was already in position before the moment arrived. Today\'s mission is not about shooting faster. It is about reading the scene until you know where the moment will be.'),
-    'aq':         ('Ansel Adams',
-                   'Made light itself the subject.',
-                   'Pre-visualise the final image before you raise the camera. What is the light doing — and what does that make you feel?',
-                   '"You don\'t take a photograph, you make it."',
-                   'Adams waited hours for the light that made the mountain. The emotion in his work comes from tonal control — what he chose to protect and what he let go dark. Today\'s mission: find one scene where the light is doing something. Expose for the feeling, not the subject.'),
-    'wonder':     ('Vivian Maier',
-                   'Found the extraordinary in the completely ordinary.',
-                   "Look at what you are walking past. The unremarkable face, the unnoticed corner — she built a life's work from exactly that.",
-                   '"Taking pictures is savoring life intensely, every hundredth of a second."',
-                   "Maier never exhibited her work. She shot for the act of seeing, not for recognition. Today's mission is about angle — going lower, closer, or further than feels natural. Maier's images often place the viewer somewhere unexpected. That discomfort is the point."),
-    'disruption': ('Daido Moriyama',
-                   'Broke every rule of composition. On purpose.',
-                   'Push contrast past comfortable. Shoot what unsettles you, not what looks right. The difficult frame is usually the honest one.',
-                   '"I want to express the feeling of reality that is beyond imagination."',
-                   "Moriyama rejected the idea that a photograph should be beautiful. He wanted it to be true — even if that truth was grainy, blurred, or uncomfortable. Today's mission asks you to break the expected composition. Put the subject in the corner. Leave empty space. Shoot the frame that feels wrong until it feels right.")
-  } %}
-  {% set _master = _master_map.get(_focus_key, ('Raghu Rai',
-                   "Captured India's decisive moments.",
-                   "Be inside the scene before the moment arrives. Trust builds access. Access builds the image.",
-                   '"The camera is not a machine. It is an extension of your eye."',
-                   "Raghu Rai spent decades embedded in India's most significant moments. His access came from relationships built over years. The lesson: be present consistently, not only when the light is good.")) %}
-
-  <div class="sl-master" style="display:block;">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; cursor:pointer;"
-         onclick="slToggleMaster()">
-      <div>
-        <div class="sl-master__eyebrow">Today's Master</div>
-        <div class="sl-master__name">{{ _master[0] }}</div>
-        <div class="sl-master__desc">{{ _master[1] }}</div>
+  {# ── Genre picker — hidden until switch button tapped ── #}
+  <div id="sl-genre-picker"
+       style="display:none; background:var(--sl-card); border-radius:var(--r-card);
+              border:1px solid var(--sl-border); box-shadow:0 10px 40px rgba(0,0,0,.08);
+              overflow:hidden; margin-bottom:16px;">
+    <div style="padding:14px 16px 12px; border-bottom:1px solid var(--sl-border); background:var(--sl-cream);">
+      <div style="font-size:14px; font-weight:800; color:var(--sl-text); letter-spacing:-.01em;">Switch your mission genre</div>
+      <div style="font-size:13px; color:var(--sl-text-light); margin-top:3px; line-height:1.4;">
+        Your lesson adapts. Your weakest dimension stays the focus.
       </div>
-      <span id="sl-master-chevron"
-            style="font-size:18px; color:var(--sl-purple); flex-shrink:0; margin-top:18px;
-                   transition:transform 0.25s; display:block;">›</span>
     </div>
-
-    {# Principle — always visible #}
-    <div style="font-size:15px; color:var(--sl-text); line-height:1.65; margin-top:10px;
-                padding:10px 12px; background:var(--sl-bg); border-radius:8px;
-                border-left:3px solid var(--sl-purple);">
-      {{ _master[2] }}
-    </div>
-
-    {# Expandable depth — quote + mission connection #}
-    <div id="sl-master-detail" style="display:none; margin-top:12px;">
-      <div style="font-size:15px; font-style:italic; color:var(--sl-text-light); line-height:1.7;
-                  padding:10px 14px; border-radius:8px; background:var(--sl-bg);
-                  margin-bottom:10px;">
-        {{ _master[3] }}<br>
-        <span style="font-style:normal; font-size:13px; font-weight:700; color:var(--sl-purple);
-                     letter-spacing:.05em;">— {{ _master[0] }}</span>
-      </div>
-      <div style="font-size:14px; color:var(--sl-text); line-height:1.7;
-                  padding:10px 12px; background:var(--sl-bg); border-radius:8px;
-                  border-left:3px solid var(--sl-yellow);">
-        <span style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-                     color:var(--sl-yellow-dark); display:block; margin-bottom:5px;">
-          Why this master, today
-        </span>
-        {{ _master[4] }}
-      </div>
-      <button onclick="slToggleMaster()"
-              style="margin-top:10px; background:none; border:none; color:var(--sl-purple);
-                     font-size:14px; font-weight:600; cursor:pointer; padding:4px 0;
-                     font-family:inherit;">
-        Show less ↑
-      </button>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:12px 16px;">
+      {% set _genres = ['Wildlife','Street','Nature','Landscape','People','Documentary','Macro','Creative','Drone','Wedding','Fashion'] %}
+      {% for _g in _genres %}
+      <form method="POST" action="{{ url_for('set_mission_genre') }}" style="margin:0;">
+        <input type="hidden" name="genre" value="{{ _g }}">
+        <button type="submit"
+                style="width:100%; padding:9px 10px; border-radius:10px; cursor:pointer;
+                       font-size:13px; text-align:center; line-height:1.3; font-family:inherit;
+                       {% if lesson and lesson.mission_genre == _g %}
+                         background:var(--sl-text); color:var(--sl-yellow); border:1px solid var(--sl-text); font-weight:700;
+                       {% else %}
+                         background:var(--sl-cream); color:var(--sl-text); border:1px solid var(--sl-border); font-weight:500;
+                       {% endif %}">
+          {{ _g }}
+        </button>
+      </form>
+      {% endfor %}
+      <form method="POST" action="{{ url_for('set_mission_genre') }}"
+            style="grid-column:span 2; margin:0;">
+        <input type="hidden" name="genre" value="engine">
+        <button type="submit"
+                style="width:100%; padding:9px 12px; border-radius:10px; cursor:pointer;
+                       font-size:13px; font-weight:600; text-align:center; font-family:inherit;
+                       background:rgba(106,62,240,.08); color:var(--sl-purple);
+                       border:1px solid rgba(106,62,240,.2);">
+          Let the engine decide for me
+        </button>
+      </form>
     </div>
   </div>
 
