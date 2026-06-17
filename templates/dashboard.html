@@ -1294,37 +1294,41 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
      lesson + weather injected from app.py
   ══════════════════════════════════════════ #}
 
-  {# ── Dimension colour map — light/muted palette ── #}
+  {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
   {% set _dim_band = {
     'dod':        ('linear-gradient(135deg,#C4CEDC,#A8B8CC)', '#98A8BC', '⬛'),
     'dm':         ('linear-gradient(135deg,#C8D8C0,#A8C0A0)', '#9AB092', '◎'),
     'aq':         ('linear-gradient(135deg,#E8D8B0,#D8C490)', '#C8B480', '☀'),
-    'wonder':     ('linear-gradient(135deg,#D8D0F8,#C0B4F0)', '#B0A0E8', '✦'),
-    'disruption': ('linear-gradient(135deg,#C4CEDC,#A8B8CC)', '#98A8BC', '◈')
+    'wonder':     ('linear-gradient(135deg,#E0D8F0,#D0C8E8)', '#C0B8D8', '✦'),
+    'disruption': ('linear-gradient(135deg,#D0D4DC,#B8BEC8)', '#A8AEB8', '◈')
   } %}
   {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
                ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
 
-  <div class="sl-assignment" id="sl-mission-card">
-
-    {# ── Band header ── #}
-    {% if lesson and lesson.show_master %}
-    {# Master day band — purple #}
-    <div style="background:linear-gradient(135deg,#D8D0F8,#C0B4F0);
-                border-bottom:1px solid #B0A0E8;
-                border-radius:var(--r-hero) var(--r-hero) 0 0;
-                padding:20px 18px 16px; display:flex; align-items:flex-end; justify-content:space-between;
-                min-height:88px;">
+  {# ── Snoozed state — show collapsed pill, full card hidden ── #}
+  {% if session.get('mission_snoozed') %}
+  <div id="sl-mission-pill"
+       style="display:flex; align-items:center; justify-content:space-between; gap:10px;
+              background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
+              border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
+       onclick="this.style.display='none'; document.getElementById('sl-mission-card').style.display='flex';">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:18px;">📷</span>
       <div>
-        <div style="font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-                    color:rgba(21,21,21,.45); margin-bottom:5px;">Today's master · {{ lesson.dim_label }}</div>
-        <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.15;
-                    letter-spacing:-.02em;">{{ lesson.master }}</div>
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's lesson is waiting</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
+          {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
+        </div>
       </div>
-      <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">◉</div>
     </div>
-    {% else %}
-    {# Principle day band ── dimension colour #}
+    <span style="font-size:20px; color:var(--sl-yellow-dark); font-weight:700; flex-shrink:0;">›</span>
+  </div>
+  <div id="sl-mission-card" style="display:none;" class="sl-assignment">
+  {% else %}
+  <div class="sl-assignment" id="sl-mission-card">
+  {% endif %}
+
+    {# ── Band header — same palette for both principle and master days ── #}
     <div style="background:{{ _dc[0] }};
                 border-bottom:1px solid {{ _dc[1] }};
                 border-radius:var(--r-hero) var(--r-hero) 0 0;
@@ -1336,37 +1340,62 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           Today's lesson · {{ lesson.dim_label if lesson else 'Decisive Moment' }}
           {% if lesson %} · Depth {{ lesson.depth }} of 3{% endif %}
         </div>
-        <div style="font-size:17px; font-weight:800; color:#151515; line-height:1.2;
+        <div style="font-size:19px; font-weight:800; color:#151515; line-height:1.2;
                     letter-spacing:-.01em;">{{ lesson.title if lesson else 'Today\'s Assignment' }}</div>
       </div>
       <div style="font-size:28px; opacity:.15; line-height:1; flex-shrink:0; padding-left:10px;">{{ _dc[2] }}</div>
     </div>
-    {% endif %}
 
-    {# ── Depth pill ── #}
+    {# ── Depth + genre pill ── #}
     {% if lesson %}
     <div style="display:inline-flex; align-items:center;
                 font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
                 padding:3px 9px; border-radius:5px; margin:12px 16px 0; align-self:flex-start;
-                {% if lesson.show_master %}background:rgba(106,62,240,.08); color:var(--sl-purple);
-                {% else %}background:rgba(21,21,21,.06); color:var(--sl-text-light);{% endif %}">
+                background:rgba(21,21,21,.06); color:var(--sl-text-light);">
       {{ lesson.mission_genre }} · Depth {{ lesson.depth }} of 3{% if lesson.show_master %} · Master day{% endif %}
     </div>
     {% endif %}
 
-    {# ── Principle — the hero line ── #}
-    <div style="margin:10px 16px 0; font-size:15px; font-weight:800; color:var(--sl-text);
+    {# ── Principle — larger, readable ── #}
+    <div style="margin:10px 16px 0; font-size:17px; font-weight:800; color:var(--sl-text);
                 line-height:1.4; letter-spacing:-.01em;">
       {{ lesson.principle if lesson else 'One frame. That is all it takes.' }}
     </div>
 
-    {# ── Wikimedia Commons reference image (principle days only) ── #}
+    {# ── Master context — warm, no purple, explains who they are ── #}
+    {% if lesson and lesson.show_master and lesson.master %}
+    {% set _master_context_map = {
+      'dod':        'Shot in technically demanding conditions most photographers would never attempt.',
+      'dm':         'Defined the decisive moment — the instant geometry and gesture coincide in one frame.',
+      'aq':         'Proved that light itself is the subject — not the mountain, not the person.',
+      'wonder':     'Photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',
+      'disruption': 'Broke every compositional rule deliberately — not accidentally.'
+    } %}
+    <div style="margin:12px 16px 0; padding:12px 14px;
+                background:rgba(244,194,13,.08); border-left:3px solid var(--sl-yellow-dark);
+                border-radius:0 10px 10px 0;">
+      <div style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+                  color:var(--sl-yellow-dark); margin-bottom:5px;">Today's Master</div>
+      <div style="font-size:16px; font-weight:800; color:var(--sl-text); margin-bottom:3px;">{{ lesson.master }}</div>
+      <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
+        {{ _master_context_map.get(lesson.dim, 'One of the defining photographers in this discipline.') }}
+      </div>
+      {% if lesson.master_quote %}
+      <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;">
+        {{ lesson.master_quote }}
+        <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
+                     display:block; margin-top:4px;">— {{ lesson.master }}</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Wikimedia Commons reference image (principle days, non-master) ── #}
     {% if lesson and lesson.commons_file and not lesson.show_master %}
     <div style="margin:12px 16px 0; border-radius:12px; overflow:hidden; height:82px;
                 background:#D8CFC0; display:flex; align-items:flex-end; position:relative;
                 border:1px solid var(--sl-border);">
-      <div style="position:absolute; inset:0;
-                  background:linear-gradient(135deg,#B8B0A0,#988878);
+      <div style="position:absolute; inset:0; background:linear-gradient(135deg,#B8B0A0,#988878);
                   display:flex; align-items:center; justify-content:center;
                   font-size:26px; opacity:.15;">📷</div>
       <div style="position:absolute; inset:0;
@@ -1378,22 +1407,10 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Master quote (master days only) ── #}
-    {% if lesson and lesson.show_master and lesson.master_quote %}
-    <div style="margin:12px 16px 0; padding:11px 13px;
-                border-left:3px solid var(--sl-purple); background:rgba(106,62,240,.06);
-                border-radius:0 8px 8px 0;
-                font-size:13px; font-style:italic; color:var(--sl-text); line-height:1.65;">
-      {{ lesson.master_quote }}
-      <span style="font-size:13px; font-style:normal; font-weight:700; color:var(--sl-purple);
-                   margin-top:5px; display:block; letter-spacing:.04em;">— {{ lesson.master }}</span>
-    </div>
-    {% endif %}
-
     {# ── Weather banner ── #}
     {% if weather and weather.message %}
     <div style="margin:10px 16px 0; padding:10px 12px; border-radius:8px;
-                font-size:13px; line-height:1.55;
+                font-size:14px; line-height:1.55;
                 {% if weather.state == 'red' %}background:#F8EDEB; border:1px solid #D8B0A8; color:#5A2820;
                 {% elif weather.state == 'amber' %}background:#FDF3DC; border:1px solid #E8C870; color:#5A3808;
                 {% else %}background:#EDF5E4; border:1px solid #C0D8A0; color:#2A5010;{% endif %}">
@@ -1401,29 +1418,28 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
     {% endif %}
 
-    {# ── Assignment line ── #}
+    {# ── Assignment line or indoor options ── #}
     {% if weather and weather.state == 'red' %}
-    {# Red weather — indoor options #}
     <div style="margin:10px 16px 0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
                   color:var(--sl-text-light); margin-bottom:7px;">Shoot indoors instead?</div>
       <a href="{{ url_for('mission') }}?indoor=portraits"
-         style="display:flex; align-items:center; gap:10px; padding:10px 12px;
+         style="display:flex; align-items:center; gap:10px; padding:11px 13px;
                 background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
                 margin-bottom:6px; text-decoration:none; color:var(--sl-text);">
         <span style="font-size:18px; flex-shrink:0;">🪟</span>
         <div>
-          <div style="font-size:13px; font-weight:700;">Home portraits</div>
+          <div style="font-size:14px; font-weight:700;">Home portraits</div>
           <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Window light · People · same lesson indoors</div>
         </div>
       </a>
       <a href="{{ url_for('mission') }}?indoor=stilllife"
-         style="display:flex; align-items:center; gap:10px; padding:10px 12px;
+         style="display:flex; align-items:center; gap:10px; padding:11px 13px;
                 background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
                 margin-bottom:4px; text-decoration:none; color:var(--sl-text);">
         <span style="font-size:18px; flex-shrink:0;">🔬</span>
         <div>
-          <div style="font-size:13px; font-weight:700;">Still life · experimental</div>
+          <div style="font-size:14px; font-weight:700;">Still life · experimental</div>
           <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Macro at home · texture · no rules</div>
         </div>
       </a>
@@ -1431,10 +1447,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
            onclick="slSkipMission()">I'll wait for tomorrow ›</div>
     </div>
     {% else %}
-    {# Normal assignment ── #}
-    <div style="margin:10px 16px 0; padding:10px 12px;
+    <div style="margin:12px 16px 0; padding:11px 13px;
                 background:rgba(244,194,13,.10); border-left:3px solid var(--sl-yellow-dark);
-                border-radius:0 8px 8px 0; font-size:13px; color:var(--sl-text); line-height:1.55;">
+                border-radius:0 8px 8px 0; font-size:15px; color:var(--sl-text); line-height:1.6;">
       <strong style="color:var(--sl-yellow-dark);">Today:</strong>
       {{ lesson.assignment if lesson else 'One frame. Make it count.' }}
     </div>
@@ -1511,22 +1526,22 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     </div>
   </div>
 
-  {# ── Mission pill — shown when user skips ── #}
+  {# ── Skip pill — shown when user taps Skip on dashboard (JS-driven, no reload) ── #}
   <div id="sl-mission-pill"
        style="display:none; align-items:center; justify-content:space-between; gap:10px;
               background:#fff; border:1px solid var(--sl-border); border-left:3px solid var(--sl-yellow);
-              border-radius:12px; padding:10px 14px; margin-bottom:12px; cursor:pointer;"
+              border-radius:16px; padding:12px 16px; margin-bottom:12px; cursor:pointer;"
        onclick="slExpandMission()">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span style="font-size:16px;">📷</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:18px;">📷</span>
       <div>
-        <div style="font-size:13px; font-weight:700; color:var(--sl-text); letter-spacing:.02em;">Today's lesson is waiting</div>
-        <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">
+        <div style="font-size:15px; font-weight:700; color:var(--sl-text);">When you are ready — today's lesson is waiting</div>
+        <div style="font-size:13px; color:var(--sl-text-light); margin-top:2px;">
           {{ lesson.title if lesson else 'Today\'s Assignment' }} · tap to expand
         </div>
       </div>
     </div>
-    <span style="font-size:18px; color:var(--sl-yellow-dark); font-weight:700;">›</span>
+    <span style="font-size:20px; color:var(--sl-yellow-dark); font-weight:700; flex-shrink:0;">›</span>
   </div>
 
   {# ── Genre picker — hidden until switch button tapped ── #}
