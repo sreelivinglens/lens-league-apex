@@ -102,8 +102,9 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
    TODAY'S ASSIGNMENT HERO CARD
 ══════════════════════════════════════════ */
 .sl-assignment {
-  background: #F8F4E9;
+  background: #FFFFFF;
   border-radius: var(--r-hero);
+  border: 1px solid var(--sl-border);
   box-shadow: var(--sl-shadow-lg);
   overflow: hidden;
   margin-bottom: 16px;
@@ -1296,11 +1297,11 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
   {% set _dim_band = {
-    'dod':        ('linear-gradient(135deg,#C4CEDC,#A8B8CC)', '#98A8BC', '⬛'),
-    'dm':         ('linear-gradient(135deg,#C8D8C0,#A8C0A0)', '#9AB092', '◎'),
-    'aq':         ('linear-gradient(135deg,#E8D8B0,#D8C490)', '#C8B480', '☀'),
-    'wonder':     ('linear-gradient(135deg,#E0D8F0,#D0C8E8)', '#C0B8D8', '✦'),
-    'disruption': ('linear-gradient(135deg,#D0D4DC,#B8BEC8)', '#A8AEB8', '◈')
+    'dod':        ('linear-gradient(135deg,#A8B8CC,#8CA0B8)', '#7890A8', '⬛'),
+    'dm':         ('linear-gradient(135deg,#A8C4A0,#88A880)', '#78986A', '◎'),
+    'aq':         ('linear-gradient(135deg,#D8C490,#C4AC70)', '#B09858', '☀'),
+    'wonder':     ('linear-gradient(135deg,#C8C0E0,#B0A8D0)', '#A098C0', '✦'),
+    'disruption': ('linear-gradient(135deg,#B8BEC8,#A0A8B4)', '#8890A0', '◈')
   } %}
   {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
                ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
