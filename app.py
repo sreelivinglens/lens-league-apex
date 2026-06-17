@@ -3904,6 +3904,7 @@ def _get_weather(city):
     Falls back to neutral green if fetch fails — never crashes dashboard.
     """
     import urllib.request as _ur
+    import urllib.parse
     import json as _json
 
     _NEUTRAL = {
@@ -3924,7 +3925,6 @@ def _get_weather(city):
             'https://geocoding-api.open-meteo.com/v1/search'
             f'?name={urllib.parse.quote(city)}&count=1&language=en&format=json'
         )
-        import urllib.parse
         with _ur.urlopen(geo_url, timeout=4) as _r:
             _geo = _json.loads(_r.read())
         if not _geo.get('results'):
