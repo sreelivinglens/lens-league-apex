@@ -1997,6 +1997,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {% set _mob_audit = hero.get_audit() %}
 {% set _mob_coaching = _mob_audit.get('byline_2_body') or _mob_audit.get('byline_1') or '' %}
 {% set _mob_next = _mob_audit.get('mentor_location_1') or _mob_audit.get('transferable_advice') or '' %}
+{# Scorecard uses carousel_images[1] — different image from hero to avoid duplication #}
+{% set _mob_sc = carousel_images[1] if carousel_images|length > 1 else hero %}
+{% set _mob_sc_audit = _mob_sc.get_audit() if _mob_sc else {} %}
+{% set _mob_sc_coaching = _mob_sc_audit.get('byline_2_body') or _mob_sc_audit.get('byline_1') or _mob_coaching %}
+{% set _mob_sc_next = _mob_sc_audit.get('mentor_location_1') or _mob_sc_audit.get('transferable_advice') or _mob_next %}
 {% endif %}
 
 <div class="sl-mob-only">
@@ -2071,65 +2076,63 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </div>
 {% endif %}
 
-{# ━━ Section 4: SCORECARD — live hero image data ━━ #}
-{% if hero and hero.score %}
+{# ━━ Section 4: SCORECARD — carousel_images[1], different from hero ━━ #}
+{% if _mob_sc and _mob_sc.score %}
 <div class="sl-mob-sec sl-mob-scorecard">
-  {# Thumbnail of the same image as the hero #}
   <div class="sl-mob-sc-img-wrap">
-    {% if hero.thumb_url %}
-    <img src="{{ hero.thumb_url }}"
-         alt="{{ hero.genre or 'Photography' }}"
+    {% if _mob_sc.thumb_url %}
+    <img src="{{ _mob_sc.thumb_url }}"
+         alt="{{ _mob_sc.genre or 'Photography' }}"
          loading="lazy"
          onerror="this.style.display='none'">
     {% endif %}
     <div class="sl-mob-sc-img-grad"></div>
-    <span class="sl-mob-sc-img-label">{{ hero.genre or '' }}{% if hero.photographer_name %} &middot; {{ hero.photographer_name }}{% endif %}</span>
+    <span class="sl-mob-sc-img-label">{{ _mob_sc.genre or '' }}{% if _mob_sc.photographer_name %} &middot; {{ _mob_sc.photographer_name }}{% endif %}</span>
   </div>
   <div class="sl-mob-sc-content">
   <p class="sl-mob-sc-eyebrow">What the engine saw</p>
   <div class="sl-mob-sc-score-row">
-    <span class="sl-mob-sc-score">{{ '%.2f'|format(hero.score) }}</span>
-    <span class="sl-mob-sc-tier">{{ hero.tier or '' }}</span>
+    <span class="sl-mob-sc-score">{{ '%.2f'|format(_mob_sc.score) }}</span>
+    <span class="sl-mob-sc-tier">{{ _mob_sc.tier or '' }}</span>
   </div>
-  <p class="sl-mob-sc-genre">{{ hero.genre or '' }}</p>
-  {% if _mob_coaching %}
-  <p class="sl-mob-sc-quote">&ldquo;{{ _mob_coaching }}&rdquo;</p>
+  <p class="sl-mob-sc-genre">{{ _mob_sc.genre or '' }}</p>
+  {% if _mob_sc_coaching %}
+  <p class="sl-mob-sc-quote">&ldquo;{{ _mob_sc_coaching }}&rdquo;</p>
   {% endif %}
-  {# Five dimension bars — plain language labels, no DDI jargon #}
-  {% if hero.dod_score %}
+  {% if _mob_sc.dod_score %}
   <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>How difficult it was</span><span class="sl-mob-dim-val">{{ '%.1f'|format(hero.dod_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (hero.dod_score / 10 * 100)|int }}%;"></div></div>
+    <div class="sl-mob-dim-lbl"><span>How difficult it was</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.dod_score) }}</span></div>
+    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.dod_score / 10 * 100)|int }}%;"></div></div>
   </div>
   {% endif %}
-  {% if hero.disruption_score %}
+  {% if _mob_sc.disruption_score %}
   <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Visual surprise</span><span class="sl-mob-dim-val">{{ '%.1f'|format(hero.disruption_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (hero.disruption_score / 10 * 100)|int }}%;"></div></div>
+    <div class="sl-mob-dim-lbl"><span>Visual surprise</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.disruption_score) }}</span></div>
+    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.disruption_score / 10 * 100)|int }}%;"></div></div>
   </div>
   {% endif %}
-  {% if hero.dm_score %}
+  {% if _mob_sc.dm_score %}
   <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Whether the timing was right</span><span class="sl-mob-dim-val">{{ '%.1f'|format(hero.dm_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (hero.dm_score / 10 * 100)|int }}%;"></div></div>
+    <div class="sl-mob-dim-lbl"><span>Whether the timing was right</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.dm_score) }}</span></div>
+    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.dm_score / 10 * 100)|int }}%;"></div></div>
   </div>
   {% endif %}
-  {% if hero.wonder_score %}
+  {% if _mob_sc.wonder_score %}
   <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>Whether it made you feel something</span><span class="sl-mob-dim-val">{{ '%.1f'|format(hero.wonder_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (hero.wonder_score / 10 * 100)|int }}%;"></div></div>
+    <div class="sl-mob-dim-lbl"><span>Whether it made you feel something</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.wonder_score) }}</span></div>
+    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.wonder_score / 10 * 100)|int }}%;"></div></div>
   </div>
   {% endif %}
-  {% if hero.aq_score %}
+  {% if _mob_sc.aq_score %}
   <div class="sl-mob-dim-row">
-    <div class="sl-mob-dim-lbl"><span>The emotion it creates</span><span class="sl-mob-dim-val">{{ '%.1f'|format(hero.aq_score) }}</span></div>
-    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (hero.aq_score / 10 * 100)|int }}%;"></div></div>
+    <div class="sl-mob-dim-lbl"><span>The emotion it creates</span><span class="sl-mob-dim-val">{{ '%.1f'|format(_mob_sc.aq_score) }}</span></div>
+    <div class="sl-mob-dim-bg"><div class="sl-mob-dim-fill" style="width:{{ (_mob_sc.aq_score / 10 * 100)|int }}%;"></div></div>
   </div>
   {% endif %}
-  {% if _mob_next %}
+  {% if _mob_sc_next %}
   <div class="sl-mob-sc-next">
     <p class="sl-mob-sc-next-lbl">One thing to do next</p>
-    <p class="sl-mob-sc-next-txt">{{ _mob_next }}</p>
+    <p class="sl-mob-sc-next-txt">{{ _mob_sc_next }}</p>
   </div>
   {% endif %}
   </div>{# end sl-mob-sc-content #}
