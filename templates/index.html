@@ -776,7 +776,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
   a[href], button { min-height: 44px; }
-  [class*="sl-"]:not(.sl-loop-steps):not(.sl-gallery-grid):not(.sl-trust) { grid-template-columns: 1fr !important; }
+  [class*="sl-"]:not(.sl-loop-steps):not(.sl-gallery-grid):not(.sl-trust):not(.sl-mob-gallery-grid):not(.sl-mob-loop-grid):not(.sl-mob-mentor-grid) { grid-template-columns: 1fr !important; }
 
   /* Below-hero cream block */
   .sl-hero-below {
@@ -1180,7 +1180,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── 480px tightening ── */
 @media (max-width: 600px) {
-  [class*="sl-"]:not(.sl-loop-steps):not(.sl-gallery-grid):not(.sl-trust) { grid-template-columns: 1fr !important; }
+  [class*="sl-"]:not(.sl-loop-steps):not(.sl-gallery-grid):not(.sl-trust):not(.sl-mob-gallery-grid):not(.sl-mob-loop-grid):not(.sl-mob-mentor-grid) { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 480px) {
@@ -1746,13 +1746,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-mentor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 6px;
     margin-bottom: 20px;
   }
   .sl-mob-mentor-photo {
     position: relative;
-    aspect-ratio: 3/4;
-    border-radius: 10px;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
     overflow: hidden;
     background: #1A1810;
   }
