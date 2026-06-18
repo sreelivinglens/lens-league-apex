@@ -1054,12 +1054,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     flex-shrink: 0;
   }
   .sl-honest-accordion-arrow.open { transform: rotate(180deg); }
-  .sl-honest-body-wrap {
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.35s ease;
-  }
-  .sl-honest-body-wrap.open { max-height: 900px; }
 
   /* ── Accordion — Feature cards ── */
   .sl-cards-accordion-hdr {
@@ -1087,12 +1081,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     flex-shrink: 0;
   }
   .sl-cards-accordion-arrow.open { transform: rotate(180deg); }
-  .sl-cards-body-wrap {
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.4s ease;
-  }
-  .sl-cards-body-wrap.open { max-height: 1200px; }
 
   /* ── Gallery see more ── */
   .sl-gallery-seemore {
@@ -1151,7 +1139,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 
 /* ── 480px tightening ── */
 @media (max-width: 600px) {
-  [class*="sl-"] { grid-template-columns: 1fr !important; }
+  [class*="sl-"]:not(.sl-loop-steps):not(.sl-gallery-grid):not(.sl-trust) { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 480px) {
@@ -1161,6 +1149,27 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-honest { padding: 56px 16px; }
   .sl-manifesto { padding: 40px 16px; }
   .sl-gallery-header { padding: 0 16px 14px; }
+}
+
+/* ── Accordion default state — closed globally, opened by JS ── */
+.sl-honest-body-wrap,
+.sl-cards-body-wrap {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+.sl-honest-body-wrap.open,
+.sl-cards-body-wrap.open {
+  max-height: 1200px;
+  opacity: 1;
+}
+/* On desktop — always visible, no accordion behaviour */
+@media (min-width: 769px) {
+  .sl-honest-body-wrap,
+  .sl-cards-body-wrap { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+  .sl-honest-accordion-hdr,
+  .sl-cards-accordion-hdr { display: none !important; }
 }
 </style>
 {% endblock %}
