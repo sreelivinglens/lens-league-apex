@@ -874,21 +874,23 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* ── 200 Years — tightened: hide body paragraphs, keep pull quote + taglines ── */
   .sl-200 {
     grid-template-columns: 1fr;
-    padding: 32px 20px;
-    gap: 24px;
+    padding: 20px 20px;
+    gap: 12px;
   }
-  .sl-200-num { font-size: 56px; }
+  .sl-200-num { font-size: 48px; }
+  .sl-200-num-row { margin-bottom: 12px; }
   .sl-200-label-line { font-size: 14px; }
   .sl-200-body { display: none; }
   .sl-200-body-bold {
-    font-size: 16px;
+    font-size: 15px;
     border-left: 2px solid #F5C518;
     padding-left: 12px;
     margin-bottom: 0;
   }
-  .sl-200-right { padding-left: 0; }
-  .sl-200-tagline-1 { font-size: 18px; }
-  .sl-200-tagline-2 { font-size: 22px; }
+  .sl-200-right { padding-left: 0; flex-direction: row; align-items: center; gap: 16px; text-align: left; }
+  .sl-200-right svg { display: none; }
+  .sl-200-tagline-1 { font-size: 15px; margin-bottom: 2px; }
+  .sl-200-tagline-2 { font-size: 17px; }
 
   /* ── Learning loop — 2×2 coloured boxes ── */
   .sl-loop { padding: 28px 20px; }
