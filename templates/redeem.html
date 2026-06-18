@@ -81,7 +81,7 @@
     <div>
       <div class="redeem-balance-pts">{{ wallet_hud.balance | round(1) }}</div>
       <div class="redeem-balance-label">Your Points Balance</div>
-      <div class="redeem-balance-sub" id="redeem-decay-nudge" style="display:none;">Upload before 31 Dec — points decay 20% annually on 1 Jan for all accounts.</div>
+      <div class="redeem-balance-sub" id="redeem-decay-nudge" style="display:none;">Upload before 31 Dec — inactive accounts lose 10% of their balance on 1 Jan.</div>
     </div>
     <div class="redeem-balance-note">
       <div>Points don&#39;t expire if you stay active</div>
@@ -125,7 +125,7 @@
   {# Upload Credits #}
   <div class="redeem-section-label">Upload Credits</div>
   <div class="redeem-table">
-    {{ redeem_row(10,   'Single upload',                'One additional scored image · rank eligible · Annual Excellence Award eligible · earns pts', 'upload_single') }}
+    {{ redeem_row(10,   'Single upload',                'One additional scored image · standing eligible · Annual Excellence Award eligible · earns pts', 'upload_single') }}
     {{ redeem_row(1000, 'Top-up pack — 3 shoots',       'Same as ₹140 cash top-up · Camera or Mobile League · subscribers earn full points', 'upload_topup') }}
     {{ redeem_row(2500, 'Monthly subscription offset',  'Covers one month · ₹200 (Founding Member rate)', 'subscription_offset') }}
   </div>
@@ -142,9 +142,9 @@
   {# Mentor Sessions #}
   <div class="redeem-section-label">Mentor Sessions</div>
   <div class="redeem-table">
-    {{ redeem_row(500,  'Master Mentor session', 'or ₹50 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_senior') }}
-    {{ redeem_row(750,  'Grandmaster Mentor session',  'or ₹75 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_expert') }}
-    {{ redeem_row(1000, 'Legend Mentor session',  'or ₹100 cash · subscribers: pts or cash · non-subscribers: cash only', 'mentor_legend') }}
+    {{ redeem_row(500,  'Master Mentor session', 'subscribers only', 'mentor_senior') }}
+    {{ redeem_row(750,  'Grandmaster Mentor session', 'subscribers only', 'mentor_expert') }}
+    {{ redeem_row(1000, 'Legend Mentor session', 'subscribers only', 'mentor_legend') }}
   </div>
 
   {# T&C #}
@@ -154,7 +154,7 @@
       <li><strong>No cash value.</strong> Points cannot be exchanged for cash, transferred between accounts, or sold.</li>
       <li><strong>Annual reset.</strong> 10% of your balance resets on 31 December — but only if you haven&#39;t uploaded in the last 6 months. Stay active and your full balance carries forward.</li>
       <li><strong>Tier badges are permanent.</strong> Earning a tier badge (Rookie through Legend) is a lifetime achievement and does not expire regardless of your points balance.</li>
-      <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions are available to all registered users via cash payment.</li>
+      <li><strong>Subscription required.</strong> Most redemptions require an active Mobile or Camera subscription. Mentor sessions require an active subscription.</li>
       <li><strong>Non-reversible.</strong> Once points are redeemed, the transaction cannot be undone. Redeemed points are deducted immediately from your balance.</li>
       <li><strong>Subject to availability.</strong> Programme credits (Open, BOW, Annual Excellence Award) are only redeemable during the relevant window. Mentor sessions are subject to mentor availability.</li>
       <li><strong>Rate changes.</strong> {{ platform_name }} may adjust redemption rates or add new redemption options at any time with a minimum of 14 days&#39; notice to active subscribers.</li>
