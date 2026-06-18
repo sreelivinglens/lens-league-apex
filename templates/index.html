@@ -1752,7 +1752,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-mentor-photo {
     position: relative;
     aspect-ratio: 3/4;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     background: #1A1810;
   }
@@ -1765,16 +1765,29 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-mentor-photo-grad {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 50%);
+  }
+  .sl-mob-mentor-photo-info {
+    position: absolute;
+    bottom: 10px; left: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sl-mob-mentor-photo-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
   }
   .sl-mob-mentor-photo-label {
-    position: absolute;
-    bottom: 12px; left: 12px;
     font-size: 14px;
     font-weight: 700;
     color: #F5C518;
     font-family: 'Inter', sans-serif;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
   }
 
   /* ── 8. SADHANA — white bg ── */
@@ -1837,7 +1850,12 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     color: #FFFFFF;
     margin-top: 10px;
     line-height: 1.55;
-    display: block;
+    font-family: 'Inter', sans-serif;
+  }
+  .sl-mob-close-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     background: #F5C518;
     color: #1A1A18;
@@ -1849,9 +1867,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     margin-top: 28px;
     text-decoration: none;
     min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1861,6 +1876,10 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-200 { display: none !important; }
   .sl-loop { display: none !important; }
   .sl-gallery-wrap { display: none !important; }
+  #sl-honest-accordion { display: none !important; }
+  #sl-cards-accordion { display: none !important; }
+  .sl-manifesto { display: none !important; }
+  .sl-manifesto + div { display: none !important; }
 
   /* ── NEW: 4-step loop — pro dark version ── */
   .sl-mob-loop {
@@ -2147,19 +2166,26 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <p class="sl-mob-mentors-body">The engine tells you what it saw. A mentor tells you what it means &mdash; and where to go next. Available on demand, not when the next workshop is scheduled.</p>
   <div class="sl-mob-mentor-grid">
     <div class="sl-mob-mentor-photo">
-      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
-           alt="Mentor"
+      <img src="{{ url_for('static', filename='img/Sreekumar.png') }}"
+           alt="Sreekumar — Master Mentor"
            loading="lazy"
            onerror="this.style.display='none'">
       <div class="sl-mob-mentor-photo-grad"></div>
-      <span class="sl-mob-mentor-photo-label">Master Mentor</span>
-    </div>
-    <div class="sl-mob-mentor-photo" style="background:#1A2744;">
-      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(245,197,24,0.4)" stroke-width="1.2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div class="sl-mob-mentor-photo-info">
+        <span class="sl-mob-mentor-photo-name">Sreekumar</span>
+        <span class="sl-mob-mentor-photo-label">Master</span>
       </div>
+    </div>
+    <div class="sl-mob-mentor-photo">
+      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+           alt="Ashok — Legend Mentor"
+           loading="lazy"
+           onerror="this.style.display='none'">
       <div class="sl-mob-mentor-photo-grad"></div>
-      <span class="sl-mob-mentor-photo-label">Legend Mentor</span>
+      <div class="sl-mob-mentor-photo-info">
+        <span class="sl-mob-mentor-photo-name">Ashok</span>
+        <span class="sl-mob-mentor-photo-label">Legend</span>
+      </div>
     </div>
   </div>
   <a href="{{ url_for('mentors') }}" class="sl-mob-mentors-cta">Meet the Mentors &rarr;</a>
