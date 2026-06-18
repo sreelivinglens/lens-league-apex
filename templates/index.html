@@ -1027,7 +1027,93 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     object-fit: cover;
   }
 
-  /* ── Gallery — 2×2 square grid ── */
+  /* ── Accordion — Honest Part ── */
+  .sl-honest { cursor: default; }
+  .sl-honest-accordion-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #EDEAE4;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  .sl-honest-accordion-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #1A1A18;
+  }
+  .sl-honest-accordion-arrow {
+    font-size: 18px;
+    color: #1A1A18;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+  .sl-honest-accordion-arrow.open { transform: rotate(180deg); }
+  .sl-honest-body-wrap {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s ease;
+  }
+  .sl-honest-body-wrap.open { max-height: 900px; }
+
+  /* ── Accordion — Feature cards ── */
+  .sl-cards-accordion-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #1A2744;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  .sl-cards-accordion-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+  }
+  .sl-cards-accordion-arrow {
+    font-size: 18px;
+    color: rgba(255,255,255,0.7);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+  .sl-cards-accordion-arrow.open { transform: rotate(180deg); }
+  .sl-cards-body-wrap {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s ease;
+  }
+  .sl-cards-body-wrap.open { max-height: 1200px; }
+
+  /* ── Gallery see more ── */
+  .sl-gallery-seemore {
+    display: block;
+    text-align: center;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1A1A18;
+    background: #F7F5F2;
+    cursor: pointer;
+    border-top: 1px solid rgba(26,26,24,0.10);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
   .sl-gallery-wrap { padding: 24px 0 0; }
   .sl-gallery-header { padding: 0 20px 16px; }
   .sl-gallery-title { font-size: 14px; }
@@ -1289,47 +1375,61 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </section>
 
 {# ━━━━━━━━━━━━━━━━━━ HONEST PART + EMOTIONAL IMPACT ━━━━━━━━━━━━━━━━━━ #}
-<section class="sl-honest">
-
-  <div class="sl-honest-col">
-    <span class="sl-honest-label">The Honest Part</span>
-    <span class="sl-gold-rule"></span>
-    <h2 class="sl-honest-heading">The score keeps the feedback honest.</h2>
-    <p class="sl-honest-body">Every photo gets a score. Not to rank you against other photographers &mdash; but to give the feedback a spine.</p>
-    <p class="sl-honest-body">Without a score, feedback is just opinion. With a score, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
-    <a href="{{ url_for('science') }}" class="sl-honest-btn">HOW THE SCORING WORKS &rarr;</a>
+<div id="sl-honest-accordion">
+  <div class="sl-honest-accordion-hdr" id="sl-honest-hdr" role="button" aria-expanded="false" aria-controls="sl-honest-body">
+    <span class="sl-honest-accordion-title">The Honest Part</span>
+    <span class="sl-honest-accordion-arrow" id="sl-honest-arrow">&#8964;</span>
   </div>
+  <div class="sl-honest-body-wrap" id="sl-honest-body">
+    <section class="sl-honest">
 
-  <div class="sl-honest-col">
-    <span class="sl-honest-label">Emotional Impact</span>
-    <span class="sl-gold-rule"></span>
-    <p class="sl-honest-body">Most systems evaluate sharpness, composition, and light. <span class="sl-yellow-underline">Ours also evaluates whether a photograph moves people.</span></p>
-    <p class="sl-honest-body">A technically imperfect photograph that stops you breathing scores higher than a technically clean one that says nothing.</p>
-    <p class="sl-honest-body-bold">That is by design.</p>
+      <div class="sl-honest-col">
+        <span class="sl-honest-label">The Honest Part</span>
+        <span class="sl-gold-rule"></span>
+        <h2 class="sl-honest-heading">The score keeps the feedback honest.</h2>
+        <p class="sl-honest-body">Every photo gets a score. Not to rank you against other photographers &mdash; but to give the feedback a spine.</p>
+        <p class="sl-honest-body">Without a score, feedback is just opinion. With a score, you can see whether you are actually improving across ten uploads, a hundred, a year of work.</p>
+        <a href="{{ url_for('science') }}" class="sl-honest-btn">HOW THE SCORING WORKS &rarr;</a>
+      </div>
+
+      <div class="sl-honest-col">
+        <span class="sl-honest-label">Emotional Impact</span>
+        <span class="sl-gold-rule"></span>
+        <p class="sl-honest-body">Most systems evaluate sharpness, composition, and light. <span class="sl-yellow-underline">Ours also evaluates whether a photograph moves people.</span></p>
+        <p class="sl-honest-body">A technically imperfect photograph that stops you breathing scores higher than a technically clean one that says nothing.</p>
+        <p class="sl-honest-body-bold">That is by design.</p>
+      </div>
+
+      <div class="sl-honest-col">
+        <div class="sl-heart-circle">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        {% if soul_active %}
+        <p class="sl-soul-title">Soul Bonus active.</p>
+        <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
+        {% else %}
+        <p class="sl-soul-title">Soul Bonus active.</p>
+        <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
+        {% endif %}
+        <div class="sl-soul-divider"></div>
+        <p class="sl-soul-tag1">The brands rated your gear.</p>
+        <p class="sl-soul-tag2">We rate your heart.</p>
+      </div>
+
+    </section>
   </div>
-
-  <div class="sl-honest-col">
-    <div class="sl-heart-circle">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-      </svg>
-    </div>
-    {% if soul_active %}
-    <p class="sl-soul-title">Soul Bonus active.</p>
-    <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
-    {% else %}
-    <p class="sl-soul-title">Soul Bonus active.</p>
-    <p class="sl-soul-body">A photograph that moves people cannot be penalised out of recognition.</p>
-    {% endif %}
-    <div class="sl-soul-divider"></div>
-    <p class="sl-soul-tag1">The brands rated your gear.</p>
-    <p class="sl-soul-tag2">We rate your heart.</p>
-  </div>
-
-</section>
+</div>
 
 {# ━━━━━━━━━━━━━━━━━━ FEATURE CARDS ━━━━━━━━━━━━━━━━━━ #}
-<div class="sl-cards" id="sl-mentors">
+<div id="sl-cards-accordion">
+  <div class="sl-cards-accordion-hdr" id="sl-cards-hdr" role="button" aria-expanded="false" aria-controls="sl-cards-body">
+    <span class="sl-cards-accordion-title">Mentor · Body of Work · Excellence Award</span>
+    <span class="sl-cards-accordion-arrow" id="sl-cards-arrow">&#8964;</span>
+  </div>
+  <div class="sl-cards-body-wrap" id="sl-cards-body">
+    <div class="sl-cards" id="sl-mentors">
 
   <div class="sl-card">
     <img class="sl-card-img"
@@ -1377,16 +1477,16 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </div>
   </div>
 
-</div>
-
-{# ━━━━━━━━━━━━━━━━━━ GALLERY ━━━━━━━━━━━━━━━━━━ #}
+  </div>{# end sl-cards #}
+  </div>{# end sl-cards-body-wrap #}
+</div>{# end sl-cards-accordion #}
 {% if gallery_imgs %}
 <div class="sl-gallery-wrap">
   <div class="sl-gallery-header">
     <span class="sl-gallery-title">Recent Work</span>
-    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All Galleries &rarr;</a>
+    <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All &rarr;</a>
   </div>
-  <div class="sl-gallery-grid">
+  <div class="sl-gallery-grid" id="sl-gallery-grid">
     {% for img in gallery_imgs[:12] %}{% if img.thumb_url %}
     <a href="{{ url_for('image_detail', image_id=img.id) }}" class="sl-gitem">
       <img class="sl-gitem-img"
@@ -1403,6 +1503,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     </a>
     {% endif %}{% endfor %}
   </div>
+  <button class="sl-gallery-seemore" id="sl-gallery-seemore" aria-label="Show more photographs">See more &#8964;</button>
 </div>
 {% endif %}
 
@@ -1444,8 +1545,6 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {% block extra_js %}
 <script>
 (function(){
-  /* Fade in hero text on load */
-
   /* Fade in score badge on desktop */
   var badge = document.querySelector('.sl-hero-score-badge');
   if (badge) {
@@ -1459,7 +1558,98 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
       }, 100);
     });
   }
-})();
 
+  /* ── Mobile-only accordion + auto-collapse ── */
+  if (window.innerWidth > 768) return;
+
+  /* ── Accordion: Honest Part ── */
+  var honestHdr  = document.getElementById('sl-honest-hdr');
+  var honestBody = document.getElementById('sl-honest-body');
+  var honestArr  = document.getElementById('sl-honest-arrow');
+
+  function openHonest() {
+    if (!honestBody) return;
+    honestBody.classList.add('open');
+    if (honestArr) honestArr.classList.add('open');
+    if (honestHdr) honestHdr.setAttribute('aria-expanded', 'true');
+  }
+  function closeHonest() {
+    if (!honestBody) return;
+    honestBody.classList.remove('open');
+    if (honestArr) honestArr.classList.remove('open');
+    if (honestHdr) honestHdr.setAttribute('aria-expanded', 'false');
+  }
+  if (honestHdr) {
+    honestHdr.addEventListener('click', function() {
+      honestBody.classList.contains('open') ? closeHonest() : openHonest();
+    });
+  }
+
+  /* ── Accordion: Feature Cards ── */
+  var cardsHdr  = document.getElementById('sl-cards-hdr');
+  var cardsBody = document.getElementById('sl-cards-body');
+  var cardsArr  = document.getElementById('sl-cards-arrow');
+
+  function openCards() {
+    if (!cardsBody) return;
+    cardsBody.classList.add('open');
+    if (cardsArr) cardsArr.classList.add('open');
+    if (cardsHdr) cardsHdr.setAttribute('aria-expanded', 'true');
+  }
+  function closeCards() {
+    if (!cardsBody) return;
+    cardsBody.classList.remove('open');
+    if (cardsArr) cardsArr.classList.remove('open');
+    if (cardsHdr) cardsHdr.setAttribute('aria-expanded', 'false');
+  }
+  if (cardsHdr) {
+    cardsHdr.addEventListener('click', function() {
+      cardsBody.classList.contains('open') ? closeCards() : openCards();
+    });
+  }
+
+  /* ── Auto-collapse on scroll past section ── */
+  if ('IntersectionObserver' in window) {
+    var ioOpts = { threshold: 0, rootMargin: '0px 0px -80% 0px' };
+
+    var honestAccordion = document.getElementById('sl-honest-accordion');
+    if (honestAccordion) {
+      new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (!e.isIntersecting) closeHonest();
+        });
+      }, ioOpts).observe(honestAccordion);
+    }
+
+    var cardsAccordion = document.getElementById('sl-cards-accordion');
+    if (cardsAccordion) {
+      new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (!e.isIntersecting) closeCards();
+        });
+      }, ioOpts).observe(cardsAccordion);
+    }
+  }
+
+  /* ── Gallery: See more ── */
+  var seemore = document.getElementById('sl-gallery-seemore');
+  if (seemore) {
+    seemore.addEventListener('click', function() {
+      var grid = document.getElementById('sl-gallery-grid');
+      if (grid) {
+        var hidden = grid.querySelectorAll('.sl-gitem:nth-child(n+5)');
+        hidden.forEach(function(el) { el.style.display = 'block'; });
+      }
+      seemore.style.display = 'none';
+    });
+    /* Hide see-more if 4 or fewer images exist */
+    var grid = document.getElementById('sl-gallery-grid');
+    if (grid) {
+      var items = grid.querySelectorAll('.sl-gitem');
+      if (items.length <= 4) seemore.style.display = 'none';
+    }
+  }
+
+})();
 </script>
 {% endblock %}
