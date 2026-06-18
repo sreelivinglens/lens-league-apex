@@ -10689,8 +10689,8 @@ def redeem_action():
         'subscription_offset':  'Monthly subscription offset',
         'free_month_mobile':    'Free month — Mobile League',
         'free_month_camera':    'Free month — Camera League',
-        'mentor_senior':        'Senior Mentor session',
-        'mentor_expert':        'Expert Mentor session',
+        'mentor_senior':        'Master Mentor session',
+        'mentor_expert':        'Grandmaster Mentor session',
         'mentor_legend':        'Legend Mentor session',
     }
 
