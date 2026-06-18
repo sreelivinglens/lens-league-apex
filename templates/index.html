@@ -1743,6 +1743,39 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
+  .sl-mob-mentor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .sl-mob-mentor-photo {
+    position: relative;
+    aspect-ratio: 3/4;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1A1810;
+  }
+  .sl-mob-mentor-photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+  .sl-mob-mentor-photo-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
+  }
+  .sl-mob-mentor-photo-label {
+    position: absolute;
+    bottom: 12px; left: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #F5C518;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.04em;
+  }
 
   /* ── 8. SADHANA — white bg ── */
   .sl-mob-sadhana {
@@ -1785,10 +1818,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     background: rgba(245,197,24,0.35);
     margin-bottom: 24px;
   }
+  .sl-mob-close-gap { height: 14px; }
   .sl-mob-close-line {
     font-size: 17px;
     line-height: 1.72;
     color: rgba(255,255,255,0.80);
+    font-family: 'Inter', sans-serif;
+  }
+  .sl-mob-close-body {
+    font-size: 16px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.62);
     font-family: 'Inter', sans-serif;
   }
   .sl-mob-close-bold {
@@ -1814,6 +1854,62 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     justify-content: center;
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Hide desktop sections replaced by new mobile journey ── */
+  .sl-trust { display: none !important; }
+  .sl-200 { display: none !important; }
+  .sl-loop { display: none !important; }
+  .sl-gallery-wrap { display: none !important; }
+
+  /* ── NEW: 4-step loop — pro dark version ── */
+  .sl-mob-loop {
+    background: #0D0D0B;
+    padding: 32px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sl-mob-loop-eyebrow {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.40);
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
+  }
+  .sl-mob-loop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .sl-mob-loop-step {
+    background: #1A1A18;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 130px;
+  }
+  .sl-mob-loop-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: #F5C518;
+    line-height: 1;
+    margin-bottom: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+  .sl-mob-loop-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+    line-height: 1.55;
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.55;
+    font-family: 'Inter', sans-serif;
+    flex: 1;
   }
 
 } /* end @media (max-width: 768px) mobile redesign */
@@ -1889,7 +1985,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-mob-elev-gap"></div>
   <p class="sl-mob-elev-line">Shutter League changes that.</p>
   <div class="sl-mob-elev-gap"></div>
-  <p class="sl-mob-elev-gold">The first evaluation system arrives with it.</p>
+  <p class="sl-mob-elev-gold">Photography turns 200 in 2026. The first standing arrives with it.</p>
   <div class="sl-mob-elev-rule-b"></div>
 </div>
 
@@ -1897,8 +1993,35 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 <div class="sl-mob-sec sl-mob-recognition">
   <p class="sl-mob-recog-text">We see you. Your photograph captured something your eye saw. We help you evaluate and improve your photography.</p>
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-cta-btn">Let&rsquo;s evaluate your photograph &rarr;</a>
+     class="sl-mob-cta-btn">Upload your first photograph &rarr;</a>
   <p class="sl-mob-cta-sub">Evaluated in 60 seconds &middot; Free to start</p>
+</div>
+
+{# ━━ Section 2b: HOW IT WORKS — pro dark 4-step ━━ #}
+<div class="sl-mob-sec sl-mob-loop">
+  <p class="sl-mob-loop-eyebrow">How it works</p>
+  <div class="sl-mob-loop-grid">
+    <div class="sl-mob-loop-step">
+      <span class="sl-mob-loop-num">01</span>
+      <div class="sl-mob-loop-title">Upload</div>
+      <div class="sl-mob-loop-desc">One photograph. Any camera. Any genre.</div>
+    </div>
+    <div class="sl-mob-loop-step">
+      <span class="sl-mob-loop-num">02</span>
+      <div class="sl-mob-loop-title">Evaluated</div>
+      <div class="sl-mob-loop-desc">Five dimensions. In 60 seconds. Honest.</div>
+    </div>
+    <div class="sl-mob-loop-step">
+      <span class="sl-mob-loop-num">03</span>
+      <div class="sl-mob-loop-title">Direction</div>
+      <div class="sl-mob-loop-desc">One specific thing to do next. Not a list.</div>
+    </div>
+    <div class="sl-mob-loop-step">
+      <span class="sl-mob-loop-num">04</span>
+      <div class="sl-mob-loop-title">Standing</div>
+      <div class="sl-mob-loop-desc">Your eye, measured. Rookie to Legend.</div>
+    </div>
+  </div>
 </div>
 
 {# ━━ Section 3: GALLERY — live 2×2 ━━ #}
@@ -2014,35 +2137,29 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-mob-tier-row sl-mob-tier-hidden" id="sl-mob-t8"><div class="sl-mob-tier-dot" style="background:#F5C518;"></div><span class="sl-mob-tier-name">Legend</span><span class="sl-mob-tier-range">9.70 &ndash; 10.0</span></div>
   <div class="sl-mob-tiers-toggle" id="sl-mob-tiers-btn" role="button" aria-expanded="false">Show all tiers &#8964;</div>
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-tiers-cta">Find out where you sit &rarr;</a>
+     class="sl-mob-tiers-cta">Upload your first photograph &rarr;</a>
 </div>
 
 {# ━━ Section 7: MENTORS ━━ #}
 <div class="sl-mob-sec sl-mob-mentors">
-  <p class="sl-mob-mentors-eyebrow">Mentor Marketplace</p>
-  <h2 class="sl-mob-mentors-heading">A real photographer&rsquo;s eyes on your work.</h2>
-  <p class="sl-mob-mentors-body">The engine tells you what it saw. A mentor tells you what it means &mdash; and where to go next. Available the moment you need it, not when the next workshop is scheduled.</p>
-  <div class="sl-mob-mentor-tiers">
-    <div class="sl-mob-mentor-tier-row">
-      <div>
-        <div class="sl-mob-mentor-tier-name">Master Mentor</div>
-        <div class="sl-mob-mentor-tier-desc">Senior photographer &middot; strong critique eye</div>
-      </div>
-      <div class="sl-mob-mentor-tier-price">&#8377;100 / session</div>
+  <p class="sl-mob-mentors-eyebrow">Human eyes on your work</p>
+  <h2 class="sl-mob-mentors-heading">A real photographer&rsquo;s read. When you need it.</h2>
+  <p class="sl-mob-mentors-body">The engine tells you what it saw. A mentor tells you what it means &mdash; and where to go next. Available on demand, not when the next workshop is scheduled.</p>
+  <div class="sl-mob-mentor-grid">
+    <div class="sl-mob-mentor-photo">
+      <img src="{{ url_for('static', filename='img/mentor_ashok.jpg') }}"
+           alt="Mentor"
+           loading="lazy"
+           onerror="this.style.display='none'">
+      <div class="sl-mob-mentor-photo-grad"></div>
+      <span class="sl-mob-mentor-photo-label">Master Mentor</span>
     </div>
-    <div class="sl-mob-mentor-tier-row">
-      <div>
-        <div class="sl-mob-mentor-tier-name">Grandmaster Mentor</div>
-        <div class="sl-mob-mentor-tier-desc">10+ years &middot; respected practitioner</div>
+    <div class="sl-mob-mentor-photo" style="background:#1A2744;">
+      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(245,197,24,0.4)" stroke-width="1.2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <div class="sl-mob-mentor-tier-price">&#8377;150 / session</div>
-    </div>
-    <div class="sl-mob-mentor-tier-row">
-      <div>
-        <div class="sl-mob-mentor-tier-name">Legend Mentor</div>
-        <div class="sl-mob-mentor-tier-desc">Award-winning &middot; recognised name</div>
-      </div>
-      <div class="sl-mob-mentor-tier-price">&#8377;200 / session</div>
+      <div class="sl-mob-mentor-photo-grad"></div>
+      <span class="sl-mob-mentor-photo-label">Legend Mentor</span>
     </div>
   </div>
   <a href="{{ url_for('mentors') }}" class="sl-mob-mentors-cta">Meet the Mentors &rarr;</a>
@@ -2058,10 +2175,13 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {# ━━ Section 9: CLOSE ━━ #}
 <div class="sl-mob-sec sl-mob-close">
   <div class="sl-mob-close-rule"></div>
-  <p class="sl-mob-close-line">Photography has been around for 200 years.</p>
-  <p class="sl-mob-close-bold">How good is your photograph &mdash; really?</p>
+  <p class="sl-mob-close-line">Every photograph you upload moves you forward.</p>
+  <div class="sl-mob-close-gap"></div>
+  <p class="sl-mob-close-body">The engine tracks your eye across every upload &mdash; your strengths, your blind spots, your growth. Daily missions point you somewhere specific. Weekly assignments push the dimension that needs it most.</p>
+  <div class="sl-mob-close-gap"></div>
+  <p class="sl-mob-close-bold">Your eye doesn&rsquo;t plateau here.</p>
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-mob-close-cta">Let&rsquo;s evaluate your photograph &rarr;</a>
+     class="sl-mob-close-cta">Upload your first photograph &rarr;</a>
 </div>
 
 </div>{# end .sl-mob-only #}
