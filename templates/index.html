@@ -1033,23 +1033,36 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    background: #EDEAE4;
+    padding: 14px 20px;
+    background: #F7F5F2;
+    border-top: 1px solid rgba(26,26,24,0.12);
+    border-bottom: 1px solid rgba(26,26,24,0.12);
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     min-height: 44px;
   }
   .sl-honest-accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
     color: #1A1A18;
   }
+  .sl-honest-accordion-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 16px;
+    background: #F5C518;
+    flex-shrink: 0;
+  }
   .sl-honest-accordion-arrow {
-    font-size: 18px;
-    color: #1A1A18;
+    font-size: 16px;
+    color: rgba(26,26,24,0.55);
     transition: transform 0.25s ease;
     flex-shrink: 0;
   }
@@ -1060,23 +1073,36 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    background: #1A2744;
+    padding: 14px 20px;
+    background: #F7F5F2;
+    border-top: 1px solid rgba(26,26,24,0.12);
+    border-bottom: 1px solid rgba(26,26,24,0.12);
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     min-height: 44px;
   }
   .sl-cards-accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
-    color: #FFFFFF;
+    color: #1A1A18;
+  }
+  .sl-cards-accordion-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 16px;
+    background: #F5C518;
+    flex-shrink: 0;
   }
   .sl-cards-accordion-arrow {
-    font-size: 18px;
-    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+    color: rgba(26,26,24,0.55);
     transition: transform 0.25s ease;
     flex-shrink: 0;
   }
@@ -1131,20 +1157,22 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     gap: 12px;
   }
   .sl-manifesto + div .sl-hero-btn {
-    width: 100%;
-    text-align: center;
-    display: block;
-    background: #F5C518;
-    color: #0D0D0B;
-    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 16px 20px;
+    color: #1A1A18;
     text-decoration: none;
-    border: none;
-    cursor: pointer;
+    border-bottom: 2px solid #F5C518;
+    padding-bottom: 2px;
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    width: auto;
     min-height: 44px;
+    cursor: pointer;
   }
 }
 
@@ -1549,7 +1577,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 </div>
 <div style="background:#F7F5F2;padding:0 64px 56px;display:flex;align-items:center;justify-content:flex-start;gap:20px;">
   <a href="{{ url_for('upload') if current_user.is_authenticated else url_for('register') }}"
-     class="sl-hero-btn">GET MY FIRST FEEDBACK</a>
+     class="sl-hero-btn">Get my first feedback →</a>
   <div style="display:flex;align-items:center;gap:8px;color:#1A1A18;font-size: 14px;font-weight:500;font-family:'Inter',sans-serif;">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Rated by science, not opinion.
