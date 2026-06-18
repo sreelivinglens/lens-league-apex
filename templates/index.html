@@ -890,45 +890,49 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-200-tagline-1 { font-size: 18px; }
   .sl-200-tagline-2 { font-size: 22px; }
 
-  /* ── Learning loop ── */
-  .sl-loop { padding: 32px 20px; }
-  .sl-loop-heading { font-size: 14px; margin-bottom: 24px; }
+  /* ── Learning loop — 2×2 coloured boxes ── */
+  .sl-loop { padding: 28px 20px; }
+  .sl-loop-heading { font-size: 14px; margin-bottom: 18px; }
   .sl-loop-steps {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    flex-direction: unset;
+    align-items: unset;
   }
   .sl-loop-step {
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    gap: 20px;
-    width: 100%;
-    max-width: 100%;
-    padding: 16px 0;
-    border-bottom: 1px solid rgba(26,26,24,0.08);
+    gap: 0;
+    width: auto;
+    max-width: none;
+    padding: 16px 14px 18px;
+    border-bottom: none;
+    border-radius: 6px;
   }
   .sl-loop-step:last-child { border-bottom: none; }
-  .sl-loop-step-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    width: 56px;
+  .sl-loop-step:nth-child(1),
+  .sl-loop-step:nth-child(7) { background: #2C3E6B; }
+  .sl-loop-step:nth-child(3),
+  .sl-loop-step:nth-child(5) { background: #3a5080; }
+  .sl-loop-step-left { display: contents; }
+  .sl-loop-step-right { display: contents; }
+  .sl-loop-num {
+    width: auto; height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: #F5C518;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10px;
   }
-  .sl-loop-step-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-  }
-  .sl-loop-num { margin-bottom: 0; }
-  .sl-loop-icon { height: auto; margin-bottom: 0; }
-  .sl-loop-title { font-size: 16px; margin-bottom: 4px; }
-  .sl-loop-desc { font-size: 15px; text-align: justify; }
+  .sl-loop-icon { display: none; }
+  .sl-loop-title { font-size: 15px; font-weight: 700; color: #FFFFFF; margin-bottom: 5px; }
+  .sl-loop-desc { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.55; text-align: left; }
   .sl-loop-arrow { display: none; }
-  .sl-loop-cta { margin-top: 32px; }
+  .sl-loop-cta { margin-top: 16px; }
 
   /* ── Honest Part + Emotional Impact — tightened ── */
   .sl-honest {
@@ -1023,16 +1027,17 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     object-fit: cover;
   }
 
-  /* ── Gallery — single column ── */
+  /* ── Gallery — 2×2 square grid ── */
   .sl-gallery-wrap { padding: 24px 0 0; }
   .sl-gallery-header { padding: 0 20px 16px; }
   .sl-gallery-title { font-size: 14px; }
   .sl-gallery-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 2px;
   }
-  .sl-gitem { aspect-ratio: 16/9; } /* landscape on mobile single col */
-  .sl-gitem-score { font-size: 28px; }
+  .sl-gitem { aspect-ratio: 1/1; }
+  .sl-gitem:nth-child(n+5) { display: none; }
+  .sl-gitem-score { font-size: 22px; }
   .sl-gitem-title { font-size: 14px; }
   .sl-gitem-by { font-size: 14px; }
 
@@ -1378,7 +1383,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
 {% if gallery_imgs %}
 <div class="sl-gallery-wrap">
   <div class="sl-gallery-header">
-    <span class="sl-gallery-title">Recent Work From Our Photographers</span>
+    <span class="sl-gallery-title">Recent Work</span>
     <a href="{{ url_for('leaderboard') }}" class="sl-gallery-viewall">View All Galleries &rarr;</a>
   </div>
   <div class="sl-gallery-grid">
