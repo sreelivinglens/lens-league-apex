@@ -1387,12 +1387,14 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   /* ── 4. SCORECARD — cream bg, live hero data ── */
   .sl-mob-scorecard {
     background: #FAF9F5;
-    padding: 0 24px 28px;
+    padding: 0;
     border-bottom: 1px solid #EAE7DF;
   }
+  .sl-mob-sc-content {
+    padding: 0 24px 28px;
+  }
   .sl-mob-sc-img-wrap {
-    width: calc(100% + 48px);
-    margin-left: -24px;
+    width: 100%;
     aspect-ratio: 4/3;
     overflow: hidden;
     background: #0D0D0B;
@@ -1403,6 +1405,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   .sl-mob-sc-img-wrap img {
     width: 100%; height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
   }
   .sl-mob-sc-img-grad {
@@ -1924,8 +1927,11 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     color: #FFFFFF;
     margin-bottom: 6px;
     line-height: 1.55;
+    font-family: 'Inter', sans-serif;
+  }
+  .sl-mob-loop-desc {
     font-size: 14px;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.65);
     line-height: 1.55;
     font-family: 'Inter', sans-serif;
     flex: 1;
@@ -2004,7 +2010,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-mob-elev-gap"></div>
   <p class="sl-mob-elev-line">Shutter League changes that.</p>
   <div class="sl-mob-elev-gap"></div>
-  <p class="sl-mob-elev-gold">Photography turns 200 in 2026. The first standing arrives with it.</p>
+  <p class="sl-mob-elev-gold">Photography turns 200 in 2026. For the first time &mdash; every photograph gets an honest answer.</p>
   <div class="sl-mob-elev-rule-b"></div>
 </div>
 
@@ -2079,6 +2085,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <div class="sl-mob-sc-img-grad"></div>
     <span class="sl-mob-sc-img-label">{{ hero.genre or '' }}{% if hero.photographer_name %} &middot; {{ hero.photographer_name }}{% endif %}</span>
   </div>
+  <div class="sl-mob-sc-content">
   <p class="sl-mob-sc-eyebrow">What the engine saw</p>
   <div class="sl-mob-sc-score-row">
     <span class="sl-mob-sc-score">{{ '%.2f'|format(hero.score) }}</span>
@@ -2125,6 +2132,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     <p class="sl-mob-sc-next-txt">{{ _mob_next }}</p>
   </div>
   {% endif %}
+  </div>{# end sl-mob-sc-content #}
 </div>
 {% endif %}
 
