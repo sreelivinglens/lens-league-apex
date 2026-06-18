@@ -1516,6 +1516,21 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
     color: rgba(255,255,255,0.84);
     line-height: 1.60;
     font-family: 'Inter', sans-serif;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .sl-mob-sc-next-more {
+    font-size: 14px;
+    font-weight: 700;
+    color: #F5C518;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
   }
 
   /* ── 5. A.R TESTIMONIAL — white bg ── */
@@ -2133,6 +2148,7 @@ body:has(.sl-home) main { padding:0 !important; max-width:none !important; }
   <div class="sl-mob-sc-next">
     <p class="sl-mob-sc-next-lbl">One thing to do next</p>
     <p class="sl-mob-sc-next-txt">{{ _mob_sc_next }}</p>
+    <a href="{{ url_for('image_detail', image_id=_mob_sc.id) }}" class="sl-mob-sc-next-more">Read more &rarr;</a>
   </div>
   {% endif %}
   </div>{# end sl-mob-sc-content #}
