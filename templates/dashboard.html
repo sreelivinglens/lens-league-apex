@@ -1513,11 +1513,14 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
     {% endif %}
 
     {# ── Indoor options (red weather only) ── #}
+    {# Both options link directly to upload with indoor_assignment + mission params pre-filled. #}
+    {# "I'll wait for tomorrow" hits /mission-snooze so the snooze persists across page loads. #}
     {% if weather and weather.state == 'red' %}
     <div style="margin:10px 16px 0;">
       <div style="font-size:13px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
                   color:var(--sl-text-light); margin-bottom:7px;">Shoot indoors instead?</div>
-      <a href="{{ url_for('mission') }}?indoor=portraits"
+      {# Home portraits — uses indoor_assignment, genre override to People #}
+      <a href="{{ url_for('upload') }}?mission_dimension={{ lesson.dim if lesson else '' }}&curriculum_principle_id={{ lesson.principle_id if lesson else '' }}&mission_title={{ (lesson.title if lesson else '') | urlencode }}&indoor=portraits"
          style="display:flex; align-items:center; gap:10px; padding:11px 13px;
                 background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
                 margin-bottom:6px; text-decoration:none; color:var(--sl-text);">
@@ -1527,7 +1530,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Window light · People · same lesson indoors</div>
         </div>
       </a>
-      <a href="{{ url_for('mission') }}?indoor=stilllife"
+      {# Still life / experimental — uses indoor_assignment #}
+      <a href="{{ url_for('upload') }}?mission_dimension={{ lesson.dim if lesson else '' }}&curriculum_principle_id={{ lesson.principle_id if lesson else '' }}&mission_title={{ (lesson.title if lesson else '') | urlencode }}&indoor=stilllife"
          style="display:flex; align-items:center; gap:10px; padding:11px 13px;
                 background:#FFFFFF; border:1px solid var(--sl-border); border-radius:12px;
                 margin-bottom:4px; text-decoration:none; color:var(--sl-text);">
@@ -1537,8 +1541,11 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
           <div style="font-size:13px; color:var(--sl-text-light); margin-top:1px;">Macro at home · texture · no rules</div>
         </div>
       </a>
-      <div style="font-size:13px; color:var(--sl-text-light); text-align:center; padding:6px 0 2px; cursor:pointer;"
-           onclick="slSkipMission()">I'll wait for tomorrow ›</div>
+      {# Snooze — hits /mission-snooze endpoint so it persists across page loads #}
+      <a href="{{ url_for('mission_snooze') }}"
+         style="display:block; font-size:13px; color:var(--sl-text-light); text-align:center; padding:6px 0 2px; text-decoration:none;">
+        I'll wait for tomorrow ›
+      </a>
     </div>
     {% endif %}
 
