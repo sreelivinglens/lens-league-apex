@@ -1365,16 +1365,31 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
      lesson + weather injected from app.py
   ══════════════════════════════════════════ #}
 
+  {% if mission_done %}
+  {# ── Mission complete today — simple done state ── #}
+  <div style="background:#E8F4F8; border-radius:16px; padding:20px 18px;
+              border:1px solid #B8D8E4; margin-bottom:4px;">
+    <div style="font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+                color:#4A8A9A; margin-bottom:6px;">Mission complete</div>
+    <div style="font-size:18px; font-weight:800; color:#1A1810; line-height:1.3; margin-bottom:8px;">
+      Your eye is moving forward.
+    </div>
+    <div style="font-size:15px; color:#3A6A7A; line-height:1.6;">
+      Come back tomorrow for your next mission.
+    </div>
+  </div>
+  {% else %}
+
   {# ── Dimension colour map — light/muted, same for both principle and master days ── #}
   {% set _dim_band = {
-    'dod':        ('linear-gradient(135deg,#A8B8CC,#8CA0B8)', '#7890A8', '⬛'),
-    'dm':         ('linear-gradient(135deg,#A8C4A0,#88A880)', '#78986A', '◎'),
-    'aq':         ('linear-gradient(135deg,#D8C490,#C4AC70)', '#B09858', '☀'),
-    'wonder':     ('linear-gradient(135deg,#C8C0E0,#B0A8D0)', '#A098C0', '✦'),
-    'disruption': ('linear-gradient(135deg,#B8BEC8,#A0A8B4)', '#8890A0', '◈')
+    'dod':        ('#E8F4F8', '#B8D8E4', '⬛'),
+    'dm':         ('#E8F4F8', '#B8D8E4', '◎'),
+    'aq':         ('#E8F4F8', '#B8D8E4', '☀'),
+    'wonder':     ('#E8F4F8', '#B8D8E4', '✦'),
+    'disruption': ('#E8F4F8', '#B8D8E4', '◈')
   } %}
   {% set _dc = _dim_band.get(lesson.dim if lesson else 'dm',
-               ('linear-gradient(135deg,#C8D8C0,#A8C0A0)','#9AB092','◉')) %}
+               ('#E8F4F8', '#B8D8E4', '◉')) %}
 
   {# ── Snoozed state — show collapsed pill, full card hidden ── #}
   {% set _snoozed_today = session.get('mission_snoozed') == now().date().isoformat() %}
@@ -1625,6 +1640,8 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
       </button>
     </div>
   </div>
+
+  {% endif %}{# end mission_done #}
 
   {# ── Skip pill — shown when user taps Skip on dashboard (JS-driven, no reload) ── #}
   <div id="sl-mission-pill"
