@@ -252,26 +252,37 @@ do not invent specific dates or locations not supported by the results.
 """
 
 
-def discover_one(db_session, city: str, genre: str):
+def discover_one(db_session, city: str, genre: str, current_month: int | None = None):
     """
     Run discovery for a single (city, genre) combo:
       1. Web search for recurring seasons + current/upcoming exhibitions.
       2. LLM-extract into seasonal_calendar row(s).
       3. Insert the row(s).
 
+    current_month: if provided (1-12), the search and extraction are scoped to
+    what is happening NOW — the extracted rows are guaranteed to cover this month.
+    Pass datetime.utcnow().month from the scoring thread for on-demand discovery.
+
     Returns the number of rows inserted (0 on no results or error — never
     raises, so a single bad combo doesn't break the batch).
     """
     from .seasonal_calendar import normalize_city
+    import calendar as _cal
     normalized_city = normalize_city(city)
+    _month_name = _cal.month_name[current_month] if current_month else ''
 
     try:
         # ── Step 1: web search ────────────────────────────────────────────
+        _month_clause = (
+            f"currently happening in {_month_name} near "
+            if _month_name else
+            "recurring wildlife/nature photography seasons near "
+        )
         search_resp = _anthropic_call(
             messages=[{
                 'role': 'user',
                 'content': (
-                    f"Search for: recurring wildlife/nature photography seasons near "
+                    f"Search for: {_month_clause}"
                     f"{normalized_city}, AND any photography exhibitions, expos, or "
                     f"festivals currently running or upcoming in {normalized_city}, "
                     f"relevant to {genre} photography."
@@ -286,16 +297,28 @@ def discover_one(db_session, city: str, genre: str):
             return 0
 
         # ── Step 2: LLM extraction into seasonal_calendar row shape ───────
+        _month_rule = (
+            f"\nCRITICAL: This discovery is for month {current_month} ({_month_name}). "
+            f"Every extracted row MUST have month_start <= {current_month} AND month_end >= {current_month} "
+            f"so it is immediately visible to users shooting this month. "
+            f"If a season runs June–September, set month_start=6, month_end=9. "
+            f"Do not set month_start to a future month."
+            if current_month else ''
+        )
         extraction_resp = _anthropic_call(
             messages=[{
                 'role': 'user',
                 'content': (
+                    f"{_EXTRACTION_SYSTEM}{_month_rule}\n\n"
+                    f"Base city: {normalized_city}\n"
+                    f"Genre: {genre}\n"
+                    f"Current month: {_month_name} (month {current_month})\n" if current_month else
                     f"{_EXTRACTION_SYSTEM}\n\n"
                     f"Base city: {normalized_city}\n"
                     f"Genre: {genre}\n"
-                    f"Current date: {date.today().isoformat()}\n\n"
-                    f"Search results:\n{search_summary[:6000]}"
                 )
+                + f"Current date: {date.today().isoformat()}\n\n"
+                + f"Search results:\n{search_summary[:6000]}"
             }],
             max_tokens=1500,
         )
@@ -398,7 +421,7 @@ def run_seasonal_discovery(db_session, batch_size: int = 5):
     def _process(row):
         nonlocal summary
         try:
-            n = discover_one(db_session, row.city, row.genre)
+            n = discover_one(db_session, row.city, row.genre, current_month=datetime.utcnow().month)
             status = 'done'
             summary["rows_inserted"] += n
         except Exception as e:
