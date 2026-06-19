@@ -85,7 +85,46 @@ KYC_TERMS = [
       "not enough.*genre", "this genre", "in this genre",
       "across all genres", "genre.*photographs",
       "# ── Genre", "Genre Insight", "genre insight",
-      "Scored As", "scored as"]),
+      "Scored As", "scored as",
+      # Approved copy (Session 90 handoff) — plain English, not a UX label
+      "any genre"]),
+    # ── Added Session 91 — terms missing from audit since Session 86 ──────────
+    ('No KYC: score in user copy (use "evaluation")',
+     ' score',
+     # Internal/template uses that are not user-facing copy
+     ['url_for', '_score', 'score=', 'score)', 'score,', "'score'", '"score"',
+      'score }}', '%.2f', 'blended_score', 'peer_avg_score', 'judge_score',
+      'ddi_score', 'poty_score', 'entry_score', 'genre_score', 'avg_score',
+      'score desc', 'score asc', 'score filter', 'score threshold',
+      'score_genre', 'score_phash', 'scored_at', 'score_cache',
+      'sort by score', 'order by score', 'score.*float', 'score.*column',
+      'calculate_score', 'auto_score', 'get_tier',
+      'sl-gitem-score', 'sl-dash-hero', 'sl-mob-sc-score', 'sl-mob-ar-score',
+      'sl-mob-gitem-score', 'sl-hero-score', 'score-badge', 'score_badge',
+      '<!-- score', '{# score', '# score',
+      # Page <title> and SEO meta tags -- not user-facing UI copy
+      'photography scored', 'get your photography',
+      # Audit script internal references
+      'apex ddi', 'DDI Engine', 'Gold text colour check skipped',
+      'coaching overlay', 'gallery scores', 'confirmed false positive']),
+    ('No KYC: rank in user copy (use "standing")',
+     ' rank',
+     # Internal/template/CSS uses
+     ['url_for', 'ranking', 'rank_', '_rank', 'rank=', "'rank'", '"rank"',
+      'rank }}', 'path_to_rank', 'poty_rank', 'rp-card', 'rp_card',
+      'frank', 'rank-', '-rank', '# rank', '{# rank', '<!-- rank',
+      'shadow_rank', 'shadow rank', 'rank position', 'rank resets',
+      'rank history', 'rank preserved', 'rank and score',
+      # Approved descriptive copy -- verb "rank" explaining what evaluation is NOT doing
+      'not to rank you', 'to rank you against',
+      # Investor/internal doc phrases
+      'shadow standing', 'standing resets']),
+    ('No KYC: gym (do not use)',
+     ' gym',
+     ['url_for', '# gym', '{# gym', '<!-- gym']),
+    ('No KYC: Mentor Marketplace (user-facing copy — removed)',
+     'mentor marketplace',
+     ['url_for', '# mentor marketplace', '{# mentor', '<!-- mentor']),
 ]
 
 # Gold colours — never on light/cream backgrounds as text
@@ -1453,37 +1492,56 @@ def _run_delivery_standard(content, filepath, fails, is_detail_page=False):
             _fail(f'CSS brace mismatch in <style> block {_i+1}: {_opens} open vs {_closes} close — unclosed media query or rule will break all CSS below it')
             fails += 1
 
-    # ── 1. KYC — scorecard-specific terms ────────────────────────────────────
-    _section('DELIVERY STANDARD 1/5 — KYC compliance (scorecard copy)')
+    # ── 1. KYC — full-page sweep + scorecard-specific terms ──────────────────
+    # Session 91: expanded from scorecard-only to full HTML. Gaps in score/rank
+    # coverage discovered on live PayU submission prep — closed here.
+    _section('DELIVERY STANDARD 1/5 — KYC compliance (full page)')
     # Strip Jinja comments and logic before checking
     stripped = re.sub(r'\{#.*?#\}', '', content, flags=re.DOTALL)
     stripped = re.sub(r'\{%.*?%\}', '', stripped, flags=re.DOTALL)
     stripped = re.sub(r'\{\{.*?\}\}', '[VAR]', stripped, flags=re.DOTALL)
-    # Strip HTML comments — developer notes, not user-facing copy
+    # Strip HTML comments -- developer notes, not user-facing copy
     stripped = re.sub(r'<!--.*?-->', '', stripped, flags=re.DOTALL)
-    # Strip <script> blocks — JS variable names / route strings are never user-facing copy
+    # Strip <script> blocks -- JS variable names / route strings are never user-facing copy
     stripped = re.sub(r'<script\b[^>]*>.*?</script>', '', stripped, flags=re.DOTALL)
-    # Strip <style> blocks — CSS class names / variables are never user-facing copy
+    # Strip <style> blocks -- CSS class names / variables are never user-facing copy
     stripped = re.sub(r'<style\b[^>]*>.*?</style>', '', stripped, flags=re.DOTALL)
     # Strip Python variable names and Jinja tuple literals to avoid false positives
     stripped = re.sub(r'\b\w*_score\b|\b\w*_data\b|image\.\w+|audit\.\w+', '', stripped)
     # Strip HTML option values (admin-only form fields)
     stripped = re.sub(r'<option value="[^"]*">', '', stripped)
-    # Strip HTML id and class attributes — anchor names / CSS hooks are never user-facing copy
+    # Strip HTML id and class attributes -- anchor names / CSS hooks are never user-facing copy
     stripped = re.sub(r'\s+id="[^"]*"', '', stripped)
     stripped = re.sub(r'\s+class="[^"]*"', '', stripped)
     stripped = re.sub(r"\s+id='[^']*'", '', stripped)
     stripped = re.sub(r"\s+class='[^']*'", '', stripped)
+    # Strip inline style attributes -- CSS values like rgba(0,0,0,.3) are not user-facing copy
+    stripped = re.sub(r'\s+style="[^"]*"', '', stripped)
+    stripped = re.sub(r"\s+style='[^']*'", '', stripped)
     # Strip Python string literals in Jinja set expressions (e.g. ('DoD', ...) tuples)
     stripped = re.sub(r"'\s*DoD\s*'|'\s*DM\s*'|'\s*AQ\s*'|'\s*VD\s*'|'\s*WF\s*'", '', stripped)
+
+    # 1a. Full-page KYC_TERMS sweep (catches score, rank, gym, Mentor Marketplace etc.)
+    kyc_full_fails = 0
+    stripped_lower = stripped.lower()
+    for label, term, exclusions in KYC_TERMS:
+        cleaned = _strip_exclusions(stripped_lower, [e.lower() for e in exclusions])
+        if term.lower() in cleaned:
+            _fail(f'KYC (full page): {label}')
+            fails += 1
+            kyc_full_fails += 1
+    if kyc_full_fails == 0:
+        _ok('Full-page KYC terms -- clean')
+
+    # 1b. Scorecard-specific dimension jargon terms
     kyc_sc_fails = 0
     for phrase, fix in SCORECARD_KYC_TERMS:
         if phrase.lower() in stripped.lower():
-            _fail(f'KYC: "{phrase}" in user-facing copy — {fix}')
+            _fail(f'KYC: "{phrase}" in user-facing copy -- {fix}')
             fails += 1
             kyc_sc_fails += 1
     if kyc_sc_fails == 0:
-        _ok('All scorecard KYC terms — clean')
+        _ok('Scorecard dimension terms -- clean')
 
     # ── 2. Mobile (≤600px) ───────────────────────────────────────────────────
     _section('DELIVERY STANDARD 2/5 — Mobile view (≤600px)')
