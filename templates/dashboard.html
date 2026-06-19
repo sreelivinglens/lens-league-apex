@@ -1804,25 +1804,25 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
   {% if free_tier %}
   <div class="sl-free-nudge">
     <div class="sl-free-nudge__title">
-      {% if upload_credits_balance == 0 %}
+      {% if free_tier.remaining == 0 %}
         Your photographs have been evaluated.
       {% elif free_tier.used == 0 %}
         3 free evaluations, waiting for you
       {% else %}
-        {{ upload_credits_balance }} free evaluation{{ 's' if upload_credits_balance != 1 else '' }} remaining
+        {{ free_tier.remaining }} free evaluation{{ 's' if free_tier.remaining != 1 else '' }} remaining
       {% endif %}
     </div>
     <div class="sl-free-nudge__sub">
-      {% if upload_credits_balance == 0 %}
+      {% if free_tier.remaining == 0 %}
         You've seen what the platform can do. Subscribe to continue your growth as a photographer.
-      {% else %}
+      {% elif free_tier.used == 0 %}
         Upload a photograph. You'll know exactly what's working and what to fix — in about 60 seconds.
+      {% else %}
+        {{ free_tier.remaining }} evaluation{{ 's' if free_tier.remaining != 1 else '' }} left. After your 3 photographs are evaluated, you can subscribe to continue your growth.
       {% endif %}
     </div>
-    {% if upload_credits_balance == 0 %}
+    {% if free_tier.remaining == 0 %}
     <a href="{{ url_for('pricing') }}" class="sl-btn-subscribe">Subscribe to continue →</a>
-    {% elif free_tier.used > 0 %}
-    <p class="sl-free-nudge__hint">After your 3 photographs are evaluated, you can subscribe to continue your growth.</p>
     {% endif %}
   </div>
   {% endif %}
