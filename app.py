@@ -5917,9 +5917,16 @@ def upload():
                                                 f'+{_pts_earned:.1f} pts earned \u00b7 Your eye is moving forward.'
                                             )
                                         else:
-                                            # Mission not followed — note it in flash
+                                            # Mission not followed — Sherpa copy names the dimension and tells user to resubmit
+                                            _dim_label_map = {
+                                                'dod': 'Technical Difficulty', 'dm': 'Timing',
+                                                'aq': 'Visual Impact', 'wonder': 'Wonder',
+                                                'disruption': 'Originality'
+                                            }
+                                            _dim_label = _dim_label_map.get(_mission_dim, 'that dimension')
                                             _img.scoring_flash = (
-                                                f'+{_pts_earned:.1f} pts earned \u00b7 That assignment is still waiting for you.'
+                                                f'+{_pts_earned:.1f} pts earned \u00b7 Your photograph was evaluated — '
+                                                f'the mission focuses on {_dim_label}. Submit a frame where that is the primary intention.'
                                             )
                                     else:
                                         # No mission — generic flash
