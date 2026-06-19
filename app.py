@@ -3056,7 +3056,7 @@ def dashboard():
             for _fi in _flash_imgs:
                 flash(
                     f'Your image "{_fi.asset_name or _fi.original_filename}" '
-                    f'scored {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}!',
+                    f'evaluated {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}',
                     'success'
                 )
                 _fi.scoring_flash = None
@@ -3141,6 +3141,10 @@ def dashboard():
         except Exception as _mde:
             app.logger.warning(f'[mission_due] {_mde}')
         # Mission done today — scored mission image completed successfully today
+        # NOTE: do NOT filter on scoring_flash — it is cleared to None on first
+        # dashboard load (by the flash pickup loop above). Use disruption_score
+        # >= 5.0 directly: the scoring thread writes this before setting
+        # scoring_flash, so it persists in the DB regardless of flash state.
         _mission_done = False
         try:
             _today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -3148,7 +3152,7 @@ def dashboard():
                          .filter_by(user_id=current_user.id, status='scored')
                          .filter(Image.mission_dimension.isnot(None),
                                  Image.created_at >= _today_start,
-                                 Image.scoring_flash.ilike('%moving forward%'))
+                                 Image.disruption_score >= 5.0)
                          .order_by(Image.created_at.desc())
                          .first())
             if _done_img:
@@ -3698,7 +3702,7 @@ _CURRICULUM = [
     {
         'id': 'V1.2', 'dim': 'disruption', 'depth': 2,
         'title': 'Disruption That Serves the Subject',
-        'principle': 'Disruption that serves the subject scores. Disruption for its own sake does not.',
+        'principle': 'Disruption that serves the subject works. Disruption for its own sake does not.',
         'commons_file': None,
         'commons_caption': None,
         'master': 'Ernst Haas', 'master_quote': 'The camera doesn\'t make a bit of difference. All of them can record what you are seeing.',
