@@ -1214,6 +1214,20 @@ with app.app_context():
 
         print('Columns migrated OK.')
 
+        # Purge expired date-bound seasonal_calendar rows on every startup.
+        # Rows with date_end < today are stale events (e.g. Photo Today Expo June 14).
+        # Silent — never crashes startup if seasonal_calendar lacks date_end column yet.
+        try:
+            with db.engine.connect() as _exp_conn:
+                _exp_r = _exp_conn.execute(db.text(
+                    "DELETE FROM seasonal_calendar WHERE date_end IS NOT NULL AND date_end < CURRENT_DATE"
+                ))
+                _exp_conn.commit()
+                if _exp_r.rowcount:
+                    print(f'[seasonal_cleanup] Removed {_exp_r.rowcount} expired date-bound event(s).')
+        except Exception as _exp_e:
+            print(f'[seasonal_cleanup] skipped: {_exp_e}')
+
         # UAT plan backfill — all subscribed users get 'uat' plan (unlimited uploads).
         # Covers NULL, 'monthly', or any other value set before UAT default was applied.
         try:
