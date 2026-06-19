@@ -696,9 +696,16 @@
       <div style="font-size:16px;color:#1A1A18;line-height:1.5">
         Today's mission: <strong>{{ image.mission_title or 'Today\'s Assignment' }}</strong><br>
         {% if _mission_score %}
-        Your {{ _mission_label }} scored {{ _mission_score }} this time. Keep working on it — the mission stays open.
+        {% set _why_map = {
+          'disruption': 'The frame stayed within the expected. Something in the composition or the choice of subject didn’t break from what we’ve seen before. The assignment stays open — look for the frame that surprises.',
+          'dm':         'The moment hadn’t fully arrived in this frame — the geometry and the action weren’t quite aligned. The assignment stays open — wait for the instant they land together.',
+          'dod':        'This frame didn’t push into demanding territory. The subject, the conditions, or the position didn’t require enough of you. The assignment stays open — find the harder situation.',
+          'wonder':     'The frame didn’t stop the viewer. Something in the subject or the seeing didn’t reach the unexpected. The assignment stays open — look for what you haven’t noticed yet.',
+          'aq':         'The frame didn’t carry a feeling that named itself. The viewer could look at it and move on. The assignment stays open — make the one frame where the emotion is unmistakable.'
+        } %}
+        {{ _why_map.get(image.mission_dimension, 'The assignment stays open — one more frame.') }}
         {% else %}
-        This photograph wasn't evaluated against the mission dimension. Upload a frame focused on <strong>{{ _mission_label }}</strong> to complete the mission.
+        This photograph didn’t carry the mission’s focus through. Upload a frame where <strong>{{ _mission_label }}</strong> is the driving force.
         {% endif %}
       </div>
     </div>
@@ -1217,5 +1224,17 @@ function pollRescoreStatus(imgId) {
     .catch(() => setTimeout(() => pollRescoreStatus(imgId), 4000));
 }
 </script>
+
+{# ── Bottom back button — user doesn't have to scroll up ── #}
+<div style="padding:24px 0 8px; text-align:center;">
+  <a href="{{ url_for('dashboard') }}"
+     style="display:inline-flex; align-items:center; gap:6px;
+            font-size:15px; font-weight:700; color:var(--text-secondary);
+            text-decoration:none; padding:12px 20px;
+            border:1px solid var(--border); border-radius:10px;
+            background:var(--surface-1);">
+    ← Back to Dashboard
+  </a>
+</div>
 
 {% endblock %}
