@@ -1796,20 +1796,34 @@ body:has(.sl-today) main { padding: 0 !important; max-width: none !important; ma
 
   {# ══════════════════════════════════════════
      FREE TIER NUDGE (no subscription)
+     States:
+       new user (used=0, balance=3)  — welcome, no CTA
+       partial  (used>0, balance>0)  — remaining count + soft subscribe mention
+       exhausted (balance=0)         — subscribe CTA
   ══════════════════════════════════════════ #}
   {% if free_tier %}
   <div class="sl-free-nudge">
     <div class="sl-free-nudge__title">
-      {% if upload_credits_balance > 0 %}
-        {{ upload_credits_balance }} free evaluation{{ 's' if upload_credits_balance != 1 else '' }} waiting
-      {% else %}
+      {% if upload_credits_balance == 0 %}
+        Your photographs have been evaluated.
+      {% elif free_tier.used == 0 %}
         3 free evaluations, waiting for you
+      {% else %}
+        {{ upload_credits_balance }} free evaluation{{ 's' if upload_credits_balance != 1 else '' }} remaining
       {% endif %}
     </div>
     <div class="sl-free-nudge__sub">
-      Upload your first photograph. The Apex DDI Engine will tell you exactly what it sees — across 5 dimensions, in 60 seconds.
+      {% if upload_credits_balance == 0 %}
+        You've seen what the platform can do. Subscribe to continue your growth as a photographer.
+      {% else %}
+        Upload a photograph. You'll know exactly what's working and what to fix — in about 60 seconds.
+      {% endif %}
     </div>
-    <a href="{{ url_for('pricing') }}" class="sl-btn-subscribe">Subscribe to unlock full coaching →</a>
+    {% if upload_credits_balance == 0 %}
+    <a href="{{ url_for('pricing') }}" class="sl-btn-subscribe">Subscribe to continue →</a>
+    {% elif free_tier.used > 0 %}
+    <p class="sl-free-nudge__hint">After your 3 photographs are evaluated, you can subscribe to continue your growth.</p>
+    {% endif %}
   </div>
   {% endif %}
 
