@@ -4,12 +4,11 @@
 {% block extra_css %}
 <style>
 /*
-  Mission Details — Screen 2 of assignment sequence
-  Design: same Apple Fitness warmth as dashboard
-  Built: Session 79 · 15 June 2026
+  Mission Details — Session 94 redesign
+  Mobile-first · no black backgrounds · sky blue assignment · purple master quote
+  Built: Session 94 · 20 June 2026
 */
 
-/* ── Override base main padding for mobile-first layout ── */
 @media (max-width: 768px) {
   main { padding: 0 !important; }
 }
@@ -22,12 +21,19 @@
   --sl-text:        #151515;
   --sl-text-light:  #6B6B6B;
   --sl-border:      #E8E5DD;
+  --sl-sky:         #E8F4FD;
+  --sl-sky-border:  #B5D4F4;
+  --sl-sky-text:    #0C447C;
+  --sl-sky-label:   #185FA5;
+  --sl-purple-bg:   #F0EBFF;
+  --sl-purple-bd:   #AFA9EC;
+  --sl-purple-text: #3C3489;
+  --sl-purple-lbl:  #534AB7;
+  --sl-purple-sub:  #26215C;
   --sl-success:     #28A745;
-  --sl-purple:      #6A3EF0;
-  --sl-shadow:      0 4px 20px rgba(0,0,0,.06);
-  --sl-shadow-lg:   0 10px 40px rgba(0,0,0,.10);
-  --r-card:         28px;
-  --r-btn:          18px;
+  --sl-shadow:      0 2px 12px rgba(0,0,0,.06);
+  --r-card:         20px;
+  --r-btn:          16px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -44,7 +50,7 @@
 .md-inner {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px 12px 32px;
+  padding: 0 0 40px;
 }
 
 /* ── Back nav ── */
@@ -56,98 +62,196 @@
   font-weight: 600;
   color: var(--sl-text-light);
   text-decoration: none;
-  margin-bottom: 16px;
+  padding: 16px 16px 0;
+  margin-bottom: 12px;
   -webkit-tap-highlight-color: transparent;
 }
 .md-back:hover { color: var(--sl-text); }
 
-/* ── Hero image ── */
+/* ── Hero card — image fills top, title overlaid ── */
+.md-hero {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  background: #1A2410;
+  overflow: hidden;
+  margin-bottom: 0;
+}
 .md-hero-img {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
-  border-radius: var(--r-card);
   display: block;
-  margin-bottom: 16px;
-  box-shadow: var(--sl-shadow-lg);
+  opacity: 0.85;
 }
-
-/* ── Assignment header ── */
+.md-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8,14,4,0.92) 0%, rgba(8,14,4,0.35) 55%, transparent 100%);
+}
+.md-hero-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px 16px 18px;
+  z-index: 2;
+}
 .md-eyebrow {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .10em;
-  text-transform: uppercase;
-  color: var(--sl-yellow-dark);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.md-title {
-  font-size: 28px;
-  font-weight: 800;
-  text-transform: uppercase;
-  line-height: 1.05;
-  color: var(--sl-text);
-  margin-bottom: 12px;
-}
-
-.md-brief {
-  font-size: 16px;
-  line-height: 1.7;
-  color: #404040;
-  margin-bottom: 20px;
-  text-align: justify;
-}
-
-/* ── Meta grid ── */
-.md-meta {
-  background: var(--sl-card);
-  border-radius: var(--r-card);
-  border: 1px solid var(--sl-border);
-  padding: 14px 16px;
-  margin-bottom: 16px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.md-meta-item {
-  display: grid;
-  grid-template-columns: 22px 72px 1fr;
   align-items: center;
   gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 6px;
+}
+.md-eyebrow-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--sl-yellow);
+  flex-shrink: 0;
+}
+.md-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.md-title em {
+  color: var(--sl-yellow);
+  font-style: italic;
+}
+.md-genre-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 11px;
+}
+.md-genre-badge span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: #FFFFFF;
 }
 
-.md-meta-icon {
+/* ── Body ── */
+.md-body {
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Principle para — no title repeat, continuation only ── */
+.md-principle {
   font-size: 16px;
-  text-align: center;
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--sl-text);
+}
+
+/* ── Weather strip ── */
+.md-wx {
+  background: #FFFBF0;
+  border: 1px solid var(--sl-yellow);
+  border-radius: 12px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.md-wx-icon {
+  font-size: 17px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #BA7517;
+}
+.md-wx-text {
+  font-size: 14px;
+  color: #633806;
+  line-height: 1.55;
+}
+.md-wx-text strong {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 1px;
+}
+
+/* ── Meta row — 3 column horizontal ── */
+.md-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--sl-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--sl-card);
+}
+.md-meta-item {
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-right: 1px solid var(--sl-border);
+}
+.md-meta-item:last-child { border-right: none; }
+.md-meta-icon {
+  font-size: 14px;
   color: var(--sl-text-light);
 }
-
 .md-meta-label {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--sl-text-light);
 }
-
 .md-meta-val {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--sl-text);
+  line-height: 1.5;
+}
+.md-meta-val.amber { color: #BA7517; }
+
+/* ── Assignment block — sky blue, no black ── */
+.md-assignment {
+  background: var(--sl-sky);
+  border: 1px solid var(--sl-sky-border);
+  border-radius: 14px;
+  padding: 15px 16px;
+}
+.md-assignment-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sl-sky-label);
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.md-assignment-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--sl-sky-text);
+  line-height: 1.65;
 }
 
-/* ── Tips section ── */
+/* ── Tips ── */
 .md-tips {
   background: var(--sl-card);
-  border-radius: var(--r-card);
+  border-radius: 14px;
   border: 1px solid var(--sl-border);
   padding: 14px 16px;
-  margin-bottom: 16px;
 }
-
 .md-tips-title {
   font-size: 13px;
   font-weight: 700;
@@ -157,70 +261,80 @@
   margin-bottom: 12px;
   display: block;
 }
-
 .md-tip {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--sl-text);
-  padding: 6px 0;
+  padding: 7px 0;
   border-bottom: 1px solid var(--sl-border);
 }
-
 .md-tip:last-child { border-bottom: none; }
-
 .md-tip-dot {
-  width: 6px;
-  height: 6px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--sl-yellow);
   flex-shrink: 0;
   margin-top: 8px;
 }
 
-/* ── Master reference ── */
+/* ── Master block — purple, quote stands out ── */
 .md-master {
-  background: #F0EBFF;
-  border: 1px solid #D4C5FF;
-  border-radius: var(--r-card);
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.md-master-img {
-  width: 64px;
-  height: 56px;
-  object-fit: cover;
+  background: var(--sl-purple-bg);
+  border: 1px solid var(--sl-purple-bd);
   border-radius: 14px;
+  padding: 16px 16px 14px;
 }
-
 .md-master-label {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--sl-purple);
-  display: block;
-  margin-bottom: 2px;
+  color: var(--sl-purple-lbl);
+  margin-bottom: 4px;
 }
-
 .md-master-name {
   font-size: 16px;
   font-weight: 700;
-  color: var(--sl-text);
-  margin-bottom: 2px;
-}
-
-.md-master-quote {
-  font-size: 13px;
-  color: #6B5B9E;
+  color: var(--sl-purple-sub);
+  margin-bottom: 4px;
   line-height: 1.5;
+}
+.md-master-context {
+  font-size: 13px;
+  color: var(--sl-purple-lbl);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.md-master-quote-wrap {
+  background: rgba(255,255,255,0.5);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.md-master-qmark {
+  font-size: 36px;
+  color: var(--sl-purple-bd);
+  font-family: Georgia, serif;
+  line-height: 1.0;
+  display: block;
+  margin-bottom: 6px;
+}
+.md-master-quote {
+  font-size: 18px;
   font-style: italic;
+  color: var(--sl-purple-text);
+  line-height: 1.65;
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+.md-master-attr {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sl-purple-lbl);
+  margin-top: 8px;
+  letter-spacing: .05em;
 }
 
 /* ── Shot count ── */
@@ -228,10 +342,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--sl-text-light);
-  margin-bottom: 20px;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 /* ── CTAs ── */
@@ -242,19 +355,17 @@
   gap: 10px;
   background: var(--sl-yellow);
   color: var(--sl-text);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
-  height: 60px;
+  height: 58px;
   min-height: 44px;
   border: none;
   border-radius: var(--r-btn);
   width: 100%;
   text-decoration: none;
-  margin-bottom: 10px;
   transition: background .2s;
   cursor: pointer;
 }
-
 .md-btn-primary:hover { background: var(--sl-yellow-dark); color: var(--sl-text); }
 
 .md-btn-secondary {
@@ -267,8 +378,28 @@
   padding: 12px;
   transition: color .2s;
 }
-
 .md-btn-secondary:hover { color: var(--sl-text); }
+
+/* ── Switch genre ── */
+.md-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 2px 0;
+  border-top: 1px solid var(--sl-border);
+  font-size: 13px;
+  color: var(--sl-text-light);
+}
+.md-switch a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sl-purple-lbl);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.md-switch a:hover { color: var(--sl-purple-sub); }
 
 /* ── Focus / accessibility ── */
 .md-btn-primary:focus-visible,
@@ -278,43 +409,62 @@
   outline-offset: 2px;
 }
 
-/* ── Responsive ── */
-
+/* ── iPad (768–1024px) ── */
 @media (min-width: 768px) and (max-width: 1024px) {
-  .md-inner, .fl-inner { padding: 0 24px; }
-  .md-meta { gap: 12px; }
+  .md-inner { max-width: 600px; padding: 0 0 48px; }
+  .md-hero { height: 260px; }
+  .md-hero-content { padding: 20px 22px 22px; }
+  .md-title { font-size: 26px; }
+  .md-body { padding: 20px 22px 0; gap: 14px; }
+  .md-principle { font-size: 16px; }
+  .md-assignment-text { font-size: 17px; }
+  .md-master-quote { font-size: 19px; }
+  .md-back { padding: 20px 22px 0; }
 }
 
-@media (min-width: 768px) {
-  .md-inner { padding: 24px 24px 48px; }
-  .md-title  { font-size: 32px; }
-  .md-hero-img { height: 240px; }
-}
-
+/* ── Desktop (≥1025px) — two column ── */
 .md-col-left, .md-col-right { display: contents; }
 
 @media (min-width: 1025px) {
-  .md-col-left  { display: block; position: sticky; top: 80px; }
-  .md-col-right { display: block; }
+  .md-page { background: var(--sl-bg); }
   .md-inner {
     max-width: 1100px;
     display: grid;
-    grid-template-columns: 1fr 520px;
+    grid-template-columns: 1fr 500px;
+    grid-template-rows: auto 1fr;
     gap: 0 48px;
     align-items: start;
-    padding: 32px 48px 64px;
+    padding: 0 48px 64px;
   }
   .md-back {
     grid-column: 1 / -1;
-    margin-bottom: 24px;
+    padding: 24px 0 0;
+    margin-bottom: 20px;
   }
-  .md-hero-img { height: 320px; }
+  .md-col-left {
+    display: block;
+    position: sticky;
+    top: 80px;
+  }
+  .md-col-right { display: block; }
+  .md-hero {
+    height: 380px;
+    border-radius: 20px;
+    margin-bottom: 0;
+  }
+  .md-hero-content { padding: 24px 28px 28px; }
+  .md-title { font-size: 30px; }
+  .md-body { padding: 20px 0 0; gap: 14px; }
+  .md-principle { font-size: 16px; }
+  .md-assignment-text { font-size: 17px; }
+  .md-master-quote { font-size: 19px; }
 }
 
-@media (max-width: 400px) {
-  .fl-steps { gap: 8px; }
-  .fl-step { grid-template-columns: 36px 1fr; }
-  .md-meta { gap: 8px; }
+/* ── Small mobile ── */
+@media (max-width: 380px) {
+  .md-meta-val { font-size: 13px; }
+  .md-meta-label { font-size: 13px; }
+  .md-title { font-size: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -327,29 +477,36 @@
 <div class="md-page">
 <div class="md-inner">
 
-  {# ── Back button — full width on desktop ── #}
-  <a href="{{ url_for('dashboard') }}" class="md-back">
-    ← Today
-  </a>
+  {# ── Back button ── #}
+  <a href="{{ url_for('dashboard') }}" class="md-back">← Today</a>
 
-  {# ── Left column: benchmark image ── #}
+  {# ── Left column: hero image ── #}
   <div class="md-col-left">
 
-  {# ── Hero image — best public platform image in today's dimension ── #}
-  {% if benchmark and benchmark.thumb_url %}
-  <div style="position:relative; margin-bottom:6px;">
+  {# ── Hero — benchmark image if available, else dark placeholder ── #}
+  <div class="md-hero">
+    {% if benchmark and benchmark.thumb_url %}
     <img src="{{ benchmark.thumb_url }}"
          alt="{{ benchmark.asset_name or 'Reference photograph' }}"
          class="md-hero-img"
          onerror="this.style.display='none'">
-    <div style="position:absolute; bottom:12px; left:12px; right:12px;
-                background:rgba(0,0,0,0.55); border-radius:10px;
-                padding:6px 10px; display:flex; align-items:center; justify-content:flex-end;">
-      <span style="font-size:13px; color:rgba(255,255,255,0.80);">{{ benchmark.tier or '' }} · {{ benchmark.photographer_name or '' }}</span>
+    {% endif %}
+    <div class="md-hero-overlay"></div>
+    <div class="md-hero-content">
+      <div class="md-eyebrow">
+        <div class="md-eyebrow-dot"></div>
+        Today's lesson · {{ assignment.focus_label if assignment is defined else 'Originality' }}
+      </div>
+      <h1 class="md-title">{{ assignment.title if assignment is defined else "Today's Assignment" }}</h1>
+      <div class="md-genre-badge">
+        <span>{{ current_user.mission_genre or 'Photography' }}</span>
+      </div>
     </div>
   </div>
-  <p style="font-size:13px; color:var(--sl-text-light); margin-bottom:16px; padding:0 4px;">
-    A reference photograph in today's focus — {{ assignment.focus_label }}. Study the composition.
+
+  {% if benchmark and benchmark.thumb_url %}
+  <p style="font-size:12px; color:var(--sl-text-light); margin:8px 16px 0; padding:0;">
+    Reference · {{ benchmark.tier or '' }} · {{ benchmark.photographer_name or '' }}
   </p>
   {% endif %}
 
@@ -357,52 +514,54 @@
 
   {# ── Right column: assignment details ── #}
   <div class="md-col-right">
+  <div class="md-body">
 
-  {# ── Assignment header ── #}
-  <span class="md-eyebrow">Today's Assignment</span>
-  <h1 class="md-title">{{ assignment.title if assignment is defined else 'Today\'s Assignment' }}</h1>
+  {# ── Principle — continues from the title, no repeat ── #}
+  <p class="md-principle">{{ assignment.description if assignment is defined else 'One frame. Make it count.' }}</p>
 
-  {# ── Principle — the one thing to carry today ── #}
-  <p style="font-size:17px; font-weight:700; color:var(--sl-text); line-height:1.5;
-            margin-bottom:10px; letter-spacing:-.01em;">
-    {{ assignment.description if assignment is defined else 'One frame. Make it count.' }}
-  </p>
-
-  {# ── Today's specific assignment ── #}
-  <div style="background:rgba(244,194,13,.10); border-left:3px solid var(--sl-yellow-dark);
-              border-radius:0 10px 10px 0; padding:11px 14px; margin-bottom:20px;">
-    <span style="font-size:13px; font-weight:700; color:var(--sl-yellow-dark);
-                 letter-spacing:.06em; text-transform:uppercase;">Today</span>
-    <p style="font-size:16px; color:var(--sl-text); line-height:1.65; margin:4px 0 0;">
-      {{ assignment.assignment if assignment is defined else assignment.description }}
-    </p>
+  {# ── Weather ── #}
+  {% if weather and weather.state != 'green' %}
+  <div class="md-wx">
+    <span class="md-wx-icon">{% if weather.state == 'red' %}🌧{% else %}⛅{% endif %}</span>
+    <div class="md-wx-text">
+      <strong>{{ current_user.city or 'Your city' }} · {{ weather.condition or 'Check conditions' }}</strong>
+      {{ weather.message or 'Check your window before heading out.' }}
+    </div>
   </div>
+  {% endif %}
 
-  {# ── Meta — Best Time · Weather · Location · Focus ── #}
+  {# ── Meta row ── #}
   <div class="md-meta">
-    <div class="md-meta-item">
-      <span class="md-meta-icon">◷</span>
-      <span class="md-meta-label">Best time</span>
-      <span class="md-meta-val">{{ assignment.best_time if assignment is defined else '5:00 – 7:00 PM' }}</span>
-    </div>
-    <div class="md-meta-item">
-      <span class="md-meta-icon">☁</span>
-      <span class="md-meta-label">Weather</span>
-      <span class="md-meta-val">{{ assignment.weather if assignment is defined else 'Any light works' }}</span>
-    </div>
-    <div class="md-meta-item">
-      <span class="md-meta-icon">📍</span>
-      <span class="md-meta-label">Location</span>
-      <span class="md-meta-val">{{ current_user.city or 'Anywhere' }}{% if current_user.state %}, {{ current_user.state }}{% endif %}</span>
-    </div>
     <div class="md-meta-item">
       <span class="md-meta-icon">◎</span>
       <span class="md-meta-label">Focus</span>
       <span class="md-meta-val">{{ assignment.focus_label if assignment is defined else 'Originality' }}</span>
     </div>
+    <div class="md-meta-item">
+      <span class="md-meta-icon">☁</span>
+      <span class="md-meta-label">Weather</span>
+      <span class="md-meta-val {% if weather and weather.state == 'amber' %}amber{% endif %}">
+        {{ weather.condition if weather else 'Any light works' }}
+      </span>
+    </div>
+    <div class="md-meta-item">
+      <span class="md-meta-icon">◷</span>
+      <span class="md-meta-label">Best time</span>
+      <span class="md-meta-val">{{ assignment.best_time if assignment is defined else '6:00 – 9:00 AM' }}</span>
+    </div>
   </div>
 
-  {# ── Tips for today ── #}
+  {# ── Assignment block — sky blue ── #}
+  <div class="md-assignment">
+    <div class="md-assignment-label">
+      📷 Your assignment today
+    </div>
+    <div class="md-assignment-text">
+      {{ assignment.assignment if assignment is defined else assignment.description }}
+    </div>
+  </div>
+
+  {# ── Tips ── #}
   <div class="md-tips">
     <span class="md-tips-title">Tips for today</span>
     {% if assignment is defined and assignment.tips %}
@@ -413,82 +572,59 @@
       </div>
       {% endfor %}
     {% else %}
-    <div class="md-tip">
-      <div class="md-tip-dot"></div>
-      <span>Look for an unexpected angle — resist the obvious shot</span>
-    </div>
-    <div class="md-tip">
-      <div class="md-tip-dot"></div>
-      <span>Shoot more than you think you need — then edit ruthlessly</span>
-    </div>
-    <div class="md-tip">
-      <div class="md-tip-dot"></div>
-      <span>The uncomfortable frame is usually the interesting one</span>
-    </div>
-    <div class="md-tip">
-      <div class="md-tip-dot"></div>
-      <span>Stay with the scene — the best light comes after you think it's over</span>
-    </div>
+    <div class="md-tip"><div class="md-tip-dot"></div><span>Look for an unexpected angle — resist the obvious shot</span></div>
+    <div class="md-tip"><div class="md-tip-dot"></div><span>Shoot more than you think you need — then edit ruthlessly</span></div>
+    <div class="md-tip"><div class="md-tip-dot"></div><span>The uncomfortable frame is usually the interesting one</span></div>
+    <div class="md-tip"><div class="md-tip-dot"></div><span>Stay with the scene — the best light comes after you think it's over</span></div>
     {% endif %}
   </div>
 
-  {# ── Master reference — warm cream, context-first, no purple ── #}
+  {# ── Master block — purple, quote prominent ── #}
   {% if master %}
-  <div style="background:var(--sl-cream, #F8F4E9); border:1px solid var(--sl-border);
-              border-left:3px solid var(--sl-yellow-dark);
-              border-radius:0 var(--r-card) var(--r-card) 0;
-              padding:14px 16px; margin-bottom:20px;">
-    <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                 color:var(--sl-yellow-dark); display:block; margin-bottom:8px;">Today's Master</span>
-    <div style="font-size:17px; font-weight:800; color:var(--sl-text); margin-bottom:4px;">{{ master[0] }}</div>
-    <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">
-      {# Context sentence so user knows who this is and why they're here today #}
+  <div class="md-master">
+    <div class="md-master-label">Today's master</div>
+    <div class="md-master-name">{{ master[0] }}</div>
+    <div class="md-master-context">
       {% if assignment.dimension == 'disruption' %}One of the most influential photographers of the 20th century — known for breaking every compositional rule deliberately, not accidentally.
-      {% elif assignment.dimension == 'dm' %}The photographer who defined timing in photography — the instant when geometry and gesture align perfectly in one frame.
+      {% elif assignment.dimension == 'dm' %}Defined timing in photography — the instant when geometry and gesture align in one unrepeatable frame.
       {% elif assignment.dimension == 'dod' %}A master of technically demanding photography — his images were made in conditions most photographers would never attempt.
-      {% elif assignment.dimension == 'wonder' %}Shot for decades without showing her work to anyone — the most powerful argument that seeing is its own reward.
-      {% elif assignment.dimension == 'aq' %}The photographer who proved that light itself — not the subject — is what creates emotion in an image.
+      {% elif assignment.dimension == 'wonder' %}Shot for decades without showing her work to anyone — the most powerful argument that the act of seeing is sufficient in itself.
+      {% elif assignment.dimension == 'aq' %}Proved that light itself — not the subject — is what creates emotion in an image.
       {% else %}One of the defining photographers in this discipline — study their work before you shoot today.{% endif %}
     </div>
     {% if master[2] %}
-    <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;
-                padding:10px 12px; background:rgba(244,194,13,.08); border-radius:8px;">
-      {{ master[2] }}
-      <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
-                   display:block; margin-top:5px; letter-spacing:.04em;">— {{ master[0] }}</span>
+    <div class="md-master-quote-wrap">
+      <span class="md-master-qmark">&ldquo;</span>
+      <div class="md-master-quote">{{ master[2] }}</div>
+      <div class="md-master-attr">— {{ master[0] }}</div>
     </div>
     {% endif %}
   </div>
   {% else %}
   {% set _focus_key = assignment.dimension if assignment is defined else 'disruption' %}
   {% set _master_context = {
-    'dod':        ('Fan Ho',                'Shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances. His difficulty came from the geometry of the scene.',          '"Photography is the art of observation."'),
-    'dm':         ('Henri Cartier-Bresson', 'Defined the art of timing in photography — the instant when geometry and gesture coincide in a single frame. He was already in position before the moment arrived.',         '"To photograph is to hold one\'s breath when all faculties converge."'),
-    'aq':         ('Ansel Adams',           'Proved that light itself is the subject — not the mountain, not the valley. He waited hours for the light that made the image feel the way it did.',       '"You don\'t take a photograph, you make it."'),
-    'wonder':     ('Vivian Maier',          'Shot for decades without showing her work to anyone. She photographed what everyone else walked past — the unremarkable corner, the unnoticed face.',       '"Taking pictures is savoring life intensely, every hundredth of a second."'),
-    'disruption': ('Daido Moriyama',        'Broke every rule of composition deliberately. He wanted the image to be true — even if that truth was grainy, blurred, or uncomfortable.',                 '"I want to express the feeling of reality that is beyond imagination."')
+    'dod':        ('Fan Ho',                'Shot in the streets of 1950s Hong Kong — technically demanding conditions, no second chances.',          'Photography is the art of observation.'),
+    'dm':         ('Henri Cartier-Bresson', 'Defined the art of timing in photography — the instant when geometry and gesture coincide in a single frame.',         'To photograph is to hold one\'s breath when all faculties converge.'),
+    'aq':         ('Ansel Adams',           'Proved that light itself is the subject — not the mountain, not the valley.',       'You don\'t take a photograph, you make it.'),
+    'wonder':     ('Vivian Maier',          'Shot for decades without showing her work to anyone. She photographed what everyone else walked past.',       'Taking pictures is savoring life intensely, every hundredth of a second.'),
+    'disruption': ('Daido Moriyama',        'Broke every rule of composition deliberately. He wanted the image to be true — even if that truth was grainy, blurred, or uncomfortable.',                 'I want to express the feeling of reality that is beyond imagination.')
   } %}
   {% set _m = _master_context.get(_focus_key, _master_context['dm']) %}
-  <div style="background:var(--sl-cream, #F8F4E9); border:1px solid var(--sl-border);
-              border-left:3px solid var(--sl-yellow-dark);
-              border-radius:0 var(--r-card) var(--r-card) 0;
-              padding:14px 16px; margin-bottom:20px;">
-    <span style="font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-                 color:var(--sl-yellow-dark); display:block; margin-bottom:8px;">Today's Master</span>
-    <div style="font-size:17px; font-weight:800; color:var(--sl-text); margin-bottom:4px;">{{ _m[0] }}</div>
-    <div style="font-size:14px; color:var(--sl-text-light); line-height:1.5; margin-bottom:8px;">{{ _m[1] }}</div>
-    <div style="font-size:14px; font-style:italic; color:#404040; line-height:1.6;
-                padding:10px 12px; background:rgba(244,194,13,.08); border-radius:8px;">
-      {{ _m[2] }}
-      <span style="font-style:normal; font-size:12px; font-weight:700; color:var(--sl-yellow-dark);
-                   display:block; margin-top:5px; letter-spacing:.04em;">— {{ _m[0] }}</span>
+  <div class="md-master">
+    <div class="md-master-label">Today's master</div>
+    <div class="md-master-name">{{ _m[0] }}</div>
+    <div class="md-master-context">{{ _m[1] }}</div>
+    <div class="md-master-quote-wrap">
+      <span class="md-master-qmark">&ldquo;</span>
+      <div class="md-master-quote">{{ _m[2] }}</div>
+      <div class="md-master-attr">— {{ _m[0] }}</div>
     </div>
   </div>
   {% endif %}
 
   {# ── Shot count ── #}
   <div class="md-shot-count">
-    <span style="font-size:18px">◷</span>
+    <span>◷</span>
     Shoot several frames. Upload your best one.
   </div>
 
@@ -500,6 +636,13 @@
     Remind me later
   </a>
 
+  {# ── Switch genre ── #}
+  <div class="md-switch">
+    <span>Missions currently in <strong>{{ current_user.mission_genre or 'your genre' }}</strong></span>
+    <a href="{{ url_for('onboarding_interests') }}">Switch interest →</a>
+  </div>
+
+  </div>{# end md-body #}
   </div>{# end md-col-right #}
 
 </div>
@@ -508,7 +651,6 @@
 
 {% block extra_js %}
 <script>
-// No JS needed for this page — purely static display
-// The assignment data will be injected by app.py via the /mission route
+// No JS needed — purely static display
 </script>
 {% endblock %}
