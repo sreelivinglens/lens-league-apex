@@ -8,9 +8,11 @@
 {% block extra_css %}
 <style>
   .redeem-wrap { max-width: 760px; margin: 0 auto; }
+
+  /* ── Balance banner ── */
   .redeem-balance {
     background: #2C3E6B; border-radius: var(--radius-md);
-    padding: 24px 28px; margin-bottom: 28px;
+    padding: 24px 28px; margin-bottom: 32px;
     display: flex; align-items: center; justify-content: space-between;
     gap: 20px; flex-wrap: wrap;
   }
@@ -19,43 +21,130 @@
   .redeem-balance-sub { font-size: 16px; color: rgba(255,255,255,0.75); margin-top: 8px; line-height: 1.6; }
   .redeem-balance-note { background: rgba(234,243,222,0.15); border: 1px solid rgba(192,221,151,0.3); border-radius: var(--radius-sm); padding: 10px 16px; text-align: right; }
   .redeem-balance-note div { font-size: 16px; color: #FFFFFF; line-height: 1.6; }
-  .redeem-section-label { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 10px; padding: 0 4px; }
-  .redeem-table { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
-  .redeem-row { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; padding: 16px 20px; gap: 16px; border-bottom: 1px solid var(--border-subtle); }
-  .redeem-row:last-child { border-bottom: none; }
+
+  /* ── Section label ── */
+  .redeem-section-label {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-primary); opacity: 0.5;
+    margin-bottom: 12px; margin-top: 32px; padding: 0 2px;
+  }
+
+  /* ── Card grid ── */
+  .redeem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .redeem-grid-full {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Individual card ── */
+  .rc {
+    border-radius: 14px;
+    padding: 18px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+  }
+  .rc-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 14px 14px 0 0;
+  }
+  .rc-pts {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 4px;
+  }
+  .rc-label {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    flex: 1;
+  }
+  .rc-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0.7;
+  }
+  .rc-action { margin-top: auto; }
+  .rc-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 100%; min-height: 40px;
+    border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; border-radius: 8px;
+    text-decoration: none; transition: opacity 0.15s;
+    background: #F5C518; color: #000;
+  }
+  .rc-btn:hover { opacity: 0.88; }
+  .rc-need {
+    display: block; text-align: center;
+    font-family: var(--font-mono); font-size: 13px;
+    font-weight: 700; line-height: 1.4;
+    opacity: 0.5;
+    padding: 6px 0;
+  }
+
+  /* ── Colour themes per card ── */
+  /* Gold — Programme */
+  .rc-gold { background: #FBF6E9; color: #3A2E00; }
+  .rc-gold .rc-accent { background: #C8A84B; }
+  .rc-gold .rc-pts { color: #8A6500; }
+
+  /* Purple — Upload / Subscription */
+  .rc-purple { background: #F2EEF9; color: #2A1A4A; }
+  .rc-purple .rc-accent { background: #6B3E9B; }
+  .rc-purple .rc-pts { color: #5B2D8E; }
+
+  /* Green — Free Month */
+  .rc-green { background: #EAF3DE; color: #1A3310; }
+  .rc-green .rc-accent { background: #3A7A28; }
+  .rc-green .rc-pts { color: #2A5A1A; }
+
+  /* Navy — Mentor */
+  .rc-navy { background: #EBF0F8; color: #0D1A35; }
+  .rc-navy .rc-accent { background: #2C3E6B; }
+  .rc-navy .rc-pts { color: #1A2C55; }
+
+  /* T&C */
+  .redeem-tnc { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid #2C3E6B; border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 18px 22px; margin-bottom: 28px; margin-top: 36px; }
+  .redeem-tnc-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 12px; }
+  .redeem-tnc ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .redeem-tnc li { font-size: 16px; color: var(--text-primary); line-height: 1.6; }
+  .redeem-tnc li strong { color: var(--text-primary); }
+
+  /* Flash */
+  .redeem-flash { border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; font-size: 16px; line-height: 1.6; }
+  .redeem-flash.success { background: #EAF3DE; border: 1px solid #C0DD97; color: #27500A; }
+  .redeem-flash.error { background: #FDE8E8; border: 1px solid #F5AAAA; color: #7A1414; }
+
+  /* Mobile */
   @media (max-width: 600px) {
     .redeem-wrap { padding: 0 4px; }
     .redeem-balance { flex-direction: column; padding: 18px 16px; }
     .redeem-balance-pts { font-size: 40px; }
     .redeem-balance-note { text-align: left; width: 100%; }
-    .redeem-row { grid-template-columns: 70px 1fr; }
-    .redeem-row-status { grid-column: 2; margin-top: 6px; }
+    .redeem-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rc { min-height: 150px; padding: 16px 14px 14px; }
+    .rc-pts { font-size: 20px; }
+    .rc-label { font-size: 14px; }
   }
-  @media (max-width: 520px) {
-    .redeem-row { grid-template-columns: 70px 1fr; }
-    .redeem-row-status { grid-column: 2; margin-top: 6px; }
+  @media (max-width: 380px) {
+    .redeem-grid { grid-template-columns: 1fr; }
   }
-  .redeem-row-pts { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #2C3E6B; line-height: 1; white-space: nowrap; }
-  .redeem-row-label { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-  .redeem-row-desc { font-size: 16px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; opacity: 0.75; }
-  .redeem-btn {
-    background: #F5C518; color: #000; border: none; cursor: pointer;
-    font-family: var(--font-mono); font-size: 16px; font-weight: 700;
-    letter-spacing: 0.5px; padding: 8px 14px; border-radius: 3px;
-    white-space: nowrap; display: inline-block; min-height: 44px;
-    display: inline-flex; align-items: center; text-decoration: none;
-    transition: opacity 0.15s;
-  }
-  .redeem-btn:hover { opacity: 0.88; }
-  .status-need { font-family: var(--font-mono); font-size: 16px; color: var(--text-primary); opacity: 0.55; white-space: nowrap; }
-  .redeem-tnc { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid #2C3E6B; border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 18px 22px; margin-bottom: 28px; }
-  .redeem-tnc-title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 12px; }
-  .redeem-tnc ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .redeem-tnc li { font-size: 16px; color: var(--text-primary); line-height: 1.6; }
-  .redeem-tnc li strong { color: var(--text-primary); }
-  .redeem-flash { border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; font-size: 16px; line-height: 1.6; }
-  .redeem-flash.success { background: #EAF3DE; border: 1px solid #C0DD97; color: #27500A; }
-  .redeem-flash.error { background: #FDE8E8; border: 1px solid #F5AAAA; color: #7A1414; }
 </style>
 {% endblock %}
 
@@ -91,60 +180,59 @@
   </div>
   {% endif %}
 
-  {# ── Redemption macro ── #}
-  {% macro redeem_row(pts, label, desc, item_type) %}
+  {# ── Redemption card macro ── #}
+  {% macro rc(pts, label, desc, item_type, theme) %}
   {% set bal = (wallet_hud.balance if wallet_hud else 0) | float %}
-  <div class="redeem-row">
-    <div class="redeem-row-pts">{{ '{:,}'.format(pts) }} pts</div>
-    <div>
-      <div class="redeem-row-label">{{ label }}</div>
-      <div class="redeem-row-desc">{{ desc }}</div>
-    </div>
-    <div class="redeem-row-status">
+  <div class="rc rc-{{ theme }}">
+    <div class="rc-accent"></div>
+    <div class="rc-pts">{{ '{:,}'.format(pts) }} pts</div>
+    <div class="rc-label">{{ label }}</div>
+    <div class="rc-desc">{{ desc }}</div>
+    <div class="rc-action">
       {% if bal >= pts %}
       <form method="POST" action="{{ url_for('redeem_action') }}" onsubmit="return confirm('Redeem {{ pts }} pts for {{ label }}?');">
         <input type="hidden" name="item_type" value="{{ item_type }}">
-        <button type="submit" class="redeem-btn">Redeem Now →</button>
+        <button type="submit" class="rc-btn">Redeem →</button>
       </form>
       {% else %}
-      <span class="status-need">{{ '{:,}'.format((pts - bal) | int) }} to go</span>
+      <span class="rc-need">{{ '{:,}'.format((pts - bal) | int) }} pts to go</span>
       {% endif %}
     </div>
   </div>
   {% endmacro %}
 
-  {# Programme Access #}
+  {# ── Programme Access ── #}
   <div class="redeem-section-label">Programme Access</div>
-  <div class="redeem-table">
-    {{ redeem_row(50,  'Weekly Challenge credit',  'Free for subscribers · non-subscribers redeem pts per credit', 'challenge_entry') }}
-    {{ redeem_row(100, 'Open Programme access',   'Annual Open Programme · one image, one genre · ₹50 cash for non-subscribers', 'open_entry') }}
-    {{ redeem_row(350, 'Body of Work access',      'Annual BOW · curated series 6–12 images · ₹999 cash for non-subscribers', 'bow_entry') }}
-    {{ redeem_row(500, 'Annual Excellence Award — participation', 'Subscribers only', 'poty_entry') }}
+  <div class="redeem-grid">
+    {{ rc(50,  'Weekly Challenge', 'Free for subscribers · non-subscribers redeem pts per credit', 'challenge_entry', 'gold') }}
+    {{ rc(100, 'Open Programme', 'Annual Open Programme · one image, one interest · ₹50 cash for non-subscribers', 'open_entry', 'gold') }}
+    {{ rc(350, 'Body of Work', 'Curated series 6–12 images · ₹999 cash for non-subscribers', 'bow_entry', 'gold') }}
+    {{ rc(500, 'Annual Excellence Award', 'Subscribers only · participation in the year-end award', 'poty_entry', 'gold') }}
   </div>
 
-  {# Upload Credits #}
+  {# ── Upload Credits ── #}
   <div class="redeem-section-label">Upload Credits</div>
-  <div class="redeem-table">
-    {{ redeem_row(10,   'Single upload',                'One additional scored image · standing eligible · Annual Excellence Award eligible · earns pts', 'upload_single') }}
-    {{ redeem_row(1000, 'Top-up pack — 3 shoots',       'Same as ₹140 cash top-up · Camera or Mobile League · subscribers earn full points', 'upload_topup') }}
-    {{ redeem_row(2500, 'Monthly subscription offset',  'Covers one month · ₹200 (Founding Member rate)', 'subscription_offset') }}
+  <div class="redeem-grid">
+    {{ rc(10,   'Single Upload', 'One scored photograph · standing eligible · earns pts', 'upload_single', 'purple') }}
+    {{ rc(1000, 'Top-up Pack', '3 shoots · same as ₹140 cash · subscribers earn full points', 'upload_topup', 'purple') }}
+    {{ rc(2500, 'Month Offset', 'Covers one month · ₹200 Founding Member rate', 'subscription_offset', 'purple') }}
   </div>
 
-  {# Free Month #}
+  {# ── Free Month ── #}
   <div class="redeem-section-label">Free Month</div>
-  <div class="redeem-table">
-    {% set _fmp = 2000 if current_user.subscription_track == 'camera' else 1000 %}
-    {% set _track_label = 'Camera League' if current_user.subscription_track == 'camera' else ('Mobile League' if current_user.subscription_track == 'mobile' else (current_user.subscription_track | title)) %}
-    {% set _fm_type = 'free_month_camera' if current_user.subscription_track == 'camera' else 'free_month_mobile' %}
-    {{ redeem_row(_fmp, 'One free month — ' ~ _track_label, 'Camera League: 2,000 pts · Mobile League: 1,000 pts · subscribers only', _fm_type) }}
+  {% set _fmp = 2000 if current_user.subscription_track == 'camera' else 1000 %}
+  {% set _track_label = 'Camera League' if current_user.subscription_track == 'camera' else ('Mobile League' if current_user.subscription_track == 'mobile' else (current_user.subscription_track | title)) %}
+  {% set _fm_type = 'free_month_camera' if current_user.subscription_track == 'camera' else 'free_month_mobile' %}
+  <div class="redeem-grid-full">
+    {{ rc(_fmp, 'One Free Month — ' ~ _track_label, 'Camera League: 2,000 pts · Mobile League: 1,000 pts · subscribers only', _fm_type, 'green') }}
   </div>
 
-  {# Mentor Sessions #}
+  {# ── Mentor Sessions ── #}
   <div class="redeem-section-label">Mentor Sessions</div>
-  <div class="redeem-table">
-    {{ redeem_row(500,  'Master Mentor session', 'subscribers only', 'mentor_senior') }}
-    {{ redeem_row(750,  'Grandmaster Mentor session', 'subscribers only', 'mentor_expert') }}
-    {{ redeem_row(1000, 'Legend Mentor session', 'subscribers only', 'mentor_legend') }}
+  <div class="redeem-grid">
+    {{ rc(500,  'Master Mentor', 'One session · subscribers only · available on demand', 'mentor_senior', 'navy') }}
+    {{ rc(750,  'Grandmaster Mentor', 'One session · subscribers only · available on demand', 'mentor_expert', 'navy') }}
+    {{ rc(1000, 'Legend Mentor', 'One session · subscribers only · available on demand', 'mentor_legend', 'navy') }}
   </div>
 
   {# T&C #}
