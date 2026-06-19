@@ -3240,6 +3240,26 @@ def dashboard():
     except Exception:
         _dash_carousel = None
 
+    # Fetch upload_credits_balance — backfill if 0/NULL for partial free-tier users
+    # upload_credits_balance is a migration-only column (DEFAULT 0) — never backfilled
+    # for users who joined before the column existed. If they still have remaining
+    # free evaluations, set the column to the correct value and persist.
+    _ucb_val = db.session.execute(
+        db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
+        {'uid': current_user.id}
+    ).scalar()
+    if free_tier and (_ucb_val is None or _ucb_val == 0) and free_tier['remaining'] > 0:
+        _ucb_val = free_tier['remaining']
+        try:
+            db.session.execute(
+                db.text('UPDATE users SET upload_credits_balance = :n WHERE id = :uid'),
+                {'n': _ucb_val, 'uid': current_user.id}
+            )
+            db.session.commit()
+        except Exception as _ucb_e:
+            app.logger.warning(f'[upload_credits_backfill] {_ucb_e}')
+    _ucb_val = _ucb_val or 0
+
     return render_template('dashboard.html', images=images, stats=stats,
                            carousel_images=[_dash_carousel] if _dash_carousel else [],
                            query=query, search_enabled=(total_images >= 20),
@@ -3263,10 +3283,7 @@ def dashboard():
                            _months_active=_months_active,
                            _season_start_label=_season_start_label,
                            _pre_season=_pre_season,
-                           upload_credits_balance=db.session.execute(
-                               db.text('SELECT upload_credits_balance FROM users WHERE id = :uid'),
-                               {'uid': current_user.id}
-                           ).scalar() or 0,
+                           upload_credits_balance=_ucb_val,
                            countries=get_countries(),
                            location_data_json=json.dumps(_dash_loc()),
                            lesson=_lesson,
