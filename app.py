@@ -3118,6 +3118,21 @@ def dashboard():
                 _mission_due = True
         except Exception as _mde:
             app.logger.warning(f'[mission_due] {_mde}')
+        # Mission done today — scored mission image completed successfully today
+        _mission_done = False
+        try:
+            _today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            _done_img = (Image.query
+                         .filter_by(user_id=current_user.id, status='scored')
+                         .filter(Image.mission_dimension.isnot(None),
+                                 Image.created_at >= _today_start,
+                                 Image.scoring_flash.ilike('%moving forward%'))
+                         .order_by(Image.created_at.desc())
+                         .first())
+            if _done_img:
+                _mission_done = True
+        except Exception as _mdd:
+            app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
 
     # Mentor reviews — for notif strip
@@ -3230,7 +3245,8 @@ def dashboard():
                            location_data_json=json.dumps(_dash_loc()),
                            lesson=_lesson,
                            weather=_weather,
-                           mission_due=_mission_due)
+                           mission_due=_mission_due,
+                           mission_done=_mission_done)
 
 
 # ---------------------------------------------------------------------------
