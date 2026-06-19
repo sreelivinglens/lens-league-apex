@@ -3127,7 +3127,11 @@ def dashboard():
         _mission_attempted = False
         _mission_attempted_dim = None  # dim key for dashboard card
         try:
-            _today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            # Use IST midnight — all paying subscribers are India-based.
+            # When international subscriptions open, replace with per-user timezone.
+            _now_utc     = datetime.utcnow()
+            _today_ist   = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
+            _today_start = _today_ist - _IST_OFFSET  # back to UTC for DB query
             _done_img = (Image.query
                          .filter_by(user_id=current_user.id, status='scored')
                          .filter(Image.mission_dimension.isnot(None),
