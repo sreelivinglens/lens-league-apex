@@ -2232,7 +2232,7 @@ def auth_google_callback():
         err = str(e)
         app.logger.warning(f'[google_oauth] callback error: {err}')
         if 'mismatching_state' in err or 'MismatchingState' in err or 'state' in err.lower():
-            flash('Sign-in session expired — please try again.', 'error')
+            flash('Sign-in interrupted — please try signing in again.', 'error')
         else:
             flash('Google sign-in failed. Please try again.', 'error')
         return redirect(url_for('login'))
@@ -2684,6 +2684,14 @@ def mission():
         _focus_label = _dim_mobile.get(_focus_key, 'Timing')
         _master      = None
 
+    # ── Indoor override — if user chose an indoor option, swap assignment text ──
+    # ?indoor=portraits or ?indoor=stilllife arrives from the dashboard red-weather card.
+    # Replaces the outdoor assignment with the lesson's indoor_assignment text.
+    _indoor = request.args.get('indoor') or None
+    if _indoor and lesson and lesson.get('indoor_assignment'):
+        _assignment = lesson['indoor_assignment']
+        _title = _title + ' — indoors'
+
     # ── Benchmark image ──────────────────────────────────────────────────
     _benchmark = None
     try:
@@ -3034,7 +3042,7 @@ def dashboard():
             for _fi in _flash_imgs:
                 flash(
                     f'Your image "{_fi.asset_name or _fi.original_filename}" '
-                    f'evaluated {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}',
+                    f'scored {_fi.score:.2f} ({_fi.tier}) — {_fi.scoring_flash}!',
                     'success'
                 )
                 _fi.scoring_flash = None
@@ -3118,38 +3126,19 @@ def dashboard():
                 _mission_due = True
         except Exception as _mde:
             app.logger.warning(f'[mission_due] {_mde}')
-        # Mission done / attempted today — checks dimension score on image record.
-        # Uses dimension score directly (not scoring_flash which is cleared on display).
-        # mission_done      = uploaded today + dimension threshold met (>= 5.0)
-        # mission_attempted = uploaded today + dimension threshold NOT met (< 5.0)
-        # Both survive page refresh, browser close, and multi-device use.
-        _mission_done      = False
-        _mission_attempted = False
-        _mission_attempted_dim = None  # dim key for dashboard card
+        # Mission done today — scored mission image completed successfully today
+        _mission_done = False
         try:
-            # Use IST midnight — all paying subscribers are India-based.
-            # When international subscriptions open, replace with per-user timezone.
-            _now_utc     = datetime.utcnow()
-            _today_ist   = (_now_utc + _IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
-            _today_start = _today_ist - _IST_OFFSET  # back to UTC for DB query
+            _today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             _done_img = (Image.query
                          .filter_by(user_id=current_user.id, status='scored')
                          .filter(Image.mission_dimension.isnot(None),
-                                 Image.created_at >= _today_start)
+                                 Image.created_at >= _today_start,
+                                 Image.scoring_flash.ilike('%moving forward%'))
                          .order_by(Image.created_at.desc())
                          .first())
             if _done_img:
-                _dim_key_map = {
-                    'dod': 'dod_score', 'disruption': 'disruption_score',
-                    'dm': 'dm_score', 'wonder': 'wonder_score', 'aq': 'aq_score'
-                }
-                _col = _dim_key_map.get(_done_img.mission_dimension)
-                _dim_val = getattr(_done_img, _col, None) if _col else None
-                if _dim_val and _dim_val >= 5.0:
-                    _mission_done = True
-                else:
-                    _mission_attempted = True
-                    _mission_attempted_dim = _done_img.mission_dimension
+                _mission_done = True
         except Exception as _mdd:
             app.logger.warning(f'[mission_done] {_mdd}')
     # ── End Photo School ──────────────────────────────────────────────────
@@ -3265,9 +3254,7 @@ def dashboard():
                            lesson=_lesson,
                            weather=_weather,
                            mission_due=_mission_due,
-                           mission_done=_mission_done,
-                           mission_attempted=_mission_attempted,
-                           mission_attempted_dim=_mission_attempted_dim)
+                           mission_done=_mission_done)
 
 
 # ---------------------------------------------------------------------------
@@ -3697,22 +3684,22 @@ _CURRICULUM = [
     {
         'id': 'V1.2', 'dim': 'disruption', 'depth': 2,
         'title': 'Disruption That Serves the Subject',
-        'principle': 'Disruption that serves the subject works. Disruption for its own sake does not.',
+        'principle': 'Disruption that serves the subject scores. Disruption for its own sake does not.',
         'commons_file': None,
         'commons_caption': None,
         'master': 'Ernst Haas', 'master_quote': 'The camera doesn\'t make a bit of difference. All of them can record what you are seeing.',
         'assignments': {
-            'Wildlife':     'Make a frame where the movement is the subject — not the animal that is moving through it.',
+            'Wildlife':     'Use a slow shutter on a moving subject deliberately. The blur must say something.',
             'Street':       'Find the angle where the subject becomes secondary to what surrounds them.',
-            'Nature':       'Find the frame where the subject\'s familiar detail disappears and something truer about it is revealed.',
-            'Landscape':    'Make a frame where the light itself is the subject — not what the light is falling on.',
+            'Nature':       'Apply a technique that removes the subject\'s detail entirely. What remains?',
+            'Landscape':    'Make an exposure decision that a camera in auto mode would refuse.',
             'People':       'Remove the face from the portrait. Make the body the entire statement.',
             'Documentary':  'Photograph the detail that stands for the event, not the event itself.',
-            'Macro':        'Find the point where your subject stops being recognisable and starts being something else entirely.',
+            'Macro':        'Defocus deliberately at maximum magnification. Shoot the abstraction.',
             'Creative':     'Shoot until one frame is unrecognisable as its source.',
-            'Drone':        'Make a frame where the aerial perspective feels inevitable — not like a drone was passing over.',
+            'Drone':        'Fly at 10 metres. The disruption is proximity, not altitude.',
             'Wedding':      'Photograph the five seconds after the peak moment. Not during it.',
-            'Fashion':      'Find the environment that fights the fashion. The tension between them is the photograph.',
+            'Fashion':      'Put the fashion in weather. Rain, wind, mud. The disruption is context.',
         },
         'indoor_assignment': 'Make two frames of the same object — one conventional, one that shows something the first cannot.',
     },
@@ -3769,13 +3756,13 @@ _CURRICULUM = [
         'commons_caption': None,
         'master': 'Raghu Rai', 'master_quote': 'The camera is not a machine. It is an extension of your eye.',
         'assignments': {
-            'Wildlife':     'Read the behaviour until you know where the peak will be before it arrives. The frame you are looking for exists in the next thirty seconds.',
+            'Wildlife':     'Watch for ten minutes before shooting. Identify the behaviour pattern. Predict the next peak.',
             'Street':       'Spend five minutes in one spot without shooting. Read where the moment will happen. Then photograph it.',
             'Nature':       'Identify the element you cannot control. Read its rhythm. Time your frame to its cycle.',
             'Landscape':    'Arrive before the light. Identify where the light will land. Be in position when it does.',
             'People':       'Talk to your subject before photographing them. Learn their rhythm.',
             'Documentary':  'Read the event\'s structure. Identify what comes next. Be in position before it arrives.',
-            'Macro':        'Find the rhythm of your subject before you raise the camera. The moment you are looking for repeats — read it until you know when.',
+            'Macro':        'Time your subject\'s rhythm for five minutes before shooting.',
             'Creative':     'Test one frame. Read what the technique is doing. Adjust for the next with that knowledge.',
             'Drone':        'Before flying, identify every moving element and predict where it will be in sixty seconds.',
             'Wedding':      'Identify who in the crowd is about to feel something. Be ready.',
@@ -5912,16 +5899,10 @@ def upload():
                                                 f'+{_pts_earned:.1f} pts earned \u00b7 Your eye is moving forward.'
                                             )
                                         else:
-                                            # Mission not followed — plain-language why per dimension
-                                            _mission_why = {
-                                                'disruption': 'The frame stayed close to what was expected. That assignment is still waiting \u2014 resubmit when you find the unexpected angle.',
-                                                'dm':         'The timing wasn\u2019t the decisive element in this frame. That assignment is still waiting \u2014 resubmit when the moment and the geometry land together.',
-                                                'dod':        'This frame didn\u2019t push into difficult territory. That assignment is still waiting \u2014 resubmit from a harder position.',
-                                                'wonder':     'The frame didn\u2019t stop the viewer yet. That assignment is still waiting \u2014 resubmit when the subject reveals something unexpected.',
-                                                'aq':         'The frame didn\u2019t carry a specific feeling yet. That assignment is still waiting \u2014 resubmit when the emotion is unmistakable.',
-                                            }
-                                            _why = _mission_why.get(_mission_dim, 'That assignment is still waiting for you.')
-                                            _img.scoring_flash = f'+{_pts_earned:.1f} pts earned \u00b7 {_why}'
+                                            # Mission not followed — note it in flash
+                                            _img.scoring_flash = (
+                                                f'+{_pts_earned:.1f} pts earned \u00b7 That assignment is still waiting for you.'
+                                            )
                                     else:
                                         # No mission — generic flash
                                         _img.scoring_flash = f'+{_pts_earned:.1f} pts earned'
