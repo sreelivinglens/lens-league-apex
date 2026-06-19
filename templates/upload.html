@@ -296,15 +296,15 @@
 
   /* ── ROTATING CONTENT CARDS ── */
   .overlay-cards-wrap {
-    width: 100%; max-width: 420px;
+    width: 100%; max-width: 340px;
     margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     margin-bottom: 24px;
   }
   .overlay-card {
     width: 100%; border-radius: 14px;
-    padding: 24px 24px 20px; text-align: center;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 22px 22px 18px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
     background: #1A1508; border: 1px solid #F5C518;
     transition: opacity 0.6s ease;
   }
@@ -348,6 +348,11 @@
     .overlay-card-body { font-size: 15px; }
     .overlay-card.card-quote .overlay-card-body { font-size: 15px; }
     .overlay-cards-wrap { margin-bottom: 14px; max-width: 100%; }
+  }
+  /* Desktop — keep card compact, centred in the dark overlay */
+  @media (min-width: 1025px) {
+    .overlay-cards-wrap { max-width: 340px; }
+    #scoringOverlay { padding: 32px 40px 40px; }
   }
 
   /* ── Responsive — iPad (≤768px): collapse camera/mobile track selector to 1 column ── */
