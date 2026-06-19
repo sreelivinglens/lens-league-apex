@@ -4000,13 +4000,14 @@ def _get_weather(city):
         lat = _geo['results'][0]['latitude']
         lon = _geo['results'][0]['longitude']
 
-        # Step 2 — current weather
+        # Step 2 — current weather + tomorrow's daily precipitation probability
         wx_url = (
             f'https://api.open-meteo.com/v1/forecast'
             f'?latitude={lat}&longitude={lon}'
             f'&current=temperature_2m,relative_humidity_2m,'
             f'precipitation_probability,wind_speed_10m,weather_code'
-            f'&wind_speed_unit=kmh&timezone=auto'
+            f'&daily=precipitation_probability_max,weather_code'
+            f'&wind_speed_unit=kmh&timezone=auto&forecast_days=2'
         )
         with _ur.urlopen(wx_url, timeout=4) as _r:
             _wx = _json.loads(_r.read())
@@ -4017,6 +4018,13 @@ def _get_weather(city):
         precip    = cur.get('precipitation_probability', 0) or 0
         wind_kph  = cur.get('wind_speed_10m', 0) or 0
         wcode     = cur.get('weather_code', 0) or 0
+        # Tomorrow's forecast — daily[1] is tomorrow (daily[0] is today)
+        _daily         = _wx.get('daily', {})
+        _tmrw_precip   = (_daily.get('precipitation_probability_max') or [0, 0])[1] or 0
+        _tmrw_wcode    = (_daily.get('weather_code') or [0, 0])[1] or 0
+        _tmrw_is_bad   = _tmrw_precip >= 50 or _tmrw_wcode in (
+            51,53,55,61,63,65,66,67,80,81,82,95,96,99,73,75,77
+        )
 
         # Weather code groups (WMO standard)
         # 0-1: clear, 2-3: partly cloudy, 45-48: fog
@@ -4047,7 +4055,11 @@ def _get_weather(city):
         if _is_storm or _is_hail:
             state   = 'red'
             condition = 'Thunderstorm'
-            message = f'{city} · Thunderstorm warning. Do not go out today. Your outdoor mission waits for tomorrow.'
+            message = (
+                f'{city} · Thunderstorm warning. Do not go out today. '
+                f'Rain is forecast tomorrow too — keep yourself covered, check the forecast before heading out.' if _tmrw_is_bad else
+                f'{city} · Thunderstorm warning. Do not go out today. Your outdoor mission waits for tomorrow.'
+            )
             window  = None
         elif _is_snow_hvy:
             state   = 'red'
@@ -4057,7 +4069,11 @@ def _get_weather(city):
         elif _is_rain and precip >= 70:
             state   = 'red'
             condition = f'Rain · {precip}% chance'
-            message = f'{city} · Heavy rain likely today. Outdoor mission best saved for tomorrow.'
+            message = (
+                f'{city} · Heavy rain likely today. '
+                f'Rain is forecast tomorrow too — keep yourself covered, check the forecast before heading out.' if _tmrw_is_bad else
+                f'{city} · Heavy rain likely today. Outdoor mission best saved for tomorrow.'
+            )
             window  = None
         elif heat_index is not None and heat_index >= 42:
             state   = 'red'
@@ -5581,7 +5597,7 @@ def upload():
                                     # discover_one() is targeted — web search + LLM extract
                                     # for exactly this (city, genre). Much cheaper than
                                     # run_seasonal_discovery() which scans all users first.
-                                    _od_n = discover_one(db.session, _sc_user_city, _od_genre)
+                                    _od_n = discover_one(db.session, _sc_user_city, _od_genre, current_month=datetime.utcnow().month)
                                     app.logger.info(f'[auto_score] on-demand discovery for ({_sc_user_city}, {_od_genre}): {_od_n} row(s) inserted')
                                     if _od_n > 0:
                                         # Retry build_seasonal_context now that rows exist
@@ -6257,7 +6273,7 @@ def _force_rescore_in_background(image_id, old_score, old_tier, old_status='scor
                 _od_genre = _primary_genre or img.genre or ''
                 try:
                     from engine.seasonal_discovery import discover_one
-                    _od_n = discover_one(db.session, _user_city, _od_genre)
+                    _od_n = discover_one(db.session, _user_city, _od_genre, current_month=datetime.utcnow().month)
                     app.logger.info(f'[retry_score] on-demand discovery for ({_user_city}, {_od_genre}): {_od_n} row(s) inserted')
                     if _od_n > 0:
                         _seasonal_ctx, _sc_calendar_ids = build_seasonal_context(
