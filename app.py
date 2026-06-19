@@ -5027,8 +5027,8 @@ def upload():
             phash             = phash,
             status            = 'pending',
             legal_declaration = bool(request.form.get('legal_declaration')),
-            mission_dimension = request.form.get('mission_dimension') or None,
-            mission_title     = request.form.get('mission_title') or None,
+            mission_dimension = (request.form.get('mission_dimension') or request.args.get('mission_dimension')) or None,
+            mission_title     = (request.form.get('mission_title') or request.args.get('mission_title')) or None,
             is_public         = (request.form.get('is_public', '0') == '1'),
             exif_status=exif_status, exif_camera=(exif_data.get('camera', '') or '').replace('\x00', ''),
             exif_lens=(exif_data.get('lens', '') or '').replace('\x00', ''),
@@ -6032,6 +6032,9 @@ def upload():
                                {k: list(v) for k, v in SUBGENRE_MAP.items()}
                            ),
                            last_location=_last_location,
+                           mission_dimension=request.args.get('mission_dimension', ''),
+                           curriculum_principle_id=request.args.get('curriculum_principle_id', ''),
+                           mission_title=request.args.get('mission_title', ''),
                            next_page=request.args.get('next', ''))
 
 
